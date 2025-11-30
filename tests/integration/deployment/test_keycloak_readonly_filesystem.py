@@ -163,9 +163,9 @@ class TestKeycloakReadOnlyFilesystemConfiguration:
         security_context = get_keycloak_container_security_context(deployment)
         assert security_context is not None, "Keycloak container securityContext not found"
 
-        assert (
-            "readOnlyRootFilesystem" in security_context
-        ), "readOnlyRootFilesystem not explicitly set in Keycloak securityContext"
+        assert "readOnlyRootFilesystem" in security_context, (
+            "readOnlyRootFilesystem not explicitly set in Keycloak securityContext"
+        )
         assert security_context["readOnlyRootFilesystem"] is False, (
             "Expected readOnlyRootFilesystem: false for Quarkus JIT compilation. "
             "See deployments/base/.trivyignore (AVD-KSV-0014) for justification."
@@ -183,9 +183,9 @@ class TestKeycloakReadOnlyFilesystemConfiguration:
         security_context = get_keycloak_container_security_context(deployment)
         assert security_context is not None, "Keycloak container securityContext not found"
 
-        assert (
-            "readOnlyRootFilesystem" in security_context
-        ), "readOnlyRootFilesystem not explicitly set in Keycloak securityContext"
+        assert "readOnlyRootFilesystem" in security_context, (
+            "readOnlyRootFilesystem not explicitly set in Keycloak securityContext"
+        )
         assert security_context["readOnlyRootFilesystem"] is False, (
             "Expected readOnlyRootFilesystem: false for Quarkus JIT compilation. "
             "See deployments/base/.trivyignore (AVD-KSV-0014) for justification."
@@ -203,9 +203,9 @@ class TestKeycloakReadOnlyFilesystemConfiguration:
         security_context = get_keycloak_container_security_context(deployment)
         assert security_context is not None, "Keycloak container securityContext not found"
 
-        assert (
-            "readOnlyRootFilesystem" in security_context
-        ), "readOnlyRootFilesystem not explicitly set in Keycloak securityContext"
+        assert "readOnlyRootFilesystem" in security_context, (
+            "readOnlyRootFilesystem not explicitly set in Keycloak securityContext"
+        )
         assert security_context["readOnlyRootFilesystem"] is False, (
             "Expected readOnlyRootFilesystem: false for Quarkus JIT compilation. "
             "See deployments/base/.trivyignore (AVD-KSV-0014) for justification."
@@ -312,9 +312,9 @@ class TestKeycloakReadOnlyFilesystemDocumentation:
         assert "quarkus" in content.lower(), "Inline comment should mention Quarkus as the reason"
         assert "jit compilation" in content.lower(), "Inline comment should explain JIT compilation requirement"
         assert "#10150" in content or "10150" in content, "Inline comment should reference GitHub issue #10150"
-        assert (
-            "trivyignore" in content.lower() or "avd-ksv-0014" in content.lower()
-        ), "Inline comment should reference .trivyignore AVD-KSV-0014"
+        assert "trivyignore" in content.lower() or "avd-ksv-0014" in content.lower(), (
+            "Inline comment should reference .trivyignore AVD-KSV-0014"
+        )
 
     def test_production_overlay_has_inline_comments(self, deployments_dir: Path) -> None:
         """
@@ -355,11 +355,11 @@ class TestKeycloakReadOnlyFilesystemDocumentation:
 
         # Check comprehensive justification
         assert "quarkus" in content.lower(), "Trivy suppression should explain Quarkus JIT requirement"
-        assert (
-            "native image" in content.lower() or "graalvm" in content.lower()
-        ), "Trivy suppression should mention native image alternative not supported"
+        assert "native image" in content.lower() or "graalvm" in content.lower(), (
+            "Trivy suppression should mention native image alternative not supported"
+        )
         assert "emptydir" in content.lower(), "Trivy suppression should document emptyDir volume mitigation"
-        assert (
-            "runasnonroot" in content.lower() or "run as non-root" in content.lower()
-        ), "Trivy suppression should document runAsNonRoot mitigation"
+        assert "runasnonroot" in content.lower() or "run as non-root" in content.lower(), (
+            "Trivy suppression should document runAsNonRoot mitigation"
+        )
         assert "capabilities" in content.lower(), "Trivy suppression should document capabilities.drop: ALL mitigation"

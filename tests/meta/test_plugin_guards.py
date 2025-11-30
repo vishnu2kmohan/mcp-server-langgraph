@@ -97,6 +97,7 @@ class TestPluginCLIModeGuards:
         assert result.returncode == 0
 
     @pytest.mark.meta
+    @pytest.mark.timeout(180)  # Extended timeout for subprocess that spawns pytest with 90s timeout
     def test_plugin_allows_fixtures_command(self):
         """
         TDD REGRESSION TEST: Ensure plugin doesn't block --fixtures
@@ -122,6 +123,7 @@ class TestPluginCLIModeGuards:
         assert result.returncode == 0
 
     @pytest.mark.meta
+    @pytest.mark.timeout(180)  # Extended timeout for subprocess that spawns pytest with 90s timeout
     def test_plugin_allows_collect_only_command(self):
         """
         TDD REGRESSION TEST: Ensure plugin doesn't block --collect-only

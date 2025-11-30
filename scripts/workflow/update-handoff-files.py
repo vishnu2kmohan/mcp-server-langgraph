@@ -290,7 +290,7 @@ class HandoffGenerator:
 
 ## 📊 Current State
 
-**Modified Files**: {len(git_status['modified'])}
+**Modified Files**: {len(git_status["modified"])}
 """
         for f in git_status["modified"][:10]:
             content += f"- {f}\n"
@@ -310,7 +310,7 @@ class HandoffGenerator:
 ## 📈 Session Metrics
 
 - **Total Commits**: {len(commits)}
-- **Files Changed**: {len(git_status['modified']) + len(git_status['staged'])}
+- **Files Changed**: {len(git_status["modified"]) + len(git_status["staged"])}
 - **Branch**: {branch}
 - **Session Duration**: ~{self.session_duration} minutes
 
@@ -359,13 +359,13 @@ class HandoffGenerator:
             for blocker in blockers:
                 severity_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}[blocker["severity"]]
                 content += f"""
-### {severity_emoji} {blocker['type']}
+### {severity_emoji} {blocker["type"]}
 
-**Severity**: {blocker['severity'].upper()}
+**Severity**: {blocker["severity"].upper()}
 
-**Issue**: {blocker['description']}
+**Issue**: {blocker["description"]}
 
-**Action**: {blocker['action']}
+**Action**: {blocker["action"]}
 
 ---
 """
@@ -382,7 +382,7 @@ class HandoffGenerator:
 
 **Item**: Commit pending changes
 
-**Status**: {len(git_status['modified']) + len(git_status['untracked'])} files waiting to be committed
+**Status**: {len(git_status["modified"]) + len(git_status["untracked"])} files waiting to be committed
 
 **Action Needed**: Review and commit changes
 
@@ -444,15 +444,15 @@ class HandoffGenerator:
         for i, step in enumerate(steps, 1):
             priority_emoji = {"high": "🔥", "medium": "⚠️", "low": "ℹ️"}[step["priority"]]
             content += f"""
-### {i}. {priority_emoji} {step['action']}
+### {i}. {priority_emoji} {step["action"]}
 
-**Priority**: {step['priority'].upper()}
+**Priority**: {step["priority"].upper()}
 
-**Details**: {step['details']}
+**Details**: {step["details"]}
 
 **Command**:
 ```bash
-{step['command']}
+{step["command"]}
 ```
 
 ---

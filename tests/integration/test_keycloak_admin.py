@@ -52,7 +52,7 @@ def skip_if_no_keycloak(keycloak_available: bool, request: FixtureRequest) -> No
     """Skip tests if Keycloak is not available"""
     if not keycloak_available:
         pytest.skip(
-            "Keycloak test instance not available. " "Start with: docker-compose -f docker-compose.keycloak-test.yml up -d"
+            "Keycloak test instance not available. Start with: docker-compose -f docker-compose.keycloak-test.yml up -d"
         )
 
 

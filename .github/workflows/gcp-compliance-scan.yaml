@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Run Trivy on Terraform
         uses: aquasecurity/trivy-action@0.33.1
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Run Trivy on Kubernetes manifests
         uses: aquasecurity/trivy-action@0.33.1
@@ -149,7 +149,7 @@ jobs:
     if: github.event_name == 'schedule' && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - id: auth
         name: Authenticate to Google Cloud
@@ -200,7 +200,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install OPA
         run: |
@@ -235,7 +235,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Full history for gitleaks
 
@@ -247,7 +247,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@v3.91.0
+        uses: trufflesecurity/trufflehog@v3.91.1
         with:
           path: ./
           base: ${{ github.event.before || 'HEAD~1' }}

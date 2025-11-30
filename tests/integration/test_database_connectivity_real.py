@@ -12,10 +12,29 @@ They depend on external services (PostgreSQL) being available.
 
 import gc
 import os
+import socket
 
 import pytest
 
 pytestmark = pytest.mark.integration
+
+
+def _is_postgres_available() -> bool:
+    """Check if PostgreSQL is actually available on the test port."""
+    host = os.getenv("POSTGRES_HOST", "localhost")
+    port = int(os.getenv("POSTGRES_PORT", "9432"))
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result == 0
+    except Exception:
+        return False
+
+
+# Check at module load time to avoid repeated socket checks
+POSTGRES_AVAILABLE = _is_postgres_available()
 
 
 @pytest.mark.xdist_group(name="database_connectivity")
@@ -27,8 +46,8 @@ class TestDatabaseConnectivityReal:
         gc.collect()
 
     @pytest.mark.skipif(
-        os.getenv("CI") is not None and os.getenv("POSTGRES_AVAILABLE") != "true",
-        reason="PostgreSQL not available in CI environment",
+        not POSTGRES_AVAILABLE,
+        reason="PostgreSQL not available on test port",
     )
     @pytest.mark.asyncio
     async def test_check_database_connectivity_with_real_postgres(self):
@@ -52,8 +71,8 @@ class TestDatabaseConnectivityReal:
         assert "accessible" in message.lower()
 
     @pytest.mark.skipif(
-        os.getenv("CI") is not None and os.getenv("POSTGRES_AVAILABLE") != "true",
-        reason="PostgreSQL not available in CI environment",
+        not POSTGRES_AVAILABLE,
+        reason="PostgreSQL not available on test port",
     )
     @pytest.mark.asyncio
     async def test_create_connection_pool_with_real_postgres(self):
@@ -97,8 +116,8 @@ class TestDatabaseConnectivityReal:
         await pool.close()
 
     @pytest.mark.skipif(
-        os.getenv("CI") is not None and os.getenv("POSTGRES_AVAILABLE") != "true",
-        reason="PostgreSQL not available in CI environment",
+        not POSTGRES_AVAILABLE,
+        reason="PostgreSQL not available on test port",
     )
     @pytest.mark.asyncio
     async def test_check_database_connectivity_with_invalid_credentials(self):
@@ -118,8 +137,8 @@ class TestDatabaseConnectivityReal:
         assert "auth" in message.lower() or "password" in message.lower() or "failed" in message.lower()
 
     @pytest.mark.skipif(
-        os.getenv("CI") is not None and os.getenv("POSTGRES_AVAILABLE") != "true",
-        reason="PostgreSQL not available in CI environment",
+        not POSTGRES_AVAILABLE,
+        reason="PostgreSQL not available on test port",
     )
     @pytest.mark.asyncio
     async def test_check_database_connectivity_with_nonexistent_database(self):
@@ -139,8 +158,8 @@ class TestDatabaseConnectivityReal:
         assert "exist" in message.lower() or "database" in message.lower()
 
     @pytest.mark.skipif(
-        os.getenv("CI") is not None and os.getenv("POSTGRES_AVAILABLE") != "true",
-        reason="PostgreSQL not available in CI environment",
+        not POSTGRES_AVAILABLE,
+        reason="PostgreSQL not available on test port",
     )
     @pytest.mark.asyncio
     async def test_check_database_connectivity_timeout(self):

@@ -27,10 +27,10 @@ Execute test suite with detailed output:
 
 ```bash
 # Run all tests, don't stop on first failure
-uv run pytest tests/ -v --tb=short --maxfail=100 2>&1 | tee /tmp/test_output.txt
+uv run --frozen pytest tests/ -v --tb=short --maxfail=100 2>&1 | tee /tmp/test_output.txt
 
 # Alternative: Only run previously failed tests
-uv run pytest --lf -v --tb=long 2>&1 | tee /tmp/test_failures.txt
+uv run --frozen pytest --lf -v --tb=long 2>&1 | tee /tmp/test_failures.txt
 
 # Count failures
 FAILURES=$(grep -c "FAILED" /tmp/test_output.txt)
@@ -506,7 +506,7 @@ git add src/**/*${MISSING_FILE}*.py
 git commit -m "fix: add missing ${MISSING_FILE} module"
 
 # 4. Re-run tests
-uv run pytest --lf -v
+uv run --frozen pytest --lf -v
 ```
 
 ### Template 2: Docker Service Fix
@@ -533,7 +533,7 @@ docker-compose up -d $SERVICE_NAME
 timeout 60s bash -c "until docker-compose ps $SERVICE_NAME | grep healthy; do sleep 2; done"
 
 # 4. Re-run tests
-uv run pytest --lf -v
+uv run --frozen pytest --lf -v
 ```
 
 ### Template 3: AsyncMock Batch Fix
@@ -651,10 +651,10 @@ grep "FAILED" /tmp/test_output.txt | \
 
 ```bash
 # Run with full traceback
-uv run pytest --lf -vv --tb=long
+uv run --frozen pytest --lf -vv --tb=long
 
 # Enable debugging
-uv run pytest --lf --pdb
+uv run --frozen pytest --lf --pdb
 ```
 
 ### Issue: Failures are intermittent
@@ -662,7 +662,7 @@ uv run pytest --lf --pdb
 ```bash
 # Run multiple times
 for i in {1..10}; do
-    uv run pytest tests/ > /tmp/run_$i.txt 2>&1
+    uv run --frozen pytest tests/ > /tmp/run_$i.txt 2>&1
     grep -c "FAILED" /tmp/run_$i.txt
 done
 ```

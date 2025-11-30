@@ -13,8 +13,9 @@ from pathlib import Path
 
 import pytest
 
-# Add scripts directory to path - use absolute path resolution
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+# Add scripts/docs directory to path - use absolute path resolution
+# From tests/meta/validation/test_mdx_validation.py, go up 4 levels to repo root, then to scripts/docs
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent / "scripts" / "docs"))
 
 
 try:

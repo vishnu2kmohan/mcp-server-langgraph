@@ -64,7 +64,7 @@ Runs only Bandit for quick code security check.
 
 ```bash
 # Generate report from existing JSON files
-uv run python scripts/security/generate_report.py security-reports
+uv run --frozen python scripts/security/generate_report.py security-reports
 ```
 
 ## Report Format
@@ -122,7 +122,7 @@ The report generation system follows TDD principles:
 
 ```bash
 # Run security report tests
-uv run pytest tests/test_security_report.py -v
+uv run --frozen pytest tests/test_security_report.py -v
 ```
 
 All 10 tests verify:

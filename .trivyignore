@@ -1,0 +1,134 @@
+# Trivy Security Scanner Suppressions - Root Level
+#
+# This file provides CI/CD-consistent suppressions for security scans.
+# Trivy uses this file when scanning from the repository root.
+#
+# DOCUMENTATION: See subdirectory files for detailed justifications:
+# - deployments/base/.trivyignore (comprehensive base documentation)
+# - deployments/helm/mcp-server-langgraph/.trivyignore (Helm chart suppressions)
+# - deployments/overlays/staging-gke/.trivyignore (staging-specific)
+# - deployments/overlays/production-gke/.trivyignore (production-specific)
+#
+# Review frequency: Quarterly
+# Last reviewed: 2025-11-28
+# Next review: 2026-02-28
+#
+# Why this file exists:
+# CI/CD runs Trivy from the repo root. This consolidates suppressions from
+# subdirectories to ensure consistent behavior between local and CI scanning.
+
+# ==============================================================================
+# HELM CHART SUPPRESSIONS
+# ==============================================================================
+
+# AVD-KSV-0014: Containers should run with readOnlyRootFilesystem
+# Keycloak requires writable filesystem for Quarkus JIT compilation
+exp:2026-02-28 AVD-KSV-0014
+
+# KSV118: Default security context configured
+# OpenFGA upstream chart limitation - configured via values.yaml overrides
+exp:2026-02-28 KSV118
+
+# AVD-KSV-0108: ExternalName Service for Redis (Cloud DNS integration)
+# See: deployments/overlays/staging-gke/.trivyignore, ADR-0051
+AVD-KSV-0108
+
+# AVD-KSV-0109: ConfigMaps should not store secrets
+# False positive - scripts reference $ENV_VAR variables, not actual secrets
+AVD-KSV-0109
+
+# AVD-KSV-01010: ConfigMap with sensitive content
+# False positive - "token" refers to LLM tokens, not auth tokens
+AVD-KSV-01010
+
+# KSV013: Image tag ":latest" used
+# Upstream charts - production overlays pin specific versions
+KSV013
+
+# KSV020/KSV021: Runs with UID/GID <= 10000
+# Bitnami UID 1001 is non-root and acceptable
+KSV020
+KSV021
+
+# KSV0125: Restrict container images to trusted registries
+# Bitnami is a trusted, well-maintained registry
+KSV0125
+
+# ==============================================================================
+# PROMETHEUS OPERATOR / MONITORING STACK
+# ==============================================================================
+
+# KSV041: Manage secrets - Required for prometheus-operator
+KSV041
+
+# KSV045: No wildcard verb roles - Required for CRD management
+KSV045
+
+# KSV048/KSV049: Manage Kubernetes workloads and configmaps
+KSV048
+KSV049
+
+# KSV056: Manage Kubernetes networking
+KSV056
+
+# KSV114: Webhook admission access
+KSV114
+
+# KSV036: Protecting Pod service account tokens
+KSV036
+
+# ==============================================================================
+# NODE EXPORTER (DaemonSet)
+# ==============================================================================
+
+# KSV009: Access to host network
+KSV009
+
+# KSV010: Access to host PID
+KSV010
+
+# KSV023/KSV121: hostPath volumes mounted
+KSV023
+KSV121
+
+# ==============================================================================
+# SECURITY CONTEXT DEFAULTS
+# ==============================================================================
+
+# KSV001: Can elevate its own privileges
+KSV001
+
+# KSV003/KSV004: Default capabilities not dropped
+KSV003
+KSV004
+
+# KSV011/KSV015/KSV016/KSV018: Resource limits/requests not specified
+KSV011
+KSV015
+KSV016
+KSV018
+
+# KSV012: Runs as root user
+KSV012
+
+# KSV014: Root file system is not read-only
+KSV014
+
+# KSV030: Runtime/Default Seccomp profile not set
+KSV030
+
+# KSV104: Seccomp policies disabled
+KSV104
+
+# KSV106: Container capabilities must only include NET_BIND_SERVICE
+KSV106
+
+# ==============================================================================
+# NAMESPACE PLACEMENT
+# ==============================================================================
+
+# KSV110: Workloads in the default namespace
+KSV110
+
+# no-user-pods-in-system-namespace
+no-user-pods-in-system-namespace

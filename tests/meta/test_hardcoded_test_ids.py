@@ -11,7 +11,6 @@ Regression prevention for validation audit finding:
 - Should use worker-safe helpers: get_user_id(), get_api_key_id()
 """
 
-import ast
 import gc
 import re
 from pathlib import Path
@@ -112,19 +111,20 @@ class TestHardcodedTestIDs:
 
         # Check that helpers are defined
         assert "def get_user_id(" in content, (
-            "get_user_id() helper not found in conftest.py!\n" "This helper is required for worker-safe test IDs"
+            "get_user_id() helper not found in conftest.py!\nThis helper is required for worker-safe test IDs"
         )
 
         assert "def get_api_key_id(" in content, (
-            "get_api_key_id() helper not found in conftest.py!\n" "This helper is required for worker-safe test IDs"
+            "get_api_key_id() helper not found in conftest.py!\nThis helper is required for worker-safe test IDs"
         )
 
-    def test_cleanup_queries_use_test_prefix(self):
+    def test_cleanup_queries_use_correct_prefix(self):
         """
-        Test that cleanup queries still work with test_ prefix pattern.
+        Test that cleanup queries use the correct 'user:test_%' pattern.
 
-        Even though we use get_user_id(), the cleanup queries can still
-        use LIKE 'test_%' pattern since all worker IDs start with test_.
+        get_user_id() returns 'user:test_gw0_...' format, so cleanup queries
+        must use LIKE 'user:test_%' pattern (NOT just 'test_%') to properly
+        clean up test data.
         """
         files_to_check = [
             Path("tests/integration/compliance/test_postgres_preferences_store.py"),
@@ -137,11 +137,11 @@ class TestHardcodedTestIDs:
 
             content = file_path.read_text()
 
-            # Cleanup queries should still use test_ pattern
-            # This is OK because all get_user_id() results start with test_
-            assert "LIKE 'test_%'" in content or 'LIKE "test_%"' in content, (
-                f"{file_path}: Cleanup queries should use LIKE 'test_%' pattern\n"
-                "This works because get_user_id() always starts with test_"
+            # Cleanup queries must use 'user:test_%' pattern since get_user_id()
+            # returns IDs in the format 'user:test_gw0_...'
+            assert "LIKE 'user:test_%'" in content or 'LIKE "user:test_%"' in content, (
+                f"{file_path}: Cleanup queries should use LIKE 'user:test_%' pattern\n"
+                "This is required because get_user_id() returns 'user:test_gw0_...' format"
             )
 
 

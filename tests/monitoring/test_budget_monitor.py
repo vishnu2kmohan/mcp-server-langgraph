@@ -21,7 +21,6 @@ from decimal import Decimal
 from email.mime.multipart import MIMEMultipart
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import httpx
 import pytest
 
 from mcp_server_langgraph.monitoring.budget_monitor import AlertLevel, BudgetMonitor, BudgetPeriod
@@ -478,15 +477,21 @@ class TestWebhookAlerts:
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(httpx.AsyncClient, "post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+        # Create a mock client that supports async context manager
+        mock_client = AsyncMock()
+        mock_client.post.return_value = mock_response
+        mock_client.__aenter__.return_value = mock_client
+        mock_client.__aexit__.return_value = None
+
+        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", return_value=mock_client):
             # Act
             await monitor._send_webhook_alert(
                 level="critical", message="Budget exceeded", budget_id="budget_001", utilization=95.0
             )
 
             # Assert
-            mock_post.assert_called_once()
-            call_args = mock_post.call_args
+            mock_client.post.assert_called_once()
+            call_args = mock_client.post.call_args
             assert call_args[0][0] == "https://hooks.slack.com/services/ABC123"
             payload = call_args[1]["json"]
             assert payload["alert_type"] == "budget"
@@ -501,14 +506,19 @@ class TestWebhookAlerts:
         # Arrange
         monitor = BudgetMonitor()  # No webhook URL
 
-        with patch.object(httpx.AsyncClient, "post", new_callable=AsyncMock) as mock_post:
+        # Create a mock client
+        mock_client = AsyncMock()
+        mock_client.__aenter__.return_value = mock_client
+        mock_client.__aexit__.return_value = None
+
+        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", return_value=mock_client) as mock_class:
             # Act
             await monitor._send_webhook_alert(
                 level="warning", message="Budget alert", budget_id="budget_001", utilization=80.0
             )
 
-            # Assert
-            mock_post.assert_not_called()
+            # Assert - AsyncClient should not be instantiated when webhook not configured
+            mock_class.assert_not_called()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -522,7 +532,13 @@ class TestWebhookAlerts:
 
         before = datetime.now(timezone.utc)
 
-        with patch.object(httpx.AsyncClient, "post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+        # Create a mock client that supports async context manager
+        mock_client = AsyncMock()
+        mock_client.post.return_value = mock_response
+        mock_client.__aenter__.return_value = mock_client
+        mock_client.__aexit__.return_value = None
+
+        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", return_value=mock_client):
             # Act
             await monitor._send_webhook_alert(
                 level="warning", message="Budget alert", budget_id="budget_001", utilization=80.0
@@ -530,7 +546,7 @@ class TestWebhookAlerts:
 
             # Assert
             after = datetime.now(timezone.utc)
-            payload = mock_post.call_args[1]["json"]
+            payload = mock_client.post.call_args[1]["json"]
             timestamp_str = payload["timestamp"]
             timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
             assert before <= timestamp <= after

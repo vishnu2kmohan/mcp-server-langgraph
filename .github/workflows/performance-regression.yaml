@@ -59,20 +59,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Install dependencies
-        run: |
-          # Install with dev (includes pytest, pytest-benchmark) and monitoring (includes requests) extras
-          uv pip install --system -e ".[dev,monitoring]"
+          extras: 'dev monitoring'
+          cache-key-prefix: 'perf-benchmarks'
 
       - name: Start test server
         run: |
@@ -157,7 +151,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Download benchmark results
         uses: actions/download-artifact@v6
@@ -224,25 +218,23 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Download benchmark results
         uses: actions/download-artifact@v6
         with:
           name: performance-benchmarks
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
+          extras: 'monitoring'
+          cache-key-prefix: 'perf-baseline'
 
       - name: Check for improvements
         id: check
         run: |
-          uv pip install --system -e .[monitoring]
 
           python scripts/ci/performance_regression.py \
             --baseline ${{ env.BASELINE_DIR }}/baseline.json \

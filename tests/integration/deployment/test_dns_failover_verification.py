@@ -26,6 +26,15 @@ from tests.fixtures.tool_fixtures import requires_tool
 
 pytestmark = pytest.mark.integration
 
+
+@pytest.fixture
+def skip_if_no_cluster(kubectl_connected):
+    """Skip test if kubectl is not connected to a Kubernetes cluster."""
+    if not kubectl_connected:
+        pytest.skip("kubectl not connected to a Kubernetes cluster (required for OpenAPI validation)")
+    return True
+
+
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 
@@ -137,7 +146,7 @@ class TestDNSConfiguration:
 
         for required_record in required_records:
             assert required_record in existing_records, (
-                f"DNS record missing: {required_record}\n" f"Run: scripts/setup-cloud-dns-staging.sh"
+                f"DNS record missing: {required_record}\nRun: scripts/setup-cloud-dns-staging.sh"
             )
 
 
@@ -235,7 +244,7 @@ spec:
             if os.path.exists(temp_file):
                 os.unlink(temp_file)
 
-    def test_cloudsql_dns_test_pod_manifest_valid(self):
+    def test_cloudsql_dns_test_pod_manifest_valid(self, skip_if_no_cluster):
         """
         Validate DNS test pod manifest for cloudsql-staging (DRY-RUN).
 
@@ -256,7 +265,7 @@ spec:
         assert "kind: Pod" in output
         assert "cloudsql-staging.staging.internal" in output
 
-    def test_redis_dns_test_pod_manifest_valid(self):
+    def test_redis_dns_test_pod_manifest_valid(self, skip_if_no_cluster):
         """
         Validate DNS test pod manifest for redis-staging (DRY-RUN).
         """
@@ -272,7 +281,7 @@ spec:
         assert "securityContext" in output
         assert "runAsNonRoot: true" in output
 
-    def test_redis_session_dns_test_pod_manifest_valid(self):
+    def test_redis_session_dns_test_pod_manifest_valid(self, skip_if_no_cluster):
         """
         Validate DNS test pod manifest for redis-session-staging (DRY-RUN).
         """
@@ -331,9 +340,9 @@ class TestServiceConfiguration:
         assert service["spec"]["type"] == "ExternalName", "Service should be type ExternalName for DNS-based approach"
 
         # Verify it uses the DNS name
-        assert (
-            service["spec"]["externalName"] == "redis-session-staging.staging.internal"
-        ), f"Service should use DNS name, got: {service['spec'].get('externalName')}"
+        assert service["spec"]["externalName"] == "redis-session-staging.staging.internal", (
+            f"Service should use DNS name, got: {service['spec'].get('externalName')}"
+        )
 
     @requires_tool("kubectl")
     def test_configmap_uses_dns_names(self):
@@ -441,7 +450,7 @@ class TestDNSFailoverSimulation:
 
         # TTL should be low for fast failover
         assert ttl <= 600, (
-            f"DNS TTL should be <= 600 seconds for fast failover, got: {ttl}\n" f"Recommended: 300 seconds (5 minutes)"
+            f"DNS TTL should be <= 600 seconds for fast failover, got: {ttl}\nRecommended: 300 seconds (5 minutes)"
         )
 
     @requires_tool("kubectl")

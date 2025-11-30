@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 # Mark as integration test with xdist_group for worker isolation
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="workflow_health_dashboard")]
 
 
 def teardown_module():
@@ -78,9 +78,9 @@ def test_dashboard_success_rate_calculation():
         # Calculate success rate (simulating dashboard logic)
         success_rate = (successful_runs * 100) / total_runs
 
-        assert (
-            abs(success_rate - expected) < 0.01
-        ), f"Expected {expected}%, got {success_rate}% for {successful_runs}/{total_runs}"
+        assert abs(success_rate - expected) < 0.01, (
+            f"Expected {expected}%, got {success_rate}% for {successful_runs}/{total_runs}"
+        )
 
 
 def test_dashboard_bc_command_edge_cases():
@@ -223,7 +223,8 @@ def test_dashboard_workflow_syntax():
 
     This ensures the workflow can be parsed and executed by GitHub Actions.
     """
-    workflow_file = Path(__file__).parent.parent / ".github" / "workflows" / "workflow-health-dashboard.yaml"
+    # Use correct path: tests/integration/ -> tests/ -> repo_root/
+    workflow_file = Path(__file__).parent.parent.parent / ".github" / "workflows" / "workflow-health-dashboard.yaml"
 
     if not workflow_file.exists():
         pytest.skip("Workflow file not found")

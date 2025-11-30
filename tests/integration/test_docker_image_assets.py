@@ -212,7 +212,7 @@ class TestDockerTestImageAssets:
                 timeout=300,  # 5 minute timeout for build
             )
 
-            assert result.returncode == 0, f"Docker build failed:\n" f"stdout: {result.stdout}\n" f"stderr: {result.stderr}"
+            assert result.returncode == 0, f"Docker build failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
 
             # Run container and check that deployments/ does NOT exist (ADR-0053)
             print("Verifying deployments/ is excluded from container (ADR-0053)...")
@@ -282,7 +282,7 @@ class TestDockerTestImageAssets:
                 timeout=300,  # 5 minute timeout for build
             )
 
-            assert result.returncode == 0, f"Docker build failed:\n" f"stdout: {result.stdout}\n" f"stderr: {result.stderr}"
+            assert result.returncode == 0, f"Docker build failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
 
             # Run container and check that scripts/ does NOT exist (ADR-0053)
             print("Verifying scripts/ is excluded from container (ADR-0053)...")

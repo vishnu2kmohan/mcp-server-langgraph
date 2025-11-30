@@ -374,7 +374,7 @@ bandit -r . -x ./tests,./venv -ll
 python mcp_server_streamable.py
 
 # Generate OpenAPI
-python scripts/generate_openapi.py
+python scripts/dev/generate_openapi.py
 ```
 
 ## Key Files

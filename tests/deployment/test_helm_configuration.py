@@ -20,7 +20,7 @@ import yaml
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 
 # Test fixtures
@@ -192,7 +192,7 @@ def test_no_hardcoded_credentials_in_configmap(base_configmap):
         actual_creds = [m for m in matches if "{{" not in m and "$(" not in m and m.strip() != '://""@']
 
         assert not actual_creds, (
-            f"Found hard-coded credentials in configmap: {actual_creds}\n" f"Use environment variable substitution instead"
+            f"Found hard-coded credentials in configmap: {actual_creds}\nUse environment variable substitution instead"
         )
 
 

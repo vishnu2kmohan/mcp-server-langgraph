@@ -20,8 +20,9 @@ name: Integration Tests
 #   - No conflicts with development environment
 #
 # PARALLELIZATION:
-#   - Uses pytest-split for 4x parallelization
-#   - Matrix strategy with 4 groups for faster execution
+#   - Uses pytest-xdist for parallel test execution within each job
+#   - Matrix strategy with test categories for faster execution
+#   - Replaced pytest-split (2025-11-28) to enable pytest 9.x upgrade
 #
 # ==============================================================================
 
@@ -50,77 +51,81 @@ permissions:
   contents: read
   pull-requests: write
 
+env:
+  # Prevent BlockingIOError when capturing large test output
+  PYTHONUNBUFFERED: "1"
+
 jobs:
   # ============================================================================
   # Integration Tests with Test Infrastructure
   # ============================================================================
 
   integration-tests:
-    name: Integration Tests (Group ${{ matrix.split-group }}/4)
+    name: Integration Tests (${{ matrix.test-category }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     strategy:
       fail-fast: false
       matrix:
-        split-group: [1, 2, 3, 4]
+        # Matrix strategy with test categories for parallel execution
+        # Each category runs its tests with pytest-xdist for intra-job parallelism
+        # This replaces pytest-split (2025-11-28) to enable pytest 9.x upgrade
+        test-category: [auth, api, database, infrastructure]
+        include:
+          - test-category: auth
+            markers: "integration and auth"
+            label: "auth"
+          - test-category: api
+            markers: "integration and api"
+            label: "api"
+          - test-category: database
+            markers: "integration and (database or gdpr)"
+            label: "database"
+          - test-category: infrastructure
+            markers: "integration and not auth and not api and not database and not gdpr"
+            label: "infra"
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
+        extras: 'dev'
+        cache-key-prefix: 'integration-tests'
 
-    - name: Cache uv binary
-      uses: actions/cache@v4
-      with:
-        path: ~/.cargo/bin/uv
-        key: uv-binary-${{ runner.os }}-0.5.0
-        restore-keys: uv-binary-${{ runner.os }}-
-
-    - name: Cache uv dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/uv
-        key: ${{ runner.os }}-uv-integration-${{ hashFiles('uv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-uv-integration-
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-
-    - name: Install dependencies
-      run: |
-        # Install with dev extra for testing framework
-        # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
-        uv sync --frozen --extra dev
-        echo "✓ Dependencies installed from lockfile with dev extra"
-
-    - name: Run Integration Tests via Script (Group ${{ matrix.split-group }}/4)
+    - name: Run Integration Tests via Script (${{ matrix.test-category }})
       run: |
         # Use the orchestration script to manage infrastructure and execution
         # This ensures 100% parity between local and CI execution
         # Passing arguments after '--' injects them into the pytest command
+        # Generate both .coverage file (for combining) and XML (for upload)
+        # Using pytest-xdist (-n auto) for parallel execution within this category
         ./scripts/test-integration.sh -- \
-          --splits 4 \
-          --group ${{ matrix.split-group }} \
-          -m integration \
+          -n auto \
+          --dist loadgroup \
+          -m "${{ matrix.markers }}" \
           -v --tb=short \
           --cov=src/mcp_server_langgraph \
-          --cov-report=xml:coverage-integration-${{ matrix.split-group }}.xml \
+          --cov-report=xml:coverage-integration-${{ matrix.label }}.xml \
           --cov-fail-under=0
+
+        # Rename .coverage to include category for combining
+        if [ -f .coverage ]; then
+          mv .coverage .coverage.${{ matrix.label }}
+        fi
 
     - name: Upload integration coverage artifact
       if: always()
       uses: actions/upload-artifact@v5
       with:
-        name: coverage-integration-${{ matrix.split-group }}
-        path: coverage-integration-${{ matrix.split-group }}.xml
+        name: coverage-integration-${{ matrix.label }}
+        path: |
+          coverage-integration-${{ matrix.label }}.xml
+          .coverage.${{ matrix.label }}
         retention-days: 1
 
     - name: Cleanup infrastructure
@@ -142,16 +147,14 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-
-    - name: Install coverage tools
-      run: |
-        pip install coverage[toml]
+        extras: 'dev'
+        cache-key-prefix: 'coverage-merge'
 
     - name: Download all coverage artifacts
       uses: actions/download-artifact@v6
@@ -160,19 +163,50 @@ jobs:
         path: coverage-reports/
         merge-multiple: true
 
+    - name: List downloaded artifacts
+      run: |
+        echo "=== Downloaded coverage artifacts ==="
+        find coverage-reports/ -type f || echo "No files found"
+
     - name: Combine coverage reports
       run: |
         echo "Combining coverage reports from all splits..."
-        coverage combine coverage-reports/coverage-integration-*.xml || echo "No coverage files to combine"
-        coverage xml -o coverage-integration-combined.xml || echo "Failed to generate combined XML"
-        coverage report || echo "Failed to generate coverage report"
+
+        # Find and move .coverage.* files to current directory for combining
+        find coverage-reports/ -name '.coverage.*' -exec cp {} . \; 2>/dev/null || true
+
+        # List what we have to combine
+        echo "=== Coverage files to combine ==="
+        ls -la .coverage.* 2>/dev/null || echo "No .coverage files found"
+
+        # Combine .coverage files (coverage combine looks for .coverage.* pattern)
+        if ls .coverage.* 1> /dev/null 2>&1; then
+          coverage combine
+          echo "✅ Combined coverage data successfully"
+
+          # Generate reports from combined data
+          coverage xml -o coverage-integration-combined.xml
+          coverage report --skip-covered || echo "Coverage report generated"
+        else
+          echo "⚠️  No .coverage files to combine"
+          echo "Creating empty coverage file for downstream steps"
+          # Create minimal valid .coverage file
+          echo '{"format": "none"}' > .coverage
+          # Create minimal valid coverage XML (using echo to avoid YAML linting issues with heredoc)
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > coverage-integration-combined.xml
+          echo '<coverage version="7.0" timestamp="0" lines-valid="0" lines-covered="0" line-rate="0" branches-covered="0" branches-valid="0" branch-rate="0" complexity="0">' >> coverage-integration-combined.xml
+          echo '  <packages/>' >> coverage-integration-combined.xml
+          echo '</coverage>' >> coverage-integration-combined.xml
+        fi
 
     - name: Upload combined coverage
       if: always()
       uses: actions/upload-artifact@v5
       with:
         name: coverage-integration-combined
-        path: coverage-integration-combined.xml
+        path: |
+          coverage-integration-combined.xml
+          .coverage
         retention-days: 7
 
     - name: Comment coverage on PR
@@ -183,3 +217,4 @@ jobs:
         COVERAGE_DATA_BRANCH: coverage-data-integration
         MINIMUM_GREEN: 80
         MINIMUM_ORANGE: 70
+      continue-on-error: true  # Don't fail PR if coverage comment fails

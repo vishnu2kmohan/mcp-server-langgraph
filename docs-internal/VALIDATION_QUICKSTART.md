@@ -276,10 +276,10 @@ make docs-fix-mdx
 
 ```bash
 # Run with verbose output
-uv run pytest tests/test_mdx_validation.py -vv
+uv run --frozen pytest tests/test_mdx_validation.py -vv
 
 # Check specific test
-uv run pytest tests/test_mdx_validation.py::TestName::test_name -vv
+uv run --frozen pytest tests/test_mdx_validation.py::TestName::test_name -vv
 
 # If tests fail, scripts may have issues
 # Report to team

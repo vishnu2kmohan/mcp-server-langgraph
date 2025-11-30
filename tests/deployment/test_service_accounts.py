@@ -11,6 +11,7 @@ Following TDD principles - these tests should FAIL before fixes are applied.
 """
 
 import gc
+import re
 import subprocess
 from collections import defaultdict
 from pathlib import Path
@@ -18,10 +19,35 @@ from pathlib import Path
 import pytest
 import yaml
 
+
+def validate_gcp_service_account_email(email: str) -> bool:
+    """
+    Validate GCP Service Account email format.
+
+    Security: Uses strict regex validation instead of substring matching
+    to prevent bypass attacks (e.g., "evil.iam.gserviceaccount.com.attacker.com").
+
+    Expected format: <name>@<project-id>.iam.gserviceaccount.com
+    Where:
+    - name: 6-30 lowercase letters, digits, hyphens (must start with letter)
+    - project-id: 6-30 lowercase letters, digits, hyphens
+
+    Args:
+        email: The service account email to validate
+
+    Returns:
+        True if valid GCP service account email format, False otherwise
+    """
+    # GCP Service Account email regex pattern
+    # See: https://cloud.google.com/iam/docs/service-accounts#service_account_naming
+    pattern = r"^[a-z][a-z0-9-]{5,29}@[a-z][a-z0-9-]{5,29}\.iam\.gserviceaccount\.com$"
+    return bool(re.match(pattern, email))
+
+
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 
@@ -156,7 +182,7 @@ class TestServiceAccountSeparation:
 
         # This test will FAIL initially (before creating separate SAs)
         assert not missing_sas, (
-            f"Missing ServiceAccounts for deployed components: {missing_sas}. " f"Found SAs: {service_accounts}"
+            f"Missing ServiceAccounts for deployed components: {missing_sas}. Found SAs: {service_accounts}"
         )
 
 
@@ -207,15 +233,11 @@ class TestWorkloadIdentityBindings:
             wi_annotation = annotations.get("iam.gke.io/gcp-service-account")
 
             if wi_annotation:
-                # Check format
-                assert "@" in wi_annotation, (
+                # Security: Use strict regex validation instead of substring matching
+                # to prevent bypass attacks (e.g., "evil.iam.gserviceaccount.com.attacker.com")
+                assert validate_gcp_service_account_email(wi_annotation), (
                     f"ServiceAccount '{sa['metadata']['name']}' has invalid Workload Identity "
-                    f"annotation: {wi_annotation}. Expected format: <gsa>@<project>.iam.gserviceaccount.com"
-                )
-
-                assert ".iam.gserviceaccount.com" in wi_annotation, (
-                    f"ServiceAccount '{sa['metadata']['name']}' has invalid Workload Identity "
-                    f"annotation: {wi_annotation}. Expected format: <gsa>@<project>.iam.gserviceaccount.com"
+                    f"annotation: {wi_annotation}. Expected format: <name>@<project-id>.iam.gserviceaccount.com"
                 )
 
                 # Check for unsubstituted variables
@@ -233,13 +255,9 @@ class TestWorkloadIdentityBindings:
             wi_annotation = annotations.get("iam.gke.io/gcp-service-account")
 
             if wi_annotation:
-                # Check format
-                assert "@" in wi_annotation, (
-                    f"ServiceAccount '{sa['metadata']['name']}' has invalid Workload Identity "
-                    f"annotation: {wi_annotation}. Expected format: <gsa>@<project>.iam.gserviceaccount.com"
-                )
-
-                assert ".iam.gserviceaccount.com" in wi_annotation, (
+                # Security: Use strict regex validation instead of substring matching
+                # to prevent bypass attacks (e.g., "evil.iam.gserviceaccount.com.attacker.com")
+                assert validate_gcp_service_account_email(wi_annotation), (
                     f"ServiceAccount '{sa['metadata']['name']}' has invalid Workload Identity "
                     f"annotation: {wi_annotation}. Expected format: <gsa>@<project>.iam.gserviceaccount.com"
                 )

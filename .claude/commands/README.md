@@ -293,7 +293,7 @@ ls .claude/commands/ | grep <command-name>
 ### Command Fails
 ```bash
 # Check prerequisites
-1. Verify virtual environment: uv run python --version
+1. Verify virtual environment: uv run --frozen python --version
 2. Check infrastructure: docker-compose ps
 3. Validate git hooks: ls .git/hooks/
 ```

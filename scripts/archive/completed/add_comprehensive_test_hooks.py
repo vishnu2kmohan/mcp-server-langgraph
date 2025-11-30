@@ -109,7 +109,7 @@ def add_comprehensive_test_hooks():
             "files": r"^(src/.*\.py|tests/unit/test_mcp_stdio_server\.py)$",
             "always_run": False,
             "stages": ["pre-push"],
-            "description": "Runs MCP protocol server tests to match CI.\n" "\n" "Prevents MCP protocol regressions.\n",
+            "description": "Runs MCP protocol server tests to match CI.\n\nPrevents MCP protocol regressions.\n",
         },
         {
             "id": "run-property-tests",

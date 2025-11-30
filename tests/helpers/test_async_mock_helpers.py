@@ -406,5 +406,5 @@ class TestRedPhaseVerification:
         This test will fail once helpers are implemented (GREEN phase).
         """
         assert not HELPERS_AVAILABLE, (
-            "Helpers should not be implemented yet (RED phase). " "This test confirms TDD discipline - write tests first!"
+            "Helpers should not be implemented yet (RED phase). This test confirms TDD discipline - write tests first!"
         )

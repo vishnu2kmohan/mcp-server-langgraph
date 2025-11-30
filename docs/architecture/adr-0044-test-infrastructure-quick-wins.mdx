@@ -1,19 +1,19 @@
 ---
-title: 'ADR-0044: Test Infrastructure Quick Wins'
-description: 'An analysis of the test infrastructure revealed several critical gaps and high-value improvements that could be addressed quickly to improve test quality, prevent security regressions, and enhance developer experience.'
-icon: 'file-lines'
-seoTitle: "ADR-0044: Test Infrastructure Quick Wins"
-seoDescription: "Architecture Decision Record 0044: Phase 1 of comprehensive test infrastructure remediation"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "ADR-0044", "testing", "OpenFGA", "benchmarks", "security", "TDD"]
-contentType: "explanation"
+title: "44. Test Infrastructure Quick Wins"
+description: "Architecture Decision Record: 44. Test Infrastructure Quick Wins"
 ---
 
-# ADR-0044: Test Infrastructure Quick Wins
+# 44. Test Infrastructure Quick Wins
 
-**Status**: Accepted
-**Date**: 2025-11-06
-**Deciders**: Development Team
-**Technical Story**: Phase 1 of comprehensive test infrastructure remediation
+Date: 2025-11-06
+
+## Status
+
+Accepted
+
+## Category
+
+Testing & Quality
 
 ## Context
 
@@ -80,6 +80,7 @@ async def check_authorization():
 
 result = percentile_benchmark(check_authorization)  # Auto-detects async
 ```
+
 **Technical Details**:
 - Added `inspect.iscoroutinefunction()` detection to `PercentileBenchmark.__call__()`
 - Create single event loop before iterations: `loop = asyncio.new_event_loop()`

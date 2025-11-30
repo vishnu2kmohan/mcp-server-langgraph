@@ -63,7 +63,7 @@ class InvalidContentTypeError(FrontmatterError):
         self.file_path = file_path
         self.value = value
         self.valid_types = valid_types
-        super().__init__(f"Invalid contentType '{value}' in {file_path}. " f"Must be one of: {', '.join(valid_types)}")
+        super().__init__(f"Invalid contentType '{value}' in {file_path}. Must be one of: {', '.join(valid_types)}")
 
 
 @dataclass

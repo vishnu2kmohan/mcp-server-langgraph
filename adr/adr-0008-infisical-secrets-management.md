@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Security & Compliance
+
 ## Context
 
 Production applications require secure secret management for:

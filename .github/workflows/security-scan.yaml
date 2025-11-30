@@ -53,6 +53,7 @@ permissions:
   contents: read
   security-events: write
   issues: write  # To create security vulnerability alerts
+  pull-requests: write  # To comment on pull requests with Trivy report
 
 jobs:
   trivy-scan:
@@ -66,7 +67,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     # Filesystem scan
     - name: Run Trivy filesystem scan
@@ -137,7 +138,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Generate comprehensive report
       uses: aquasecurity/trivy-action@0.33.1
@@ -186,7 +187,7 @@ jobs:
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
-            repo: context.repo.name,
+            repo: context.repo.repo,
             body: comment
           });
 
@@ -197,7 +198,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Build Docker image
       run: docker build -f docker/Dockerfile -t mcp-server-langgraph:scan .
@@ -223,7 +224,7 @@ jobs:
     if: github.event_name != 'push'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Setup Python
       uses: ./.github/actions/setup-python-deps
@@ -265,16 +266,19 @@ jobs:
       security-events: write
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
       with:
         languages: python
-        queries: security-and-quality
+        # Use custom config for path filtering and query selection
+        config-file: .github/codeql/codeql-config.yml
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
+      with:
+        category: "/language:python"
 
   secrets-scan:
     name: Secrets Scan
@@ -282,7 +286,7 @@ jobs:
     if: github.event_name != 'push'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0  # Required for full repository history scan
 
@@ -290,7 +294,7 @@ jobs:
     # Scheduled scans: full repository scan (no base/head specified)
     - name: TruffleHog OSS (Scheduled - Full Repository Scan)
       if: github.event_name == 'schedule'
-      uses: trufflesecurity/trufflehog@v3.91.0
+      uses: trufflesecurity/trufflehog@v3.91.1
       with:
         path: ./
         # No base/head specified = full repository scan
@@ -299,7 +303,7 @@ jobs:
     # Push/PR scans: incremental scan (with base/head range)
     - name: TruffleHog OSS (Push/PR - Incremental Scan)
       if: github.event_name != 'schedule'
-      uses: trufflesecurity/trufflehog@v3.91.0
+      uses: trufflesecurity/trufflehog@v3.91.1
       with:
         path: ./
         base: ${{ github.event.repository.default_branch }}
@@ -312,7 +316,7 @@ jobs:
     if: github.event_name != 'push'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Setup Python and dependencies
       uses: ./.github/actions/setup-python-deps

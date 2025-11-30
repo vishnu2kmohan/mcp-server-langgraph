@@ -46,8 +46,9 @@ class RealKeycloakAuth:
         self.client_id = os.getenv("KEYCLOAK_CLIENT_ID", "mcp-server")
         # CODEX FINDING FIX (2025-11-20): Add client_secret for token introspection
         # Keycloak requires client authentication for introspection endpoint
-        self.client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET", "")
-        self.client = httpx.AsyncClient(timeout=30.0)
+        self.client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET", "test-client-secret-for-e2e-tests")
+        # S501: verify=False is intentional for e2e tests against local dev servers
+        self.client = httpx.AsyncClient(timeout=30.0, verify=False)  # noqa: S501 # nosec B501
 
     async def login(self, username: str, password: str) -> dict[str, str]:
         """
@@ -96,7 +97,7 @@ class RealKeycloakAuth:
             ) from e
         except httpx.HTTPStatusError as e:
             raise RuntimeError(
-                f"Keycloak auth failed: {e.response.status_code} - {e.response.text[:200]} " f"(URL: {token_url})"
+                f"Keycloak auth failed: {e.response.status_code} - {e.response.text[:200]} (URL: {token_url})"
             ) from e
 
     async def refresh(self, refresh_token: str) -> dict[str, str]:
@@ -204,7 +205,8 @@ class RealMCPClient:
         if access_token:
             headers["Authorization"] = f"Bearer {access_token}"
 
-        self.client = httpx.AsyncClient(base_url=self.base_url, headers=headers, timeout=30.0)
+        # S501: verify=False is intentional for e2e tests against local dev servers
+        self.client = httpx.AsyncClient(base_url=self.base_url, headers=headers, timeout=30.0, verify=False)  # noqa: S501 # nosec B501
 
     async def initialize(self) -> dict[str, Any]:
         """
@@ -230,11 +232,11 @@ class RealMCPClient:
 
         except httpx.TimeoutException as e:
             raise RuntimeError(
-                f"MCP initialize timeout after 30s at {self.base_url} - " f"server may be down or overloaded."
+                f"MCP initialize timeout after 30s at {self.base_url} - server may be down or overloaded."
             ) from e
         except httpx.ConnectError as e:
             raise RuntimeError(
-                f"Cannot connect to MCP server at {self.base_url} - " f"service is not reachable. Check server is running."
+                f"Cannot connect to MCP server at {self.base_url} - service is not reachable. Check server is running."
             ) from e
         except httpx.HTTPStatusError as e:
             raise RuntimeError(f"MCP initialize failed: {e.response.status_code} - {e.response.text[:200]}") from e

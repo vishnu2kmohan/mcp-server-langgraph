@@ -44,7 +44,7 @@ pytestmark = [pytest.mark.unit]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testinterrupttype")
+@pytest.mark.xdist_group(name="core_interrupts")
 class TestInterruptType:
     """Test interrupt type enumeration."""
 
@@ -78,7 +78,7 @@ class TestInterruptType:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testinterruptconfig")
+@pytest.mark.xdist_group(name="core_interrupts")
 class TestInterruptConfig:
     """Test InterruptConfig model validation."""
 
@@ -150,7 +150,7 @@ class TestInterruptConfig:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testinterrupthandler")
+@pytest.mark.xdist_group(name="core_interrupts")
 class TestInterruptHandler:
     """Test InterruptHandler class functionality."""
 
@@ -389,7 +389,7 @@ class TestInterruptHandler:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcreateinterrupthandler")
+@pytest.mark.xdist_group(name="core_interrupts")
 class TestCreateInterruptHandler:
     """Test create_interrupt_handler factory function."""
 
@@ -418,7 +418,7 @@ class TestCreateInterruptHandler:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcreateconditionalinterrupt")
+@pytest.mark.xdist_group(name="core_interrupts")
 class TestCreateConditionalInterrupt:
     """Test create_conditional_interrupt helper function."""
 
@@ -492,7 +492,7 @@ class TestCreateConditionalInterrupt:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcreatetimeoutinterrupt")
+@pytest.mark.xdist_group(name="core_interrupts")
 class TestCreateTimeoutInterrupt:
     """Test create_timeout_interrupt helper function."""
 
@@ -541,7 +541,7 @@ class TestCreateTimeoutInterrupt:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testinterruptworkflowintegration")
+@pytest.mark.xdist_group(name="core_interrupts")
 class TestInterruptWorkflowIntegration:
     """Integration tests for complete interrupt workflows."""
 
@@ -639,7 +639,7 @@ class TestInterruptWorkflowIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testinterruptedgecases")
+@pytest.mark.xdist_group(name="core_interrupts")
 class TestInterruptEdgeCases:
     """Test edge cases and error scenarios."""
 

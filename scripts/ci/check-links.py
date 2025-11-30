@@ -111,11 +111,17 @@ def main():
 
     args = parser.parse_args()
 
+    # Always exclude infrastructure directories (venv, node_modules, etc.)
+    # These are not user-maintained docs and should never be checked
+    # Also exclude template files which contain intentional placeholder links
+    infrastructure_excludes = [".venv/", "venv/", "node_modules/", "__pycache__/", ".git/", ".claude/templates/"]
+    all_excludes = list(set(args.exclude + infrastructure_excludes))
+
     print("🔍 Checking for broken internal links...")
     print(f"Excluding: {', '.join(args.exclude)} (historical docs and Mintlify navigation)")
     print()
 
-    broken = find_broken_links(args.root_dir, args.exclude)
+    broken = find_broken_links(args.root_dir, all_excludes)
     categories = categorize_links(broken)
     high_priority = categories["github"] + categories["adr"]
 

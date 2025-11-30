@@ -453,10 +453,9 @@ This fix demonstrates the value of Test-Driven Development:
 
 ## Related Documentation
 
-- [Kubernetes Best Practices Implementation](docs/kubernetes-best-practices-implementation.mdx)
-- [Security Remediation Guide](docs/security/remediation-guide.mdx)
-- [Testing Strategy](docs/reference/development/ci-cd/testing.mdx)
-- [CHANGELOG.md](CHANGELOG.md) - Detailed change history
+- [CHANGELOG.md](../../CHANGELOG.md) - Detailed change history
+
+For Kubernetes, security, and testing documentation, see the Mintlify docs in the `docs/` directory.
 
 ---
 

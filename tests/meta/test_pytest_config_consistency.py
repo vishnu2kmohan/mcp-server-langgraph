@@ -39,6 +39,7 @@ class TestPytestConfigConsistency:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @pytest.mark.timeout(180)  # Extended timeout for filesystem-heavy rglob operations in parallel execution
     def test_no_duplicate_pytest_ini_files(self):
         """
         GIVEN: Project root and all subdirectories
@@ -110,9 +111,9 @@ class TestPytestConfigConsistency:
         ]
 
         for setting in required_settings:
-            assert (
-                f"{setting} =" in content or f"{setting} = [" in content
-            ), f"pyproject.toml [tool.pytest.ini_options] missing required setting: {setting}"
+            assert f"{setting} =" in content or f"{setting} = [" in content, (
+                f"pyproject.toml [tool.pytest.ini_options] missing required setting: {setting}"
+            )
 
     def test_pytest_config_includes_timeout_protection(self):
         """

@@ -19,7 +19,7 @@ from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 # FastAPI imports for dependency injection (optional, only if using FastAPI endpoints)
 try:
-    from fastapi import Depends, HTTPException, Request, status
+    from fastapi import Depends, HTTPException, Request, status  # noqa: F401 (Depends used at line 929, 970)
     from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
     FASTAPI_AVAILABLE = True

@@ -5,7 +5,6 @@ Tests GDPR Article 5(1)(e) - 90-day retention with auto-cleanup
 """
 
 import gc
-import os
 from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
 
@@ -17,7 +16,7 @@ from mcp_server_langgraph.compliance.gdpr.storage import Conversation, UserProfi
 from tests.conftest import get_user_id
 
 # Mark as integration test with xdist_group for worker isolation
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="postgres_conversation_store")]
 
 
 def teardown_module():
@@ -42,17 +41,17 @@ async def db_pool(postgres_connection_real) -> AsyncGenerator[asyncpg.Pool, None
     """
     pool = postgres_connection_real
 
-    # Clean up test data
+    # Clean up test data - use 'user:test_%' pattern since get_user_id returns 'user:test_gw0_...'
     async with pool.acquire() as conn:
-        await conn.execute("DELETE FROM conversations WHERE user_id LIKE 'test_%'")
-        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'test_%'")
+        await conn.execute("DELETE FROM conversations WHERE user_id LIKE 'user:test_%'")
+        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'user:test_%'")
 
     yield pool
 
     # Clean up after test
     async with pool.acquire() as conn:
-        await conn.execute("DELETE FROM conversations WHERE user_id LIKE 'test_%'")
-        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'test_%'")
+        await conn.execute("DELETE FROM conversations WHERE user_id LIKE 'user:test_%'")
+        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'user:test_%'")
 
     # Note: Don't close the pool - it's session-scoped and shared across all tests
 

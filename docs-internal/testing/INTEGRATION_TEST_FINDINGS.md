@@ -464,10 +464,10 @@ def validate_repo_root_patterns(test_file: Path) -> list[str]:
   run: python scripts/validate_repo_root_calculations.py
 
 - name: Validate async fixture configuration
-  run: uv run pytest tests/test_async_fixture_validation.py -v
+  run: uv run --frozen pytest tests/test_async_fixture_validation.py -v
 
 - name: Validate infrastructure port configuration
-  run: uv run pytest tests/test_infrastructure_config_validation.py -v
+  run: uv run --frozen pytest tests/test_infrastructure_config_validation.py -v
 
 - name: Check test memory safety
   run: python scripts/check_test_memory_safety.py

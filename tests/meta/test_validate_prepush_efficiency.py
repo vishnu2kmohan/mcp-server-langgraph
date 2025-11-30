@@ -22,6 +22,7 @@ Related Issues:
 - CI/CD pipeline optimization
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -30,8 +31,13 @@ import pytest
 pytestmark = pytest.mark.meta
 
 
+@pytest.mark.xdist_group(name="validate_prepush_efficiency")
 class TestValidatePrePushEfficiency:
     """Validates validate-pre-push doesn't duplicate work."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @property
     def makefile_path(self) -> Path:
@@ -55,21 +61,35 @@ class TestValidatePrePushEfficiency:
         assert re.search(r"^validate-pre-push:", content, re.MULTILINE), "validate-pre-push target not found in Makefile"
 
     def test_validate_pre_push_has_phases(self):
-        """Verify validate-pre-push has multiple phases with progress indicators."""
+        """Verify validate-pre-push has multiple phases with progress indicators.
+
+        Note: validate-pre-push-quick delegates to sub-targets:
+        - _validate-pre-push-phases-1-2 (contains PHASE 1, 2)
+        - inline PHASE 3
+        - _validate-pre-push-phase-4 (contains PHASE 4)
+
+        We need to check the combined content of all these targets.
+        """
         content = self.makefile_path.read_text()
 
-        # Find the validate-pre-push-quick target (where implementation lives)
-        match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        # Extract all three targets that make up validate-pre-push-quick
+        quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        phases_1_2_match = re.search(r"^_validate-pre-push-phases-1-2:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        phase_4_match = re.search(r"^_validate-pre-push-phase-4:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
 
-        assert match, "Could not find validate-pre-push-quick target"
+        assert quick_match, "Could not find validate-pre-push-quick target"
+        assert phases_1_2_match, "Could not find _validate-pre-push-phases-1-2 target"
+        assert phase_4_match, "Could not find _validate-pre-push-phase-4 target"
 
-        target_content = match.group(0)
+        # Combine all target content
+        combined_content = quick_match.group(0) + "\n" + phases_1_2_match.group(0) + "\n" + phase_4_match.group(0)
 
         # Should have PHASE markers for visibility
-        phases = re.findall(r"PHASE \d+:", target_content)
+        phases = re.findall(r"PHASE \d+:", combined_content)
         assert len(phases) >= 3, (
-            f"Expected at least 3 phases in validate-pre-push-quick, found {len(phases)}\n"
-            f"Phases provide explicit progress visibility (user-selected hybrid approach)"
+            f"Expected at least 3 phases in validate-pre-push-quick (combined), found {len(phases)}\n"
+            f"Phases provide explicit progress visibility (user-selected hybrid approach)\n"
+            f"Targets checked: validate-pre-push-quick, _validate-pre-push-phases-1-2, _validate-pre-push-phase-4"
         )
 
     def test_manual_phases_run_critical_checks(self):
@@ -80,13 +100,23 @@ class TestValidatePrePushEfficiency:
         - uv lock --check (Phase 1)
         - MyPy (Phase 2)
         - Test suite (Phase 3)
+
+        Note: validate-pre-push-quick delegates to internal targets, so we need to
+        check both the main target and its delegated targets for the commands.
         """
         content = self.makefile_path.read_text()
 
-        match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        # Find main target
+        quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        assert quick_match, "Could not find validate-pre-push-quick target"
 
-        assert match, "Could not find validate-pre-push-quick target"
-        target_content = match.group(0)
+        # Find delegated targets (internal targets start with _)
+        phases_1_2_match = re.search(r"^_validate-pre-push-phases-1-2:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
+
+        # Combine content from main target and delegated targets
+        target_content = quick_match.group(0)
+        if phases_1_2_match:
+            target_content += "\n" + phases_1_2_match.group(0)
 
         # Critical checks that should be manual for visibility
         critical_checks = {
@@ -110,13 +140,21 @@ class TestValidatePrePushEfficiency:
 
         Example:
             SKIP=uv-lock-check,mypy,run-pre-push-tests pre-commit run ...
+
+        Note: validate-pre-push-quick delegates to _validate-pre-push-phase-4 for
+        the pre-commit run invocation, so we need to check that target too.
         """
         content = self.makefile_path.read_text()
 
-        match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        # Check validate-pre-push-quick and its delegated target _validate-pre-push-phase-4
+        quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        phase4_match = re.search(r"^_validate-pre-push-phase-4:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
 
-        assert match, "Could not find validate-pre-push target"
-        target_content = match.group(0)
+        assert quick_match, "Could not find validate-pre-push-quick target"
+        assert phase4_match, "Could not find _validate-pre-push-phase-4 target"
+
+        # Combine content from main target and delegated target
+        target_content = quick_match.group(0) + "\n" + phase4_match.group(0)
 
         # Find the pre-commit run invocation (Phase 4)
         # Look for lines with pre-commit run, capturing any preceding SKIP= env var
@@ -125,7 +163,9 @@ class TestValidatePrePushEfficiency:
             if "pre-commit run" in line:
                 precommit_lines.append(line)
 
-        assert len(precommit_lines) > 0, "No 'pre-commit run' invocation found in validate-pre-push"
+        assert len(precommit_lines) > 0, (
+            "No 'pre-commit run' invocation found in validate-pre-push or _validate-pre-push-phase-4"
+        )
 
         # At least one invocation should use SKIP to avoid duplicates
         has_skip = any("SKIP=" in line for line in precommit_lines)
@@ -152,13 +192,21 @@ class TestValidatePrePushEfficiency:
         - uv-pip-check (run manually in Phase 1)
         - mypy (run manually in Phase 2)
         - run-pre-push-tests (run manually in Phase 3)
+
+        Note: validate-pre-push-quick delegates to _validate-pre-push-phase-4 for
+        the pre-commit run invocation, so we need to check that target too.
         """
         content = self.makefile_path.read_text()
 
-        match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        # Check validate-pre-push-quick and its delegated target _validate-pre-push-phase-4
+        quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        phase4_match = re.search(r"^_validate-pre-push-phase-4:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
 
-        assert match, "Could not find validate-pre-push target"
-        target_content = match.group(0)
+        assert quick_match, "Could not find validate-pre-push-quick target"
+        assert phase4_match, "Could not find _validate-pre-push-phase-4 target"
+
+        # Combine content from main target and delegated target
+        target_content = quick_match.group(0) + "\n" + phase4_match.group(0)
 
         # Find SKIP= assignments
         skip_matches = re.findall(r"SKIP=([^\s]+)", target_content)
@@ -190,36 +238,36 @@ class TestValidatePrePushEfficiency:
             "in Phase 4 to avoid duplicate execution."
         )
 
-    def test_validation_hooks_skipped_to_avoid_duplication_with_pytest_tests(self):
+    def test_validation_hooks_run_for_ci_local_parity(self):
         """
-        Verify validation hooks are skipped in Phase 4 (Finding: Duplicate validation hooks).
+        Verify validation hooks are NOT skipped in Phase 4 (CI/local parity requirement).
 
-        Background:
-        - Phase 3 runs pytest tests (run_pre_push_tests.py) including tests in tests/meta/
-        - These pytest tests validate patterns comprehensively:
-          - test_validator_consistency.py: Validates check-test-memory-safety script
-          - test_pytest_xdist_enforcement.py: Validates memory safety patterns
-          - test_pytest_config_validation.py: Validates pytest configuration
-          - And more...
-        - Phase 4 runs pre-commit hooks including validation scripts
+        Background (Codex Finding #2 Fix - 2025-11-23):
+        - Validation hooks (validate-pytest-config, check-test-memory-safety, etc.)
+          were REMOVED from the SKIP list to maintain CI/local parity
+        - These hooks must run locally to match CI behavior
+        - While they duplicate some pytest test coverage, they catch different issues
 
-        Issue:
-        - Running both pytest tests AND validation hooks is duplicate work
-        - Pytest tests are more comprehensive and catch issues earlier
-        - Validation hooks re-validate what pytest already validated
+        Design Decision:
+        - CI/local parity is more important than avoiding 30-60 seconds of duplicate work
+        - Pre-commit hooks validate at file-change level (staged files)
+        - Pytest tests validate at code-level (executed assertions)
+        - Both are valuable and catch different types of issues
 
-        Solution:
-        - Add validation hooks to SKIP list in Phase 4
-        - Saves 30-60 seconds per push
-        - Reduces duplicate log noise
+        Note: validate-pre-push-quick delegates to _validate-pre-push-phase-4 for
+        the pre-commit run invocation, so we need to check that target too.
         """
         content = self.makefile_path.read_text()
 
-        # Find validate-pre-push-quick target
-        match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        # Check validate-pre-push-quick and its delegated target _validate-pre-push-phase-4
+        quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        phase4_match = re.search(r"^_validate-pre-push-phase-4:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
 
-        assert match, "Could not find validate-pre-push-quick target"
-        target_content = match.group(0)
+        assert quick_match, "Could not find validate-pre-push-quick target"
+        assert phase4_match, "Could not find _validate-pre-push-phase-4 target"
+
+        # Combine content from main target and delegated target
+        target_content = quick_match.group(0) + "\n" + phase4_match.group(0)
 
         # Extract SKIP value from pre-commit invocation
         precommit_lines = []
@@ -244,27 +292,25 @@ class TestValidatePrePushEfficiency:
         skip_value = skip_match.group(1)
         skipped_hooks = set(skip_value.split(","))
 
-        # Validation hooks that should be skipped (redundant with pytest tests)
-        required_validation_skips = {
-            "validate-pytest-config",  # Covered by test_pytest_config_validation.py
-            "check-test-memory-safety",  # Covered by test_validator_consistency.py, test_pytest_xdist_enforcement.py
-            "check-async-mock-usage",  # Covered by test_validator_consistency.py
-            "validate-test-ids",  # Covered by test_validator_consistency.py
+        # Validation hooks that should NOT be skipped (required for CI/local parity)
+        # Per Codex Finding #2 Fix (2025-11-23): These were deliberately removed from SKIP list
+        validation_hooks_that_must_run = {
+            "validate-pytest-config",
+            "check-test-memory-safety",
+            "check-async-mock-usage",
+            "validate-test-ids",
         }
 
-        missing_skips = required_validation_skips - skipped_hooks
+        # These hooks should NOT be in the SKIP list
+        incorrectly_skipped = validation_hooks_that_must_run & skipped_hooks
 
-        assert not missing_skips, (
-            f"SKIP variable missing validation hooks: {missing_skips}\n\n"
-            f"Current SKIP: {skip_value}\n"
-            f"Required additional SKIPs: {','.join(sorted(required_validation_skips))}\n\n"
-            "These validation hooks are redundant with comprehensive pytest tests:\n"
-            "- test_validator_consistency.py validates the validation scripts\n"
-            "- test_pytest_xdist_enforcement.py validates memory safety patterns\n"
-            "- test_pytest_config_validation.py validates pytest configuration\n"
-            "- And more...\n\n"
-            "Running both pytest tests AND validation hooks duplicates work.\n"
-            "Add these hooks to SKIP to save 30-60 seconds per push."
+        assert not incorrectly_skipped, (
+            f"Validation hooks incorrectly skipped: {incorrectly_skipped}\n\n"
+            f"Current SKIP: {skip_value}\n\n"
+            "Per Codex Finding #2 Fix (2025-11-23):\n"
+            "These validation hooks were REMOVED from SKIP to maintain CI/local parity.\n"
+            "They must run locally to match CI behavior.\n\n"
+            "See _validate-pre-push-phase-4 in Makefile for the comment explaining this."
         )
 
     def test_integration_tests_respect_ci_parity_flag(self):
@@ -295,13 +341,21 @@ class TestValidatePrePushEfficiency:
         Verify validate-pre-push documents why hooks are skipped.
 
         Good UX: Comments explaining the SKIP variable help future maintainers.
+
+        Note: validate-pre-push-quick delegates to _validate-pre-push-phase-4 for
+        the pre-commit run invocation, so we need to check that target too.
         """
         content = self.makefile_path.read_text()
 
-        match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        # Check validate-pre-push-quick and its delegated target _validate-pre-push-phase-4
+        quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        phase4_match = re.search(r"^_validate-pre-push-phase-4:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
 
-        assert match, "Could not find validate-pre-push target"
-        target_content = match.group(0)
+        assert quick_match, "Could not find validate-pre-push-quick target"
+        assert phase4_match, "Could not find _validate-pre-push-phase-4 target"
+
+        # Combine content from main target and delegated target
+        target_content = quick_match.group(0) + "\n" + phase4_match.group(0)
 
         # If SKIP is used, there should be a comment nearby explaining it
         if "SKIP=" in target_content:
@@ -328,8 +382,13 @@ class TestValidatePrePushEfficiency:
                     )
 
 
+@pytest.mark.xdist_group(name="validate_prepush_performance")
 class TestValidatePrePushPerformance:
     """Validates validate-pre-push performance characteristics."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @property
     def makefile_path(self) -> Path:
@@ -344,18 +403,36 @@ class TestValidatePrePushPerformance:
         Each test command (run_pre_push_tests.py, test-integration.sh, pytest)
         should appear at most once in the manual phases, with pre-commit hooks
         properly skipped.
+
+        Note: validate-pre-push-quick delegates to _validate-pre-push-phases-1-2
+        and _validate-pre-push-phase-4, so we need to check all targets combined.
         """
         content = self.makefile_path.read_text()
 
-        # Check validate-pre-push-quick (no integration tests)
+        # Check validate-pre-push-quick and its delegated targets
         match_quick = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
         assert match_quick, "Could not find validate-pre-push-quick target"
         quick_content = match_quick.group(0)
 
-        # Check validate-pre-push-full (with integration tests)
+        # Also include delegated targets for quick (phases-1-2 and phase-4)
+        match_phases_1_2 = re.search(r"^_validate-pre-push-phases-1-2:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
+        match_phase_4 = re.search(r"^_validate-pre-push-phase-4:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
+
+        if match_phases_1_2:
+            quick_content += "\n" + match_phases_1_2.group(0)
+        if match_phase_4:
+            quick_content += "\n" + match_phase_4.group(0)
+
+        # Check validate-pre-push-full and its delegated targets
         match_full = re.search(r"^validate-pre-push-full:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
         assert match_full, "Could not find validate-pre-push-full target"
         full_content = match_full.group(0)
+
+        # Also include delegated targets for full
+        if match_phases_1_2:
+            full_content += "\n" + match_phases_1_2.group(0)
+        if match_phase_4:
+            full_content += "\n" + match_phase_4.group(0)
 
         # Count invocations in quick target
         run_pre_push_count_quick = quick_content.count("run_pre_push_tests.py")
@@ -379,20 +456,19 @@ class TestValidatePrePushPerformance:
         )
 
         assert mypy_count_quick == 1, (
-            f"MyPy appears {mypy_count_quick} times in quick\n"
-            f"Expected: 1 (manual phase only, skipped in pre-commit via SKIP)"
+            f"MyPy appears {mypy_count_quick} times in quick\nExpected: 1 (manual phase only, skipped in pre-commit via SKIP)"
         )
 
         # Full target: same plus integration tests once
         assert run_pre_push_count_full == 1, (
-            f"run_pre_push_tests.py appears {run_pre_push_count_full} times in full\n" f"Expected: 1 (manual phase only)"
+            f"run_pre_push_tests.py appears {run_pre_push_count_full} times in full\nExpected: 1 (manual phase only)"
         )
 
         assert test_integration_count_full == 1, (
-            f"test-integration.sh appears {test_integration_count_full} times in full\n" f"Expected: 1 (manual phase only)"
+            f"test-integration.sh appears {test_integration_count_full} times in full\nExpected: 1 (manual phase only)"
         )
 
-        assert mypy_count_full == 1, f"MyPy appears {mypy_count_full} times in full\n" f"Expected: 1 (manual phase only)"
+        assert mypy_count_full == 1, f"MyPy appears {mypy_count_full} times in full\nExpected: 1 (manual phase only)"
 
     def test_progress_indicators_for_user_experience(self):
         """
@@ -400,13 +476,25 @@ class TestValidatePrePushPerformance:
 
         The hybrid approach values explicit progress visibility, so manual
         phases should have echo statements showing what's running.
+
+        Note: validate-pre-push-quick delegates to _validate-pre-push-phases-1-2
+        and _validate-pre-push-phase-4, so we need to check all targets.
         """
         content = self.makefile_path.read_text()
 
-        match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        # Check validate-pre-push-quick and all its delegated targets
+        quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        phases_1_2_match = re.search(r"^_validate-pre-push-phases-1-2:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
+        phase_4_match = re.search(r"^_validate-pre-push-phase-4:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
 
-        assert match, "Could not find validate-pre-push target"
-        target_content = match.group(0)
+        assert quick_match, "Could not find validate-pre-push-quick target"
+
+        # Combine content from main target and all delegated targets
+        target_content = quick_match.group(0)
+        if phases_1_2_match:
+            target_content += "\n" + phases_1_2_match.group(0)
+        if phase_4_match:
+            target_content += "\n" + phase_4_match.group(0)
 
         # Count progress indicators (echo statements with ▶ or similar)
         progress_indicators = len(re.findall(r"@echo.*[▶✓✗]", target_content))
@@ -418,8 +506,13 @@ class TestValidatePrePushPerformance:
         )
 
 
+@pytest.mark.xdist_group(name="validate_prepush_documentation")
 class TestValidatePrePushDocumentation:
     """Validates validate-pre-push target is well-documented."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @property
     def makefile_path(self) -> Path:

@@ -191,6 +191,6 @@ class TestE2EInfrastructure:
         # CRITICAL: Verify it points to the TEST infrastructure port, not default port
         # If fixture uses wrong field name (keycloak_url), Settings silently ignores it and uses default
         test_port = test_infrastructure_ports["keycloak"]
-        assert (
-            str(test_port) in test_app_settings.keycloak_server_url
-        ), f"keycloak_server_url must point to test port {test_port}, got {test_app_settings.keycloak_server_url}"
+        assert str(test_port) in test_app_settings.keycloak_server_url, (
+            f"keycloak_server_url must point to test port {test_port}, got {test_app_settings.keycloak_server_url}"
+        )

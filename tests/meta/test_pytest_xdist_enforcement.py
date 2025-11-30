@@ -15,6 +15,11 @@ This is a "test of the tests" - meta-validation that our guardrails work.
 References:
 - ADR-0052: Pytest-xdist Isolation Strategy
 - OpenAI Codex Findings: All resolved issues
+
+Performance Optimization (2025-11-27):
+- Uses tests/validation_lib/ast_cache for cached file reading and AST parsing
+- Fast regex checks used for presence detection (1000x faster than AST)
+- AST parsing reserved for structural analysis only
 """
 
 import ast
@@ -22,6 +27,12 @@ import gc
 from pathlib import Path
 
 import pytest
+
+from tests.validation_lib.ast_cache import (
+    cached_parse_ast,
+    cached_read_file,
+    has_xdist_group,
+)
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = pytest.mark.unit
@@ -49,9 +60,9 @@ class TestEnforcementMechanisms:
         root = Path(__file__).parent.parent.parent
 
         required_scripts = [
-            "scripts/validation/check_test_memory_safety.py",
-            "scripts/validation/validate_test_isolation.py",
-            "scripts/validation/validate_test_fixtures.py",
+            "scripts/validators/check_test_memory_safety.py",
+            "scripts/validators/validate_test_isolation.py",
+            "scripts/validators/validate_test_fixtures.py",
         ]
 
         for script_path in required_scripts:
@@ -70,12 +81,14 @@ class TestEnforcementMechanisms:
 
         assert pre_commit_config.exists(), "Pre-commit config missing"
 
-        content = pre_commit_config.read_text()
+        content = cached_read_file(str(pre_commit_config))
 
         # Verify critical hooks exist
+        # Note: check-async-mock-usage was renamed to check-async-mock-configuration
+        # per commit 5268d9a8 (remove duplicate AsyncMock hook)
         required_hooks = [
             "check-test-memory-safety",
-            "check-async-mock-usage",
+            "check-async-mock-configuration",
             "validate-test-isolation",
             "validate-test-fixtures",
         ]
@@ -114,7 +127,7 @@ class TestEnforcementMechanisms:
         assert worker_utils.exists(), "Worker utils library missing"
 
         # Verify it exports required functions
-        content = worker_utils.read_text()
+        content = cached_read_file(str(worker_utils))
 
         required_functions = [
             "get_worker_id",
@@ -143,13 +156,13 @@ class TestEnforcementMechanisms:
         conftest = root / "tests" / "conftest.py"
         database_fixtures = root / "tests" / "fixtures" / "database_fixtures.py"
 
-        content_conftest = conftest.read_text()
-        content_db = database_fixtures.read_text()
+        content_conftest = cached_read_file(str(conftest))
+        content_db = cached_read_file(str(database_fixtures))
 
         # test_infrastructure_ports should use FIXED ports (current architecture)
-        assert (
-            "PYTEST_XDIST_WORKER" in content_conftest or "test_infrastructure_ports" in content_db
-        ), "Worker-aware logic missing"
+        assert "PYTEST_XDIST_WORKER" in content_conftest or "test_infrastructure_ports" in content_db, (
+            "Worker-aware logic missing"
+        )
 
         # postgres_connection_clean should use worker schema
         assert "test_worker_" in content_db, "Worker-scoped schema missing from database_fixtures.py"
@@ -185,7 +198,7 @@ class TestEnforcementMechanisms:
         root = Path(__file__).parent.parent.parent
         adr = root / "adr" / "adr-0052-pytest-xdist-isolation-strategy.md"
 
-        content = adr.read_text()
+        content = cached_read_file(str(adr))
 
         # Should reference regression tests
         assert "test_pytest_xdist_port_conflicts" in content
@@ -201,7 +214,7 @@ class TestEnforcementMechanisms:
         root = Path(__file__).parent.parent.parent
         best_practices = root / "tests" / "PYTEST_XDIST_BEST_PRACTICES.md"
 
-        content = best_practices.read_text()
+        content = cached_read_file(str(best_practices))
 
         # Should have worker isolation section
         assert "Worker-Scoped Resource Isolation" in content
@@ -672,11 +685,11 @@ class TestXdistGroupCoverage:
         Extract all pytest markers from a test file using AST parsing.
 
         Returns set of marker names (e.g., {'unit', 'integration', 'meta'})
+
+        Note: Uses cached_parse_ast for performance in CI.
         """
-        try:
-            content = file_path.read_text()
-            tree = ast.parse(content, filename=str(file_path))
-        except (SyntaxError, UnicodeDecodeError):
+        tree, _ = cached_parse_ast(str(file_path))
+        if tree is None:
             return set()
 
         markers = set()
@@ -708,25 +721,27 @@ class TestXdistGroupCoverage:
                         # pytestmark = [pytest.mark.integration, pytest.mark.unit]
                         elif isinstance(node.value, ast.List):
                             for elt in node.value.elts:
+                                # Handle @pytest.mark.integration (Attribute)
                                 if isinstance(elt, ast.Attribute):
                                     if isinstance(elt.value, ast.Attribute) and elt.value.attr == "mark":
                                         markers.add(elt.attr)
+                                # Handle @pytest.mark.xdist_group(...) (Call with args)
+                                elif isinstance(elt, ast.Call):
+                                    if isinstance(elt.func, ast.Attribute):
+                                        if isinstance(elt.func.value, ast.Attribute) and elt.func.value.attr == "mark":
+                                            markers.add(elt.func.attr)
 
         return markers
 
     def _has_xdist_group_marker(self, file_path: Path) -> bool:
         """
-        Check if a file has any xdist_group markers using AST parsing.
+        Check if a file has any xdist_group markers using fast regex.
 
         Returns True if file contains @pytest.mark.xdist_group(...)
-        """
-        try:
-            content = file_path.read_text()
-        except (UnicodeDecodeError, FileNotFoundError):
-            return False
 
-        # Simple string search for xdist_group
-        return "xdist_group" in content
+        Note: Uses has_xdist_group from ast_cache for 1000x faster detection.
+        """
+        return has_xdist_group(str(file_path))
 
     def test_all_integration_tests_have_xdist_group_marker(self):
         """
@@ -827,8 +842,8 @@ class TestXdistGroupCoverage:
 
             # File has xdist_group - must have teardown_method with gc.collect()
             try:
-                content = test_file.read_text()
-            except (UnicodeDecodeError, FileNotFoundError):
+                content = cached_read_file(str(test_file))
+            except OSError:
                 continue
 
             # Check for teardown_method
@@ -842,7 +857,7 @@ class TestXdistGroupCoverage:
 
         if missing_teardown:
             error_msg = (
-                f"Found {len(missing_teardown)} files with xdist_group but missing " "teardown_method() with gc.collect():\n\n"
+                f"Found {len(missing_teardown)} files with xdist_group but missing teardown_method() with gc.collect():\n\n"
             )
             for rel_path in missing_teardown:
                 error_msg += f"  - {rel_path}\n"
@@ -921,7 +936,7 @@ class TestXdistGroupCoverage:
             import warnings
 
             warnings.warn(
-                f"Integration test xdist_group coverage: {coverage_percentage:.1f}% " f"(target: {TARGET_COVERAGE}%)",
+                f"Integration test xdist_group coverage: {coverage_percentage:.1f}% (target: {TARGET_COVERAGE}%)",
                 UserWarning,
                 stacklevel=2,
             )

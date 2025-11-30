@@ -6,6 +6,10 @@ Date: 2025-10-11
 
 Accepted
 
+## Category
+
+Core Architecture
+
 ## Context
 
 The MCP server needs to support multiple LLM providers to offer flexibility, avoid vendor lock-in, and enable fallback mechanisms for high availability. Users may want to:

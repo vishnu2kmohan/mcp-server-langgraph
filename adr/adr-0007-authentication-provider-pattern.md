@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Core Architecture
+
 ## Context
 
 Enterprise applications require integration with existing identity providers (Keycloak, Okta, Auth0, Azure AD), while development and testing environments benefit from simpler authentication mechanisms. A hardcoded authentication approach creates several problems:

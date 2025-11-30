@@ -46,9 +46,9 @@ def test_get_integration_test_file_returns_valid_path():
     # Assert: Path is correct
     assert isinstance(result, Path), "Should return a Path object"
     assert result.is_absolute(), "Should return absolute path, not relative"
-    assert "tests/integration/api/test_api_keys_endpoints.py" in str(
-        result
-    ), f"Path should contain integration/api structure, got: {result}"
+    assert "tests/integration/api/test_api_keys_endpoints.py" in str(result), (
+        f"Path should contain integration/api structure, got: {result}"
+    )
     assert result.name == "test_api_keys_endpoints.py", f"Filename should be test_api_keys_endpoints.py, got: {result.name}"
 
 

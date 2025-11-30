@@ -76,21 +76,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Full history for accurate metrics
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Install dependencies
-        run: |
-          uv pip install --system -e .[monitoring]
+          extras: 'monitoring'
+          cache-key-prefix: 'dora-metrics'
 
       - name: Calculate DORA metrics
         id: calculate
@@ -138,7 +133,7 @@ jobs:
     needs: calculate-metrics
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Download metrics
         uses: actions/download-artifact@v6

@@ -6,6 +6,10 @@ Date: 2025-10-11
 
 Accepted
 
+## Category
+
+Core Architecture
+
 ## Context
 
 Production systems require comprehensive observability to:

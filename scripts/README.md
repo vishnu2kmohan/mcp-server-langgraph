@@ -1,8 +1,12 @@
 # Scripts Directory
 
-This directory contains 172+ scripts for deployment, validation, testing, and automation.
+This directory contains 192 scripts for deployment, validation, testing, and automation.
 
 **📋 Complete Inventory**: See [SCRIPT_INVENTORY.md](./SCRIPT_INVENTORY.md) for comprehensive categorization of all scripts by usage, priority, and status.
+
+**Last Inventory Update**: 2025-11-24 (192 scripts: 143 Python, 49 Shell)
+**Actively Used**: 65 scripts (33.9%) - Used in hooks, Makefile, or workflows
+**Unused/Utilities**: 127 scripts (66.1%) - Available for archival or development use
 
 ---
 
@@ -266,7 +270,7 @@ make docs-validate-links
 ```
 
 **Validates**:
-- Markdown links: `[text](../path.mdx)`
+- Markdown links: `[text] (path/to/file.mdx)`
 - Absolute links: `[text](/api-reference/auth)`
 - MDX Link components: `<Link href="/path">text</Link>`
 - Card/Button hrefs: `<Card href="/path">`

@@ -1,19 +1,19 @@
 ---
-title: 'ADR-0042: Dependency Injection Configuration Fixes'
-description: 'OpenAI Codex identified three critical runtime failures and two high-priority configuration issues in our dependency injection system that would cause production outages.'
-icon: 'file-lines'
-seoTitle: "ADR-0042: Dependency Injection Configuration Fixes"
-seoDescription: "Architecture Decision Record 0042: OpenAI Codex identified critical runtime failures and configuration issues in dependency injection system"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "ADR-0042", "dependency injection", "configuration", "Keycloak", "OpenFGA", "Redis", "security"]
-contentType: "explanation"
+title: "42. Dependency Injection Configuration Fixes"
+description: "Architecture Decision Record: 42. Dependency Injection Configuration Fixes"
 ---
 
-# ADR-0042: Dependency Injection Configuration Fixes
+# 42. Dependency Injection Configuration Fixes
 
-**Status**: Accepted
-**Date**: 2025-01-28
-**Deciders**: Engineering Team
-**Related**: OpenAI Codex Security Review
+Date: 2025-01-28
+
+## Status
+
+Accepted
+
+## Category
+
+Core Architecture
 
 ## Context
 
@@ -76,6 +76,7 @@ keycloak_config = KeycloakConfig(
     admin_password=settings.keycloak_admin_password,  # ADDED
 )
 ```
+
 **Impact**:
 - ✅ Admin API operations now authenticate correctly
 - ✅ API key manager can create/delete keys
@@ -152,6 +153,7 @@ def __init__(self, keycloak_client: KeycloakClient, openfga_client: Optional[Ope
     self.keycloak = keycloak_client
     self.openfga = openfga_client
 ```
+
 #### 3b. Guard `_sync_to_openfga` Method
 ```python
 # Line 209-211: Check if OpenFGA is available
@@ -173,6 +175,7 @@ async def _sync_to_openfga(...) -> None:
 if inherit_permissions and self.openfga is not None:
     await self.openfga.write_tuples([...])
 ```
+
 #### 3d. Guard `delete_service_principal` Method
 ```python
 # Line 426-427: Guard OpenFGA cleanup
@@ -237,6 +240,7 @@ def __init__(
         socket_timeout=2,
     )
 ```
+
 **Updated**: `get_cache()` function to pass all settings:
 ```python
 def get_cache() -> CacheService:
@@ -339,6 +343,7 @@ Ensure environment variables are set:
 KEYCLOAK_ADMIN_USERNAME=admin
 KEYCLOAK_ADMIN_PASSWORD=<secure-password>
 ```
+
 #### For OpenFGA Authorization
 Either configure fully or accept degraded mode:
 ```bash
@@ -378,8 +383,8 @@ REDIS_SSL=true
 ## References
 
 - OpenAI Codex Security Review (2025-01-28)
-- [ADR-0034](/architecture/adr-0034-api-key-jwt-exchange): API Key to JWT Exchange Pattern
-- [ADR-0033](/architecture/adr-0033-service-principal-design): Service Principal Design
+- [ADR-0034](./adr-0034-api-key-jwt-exchange.md): API Key JWT Exchange
+- [ADR-0033](./adr-0033-service-principal-design.md): Service Principal Design
 - Production Incident: Revision 758b8f744 (Redis password encoding)
 
 ## Verification

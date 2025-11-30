@@ -6,6 +6,10 @@ Date: 2025-10-15
 
 Accepted
 
+## Category
+
+Data & Storage
+
 ## Context
 
 The MCP Server uses LangGraph's checkpointing feature to maintain multi-turn conversation state. Previously, conversations were stored using `MemorySaver` (in-memory), which creates critical problems for production deployments with horizontal pod autoscaling (HPA):

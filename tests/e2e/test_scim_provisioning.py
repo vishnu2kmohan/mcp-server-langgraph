@@ -38,7 +38,8 @@ def api_server_available() -> bool:
 
     async def _check():
         try:
-            async with httpx.AsyncClient() as client:
+            # nosec B501: verify=False is intentional for E2E tests against local dev servers
+            async with httpx.AsyncClient(verify=False) as client:  # nosec B501
                 response = await client.get(f"{API_BASE_URL}/health", timeout=5.0)
                 return response.status_code == 200
         except (httpx.ConnectError, httpx.TimeoutException):
@@ -54,7 +55,8 @@ def keycloak_available() -> bool:
 
     async def _check():
         try:
-            async with httpx.AsyncClient() as client:
+            # nosec B501: verify=False is intentional for E2E tests against local dev servers
+            async with httpx.AsyncClient(verify=False) as client:  # nosec B501
                 response = await client.get(f"{KEYCLOAK_TEST_URL}/health/ready", timeout=5.0)
                 return response.status_code == 200
         except (httpx.ConnectError, httpx.TimeoutException):

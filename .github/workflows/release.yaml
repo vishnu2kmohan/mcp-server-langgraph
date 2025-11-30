@@ -84,7 +84,7 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -100,7 +100,7 @@ jobs:
         REF_NAME: ${{ github.ref_name }}
         REPOSITORY: ${{ github.repository }}
       run: |
-        uv run python scripts/ci/extract-changelog.py \
+        uv run --frozen python scripts/ci/extract-changelog.py \
           "$REF_NAME" \
           --changelog CHANGELOG.md \
           --output release_notes.md \
@@ -140,13 +140,12 @@ jobs:
           - linux/arm64
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3.7.0
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3.11.1
+    - name: Set up Docker Buildx (multiplatform)
+      uses: ./.github/actions/setup-docker-buildx
+      with:
+        enable-qemu: 'true'
 
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@v3.6.0
@@ -177,7 +176,7 @@ jobs:
           type=gha,mode=max,scope=build-base
 
     - name: Generate SBOM
-      uses: anchore/sbom-action@v0.20.9
+      uses: anchore/sbom-action@v0.20.10
       with:
         format: spdx-json
         output-file: sbom-${{ matrix.platform }}.spdx.json
@@ -197,7 +196,7 @@ jobs:
     timeout-minutes: 10
     steps:
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3.11.1
+      uses: ./.github/actions/setup-docker-buildx
 
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@v3.6.0
@@ -263,7 +262,7 @@ jobs:
     needs: create-release
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Set up Helm
       uses: azure/setup-helm@v4.3.1
@@ -334,24 +333,14 @@ jobs:
     if: "!contains(github.ref_name, 'alpha') && !contains(github.ref_name, 'beta')"
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-
-    - name: Install build tools
-      run: |
-        # Install release tools (build, twine) from pyproject.toml extras
-        # Installed to system Python to be available for python -m build
-        uv pip install --system -e .[release-tools]
-        echo "✓ Release tools installed to active interpreter"
+        extras: 'release-tools'
+        cache-key-prefix: 'release-pypi'
 
     - name: Build package
       run: |
@@ -374,7 +363,7 @@ jobs:
     if: "!contains(github.ref_name, 'alpha') && !contains(github.ref_name, 'beta')"
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Update manifest version
       run: |

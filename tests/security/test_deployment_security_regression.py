@@ -12,10 +12,36 @@ Test Coverage:
 """
 
 import gc
+import re
 from pathlib import Path
 
 import pytest
 import yaml
+
+
+def validate_gcp_service_account_email(email: str) -> bool:
+    """
+    Validate GCP Service Account email format.
+
+    Security: Uses strict regex validation instead of substring matching
+    to prevent bypass attacks (e.g., "evil.iam.gserviceaccount.com.attacker.com").
+
+    Expected format: <name>@<project-id>.iam.gserviceaccount.com
+    Where:
+    - name: 6-30 lowercase letters, digits, hyphens (must start with letter)
+    - project-id: 6-30 lowercase letters, digits, hyphens
+
+    Args:
+        email: The service account email to validate
+
+    Returns:
+        True if valid GCP service account email format, False otherwise
+    """
+    # GCP Service Account email regex pattern
+    # See: https://cloud.google.com/iam/docs/service-accounts#service_account_naming
+    pattern = r"^[a-z][a-z0-9-]{5,29}@[a-z][a-z0-9-]{5,29}\.iam\.gserviceaccount\.com$"
+    return bool(re.match(pattern, email))
+
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
@@ -166,8 +192,11 @@ class TestOpenFGAWorkloadIdentity:
         gcp_sa = annotations["iam.gke.io/gcp-service-account"]
 
         # Verify format: <sa-name>@<project-id>.iam.gserviceaccount.com
-        assert "@" in gcp_sa, "GCP service account should be in format: name@project.iam.gserviceaccount.com"
-        assert ".iam.gserviceaccount.com" in gcp_sa, "GCP service account should end with .iam.gserviceaccount.com"
+        # Security: Use strict regex validation instead of substring matching
+        # to prevent bypass attacks (e.g., "evil.iam.gserviceaccount.com.attacker.com")
+        assert validate_gcp_service_account_email(gcp_sa), (
+            f"GCP service account '{gcp_sa}' does not match expected format: <name>@<project-id>.iam.gserviceaccount.com"
+        )
 
     def test_openfga_serviceaccount_has_minimal_permissions_comment(self):
         """
@@ -186,9 +215,9 @@ class TestOpenFGAWorkloadIdentity:
             content = f.read()
 
         # Check for documentation of minimal permissions
-        assert (
-            "minimal permissions" in content.lower() or "least privilege" in content.lower()
-        ), "ServiceAccount should document minimal permissions principle"
+        assert "minimal permissions" in content.lower() or "least privilege" in content.lower(), (
+            "ServiceAccount should document minimal permissions principle"
+        )
 
 
 @pytest.mark.security
@@ -315,9 +344,9 @@ class TestHelmPlaceholderSecurity:
             if has_placeholders:
                 # If placeholders exist, verify they are documented
                 # Look for comments explaining they need to be replaced
-                assert (
-                    "# Replace with" in content or "TODO" in content or "# For" in content
-                ), f"{values_file.name} has placeholders but no documentation on replacing them"
+                assert "# Replace with" in content or "TODO" in content or "# For" in content, (
+                    f"{values_file.name} has placeholders but no documentation on replacing them"
+                )
 
     def test_helm_values_are_valid_yaml(self):
         """

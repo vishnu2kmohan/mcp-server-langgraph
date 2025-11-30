@@ -5,7 +5,6 @@ Tests HIPAA §164.312(b) and SOC2 CC6.6 - 7-year audit log retention
 """
 
 import gc
-import os
 from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta, timezone
 
@@ -17,7 +16,7 @@ from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry
 from tests.conftest import get_user_id
 
 # Mark as integration test with xdist_group for worker isolation
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="postgres_audit_log_store")]
 
 
 def teardown_module():

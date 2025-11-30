@@ -18,11 +18,15 @@ Test Coverage:
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+import os
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.infrastructure]
+
+# Use configurable Postgres port (default 9432 for test isolation)
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "9432")
 
 
 @pytest.mark.xdist_group(name="testgdprstorageinit")
@@ -79,7 +83,7 @@ class TestGDPRStorageInitialization:
         settings = Settings(
             environment="test",
             gdpr_storage_backend="memory",
-            gdpr_postgres_url="postgresql://test:test@localhost:5432/gdpr_test",
+            gdpr_postgres_url="postgresql://test:test@localhost:{POSTGRES_PORT}/gdpr_test",
         )
         container = create_test_container(settings=settings)
 
@@ -93,7 +97,7 @@ class TestGDPRStorageInitialization:
             async with lifespan:
                 # Should be called with settings from container
                 mock_init.assert_called_once_with(
-                    backend="memory", postgres_url="postgresql://test:test@localhost:5432/gdpr_test"
+                    backend="memory", postgres_url="postgresql://test:test@localhost:{POSTGRES_PORT}/gdpr_test"
                 )
 
     @pytest.mark.asyncio

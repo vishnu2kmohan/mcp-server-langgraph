@@ -99,7 +99,7 @@ VUs: 10, Duration: 5m
 
 ## Benchmark Results Archive
 
-See [RESULTS.md](./RESULTS.md) for historical benchmark data across versions and deployment configurations.
+Benchmark results are stored in this directory after running benchmarks.
 
 ## Comparison Methodology
 

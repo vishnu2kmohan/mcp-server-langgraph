@@ -54,24 +54,25 @@ jobs:
       validation_passed: ${{ steps.validate.outputs.passed }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Validate Kustomize configuration
         run: |
           kubectl kustomize deployments/overlays/staging-gke > /tmp/manifests.yaml
           echo "✅ Kustomize validation passed"
 
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          extras: 'dev'
+          cache-key-prefix: 'staging-kustomize-validate'
+
       - name: Validate Kustomize configuration correctness
         run: |
-          # Install dependencies for validation tests
-          sudo apt-get update && sudo apt-get install -y python3-pip python3-venv
-          python3 -m venv /tmp/venv
-          source /tmp/venv/bin/activate
-          pip install --quiet pyyaml pytest
-
           # Run Kustomize validation tests
           echo "Running Kustomize staging-gke validation tests..."
-          python -m pytest tests/kubernetes/test_kustomize_staging_gke.py -v
+          uv run --frozen pytest tests/kubernetes/test_kustomize_staging_gke.py -v
 
           echo "✅ Kustomize configuration correctness validated"
 
@@ -123,7 +124,7 @@ jobs:
       image_tag: ${{ steps.image.outputs.tag }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Validate required environment variables
         run: |
@@ -161,11 +162,11 @@ jobs:
       # Authenticate to Google Cloud using Workload Identity Federation (keyless)
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
+        uses: ./.github/actions/setup-gcp-auth
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
-          token_format: access_token
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
+          token-format: access_token
 
       # Configure Docker to use gcloud credentials
       - name: Configure Docker for Artifact Registry
@@ -173,7 +174,7 @@ jobs:
           echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.11.1
+        uses: ./.github/actions/setup-docker-buildx
 
       - name: Build and push image
         uses: docker/build-push-action@v6.18.0
@@ -214,15 +215,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Authenticate to Google Cloud
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
+        uses: ./.github/actions/setup-gcp-auth
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
 
       # Get GKE credentials
       - name: Get GKE Credentials
@@ -238,11 +239,13 @@ jobs:
           kubectl get nodes
 
       # Install kustomize
-      - name: Install kustomize
-        run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-          sudo mv kustomize /usr/local/bin/
-          kustomize version
+      - name: Set up Kustomize
+        uses: imranismail/setup-kustomize@v2
+        with:
+          kustomize-version: "5.0.0"
+
+      - name: Verify kustomize
+        run: kustomize version
 
       # Verify External Secrets Operator (installed by infrastructure script)
       - name: Verify External Secrets Operator
@@ -387,14 +390,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
+        uses: ./.github/actions/setup-gcp-auth
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
 
       - name: Get GKE Credentials
         uses: google-github-actions/get-gke-credentials@v3
@@ -488,10 +491,10 @@ jobs:
     steps:
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
+        uses: ./.github/actions/setup-gcp-auth
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
 
       - name: Get GKE Credentials
         uses: google-github-actions/get-gke-credentials@v3

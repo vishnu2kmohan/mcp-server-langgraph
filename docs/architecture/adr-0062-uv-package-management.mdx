@@ -1,0 +1,148 @@
+---
+title: "62. uv for Package Management"
+description: "Architecture Decision Record: 62. uv for Package Management"
+---
+
+# 62. uv for Package Management
+
+Date: 2025-11-29
+
+## Status
+
+Accepted
+
+## Category
+
+Development & Tooling
+
+## Context
+
+Python package management has historically been fragmented across multiple tools:
+
+- **pip**: Standard but slow, no lockfile by default
+- **poetry**: Popular but slow dependency resolution, complex pyproject.toml
+- **pipenv**: Deprecated in favor of poetry, slow
+- **conda**: Heavy, primarily for data science
+
+The project needs a package manager that:
+
+1. **Fast installation**: CI/CD pipelines run frequently
+2. **Reproducible builds**: Lockfile for exact dependency versions
+3. **Virtual environment management**: Isolated environments per project
+4. **pyproject.toml support**: Modern Python packaging standard
+5. **Cross-platform**: Works on Linux, macOS, Windows
+
+### Performance Comparison (cold cache, ~150 dependencies)
+
+| Tool | Install Time | Resolution Time |
+|------|-------------|-----------------|
+| pip | ~45s | N/A |
+| poetry | ~120s | ~60s |
+| uv | ~3s | ~1s |
+
+## Decision
+
+Use **uv** (by Astral) as the primary package manager for dependency installation and virtual environment management.
+
+### Key Reasons
+
+1. **Speed**: 10-100x faster than pip/poetry (written in Rust)
+2. **Drop-in Replacement**: Compatible with pip commands and requirements.txt
+3. **Lockfile Support**: `uv.lock` for reproducible builds
+4. **pyproject.toml**: Native support for modern Python packaging
+5. **Virtual Environments**: Built-in venv creation and management
+6. **Active Development**: Maintained by Astral (creators of ruff)
+
+### Usage Patterns
+
+```bash
+# Create virtual environment
+uv venv
+
+# Install dependencies from pyproject.toml
+uv sync
+
+# Install with optional dependencies
+uv sync --extra dev --extra test
+
+# Add a new dependency
+uv add httpx
+
+# Run commands in virtual environment
+uv run pytest tests/
+
+# Export to requirements.txt (for compatibility)
+uv pip compile pyproject.toml -o requirements.txt
+```
+
+### CI/CD Integration
+
+```yaml
+# .github/workflows/ci.yaml
+- name: Install uv
+  uses: astral-sh/setup-uv@v4
+
+- name: Install dependencies
+  run: uv sync --frozen --extra dev --extra test
+
+- name: Run tests
+  run: uv run pytest tests/
+```
+
+## Consequences
+
+### Positive
+
+- **CI Speed**: Dependency installation reduced from ~2min to ~10s
+- **Developer Experience**: Fast feedback loops during development
+- **Reproducibility**: `uv.lock` ensures identical environments
+- **Compatibility**: Works with existing pip/requirements.txt workflows
+- **Memory Efficient**: Low memory footprint during resolution
+
+### Negative
+
+- **New Tool**: Team must learn uv-specific commands
+- **Early Stage**: Less mature than poetry (but rapidly improving)
+- **Rust Dependency**: Requires Rust toolchain for some edge cases
+
+## Alternatives Considered
+
+### pip + pip-tools
+- **Rejected**: Slow installation, no built-in venv management
+- Requires manual lockfile generation with pip-compile
+
+### poetry
+- **Rejected**: Slow dependency resolution (minutes vs seconds)
+- Complex pyproject.toml format with poetry-specific sections
+- Memory-intensive for large dependency trees
+
+### pipenv
+- **Rejected**: Deprecated in favor of poetry
+- Slow, inconsistent behavior across platforms
+
+### pdm
+- **Considered**: Fast, PEP 582 support
+- **Rejected**: Smaller community, less CI/CD integration
+
+## Migration from Poetry
+
+```bash
+# Export poetry.lock to requirements.txt
+poetry export -f requirements.txt --output requirements.txt
+
+# Initialize uv
+uv init
+
+# Import dependencies
+uv add $(cat requirements.txt | grep -v '^#' | tr '\n' ' ')
+
+# Generate uv.lock
+uv lock
+```
+
+## References
+
+- Configuration: `pyproject.toml`, `uv.lock`
+- CI Integration: `.github/workflows/ci.yaml`
+- External: [uv Documentation](https://docs.astral.sh/uv/)
+- Related: [Astral](https://astral.sh/) (creators of uv and ruff)

@@ -240,9 +240,9 @@ class TestOpenFGARelationDefinitions:
         content = scim_file.read_text()
 
         # Should mention can_provision_users or similar relation
-        assert (
-            "can_provision" in content.lower() or "openfga" in content.lower()
-        ), "SCIM endpoints should document OpenFGA relations"
+        assert "can_provision" in content.lower() or "openfga" in content.lower(), (
+            "SCIM endpoints should document OpenFGA relations"
+        )
 
     def test_service_principal_relations_documented(self):
         """
@@ -258,9 +258,9 @@ class TestOpenFGARelationDefinitions:
         content = sp_file.read_text()
 
         # Should mention can_manage or OpenFGA
-        assert (
-            "can_manage" in content.lower() or "openfga" in content.lower()
-        ), "Service Principal endpoints should document OpenFGA relations"
+        assert "can_manage" in content.lower() or "openfga" in content.lower(), (
+            "Service Principal endpoints should document OpenFGA relations"
+        )
 
 
 @pytest.mark.security
@@ -285,9 +285,9 @@ class TestAdHocRoleChecks:
         source = inspect.getsource(_require_admin_or_scim_role)
 
         # Current implementation checks roles directly
-        assert (
-            "admin" in source and "scim-provisioner" in source
-        ), "Current implementation should check admin and scim-provisioner roles"
+        assert "admin" in source and "scim-provisioner" in source, (
+            "Current implementation should check admin and scim-provisioner roles"
+        )
 
     def test_service_principal_currently_uses_admin_check(self):
         """

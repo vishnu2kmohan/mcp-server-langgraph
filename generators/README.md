@@ -132,7 +132,7 @@ openapi-generator-cli batch generators/batch-config.yaml
 
 1. **Update OpenAPI Schema:**
    ```bash
-   uv run python scripts/development/generate_openapi.py
+   uv run --frozen python scripts/development/generate_openapi.py
    ```
 
 2. **Generate Clients:**

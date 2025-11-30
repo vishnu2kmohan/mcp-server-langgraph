@@ -6,6 +6,10 @@ Date: 2025-10-17
 
 Accepted
 
+## Category
+
+Core Architecture
+
 ## Context
 
 Our MCP server previously implemented a basic agent workflow (route → act → respond), but lacked the full agentic loop described in Anthropic's engineering guides. To build truly autonomous agents capable of multi-step tasks with quality assurance, we need to implement the complete gather-action-verify-repeat cycle.
@@ -337,7 +341,7 @@ VERIFICATION_MODE=standard
 
 2. **Verification**
    - `verification.passed_total`: Pass rate (target: >70%)
-   - `verification.refinement_total`: Refinement frequency (target: <30%)
+   - `verification.refinement_total`: Refinement frequency (target: \<30%)
    - `verification.score_distribution`: Quality score distribution
 
 3. **Overall Quality**

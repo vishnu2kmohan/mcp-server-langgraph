@@ -262,20 +262,20 @@ class CheckpointConfigValidator:
 
             # Attempt to create client (will fail if URL is malformed)
             # Note: This doesn't actually connect, just validates URL parsing
-            _client = redis_async.from_url(url)  # type: ignore[no-untyped-call]
+            _ = redis_async.from_url(url)  # type: ignore[no-untyped-call]
 
             # Close the client (cleanup)
             # In production, actual connection test would be async
 
         except ImportError as e:
-            raise CheckpointValidationError(f"Redis client library not available: {e}\n" f"Install: pip install redis")
+            raise CheckpointValidationError(f"Redis client library not available: {e}\nInstall: pip install redis")
         except ConnectionError as e:
             raise CheckpointValidationError(
-                f"Failed to connect to Redis: {e}\n" f"Check that Redis is running and accessible at the specified URL."
+                f"Failed to connect to Redis: {e}\nCheck that Redis is running and accessible at the specified URL."
             )
         except Exception as e:
             raise CheckpointValidationError(
-                f"Redis connection test failed: {e}\n" f"Verify the Redis URL is correct and Redis is accessible."
+                f"Redis connection test failed: {e}\nVerify the Redis URL is correct and Redis is accessible."
             )
 
 

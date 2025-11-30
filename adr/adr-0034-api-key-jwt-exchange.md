@@ -6,6 +6,10 @@ Date: 2025-01-28
 
 Accepted
 
+## Category
+
+Authentication & Authorization
+
 ## Context
 
 Legacy systems and simple integrations use API keys for authentication due to simplicity and stateless nature. However, our architecture standardizes on JWTs (ADR-0032) for consistent authentication and authorization. This creates tension between legacy support and JWT standardization.

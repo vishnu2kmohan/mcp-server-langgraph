@@ -25,7 +25,7 @@ git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp-server-langgraph
 
 # Install dependencies
-uv sync --extra dev --extra builder
+uv sync --extra dev
 
 # Setup git hooks (REQUIRED)
 make git-hooks
@@ -61,7 +61,7 @@ All changes to `.github/workflows/*.yaml` files **MUST** be tested locally with 
 **Why?** Recent CI failures were caused by issues that `act` would have caught:
 - Missing dependencies (ModuleNotFoundError)
 - Missing system tools (jq: command not found)
-- Incorrect Python usage (bare `python` instead of `uv run python`)
+- Incorrect Python usage (bare `python` instead of `uv run --frozen python`)
 
 ### Quick Testing
 
@@ -197,8 +197,8 @@ Run pre-push validation manually anytime:
 make validate-pre-push
 
 # Or run specific phases
-uv run pytest tests/ -m unit           # Phase 3: Unit tests
-uv run pytest tests/smoke/             # Phase 3: Smoke tests
+uv run --frozen pytest tests/ -m unit           # Phase 3: Unit tests
+uv run --frozen pytest tests/smoke/             # Phase 3: Smoke tests
 pre-commit run --all-files --hook-stage pre-push  # Phase 4
 ```
 
@@ -255,10 +255,10 @@ git push  # Runs full integration suite in ~8-12 min
 
 ```bash
 # Measure pre-commit performance
-python scripts/measure_hook_performance.py --stage commit
+python scripts/dev/measure_hook_performance.py --stage commit
 
 # Measure pre-push performance
-python scripts/measure_hook_performance.py --stage push
+python scripts/dev/measure_hook_performance.py --stage push
 ```
 
 #### Bypass (EMERGENCY ONLY)
@@ -288,14 +288,14 @@ pre-commit run ruff --all-files
 **Pre-push failures:**
 ```bash
 # Run specific phase
-uv run pytest tests/ -m unit     # Phase 3: Unit tests
+uv run --frozen pytest tests/ -m unit     # Phase 3: Unit tests
 uv lock --check                  # Phase 1: Lockfile
 pre-commit run --all-files --hook-stage push  # Phase 4
 ```
 
 #### Documentation
 
-- Full guide: [TESTING.md](TESTING.md#git-hooks-and-validation)
+- Full guide: [TESTING.md](docs-internal/testing/TESTING.md#git-hooks-and-validation)
 - Categorization: `docs-internal/HOOK_CATEGORIZATION.md`
 - Migration guide: `docs-internal/PRE_COMMIT_PRE_PUSH_REORGANIZATION.md`
 
@@ -415,14 +415,14 @@ This project follows TDD principles (see global CLAUDE.md for details):
 If you need to test multiple Python versions locally:
 
 ```bash
-# Using Docker to test against Python 3.10
-docker run --rm -v $(pwd):/app -w /app python:3.10 bash -c "pip install uv && uv sync && uv run pytest tests/"
-
 # Using Docker to test against Python 3.11
-docker run --rm -v $(pwd):/app -w /app python:3.11 bash -c "pip install uv && uv sync && uv run pytest tests/"
+docker run --rm -v $(pwd):/app -w /app python:3.11 bash -c "pip install uv && uv sync && uv run --frozen pytest tests/"
 
 # Using Docker to test against Python 3.12
-docker run --rm -v $(pwd):/app -w /app python:3.12 bash -c "pip install uv && uv sync && uv run pytest tests/"
+docker run --rm -v $(pwd):/app -w /app python:3.12 bash -c "pip install uv && uv sync && uv run --frozen pytest tests/"
+
+# Using Docker to test against Python 3.13
+docker run --rm -v $(pwd):/app -w /app python:3.13 bash -c "pip install uv && uv sync && uv run --frozen pytest tests/"
 ```
 
 #### Python Version Compatibility
@@ -481,7 +481,7 @@ make lint-type-check
 make lint-security
 ```
 
-**Migration Note**: Legacy tools (black, isort, flake8) are deprecated. See [Ruff Migration Guide](docs-internal/TOOLING_CONSOLIDATION_MIGRATION.md) for details.
+**Note**: Legacy tools (black, isort, flake8) have been replaced by Ruff. All configuration is in `pyproject.toml`.
 
 ### Configuration
 
@@ -548,7 +548,7 @@ Closes #123
 ```text
 fix(ci): add missing optional dependencies to workflows
 
-- Add --extra dev --extra builder to uv sync commands
+- Add --extra dev to uv sync commands
 - Fixes ModuleNotFoundError in E2E and unit tests
 - Tested locally with act before committing
 
@@ -574,8 +574,8 @@ git commit -S -m "feat: add feature"
 
 **MUST**:
 - ✅ Use `uv` for all Python operations (not `pip`)
-- ✅ Use `uv run python` for scripts (not bare `python`)
-- ✅ Use `uv sync --extra dev --extra builder` for tests
+- ✅ Use `uv run --frozen python` for scripts (not bare `python`)
+- ✅ Use `uv sync --extra dev` for tests
 - ✅ Test with `act` before committing
 - ✅ Add timeouts to all jobs
 - ✅ Use path filters to skip unnecessary runs

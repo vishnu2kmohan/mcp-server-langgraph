@@ -83,7 +83,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Setup Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -130,7 +130,7 @@ jobs:
         PERIOD_DAYS: ${{ steps.fetch.outputs.period }}
       run: |
         # Run cost analysis using external script
-        uv run python scripts/ci/track_costs.py
+        uv run --frozen python scripts/ci/track_costs.py
 
         # Load metrics into outputs
         source cost-metrics.txt

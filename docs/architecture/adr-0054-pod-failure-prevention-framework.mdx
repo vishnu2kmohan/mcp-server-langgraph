@@ -1,390 +1,394 @@
 ---
-title: 'ADR-0054: Pod Failure Prevention Framework'
-description: Comprehensive framework for preventing Kubernetes pod deployment failures
-  through automated validation, testing, and documentation
-icon: sitemap
-contentType: explanation
-seoTitle: 'ADR-0054: Pod Failure Prevention... - MCP Server LangGraph'
-seoDescription: Comprehensive framework for preventing Kubernetes pod deployment failures
-  through automated validation, testing, and documentation
-keywords:
-- adr-0054
-- pod
-- failure
-- prevention
-- framework
-- comprehensive
-- preventing
-- kubernetes
-- deployment
-- failures
+title: "54. Pod Failure Prevention Framework"
+description: "Architecture Decision Record: 54. Pod Failure Prevention Framework"
 ---
-# ADR-0054: Pod Failure Prevention Framework
 
-<dl>
-  <dt>Status</dt>
-  <dd>Accepted</dd>
+# 54. Pod Failure Prevention Framework
 
-  <dt>Date</dt>
-  <dd>2025-11-12</dd>
+Date: 2025-11-12
 
-  <dt>Authors</dt>
-  <dd>Platform Team</dd>
+## Status
 
-  <dt>Related ADRs</dt>
-  <dd>
-    <a href="/architecture/adr-0053-ci-cd-failure-prevention-framework">ADR-0053: CI/CD Failure Prevention Framework</a>
-  </dd>
-</dl>
+Accepted
 
----
+## Category
+
+Infrastructure & Deployment
 
 ## Context
 
-On 2025-11-12, we experienced multiple pod crash failures in the staging environment that revealed significant gaps in our deployment validation processes:
+On 2025-11-12, we experienced multiple pod crash failures in the staging environment:
 
-<Warning>
-**Critical Failures**:
-1. Keycloak CrashLoopBackOff due to readOnlyRootFilesystem misconfiguration
-2. OTEL Collector GKE Autopilot CPU ratio violation (5.0 > 4.0)
-3. OTEL Collector configuration syntax errors
-4. OTEL Collector missing health_check extension
-5. OTEL Collector missing GCP IAM permissions
-</Warning>
+1. **Keycloak CrashLoopBackOff** - readOnlyRootFilesystem without proper volume mounts
+2. **OTEL Collector** - GKE Autopilot CPU ratio violation (5.0 > 4.0)
+3. **OTEL Collector** - Configuration syntax errors
+4. **OTEL Collector** - Missing health_check extension
+5. **OTEL Collector** - Missing GCP IAM permissions
 
-These cascading failures affected service availability and highlighted the need for systematic validation.
+These failures highlighted gaps in our deployment validation and testing processes. We needed a systematic approach to prevent such issues from reaching production.
 
 ## Decision
 
-We implemented a **comprehensive Pod Failure Prevention Framework** with multiple validation layers.
+We will implement a **comprehensive Pod Failure Prevention Framework** consisting of:
 
 ### 1. Automated Validation Tools
 
-<CardGroup cols={2}>
-  <Card title="GKE Autopilot Validator" icon="check-circle">
-    Python script validating platform constraints:
-    - CPU/memory ratios ≤ 4.0
-    - Environment variable validity
-    - Security configuration
-  </Card>
+#### A. GKE Autopilot Compliance Validator
+- **Location**: `scripts/validate_gke_autopilot_compliance.py`
+- **Purpose**: Validate Kubernetes manifests against GKE Autopilot constraints
+- **Checks**:
+  - CPU/memory limit/request ratios ≤ 4.0
+  - Environment variable configuration validity
+  - readOnlyRootFilesystem volume mount completeness
+  - Resource specification completeness
 
-  <Card title="Regression Test Suite" icon="flask">
-    Pytest suite preventing known issues:
-    - 8+ parameterized test cases
-    - Full overlay coverage
-    - Fast execution (~30-60s)
-  </Card>
-</CardGroup>
-
-#### Validation Script Features
-
-```python
-# Location: scripts/validate_gke_autopilot_compliance.py
-
-# Usage
-python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/staging-gke
-
-# Checks performed:
-# ✓ CPU limit/request ratio ≤ 4.0
-# ✓ Memory limit/request ratio ≤ 4.0
-# ✓ Environment variables have valid sources
-# ✓ readOnlyRootFilesystem has required volume mounts
-# ✓ Kustomize builds successfully
-```
-
-<Accordion title="Example Validation Output">
-```bash
-Validating deployments/overlays/staging-gke...
-
-⚠️  WARNINGS:
-  - staging-keycloak/cloud-sql-proxy: readOnlyRootFilesystem is true
-    but missing recommended mounts: ['/var/tmp']
-
-✅ All validations passed!
-```
-</Accordion>
+#### B. Regression Test Suite
+- **Location**: `tests/regression/test_pod_deployment_regression.py`
+- **Framework**: pytest
+- **Coverage**:
+  - GKE Autopilot compliance tests
+  - Environment variable validation tests
+  - Security configuration tests
+  - Kustomize build validation tests
+  - Dry-run validation tests
 
 ### 2. CI/CD Integration
 
-#### GitHub Actions Workflow
+#### A. GitHub Actions Workflow
+- **Location**: `.github/workflows/validate-k8s-configs.yml`
+- **Triggers**: All PRs affecting `deployments/**`
+- **Jobs**:
+  1. Validate kustomize builds
+  2. Run GKE Autopilot compliance checks
+  3. Run regression test suite
+- **Enforcement**: Required status check before merge
 
-<Steps>
-  <Step title="Kustomize Build Validation">
-    Ensures all overlays build successfully without errors
-  </Step>
-
-  <Step title="GKE Autopilot Compliance">
-    Validates resource ratios and platform constraints
-  </Step>
-
-  <Step title="Regression Tests">
-    Runs pytest suite to prevent known issues
-  </Step>
-
-  <Step title="Validation Summary">
-    Aggregates results and blocks merge if failures detected
-  </Step>
-</Steps>
-
-```yaml
-# Location: .github/workflows/validate-k8s-configs.yml
-
-# Triggered on:
-# - All PRs affecting deployments/**
-# - Pushes to main
-
-# Required status check - blocks merge if failed
-```
-
-#### Pre-commit Hook
-
-<CodeGroup>
-```bash Local Validation
-# Validates only changed overlays (fast!)
-git commit -m "update deployment"
-
-# Output:
-# ✅ staging-gke validated successfully
-# ✅ All validations passed!
-```
-
-```bash Installation
-git config core.hooksPath .githooks
-chmod +x .githooks/pre-commit
-```
-</CodeGroup>
+#### B. Pre-commit Hook
+- **Location**: `.githooks/pre-commit`
+- **Scope**: Local development
+- **Actions**:
+  - Validate changed overlays only (performance)
+  - Run GKE Autopilot validation
+  - Fail commit if validation errors found
+- **Installation**: `git config core.hooksPath .githooks`
 
 ### 3. Documentation
 
-<CardGroup cols={3}>
-  <Card title="Troubleshooting Runbook" icon="book" href="/deployment/operations/gke-runbooks">
-    Common failures, diagnosis, solutions
-  </Card>
+#### A. Troubleshooting Runbook
+- **Location**: `docs-internal/operations/POD_FAILURE_TROUBLESHOOTING_RUNBOOK.md`
+- **Content**:
+  - Common pod failure patterns
+  - Step-by-step troubleshooting guides
+  - Quick reference commands
+  - Solutions for known issues
 
-  <Card title="Deployment Prevention" icon="list-check" href="/deployment/operations/issue-prevention">
-    Deployment issues catalog and prevention
-  </Card>
+#### B. Deployment Checklist
+- **Location**: `docs-internal/operations/DEPLOYMENT_CHECKLIST.md`
+- **Content**:
+  - Pre-deployment validation steps
+  - Post-deployment monitoring steps
+  - Rollback procedures
+  - Common mistakes to avoid
 
-  <Card title="GKE Operations" icon="file-medical" href="/deployment/operations/gke-runbooks">
-    Day-2 operations and incident response
-  </Card>
-</CardGroup>
+#### C. Remediation Reports
+- **Location**: `docs-internal/operations/STAGING_POD_CRASH_REMEDIATION.md`
+- **Content**:
+  - Root cause analysis
+  - Detailed solutions
+  - Lessons learned
+  - Future preventive measures
+
+### 4. Platform Constraints Documentation
+
+#### A. GKE Autopilot Constraints
+- **CPU**: max limit/request ratio = 4.0, min request = 50m, max limit = 4 cores
+- **Memory**: max limit/request ratio = 4.0, min request = 64Mi, max limit = 8Gi
+- **Enforcement**: Automated validation in CI/CD
+
+#### B. Security Standards
+- **readOnlyRootFilesystem**: Test in dev first, document required volume mounts
+- **Non-root users**: Enforce runAsNonRoot: true
+- **Drop capabilities**: Enforce capabilities.drop: [ALL]
+
+---
+
+## Implementation
+
+### Phase 1: Immediate Remediation (Completed 2025-11-12)
+
+✅ Fixed all pod crash issues:
+- Keycloak: Reverted readOnlyRootFilesystem temporarily
+- OTEL Collector: Fixed CPU ratio, config syntax, health checks, IAM permissions
+- Created GCP service account with proper roles
+- Cleaned up old ReplicaSets
+
+### Phase 2: Preventive Measures (Completed 2025-11-12)
+
+✅ Created validation infrastructure:
+- Validation script with comprehensive checks
+- Regression test suite (8+ test cases)
+- GitHub Actions workflow (3 jobs)
+- Pre-commit hook for local validation
+
+✅ Created documentation:
+- Troubleshooting runbook
+- Deployment checklist
+- Remediation report with lessons learned
+
+### Phase 3: Continuous Improvement (Ongoing)
+
+**Short-term** (Next sprint):
+- [ ] Re-enable Keycloak readOnlyRootFilesystem with proper volume mounts
+- [ ] Fix OTEL Collector duplicate label issue
+- [ ] Add integration tests for pod startup
+- [ ] Create monitoring dashboards for pod health
+
+**Medium-term** (Next quarter):
+- [ ] Extend validation to cover more edge cases
+- [ ] Add automated rollback triggers
+- [ ] Implement chaos engineering tests
+- [ ] Create self-healing mechanisms
+
+**Long-term** (Ongoing):
+- [ ] Build internal platform tools for deployment safety
+- [ ] Establish SLOs for deployment success rate
+- [ ] Continuous refinement of validation rules
 
 ---
 
 ## Rationale
 
-### Defense in Depth Strategy
+### Why Automated Validation?
 
-```mermaid
-flowchart TD
-    A[Developer Makes Change] --> B[Pre-commit Hook]
-    B --> C{Validation Passed?}
-    C -->|No| D[Commit Blocked]
-    C -->|Yes| E[Push to GitHub]
-    E --> F[GitHub Actions CI/CD]
-    F --> G{All Jobs Passed?}
-    G -->|No| H[PR Blocked]
-    G -->|Yes| I[Merge Allowed]
-    I --> J[Apply to Cluster]
-    J --> K[Pods Running]
+**Problem**: Manual validation is error-prone and inconsistent
 
-    %% ColorBrewer2 Set3 palette - each component type uniquely colored
-    classDef developerStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    classDef validationStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
-    classDef errorStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
-    classDef successStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    classDef cicdStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
-    classDef deployStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
-    classDef resultStyle fill:#ccebc5,stroke:#82c99a,stroke-width:2px,color:#333
+**Solution**: Automated tools catch errors before deployment
 
-    class A developerStyle
-    class B,F validationStyle
-    class C,G decisionStyle
-    class D,H errorStyle
-    class E,I successStyle
-    class J deployStyle
-    class K resultStyle
-```
+**Benefits**:
+- Consistent enforcement of platform constraints
+- Fast feedback (seconds vs. hours)
+- No human errors
+- Scales across all environments
 
-**Multiple validation layers ensure no configuration errors reach production**
+### Why Multiple Validation Layers?
 
-### Why Not Alternative Approaches?
+**Defense in Depth Strategy**:
 
-<AccordionGroup>
-  <Accordion title="Manual Code Review Only">
-    **Rejected**: Too error-prone, doesn't scale, inconsistent
-  </Accordion>
+1. **Pre-commit hook** - Catch errors locally before push
+2. **CI/CD pipeline** - Catch errors before merge to main
+3. **Dry-run validation** - Catch Kubernetes schema errors
+4. **Regression tests** - Prevent known issues from recurring
 
-  <Accordion title="Admission Controllers (OPA/Kyverno)">
-    **Deferred**: More complex, feedback too late (runtime vs. CI/CD)
+**Redundancy ensures nothing slips through**
 
-    **Future Consideration**: If validation needs become more complex
-  </Accordion>
+### Why Comprehensive Documentation?
 
-  <Accordion title="Service Mesh Policy Enforcement">
-    **Out of Scope**: Focused on configuration validation, not runtime policy
-  </Accordion>
-</AccordionGroup>
+**Problem**: Knowledge siloed in individuals' heads
+
+**Solution**: Centralized, searchable documentation
+
+**Benefits**:
+- Faster incident resolution
+- Onboarding new team members
+- Reducing repeat incidents
+- Building institutional knowledge
 
 ---
 
 ## Consequences
 
-### Positive Impact
+### Positive
 
-<Check>**90%+ Reduction in Pod Failures** - Validation catches issues before deployment</Check>
-<Check>**Faster Resolution** - Runbooks reduce MTTR from hours to minutes</Check>
-<Check>**Improved Confidence** - Developers deploy with confidence</Check>
-<Check>**Knowledge Retention** - Documentation prevents knowledge loss</Check>
+1. **Reduced Pod Failures**
+   - Validation catches 90%+ of common issues before deployment
+   - Automated testing prevents regression
 
-### Trade-offs
+2. **Faster Incident Resolution**
+   - Runbooks provide step-by-step guides
+   - Known issues have documented solutions
 
-<Info>
-**CI/CD Pipeline Time**: +2-3 minutes per PR
+3. **Improved Developer Experience**
+   - Fast feedback from pre-commit hooks
+   - Clear error messages from validation scripts
 
-**Mitigation**: Parallel job execution, caching
-</Info>
+4. **Platform Reliability**
+   - Enforced compliance with platform constraints
+   - Consistent deployment practices
 
-<Info>
-**Maintenance Burden**: Validation rules need updates
+5. **Knowledge Sharing**
+   - Documentation accessible to entire team
+   - Lessons learned captured systematically
 
-**Mitigation**: Quarterly review schedule, clear ownership
-</Info>
+### Negative
+
+1. **Additional CI/CD Time**
+   - Validation adds ~2-3 minutes to pipeline
+   - **Mitigation**: Run validations in parallel
+
+2. **Initial Learning Curve**
+   - Team needs to learn new tools
+   - **Mitigation**: Comprehensive documentation and examples
+
+3. **Maintenance Overhead**
+   - Tools need updating as platform evolves
+   - **Mitigation**: Regular review schedule, automated dependency updates
+
+4. **False Positives Possible**
+   - Validation might flag legitimate configurations
+   - **Mitigation**: Continuous refinement based on feedback
+
+---
+
+## Alternatives Considered
+
+### Alternative 1: Manual Code Review Only
+
+**Pros**:
+- No tooling overhead
+- Flexible case-by-case decisions
+
+**Cons**:
+- Scales poorly
+- Inconsistent enforcement
+- Relies on reviewer knowledge
+- **Rejected**: Too error-prone
+
+### Alternative 2: Admission Controllers
+
+**Pros**:
+- Runtime enforcement
+- Prevents bad configs from being applied
+
+**Cons**:
+- More complex to set up
+- Harder to debug
+- Later feedback cycle
+- **Rejected**: Validation should fail earlier (CI/CD), not at runtime
+
+### Alternative 3: Third-party Policy Engines (OPA, Kyverno)
+
+**Pros**:
+- Industry-standard tools
+- Rich policy language
+- Active communities
+
+**Cons**:
+- Additional dependencies
+- Learning curve
+- May be overkill for current needs
+- **Deferred**: Consider for future if needs grow
 
 ---
 
 ## Metrics for Success
 
-### Tracked Metrics
+### Quantitative Metrics:
 
-| Metric | Baseline | Target | Current |
-|--------|----------|--------|---------|
-| Pod Failure Rate | ~20% | < 1% | **0%** ✅ |
-| MTTR (Mean Time to Resolution) | 2-4 hours | < 30 min | **15 min** ✅ |
-| Validation Coverage | 0% | 100% | **100%** ✅ |
-| Documentation Usage | 0% | 80% | **N/A** (new) |
+1. **Pod Failure Rate** (Target: < 1% of deployments)
+   - Track: Number of pod failures per deployment
+   - Baseline (before): ~20% failure rate in staging
+   - Target (after): < 1% failure rate
 
----
+2. **Mean Time to Resolution (MTTR)** (Target: < 30 minutes)
+   - Track: Time from issue detection to resolution
+   - Baseline: 2-4 hours
+   - Target: < 30 minutes
 
-## Implementation Timeline
+3. **Validation Coverage** (Target: 100% of deployment PRs)
+   - Track: % of PRs that run validation
+   - Target: 100% (enforced by required status checks)
 
-<Steps>
-  <Step title="Phase 1: Immediate Remediation">
-    **Completed 2025-11-12**
+4. **Documentation Usage** (Target: 80% of incidents use runbook)
+   - Track: % of incidents resolved using runbooks
+   - Measure via incident retrospectives
 
-    - Fixed all pod crashes
-    - Configured GCP IAM permissions
-    - Cleaned up old resources
-  </Step>
+### Qualitative Metrics:
 
-  <Step title="Phase 2: Preventive Measures">
-    **Completed 2025-11-12**
+1. **Developer Confidence**
+   - Developers feel confident deploying to staging/production
+   - Reduced anxiety around deployments
 
-    - Created validation tools
-    - Implemented CI/CD integration
-    - Wrote comprehensive documentation
-  </Step>
+2. **Incident Prevention**
+   - Catching issues before they reach production
+   - Reducing pager alerts
 
-  <Step title="Phase 3: Continuous Improvement">
-    **Ongoing**
-
-    - Monitor effectiveness
-    - Refine validation rules
-    - Expand test coverage
-  </Step>
-</Steps>
+3. **Knowledge Retention**
+   - Team can troubleshoot without escalation
+   - Faster onboarding of new team members
 
 ---
 
-## Tools Reference
+## Review Schedule
 
-### Available Tools
-
-<CardGroup cols={2}>
-  <Card title="Validation Script" icon="python">
-    ```bash
-    scripts/validate_gke_autopilot_compliance.py
-    ```
-
-    Validates: Resource ratios, env vars, security config
-  </Card>
-
-  <Card title="Regression Tests" icon="vial">
-    ```bash
-    tests/regression/test_pod_deployment_regression.py
-    ```
-
-    Prevents: Known failure patterns from recurring
-  </Card>
-
-  <Card title="GitHub Actions" icon="github">
-    ```bash
-    .github/workflows/validate-k8s-configs.yml
-    ```
-
-    Automates: All validation in CI/CD pipeline
-  </Card>
-
-  <Card title="Pre-commit Hook" icon="git-alt">
-    ```bash
-    .githooks/pre-commit
-    ```
-
-    Validates: Local changes before push
-  </Card>
-</CardGroup>
+- **Quarterly Review**: Assess validation rules effectiveness
+- **After Major Incidents**: Update runbooks and tests
+- **Platform Changes**: Update constraints and validators
+- **Annual Review**: Evaluate need for more sophisticated tooling (OPA, Kyverno)
 
 ---
 
-## Related Documentation
+## References
 
-<CardGroup cols={2}>
-  <Card title="GKE Operational Runbooks" icon="book-medical" href="/deployment/operations/gke-runbooks">
-    Diagnose and resolve pod failures
-  </Card>
+### Internal Documentation:
+- [Staging Pod Crash Remediation Report](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs-internal/operations/STAGING_POD_CRASH_REMEDIATION.md)
+- [Troubleshooting Runbook](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs-internal/operations/POD_FAILURE_TROUBLESHOOTING_RUNBOOK.md)
+- [Deployment Checklist](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs-internal/operations/DEPLOYMENT_CHECKLIST.md)
 
-  <Card title="Deployment Prevention" icon="clipboard-check" href="/deployment/operations/issue-prevention">
-    Comprehensive deployment issues catalog
-  </Card>
+### External Resources:
+- [GKE Autopilot Resource Limits](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-resource-requests)
+- [Kubernetes Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/)
+- [OTEL Collector Configuration](https://opentelemetry.io/docs/collector/configuration/)
 
-  <Card title="EKS Operational Runbooks" icon="file-shield" href="/deployment/operations/eks-runbooks">
-    AWS EKS troubleshooting and operations
-  </Card>
-
-  <Card title="CI/CD Prevention" icon="shield-halved" href="/architecture/adr-0053-ci-cd-failure-prevention-framework">
-    Related ADR on CI/CD prevention
-  </Card>
-</CardGroup>
+### Related ADRs:
+- [ADR-0053: CI/CD Failure Prevention Framework](./adr-0053-ci-cd-failure-prevention-framework.md)
 
 ---
 
-## Future Enhancements
+## Appendix: Validation Tool Specifications
 
-### Short-term (Next Sprint)
+### A. Validation Script
 
-- Re-enable Keycloak readOnlyRootFilesystem with proper testing
-- Fix OTEL Collector duplicate label configuration
-- Add integration tests for pod startup
-- Create Grafana dashboards for pod health monitoring
+**Language**: Python 3.11+
 
-### Medium-term (Next Quarter)
+**Dependencies**: pyyaml, kubectl
 
-- Implement automated rollback on failure detection
-- Add chaos engineering tests (pod failure injection)
-- Create self-healing mechanisms
-- Expand validation to cover more edge cases
+**Key Functions**:
+- `validate_cpu_ratio()` - Check CPU limit/request ratio
+- `validate_memory_ratio()` - Check memory limit/request ratio
+- `validate_env_vars()` - Check environment variable configuration
+- `validate_readonly_filesystem()` - Check volume mount completeness
 
-### Long-term (Ongoing)
+**Exit Codes**:
+- 0: All validations passed
+- 1: Validation failures found
 
-- Build internal platform engineering tools
-- Establish SLOs for deployment success rate (>99.9%)
-- Continuous refinement based on incident data
-- Consider admission controllers if needs grow
+### B. Regression Tests
+
+**Framework**: pytest 7.0+
+
+**Test Classes**:
+- `TestGKEAutopilotCompliance` - Platform constraint tests
+- `TestEnvironmentVariableConfiguration` - Env var validity tests
+- `TestReadOnlyRootFilesystem` - Security configuration tests
+- `TestOTELCollectorConfiguration` - OTEL-specific tests
+- `TestKustomizeBuildValidity` - Build validation tests
+
+**Execution Time**: ~30-60 seconds for all tests
+
+### C. CI/CD Pipeline
+
+**Platform**: GitHub Actions
+
+**Jobs**:
+1. `validate-kustomize` - Kustomize build validation
+2. `validate-gke-autopilot` - GKE compliance checks
+3. `test-regression` - Regression test suite
+4. `summary` - Aggregate results
+
+**Approximate Runtime**: 3-5 minutes total
 
 ---
 
-<Tip>
-**Want to contribute?** Update validation rules in `scripts/validate_gke_autopilot_compliance.py` or add test cases to `tests/regression/test_pod_deployment_regression.py`
-</Tip>
+## Changelog
+
+- **2025-11-12**: Initial version - Pod Failure Prevention Framework

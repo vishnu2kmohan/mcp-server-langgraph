@@ -6,6 +6,10 @@ Date: 2025-01-28
 
 Accepted
 
+## Category
+
+Authentication & Authorization
+
 ## Context
 
 Kong API Gateway can validate JWTs using its built-in JWT plugin, but it currently uses HS256 (symmetric keys) with static secrets. Our architecture requires RS256 (asymmetric) validation using Keycloak's public keys for:

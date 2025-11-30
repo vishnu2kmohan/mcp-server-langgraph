@@ -11,6 +11,7 @@ Following TDD principles - written to prevent regression of fixes.
 import ast
 import gc
 import subprocess
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
@@ -20,6 +21,28 @@ pytestmark = pytest.mark.unit
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 TESTS_DIR = REPO_ROOT / "tests"
+
+
+# Module-level caches to prevent repeated file I/O across test methods
+# This significantly speeds up CI where I/O is slower
+@lru_cache(maxsize=500)
+def _cached_read_file(filepath: str) -> str:
+    """Cache file contents to avoid repeated I/O."""
+    return Path(filepath).read_text()
+
+
+@lru_cache(maxsize=500)
+def _cached_parse_ast(filepath: str) -> tuple:
+    """
+    Cache parsed AST trees to avoid repeated parsing.
+    Returns (tree, content) or (None, None) on parse error.
+    """
+    try:
+        content = _cached_read_file(filepath)
+        tree = ast.parse(content, filename=filepath)
+        return (tree, content)
+    except (SyntaxError, OSError):
+        return (None, None)
 
 
 @pytest.mark.meta
@@ -68,11 +91,9 @@ class TestUnconditionalSkipDetection:
                 if not condition:
                     pytest.skip("reason")  # ← CONDITIONAL (OK)
         """
-        with open(filepath) as f:
-            try:
-                tree = ast.parse(f.read(), filename=str(filepath))
-            except SyntaxError:
-                return []
+        tree, _ = _cached_parse_ast(str(filepath))
+        if tree is None:
+            return []
 
         violations = []
 
@@ -145,12 +166,9 @@ class TestStateIsolationPatterns:
 
     def _find_manual_settings_cleanup(self, filepath: Path) -> list[tuple[str, int]]:
         """Find try/finally blocks that save/restore settings"""
-        with open(filepath) as f:
-            try:
-                content = f.read()
-                tree = ast.parse(content, filename=str(filepath))
-            except SyntaxError:
-                return []
+        tree, content = _cached_parse_ast(str(filepath))
+        if tree is None:
+            return []
 
         violations = []
 
@@ -220,12 +238,9 @@ class TestCLIToolGuards:
 
     def _find_unguarded_cli_calls(self, filepath: Path, cli_tools: list[str]) -> list[tuple[str, int, str]]:
         """Find subprocess.run() calls to CLI tools without guards"""
-        with open(filepath) as f:
-            try:
-                content = f.read()
-                tree = ast.parse(content, filename=str(filepath))
-            except SyntaxError:
-                return []
+        tree, content = _cached_parse_ast(str(filepath))
+        if tree is None:
+            return []
 
         violations = []
 
@@ -315,11 +330,9 @@ class TestPrivateAPIUsage:
 
     def _find_private_method_calls(self, filepath: Path) -> list[tuple[str, int, str]]:
         """Find calls to private methods (leading underscore) in tests"""
-        with open(filepath) as f:
-            try:
-                tree = ast.parse(f.read(), filename=str(filepath))
-            except SyntaxError:
-                return []
+        tree, _ = _cached_parse_ast(str(filepath))
+        if tree is None:
+            return []
 
         violations = []
 
@@ -371,8 +384,7 @@ class TestXFailStrictUsage:
         if not e2e_journey_file.exists():
             pytest.skip("E2E journey test file not found")
 
-        with open(e2e_journey_file) as f:
-            content = f.read()
+        content = _cached_read_file(str(e2e_journey_file))
 
         # Count xfail decorators
         xfail_count = content.count("@pytest.mark.xfail(strict=True")
@@ -412,8 +424,7 @@ class TestMonkeypatchUsage:
         if not checkpoint_test_file.exists():
             pytest.skip("Distributed checkpointing test file not found")
 
-        with open(checkpoint_test_file) as f:
-            content = f.read()
+        content = _cached_read_file(str(checkpoint_test_file))
 
         # Should have no manual try/finally for settings
         manual_cleanup_pattern = "original_backend = settings.checkpoint_backend"
@@ -432,7 +443,7 @@ class TestMonkeypatchUsage:
         if monkeypatch_count > 0:
             usage_percent = (monkeypatch_param_count / monkeypatch_count) * 100
             assert usage_percent >= 50, (
-                f"Only {usage_percent:.0f}% of tests use monkeypatch. " f"Expected 50%+ for settings isolation"
+                f"Only {usage_percent:.0f}% of tests use monkeypatch. Expected 50%+ for settings isolation"
             )
 
 
@@ -460,8 +471,7 @@ class TestRequiresToolDecorator:
             if not test_file.exists():
                 continue
 
-            with open(test_file) as f:
-                content = f.read()
+            content = _cached_read_file(str(test_file))
 
             # Should use @requires_tool decorator
             has_requires_tool = "@requires_tool" in content
@@ -521,11 +531,9 @@ class TestDeadCodeInFixtures:
 
         Returns list of (fixture_name, return_line, [dead_line_numbers]) tuples.
         """
-        with open(filepath) as f:
-            try:
-                tree = ast.parse(f.read(), filename=str(filepath))
-            except SyntaxError:
-                return []
+        tree, _ = _cached_parse_ast(str(filepath))
+        if tree is None:
+            return []
 
         violations = []
 
@@ -574,11 +582,15 @@ class TestCodexFindingCompliance:
     def test_codex_validation_commit_exists(self):
         """Verify Codex findings validation commits exist in git history
 
-        Note: Searches last 100 commits to account for recent work on other areas.
-        Codex findings commits exist but may be older than 20 commits.
+        Note: Searches origin/main explicitly because worktrees may not have
+        full history visible via --all. Codex commits exist on main branch.
         """
+        # First try to fetch latest refs to ensure we have up-to-date history
+        subprocess.run(["git", "fetch", "origin", "main"], capture_output=True, cwd=REPO_ROOT, timeout=30)
+
+        # Search origin/main for Codex commits (works in worktrees)
         result = subprocess.run(
-            ["git", "log", "--oneline", "--all", "-100"], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+            ["git", "log", "--oneline", "origin/main", "-200"], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
 
         log_output = result.stdout
@@ -587,31 +599,28 @@ class TestCodexFindingCompliance:
         codex_keywords = ["codex", "openai", "finding"]
         has_codex_commits = any(keyword in log_output.lower() for keyword in codex_keywords)
 
-        assert has_codex_commits, "No commits found addressing OpenAI Codex findings in recent history"
+        assert has_codex_commits, "No commits found addressing OpenAI Codex findings in origin/main history"
 
     def test_critical_findings_have_fixes(self):
         """Verify critical findings (E2E skips, state mutations, CLI guards) are fixed"""
         # E2E xfail conversion
         e2e_file = TESTS_DIR / "e2e" / "test_full_user_journey.py"
         if e2e_file.exists():
-            with open(e2e_file) as f:
-                content = f.read()
+            content = _cached_read_file(str(e2e_file))
             xfail_count = content.count("@pytest.mark.xfail(strict=True")
             assert xfail_count >= 20, f"E2E tests should have 20+ xfail markers, found {xfail_count}"
 
         # State isolation with monkeypatch
         checkpoint_file = TESTS_DIR / "test_distributed_checkpointing.py"
         if checkpoint_file.exists():
-            with open(checkpoint_file) as f:
-                content = f.read()
+            content = _cached_read_file(str(checkpoint_file))
             has_monkeypatch = ", monkeypatch)" in content
             assert has_monkeypatch, "Distributed checkpointing tests should use monkeypatch"
 
         # CLI tool guards
         kustomize_file = TESTS_DIR / "deployment" / "test_kustomize_build.py"
         if kustomize_file.exists():
-            with open(kustomize_file) as f:
-                content = f.read()
+            content = _cached_read_file(str(kustomize_file))
             has_requires_tool = "@requires_tool" in content
             assert has_requires_tool, "Kustomize tests should use @requires_tool decorator"
 
@@ -655,9 +664,8 @@ class TestInfrastructurePortIsolation:
         """
         conftest_file = TESTS_DIR / "conftest.py"
 
-        with open(conftest_file) as f:
-            content = f.read()
-            lines = content.splitlines()
+        content = _cached_read_file(str(conftest_file))
+        lines = content.splitlines()
 
         violations = []
 
@@ -699,8 +707,7 @@ class TestInfrastructurePortIsolation:
         if not docker_compose_file.exists():
             pytest.skip("docker-compose.test.yml not found")
 
-        with open(docker_compose_file) as f:
-            content = f.read()
+        content = _cached_read_file(str(docker_compose_file))
 
         # Check for documentation about serial execution requirement
         has_serial_warning = any(

@@ -37,12 +37,12 @@ This guide explains how to test GitHub Actions workflows locally using `act` bef
 
 ### Real Example from This Project
 
-**Recent Issue**: E2E tests failing with `ModuleNotFoundError: No module named 'black'`
+**Historical Issue**: E2E tests failing with `ModuleNotFoundError: No module named 'black'`
 
 **What Happened**:
 ```bash
 # CI workflow used:
-uv sync  # Missing --extra dev --extra builder
+uv sync  # Missing --extra dev
 
 # E2E tests import builder modules
 import mcp_server_langgraph.builder.codegen.generator
@@ -57,7 +57,7 @@ $ act push -W .github/workflows/e2e-tests.yaml -j e2e-tests
 ... (workflow runs locally)
 ModuleNotFoundError: No module named 'black'  ← CAUGHT LOCALLY ✅
 
-# Fix: Add --extra dev --extra builder
+# Fix: Add --extra dev
 # Retest with act
 # Push when working ✅
 ```
@@ -160,7 +160,7 @@ act workflow_dispatch -W .github/workflows/deploy-staging-gke.yaml
 # .github/workflows/ci.yaml
 - name: Install dependencies
   run: |
-    uv sync --extra dev --extra builder  # ← Added --extra flags
+    uv sync --extra dev  # ← Added --extra flags
 ```
 
 **Step 2: Validate Syntax**
@@ -176,7 +176,7 @@ make validate-workflows
 act push -W .github/workflows/ci.yaml -j test
 
 # Watch for:
-# ✅ "uv sync --extra dev --extra builder" executes
+# ✅ "uv sync --extra dev" executes
 # ✅ Dependencies install successfully
 # ✅ Tests can import modules
 # ❌ Any ModuleNotFoundError or command not found errors
@@ -317,8 +317,8 @@ make act-dry-run
 
 ```python
 [Run unit tests]
-| uv sync --extra dev --extra builder
-| ✓ Dependencies installed from lockfile with dev+builder extras
+| uv sync --extra dev
+| ✓ Dependencies installed from lockfile with dev extras
 |
 | pytest -n auto -m unit --cov
 | ============================= test session starts ==============================
@@ -339,7 +339,7 @@ make act-dry-run
 | pip install requests  ← Should be: uv pip install OR uv sync --group
 | /bin/bash: jq: command not found  ← Missing: sudo apt-get install -y jq
 | python scripts/ci/check-links.py  ← Should be: uv run python scripts/...
-| ModuleNotFoundError: No module named 'black'  ← Missing: --extra builder
+| ModuleNotFoundError: No module named 'black'  ← Missing: --extra dev
 ```
 
 ---

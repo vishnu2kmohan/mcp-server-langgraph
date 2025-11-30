@@ -10,7 +10,6 @@ Following TDD principles:
 
 import gc
 import re
-from pathlib import Path
 
 import pytest
 import yaml
@@ -27,14 +26,19 @@ class TestShellScriptSafety:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_check_pr_status_quotes_variables(self):
+    @pytest.fixture
+    def scripts_dir(self, repo_root):
+        """Get scripts directory using shared repo_root fixture (DRY pattern)."""
+        return repo_root / "scripts"
+
+    def test_check_pr_status_quotes_variables(self, scripts_dir):
         """
         Test that check-pr-status.sh properly quotes all variables.
 
         This test will initially FAIL because variables are unquoted.
         After fix, all variable expansions should be quoted to prevent word-splitting.
         """
-        script_file = Path(__file__).parent.parent / "scripts" / "check-pr-status.sh"
+        script_file = scripts_dir / "check-pr-status.sh"
 
         if not script_file.exists():
             pytest.skip("check-pr-status.sh not found")
@@ -61,14 +65,14 @@ class TestShellScriptSafety:
         # After fix, these patterns should not be found
         assert len(issues) == 0, "Found unquoted variables:\n" + "\n".join(issues[:5])
 
-    def test_build_infisical_wheels_rm_safety(self):
+    def test_build_infisical_wheels_rm_safety(self, scripts_dir):
         """
         Test that build-infisical-wheels.sh validates OUTPUT_DIR before rm -rf.
 
         This test will initially FAIL if path validation is missing.
         After fix, should validate OUTPUT_DIR is not empty or root before deletion.
         """
-        script_file = Path(__file__).parent.parent / "scripts" / "build-infisical-wheels.sh"
+        script_file = scripts_dir / "build-infisical-wheels.sh"
 
         if not script_file.exists():
             pytest.skip("build-infisical-wheels.sh not found")
@@ -99,14 +103,19 @@ class TestDockerComposeHealthChecks:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_keycloak_health_check_uses_native_command(self):
+    @pytest.fixture
+    def docker_compose_file(self, repo_root):
+        """Get docker-compose.test.yml using shared repo_root fixture (DRY pattern)."""
+        return repo_root / "docker-compose.test.yml"
+
+    def test_keycloak_health_check_uses_native_command(self, docker_compose_file):
         """
         Test that Keycloak health check uses native kc.sh command instead of curl.
 
         This test will initially FAIL because curl is not available in Keycloak image.
         After fix, should use /opt/keycloak/bin/kc.sh show-health or similar.
         """
-        compose_file = Path(__file__).parent.parent / "docker-compose.test.yml"
+        compose_file = docker_compose_file
 
         if not compose_file.exists():
             pytest.skip("docker-compose.test.yml not found")
@@ -130,18 +139,18 @@ class TestDockerComposeHealthChecks:
         )
 
         # Should use native Keycloak command or built-in health endpoint
-        assert (
-            "kc.sh" in test_str or "/health" in test_str
-        ), "Keycloak health check should use native command or health endpoint"
+        assert "kc.sh" in test_str or "/health" in test_str, (
+            "Keycloak health check should use native command or health endpoint"
+        )
 
-    def test_qdrant_health_check_uses_available_command(self):
+    def test_qdrant_health_check_uses_available_command(self, docker_compose_file):
         """
         Test that Qdrant health check uses TCP port check (not wget/curl/grpc_health_probe).
 
         Qdrant v1.15.1 image does not include wget, curl, or grpc_health_probe.
         Use TCP-based health check via /dev/tcp which requires no external tools.
         """
-        compose_file = Path(__file__).parent.parent / "docker-compose.test.yml"
+        compose_file = docker_compose_file
 
         if not compose_file.exists():
             pytest.skip("docker-compose.test.yml not found")
@@ -165,9 +174,9 @@ class TestDockerComposeHealthChecks:
             "Works with bash in Qdrant v1.15.1+ without external dependencies"
         )
 
-    def test_all_health_checks_have_proper_intervals(self):
+    def test_all_health_checks_have_proper_intervals(self, docker_compose_file):
         """Test that all services have reasonable health check intervals."""
-        compose_file = Path(__file__).parent.parent / "docker-compose.test.yml"
+        compose_file = docker_compose_file
 
         if not compose_file.exists():
             pytest.skip("docker-compose.test.yml not found")

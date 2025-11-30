@@ -20,7 +20,6 @@ Fix Pattern:
   - Use asyncio.create_task() or await to initialize client
 """
 
-import asyncio
 import gc
 
 import pytest

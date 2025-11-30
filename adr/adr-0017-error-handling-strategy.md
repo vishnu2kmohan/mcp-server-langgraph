@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Core Architecture
+
 ## Context
 
 The MCP Server with LangGraph needs a consistent, production-grade error handling strategy that:

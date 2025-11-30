@@ -121,7 +121,7 @@ class PercentileBenchmark:
         value = self._calculate_percentile(percentile)
         label = f" ({description})" if description else ""
 
-        assert value < max_seconds, f"p{percentile}{label}: {value * 1000:.2f}ms " f"(target: < {max_seconds * 1000:.0f}ms)"
+        assert value < max_seconds, f"p{percentile}{label}: {value * 1000:.2f}ms (target: < {max_seconds * 1000:.0f}ms)"
 
     def _calculate_percentile(self, percentile: int) -> float:
         """

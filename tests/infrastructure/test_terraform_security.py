@@ -104,8 +104,7 @@ class TestAzureKeyVaultSecurityDefaults:
         Requirement: Support environment-specific IP allowlists.
         """
         assert 'variable "allowed_ip_ranges"' in azure_variables_tf, (
-            "Missing 'allowed_ip_ranges' variable. "
-            "Required to specify authorized IPs when network_default_action is 'Deny'."
+            "Missing 'allowed_ip_ranges' variable. Required to specify authorized IPs when network_default_action is 'Deny'."
         )
 
         # Check that it's a list type
@@ -184,7 +183,7 @@ class TestAWSSecretsManagerSecurity:
         Requirement: Configurable recovery window (0-30 days).
         """
         assert 'variable "recovery_window_in_days"' in aws_variables_tf, (
-            "Missing 'recovery_window_in_days' variable. " "Required to configure secret recovery window (default: 30 days)."
+            "Missing 'recovery_window_in_days' variable. Required to configure secret recovery window (default: 30 days)."
         )
 
     def test_secret_uses_kms_key_id(self, aws_main_tf: str):
@@ -206,9 +205,9 @@ class TestAWSSecretsManagerSecurity:
         pattern = (
             r'resource\s+"aws_secretsmanager_secret"[^{]*{[^}]*recovery_window_in_days\s*=\s*var\.recovery_window_in_days'
         )
-        assert re.search(
-            pattern, aws_main_tf, re.DOTALL
-        ), "aws_secretsmanager_secret must use recovery_window_in_days = var.recovery_window_in_days"
+        assert re.search(pattern, aws_main_tf, re.DOTALL), (
+            "aws_secretsmanager_secret must use recovery_window_in_days = var.recovery_window_in_days"
+        )
 
 
 @pytest.mark.xdist_group(name="testdynamodbbackendsecurity")
@@ -255,7 +254,7 @@ class TestDynamoDBBackendSecurity:
         assert (
             'variable "enable_deletion_protection"' in backend_variables_tf
             or 'variable "deletion_protection_enabled"' in backend_variables_tf
-        ), "Missing deletion protection variable. " "Required to prevent accidental deletion of Terraform state lock table."
+        ), "Missing deletion protection variable. Required to prevent accidental deletion of Terraform state lock table."
 
     def test_deletion_protection_enabled_by_default(self, backend_variables_tf: str):
         """
@@ -280,7 +279,7 @@ class TestDynamoDBBackendSecurity:
         Requirement: Support CMK encryption in production.
         """
         assert 'variable "kms_key_arn"' in backend_variables_tf or 'variable "kms_key_id"' in backend_variables_tf, (
-            "Missing KMS key variable. " "Required for Customer Managed Key (CMK) encryption in production."
+            "Missing KMS key variable. Required for Customer Managed Key (CMK) encryption in production."
         )
 
     def test_dynamodb_uses_deletion_protection(self, backend_main_tf: str):
@@ -404,7 +403,7 @@ class TestCheckovCompliance:
         )
 
         assert result == 0, (
-            "Checkov scan failed for Azure secrets module. " "Run 'checkov -d terraform/modules/azure-secrets' for details."
+            "Checkov scan failed for Azure secrets module. Run 'checkov -d terraform/modules/azure-secrets' for details."
         )
 
     @pytest.mark.skipif(os.system("which checkov > /dev/null 2>&1") != 0, reason="Checkov not installed (pip install checkov)")
@@ -418,10 +417,10 @@ class TestCheckovCompliance:
         if not Path("terraform/modules/aws-secrets").exists():
             pytest.skip("AWS secrets module not present")
 
-        result = os.system("checkov -d terraform/modules/aws-secrets " "--framework terraform " "--quiet " "--compact")
+        result = os.system("checkov -d terraform/modules/aws-secrets --framework terraform --quiet --compact")
 
         assert result == 0, (
-            "Checkov scan failed for AWS secrets module. " "Run 'checkov -d terraform/modules/aws-secrets' for details."
+            "Checkov scan failed for AWS secrets module. Run 'checkov -d terraform/modules/aws-secrets' for details."
         )
 
     @pytest.mark.skipif(os.system("which checkov > /dev/null 2>&1") != 0, reason="Checkov not installed (pip install checkov)")
@@ -436,9 +435,9 @@ class TestCheckovCompliance:
         if not Path("terraform/backend-setup").exists():
             pytest.skip("Backend setup not present")
 
-        result = os.system("checkov -d terraform/backend-setup " "--framework terraform " "--quiet " "--compact")
+        result = os.system("checkov -d terraform/backend-setup --framework terraform --quiet --compact")
 
-        assert result == 0, "Checkov scan failed for backend setup. " "Run 'checkov -d terraform/backend-setup' for details."
+        assert result == 0, "Checkov scan failed for backend setup. Run 'checkov -d terraform/backend-setup' for details."
 
 
 if __name__ == "__main__":

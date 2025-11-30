@@ -205,6 +205,8 @@ class TestProductionReadiness:
 
     def test_all_required_dependencies_present(self):
         """All required dependencies should be importable"""
+        # Note: 'anthropic' is NOT a direct dependency - the project uses litellm
+        # for multi-LLM support, which handles Anthropic/OpenAI/etc. internally
         required_packages = [
             "fastapi",
             "uvicorn",
@@ -214,7 +216,6 @@ class TestProductionReadiness:
             "asyncpg",
             "langchain_core",
             "langgraph",
-            "anthropic",
             "litellm",
             "openfga_sdk",
         ]

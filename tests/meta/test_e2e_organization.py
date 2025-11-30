@@ -13,7 +13,6 @@ Finding: Broken E2E tracking tooling - script pointed to wrong path
 
 import ast
 import gc
-import re
 from pathlib import Path
 
 import pytest
@@ -44,8 +43,7 @@ class TestE2EOrganization:
         e2e_journey_file = Path(__file__).parent.parent / "e2e" / "test_full_user_journey.py"
 
         assert e2e_journey_file.exists(), (
-            f"E2E journey test file not found at {e2e_journey_file}. "
-            f"Expected location: tests/e2e/test_full_user_journey.py"
+            f"E2E journey test file not found at {e2e_journey_file}. Expected location: tests/e2e/test_full_user_journey.py"
         )
 
         # Validate it's a real test file with content
@@ -68,7 +66,7 @@ class TestE2EOrganization:
         References:
         - scripts/validation/check_e2e_completion.py:17 - E2E_TEST_FILE path constant
         """
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "check_e2e_completion.py"
+        script_path = Path(__file__).parent.parent.parent / "scripts" / "validators" / "check_e2e_completion.py"
 
         assert script_path.exists(), f"check_e2e_completion.py not found at {script_path}"
 
@@ -92,14 +90,14 @@ class TestE2EOrganization:
         # Validate the path includes correct segments (ast.unparse uses single quotes)
         assert "'tests'" in e2e_test_file_value, f"E2E_TEST_FILE should reference 'tests' directory: {e2e_test_file_value}"
         assert "'e2e'" in e2e_test_file_value, f"E2E_TEST_FILE should reference 'e2e' directory: {e2e_test_file_value}"
-        assert (
-            "'test_full_user_journey.py'" in e2e_test_file_value
-        ), f"E2E_TEST_FILE should reference test_full_user_journey.py: {e2e_test_file_value}"
+        assert "'test_full_user_journey.py'" in e2e_test_file_value, (
+            f"E2E_TEST_FILE should reference test_full_user_journey.py: {e2e_test_file_value}"
+        )
 
         # Should NOT include "integration" in the path
-        assert (
-            "'integration'" not in e2e_test_file_value
-        ), f"E2E_TEST_FILE should NOT include 'integration' directory (legacy location): {e2e_test_file_value}"
+        assert "'integration'" not in e2e_test_file_value, (
+            f"E2E_TEST_FILE should NOT include 'integration' directory (legacy location): {e2e_test_file_value}"
+        )
 
     def test_e2e_infrastructure_helpers_exist(self):
         """

@@ -65,7 +65,7 @@ import mcp_server_langgraph_client
 Execute tests using uv:
 
 ```sh
-uv run pytest
+uv run --frozen pytest
 ```
 
 Or with pytest directly:

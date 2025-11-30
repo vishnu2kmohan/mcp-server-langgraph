@@ -2,10 +2,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/version-2.8.0-blue.svg)](CHANGELOG.md)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Production Ready](https://img.shields.io/badge/production-ready-brightgreen.svg)](docs/deployment/production-checklist.mdx)
 [![Documentation](https://img.shields.io/badge/docs-mintlify-green.svg)](https://vishnu2kmohan.github.io/mcp-server-langgraph/)
-[![ADRs](https://img.shields.io/badge/ADRs-59-informational.svg)](adr/README.md)
+[![ADRs](https://img.shields.io/badge/ADRs-63-informational.svg)](adr/README.md)
 [![Use This Template](https://img.shields.io/badge/use-this%20template-blue.svg?logo=cookiecutter)](https://github.com/vishnu2kmohan/mcp-server-langgraph#-use-this-template)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?logo=docker&logoColor=white)](Dockerfile)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?logo=kubernetes&logoColor=white)](docs/deployment/kubernetes.mdx)
@@ -40,7 +40,7 @@ Pick the quickstart that matches your needs:
 
 This project uses **19 GitHub Actions workflows** with Google Cloud Platform (GCP) Workload Identity Federation for secure deployments.
 
-**Quick setup**: [SECRETS.md](SECRETS.md) | **Full CI/CD status**: [docs/ci-cd/badges.mdx](docs/ci-cd/badges.mdx) | **Workflow details**: [.github/archive/audits-2025-11/WORKFLOW_AUDIT_REMAINING.md](.github/archive/audits-2025-11/WORKFLOW_AUDIT_REMAINING.md)
+**Quick setup**: [SECRETS.md](.github/SECRETS.md) | **Full CI/CD status**: [docs/ci-cd/badges.mdx](docs/ci-cd/badges.mdx) | **Workflow details**: [.github/archive/audits-2025-11/WORKFLOW_AUDIT_REMAINING.md](.github/archive/audits-2025-11/WORKFLOW_AUDIT_REMAINING.md)
 
 ---
 
@@ -277,7 +277,7 @@ print(f'Databases: {list(result.databases.keys())}')
 "
 ```
 
-**See**: [ADR-0056: Database Architecture](adr/adr-0056-database-architecture-and-naming-convention.md) | [Migration Script](migrations/000_init_databases.sh) | [Database Validation Module](src/mcp_server_langgraph/health/database_checks.py)
+**See**: [ADR-0060: Database Architecture](adr/adr-0060-database-architecture-and-naming-convention.md) | [Migration Script](migrations/000_init_databases.sh) | [Database Validation Module](src/mcp_server_langgraph/health/database_checks.py)
 
 ## Quick Start
 
@@ -329,7 +329,7 @@ curl http://localhost:8000/health    # Test
 - **Pre-commit** (< 30s): Fast validation on changed files - commit frequently!
 - **Pre-push** (8-12 min): Comprehensive validation matching CI - prevents surprises!
 
-**See**: [Complete Installation Guide](docs/getting-started/installation.mdx) | [Day-1 Developer Guide](docs/getting-started/day-1-developer.mdx) | [Git Hooks Guide](TESTING.md#git-hooks-and-validation)
+**See**: [Complete Installation Guide](docs/getting-started/installation.mdx) | [Day-1 Developer Guide](docs/getting-started/day-1-developer.mdx) | [Git Hooks Guide](docs-internal/testing/TESTING.md#git-hooks-and-validation)
 
 ### 👤 Creating Test Users
 
@@ -472,7 +472,7 @@ Tests run in parallel across multiple GitHub Actions workflows for comprehensive
 - Each group runs independently for maximum CI efficiency
 
 **Pre-push Hooks**:
-- **Fast mode** (default): Optimized unit tests (~2-3 min) via pytest-testmon
+- **Fast mode** (default): Optimized unit tests (~2-3 min) via pytest-xdist parallel execution
 - **Comprehensive mode**: `make validate-pre-push` runs all test suites including integration tests (~8-12 min)
 
 **Best Practice**: All workflows run in parallel for fast feedback. Integration tests now have **full CI visibility** with parallelization, catching infrastructure issues before merge.
@@ -678,12 +678,12 @@ See **[MCP Registry Guide](reference/mcp-registry.md)** for registry deployment 
 - `make test-unit` - Fast unit tests with mocked dependencies
 - `make test-integration` - End-to-end with real infrastructure
 - `make test-coverage` - Generate coverage report
-- `make validate-pre-push` - Quick validation (skip integration, use testmon)
+- `make validate-pre-push` - Quick validation (skip integration tests)
 - `CI_PARITY=1 make validate-pre-push` - Full CI-equivalent validation (includes integration tests)
 
 **Development**: Branch protection, conventional commits, code review required, 59 ADRs documenting architectural decisions.
 
-**See**: [Complete Development Guide](.github/CLAUDE.md) | [Testing Strategy](docs/advanced/testing.mdx) | [Contributing Guidelines](CONTRIBUTING.md) | [Ruff Migration Guide](docs-internal/TOOLING_CONSOLIDATION_MIGRATION.md)
+**See**: [Complete Development Guide](.github/CLAUDE.md) | [Testing Strategy](docs/advanced/testing.mdx) | [Contributing Guidelines](CONTRIBUTING.md)
 
 ## Contributors
 

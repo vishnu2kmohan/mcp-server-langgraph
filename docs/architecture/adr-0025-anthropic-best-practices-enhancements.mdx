@@ -1,25 +1,25 @@
 ---
-title: 25. Anthropic Best Practices - Advanced Enhancements
-description: 'Architecture Decision Record: ADR-0025: Anthropic Best Practices - Advanced Enhancements'
-icon: 'file-lines'
-seoTitle: "ADR-0025: 25. Anthropic Best Practices - Advanced Enhancemen"
-seoDescription: "Architecture Decision Record 0025: Architecture Decision Record: ADR-0025: Anthropic Best Practices - Advanced Enhancements"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "25."]
-contentType: "explanation"
+title: "25. Anthropic Best Practices - Advanced Enhancements"
+description: "Architecture Decision Record: 25. Anthropic Best Practices - Advanced Enhancements"
 ---
 
-## ADR-0025: Anthropic Best Practices - Advanced Enhancements
+# 25. Anthropic Best Practices - Advanced Enhancements
 
-**Status**: ✅ Accepted
-**Date**: 2025-10-17
-**Deciders**: Development Team
-**Related ADRs**: [ADR-0023](/architecture/adr-0023-anthropic-tool-design-best-practices), [ADR-0024](/architecture/adr-0024-agentic-loop-implementation)
+Date: 2025-10-17
 
-### Context
+## Status
 
-Following the comprehensive assessment in [ADR-0024](/architecture/adr-0024-agentic-loop-implementation), we achieved a 9.2/10 adherence score to Anthropic's best practices. This ADR documents the implementation of advanced enhancements to reach 9.8/10.
+Accepted
 
-#### Assessment Results
+## Category
+
+Core Architecture
+
+## Context
+
+Following the comprehensive assessment in [ADR-0024](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0024-agentic-loop-implementation.md), we achieved a 9.2/10 adherence score to Anthropic's best practices. This ADR documents the implementation of advanced enhancements to reach 9.8/10.
+
+### Assessment Results
 
 From `ANTHROPIC_BEST_PRACTICES_ASSESSMENT.md`:
 
@@ -32,17 +32,17 @@ From `ANTHROPIC_BEST_PRACTICES_ASSESSMENT.md`:
   4. Parameter Naming Consistency (Low Priority) - ✅ Previously completed
   5. Framework Transparency Documentation (Very Low Priority) - ✅ Previously completed
 
-#### Anthropic References
+### Anthropic References
 
 1. [Effective Context Engineering for AI Agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
 2. [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents)
 3. [Writing Tools for Agents](https://www.anthropic.com/engineering/writing-tools-for-agents)
 
-### Decision
+## Decision
 
 We implement all identified enhancements to achieve comprehensive adherence to Anthropic's best practices:
 
-#### 1. Just-in-Time Context Loading with Qdrant
+### 1. Just-in-Time Context Loading with Qdrant
 
 **What**: Implement dynamic, semantic search-based context loading.
 
@@ -53,8 +53,8 @@ We implement all identified enhancements to achieve comprehensive adherence to A
 - Supports unlimited context corpus with intelligent retrieval
 
 **How**:
-```
-## New module: src/mcp_server_langgraph/core/dynamic_context_loader.py
+```python
+# New module: src/mcp_server_langgraph/core/dynamic_context_loader.py
 class DynamicContextLoader:
     - Qdrant vector store integration
     - Semantic search with embeddings (SentenceTransformer)
@@ -62,6 +62,7 @@ class DynamicContextLoader:
     - Token-aware batch loading
     - LRU caching for performance
 ```
+
 **Integration**:
 - New `load_context` node in agent graph (before compaction)
 - Flow: START → load_context → compact → router → ...
@@ -72,7 +73,7 @@ class DynamicContextLoader:
 - Configuration settings in `config.py`
 - Environment variables in `.env.example`
 
-#### 2. Parallel Tool Execution
+### 2. Parallel Tool Execution
 
 **What**: Execute independent tool calls concurrently.
 
@@ -83,8 +84,8 @@ class DynamicContextLoader:
 - Respects dependencies through topological sorting
 
 **How**:
-```
-## New module: src/mcp_server_langgraph/core/parallel_executor.py
+```python
+# New module: src/mcp_server_langgraph/core/parallel_executor.py
 class ParallelToolExecutor:
     - Dependency graph analysis
     - Topological sorting for execution order
@@ -99,7 +100,7 @@ class ParallelToolExecutor:
 - Error handling and recovery
 - Configurable max parallelism
 
-#### 3. Enhanced Structured Note-Taking
+### 3. Enhanced Structured Note-Taking
 
 **What**: LLM-based extraction of key information into 6 categories.
 
@@ -110,14 +111,15 @@ class ParallelToolExecutor:
 - Fallback to rule-based extraction
 
 **How**:
-```
-## Enhanced in: src/mcp_server_langgraph/core/context_manager.py
+```python
+# Enhanced in: src/mcp_server_langgraph/core/context_manager.py
 async def extract_key_information_llm(messages):
     - XML-structured prompts
     - 6-category extraction
     - LLM-based analysis
     - Fallback to keyword-based
 ```
+
 **Categories**:
 1. Decisions: Choices made, agreements
 2. Requirements: Needs, constraints
@@ -126,9 +128,9 @@ async def extract_key_information_llm(messages):
 5. Issues: Problems, errors
 6. Preferences: User settings
 
-### Implementation Details
+## Implementation Details
 
-#### File Changes
+### File Changes
 
 **New Files**:
 1. `src/mcp_server_langgraph/core/dynamic_context_loader.py` (450 lines)
@@ -164,7 +166,7 @@ async def extract_key_information_llm(messages):
    - Documented 15+ new environment variables
    - Configuration examples and best practices
 
-#### Configuration
+### Configuration
 
 **Dynamic Context Loading**:
 ```bash
@@ -182,12 +184,13 @@ CONTEXT_CACHE_SIZE=100
 ENABLE_PARALLEL_EXECUTION=false  # Default off
 MAX_PARALLEL_TOOLS=5
 ```
+
 **Enhanced Note-Taking**:
 ```bash
 ENABLE_LLM_EXTRACTION=false  # Default off
 ```
 
-#### Dependencies
+### Dependencies
 
 **New Dependencies** (added to `pyproject.toml`):
 - `qdrant-client>=1.7.0` - Vector database client
@@ -196,9 +199,9 @@ ENABLE_LLM_EXTRACTION=false  # Default off
 **Docker Services**:
 - `qdrant:v1.14.0` - Vector database for context storage
 
-### Consequences
+## Consequences
 
-#### Positive
+### Positive
 
 1. **Comprehensive Anthropic Adherence**:
    - Score increases from 9.2/10 to 9.8/10
@@ -228,7 +231,7 @@ ENABLE_LLM_EXTRACTION=false  # Default off
    - Configuration examples
    - ADR documentation
 
-#### Negative
+### Negative
 
 1. **Increased Complexity**:
    - New dependencies (Qdrant, SentenceTransformer)
@@ -245,7 +248,7 @@ ENABLE_LLM_EXTRACTION=false  # Default off
    - Vector database concepts
    - Dependency graph management
 
-#### Neutral
+### Neutral
 
 1. **Optional Features**:
    - All enhancements default to disabled
@@ -257,9 +260,9 @@ ENABLE_LLM_EXTRACTION=false  # Default off
    - Performance benchmarks
    - Production validation
 
-### Alternatives Considered
+## Alternatives Considered
 
-#### Alternative 1: Simpler Context Loading (Rejected)
+### Alternative 1: Simpler Context Loading (Rejected)
 
 Use keyword-based context search instead of semantic search.
 
@@ -267,7 +270,7 @@ Use keyword-based context search instead of semantic search.
 **Cons**: Lower quality, misses semantic relationships
 **Decision**: Rejected - semantic search provides significantly better results
 
-#### Alternative 2: In-Memory Vector Store (Rejected)
+### Alternative 2: In-Memory Vector Store (Rejected)
 
 Use FAISS or similar in-memory solution instead of Qdrant.
 
@@ -275,7 +278,7 @@ Use FAISS or similar in-memory solution instead of Qdrant.
 **Cons**: Not persistent, not distributed, loses data on restart
 **Decision**: Rejected - Qdrant provides better production characteristics
 
-#### Alternative 3: Thread-based Parallelism (Rejected)
+### Alternative 3: Thread-based Parallelism (Rejected)
 
 Use threads instead of asyncio for parallel execution.
 
@@ -283,72 +286,75 @@ Use threads instead of asyncio for parallel execution.
 **Cons**: Less efficient for I/O-bound operations, harder to manage
 **Decision**: Rejected - asyncio is the right choice for I/O-bound tool execution
 
-### Rollout Plan
+## Rollout Plan
 
-#### Phase 1: Infrastructure (Completed)
+### Phase 1: Infrastructure (Completed)
 - ✅ Add Qdrant to docker-compose.yml
 - ✅ Add configuration settings
 - ✅ Document environment variables
 
-#### Phase 2: Core Implementation (Completed)
+### Phase 2: Core Implementation (Completed)
 - ✅ Implement DynamicContextLoader
 - ✅ Implement ParallelToolExecutor
 - ✅ Enhance ContextManager with LLM extraction
 - ✅ Integrate with agent graph
 
-#### Phase 3: Testing (Future)
+### Phase 3: Testing (Future)
 - ⏳ Unit tests for each module
 - ⏳ Integration tests for full workflow
 - ⏳ Performance benchmarks
 
-#### Phase 4: Production Rollout (Future)
+### Phase 4: Production Rollout (Future)
 - ⏳ Enable in staging with monitoring
 - ⏳ Gradual feature flag rollout
 - ⏳ Production validation
 - ⏳ Documentation updates
 
-### Monitoring & Metrics
+## Monitoring & Metrics
 
-#### Key Metrics to Track
+### Key Metrics to Track
 
 **Dynamic Context Loading**:
-```
+```python
 - context.semantic_search.latency_ms
 - context.load.cache_hit_rate
 - context.load.token_savings_total
 - context.load.contexts_loaded_per_request
 ```
+
 **Parallel Execution**:
-```
+```python
 - parallel.tools.concurrent_total
 - parallel.tools.latency_reduction_ms
 - parallel.tools.dependency_levels_avg
 ```
+
 **LLM Extraction**:
-```
+```python
 - extraction.llm.success_rate
 - extraction.llm.fallback_rate
 - extraction.categories.items_per_category
 ```
-#### Alerts
+
+### Alerts
 
 1. **Qdrant Health**: Alert if unavailable > 5 minutes
 2. **Context Load Failures**: Alert if failure rate > 5%
 3. **Parallel Execution Errors**: Alert if error rate > 10%
 
-### Migration Guide
+## Migration Guide
 
-#### For Developers
+### For Developers
 
 **Enabling Dynamic Context Loading**:
-```
-## 1. Start Qdrant
+```bash
+# 1. Start Qdrant
 docker compose up -d qdrant
 
-## 2. Enable in .env
+# 2. Enable in .env
 ENABLE_DYNAMIC_CONTEXT_LOADING=true
 
-## 3. Index some contexts (example)
+# 3. Index some contexts (example)
 from mcp_server_langgraph.core.dynamic_context_loader import DynamicContextLoader
 
 loader = DynamicContextLoader()
@@ -361,18 +367,19 @@ await loader.index_context(
 ```
 
 **Enabling Parallel Execution**:
-```
-## Enable in .env
+```bash
+# Enable in .env
 ENABLE_PARALLEL_EXECUTION=true
 MAX_PARALLEL_TOOLS=5
 ```
+
 **Enabling LLM Extraction**:
-```
-## Enable in .env
+```bash
+# Enable in .env
 ENABLE_LLM_EXTRACTION=true
 ```
 
-### Success Criteria
+## Success Criteria
 
 - [x] All enhancements implemented and integrated
 - [x] Configuration properly documented
@@ -382,17 +389,17 @@ ENABLE_LLM_EXTRACTION=true
 - [ ] Monitoring dashboards created (Future)
 - [ ] Production rollout successful (Future)
 
-### References
+## References
 
 - **Enhancement Plan**: `reports/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN_20251017.md`
 - **Assessment Report**: `ANTHROPIC_BEST_PRACTICES_ASSESSMENT.md`
 - **Agentic Loop Guide**: `docs-internal/AGENTIC_LOOP_GUIDE.md`
 - **Anthropic Article 1**: [Context Engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
 - **Anthropic Article 2**: [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents)
-- **ADR-0023**: [Tool Design Best Practices](/architecture/adr-0023-anthropic-tool-design-best-practices)
-- **ADR-0024**: [Agentic Loop Implementation](/architecture/adr-0024-agentic-loop-implementation)
+- **ADR-0023**: [Tool Design Best Practices](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0023-anthropic-tool-design-best-practices.md)
+- **ADR-0024**: [Agentic Loop Implementation](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0024-agentic-loop-implementation.md)
 
-### Conclusion
+## Conclusion
 
 This implementation completes our journey to comprehensive Anthropic best practices adherence:
 

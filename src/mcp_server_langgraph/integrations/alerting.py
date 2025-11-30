@@ -69,15 +69,23 @@ class Alert:
     severity: AlertSeverity
     category: AlertCategory
     source: str  # Component that generated the alert
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.min)  # Sentinel, set in __post_init__
     metadata: dict[str, Any] = field(default_factory=dict)
     dedupe_key: str | None = None  # For deduplication
-    alert_id: str = field(
-        default_factory=lambda: hashlib.md5(str(datetime.now(timezone.utc)).encode(), usedforsecurity=False).hexdigest()[:16]
-    )  # nosec B324
+    alert_id: str = ""  # Sentinel, set in __post_init__ for freezegun compatibility  # nosec B324
 
     def __post_init__(self) -> None:
-        """Generate deduplication key if not provided"""
+        """Generate timestamps and deduplication key if not provided. Ensures freezegun compatibility."""
+        # Set timestamp if sentinel value (moved from default_factory for freezegun compatibility)
+        if self.timestamp == datetime.min:
+            self.timestamp = datetime.now(timezone.utc)
+
+        # Set alert_id if empty sentinel (moved from default_factory for freezegun compatibility)
+        if not self.alert_id:
+            # MD5 used for non-cryptographic ID generation only
+            self.alert_id = hashlib.md5(str(datetime.now(timezone.utc)).encode(), usedforsecurity=False).hexdigest()[:16]  # nosec B324
+
+        # Generate dedupe_key if not provided
         if self.dedupe_key is None:
             # Generate hash from title, source, and category
             # MD5 used for non-cryptographic deduplication only
@@ -319,14 +327,14 @@ class EmailProvider(AlertProvider):
         return f"""
         <html>
         <body style="font-family: Arial, sans-serif;">
-            <div style="border-left: 4px solid {severity_color.get(alert.severity, '#808080')}; padding-left: 12px;">
+            <div style="border-left: 4px solid {severity_color.get(alert.severity, "#808080")}; padding-left: 12px;">
                 <h2 style="color: {severity_color.get(alert.severity)};">{alert.title}</h2>
                 <p>{alert.description}</p>
                 <table style="margin-top: 20px;">
                     <tr><td><strong>Severity</strong></td><td>{alert.severity.value.upper()}</td></tr>
                     <tr><td><strong>Category</strong></td><td>{alert.category.value}</td></tr>
                     <tr><td><strong>Source</strong></td><td>{alert.source}</td></tr>
-                    <tr><td><strong>Time</strong></td><td>{alert.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}</td></tr>
+                    <tr><td><strong>Time</strong></td><td>{alert.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")}</td></tr>
                     {metadata_rows}
                 </table>
             </div>

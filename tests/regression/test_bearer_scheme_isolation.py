@@ -131,7 +131,7 @@ class TestBearerSchemeIsolation:
 
             # Should NOT be 401 Unauthorized
             assert response.status_code != status.HTTP_401_UNAUTHORIZED, (
-                "bearer_scheme override failed - still getting 401 errors. " "This indicates the singleton is still active."
+                "bearer_scheme override failed - still getting 401 errors. This indicates the singleton is still active."
             )
 
             # Should be 200 OK with empty list

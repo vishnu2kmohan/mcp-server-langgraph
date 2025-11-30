@@ -53,7 +53,7 @@ Conducted comprehensive validation of testing infrastructure findings and implem
 
 **Verification**:
 ```bash
-$ uv run python scripts/check_e2e_completion.py
+$ uv run --frozen python scripts/check_e2e_completion.py
 ✅ PASS: E2E completion (35.1%) meets minimum (25%)
 📈 Progress toward target: 44.9% remaining to reach 80%
 ```
@@ -225,23 +225,23 @@ $ pre-commit run --hook-stage commit --all-files
 
 ### Unit Tests
 ```bash
-$ uv run pytest -m unit tests/unit/ -q
+$ uv run --frozen pytest -m unit tests/unit/ -q
 ✅ 194 passed, 1 failed (99.5% pass rate)
 - 1 known failure: test_app_factory.py (requires DB at import time - pre-existing)
 ```
 
 ### Meta-Tests
 ```bash
-$ uv run pytest tests/meta/test_e2e_organization.py -v
+$ uv run --frozen pytest tests/meta/test_e2e_organization.py -v
 ✅ 5/5 tests PASSED
 
-$ uv run pytest tests/meta/test_ci_workflow_redundancy.py -v
+$ uv run --frozen pytest tests/meta/test_ci_workflow_redundancy.py -v
 ✅ 2/2 tests PASSED, 1 SKIPPED (informational)
 ```
 
 ### E2E Completion Check
 ```bash
-$ uv run python scripts/check_e2e_completion.py
+$ uv run --frozen python scripts/check_e2e_completion.py
 ✅ PASS: E2E completion (35.1%) meets minimum (25%)
 📈 Progress toward target: 44.9% remaining to reach 80%
 ```

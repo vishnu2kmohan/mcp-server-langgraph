@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -34,7 +34,7 @@ jobs:
 
       - name: Verify import works
         run: |
-          uv run python -c "
+          uv run --frozen python -c "
           import mcp_server_langgraph
           from mcp_server_langgraph.core.agent import create_agent_graph
           from mcp_server_langgraph.tools import ALL_TOOLS
@@ -47,7 +47,7 @@ jobs:
           # IMPORTANT: Must match TEST_JWT_SECRET in tests/constants.py
           JWT_SECRET_KEY: "test-secret-key-for-integration-tests"
         run: |
-          uv run python -c "
+          uv run --frozen python -c "
           from mcp_server_langgraph.core.config import settings
           # Should work with environment variable fallback
           assert settings.jwt_secret_key == 'test-secret-key-for-integration-tests'
@@ -60,7 +60,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -80,7 +80,7 @@ jobs:
 
       - name: Verify secrets fallback
         run: |
-          uv run python -c "
+          uv run --frozen python -c "
           from mcp_server_langgraph.secrets.manager import SecretsManager
           # Should work even if Infisical not installed
           manager = SecretsManager()
@@ -95,7 +95,7 @@ jobs:
     timeout-minutes: 15  # Embeddings may take longer
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -110,7 +110,7 @@ jobs:
 
       - name: Verify embeddings import
         run: |
-          uv run python -c "
+          uv run --frozen python -c "
           # Should be able to import sentence_transformers
           try:
               import sentence_transformers
@@ -129,7 +129,7 @@ jobs:
     timeout-minutes: 15  # All extras installation may take longer
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -149,7 +149,7 @@ jobs:
 
       - name: Run smoke tests
         run: |
-          uv run python -c "
+          uv run --frozen python -c "
           from mcp_server_langgraph.core.agent import create_agent_graph
           from mcp_server_langgraph.tools import ALL_TOOLS
           from mcp_server_langgraph.core.storage import ConversationStore
@@ -165,7 +165,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -175,7 +175,7 @@ jobs:
 
       - name: Verify production config requirements
         run: |
-          uv run python -c "
+          uv run --frozen python -c "
           from mcp_server_langgraph.core.config import Settings
           import os
 
@@ -215,7 +215,7 @@ jobs:
             flags: "ENABLE_PARALLEL_EXECUTION=false ENABLE_DYNAMIC_CONTEXT_LOADING=false"
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -226,7 +226,7 @@ jobs:
       - name: Test with ${{ matrix.config.name }}
         run: |
           export ${{ matrix.config.flags }}
-          uv run python -c "
+          uv run --frozen python -c "
           from mcp_server_langgraph.core.config import settings
           from mcp_server_langgraph.core.agent import create_agent_graph
 

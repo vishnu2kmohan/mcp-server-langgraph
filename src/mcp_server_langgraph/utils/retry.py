@@ -93,7 +93,7 @@ async def retry_with_backoff(
                 jitter_factor = random.uniform(0.8, 1.2)
                 delay = delay * jitter_factor
 
-            logger.warning(f"Attempt {attempt + 1}/{max_retries + 1} failed: {e}. " f"Retrying in {delay:.2f}s...")
+            logger.warning(f"Attempt {attempt + 1}/{max_retries + 1} failed: {e}. Retrying in {delay:.2f}s...")
 
             await asyncio.sleep(delay)
 

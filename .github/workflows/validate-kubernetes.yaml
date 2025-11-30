@@ -34,7 +34,7 @@ jobs:
     name: Validate Helm Charts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up Helm
         uses: azure/setup-helm@v4.3.1
@@ -78,12 +78,12 @@ jobs:
       matrix:
         overlay: [dev, staging, production, production-gke, staging-gke]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up Kustomize
-        run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-          sudo mv kustomize /usr/local/bin/
+        uses: imranismail/setup-kustomize@v2
+        with:
+          kustomize-version: "5.0.0"
 
       - name: Build Kustomize Overlay - ${{ matrix.overlay }}
         run: |
@@ -98,16 +98,14 @@ jobs:
     name: Validate YAML Syntax
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-
-      - name: Install yamllint
-        # NOTE: Using pip for single-tool install (yamllint only). For full project deps, use uv sync --frozen
-        run: pip install yamllint
+          extras: 'dev'
+          cache-key-prefix: 'k8s-yaml-lint'
 
       - name: Lint YAML files
         # Use repository's .yamllint.yml configuration
@@ -117,7 +115,7 @@ jobs:
     name: Security Validation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Fetch full git history for Gitleaks
 
@@ -161,7 +159,7 @@ jobs:
     name: Run Deployment Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -173,7 +171,7 @@ jobs:
       - name: Run deployment validation tests
         run: |
           if [ -f tests/deployment/test_helm_configuration.py ]; then
-            uv run pytest tests/deployment/test_helm_configuration.py -v --tb=short
+            uv run --frozen pytest tests/deployment/test_helm_configuration.py -v --tb=short
           else
             echo "⚠️  Deployment tests not found, skipping"
           fi
@@ -182,7 +180,7 @@ jobs:
     name: Validate Version Consistency
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Check version alignment
         run: |

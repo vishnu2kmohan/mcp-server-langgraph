@@ -8,10 +8,10 @@ This document provides a high-level summary of the infrastructure implementation
 
 See detailed implementation guides:
 
-- **Kubernetes Best Practices**: [kubernetes-best-practices-implementation.mdx](./kubernetes-best-practices-implementation.mdx)
-- **GKE Staging Implementation**: [deployment/gke-staging-implementation-summary.mdx](./deployment/gke-staging-implementation-summary.mdx)
 - **Code Execution Implementation**: [code-execution-implementation-summary.md](./code-execution-implementation-summary.md)
 - **Infrastructure Deployment**: See INFRASTRUCTURE-DEPLOYMENT-CHECKLIST.md in repository root
+
+For Kubernetes and GKE implementation guides, see the Mintlify documentation in the `docs/` directory.
 
 ## Naming Conventions
 

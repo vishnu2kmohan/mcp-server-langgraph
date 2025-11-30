@@ -50,7 +50,7 @@ Simulates what will run when you push:
 
 ### Flake8 (Syntax & Style)
 ```bash
-uv run flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+uv run --frozen flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
 ```
 Catches:
 - Syntax errors
@@ -61,24 +61,24 @@ Catches:
 ### Black (Code Formatting)
 ```bash
 # Check only
-uv run black --check src/ --line-length=127
+uv run --frozen black --check src/ --line-length=127
 
 # Auto-fix
-uv run black src/ --line-length=127
+uv run --frozen black src/ --line-length=127
 ```
 
 ### Isort (Import Sorting)
 ```bash
 # Check only
-uv run isort --check src/ --profile=black --line-length=127
+uv run --frozen isort --check src/ --profile=black --line-length=127
 
 # Auto-fix
-uv run isort src/ --profile=black --line-length=127
+uv run --frozen isort src/ --profile=black --line-length=127
 ```
 
 ### Mypy (Type Checking)
 ```bash
-uv run mypy src/ --ignore-missing-imports --show-error-codes
+uv run --frozen mypy src/ --ignore-missing-imports --show-error-codes
 ```
 Checks type safety based on `pyproject.toml` configuration.
 
@@ -88,7 +88,7 @@ type error count is significantly reduced.
 
 ### Bandit (Security Scan)
 ```bash
-uv run bandit -r src/ -ll
+uv run --frozen bandit -r src/ -ll
 ```
 Scans for common security issues.
 

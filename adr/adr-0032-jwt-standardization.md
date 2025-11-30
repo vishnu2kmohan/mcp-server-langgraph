@@ -6,6 +6,10 @@ Date: 2025-01-28
 
 Accepted
 
+## Category
+
+Authentication & Authorization
+
 ## Context
 
 Authentication systems often support multiple token formats (sessions, cookies, opaque tokens, JWTs, API keys) leading to complexity in validation, authorization, and client integration. This creates challenges:

@@ -65,7 +65,7 @@ def create_user_provider(settings: Settings, openfga_client: OpenFGAClient | Non
         # Validate JWT secret is configured
         if not settings.jwt_secret_key:
             raise ValueError(
-                "CRITICAL: JWT secret key required for InMemoryUserProvider. " "Set JWT_SECRET_KEY environment variable."
+                "CRITICAL: JWT secret key required for InMemoryUserProvider. Set JWT_SECRET_KEY environment variable."
             )
 
         return InMemoryUserProvider(secret_key=settings.jwt_secret_key, use_password_hashing=settings.use_password_hashing)
@@ -75,7 +75,7 @@ def create_user_provider(settings: Settings, openfga_client: OpenFGAClient | Non
 
         # Validate Keycloak configuration
         if not settings.keycloak_client_secret:
-            raise ValueError("CRITICAL: Keycloak client secret required. " "Set KEYCLOAK_CLIENT_SECRET environment variable.")
+            raise ValueError("CRITICAL: Keycloak client secret required. Set KEYCLOAK_CLIENT_SECRET environment variable.")
 
         if not settings.keycloak_admin_password:
             raise ValueError(
@@ -129,7 +129,7 @@ def create_session_store(settings: Settings) -> SessionStore | None:
 
     if backend == "memory":
         logger.warning(
-            "Using in-memory session store. Sessions will not persist across restarts. " "For production, use 'redis' backend."
+            "Using in-memory session store. Sessions will not persist across restarts. For production, use 'redis' backend."
         )
         # Import here to avoid circular dependency
         from mcp_server_langgraph.auth.session import InMemorySessionStore
@@ -145,7 +145,7 @@ def create_session_store(settings: Settings) -> SessionStore | None:
 
         # Validate Redis configuration
         if not settings.redis_url:
-            raise ValueError("CRITICAL: Redis URL required for Redis session store. " "Set REDIS_URL environment variable.")
+            raise ValueError("CRITICAL: Redis URL required for Redis session store. Set REDIS_URL environment variable.")
 
         return RedisSessionStore(
             redis_url=settings.redis_url,
@@ -157,7 +157,7 @@ def create_session_store(settings: Settings) -> SessionStore | None:
         )
 
     else:
-        raise ValueError(f"Unknown session backend: '{backend}'. " f"Supported backends: 'memory', 'redis'.")
+        raise ValueError(f"Unknown session backend: '{backend}'. Supported backends: 'memory', 'redis'.")
 
 
 def create_auth_middleware(settings: Settings, openfga_client: OpenFGAClient | None = None) -> AuthMiddleware:

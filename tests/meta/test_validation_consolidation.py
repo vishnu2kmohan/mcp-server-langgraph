@@ -280,9 +280,9 @@ class TestValidationDocumentation:
         content = testing_doc.read_text()
 
         # Should mention validation or pre-commit
-        assert (
-            "validation" in content.lower() or "pre-commit" in content.lower()
-        ), "TESTING.md should document validation workflows"
+        assert "validation" in content.lower() or "pre-commit" in content.lower(), (
+            "TESTING.md should document validation workflows"
+        )
 
     def test_makefile_has_validation_tier_comments(self):
         """

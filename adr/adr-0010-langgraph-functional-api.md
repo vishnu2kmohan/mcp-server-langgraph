@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Core Architecture
+
 ## Context
 
 LangGraph offers two approaches for defining agent workflows:

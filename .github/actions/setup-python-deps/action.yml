@@ -1,10 +1,10 @@
 name: 'Setup Python and Dependencies'
-description: 'Set up Python environment with caching and install project dependencies'
+description: 'Set up Python environment with reproducible dependency installation via uv lockfile'
 author: 'MCP Server LangGraph Team'
 
 inputs:
   python-version:
-    description: 'Python version to set up (e.g., 3.12 or ["3.10", "3.11", "3.12"])'
+    description: 'Python version to set up (e.g., 3.12 or ["3.11", "3.12", "3.13"])'
     required: false
     default: '3.12'
 
@@ -14,7 +14,7 @@ inputs:
     default: ''
 
   cache-key-prefix:
-    description: 'Prefix for cache key (e.g., "lint", "test")'
+    description: 'Legacy parameter (ignored). Caching is now managed by astral-sh/setup-uv via uv.lock.'
     required: false
     default: 'deps'
 
@@ -26,21 +26,18 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
 
+    # Modern best practice (2025): Use astral-sh/setup-uv's built-in caching
+    # The cache is keyed by uv.lock, ensuring reproducibility while maintaining speed
+    # See: https://docs.astral.sh/uv/guides/integration/github/
+    # NOTE: Updated from 0.7.12 to 0.9.13 to fix cache mismatch with different Python versions
+    # See: https://github.com/astral-sh/uv/issues/12273
     - name: Install uv
       uses: astral-sh/setup-uv@v7
       with:
-        version: "latest"
-
-    - name: Cache uv dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/uv
-        # Cache version v2: Bust stale caches causing dependency conflicts (2025-11-17)
-        # Increment version number to force fresh cache if conflicts persist
-        key: ${{ runner.os }}-uv-v2-${{ inputs.cache-key-prefix }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-uv-v2-${{ inputs.cache-key-prefix }}-
-          ${{ runner.os }}-uv-v2-
+        version: "0.9.13"  # Pin version for reproducibility (best practice per uv docs)
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+        cache-suffix: ${{ inputs.python-version }}-v2  # Bust cache for Hypothesis 6.147.0 fix
 
     - name: Install base dependencies
       run: |
@@ -49,19 +46,45 @@ runs:
         uv venv --python ${{ inputs.python-version }}
 
         # Build extras flags if provided
+        EXTRAS_INPUT="${{ inputs.extras }}"
         EXTRA_FLAGS=""
-        if [ -n "${{ inputs.extras }}" ]; then
-          for extra in ${{ inputs.extras }}; do
+        if [ -n "$EXTRAS_INPUT" ]; then
+          # Use read to properly handle space-separated extras
+          for extra in $EXTRAS_INPUT; do
             EXTRA_FLAGS="$EXTRA_FLAGS --extra $extra"
           done
-          echo "Installing with extras: ${{ inputs.extras }}"
-          uv sync --frozen $EXTRA_FLAGS
+          echo "Installing with extras: $EXTRAS_INPUT"
+          echo "Extra flags: $EXTRA_FLAGS"
+          # shellcheck disable=SC2086 - Word splitting is intentional for EXTRA_FLAGS
+          # --frozen ensures lockfile is used exactly as-is (reproducible builds)
+          uv sync --frozen --python ${{ inputs.python-version }} $EXTRA_FLAGS
         else
-          uv sync --frozen
+          uv sync --frozen --python ${{ inputs.python-version }}
         fi
 
         # NOTE: Removed legacy install-test flag support (redundant with extras parameter)
         # Workflows should use extras: 'dev builder' instead of install-test: 'true'
+      shell: bash
+
+    - name: Activate virtual environment
+      run: |
+        set -euo pipefail  # Exit on error, undefined vars, pipe failures
+        echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
+        echo "$PWD/.venv/bin" >> $GITHUB_PATH
+      shell: bash
+
+    - name: Verify Python version
+      run: |
+        set -euo pipefail  # Exit on error, undefined vars, pipe failures
+        EXPECTED="${{ inputs.python-version }}"
+        ACTUAL=$(.venv/bin/python --version | awk '{print $2}')
+        echo "Expected Python: $EXPECTED"
+        echo "Actual Python: $ACTUAL"
+        if [[ ! "$ACTUAL" == "$EXPECTED"* ]]; then
+          echo "::error::Python version mismatch! Expected $EXPECTED but got $ACTUAL"
+          exit 1
+        fi
+        echo "✓ Python version verified: $ACTUAL"
       shell: bash
 
     - name: Validate dependency consistency
@@ -69,14 +92,31 @@ runs:
         set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
         # Run uv pip check and capture output
+        # NOTE: Hard-fail enabled after P0-5 audit (2025-11-27)
+        # Pre-audit: Warning only to avoid blocking CI
+        # Post-audit: Confirmed no conflicts exist, now blocking
         if ! CHECK_OUTPUT=$(uv pip check 2>&1); then
-          echo "::warning::Dependency conflicts detected in CI (may be false positive):"
+          echo "::error::Dependency conflicts detected in CI:"
           echo "$CHECK_OUTPUT"
           echo ""
-          echo "Note: This check passes locally but may fail in CI due to environment differences."
-          echo "If tests pass despite this warning, the conflicts are likely non-breaking."
-          # Don't fail the job - let tests determine if there are real issues
+          echo "Resolution options:"
+          echo "  1. Run: uv pip check (locally to reproduce)"
+          echo "  2. Run: uv lock --upgrade-package CONFLICTING_PKG"
+          echo "  3. Check pyproject.toml for incompatible version constraints"
+          echo ""
+          echo "Reference: P0-5 - Pre-commit/Pre-push Hook Remediation Plan"
+          exit 1
         else
           echo "✓ All dependencies are consistent (no conflicts detected)"
         fi
+      shell: bash
+
+    - name: Prune cache for CI optimization
+      run: |
+        set -euo pipefail  # Exit on error, undefined vars, pipe failures
+        # Prune cache to reduce size and remove stale entries
+        # This helps prevent cache mismatch issues when Python versions change
+        # See: https://docs.astral.sh/uv/guides/integration/github/
+        uv cache prune --ci
+        echo "✓ Cache pruned for CI optimization"
       shell: bash

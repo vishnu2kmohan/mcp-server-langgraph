@@ -50,8 +50,6 @@ async def liveness_check() -> HealthResponse:
 
     Used by Kubernetes liveness probe at /health/live
     """
-    from typing import cast
-
     return await health_check()
 
 

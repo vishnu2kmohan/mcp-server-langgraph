@@ -373,7 +373,7 @@ validate_jwt_secret()
   hooks:
     - id: validate-test-constants
       name: Validate Test Constants Synchronization
-      entry: uv run python scripts/validation/validate-test-constants.py
+      entry: uv run --frozen python scripts/validation/validate-test-constants.py
       language: system
       pass_filenames: false
 ```

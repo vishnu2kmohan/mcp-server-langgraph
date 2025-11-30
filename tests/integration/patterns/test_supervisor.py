@@ -12,7 +12,7 @@ import pytest
 from mcp_server_langgraph.patterns.supervisor import Supervisor, SupervisorState
 
 # xdist_group for integration test worker isolation
-pytestmark = pytest.mark.xdist_group(name="integration_patterns_supervisor_tests")
+pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="integration_patterns_supervisor_tests")]
 
 
 def teardown_module():

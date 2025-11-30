@@ -1,9 +1,14 @@
-# ADR-0046: Deployment Configuration TDD Infrastructure
+# 46. Deployment Configuration TDD Infrastructure
 
-**Status**: Accepted
-**Date**: 2025-11-06
-**Authors**: Engineering Team
-**Related**: ADR-0041 (GDPR Storage), ADR-0045 (Test Infrastructure Phase 2)
+Date: 2025-11-06
+
+## Status
+
+Accepted
+
+## Category
+
+Testing & Quality
 
 ## Context
 

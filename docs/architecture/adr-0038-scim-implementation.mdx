@@ -1,21 +1,21 @@
 ---
-title: 38. SCIM 2.0 Implementation Approach
-description: 'External identity management systems (Azure AD, Okta, Google Workspace, OneLogin) need to programmatically provision/deprovision users and groups. ...'
-icon: 'file-lines'
-seoTitle: "ADR-0038: 38. SCIM 2.0 Implementation Approach"
-seoDescription: "Architecture Decision Record 0038: External identity management systems (Azure AD, Okta, Google Workspace, OneLogin) need to programmatically provision/deprovision users and g"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "38."]
-contentType: "explanation"
+title: "38. SCIM 2.0 Implementation Approach"
+description: "Architecture Decision Record: 38. SCIM 2.0 Implementation Approach"
 ---
 
+# 38. SCIM 2.0 Implementation Approach
 
 Date: 2025-01-28
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Authentication & Authorization
+
+## Context
 
 External identity management systems (Azure AD, Okta, Google Workspace, OneLogin) need to programmatically provision/deprovision users and groups. Industry standard is SCIM 2.0 (System for Cross-domain Identity Management), but Keycloak does not have native SCIM 2.0 server support.
 
@@ -28,108 +28,19 @@ Requirements:
 
 Keycloak gap: No built-in SCIM 2.0 server endpoints.
 
-### Decision
+## Decision
 
 Implement **FastAPI SCIM 2.0 endpoints** that bridge to Keycloak Admin API, providing standard SCIM interface while maintaining Keycloak as authoritative identity store.
 
-#### Architecture
+### Architecture
 
-```text
+```
 External System (SCIM Client) → MCP Server SCIM Endpoints
   → Keycloak Admin API → Keycloak (User Storage)
   → Sync to OpenFGA (via existing sync_user_to_openfga)
 ```
 
-#### SCIM 2.0 Provisioning Flow
-
-```mermaid
-sequenceDiagram
-    %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
-    participant IDP as Identity Provider<br/>(Azure AD/Okta/Google)
-    participant SCIM as SCIM 2.0 API<br/>(MCP Server)
-    participant Auth as Authentication<br/>(Service Principal)
-    participant KC as Keycloak<br/>Admin API
-    participant FGA as OpenFGA<br/>Authorization
-    participant Events as Event System<br/>(Webhooks)
-
-    Note over IDP,SCIM: User Provisioning (Create)
-    IDP->>SCIM: POST /scim/v2/Users<br/>Authorization: Bearer <SP JWT><br/>Body: {userName, name, emails}
-    SCIM->>Auth: Validate JWT<br/>(Service Principal token)
-    Auth-->>SCIM: Valid
-
-    SCIM->>KC: POST /admin/realms/{realm}/users<br/>Create user in Keycloak
-    KC->>KC: Generate User ID<br/>Store user attributes
-    KC-->>SCIM: User created<br/>ID: keycloak-uuid-123
-
-    Note over SCIM,FGA: Automatic OpenFGA Sync
-    SCIM->>FGA: Create OpenFGA tuples<br/>user:alice → organization:acme<br/>user:alice → role:user
-    FGA-->>SCIM: Tuples created
-
-    SCIM->>Events: Emit user.created event<br/>{userId, userName, source: scim}
-    Events-->>SCIM: Event published
-
-    SCIM-->>IDP: 201 Created<br/>{id, userName, active: true}
-
-    Note over IDP,SCIM: User Update (Attribute Change)
-    IDP->>SCIM: PATCH /scim/v2/Users/{id}<br/>Body: {Operations: [{op: replace, path: department}]}
-    SCIM->>KC: PUT /admin/users/{id}<br/>Update attributes
-    KC-->>SCIM: Updated
-    SCIM->>Events: Emit user.updated
-    SCIM-->>IDP: 200 OK
-
-    Note over IDP,SCIM: Group Membership (Add to Group)
-    IDP->>SCIM: PATCH /scim/v2/Groups/{group-id}<br/>Body: {Operations: [{op: add, members: [alice]}]}
-    SCIM->>KC: POST /admin/users/{id}/groups/{group-id}<br/>Add user to group
-    KC-->>SCIM: Group added
-
-    Note over SCIM,FGA: Sync Group Permissions to OpenFGA
-    SCIM->>FGA: Update group membership<br/>user:alice → member → group:engineering
-    SCIM->>FGA: Grant role permissions<br/>group:engineering → viewer → resource:*
-    FGA-->>SCIM: Permissions synced
-
-    SCIM->>Events: Emit group.member_added
-    SCIM-->>IDP: 200 OK
-
-    Note over IDP,SCIM: User Deactivation (Soft Delete)
-    IDP->>SCIM: PATCH /scim/v2/Users/{id}<br/>Body: {Operations: [{op: replace, active: false}]}
-    SCIM->>KC: PUT /admin/users/{id}<br/>{enabled: false}
-    KC-->>SCIM: User deactivated
-
-    SCIM->>FGA: Remove all user permissions<br/>(optional based on config)
-    FGA-->>SCIM: Removed
-
-    SCIM->>Events: Emit user.deactivated
-    SCIM-->>IDP: 200 OK
-
-    Note over IDP: User no longer has access
-
-```
-**Bulk Provisioning (Initial Sync)**:
-```mermaid
-sequenceDiagram
-    %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
-    participant IDP as Identity Provider
-    participant SCIM as SCIM 2.0 API
-    participant KC as Keycloak
-    participant FGA as OpenFGA
-
-    Note over IDP,SCIM: Bulk User Creation
-    IDP->>SCIM: POST /scim/v2/Bulk<br/>Operations: [<br/>  {method: POST, path: /Users, data: user1},<br/>  {method: POST, path: /Users, data: user2},<br/>  ...<br/>]
-
-    loop For each operation
-        SCIM->>KC: Create user in Keycloak
-        KC-->>SCIM: User created
-        SCIM->>FGA: Sync permissions
-        FGA-->>SCIM: Synced
-    end
-
-    SCIM-->>IDP: 200 OK<br/>Operations: [<br/>  {status: 201, response: user1},<br/>  {status: 201, response: user2},<br/>  {status: 409, response: user3 exists}<br/>]
-
-    Note over SCIM: Idempotent - safe to retry
-
-```
-
-#### Core Principles
+### Core Principles
 
 1. **SCIM 2.0 Compliance**: Implement RFC 7643/7644 endpoints
 2. **Keycloak Bridge**: All operations proxy to Keycloak Admin API
@@ -138,7 +49,7 @@ sequenceDiagram
 5. **Idempotent Operations**: Multiple creates/updates safe
 6. **Event-Driven**: User events trigger webhooks/notifications
 
-#### SCIM Endpoints
+### SCIM Endpoints
 
 **Users**:
 - POST `/scim/v2/Users` - Create user
@@ -153,7 +64,7 @@ sequenceDiagram
 - GET `/scim/v2/Groups/{id}` - Get group
 - PATCH `/scim/v2/Groups/{id}` - Update group membership
 
-#### SCIM Schema
+### SCIM Schema
 
 **Core User Schema**:
 ```json
@@ -166,6 +77,7 @@ sequenceDiagram
   "groups": [{"value": "engineering", "display": "Engineering"}]
 }
 ```
+
 **Enterprise Extension**:
 ```json
 {
@@ -180,48 +92,49 @@ sequenceDiagram
 }
 ```
 
-#### Configuration
+### Configuration
 
-```
-## SCIM Server
+```bash
+# SCIM Server
 SCIM_ENABLED=true
 SCIM_BASE_URL=https://api.example.com/scim/v2
 SCIM_AUTHENTICATION=jwt  # Require JWT tokens
 
-## Provisioning
+# Provisioning
 SCIM_AUTO_SYNC_TO_OPENFGA=true
 SCIM_DEFAULT_ROLES=["user"]  # Default roles for new users
 SCIM_SEND_WELCOME_EMAIL=false
 ```
-### Consequences
 
-#### Positive Consequences
+## Consequences
+
+### Positive Consequences
 - Standard SCIM 2.0 interface (works with all SCIM clients)
 - Keycloak remains authoritative (no duplicate identity stores)
 - Automatic OpenFGA synchronization
 - Audit trail (all changes via Keycloak Admin API)
 - Deprovisioning support (disable users)
 
-#### Negative Consequences
+### Negative Consequences
 - Custom implementation (not standard Keycloak feature)
 - Maintenance burden (SCIM spec changes)
 - Keycloak Admin API dependency (performance)
 - No built-in bulk operations (must implement)
 
-#### Mitigation Strategies
+### Mitigation Strategies
 - Use FastAPI OpenAPI for auto-documentation
 - Comprehensive test suite with SCIM client simulation
 - Asynchronous provisioning (queue bulk operations)
 - Monitor Keycloak Admin API latency
 
-### Alternatives Considered
+## Alternatives Considered
 
 1. **Keycloak SCIM Extension**: Rejected - community extensions unmaintained
 2. **External SCIM Bridge Service**: Rejected - additional microservice overhead
 3. **Direct Keycloak Admin API**: Rejected - not SCIM standard, client compatibility
 4. **Manual Provisioning**: Rejected - doesn't scale for large orgs
 
-### Implementation
+## Implementation
 
 **SCIM Endpoints** (`src/mcp_server_langgraph/api/scim.py`):
 ```python
@@ -287,10 +200,10 @@ def validate_scim_user(data: dict) -> bool:
     # Additional validation...
 ```
 
-### References
+## References
 
 - SCIM API: `src/mcp_server_langgraph/api/scim.py` (to be created)
 - Schema: `src/mcp_server_langgraph/scim/schema.py` (to be created)
 - Provisioning: `src/mcp_server_langgraph/scim/provisioning.py` (to be created)
-- Related ADRs: [ADR-0031](/architecture/adr-0031-keycloak-authoritative-identity)
+- Related ADRs: [ADR-0031](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0031-keycloak-authoritative-identity.md)
 - External: [RFC 7643 (SCIM Core Schema)](https://datatracker.ietf.org/doc/html/rfc7643), [RFC 7644 (SCIM Protocol)](https://datatracker.ietf.org/doc/html/rfc7644)

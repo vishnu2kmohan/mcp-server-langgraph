@@ -1,8 +1,14 @@
-# ADR-0047: Visual Workflow Builder
+# 47. Visual Workflow Builder
+
+Date: 2025-11-02
 
 ## Status
 
-**Accepted** - 2025-11-02
+Proposed
+
+## Category
+
+Development & Tooling
 
 ## Context
 

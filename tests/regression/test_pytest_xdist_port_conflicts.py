@@ -51,20 +51,20 @@ def test_ports_are_intentionally_fixed(test_infrastructure_ports):
     """
     # Expected base ports (from docker-compose.test.yml)
     assert test_infrastructure_ports["postgres"] == 9432, "Postgres port should be fixed at 9432 for all workers"
-    assert (
-        test_infrastructure_ports["redis_checkpoints"] == 9379
-    ), "Redis checkpoints port should be fixed at 9379 for all workers"
-    assert (
-        test_infrastructure_ports["redis_sessions"] == 9379
-    ), "Redis sessions port should be fixed at 9379 for all workers (consolidated with checkpoints)"
+    assert test_infrastructure_ports["redis_checkpoints"] == 9379, (
+        "Redis checkpoints port should be fixed at 9379 for all workers"
+    )
+    assert test_infrastructure_ports["redis_sessions"] == 9379, (
+        "Redis sessions port should be fixed at 9379 for all workers (consolidated with checkpoints)"
+    )
     assert test_infrastructure_ports["qdrant"] == 9333, "Qdrant port should be fixed at 9333 for all workers"
     assert test_infrastructure_ports["qdrant_grpc"] == 9334, "Qdrant gRPC port should be fixed at 9334 for all workers"
     assert test_infrastructure_ports["openfga_http"] == 9080, "OpenFGA HTTP port should be fixed at 9080 for all workers"
     assert test_infrastructure_ports["openfga_grpc"] == 9081, "OpenFGA gRPC port should be fixed at 9081 for all workers"
     assert test_infrastructure_ports["keycloak"] == 9082, "Keycloak port should be fixed at 9082 for all workers"
-    assert (
-        test_infrastructure_ports["keycloak_management"] == 9900
-    ), "Keycloak management port should be fixed at 9900 for all workers"
+    assert test_infrastructure_ports["keycloak_management"] == 9900, (
+        "Keycloak management port should be fixed at 9900 for all workers"
+    )
 
 
 @pytest.mark.regression
@@ -157,17 +157,17 @@ def test_ports_match_docker_compose():
     content = compose_file.read_text()
 
     # Validate key port mappings
-    assert (
-        '"9432:5432"' in content or "'9432:5432'" in content
-    ), "docker-compose.test.yml should map host port 9432 to postgres container port 5432"
+    assert '"9432:5432"' in content or "'9432:5432'" in content, (
+        "docker-compose.test.yml should map host port 9432 to postgres container port 5432"
+    )
 
-    assert (
-        '"9379:6379"' in content or "'9379:6379'" in content
-    ), "docker-compose.test.yml should map host port 9379 to redis container port 6379"
+    assert '"9379:6379"' in content or "'9379:6379'" in content, (
+        "docker-compose.test.yml should map host port 9379 to redis container port 6379"
+    )
 
-    assert (
-        '"9080:8080"' in content or "'9080:8080'" in content
-    ), "docker-compose.test.yml should map host port 9080 to openfga container port 8080"
+    assert '"9080:8080"' in content or "'9080:8080'" in content, (
+        "docker-compose.test.yml should map host port 9080 to openfga container port 8080"
+    )
 
 
 @pytest.mark.regression
@@ -187,9 +187,9 @@ def test_logical_isolation_mechanisms_exist():
     worker_id = get_worker_id()
 
     # Worker ID should be available for schema/store naming
-    assert (
-        worker_id.startswith("gw") or worker_id == "master"
-    ), f"Worker ID should be gw0, gw1, etc. or 'master', got: {worker_id}"
+    assert worker_id.startswith("gw") or worker_id == "master", (
+        f"Worker ID should be gw0, gw1, etc. or 'master', got: {worker_id}"
+    )
 
     # The worker ID is used to create isolated namespaces
     # Example: PostgreSQL schema = test_worker_{worker_id}
@@ -218,12 +218,12 @@ def test_fixture_documentation_explains_architecture(test_infrastructure_ports):
 
     # Should mention single/shared infrastructure
     assert "single" in docstring_lower or "shared" in docstring_lower or "session" in docstring_lower, (
-        f"Docstring should explain single/shared infrastructure approach.\n" f"Current docstring:\n{docstring}"
+        f"Docstring should explain single/shared infrastructure approach.\nCurrent docstring:\n{docstring}"
     )
 
     # Should mention logical isolation
     assert "schema" in docstring_lower or "isolation" in docstring_lower, (
-        f"Docstring should explain how logical isolation works.\n" f"Current docstring:\n{docstring}"
+        f"Docstring should explain how logical isolation works.\nCurrent docstring:\n{docstring}"
     )
 
 

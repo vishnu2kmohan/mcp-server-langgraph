@@ -5,7 +5,6 @@ Tests GDPR Article 7 (Consent) - 7-year retention requirement
 """
 
 import gc
-import os
 from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
 
@@ -16,7 +15,7 @@ from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresConsen
 from mcp_server_langgraph.compliance.gdpr.storage import ConsentRecord, UserProfile
 
 # Mark as integration test with xdist_group for worker isolation
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="postgres_consent_store")]
 
 
 def teardown_module():

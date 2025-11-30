@@ -13,7 +13,6 @@ Test ID: TEST-META-PYTESTMARK-001
 
 import ast
 from pathlib import Path
-from typing import List, Tuple
 
 import pytest
 
@@ -85,7 +84,7 @@ class TestPytestmarkPlacementRegression:
                                         (
                                             test_file,
                                             i + 1,  # Convert back to 1-indexed for reporting
-                                            f"pytestmark found inside import statement (lines {start_line+1}-{end_line+1})",
+                                            f"pytestmark found inside import statement (lines {start_line + 1}-{end_line + 1})",
                                         )
                                     )
                                     break
@@ -269,16 +268,26 @@ class TestAutomationScriptFix:
         assert "end_lineno" in content, "Script must use end_lineno to handle multi-line imports"
 
         # Check that there's documentation about the fix
-        assert (
-            "end_lineno" in content and "multi-line" in content.lower()
-        ), "Script must document the end_lineno fix for multi-line imports"
+        assert "end_lineno" in content and "multi-line" in content.lower(), (
+            "Script must document the end_lineno fix for multi-line imports"
+        )
 
     def test_automation_script_has_unit_tests(self):
         """Test that the automation script has comprehensive unit tests.
 
         Test ID: TEST-META-PYTESTMARK-003-02
+
+        Note: The fix_missing_pytestmarks.py script was a one-time migration tool
+        that has been removed after the migration was completed. This test is now
+        skipped as the script is no longer needed.
         """
+        script_file = Path("scripts/fix_missing_pytestmarks.py")
         test_file = Path("tests/scripts/test_fix_missing_pytestmarks.py")
+
+        # Skip if the automation script doesn't exist (migration completed)
+        if not script_file.exists():
+            pytest.skip("fix_missing_pytestmarks.py script removed after migration completed")
+
         assert test_file.exists(), "Automation script must have unit tests"
 
         content = test_file.read_text()

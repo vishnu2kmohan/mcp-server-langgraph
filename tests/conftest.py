@@ -21,13 +21,13 @@ pytest_plugins = [
     "tests.fixtures.isolation_fixtures",
 ]
 
-import asyncio  # noqa: E402
+import asyncio  # noqa: E402, F401  # used in cleanup_asyncio_clients fixture (line ~1540)
 import logging  # noqa: E402
 import os  # noqa: E402
 import sys  # noqa: E402
-import time  # noqa: E402
 import warnings  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
+from pathlib import Path  # noqa: E402
 from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402
 
 import pytest  # noqa: E402
@@ -576,6 +576,82 @@ def frozen_time():
 
     with freeze_time("2024-01-01 00:00:00", tz_offset=0):
         yield
+
+
+# ==============================================================================
+# Mock App Settings Fixture (DRY pattern for app.settings mocking)
+# ==============================================================================
+
+
+@pytest.fixture
+def mock_app_settings():
+    """
+    Complete mock for app settings with all required attributes.
+
+    Use this fixture when patching mcp_server_langgraph.app.settings
+    to ensure auth factory validation passes. The auth factory validates
+    settings.auth_provider.lower() against ["inmemory", "keycloak"].
+
+    This fixture provides all attributes that create_app() requires:
+    - auth_provider: For UserProvider factory validation
+    - jwt_secret_key: For JWT token signing/verification
+    - environment: For environment-specific behavior
+    - use_password_hashing: For auth mode configuration
+    - cors_allowed_origins: For CORS middleware setup
+    - get_cors_origins(): Method for CORS configuration
+
+    Usage:
+        def test_cors_config(self, mock_app_settings):
+            mock_app_settings.cors_allowed_origins = ["http://localhost:3000"]
+            mock_app_settings.get_cors_origins = MagicMock(
+                return_value=["http://localhost:3000"]
+            )
+            with patch("mcp_server_langgraph.app.settings", mock_app_settings):
+                app = create_app()
+                assert isinstance(app, FastAPI)
+    """
+    mock = MagicMock()
+    # Required for auth factory validation (see auth/factory.py:43-110)
+    mock.auth_provider = "inmemory"
+    mock.jwt_secret_key = "test-jwt-secret-key-for-testing"
+    mock.environment = "development"
+    mock.use_password_hashing = False
+    # CORS settings
+    mock.cors_allowed_origins = []
+    mock.get_cors_origins = MagicMock(return_value=[])
+    return mock
+
+
+# ==============================================================================
+# Repository Path Fixtures (DRY - prevents path resolution bugs)
+# ==============================================================================
+
+
+@pytest.fixture(scope="session")
+def repo_root() -> Path:
+    """Get the repository root directory.
+
+    Use this fixture instead of manual Path(__file__).parents[N] navigation
+    to prevent path resolution bugs in tests. The conftest.py is always in
+    tests/, so parent.parent gets us to the repo root.
+
+    Returns:
+        Path to repository root directory
+    """
+    return Path(__file__).parent.parent
+
+
+@pytest.fixture(scope="session")
+def deployments_dir(repo_root: Path) -> Path:
+    """Get the deployments directory.
+
+    Args:
+        repo_root: Repository root path (injected by pytest)
+
+    Returns:
+        Path to deployments/ directory
+    """
+    return repo_root / "deployments"
 
 
 # ==============================================================================

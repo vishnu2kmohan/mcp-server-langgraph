@@ -40,17 +40,17 @@ This document establishes the mandatory requirement to **always use the project'
 
 ```bash
 # Run Python scripts
-uv run python script.py
+uv run --frozen python script.py
 
 # Run pytest
-uv run pytest tests/
+uv run --frozen pytest tests/
 
 # Run with arguments
-uv run pytest -v -m unit
+uv run --frozen pytest -v -m unit
 
 # Run modules
-uv run python -m pytest
-uv run python -m mypy src/
+uv run --frozen python -m pytest
+uv run --frozen python -m mypy src/
 ```
 
 **Advantages**:
@@ -145,7 +145,7 @@ which python  # Might point to /usr/bin/python3
 pytest tests/  # Might use system pytest
 
 # ✅ CORRECT: Explicitly use venv
-uv run pytest tests/
+uv run --frozen pytest tests/
 ```
 
 **Why This Fails**:
@@ -161,38 +161,38 @@ uv run pytest tests/
 
 ```bash
 # Run all tests
-uv run pytest
+uv run --frozen pytest
 
 # Run unit tests only
-uv run pytest -m unit
+uv run --frozen pytest -m unit
 
 # Run with coverage
-uv run pytest --cov=src/mcp_server_langgraph
+uv run --frozen pytest --cov=src/mcp_server_langgraph
 
 # Run specific test file
-uv run pytest tests/test_session.py
+uv run --frozen pytest tests/test_session.py
 
 # Run specific test function
-uv run pytest tests/test_session.py::test_create_session
+uv run --frozen pytest tests/test_session.py::test_create_session
 ```
 
 ### Code Quality Commands
 
 ```bash
 # Type checking
-uv run mypy src/
+uv run --frozen mypy src/
 
 # Code formatting (check)
-uv run black --check src/
+uv run --frozen black --check src/
 
 # Code formatting (apply)
-uv run black src/
+uv run --frozen black src/
 
 # Import sorting
-uv run isort src/
+uv run --frozen isort src/
 
 # Linting
-uv run flake8 src/
+uv run --frozen flake8 src/
 ```
 
 ### Package Management
@@ -218,13 +218,13 @@ uv pip show package-name
 
 ```bash
 # Run MCP server
-uv run mcp-server-langgraph
+uv run --frozen mcp-server-langgraph
 
 # Run HTTP server
-uv run mcp-server-langgraph-http
+uv run --frozen mcp-server-langgraph-http
 
 # Run custom script
-uv run python scripts/my_script.py
+uv run --frozen python scripts/my_script.py
 ```
 
 ---
@@ -235,7 +235,7 @@ uv run python scripts/my_script.py
 
 ```bash
 # ✅ CORRECT
-uv run pytest -v -m unit
+uv run --frozen pytest -v -m unit
 
 # ❌ WRONG
 pytest -v -m unit
@@ -245,7 +245,7 @@ pytest -v -m unit
 
 ```bash
 # ✅ CORRECT
-uv run mypy src/mcp_server_langgraph
+uv run --frozen mypy src/mcp_server_langgraph
 
 # ❌ WRONG
 mypy src/mcp_server_langgraph
@@ -255,7 +255,7 @@ mypy src/mcp_server_langgraph
 
 ```bash
 # ✅ CORRECT (preferred)
-uv run pytest && uv run mypy src/ && uv run black --check src/
+uv run --frozen pytest && uv run --frozen mypy src/ && uv run --frozen black --check src/
 
 # ✅ CORRECT (alternative)
 source .venv/bin/activate && pytest && mypy src/ && black --check src/
@@ -268,7 +268,7 @@ pytest && mypy src/ && black --check src/
 
 ```bash
 # ✅ CORRECT
-uv run python --version
+uv run --frozen python --version
 # Expected: Python 3.13.7
 
 # ✅ CORRECT (explicit)
@@ -282,7 +282,7 @@ python --version  # Might show system version
 
 ```bash
 # ✅ CORRECT
-uv run python
+uv run --frozen python
 
 # ✅ CORRECT (explicit)
 .venv/bin/python
@@ -331,7 +331,7 @@ echo $VIRTUAL_ENV
 **Solution**:
 ```bash
 # Use uv run
-uv run pytest
+uv run --frozen pytest
 
 # Or explicit path
 .venv/bin/pytest
@@ -370,7 +370,7 @@ uv pip install package-name
 
 ```bash
 # CI uses venv, so local commands should too
-uv run pytest  # Matches CI environment
+uv run --frozen pytest  # Matches CI environment
 ```
 
 ---
@@ -410,21 +410,99 @@ executable = /usr/bin/python3.12
 
 ```bash
 # Check Python executable
-uv run python -c "import sys; print(sys.executable)"
+uv run --frozen python -c "import sys; print(sys.executable)"
 # Expected: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv/bin/python
 
 # Check Python version
-uv run python --version
+uv run --frozen python --version
 # Expected: Python 3.12.12
 
 # Check package location
-uv run python -c "import mcp_server_langgraph; print(mcp_server_langgraph.__file__)"
+uv run --frozen python -c "import mcp_server_langgraph; print(mcp_server_langgraph.__file__)"
 # Expected: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv/lib/python3.12/site-packages/...
 
 # Verify pytest is from venv
-uv run pytest --version
+uv run --frozen pytest --version
 # Check if pytest path includes .venv
 ```
+
+---
+
+## Multi-Python Version Testing
+
+### Why Multi-Python Testing Matters
+
+**Context**: PR #121 (2025-11-28) revealed that CI tests can fail on Python 3.11/3.13 while passing on Python 3.12 due to version-specific dependency issues. This section documents how to catch these issues locally before they reach CI.
+
+**Root Cause Pattern**:
+- Bleeding-edge dependencies (released within last 7 days)
+- Internal module restructuring in dependencies
+- Python version-specific behavior in universal wheels
+
+### Multi-Python Smoke Test Script
+
+A pre-push hook runs `scripts/test_python_versions.sh` automatically:
+
+```bash
+# Runs automatically on git push
+git push
+
+# Manual execution (full suite)
+./scripts/test_python_versions.sh
+
+# Quick mode (faster, fewer tests)
+./scripts/test_python_versions.sh --quick
+
+# CI mode (fail if Python version missing)
+./scripts/test_python_versions.sh --ci
+```
+
+### Installing Multiple Python Versions
+
+To maximize local CI parity, install Python 3.11, 3.12, and 3.13:
+
+**Using pyenv (Recommended)**:
+```bash
+# Install pyenv
+curl https://pyenv.run | bash
+
+# Add to shell profile (~/.bashrc or ~/.zshrc)
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# Install Python versions
+pyenv install 3.11.8
+pyenv install 3.12.12
+pyenv install 3.13.7
+
+# Make all versions available
+pyenv global 3.12.12 3.11.8 3.13.7
+```
+
+**On Gentoo Linux**:
+```bash
+# Python 3.11
+emerge -av dev-lang/python:3.11
+
+# Python 3.12 (usually default)
+emerge -av dev-lang/python:3.12
+
+# Python 3.13
+emerge -av dev-lang/python:3.13
+```
+
+### Version-Specific Dependency Issues (Known Patterns)
+
+**Click 8.3.x** (Discovered 2025-11-28):
+- Internal `_textwrap` module missing on Python 3.11/3.13
+- Pinned to `<8.3.0` until upstream fix
+
+**Hypothesis 6.148.x** (Discovered 2025-11-28):
+- `internal.conjecture.optimiser` module removed
+- Pinned to `<6.148.0` until upstream fix
+
+When encountering similar issues, update `pyproject.toml` with version upper bounds.
 
 ---
 
@@ -432,11 +510,11 @@ uv run pytest --version
 
 Before running any Python command, verify:
 
-- [ ] Using `uv run python` or `.venv/bin/python` (NOT bare `python`)
-- [ ] Using `uv run pytest` or `.venv/bin/pytest` (NOT bare `pytest`)
+- [ ] Using `uv run --frozen python` or `.venv/bin/python` (NOT bare `python`)
+- [ ] Using `uv run --frozen pytest` or `.venv/bin/pytest` (NOT bare `pytest`)
 - [ ] Using `uv pip` or `.venv/bin/pip` (NOT bare `pip`)
 - [ ] For multiple commands, consider activation OR use multiple `uv run` calls
-- [ ] Python version is 3.12.12 (verify with `uv run python --version`)
+- [ ] Python version is 3.12.12 (verify with `uv run --frozen python --version`)
 
 ---
 
@@ -453,9 +531,9 @@ Before running any Python command, verify:
 
 ---
 
-**Last Updated**: 2025-10-21
+**Last Updated**: 2025-11-28
 **Virtual Environment Python Version**: 3.12.12
 **Package Manager**: uv (latest)
-**pyproject.toml Python Requirement**: >=3.10, below 3.13
+**pyproject.toml Python Requirement**: >=3.11, <3.14
 
 _This is active configuration. All Python commands must follow these guidelines._

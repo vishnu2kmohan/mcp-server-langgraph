@@ -141,15 +141,15 @@ class TestObservabilityShutdown:
 
             # THEN: Provider instances should be stored
             if mock_settings.enable_tracing:
-                assert hasattr(
-                    _observability_config, "tracer_provider"
-                ), "tracer_provider must be stored on ObservabilityConfig for shutdown to work"
+                assert hasattr(_observability_config, "tracer_provider"), (
+                    "tracer_provider must be stored on ObservabilityConfig for shutdown to work"
+                )
                 assert _observability_config.tracer_provider is not None
 
             if mock_settings.enable_metrics:
-                assert hasattr(
-                    _observability_config, "meter_provider"
-                ), "meter_provider must be stored on ObservabilityConfig for shutdown to work"
+                assert hasattr(_observability_config, "meter_provider"), (
+                    "meter_provider must be stored on ObservabilityConfig for shutdown to work"
+                )
                 assert _observability_config.meter_provider is not None
 
         # Cleanup

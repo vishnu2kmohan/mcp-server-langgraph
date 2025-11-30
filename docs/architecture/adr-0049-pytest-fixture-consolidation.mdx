@@ -1,22 +1,27 @@
 ---
-title: 'ADR-0049: Pytest Fixture Consolidation and Organization'
-description: 'Consolidation of duplicate autouse fixtures to improve test performance and maintainability'
-icon: 'flask-vial'
-seoTitle: "ADR-0049: Pytest Fixture Consolidation and Organization"
-seoDescription: "Architecture Decision Record 0049: Consolidation of duplicate autouse fixtures to improve test performance and maintainability"
-keywords: ["ADR", "architecture decision", "testing", "pytest", "fixtures", "TDD", "ADR-0049"]
-contentType: "explanation"
+title: "ADR-0049: Pytest Fixture Consolidation and Organization"
+description: "Architecture Decision Record: ADR-0049: Pytest Fixture Consolidation and Organization"
 ---
 
 # ADR-0049: Pytest Fixture Consolidation and Organization
 
+Date: 2025-11-07
+
 ## Status
 
-**Accepted** - 2025-11-07
+Accepted
 
-**Decision Makers:** Test Infrastructure Team
+## Category
 
-**Related ADRs:** ADR-0042 (Dependency Injection)
+Testing & Quality
+
+## Decision Makers
+
+Test Infrastructure Team
+
+## Related ADRs
+
+ADR-0042 (Dependency Injection)
 
 ## Context
 
@@ -101,6 +106,7 @@ def init_test_observability():
 
     yield
 ```
+
 **Removed**: 25 duplicate fixtures from individual test files (-476 lines)
 
 ## Consequences
@@ -170,6 +176,7 @@ def test_no_duplicate_autouse_fixtures():
   entry: python -m pytest tests/test_fixture_organization.py -v
   files: ^tests/.*\.py$
 ```
+
 ### 3. Runtime Plugin
 ```python
 # tests/conftest_fixtures_plugin.py
@@ -238,5 +245,4 @@ This ADR should be reviewed when:
 - Performance issues with current approach
 
 **Last Reviewed**: 2025-11-07
-
 **Next Review**: 2026-01-01 (or when pytest 9.0 released)

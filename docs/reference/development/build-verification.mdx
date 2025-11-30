@@ -15,23 +15,22 @@ contentType: "reference"
 
 ### ✅ Completed Tasks
 
-#### 1. Python 3.13 Support Removal
-- [x] **Removed Python 3.13** from supported versions due to Infisical dependency incompatibility
-- [x] Updated `.github/workflows/ci.yaml` to use Python 3.12
-- [x] Updated `.github/workflows/pr-checks.yaml` test matrix to [3.10, 3.11, 3.12]
-- [x] Updated `setup.py`: `python_requires=">=3.10,&lt;3.13"`
-- [x] Updated `pyproject.toml`: `requires-python = ">=3.10,&lt;3.13"`
-- [x] Removed Python 3.13 classifier from `pyproject.toml`
-- [x] Updated documentation (CLAUDE.md, AGENTS.md)
+#### 1. Python Version Support Update (November 2025)
+- [x] **Dropped Python 3.10** - EOL approaching (Oct 2026), `datetime.fromisoformat()` Z-suffix bug
+- [x] **Added Python 3.13** - Now stable and fully supported
+- [x] Updated `.github/workflows/ci.yaml` test matrix to [3.11, 3.12, 3.13]
+- [x] Updated `pyproject.toml`: `requires-python = ">=3.11,<3.14"`
+- [x] Updated classifiers to include Python 3.13
+- [x] Updated documentation (README, CONTRIBUTING, onboarding docs)
 
 #### 2. Test Coverage Improvements
 - [x] Improved test coverage from 45% to 84.83%
 - [x] Added 11 new unit tests for llm_validators.py and mcp_streaming.py
 - [x] Created `.coveragerc` configuration file
-- [x] All 126 unit tests passing on Python 3.10, 3.11, 3.12
+- [x] All unit tests passing on Python 3.11, 3.12, 3.13
 
 #### 3. CI/CD Status
-- [x] Tests passing on Python 3.10, 3.11, 3.12
+- [x] Tests passing on Python 3.11, 3.12, 3.13
 - [x] Lint and code quality checks configured for Python 3.12
 - [x] Security scans configured for Python 3.12
 - [x] Docker builds working correctly
@@ -40,20 +39,17 @@ contentType: "reference"
 
 #### Workflow Updates
 - **ci.yaml**: Python 3.13 → 3.12 (test and lint jobs)
-- **pr-checks.yaml**: Test matrix reduced to [3.10, 3.11, 3.12]
+- **pr-checks.yaml**: Test matrix updated to [3.11, 3.12, 3.13]
 - **pr-checks.yaml**: Coverage upload condition changed to Python 3.12
 
 #### Package Configuration
 ```
-## setup.py
-python_requires=">=3.10,&lt;3.13"
-
 ## pyproject.toml
-requires-python = ">=3.10,&lt;3.13"
+requires-python = ">=3.11,<3.14"
 classifiers = [
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 ```
 #### Documentation Updates

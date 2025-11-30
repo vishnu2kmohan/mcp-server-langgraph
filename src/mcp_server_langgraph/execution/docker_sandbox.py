@@ -72,7 +72,7 @@ class DockerSandbox(Sandbox):
 
         # Check if docker package is available
         if not DOCKER_AVAILABLE:
-            raise SandboxError("Docker package not installed. " "Install it with: pip install docker or uv add docker")
+            raise SandboxError("Docker package not installed. Install it with: pip install docker or uv add docker")
 
         self.image = image
         self.socket_path = socket_path
@@ -249,6 +249,7 @@ class DockerSandbox(Sandbox):
                 image=self.image,
                 command=["python", "-c", code],
                 detach=True,
+                user="nobody",  # Run as non-root user (security best practice)
                 mem_limit=mem_limit,
                 memswap_limit=mem_limit,  # Disable swap
                 nano_cpus=nano_cpus,
@@ -261,8 +262,8 @@ class DockerSandbox(Sandbox):
                 # Tmpfs for writable directories (ephemeral, in-memory)
                 # Python needs /tmp and /var/tmp for tempfile module
                 tmpfs={  # nosec B108 - tmpfs is ephemeral in-memory, not persistent storage
-                    "/tmp": f"size={self.limits.disk_quota_mb}m",  # nosec B108
-                    "/var/tmp": f"size={self.limits.disk_quota_mb}m",  # nosec B108
+                    "/tmp": f"size={self.limits.disk_quota_mb}m,uid=65534,gid=65534",  # nosec B108 - nobody user
+                    "/var/tmp": f"size={self.limits.disk_quota_mb}m,uid=65534,gid=65534",  # nosec B108 - nobody user
                 },
             )
 

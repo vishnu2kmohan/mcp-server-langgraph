@@ -17,6 +17,28 @@ def kubectl_available():
 
 
 @pytest.fixture(scope="session")
+def kubectl_connected():
+    """
+    Check if kubectl can connect to a Kubernetes cluster.
+
+    This is needed for tests that use --dry-run=client because kubectl
+    still downloads the OpenAPI schema from the cluster for validation.
+    """
+    if not shutil.which("kubectl"):
+        return False
+    try:
+        result = subprocess.run(
+            ["kubectl", "cluster-info", "--request-timeout=5s"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        return result.returncode == 0
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return False
+
+
+@pytest.fixture(scope="session")
 def helm_available():
     """Check if helm CLI tool is available."""
     return shutil.which("helm") is not None

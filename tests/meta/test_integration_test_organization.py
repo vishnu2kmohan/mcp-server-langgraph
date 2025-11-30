@@ -277,9 +277,7 @@ class TestIntegrationTestOrganization:
         root = Path(__file__).parent.parent.parent
         integration_dir = root / "tests" / "integration"
 
-        assert integration_dir.exists(), (
-            "tests/integration/ directory must exist. Create with:\n" "  mkdir -p tests/integration"
-        )
+        assert integration_dir.exists(), "tests/integration/ directory must exist. Create with:\n  mkdir -p tests/integration"
         assert integration_dir.is_dir(), "tests/integration/ must be a directory"
 
 
@@ -333,7 +331,9 @@ class TestIntegrationTestSelection:
         """
         🟢 GREEN: Verify CI workflow uses marker-based selection.
 
-        CI should use `pytest -m integration` for maximum coverage.
+        CI should use pytest markers for test selection, either:
+        - `-m integration` for all integration tests, OR
+        - Matrix-based markers like `integration and auth` (pytest 9.x + matrix strategy)
         """
         root = Path(__file__).parent.parent.parent
         workflow = root / ".github" / "workflows" / "integration-tests.yaml"
@@ -343,9 +343,18 @@ class TestIntegrationTestSelection:
         content = workflow.read_text()
 
         # CI should use marker-based selection
-        assert "-m integration" in content, (
-            "CI workflow must use marker-based selection (-m integration) "
-            "to catch all integration tests regardless of location"
+        # Accept either:
+        # 1. Simple: -m integration (all in one job)
+        # 2. Matrix: "integration and auth", "integration and api", etc. (pytest 9.x + matrix)
+        has_simple_marker = "-m integration" in content
+        has_matrix_markers = (
+            "integration and auth" in content or "integration and api" in content or "integration and database" in content
+        )
+
+        assert has_simple_marker or has_matrix_markers, (
+            "CI workflow must use marker-based selection for integration tests. "
+            "Use either `-m integration` (simple) or matrix-based markers like "
+            "`integration and auth` (pytest 9.x + GitHub Actions matrix strategy)"
         )
 
 

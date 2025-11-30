@@ -91,7 +91,7 @@ class TestModuleLevelInsertPosition:
         # Should be after line 7 (closing paren), NOT line 4 (from datetime)
         # Note: dedent() adds leading newline, so line numbers are +1
         assert position == 7, (
-            f"Expected position 7 (after closing paren), got {position}. " f"Pytestmark would be inserted inside import block!"
+            f"Expected position 7 (after closing paren), got {position}. Pytestmark would be inserted inside import block!"
         )
 
     def test_insert_after_multiline_import_middle(self, tmp_path):
@@ -285,7 +285,7 @@ class TestPytestmarkIntegration:
         try:
             ast.parse(fixed_content)
         except SyntaxError as e:
-            pytest.fail(f"Generated invalid Python syntax:\n" f"Error: {e}\n" f"Generated code:\n{fixed_content}")
+            pytest.fail(f"Generated invalid Python syntax:\nError: {e}\nGenerated code:\n{fixed_content}")
 
         # Verify pytestmark is on correct line (after closing paren, not inside)
         lines = fixed_content.splitlines()
@@ -298,7 +298,7 @@ class TestPytestmarkIntegration:
         # Pytestmark should be after line 5 (closing paren is at index 4, 0-based)
         # and definitely NOT inside the import block (lines 2-5)
         assert pytestmark_line_num > 5, (
-            f"pytestmark found at line {pytestmark_line_num}, " f"which is inside or at the import block (lines 2-5)"
+            f"pytestmark found at line {pytestmark_line_num}, which is inside or at the import block (lines 2-5)"
         )
 
     def test_generated_code_preserves_existing_code(self, tmp_path):
@@ -379,7 +379,7 @@ class TestPytestmarkIntegration:
         pytestmark_line = pytestmark_lines[0]
         # Last import closes at line 14 (0-based index 13)
         assert pytestmark_line > 14, (
-            f"pytestmark at line {pytestmark_line} is too early, " f"should be after line 14 (last import closing paren)"
+            f"pytestmark at line {pytestmark_line} is too early, should be after line 14 (last import closing paren)"
         )
 
     def test_handles_inline_comments_in_multiline_import(self, tmp_path):

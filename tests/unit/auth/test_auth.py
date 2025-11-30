@@ -7,7 +7,6 @@ from unittest.mock import MagicMock
 import jwt
 import pytest
 from fastapi import Request
-from fastapi.security import HTTPAuthorizationCredentials
 
 from mcp_server_langgraph.auth.middleware import (
     AuthMiddleware,

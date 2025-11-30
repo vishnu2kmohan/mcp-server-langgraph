@@ -17,23 +17,18 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Full history for accurate stats
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7.1.0
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
+          # Note: Using explicit extras list instead of --all-extras
+          # Composite action doesn't support --all-extras flag
+          extras: 'dev monitoring release-tools'
+          cache-key-prefix: 'weekly-reports'
 
       - name: Create reports directory
         run: mkdir -p docs-internal/reports

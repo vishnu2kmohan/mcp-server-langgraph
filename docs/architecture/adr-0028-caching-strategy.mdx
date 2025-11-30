@@ -1,155 +1,75 @@
 ---
-title: 28. Multi-Layer Caching Strategy
-description: 'Three-layer caching architecture for performance optimization and cost reduction'
-icon: 'file-lines'
-seoTitle: "ADR-0028: 28. Multi-Layer Caching Strategy"
-seoDescription: "Architecture Decision Record 0028: Three-layer caching architecture for performance optimization and cost reduction"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "28."]
-contentType: "explanation"
+title: "28. Multi-Layer Caching Strategy"
+description: "Architecture Decision Record: 28. Multi-Layer Caching Strategy"
 ---
 
-## ADR-0028: Multi-Layer Caching Strategy
+# 28. Multi-Layer Caching Strategy
 
-<Note>
-**Status**: Accepted
-**Date**: 2025-10-20
-**Deciders**: Engineering Team
-</Note>
+Date: 2025-10-20
 
-### Context
+## Status
+
+Accepted
+
+## Category
+
+Performance & Resilience
+
+## Context
 
 The MCP server makes expensive operations that could benefit from caching:
-
 - **LLM API calls**: $0.003-0.015 per request, 2-10s latency
 - **OpenFGA authorization checks**: 50-100ms per check, high volume
 - **Prometheus metric queries**: 100-500ms per query
 - **Embedding generation**: 200-500ms per text chunk
 - **Knowledge base searches**: 500ms-2s per query
 
-#### Current State
-
+**Current State**:
 - No caching layer implemented
 - Every request hits external services
-- Repeated identical requests waste resources
+- Repeated identical requests (e.g., same auth check)
 - High latency and cost
 
-#### Performance Targets
+**Performance Impact**:
+- P95 latency: Unknown (no baseline)
+- LLM costs: Uncontrolled, potentially high
+- OpenFGA load: 50+ checks per request
+- Prometheus load: Repeated queries for same metrics
 
-- **30% latency reduction**
-- **20% cost savings**
-- **P95 latency < 500ms**
+**Roadmap Targets** (v2.7.0):
+- 30% latency reduction
+- 20% cost savings
+- P95 latency < 500ms
 
-### Decision
+## Decision
 
-Implement a **multi-layer caching strategy** with three distinct layers:
+Implement a **multi-layer caching strategy** with different TTLs and invalidation policies:
 
-#### Cache Architecture
-
-```mermaid
-%% ColorBrewer2 Set3 palette - each component type uniquely colored
-flowchart TB
-    Request[API Request] --> L1[L1: In-Memory LRU Cache<br/>~10ms<br/>local, per-instance]
-    L1 -->|Cache miss| L2[L2: Redis Distributed Cache<br/>~50ms<br/>shared, cross-instance]
-    L2 -->|Cache miss| L3[L3: Provider-Native Cache<br/>~200ms<br/>Anthropic, Gemini prompts]
-    L3 -->|Cache miss| External[External Service<br/>~2000ms+<br/>uncached]
-
-    L1 -.->|Cache hit| Response1[Response ~10ms]
-    L2 -.->|Cache hit| Response2[Response ~50ms]
-    L3 -.->|Cache hit| Response3[Response ~200ms]
-    External -.-> Response4[Response ~2000ms+]
-
-    classDef l1Style fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    classDef l2Style fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    classDef l3Style fill:#bebada,stroke:#8e44ad,stroke-width:2px,color:#333
-    classDef externalStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px,color:#333
-    classDef responseStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-
-    class Request,Response1,Response2,Response3,Response4 responseStyle
-    class L1 l1Style
-    class L2 l2Style
-    class L3 l3Style
-    class External externalStyle
-```
-#### Multi-Layer Caching Flow
-
-```mermaid
-%% ColorBrewer2 Set3 palette - each component type uniquely colored
-flowchart TB
-    Request[API Request] --> L1{L1: In-Memory<br/>LRU Cache}
-
-    L1 -->|Hit ~5ms| L1Hit[Return from L1<br/>Authorization results<br/>User profiles]
-    L1 -->|Miss| L2{L2: Redis<br/>Distributed Cache}
-
-    L2 -->|Hit ~20ms| L2Hit[Return from L2<br/>Update L1]
-    L2 -->|Miss| L3{L3: Provider Cache<br/>Anthropic/Gemini}
-
-    L3 -->|Hit ~100ms| L3Hit[Return from L3<br/>Update L2 + L1]
-    L3 -->|Miss| External[External Service<br/>LLM API Call<br/&gt;2000ms+]
-
-    External --> Update[Update All Layers<br/>L3 → L2 → L1]
-    Update --> Response[Response]
-
-    L1Hit --> Response
-    L2Hit --> Response
-    L3Hit --> Response
+### Cache Layers
 
 ```
-
-**Cache Lookup Sequence with Fallback**:
-```mermaid
-%% ColorBrewer2 Set3 palette - each component type uniquely colored
-sequenceDiagram
-    %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
-    participant Client
-    participant App as MCP Server
-    participant L1 as L1: In-Memory<br/>LRU Cache
-    participant L2 as L2: Redis Cache
-    participant L3 as L3: Provider Cache<br/>(Anthropic Prompt Caching)
-    participant LLM as LLM API<br/>(Anthropic/Gemini)
-
-    Client->>App: POST /chat<br/>{prompt: "What is RAG?"}
-
-    Note over App,L1: Check L1 (In-Memory)
-    App->>L1: GET cache_key: hash(prompt)
-    L1-->>App: MISS
-
-    Note over App,L2: Check L2 (Redis)
-    App->>L2: GET llm:cache:hash(prompt)
-    L2-->>App: MISS
-
-    Note over App,L3: Check L3 (Provider Prompt Cache)
-    App->>L3: Check prompt cache<br/>with system: [cached]
-    L3-->>App: MISS
-
-    Note over App,LLM: Call External LLM (Expensive)
-    App->>LLM: POST /messages<br/>{prompt, system: [...], cache_control}
-    Note over LLM: Process request<br/>~2000ms + $0.015
-    LLM-->>App: Response + cache info<br/>{text, usage, cache_creation_input_tokens}
-
-    Note over App,L3: Populate L3 (Provider stores internally)
-    App->>L3: Store in provider cache<br/>TTL: 5 min
-    L3-->>App: Cached
-
-    Note over App,L2: Populate L2 (Redis)
-    App->>L2: SET llm:cache:hash → response<br/>TTL: 300 sec
-    L2-->>App: Stored
-
-    Note over App,L1: Populate L1 (In-Memory)
-    App->>L1: Store in LRU<br/>maxsize: 1000
-    L1-->>App: Stored
-
-    App-->>Client: Response (2000ms)
-
-    Note over Client,App: Subsequent identical request
-    Client->>App: POST /chat<br/>{prompt: "What is RAG?"}
-
-    App->>L1: GET cache_key
-    L1-->>App: HIT (~5ms)
-
-    App-->>Client: Response (5ms) ✓<br/>400x faster
-
+┌─────────────────────────────────────────┐
+│         Application Layer               │
+│  ┌────────────────────────────────┐    │
+│  │   L1: In-Memory LRU Cache      │    │ < 10ms
+│  │   (local, per-instance)        │    │
+│  └────────────────────────────────┘    │
+│              ▼                          │
+│  ┌────────────────────────────────┐    │
+│  │   L2: Redis Distributed Cache  │    │ < 50ms
+│  │   (shared, cross-instance)     │    │
+│  └────────────────────────────────┘    │
+│              ▼                          │
+│  ┌────────────────────────────────┐    │
+│  │   L3: Provider-Native Cache    │    │ < 200ms
+│  │   (Anthropic, Gemini prompts)  │    │
+│  └────────────────────────────────┘    │
+└─────────────────────────────────────────┘
+              ▼
+    External Service (uncached)          2000ms+
 ```
-#### Layer 1: In-Memory LRU Cache
+
+### Layer 1: In-Memory LRU Cache
 
 **Use Case**: Frequently accessed, small data (< 1MB per entry)
 
@@ -163,8 +83,8 @@ L1_CACHE_MAXSIZE_MB = 100   # Max memory usage
 ```
 
 **What to Cache**:
-- OpenFGA authorization results
-- User profile lookups
+- OpenFGA authorization results (user:resource:permission)
+- User profile lookups (user_id → profile)
 - Feature flag evaluations
 - Configuration values
 
@@ -174,13 +94,15 @@ from functools import lru_cache
 
 @lru_cache(maxsize=1000)
 def check_permission_cached(user: str, resource: str, action: str) -> bool:
+    """Check permission with L1 cache (60s TTL)"""
     return openfga_client.check(user, resource, action)
 ```
-#### Layer 2: Redis Distributed Cache
+
+### Layer 2: Redis Distributed Cache
 
 **Use Case**: Shared across instances, larger data, longer TTL
 
-**Implementation**: Redis with pickle serialization
+**Implementation**: `redis` with `pickle` serialization
 
 **Configuration**:
 ```python
@@ -190,104 +112,133 @@ L2_CACHE_MAX_SIZE_MB = 1000  # 1GB cache limit
 ```
 
 **What to Cache**:
-- LLM responses (with semantic similarity)
-- Embedding vectors
+- LLM responses (with semantic similarity check)
+- Embedding vectors for text chunks
 - Prometheus query results
 - Knowledge base search results
 - Expensive computations
 
 **Example**:
 ```python
+import redis
+import pickle
+from typing import Optional
+
+redis_client = redis.Redis(host="localhost", port=6379, db=2)
+
+def cache_get(key: str) -> Optional[Any]:
+    """Get from Redis cache"""
+    data = redis_client.get(key)
+    return pickle.loads(data) if data else None
+
+def cache_set(key: str, value: Any, ttl: int = 300):
+    """Set in Redis cache with TTL"""
+    redis_client.setex(key, ttl, pickle.dumps(value))
+
 async def get_llm_response_cached(prompt: str) -> str:
+    """Get LLM response with L2 cache"""
     cache_key = f"llm:{hash(prompt)}"
 
+    # Check cache first
     if cached := cache_get(cache_key):
         return cached
 
+    # Cache miss: call LLM
     response = await llm_client.generate(prompt)
+
+    # Store in cache (5 min TTL)
     cache_set(cache_key, response, ttl=300)
+
     return response
 ```
-#### Layer 3: Provider-Native Caching
 
-**Use Case**: Leverage provider-specific caching features
+### Layer 3: Provider-Native Caching
 
-##### Anthropic Claude Prompt Caching
+**Use Case**: Leverage provider-specific caching (Anthropic, Gemini)
 
+**Anthropic Claude Prompt Caching**:
 ```python
+# Anthropic supports prompt caching for repeated prefixes
 response = anthropic.messages.create(
     model="claude-3-5-sonnet-20241022",
     max_tokens=1024,
-    system=[{
-        "type": "text",
-        "text": "You are an AI assistant...",  # Static
-        "cache_control": {"type": "ephemeral"}  # Cache!
-    }],
+    system=[
+        {
+            "type": "text",
+            "text": "You are an AI assistant...",  # Static system prompt
+            "cache_control": {"type": "ephemeral"}  # Cache this!
+        }
+    ],
     messages=[...]
 )
-## Saves 90% on input tokens for repeated system prompts
+# Saves 90% on input tokens for repeated system prompts
 ```
 
-##### Google Gemini Caching
-
+**Google Gemini Caching**:
 ```python
+# Gemini supports caching via context caching
 from google.generativeai import caching
 
 cached_content = caching.CachedContent.create(
-    model="gemini-2.5-flash",
+    model="gemini-1.5-flash-001",
     system_instruction="You are an AI assistant...",
-    ttl=datetime.timedelta(minutes=5)
+    contents=["..."],
+    ttl=datetime.timedelta(minutes=5),
 )
+# Reuse cached content for subsequent requests
 ```
+
 ### Cache Key Design
 
-#### Hierarchical Format
-
-```html
+**Hierarchical Key Format**:
+```
 <namespace>:<entity>:<identifier>:<version>
 ```
-#### Examples
 
-```
-## Authorization cache
+**Examples**:
+```python
+# Authorization cache
 "auth:permission:user:alice:resource:doc123:action:read:v1"
 
-## LLM response cache
+# LLM response cache
 "llm:response:model:claude-3-5:hash:abc123def:v1"
 
-## Embedding cache
+# Embedding cache
 "embedding:text:hash:xyz789:model:all-minilm-l6-v2:v1"
-```
-#### Best Practices
 
-<Check>Include version suffix (`:v1`) for cache invalidation</Check>
-<Check>Use hashing for long identifiers (< 250 chars)</Check>
-<Check>Namespace by feature area to avoid collisions</Check>
-<Check>Include all parameters that affect output</Check>
+# Prometheus query cache
+"metrics:query:uptime:service:mcp-server:range:30d:v1"
+```
+
+**Cache Key Best Practices**:
+1. Include version suffix (`:v1`) for cache invalidation
+2. Use hashing for long identifiers (limit key length < 250 chars)
+3. Namespace by feature area to avoid collisions
+4. Include all parameters that affect output
 
 ### TTL Strategy
 
 | Cache Type | TTL | Rationale |
 |------------|-----|-----------|
-| **OpenFGA Authorization** | 5 min | Permissions change infrequently |
-| **LLM Responses** | 1 hour | Deterministic responses |
-| **User Profiles** | 15 min | Infrequent updates |
-| **Feature Flags** | 1 min | Fast rollout needed |
-| **Prometheus Queries** | 1 min | Frequent metric changes |
-| **Embeddings** | 24 hours | Deterministic transformation |
-| **Knowledge Base Search** | 30 min | Periodic index updates |
+| **OpenFGA Authorization** | 5 min | Permissions don't change frequently |
+| **LLM Responses** | 1 hour | Same prompt → same response (deterministic) |
+| **User Profiles** | 15 min | Profiles update infrequently |
+| **Feature Flags** | 1 min | Need fast rollout of flag changes |
+| **Prometheus Queries** | 1 min | Metrics change frequently |
+| **Embeddings** | 24 hours | Text → embedding is deterministic |
+| **Knowledge Base Search** | 30 min | Search index updates periodically |
 
 ### Cache Invalidation
 
-#### Strategies
+**Strategies**:
 
-1. **Time-based (TTL)**: Automatic expiration
+1. **Time-based (TTL)**: Automatic expiration after duration
 2. **Event-based**: Invalidate on data changes
 3. **Version-based**: Change key version to invalidate all
 
-#### Event-Based Example
-
+**Event-Based Invalidation**:
 ```python
+# Example: Invalidate user cache on profile update
 async def update_user_profile(user_id: str, updates: dict):
     # Update database
     await db.update_user(user_id, updates)
@@ -295,21 +246,32 @@ async def update_user_profile(user_id: str, updates: dict):
     # Invalidate all caches for this user
     cache_keys = [
         f"user:profile:{user_id}:v1",
-        f"user:permissions:{user_id}:*",  # Wildcard
+        f"user:permissions:{user_id}:*",  # Wildcard delete
     ]
     for key in cache_keys:
         redis_client.delete(key)
 ```
-#### Cache Stampede Prevention
 
-```
-## Lock-based cache refresh (prevent thundering herd)
-async def get_with_lock(key: str, fetcher: Callable, ttl: int):
+**Cache Stampede Prevention**:
+```python
+import asyncio
+from typing import Optional
+
+# Lock-based cache refresh (prevent thundering herd)
+_refresh_locks = {}
+
+async def get_with_lock(key: str, fetcher: Callable, ttl: int) -> Any:
+    """Get from cache or fetch with lock to prevent stampede"""
+    # Try L2 cache first
     if cached := cache_get(key):
         return cached
 
+    # Acquire lock for this key
+    if key not in _refresh_locks:
+        _refresh_locks[key] = asyncio.Lock()
+
     async with _refresh_locks[key]:
-        # Double-check cache
+        # Double-check cache (another request may have filled it)
         if cached := cache_get(key):
             return cached
 
@@ -319,24 +281,47 @@ async def get_with_lock(key: str, fetcher: Callable, ttl: int):
         return value
 ```
 
-### Implementation
+## Architecture
 
-#### New Module: `core/cache.py`
+### New Module: `src/mcp_server_langgraph/core/cache.py`
 
 ```python
-from typing import Any, Optional
-from cachetools import TTLCache
+"""
+Multi-layer caching system for MCP server.
+
+Features:
+- L1: In-memory LRU cache (functools.lru_cache)
+- L2: Redis distributed cache
+- L3: Provider-native caching (Anthropic, Gemini)
+- Automatic TTL and eviction
+- Cache stampede prevention
+- Metrics and observability
+"""
+
+from typing import Any, Callable, Optional, TypeVar, ParamSpec
+import functools
+import hashlib
+import pickle
 import redis
+from cachetools import TTLCache
+
+P = ParamSpec('P')
+T = TypeVar('T')
 
 class CacheService:
     """Unified caching service with L1 + L2"""
 
     def __init__(self):
-        # L1: In-memory cache
+        # L1: In-memory cache (per-instance)
         self.l1_cache = TTLCache(maxsize=1000, ttl=60)
 
-        # L2: Redis cache
-        self.redis = redis.Redis(host="localhost", port=6379, db=2)
+        # L2: Redis cache (shared)
+        self.redis = redis.Redis(
+            host="localhost",
+            port=6379,
+            db=2,  # Separate DB for cache
+            decode_responses=False,  # Keep binary for pickle
+        )
 
     def get(self, key: str, level: str = "l2") -> Optional[Any]:
         """Get from cache (L1 → L2 → miss)"""
@@ -349,112 +334,297 @@ class CacheService:
             data = self.redis.get(key)
             if data:
                 value = pickle.loads(data)
-                self.l1_cache[key] = value  # Promote to L1
+                # Promote to L1
+                self.l1_cache[key] = value
                 return value
 
         return None
+
+    def set(self, key: str, value: Any, ttl: int = 300, level: str = "l2"):
+        """Set in cache"""
+        if level in ("l1", "l2"):
+            self.l1_cache[key] = value
+
+        if level == "l2":
+            self.redis.setex(key, ttl, pickle.dumps(value))
+
+    def delete(self, key: str):
+        """Delete from all cache levels"""
+        self.l1_cache.pop(key, None)
+        self.redis.delete(key)
+
+    def clear(self, pattern: Optional[str] = None):
+        """Clear cache (all or by pattern)"""
+        self.l1_cache.clear()
+        if pattern:
+            keys = self.redis.keys(pattern)
+            if keys:
+                self.redis.delete(*keys)
+        else:
+            self.redis.flushdb()
+
+
+# Global cache instance
+_cache_service: Optional[CacheService] = None
+
+def get_cache() -> CacheService:
+    """Get global cache service"""
+    global _cache_service
+    if _cache_service is None:
+        _cache_service = CacheService()
+    return _cache_service
+
+
+# Decorator for caching async functions
+def cached(key_prefix: str, ttl: int = 300, level: str = "l2"):
+    """Decorator for caching async function results"""
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
+        @functools.wraps(func)
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            cache = get_cache()
+
+            # Generate cache key
+            key_parts = [key_prefix]
+            key_parts.extend(str(arg) for arg in args)
+            key_parts.extend(f"{k}:{v}" for k, v in sorted(kwargs.items()))
+            key = ":".join(key_parts)
+
+            # Hash if too long
+            if len(key) > 200:
+                key = f"{key_prefix}:hash:{hashlib.md5(key.encode()).hexdigest()}"
+
+            # Try cache
+            if cached_value := cache.get(key, level=level):
+                return cached_value
+
+            # Cache miss: call function
+            result = await func(*args, **kwargs)
+
+            # Store in cache
+            cache.set(key, result, ttl=ttl, level=level)
+
+            return result
+
+        return wrapper
+    return decorator
 ```
-#### Usage with Decorator
+
+## Metrics & Observability
+
+### Cache Metrics (20+)
 
 ```python
-from mcp_server_langgraph.core.cache import cached
+# Cache hit/miss rates
+cache_hits_total{layer, cache_type}
+cache_misses_total{layer, cache_type}
+cache_hit_rate{layer, cache_type}  # hits / (hits + misses)
 
-@cached(key_prefix="llm:response", ttl=3600)
-async def get_llm_response(prompt: str) -> str:
-    return await llm_client.generate(prompt)
+# Cache performance
+cache_latency_seconds{layer, operation}  # get, set, delete
+cache_size_bytes{layer, cache_type}
+cache_evictions_total{layer, reason}  # ttl, size, manual
+
+# L1 specific
+l1_cache_memory_bytes
+l1_cache_entries_total
+
+# L2 specific
+l2_redis_errors_total{operation}
+l2_redis_connection_pool_size
+
+# Cache effectiveness
+cache_cost_savings_usd  # Estimated $ saved from cache hits
+cache_latency_reduction_ms  # Estimated ms saved
 ```
 
-### Configuration
+### Cache Hit Rate Targets
 
-#### Environment Variables
+| Cache Type | Target Hit Rate | Current | Status |
+|------------|----------------|---------|--------|
+| OpenFGA Authorization | > 80% | TBD | 🟡 |
+| LLM Responses | > 40% | TBD | 🟡 |
+| Embeddings | > 70% | TBD | 🟡 |
+| Prometheus Queries | > 60% | TBD | 🟡 |
+| User Profiles | > 90% | TBD | 🟡 |
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# L1 Cache (In-Memory)
+L1_CACHE_ENABLED=true
+L1_CACHE_SIZE=1000
+L1_CACHE_TTL=60
+L1_CACHE_MAXSIZE_MB=100
+
+# L2 Cache (Redis)
+L2_CACHE_ENABLED=true
+L2_CACHE_REDIS_URL=redis://localhost:6379/2
+L2_CACHE_DEFAULT_TTL=300
+L2_CACHE_MAX_SIZE_MB=1000
+
+# L3 Cache (Provider-Native)
+L3_ANTHROPIC_PROMPT_CACHE=true
+L3_GEMINI_CONTEXT_CACHE=true
+
+# Feature Flags
+FF_ENABLE_CACHING=true
+FF_CACHE_ENFORCEMENT_MODE=enforce  # enforce, log_only, disabled
 ```
-## Cache Configuration
-CACHE_L1_SIZE=1000
-CACHE_L1_TTL=60
-CACHE_L2_REDIS_URL=redis://localhost:6379/2
-CACHE_L2_DEFAULT_TTL=300
-CACHE_L2_MAX_SIZE_MB=1000
 
-## Provider Caching
-ANTHROPIC_ENABLE_PROMPT_CACHING=true
-GEMINI_ENABLE_CONTEXT_CACHING=true
+## Consequences
+
+### Positive
+
+1. **Performance Improvement**
+   - 30-50% latency reduction for cached operations
+   - P95 latency: < 500ms (target achieved)
+   - Reduced load on external services
+
+2. **Cost Savings**
+   - 20-40% reduction in LLM API costs
+   - Fewer OpenFGA API calls
+   - Lower Prometheus query load
+
+3. **Scalability**
+   - Handle higher request volume with same resources
+   - Reduced database/API load enables horizontal scaling
+
+4. **User Experience**
+   - Faster response times
+   - More consistent performance
+
+### Negative
+
+1. **Cache Staleness**
+   - Stale data for TTL duration
+   - Permission changes not reflected immediately
+   - May violate real-time requirements
+
+2. **Memory Usage**
+   - L1 cache consumes application memory (~100MB)
+   - Redis memory usage (~1GB)
+   - Need monitoring and alerting
+
+3. **Complexity**
+   - Cache invalidation is hard ("one of two hard problems")
+   - Debugging cache-related issues
+   - More moving parts (Redis dependency)
+
+4. **Cache Stampede Risk**
+   - Thundering herd on cache expiration
+   - Need locking mechanisms
+
+### Mitigations
+
+1. **Short TTLs**: Start with 1-5 min, increase based on metrics
+2. **Tiered Rollout**: Enable caching incrementally (auth → llm → metrics)
+3. **Cache Warming**: Pre-populate cache with common queries
+4. **Monitoring**: Alert on low hit rates, high evictions
+5. **Circuit Breaker**: Bypass cache if Redis is down (fail-safe)
+
+## Implementation Plan
+
+### Week 1: Foundation
+- [ ] Create `core/cache.py` module
+- [ ] Implement L1 cache (LRU with TTL)
+- [ ] Implement L2 cache (Redis)
+- [ ] Add cache metrics and observability
+- [ ] Write 40+ unit tests
+
+### Week 2: Integration - Auth Layer
+- [ ] Cache OpenFGA authorization checks (5 min TTL)
+- [ ] Cache user profile lookups (15 min TTL)
+- [ ] Cache session lookups (already in Redis, optimize)
+- [ ] Measure hit rate, tune TTLs
+
+### Week 3: Integration - LLM Layer
+- [ ] Cache LLM responses with semantic similarity
+- [ ] Implement Anthropic prompt caching
+- [ ] Implement Gemini context caching
+- [ ] Cache embedding generation results
+- [ ] Measure cost savings
+
+### Week 4: Integration - Metrics Layer
+- [ ] Cache Prometheus query results (1 min TTL)
+- [ ] Cache SLA metrics calculations
+- [ ] Cache compliance evidence queries
+- [ ] Measure latency reduction
+
+### Week 5: Optimization & Rollout
+- [ ] Implement cache stampede prevention
+- [ ] Add cache warming for common queries
+- [ ] Performance testing: 1000 req/s load
+- [ ] Deploy to production (gradual rollout)
+
+## Testing Strategy
+
+### Unit Tests
+```python
+def test_cache_hit():
+    """Test cache hit returns cached value"""
+    cache = CacheService()
+    cache.set("test:key", "value", ttl=60)
+    assert cache.get("test:key") == "value"
+
+def test_cache_miss():
+    """Test cache miss returns None"""
+    cache = CacheService()
+    assert cache.get("nonexistent:key") is None
+
+def test_cache_expiration():
+    """Test cache entries expire after TTL"""
+    cache = CacheService()
+    cache.set("test:key", "value", ttl=1)
+    time.sleep(2)
+    assert cache.get("test:key") is None
 ```
-### Metrics & Observability
 
-#### New Metrics
+### Performance Tests
+```python
+def test_cache_performance():
+    """Test cache latency is < 10ms for L1, < 50ms for L2"""
+    cache = CacheService()
 
-```
-## Cache hit/miss rates
-cache_hits_total{layer, namespace}
-cache_misses_total{layer, namespace}
-cache_hit_rate{layer, namespace}  # Calculated
+    # L1 latency
+    start = time.time()
+    cache.get("test:key")
+    l1_latency = (time.time() - start) * 1000
+    assert l1_latency < 10  # < 10ms
 
-## Cache performance
-cache_latency_seconds{layer, namespace}
-cache_size_bytes{layer}
-cache_evictions_total{layer, reason}
-
-## Provider caching
-prompt_cache_read_tokens_total{provider}
-prompt_cache_write_tokens_total{provider}
+    # L2 latency
+    # ... similar test
 ```
 
-#### Grafana Dashboard
+## References
 
-**Panel: Cache Performance**
-- Hit rate by layer (L1, L2) - line chart
-- Cache latency distribution - heatmap
-- Cache size over time - area chart
-- Top cache keys by access count - table
+- **Redis Caching Best Practices**: https://redis.io/docs/manual/client-side-caching/
+- **Anthropic Prompt Caching**: https://docs.anthropic.com/claude/docs/prompt-caching
+- **Google Gemini Caching**: https://ai.google.dev/gemini-api/docs/caching
+- **cachetools Library**: https://github.com/tkem/cachetools
+- **Cache Stampede Prevention**: https://en.wikipedia.org/wiki/Cache_stampede
 
-### Consequences
+## Success Metrics
 
-#### Positive
+### Performance
+- **Target**: 30% P95 latency reduction
+- **Baseline**: Measure current P95 latency
+- **Target**: P95 < 500ms after caching
 
-<Check>**30% Latency Reduction** - Faster response times</Check>
-<Check>**20% Cost Savings** - Reduced LLM API calls</Check>
-<Check>**Improved Scalability** - Less external API load</Check>
-<Check>**Better User Experience** - Faster responses</Check>
+### Cost Savings
+- **Target**: 20% reduction in LLM API costs
+- **Measurement**: Monthly LLM spend before/after
 
-#### Negative
+### Cache Hit Rate
+- **Target**: > 60% overall hit rate
+- **Measurement**: `cache_hits / (cache_hits + cache_misses)`
 
-<Warning>**Stale Data Risk** - Cache may serve outdated data</Warning>
-<Warning>**Memory Usage** - L1 cache consumes RAM</Warning>
-<Warning>**Complexity** - Additional component to manage</Warning>
-<Warning>**Cache Invalidation** - Hard problem in distributed systems</Warning>
-
-#### Mitigations
-
-1. **Conservative TTLs**: Start with shorter TTLs, increase gradually
-2. **Monitoring**: Track cache hit rates and staleness
-3. **Circuit Breaker**: Disable caching if Redis is unavailable
-4. **Clear Documentation**: Document cache behavior for each endpoint
-
-### Performance Impact
-
-#### Latency Improvements
-
-| Operation | Without Cache | With Cache | Improvement |
-|-----------|---------------|------------|-------------|
-| Authorization Check | 50ms | 5ms | **90%** |
-| LLM Response | 2000ms | 50ms | **97.5%** |
-| Embedding Generation | 300ms | 10ms | **96.7%** |
-| Prometheus Query | 200ms | 20ms | **90%** |
-
-#### Cost Savings
-
-- **LLM API calls**: 40% reduction (cache hit rate: 40%)
-- **Monthly savings**: ~$500-1000 (based on usage)
-- **ROI**: Redis hosting cost < $50/month
-
-### Related
-
-- [ADR-0026: Resilience Patterns](/architecture/adr-0030-resilience-patterns)
-- [Performance Optimization](/deployment/scaling)
-- [Redis Sessions](/guides/redis-sessions)
+### User Experience
+- **Target**: < 2% increase in stale data complaints
+- **Measurement**: User feedback, support tickets
 
 ---
 
 **Last Updated**: 2025-10-20
-**Next Review**: 2025-11-20
+**Next Review**: 2025-11-20 (after 1 month in production)

@@ -22,6 +22,7 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="agent_type_compliance")
+@pytest.mark.timeout(120)  # Allow up to 2 minutes for mypy subprocess tests
 class TestAgentTypeCompliance:
     """Test that agent.py passes MyPy type checking"""
 
@@ -48,14 +49,18 @@ class TestAgentTypeCompliance:
         assert agent_file.exists(), f"Agent file not found: {agent_file}"
 
         # Run MyPy on agent.py
+        # Use --frozen to ensure lockfile-pinned versions (prevents version drift in CI)
         result = subprocess.run(
-            ["uv", "run", "mypy", str(agent_file), "--no-error-summary"], capture_output=True, text=True, timeout=30
+            ["uv", "run", "--frozen", "mypy", str(agent_file), "--no-error-summary"],
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
 
         # Check for specific type errors that need to be fixed
         if result.returncode != 0:
-            # Parse errors
-            errors = result.stderr
+            # Parse errors from stdout (mypy outputs errors there, not stderr)
+            errors = result.stdout
 
             # Assert no type errors (this will fail in RED phase)
             pytest.fail(
@@ -77,7 +82,6 @@ class TestAgentTypeCompliance:
         """
         from mcp_server_langgraph.core.agent import AgentState
         from typing import get_type_hints, get_args, get_origin
-        from collections.abc import Sequence
 
         # Get type hints for AgentState
         hints = get_type_hints(AgentState, include_extras=True)
@@ -111,18 +115,23 @@ class TestAgentTypeCompliance:
         This is a broader check to ensure the type safety fix doesn't
         introduce errors elsewhere.
         """
+        # CI runners are slower - allow 90 seconds for full codebase mypy check
+        # Use --frozen to ensure lockfile-pinned versions (prevents version drift in CI)
         result = subprocess.run(
-            ["uv", "run", "mypy", "src/mcp_server_langgraph", "--no-error-summary"], capture_output=True, text=True, timeout=60
+            ["uv", "run", "--frozen", "mypy", "src/mcp_server_langgraph", "--no-error-summary"],
+            capture_output=True,
+            text=True,
+            timeout=90,
         )
 
         if result.returncode != 0:
-            # Count errors
-            error_lines = [line for line in result.stderr.split("\n") if "error:" in line]
+            # Count errors from stdout (mypy outputs errors there, not stderr)
+            error_lines = [line for line in result.stdout.split("\n") if "error:" in line]
             error_count = len(error_lines)
 
             pytest.fail(
                 f"MyPy found {error_count} type errors in codebase:\n"
-                f"{result.stderr}\n\n"
+                f"{result.stdout}\n\n"
                 f"Expected: 0 errors\n"
                 f"Current errors must be fixed to unblock CI/CD"
             )

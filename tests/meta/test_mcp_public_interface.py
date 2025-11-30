@@ -46,9 +46,9 @@ class TestMCPPublicInterface:
         )
 
         # Verify it's a coroutine function (async method)
-        assert inspect.iscoroutinefunction(
-            MCPAgentServer.call_tool_public
-        ), "MCPAgentServer.call_tool_public() must be an async method"
+        assert inspect.iscoroutinefunction(MCPAgentServer.call_tool_public), (
+            "MCPAgentServer.call_tool_public() must be an async method"
+        )
 
         # Verify signature
         sig = inspect.signature(MCPAgentServer.call_tool_public)
@@ -73,9 +73,9 @@ class TestMCPPublicInterface:
         assert hasattr(MCPAgentServer, "list_tools_public"), "MCPAgentServer must expose list_tools_public() method"
 
         # Verify it's a coroutine function (async method)
-        assert inspect.iscoroutinefunction(
-            MCPAgentServer.list_tools_public
-        ), "MCPAgentServer.list_tools_public() must be an async method"
+        assert inspect.iscoroutinefunction(MCPAgentServer.list_tools_public), (
+            "MCPAgentServer.list_tools_public() must be an async method"
+        )
 
     def test_mcp_server_has_auth_attribute(self):
         """

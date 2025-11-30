@@ -108,9 +108,9 @@ class TestGDPRSchemaSetup:
         required_tables = ["user_profiles", "user_preferences", "consent_records", "conversations", "audit_logs"]
 
         for table in required_tables:
-            assert (
-                table in table_names
-            ), f"Table '{table}' not found in database. Available: {table_names}. Schema setup failed."
+            assert table in table_names, (
+                f"Table '{table}' not found in database. Available: {table_names}. Schema setup failed."
+            )
 
     @pytest.mark.asyncio
     async def test_conversations_table_structure(self, db_pool_gdpr):

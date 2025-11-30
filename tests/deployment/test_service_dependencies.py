@@ -21,7 +21,7 @@ import yaml
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
@@ -205,9 +205,7 @@ def test_required_services_exist_in_staging():
 
     missing = [svc for svc in required_services if svc not in services]
 
-    assert not missing, (
-        f"Required services missing from staging deployment: {missing}\n" f"Available services: {sorted(services)}"
-    )
+    assert not missing, f"Required services missing from staging deployment: {missing}\nAvailable services: {sorted(services)}"
 
 
 def test_external_name_services_have_endpoints():

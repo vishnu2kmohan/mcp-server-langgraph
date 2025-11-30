@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Data & Storage
+
 ## Context
 
 Conversational agents need:

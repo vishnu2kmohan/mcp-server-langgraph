@@ -6,6 +6,10 @@ Date: 2025-01-28
 
 Accepted
 
+## Category
+
+Authentication & Authorization
+
 ## Context
 
 External identity management systems (Azure AD, Okta, Google Workspace, OneLogin) need to programmatically provision/deprovision users and groups. Industry standard is SCIM 2.0 (System for Cross-domain Identity Management), but Keycloak does not have native SCIM 2.0 server support.

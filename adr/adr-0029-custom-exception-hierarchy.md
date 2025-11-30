@@ -1,9 +1,14 @@
-# ADR-0029: Custom Exception Hierarchy
+# 29. Custom Exception Hierarchy
 
-**Status**: Accepted
-**Date**: 2025-10-20
-**Deciders**: Engineering Team
-**Related**: [ADR-0017: Error Handling Strategy](adr-0017-error-handling-strategy.md), [ADR-0030: Resilience Patterns](adr-0030-resilience-patterns.md)
+Date: 2025-10-20
+
+## Status
+
+Accepted
+
+## Category
+
+Core Architecture
 
 ## Context
 

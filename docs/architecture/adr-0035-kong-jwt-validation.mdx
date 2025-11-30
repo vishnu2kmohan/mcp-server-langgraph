@@ -1,21 +1,21 @@
 ---
-title: 35. Kong JWT Validation Strategy
-description: 'Kong API Gateway can validate JWTs using its built-in JWT plugin, but it currently uses HS256 (symmetric keys) with static secrets. Our architectur...'
-icon: 'file-lines'
-seoTitle: "ADR-0035: 35. Kong JWT Validation Strategy"
-seoDescription: "Architecture Decision Record 0035: Kong API Gateway can validate JWTs using its built-in JWT plugin, but it currently uses HS256 (symmetric keys) with static secrets. Our arch"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "35."]
-contentType: "explanation"
+title: "35. Kong JWT Validation Strategy"
+description: "Architecture Decision Record: 35. Kong JWT Validation Strategy"
 ---
 
+# 35. Kong JWT Validation Strategy
 
 Date: 2025-01-28
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Authentication & Authorization
+
+## Context
 
 Kong API Gateway can validate JWTs using its built-in JWT plugin, but it currently uses HS256 (symmetric keys) with static secrets. Our architecture requires RS256 (asymmetric) validation using Keycloak's public keys for:
 - Stateless validation at gateway layer
@@ -29,18 +29,18 @@ Options:
 3. **Kong JWT Plugin + Static Public Key**: Simple but manual key updates
 4. **Custom Plugin with JWKS Fetching**: Dynamic but requires Lua development
 
-### Decision
+## Decision
 
 Use **Kong's standard JWT plugin with RS256 and periodic JWKS updates** via automated CronJob, avoiding custom plugin development while maintaining security.
 
-#### Architecture
+### Architecture
 
-```python
+```
 Client (JWT) → Kong JWT Plugin (RS256 validation with Keycloak public key)
   → MCP Server (optional double-check or trust Kong)
 ```
 
-#### Core Principles
+### Core Principles
 
 1. **Standard Plugin**: Use Kong's built-in JWT plugin (no custom code)
 2. **RS256 Validation**: Asymmetric cryptography with Keycloak public key
@@ -48,7 +48,7 @@ Client (JWT) → Kong JWT Plugin (RS256 validation with Keycloak public key)
 4. **Hybrid Routes**: Different auth per route (API, browser, legacy)
 5. **Stateless**: No Kong-Keycloak coordination required
 
-#### Configuration
+### Configuration
 
 **Kong JWT Plugin**:
 ```yaml
@@ -64,6 +64,7 @@ spec:
     claims_to_verify: [exp, nbf]
     key_claim_name: iss
 ```
+
 **Kong Consumer with Keycloak Public Key**:
 ```yaml
 apiVersion: configuration.konghq.com/v1
@@ -98,7 +99,8 @@ spec:
             image: python:3.11
             command: ["python", "/scripts/update_kong_jwks.py"]
 ```
-#### Hybrid Route Configuration
+
+### Hybrid Route Configuration
 
 **API Route** (JWT required):
 ```yaml
@@ -113,6 +115,7 @@ metadata:
   annotations:
     konghq.com/plugins: cors,rate-limit-basic
 ```
+
 **Legacy Route** (API key→JWT exchange):
 ```yaml
 metadata:
@@ -120,31 +123,31 @@ metadata:
     konghq.com/plugins: apikey-jwt-exchange,rate-limit-basic
 ```
 
-### Consequences
+## Consequences
 
-#### Positive Consequences
+### Positive Consequences
 - No custom plugin development, standard Kong features
 - RS256 security (no shared secrets), stateless validation
 - Sub-millisecond performance (static key), high throughput
 
-#### Negative Consequences
+### Negative Consequences
 - Manual key rotation (6-hour lag), CronJob dependency
 - No automatic JWKS fetching built-in
 - Requires Python script for key updates
 
-#### Mitigation Strategies
+### Mitigation Strategies
 - Automated CronJob every 6 hours (acceptable lag)
 - Monitor CronJob success/failure, alert on failures
 - Keycloak supports multiple valid keys during rotation
 
-### Alternatives Considered
+## Alternatives Considered
 
 1. **Kong Enterprise OIDC**: Rejected - cost, not needed for stateless validation
 2. **Community OIDC Plugin**: Rejected - maintenance burden, compatibility issues
 3. **Custom JWKS Plugin**: Rejected - unnecessary complexity for infrequent key rotation
 4. **No Kong Validation**: Rejected - performance (MCP validation slower)
 
-### Implementation
+## Implementation
 
 **JWKS Updater Script** (`scripts/update_kong_jwks.py`):
 ```python
@@ -165,10 +168,10 @@ async def fetch_and_update_kong_jwks():
 3. Deploy JWKS updater CronJob
 4. Test with sample JWTs from Keycloak
 
-### References
+## References
 
 - Kong Plugin: `deployments/kubernetes/kong/kong-plugins.yaml` (to be updated)
 - JWKS Updater: `scripts/update_kong_jwks.py` (to be created)
 - CronJob: `deployments/kubernetes/kong/kong-jwks-updater-cronjob.yaml` (to be created)
-- Related ADRs: [ADR-0031](/architecture/adr-0031-keycloak-authoritative-identity), [ADR-0032](/architecture/adr-0032-jwt-standardization), [ADR-0034](/architecture/adr-0034-api-key-jwt-exchange)
+- Related ADRs: [ADR-0031](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0031-keycloak-authoritative-identity.md), [ADR-0032](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0032-jwt-standardization.md), [ADR-0034](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0034-api-key-jwt-exchange.md)
 - External: [Kong JWT Plugin](https://docs.konghq.com/hub/kong-inc/jwt/), [JWKS](https://datatracker.ietf.org/doc/html/rfc7517)

@@ -179,7 +179,7 @@ mock_api = configured_async_mock_raise(
 ### Step 1: Run Validator
 
 ```bash
-uv run python scripts/check_async_mock_configuration.py tests/**/*.py
+uv run --frozen python scripts/check_async_mock_configuration.py tests/**/*.py
 ```
 
 Output shows files and line numbers with violations.
@@ -220,26 +220,26 @@ Output shows files and line numbers with violations.
    ```python
    from tests.helpers import configured_async_mock, configured_async_mock_deny
    ```
-5. Run tests: `uv run pytest tests/path/to/test_file.py -xvs`
-6. Verify: `uv run python scripts/check_async_mock_configuration.py tests/path/to/test_file.py`
+5. Run tests: `uv run --frozen pytest tests/path/to/test_file.py -xvs`
+6. Verify: `uv run --frozen python scripts/check_async_mock_configuration.py tests/path/to/test_file.py`
 
 **Bulk Approach (For Non-Critical Tests):**
 
 ```bash
 # Dry run first
-uv run python scripts/bulk_fix_async_mock.py tests/some_test.py --dry-run
+uv run --frozen python scripts/bulk_fix_async_mock.py tests/some_test.py --dry-run
 
 # Apply fixes
-uv run python scripts/bulk_fix_async_mock.py tests/some_test.py
+uv run --frozen python scripts/bulk_fix_async_mock.py tests/some_test.py
 
 # Verify
-uv run pytest tests/some_test.py
+uv run --frozen pytest tests/some_test.py
 ```
 
 ### Step 4: Verify Meta-Test Passes
 
 ```bash
-uv run pytest tests/meta/test_async_mock_configuration.py -xvs
+uv run --frozen pytest tests/meta/test_async_mock_configuration.py -xvs
 ```
 
 Should pass with 0 violations after all fixes applied.
@@ -252,7 +252,7 @@ Once all violations are fixed, move the hook from `manual` to `pre-push` in `.pr
 # Move from line ~1160 (manual) to line ~440 (pre-push)
 - id: check-async-mock-configuration
   name: Check AsyncMock Configuration
-  entry: uv run python scripts/check_async_mock_configuration.py
+  entry: uv run --frozen python scripts/check_async_mock_configuration.py
   language: system
   files: ^tests/.*\.py$
   stages: [pre-push]  # ← Enable enforcement
@@ -266,13 +266,13 @@ Once all violations are fixed, move the hook from `manual` to `pre-push` in `.pr
 
 ```bash
 # Check specific file
-uv run python scripts/check_async_mock_configuration.py tests/test_example.py
+uv run --frozen python scripts/check_async_mock_configuration.py tests/test_example.py
 
 # Check all test files
-uv run python scripts/check_async_mock_configuration.py tests/**/*.py
+uv run --frozen python scripts/check_async_mock_configuration.py tests/**/*.py
 
 # Run meta-test
-uv run pytest tests/meta/test_async_mock_configuration.py -xvs
+uv run --frozen pytest tests/meta/test_async_mock_configuration.py -xvs
 ```
 
 ### Expected Output (After Remediation)

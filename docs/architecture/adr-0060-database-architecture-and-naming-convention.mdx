@@ -1,26 +1,8 @@
 ---
-title: 'ADR-0060: Database Architecture and Naming Convention'
-description: Standardizes multi-database PostgreSQL architecture with consistent naming
-  conventions across development, test, staging, and production environments for GDPR,
-  OpenFGA, and Keycloak services
-icon: database
-contentType: reference
-seoTitle: 'ADR-0060: Database Architecture... - MCP Server LangGraph'
-seoDescription: Standardizes multi-database PostgreSQL architecture with consistent
-  naming conventions across development, test, staging, and production environments
-  for GDP.
-keywords:
-- adr-0060
-- database
-- architecture
-- naming
-- convention
-- standardizes
-- multi-database
-- postgresql
-- consistent
-- conventions
+title: "60. Database Architecture and Naming Convention"
+description: "Architecture Decision Record: 60. Database Architecture and Naming Convention"
 ---
+
 # 60. Database Architecture and Naming Convention
 
 Date: 2025-11-18
@@ -28,6 +10,10 @@ Date: 2025-11-18
 ## Status
 
 Proposed
+
+## Category
+
+Data & Storage
 
 ## Context
 
@@ -576,7 +562,7 @@ livenessProbe:
 
 ## Related ADRs
 
-- [ADR-0006](/architecture/adr-0006-session-storage-architecture) - Session storage (may use PostgreSQL in future)
-- [ADR-0002](/architecture/adr-0002-openfga-authorization) - OpenFGA authorization database
-- [ADR-0007](/architecture/adr-0007-authentication-provider-pattern) - Keycloak authentication database
-- [ADR-0030](/architecture/adr-0030-resilience-patterns) - Circuit breakers for database connections
+- [ADR-0006](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0006-session-storage-architecture.md) - Session storage (may use PostgreSQL in future)
+- [ADR-0002](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0002-openfga-authorization.md) - OpenFGA authorization database
+- [ADR-0007](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0007-authentication-provider-pattern.md) - Keycloak authentication database
+- [ADR-0030](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0030-resilience-patterns.md) - Circuit breakers for database connections

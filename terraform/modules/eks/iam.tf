@@ -179,13 +179,12 @@ resource "aws_iam_policy" "ebs_csi" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      # Read-only Describe actions require Resource = "*" (AWS IAM limitation)
+      # These cannot be scoped to specific ARNs by AWS design
       {
+        Sid    = "EBSCSIDescribeActions"
         Effect = "Allow"
         Action = [
-          "ec2:CreateSnapshot",
-          "ec2:AttachVolume",
-          "ec2:DetachVolume",
-          "ec2:ModifyVolume",
           "ec2:DescribeAvailabilityZones",
           "ec2:DescribeInstances",
           "ec2:DescribeSnapshots",
@@ -194,6 +193,28 @@ resource "aws_iam_policy" "ebs_csi" {
           "ec2:DescribeVolumesModifications"
         ]
         Resource = "*"
+      },
+      # Mutating actions scoped to account and cluster-tagged resources
+      # CKV_AWS_290/CKV_AWS_355: Scoped by account + cluster tag condition
+      {
+        Sid    = "EBSCSIMutatingActions"
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateSnapshot",
+          "ec2:AttachVolume",
+          "ec2:DetachVolume",
+          "ec2:ModifyVolume"
+        ]
+        Resource = [
+          "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:volume/*",
+          "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:snapshot/*",
+          "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:instance/*"
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:ResourceTag/kubernetes.io/cluster/${var.cluster_name}" = "owned"
+          }
+        }
       },
       {
         Effect = "Allow"
@@ -441,38 +462,46 @@ resource "aws_iam_role" "application" {
 }
 
 resource "aws_iam_policy" "application_secrets" {
-  count = var.create_application_irsa_role ? 1 : 0
+  # Only create if IRSA role is enabled AND at least one ARN list is non-empty
+  count = var.create_application_irsa_role && (length(var.application_secrets_arns) > 0 || length(var.application_kms_key_arns) > 0) ? 1 : 0
 
   name_prefix = "${local.cluster_name}-app-secrets-"
   description = "Application Secrets Manager access for ${local.cluster_name}"
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret"
-        ]
-        Resource = var.application_secrets_arns
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "kms:Decrypt",
-          "kms:DescribeKey"
-        ]
-        Resource = var.application_kms_key_arns
-      }
-    ]
+    Statement = concat(
+      # Secrets Manager access (only if ARNs are specified)
+      length(var.application_secrets_arns) > 0 ? [
+        {
+          Effect = "Allow"
+          Action = [
+            "secretsmanager:GetSecretValue",
+            "secretsmanager:DescribeSecret"
+          ]
+          Resource = var.application_secrets_arns
+        }
+      ] : [],
+      # KMS access (only if ARNs are specified)
+      length(var.application_kms_key_arns) > 0 ? [
+        {
+          Effect = "Allow"
+          Action = [
+            "kms:Decrypt",
+            "kms:DescribeKey"
+          ]
+          Resource = var.application_kms_key_arns
+        }
+      ] : []
+    )
   })
 
   tags = local.common_tags
 }
 
 resource "aws_iam_role_policy_attachment" "application_secrets" {
-  count = var.create_application_irsa_role ? 1 : 0
+  # Only attach if the policy was created (matching the policy's count condition)
+  count = var.create_application_irsa_role && (length(var.application_secrets_arns) > 0 || length(var.application_kms_key_arns) > 0) ? 1 : 0
 
   role       = aws_iam_role.application[0].name
   policy_arn = aws_iam_policy.application_secrets[0].arn

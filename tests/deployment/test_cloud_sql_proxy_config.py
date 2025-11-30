@@ -19,7 +19,7 @@ import pytest
 import yaml
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 # Test data
 OVERLAYS_DIR = Path(__file__).parent.parent.parent / "deployments" / "overlays"
 STAGING_GKE_DIR = OVERLAYS_DIR / "staging-gke"
@@ -122,17 +122,17 @@ def test_cloud_sql_proxy_health_probes_configured(patch_file: Path):
     liveness = proxy_container.get("livenessProbe")
     assert liveness is not None, f"Missing livenessProbe in {patch_file.name}"
     assert liveness.get("httpGet", {}).get("port") == 9801, f"Liveness probe must use port 9801 in {patch_file.name}"
-    assert (
-        liveness.get("httpGet", {}).get("path") == "/liveness"
-    ), f"Liveness probe must use /liveness path in {patch_file.name}"
+    assert liveness.get("httpGet", {}).get("path") == "/liveness", (
+        f"Liveness probe must use /liveness path in {patch_file.name}"
+    )
 
     # Check readiness probe
     readiness = proxy_container.get("readinessProbe")
     assert readiness is not None, f"Missing readinessProbe in {patch_file.name}"
     assert readiness.get("httpGet", {}).get("port") == 9801, f"Readiness probe must use port 9801 in {patch_file.name}"
-    assert (
-        readiness.get("httpGet", {}).get("path") == "/readiness"
-    ), f"Readiness probe must use /readiness path in {patch_file.name}"
+    assert readiness.get("httpGet", {}).get("path") == "/readiness", (
+        f"Readiness probe must use /readiness path in {patch_file.name}"
+    )
 
 
 @pytest.mark.parametrize("patch_file", PROXY_PATCH_FILES)
@@ -170,12 +170,12 @@ def test_cloud_sql_proxy_security_context(patch_file: Path):
 
     # Security requirements
     assert security_context.get("runAsNonRoot") is True, f"Cloud SQL Proxy must run as non-root in {patch_file.name}"
-    assert (
-        security_context.get("allowPrivilegeEscalation") is False
-    ), f"Cloud SQL Proxy must not allow privilege escalation in {patch_file.name}"
-    assert (
-        security_context.get("readOnlyRootFilesystem") is True
-    ), f"Cloud SQL Proxy must use read-only root filesystem in {patch_file.name}"
+    assert security_context.get("allowPrivilegeEscalation") is False, (
+        f"Cloud SQL Proxy must not allow privilege escalation in {patch_file.name}"
+    )
+    assert security_context.get("readOnlyRootFilesystem") is True, (
+        f"Cloud SQL Proxy must use read-only root filesystem in {patch_file.name}"
+    )
 
     # Should drop all capabilities
     capabilities = security_context.get("capabilities", {})

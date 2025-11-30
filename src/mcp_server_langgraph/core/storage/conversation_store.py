@@ -14,8 +14,8 @@ try:
     from redis import Redis
 
     REDIS_AVAILABLE = True
-    # Note: Redis is not a generic class in redis-py >= 5.0
-    # Using plain Redis type instead of Redis[str] to avoid TypeError
+    # Note: types-redis >= 4.6.0.20241115 requires generic parameters
+    # Using Redis[str] for decode_responses=True
     RedisType = Redis
 except ImportError:
     REDIS_AVAILABLE = False

@@ -35,7 +35,7 @@ def test_docker_python_path_consistency():
     Different Docker base images have Python installed at different paths:
     - python:3.12-slim - Python at /usr/local/bin/python3
     - Distroless - Python at /usr/bin/python3 (if using distroless/python)
-    - Custom builds - Python at /opt/venv/bin/python (if using venv)
+    - uv-managed venv - Python at /app/.venv/bin/python (uv sync installs here)
 
     The smoke test must use the correct path for each variant to avoid:
     "exec: /usr/bin/python3: not found" errors
@@ -82,7 +82,9 @@ def test_docker_python_path_consistency():
 
                 is_configured = has_path_variable or has_conditional or uses_simple_python
 
-                assert is_configured, f"Docker test step in {job_name} doesn't properly configure Python path:\n{step.get('name', 'unnamed step')}"
+                assert is_configured, (
+                    f"Docker test step in {job_name} doesn't properly configure Python path:\n{step.get('name', 'unnamed step')}"
+                )
 
 
 def test_docker_variant_matrix_complete():
@@ -136,9 +138,9 @@ def test_docker_variant_matrix_complete():
 
             # At least one expected variant should exist
             common = expected_variants & actual_variants
-            assert (
-                common
-            ), f"No common Docker variants found in {job_name}. Expected one of: {expected_variants}, got: {actual_variants}"
+            assert common, (
+                f"No common Docker variants found in {job_name}. Expected one of: {expected_variants}, got: {actual_variants}"
+            )
 
 
 def test_docker_image_verification_comprehensive():
@@ -172,9 +174,9 @@ def test_docker_image_verification_comprehensive():
     # All verification steps should be present
     missing = [desc for desc, found in verification_patterns.items() if desc not in found_verifications]
 
-    assert (
-        len(found_verifications) >= 2
-    ), f"Docker build verification is incomplete. Found: {list(found_verifications.keys())}, Missing checks: {missing}"
+    assert len(found_verifications) >= 2, (
+        f"Docker build verification is incomplete. Found: {list(found_verifications.keys())}, Missing checks: {missing}"
+    )
 
 
 def test_docker_entrypoint_configuration():
@@ -200,9 +202,9 @@ def test_docker_entrypoint_configuration():
     has_import_test = "import " in content and ("mcp_server" in content or "core.agent" in content)
 
     assert has_entrypoint_test, "CI workflow doesn't test Docker entrypoint. Add: docker run --entrypoint <python> <image>"
-    assert (
-        has_import_test
-    ), "CI workflow doesn't test Python imports. Add: docker run <image> python -c 'import mcp_server_langgraph'"
+    assert has_import_test, (
+        "CI workflow doesn't test Python imports. Add: docker run <image> python -c 'import mcp_server_langgraph'"
+    )
 
 
 def test_docker_smoke_test_validates_variants():
@@ -210,7 +212,7 @@ def test_docker_smoke_test_validates_variants():
     Test that smoke tests are variant-aware and test each variant appropriately.
 
     Different variants may have different:
-    - Python locations (/usr/bin vs /usr/local/bin vs /opt/venv/bin)
+    - Python locations (/usr/bin vs /usr/local/bin vs /app/.venv/bin)
     - Installed packages (test variant has test dependencies, base does not)
     - Entrypoints (some use venv activation, others don't)
 

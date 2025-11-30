@@ -1,20 +1,21 @@
 ---
-title: 21. CI/CD Pipeline Strategy
-description: 'Architecture Decision Record: 21. CI/CD Pipeline Strategy'
-icon: 'file-lines'
-seoTitle: "ADR-0021: 21. CI/CD Pipeline Strategy"
-seoDescription: "Architecture Decision Record 0021: Architecture Decision Record: 21. CI/CD Pipeline Strategy"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "21."]
-contentType: "explanation"
+title: "21. CI/CD Pipeline Strategy"
+description: "Architecture Decision Record: 21. CI/CD Pipeline Strategy"
 ---
+
+# 21. CI/CD Pipeline Strategy
 
 Date: 2025-10-13
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Infrastructure & Deployment
+
+## Context
 
 Modern software projects require automated CI/CD to:
 - **Maintain Code Quality**: Prevent bugs from reaching production
@@ -38,40 +39,59 @@ For an AI agent system with:
 
 ...manual testing is infeasible. Automated pipelines are mandatory.
 
-### Decision
+## Decision
 
 We will implement a **multi-stage CI/CD pipeline** using GitHub Actions with the following workflows:
 
-#### Pipeline Architecture
+### Pipeline Architecture
 
-```mermaid
-%% ColorBrewer2 Set3 palette - each component type uniquely colored
-flowchart TD
-    PR[PR Checks<br/>on pull_request<br/><br/>• Lint Black, isort, flake8<br/>• Type Check mypy<br/>• Unit Tests pytest]
-
-    PR -->|PR approved + merged| CI[CI Pipeline<br/>on push to main<br/><br/>• Lint & Type Check<br/>• Unit Tests all markers<br/>• Integration Tests<br/>• Property Tests Hypothesis<br/>• Contract Tests MCP schema<br/>• Build Docker Image<br/>• Deployment Validation]
-
-    CI -->|tests pass| Quality[Quality Tests<br/>nightly/on-demand<br/><br/>• Mutation Testing mutmut<br/>• Performance Regression Tests<br/>• OpenAPI Breaking Change Detection<br/>• Deployment E2E Tests kind clusters]
-
-    Quality -->|quality gates pass| Security[Security Scan<br/>daily/on-demand<br/><br/>• Bandit Python security linter<br/>• Dependency Audit pip-audit<br/>• SAST Static Application Security<br/>• Container Scanning]
-
-    Security -->|tag pushed| Release[Release Pipeline<br/>on tag v*<br/><br/>• Build & Publish Docker Image<br/>• Build & Publish PyPI Package<br/>• Generate Release Notes<br/>• Create GitHub Release]
-
-    classDef prStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    classDef ciStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    classDef qualityStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    classDef securityStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px,color:#333
-    classDef releaseStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px,color:#333
-
-    class PR prStyle
-    class CI ciStyle
-    class Quality qualityStyle
-    class Security securityStyle
-    class Release releaseStyle
 ```
-### Consequences
+┌─────────────────────────────────────────────────────────┐
+│  PR Checks (on pull_request)                            │
+│  ├─ Lint (Black, isort, flake8)                        │
+│  ├─ Type Check (mypy)                                  │
+│  └─ Unit Tests (pytest)                                │
+└─────────────────────────────────────────────────────────┘
+                         ↓ (PR approved + merged)
+┌─────────────────────────────────────────────────────────┐
+│  CI Pipeline (on push to main)                          │
+│  ├─ Lint & Type Check                                  │
+│  ├─ Unit Tests (all markers)                           │
+│  ├─ Integration Tests                                  │
+│  ├─ Property Tests (Hypothesis)                        │
+│  ├─ Contract Tests (MCP schema)                        │
+│  ├─ Build Docker Image                                 │
+│  └─ Deployment Validation                              │
+└─────────────────────────────────────────────────────────┘
+                         ↓ (tests pass)
+┌─────────────────────────────────────────────────────────┐
+│  Quality Tests (nightly/on-demand)                      │
+│  ├─ Mutation Testing (mutmut)                          │
+│  ├─ Performance Regression Tests                       │
+│  ├─ OpenAPI Breaking Change Detection                  │
+│  └─ Deployment E2E Tests (kind clusters)               │
+└─────────────────────────────────────────────────────────┘
+                         ↓ (quality gates pass)
+┌─────────────────────────────────────────────────────────┐
+│  Security Scan (daily/on-demand)                        │
+│  ├─ Bandit (Python security linter)                    │
+│  ├─ Dependency Audit (pip-audit)                       │
+│  ├─ SAST (Static Application Security Testing)         │
+│  └─ Container Scanning                                 │
+└─────────────────────────────────────────────────────────┘
+                         ↓ (tag pushed)
+┌─────────────────────────────────────────────────────────┐
+│  Release Pipeline (on tag v*)                           │
+│  ├─ Build & Publish Docker Image                       │
+│  ├─ Build & Publish PyPI Package                       │
+│  ├─ Generate Release Notes                             │
+│  └─ Create GitHub Release                              │
+└─────────────────────────────────────────────────────────┘
+```
 
-#### Positive Consequences
+## Consequences
+
+### Positive Consequences
 
 - **Quality Assurance**: Multi-layered testing catches bugs before production
 - **Security**: Automated vulnerability scanning prevents security incidents
@@ -80,21 +100,21 @@ flowchart TD
 - **Deployment Safety**: Validation scripts verify all deployment configs
 - **Developer Productivity**: Automated releases save 2+ hours per release
 
-#### Negative Consequences
+### Negative Consequences
 
 - **Complexity**: 6 workflow files to maintain (1200+ lines of YAML)
 - **CI Minutes**: ~30 minutes per full pipeline run (GitHub Actions cost)
 - **Maintenance**: Workflows require updates when dependencies change
 - **Debugging**: Failed CI requires log analysis and investigation
 
-#### Neutral Consequences
+### Neutral Consequences
 
 - **Learning Curve**: New contributors must understand workflow structure
 - **External Dependencies**: Relies on GitHub Actions availability
 
-### Implementation Details
+## Implementation Details
 
-#### Workflow 1: PR Checks (`.github/workflows/pr-checks.yaml`)
+### Workflow 1: PR Checks (`.github/workflows/pr-checks.yaml`)
 
 **Trigger**: Every pull request
 
@@ -138,7 +158,7 @@ jobs:
 
 **Fail Fast**: Yes (blocks PR merge if fails)
 
-#### Workflow 2: CI Pipeline (`.github/workflows/ci.yaml`)
+### Workflow 2: CI Pipeline (`.github/workflows/ci.yaml`)
 
 **Trigger**: Push to main branch
 
@@ -182,11 +202,12 @@ jobs:
       - name: Validate Kustomize overlays
         run: kustomize build deployments/kustomize/overlays/production
 ```
+
 **Duration**: ~15 minutes
 
 **Artifacts**: Docker image (tagged with git SHA)
 
-#### Workflow 3: Quality Tests (`.github/workflows/quality-tests.yaml`)
+### Workflow 3: Quality Tests (`.github/workflows/quality-tests.yaml`)
 
 **Trigger**: Nightly cron, manual dispatch
 
@@ -238,7 +259,7 @@ jobs:
 
 **Frequency**: Nightly (1:00 AM UTC)
 
-#### Workflow 4: Security Scan (`.github/workflows/security-scan.yaml`)
+### Workflow 4: Security Scan (`.github/workflows/security-scan.yaml`)
 
 **Trigger**: Daily cron, on-demand
 
@@ -283,11 +304,12 @@ jobs:
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
 ```
+
 **Duration**: ~10 minutes
 
 **Frequency**: Daily (2:00 AM UTC)
 
-#### Workflow 5: Release Pipeline (`.github/workflows/release.yaml`)
+### Workflow 5: Release Pipeline (`.github/workflows/release.yaml`)
 
 **Trigger**: Git tag push matching `v*` (e.g., `v2.2.0`)
 
@@ -335,7 +357,7 @@ jobs:
 - Docker image (GHCR)
 - GitHub Release
 
-#### Workflow 6: Stale Issues (`.github/workflows/stale.yaml`)
+### Workflow 6: Stale Issues (`.github/workflows/stale.yaml`)
 
 **Trigger**: Daily cron
 
@@ -352,7 +374,8 @@ jobs:
           days-before-stale: 60
           days-before-close: 14
 ```
-### Testing Strategy Matrix
+
+## Testing Strategy Matrix
 
 | Test Type | Frequency | Duration | Coverage | Purpose |
 |-----------|-----------|----------|----------|---------|
@@ -367,34 +390,34 @@ jobs:
 
 **Total Test Suite**: 367 tests across 8 test categories
 
-### Deployment Validation
+## Deployment Validation
 
-#### Kubernetes Validation
+### Kubernetes Validation
 
-```
-## scripts/validation/validate_deployments.sh
+```bash
+# scripts/validation/validate_deployments.sh
 
-## Validate all Kubernetes manifests
+# Validate all Kubernetes manifests
 kubectl apply --dry-run=client -f deployments/kubernetes/
 
-## Check Helm chart syntax
+# Check Helm chart syntax
 helm lint deployments/helm/langgraph-agent/
 
-## Validate Kustomize builds
+# Validate Kustomize builds
 for env in dev staging production; do
   kustomize build deployments/kustomize/overlays/$env
 done
 
-## Test with kind cluster
+# Test with kind cluster
 kind create cluster --name test-cluster
 kubectl apply -f deployments/kubernetes/
 kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
 ```
 
-#### Docker Build Validation
+### Docker Build Validation
 
-```
-## .github/workflows/ci.yaml
+```yaml
+# .github/workflows/ci.yaml
 - name: Build multi-platform images
   run: |
     docker buildx create --use
@@ -408,9 +431,10 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
     docker run --rm test-image:latest mcp-server-langgraph --version
     docker run --rm test-image:latest mcp-server-langgraph-http --help
 ```
-### Alternatives Considered
 
-#### 1. Jenkins
+## Alternatives Considered
+
+### 1. Jenkins
 
 **Description**: Self-hosted CI/CD with Jenkins
 
@@ -427,7 +451,7 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
 
 **Why Rejected**: Maintenance overhead outweighs control benefits for open-source project
 
-#### 2. GitLab CI/CD
+### 2. GitLab CI/CD
 
 **Description**: GitLab's integrated CI/CD
 
@@ -443,7 +467,7 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
 
 **Why Rejected**: Already on GitHub, no compelling reason to switch
 
-#### 3. CircleCI
+### 3. CircleCI
 
 **Description**: Cloud-based CI/CD platform
 
@@ -459,7 +483,7 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
 
 **Why Rejected**: GitHub Actions is free and better integrated
 
-#### 4. Travis CI
+### 4. Travis CI
 
 **Description**: Legacy CI/CD platform
 
@@ -474,7 +498,7 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
 
 **Why Rejected**: GitHub Actions is the modern standard
 
-#### 5. Manual Testing Only
+### 5. Manual Testing Only
 
 **Description**: No CI/CD, manual testing and releases
 
@@ -492,9 +516,9 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
 
 **Why Rejected**: Infeasible for production-grade software
 
-### CI/CD Metrics
+## CI/CD Metrics
 
-#### Pipeline Performance
+### Pipeline Performance
 
 | Workflow | Avg Duration | Success Rate | Runs per Week |
 |----------|--------------|--------------|---------------|
@@ -506,18 +530,18 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
 
 **Total CI Minutes/Week**: ~1,200 minutes (~$5-10 cost on GitHub Actions)
 
-#### Code Quality Impact
+### Code Quality Impact
 
 - **Bug Detection**: 45+ bugs caught by CI before production (last 6 months)
 - **Security Issues**: 12 vulnerabilities detected and patched via automated scans
 - **Deployment Failures Prevented**: 8 broken deployments caught by validation scripts
 - **Test Coverage**: Increased from 45% → 87% via automated coverage tracking
 
-### Best Practices
+## Best Practices
 
-#### 1. Fail Fast
-```
-## Run fast checks first (lint, type-check) before slow tests
+### 1. Fail Fast
+```yaml
+# Run fast checks first (lint, type-check) before slow tests
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -525,41 +549,43 @@ jobs:
     needs: lint  # Only run tests if lint passes
 ```
 
-#### 2. Matrix Testing
-```
-## Test multiple Python versions
+### 2. Matrix Testing
+```yaml
+# Test multiple Python versions
 strategy:
   matrix:
     python-version: ['3.10', '3.11', '3.12']
     os: [ubuntu-latest, macos-latest]
 ```
-#### 3. Caching
-```
-## Cache dependencies to speed up runs
+
+### 3. Caching
+```yaml
+# Cache dependencies to speed up runs
 - uses: actions/cache@v3
   with:
     path: ~/.cache/pip
     key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
 ```
 
-#### 4. Conditional Workflows
-```
-## Skip expensive tests on docs-only changes
+### 4. Conditional Workflows
+```yaml
+# Skip expensive tests on docs-only changes
 on:
   push:
     paths-ignore:
       - '**.md'
       - 'docs/**'
 ```
-#### 5. Secure Secrets
-```
-## Use GitHub Secrets for sensitive data
+
+### 5. Secure Secrets
+```yaml
+# Use GitHub Secrets for sensitive data
 env:
   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
   PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 ```
 
-### Future Enhancements
+## Future Enhancements
 
 - **Automated Dependency Updates**: Dependabot or Renovate for dependency PRs
 - **Preview Deployments**: Automatic deployment of PRs to staging environments
@@ -567,7 +593,7 @@ env:
 - **Deployment Rollback**: Automated rollback on production health check failures
 - **Blue-Green Deployments**: Zero-downtime deployments with traffic shifting
 
-### References
+## References
 
 - **GitHub Actions Documentation**: https://docs.github.com/en/actions
 - **Workflow Files**: `.github/workflows/*.yaml`

@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Development & Tooling
+
 ## Context
 
 Developers building MCP servers face repeated setup tasks:

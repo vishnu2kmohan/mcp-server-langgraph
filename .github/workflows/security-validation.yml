@@ -31,20 +31,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
-          python-version: '3.11'
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Install package and test dependencies
-        run: |
-          # Install with dev extras (includes pytest, pyyaml, hypothesis)
-          uv pip install --system -e .[dev]
+          python-version: '3.12'
+          extras: 'dev'
+          cache-key-prefix: 'security-terraform'
 
       - name: Run Terraform security tests
         run: |
@@ -58,20 +52,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
-          python-version: '3.11'
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Install package and test dependencies
-        run: |
-          # Install with dev extras (includes pytest, pyyaml, hypothesis)
-          uv pip install --system -e .[dev]
+          python-version: '3.12'
+          extras: 'dev'
+          cache-key-prefix: 'security-k8s'
 
       - name: Run Kubernetes security tests
         run: |
@@ -85,7 +73,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Check for ACCOUNT_ID placeholders
         run: |
@@ -146,7 +134,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3

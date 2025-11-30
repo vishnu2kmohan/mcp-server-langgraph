@@ -88,7 +88,7 @@ Total:                         8-12 min   Matches CI exactly ✅
 - Impact: Quality Tests workflow failed
 
 **GREEN (After):**
-- Updated 11 hooks: `python -m pytest` → `uv run pytest`
+- Updated 11 hooks: `python -m pytest` → `uv run --frozen pytest`
 - Pattern: Hooks using `uv run` should use `language: system`
 - Reason: uv/venv manage their own dependencies
 
@@ -254,7 +254,7 @@ Total:                         8-12 min   Matches CI exactly ✅
 ## 🛠️ Tools Created
 
 ### 1. Performance Monitoring
-**File:** `scripts/measure_hook_performance.py` (243 lines)
+**File:** `scripts/dev/measure_hook_performance.py` (243 lines)
 
 **Capabilities:**
 - Measure commit stage performance
@@ -264,11 +264,11 @@ Total:                         8-12 min   Matches CI exactly ✅
 
 **Usage:**
 ```bash
-python scripts/measure_hook_performance.py --stage all
+python scripts/dev/measure_hook_performance.py --stage all
 ```
 
 ### 2. Hook Validation
-**File:** `scripts/validate_pre_push_hook.py` (Updated)
+**File:** `scripts/validators/validate_pre_push_hook.py` (Updated)
 
 **Validates:**
 - All 4 phases present
@@ -406,8 +406,8 @@ git push
 2. `.git/hooks/pre-push` - 4-phase comprehensive validation
 
 ### Scripts (3 files)
-3. `scripts/validate_pre_push_hook.py` - Updated phase verification
-4. `scripts/measure_hook_performance.py` - NEW: Performance monitor
+3. `scripts/validators/validate_pre_push_hook.py` - Updated phase verification
+4. `scripts/dev/measure_hook_performance.py` - NEW: Performance monitor
 5. `scripts/validate_pytest_markers.py` - Enhanced comment filtering
 
 ### Tests (3 files)
@@ -532,7 +532,7 @@ elif name == "health":
 **3. Monitor Hook Performance**
 ```bash
 # Weekly measurement
-python scripts/measure_hook_performance.py --stage all > metrics/hooks-$(date +%Y-%m-%d).txt
+python scripts/dev/measure_hook_performance.py --stage all > metrics/hooks-$(date +%Y-%m-%d).txt
 
 # Track trends
 # - Pre-commit staying < 30s?
@@ -603,7 +603,7 @@ make git-hooks
 ### Verify Configuration
 ```bash
 # Validate pre-push hook
-python scripts/validate_pre_push_hook.py
+python scripts/validators/validate_pre_push_hook.py
 
 # Expected: ✅ Pre-push hook configuration is valid
 ```
@@ -611,7 +611,7 @@ python scripts/validate_pre_push_hook.py
 ### Measure Performance
 ```bash
 # Measure both stages
-python scripts/measure_hook_performance.py --stage all
+python scripts/dev/measure_hook_performance.py --stage all
 
 # Expected:
 # - Pre-commit: < 30s
@@ -625,7 +625,7 @@ python scripts/validate_pytest_markers.py
 # Expected: ✅ All 35 used markers are registered
 
 # Test hook dependencies
-uv run pytest tests/regression/test_precommit_hook_dependencies.py -v
+uv run --frozen pytest tests/regression/test_precommit_hook_dependencies.py -v
 # Expected: ✅ 8/8 passed
 ```
 

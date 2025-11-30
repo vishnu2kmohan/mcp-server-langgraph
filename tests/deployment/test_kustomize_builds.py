@@ -21,7 +21,8 @@ import yaml
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+# Note: usefixtures is included here (not at module end) to avoid pytestmark redefinition
+pytestmark = [pytest.mark.unit, pytest.mark.validation, pytest.mark.usefixtures("check_kustomize_installed")]
 
 # Define paths to all Kustomize overlays
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -74,7 +75,7 @@ class TestKustomizeBuilds:
 
         # Assert build succeeded
         assert result.returncode == 0, (
-            f"Kustomize build failed for {overlay_path}\n" f"STDOUT: {result.stdout}\n" f"STDERR: {result.stderr}"
+            f"Kustomize build failed for {overlay_path}\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}"
         )
 
         # Assert output is not empty
@@ -224,8 +225,7 @@ class TestStagingGKEOverlay:
                         # If port 3307 is found, fail (that's MySQL, not Postgres)
                         if port == 3307:
                             pytest.fail(
-                                f"NetworkPolicy '{doc['metadata']['name']}' uses port 3307 (MySQL). "
-                                f"PostgreSQL uses port 5432."
+                                f"NetworkPolicy '{doc['metadata']['name']}' uses port 3307 (MySQL). PostgreSQL uses port 5432."
                             )
 
 
@@ -312,15 +312,13 @@ class TestProductionGKEOverlay:
                         if has_http_probe:
                             # Must have health check flags
                             assert "--health-check" in args, (
-                                f"Cloud SQL Proxy in {doc['metadata']['name']} has HTTP probes "
-                                f"but missing --health-check flag"
+                                f"Cloud SQL Proxy in {doc['metadata']['name']} has HTTP probes but missing --health-check flag"
                             )
 
                             # Check for --http-port flag
                             http_port_found = any("--http-port" in arg for arg in args)
                             assert http_port_found, (
-                                f"Cloud SQL Proxy in {doc['metadata']['name']} has HTTP probes "
-                                f"but missing --http-port flag"
+                                f"Cloud SQL Proxy in {doc['metadata']['name']} has HTTP probes but missing --http-port flag"
                             )
 
     def test_no_unsubstituted_variables_in_images(self):
@@ -485,7 +483,3 @@ def check_kustomize_installed():
             "kustomize is not installed. Install it with:\n"
             "  curl -s 'https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh' | bash"
         )
-
-
-# Use the fixture in all tests
-pytestmark = pytest.mark.usefixtures("check_kustomize_installed")

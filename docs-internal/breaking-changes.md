@@ -179,10 +179,10 @@ ENABLE_MOCK_AUTHORIZATION=false  # Disable mock data
 
 ## How to Upgrade
 
-See [MIGRATION.md](./MIGRATION.md) for detailed upgrade instructions.
+See [MIGRATION.md](./migrations/MIGRATION.md) for detailed upgrade instructions.
 
 ## Support
 
 - **GitHub Issues**: Report issues at https://github.com/your-org/mcp-server-langgraph/issues
 - **Documentation**: https://docs.yoursite.com
-- **Migration Guide**: [MIGRATION.md](./MIGRATION.md)
+- **Migration Guide**: [MIGRATION.md](./migrations/MIGRATION.md)

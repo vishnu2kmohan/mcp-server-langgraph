@@ -194,7 +194,7 @@ Runs local development server to preview documentation changes.
 
 ```bash
 # Both test suites
-uv run pytest tests/meta/test_documentation_validation.py tests/test_documentation_integrity.py -v
+uv run --frozen pytest tests/meta/test_documentation_validation.py tests/test_documentation_integrity.py -v
 
 # Expected: 22 passed, 1 skipped
 ```
@@ -203,27 +203,27 @@ uv run pytest tests/meta/test_documentation_validation.py tests/test_documentati
 
 ```bash
 # Meta validation only
-uv run pytest tests/meta/test_documentation_validation.py -v
+uv run --frozen pytest tests/meta/test_documentation_validation.py -v
 
 # Integrity tests only
-uv run pytest tests/test_documentation_integrity.py -v
+uv run --frozen pytest tests/test_documentation_integrity.py -v
 ```
 
 ### Run Specific Test
 
 ```bash
 # Test ADR synchronization
-uv run pytest tests/test_documentation_integrity.py::TestADRSynchronization -v
+uv run --frozen pytest tests/test_documentation_integrity.py::TestADRSynchronization -v
 
 # Test MDX parsing
-uv run pytest tests/meta/test_documentation_validation.py::TestMDXParsing -v
+uv run --frozen pytest tests/meta/test_documentation_validation.py::TestMDXParsing -v
 ```
 
 ### Fast Failure Mode
 
 ```bash
 # Stop on first failure
-uv run pytest tests/meta tests/test_documentation_integrity.py -x
+uv run --frozen pytest tests/meta tests/test_documentation_integrity.py -x
 ```
 
 ---
@@ -327,11 +327,11 @@ Monitor test pass rates:
 
 ```bash
 # Generate test report
-uv run pytest tests/meta tests/test_documentation_integrity.py \
+uv run --frozen pytest tests/meta tests/test_documentation_integrity.py \
   --junitxml=test-results/documentation-tests.xml
 
 # View coverage
-uv run pytest tests/meta tests/test_documentation_integrity.py \
+uv run --frozen pytest tests/meta tests/test_documentation_integrity.py \
   --cov=docs --cov-report=html
 ```
 

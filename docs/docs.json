@@ -65,6 +65,7 @@
           {
             "group": "Development",
             "pages": [
+              "development/setup",
               "development/onboarding",
               "development/naming-conventions",
               "advanced/contributing",
@@ -449,9 +450,13 @@
               "architecture/adr-0054-pod-failure-prevention-framework",
               "architecture/adr-0055-diagram-visualization-standards",
               "architecture/adr-0056-asyncmock-configuration-prevention",
-              "architecture/adr-0057-circuit-breaker-decorator-closure-isolation",
-              "architecture/adr-0058-pytest-xdist-state-pollution-prevention",
-              "architecture/adr-0060-database-architecture-and-naming-convention"
+              "architecture/adr-0060-database-architecture-and-naming-convention",
+              "architecture/adr-0061-fastapi-web-framework",
+              "architecture/adr-0062-uv-package-management",
+              "architecture/adr-0063-mintlify-documentation-platform",
+              "architecture/adr-0064-pre-commit-hooks-strategy",
+              "architecture/adr-0065-ruff-code-quality",
+              "architecture/adr-0066-helm-chart-security-risk-acceptance"
             ]
           },
           {

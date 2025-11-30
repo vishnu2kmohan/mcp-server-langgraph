@@ -463,7 +463,7 @@ make lint-check
 vim src/file.py
 
 # Verify fix
-uv run mypy src/file.py
+uv run --frozen mypy src/file.py
 
 # Commit (mypy won't block)
 git commit
@@ -504,7 +504,7 @@ git push
 **Solution**:
 ```bash
 # Run pre-commit on all files (not just changed)
-uv run pre-commit run --all-files
+uv run --frozen pre-commit run --all-files
 
 # Fix any new issues
 

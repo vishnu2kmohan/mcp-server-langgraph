@@ -1,21 +1,21 @@
 ---
-title: 37. Identity Federation Architecture
-description: 'Enterprise users exist in multiple identity systems (Active Directory, Azure AD, Google Workspace, Okta, GitHub) and forcing migration to Keycloak-...'
-icon: 'file-lines'
-seoTitle: "ADR-0037: 37. Identity Federation Architecture"
-seoDescription: "Architecture Decision Record 0037: Enterprise users exist in multiple identity systems (Active Directory, Azure AD, Google Workspace, Okta, GitHub) and forcing migration to Ke"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "37."]
-contentType: "explanation"
+title: "37. Identity Federation Architecture"
+description: "Architecture Decision Record: 37. Identity Federation Architecture"
 ---
 
+# 37. Identity Federation Architecture
 
 Date: 2025-01-28
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Authentication & Authorization
+
+## Context
 
 Enterprise users exist in multiple identity systems (Active Directory, Azure AD, Google Workspace, Okta, GitHub) and forcing migration to Keycloak-only creates adoption barriers. Need to support:
 - LDAP/Active Directory (10,000+ user enterprises)
@@ -25,111 +25,20 @@ Enterprise users exist in multiple identity systems (Active Directory, Azure AD,
 
 Current system: Keycloak with local users only, no federation configured.
 
-### Decision
+## Decision
 
 Implement **Identity Federation via Keycloak** as identity broker, federating all external identity providers while normalizing to consistent JWT output.
 
-#### Architecture
+### Architecture
 
-```text
+```
 External IdPs (LDAP, SAML, OIDC) → Keycloak (Broker + Normalizer)
   → Keycloak-issued JWT → Kong → MCP Server → OpenFGA
 ```
 
-#### Identity Federation Architecture
+### Federation Strategies
 
-```mermaid
-%% ColorBrewer2 Set3 palette - each component type uniquely colored
-flowchart TB
-    subgraph "External Identity Providers"
-        LDAP[LDAP / Active Directory<br/>Corporate Directory]
-        SAML[SAML 2.0 Providers<br/>Azure AD, ADFS, Ping]
-        OIDC1[OIDC Providers<br/>Google Workspace]
-        OIDC2[GitHub]
-        OIDC3[Okta]
-        Azure[Azure AD / Entra ID]
-    end
-
-    subgraph "Keycloak Identity Broker"
-        KC[Keycloak<br/>Identity Federation Hub]
-        Normalizer[Identity Normalizer<br/>Attribute Mapping]
-        UserDB[(Federated Users<br/>Synchronized Cache)]
-    end
-
-    subgraph "MCP Server Platform"
-        Kong[Kong Gateway<br/>JWT Validation]
-        App[MCP Server<br/>Application]
-        FGA[OpenFGA<br/>Authorization]
-    end
-
-    %% Federation connections
-    LDAP -->|LDAP Bind<br/>User Storage Provider| KC
-    SAML -->|SAML Assertion<br/>Identity Broker| KC
-    OIDC1 -->|OIDC Token Exchange<br/>Identity Broker| KC
-    OIDC2 -->|OIDC Token Exchange| KC
-    OIDC3 -->|OIDC Token Exchange| KC
-    Azure -->|SAML or OIDC<br/>Identity Broker| KC
-
-    %% Keycloak processing
-    KC --> Normalizer
-    Normalizer -->|Standard Attributes<br/>sub, email, name, groups| UserDB
-    UserDB --> JWT[Issue Standardized JWT<br/>sub: user:alice<br/>TTL: 15 min]
-
-    %% Application flow
-    JWT --> Kong
-    Kong -->|Validate JWT| App
-    App --> FGA
-    FGA -->|Check permissions<br/>user:alice| Response[Response]
-
-    %% Styling
-
-```
-**Authentication Flows by Provider Type**:
-```mermaid
-%% ColorBrewer2 Set3 palette - each component type uniquely colored
-sequenceDiagram
-    %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
-    participant User
-    participant KC as Keycloak
-    participant LDAP as LDAP/AD
-    participant SAML as SAML IdP
-    participant OIDC as OIDC Provider
-    participant App as MCP Server
-
-    Note over User,LDAP: Flow 1: LDAP Authentication (Direct)
-    User->>KC: Login (username + password)
-    KC->>LDAP: LDAP Bind<br/>uid=alice,ou=Users,...
-    LDAP-->>KC: Bind successful<br/>User attributes
-    KC->>KC: Normalize attributes<br/>Create local user record (cached)
-    KC-->>User: JWT (sub: user:alice)
-    User->>App: Request + JWT
-    App-->>User: Response
-
-    Note over User,SAML: Flow 2: SAML Federation (Redirect)
-    User->>KC: Click "Login with Azure AD"
-    KC-->>User: Redirect to SAML IdP
-    User->>SAML: Authenticate at IdP
-    SAML-->>User: SAML Assertion (signed)
-    User->>KC: POST SAML Response
-    KC->>KC: Validate assertion<br/>Extract attributes<br/>Map to Keycloak user
-    KC-->>User: JWT (sub: user:alice)
-
-    Note over User,OIDC: Flow 3: OIDC Federation (Authorization Code)
-    User->>KC: Click "Login with Google"
-    KC-->>User: Redirect to Google
-    User->>OIDC: Authenticate + Consent
-    OIDC-->>User: Authorization code
-    User->>KC: Authorization code
-    KC->>OIDC: Exchange code for token
-    OIDC-->>KC: ID Token + Access Token
-    KC->>KC: Validate ID Token<br/>Extract claims<br/>Normalize to Keycloak user
-    KC-->>User: JWT (sub: user:alice)
-
-```
-
-#### Federation Strategies
-
-##### 1. LDAP/Active Directory (User Storage Provider)
+#### 1. LDAP/Active Directory (User Storage Provider)
 **Use Case**: Corporate directory with 1,000-100,000 users
 
 **Configuration**:
@@ -146,9 +55,10 @@ sequenceDiagram
   }
 }
 ```
+
 **Flow**: User logs in → Keycloak binds to LDAP → LDAP validates → Keycloak issues JWT
 
-##### 2. SAML 2.0 (Identity Broker)
+#### 2. SAML 2.0 (Identity Broker)
 **Use Case**: Enterprise SSO (ADFS, Azure AD, Ping)
 
 **Configuration**:
@@ -166,7 +76,7 @@ sequenceDiagram
 
 **Flow**: User → Keycloak → Redirect to ADFS → SAML assertion → Keycloak → JWT
 
-##### 3. OIDC (Identity Broker)
+#### 3. OIDC (Identity Broker)
 **Use Case**: Social login, cloud providers
 
 **Providers**: Google, Microsoft, GitHub, Okta, OneLogin
@@ -184,9 +94,10 @@ sequenceDiagram
   }
 }
 ```
+
 **Flow**: User → Keycloak → Redirect to Google → OIDC auth → Keycloak → JWT
 
-#### Attribute Mapping
+### Attribute Mapping
 
 **LDAP → Keycloak**:
 ```python
@@ -207,6 +118,7 @@ sequenceDiagram
    "keycloak": "groups"}
 ]
 ```
+
 **OIDC → Keycloak**:
 ```python
 [
@@ -216,54 +128,54 @@ sequenceDiagram
 ]
 ```
 
-#### Configuration
+### Configuration
 
-```
-## Federation Enabled
+```bash
+# Federation Enabled
 KEYCLOAK_FEDERATION_ENABLED=true
 KEYCLOAK_LDAP_ENABLED=true
 KEYCLOAK_LDAP_URL=ldap://ad.example.com:389
 KEYCLOAK_LDAP_BIND_DN=CN=svc_keycloak,OU=Service Accounts,DC=example,DC=com
 
-## SAML Providers
+# SAML Providers
 KEYCLOAK_SAML_PROVIDERS=adfs,azure-ad
 KEYCLOAK_SAML_ADFS_URL=https://adfs.example.com/adfs/ls/
 
-## OIDC Providers
+# OIDC Providers
 KEYCLOAK_OIDC_PROVIDERS=google,microsoft,github,okta
 KEYCLOAK_OIDC_GOOGLE_CLIENT_ID=<client-id>
 KEYCLOAK_OIDC_GOOGLE_DOMAIN=example.com  # Restrict to domain
 ```
 
-### Consequences
+## Consequences
 
-#### Positive Consequences
+### Positive Consequences
 - Enterprise adoption (no forced migration)
 - Consistent JWT output (all providers → same format)
 - Centralized user view (federated users in Keycloak)
 - Attribute normalization (consistent schema)
 - Single authorization model (OpenFGA uses Keycloak JWTs)
 
-#### Negative Consequences
+### Negative Consequences
 - Configuration complexity (multiple providers)
 - LDAP/SAML expertise required
 - Attribute mapping maintenance
 - Performance (additional network hop)
 - Provider outages impact authentication
 
-#### Mitigation Strategies
+### Mitigation Strategies
 - Automated setup scripts for common providers
 - Monitoring provider availability
 - Fallback to local Keycloak users if provider down
 - Connection pooling to LDAP/SAML endpoints
 
-### Alternatives Considered
+## Alternatives Considered
 
 1. **Direct Integration**: Rejected - each app integrates with N providers (complexity)
 2. **No Federation**: Rejected - forces user migration, adoption barrier
 3. **Multiple Keycloak Realms**: Rejected - inconsistent tokens, complex management
 
-### Implementation
+## Implementation
 
 **Setup Scripts**:
 - `scripts/setup/setup_ldap_federation.py` - Configure LDAP
@@ -277,7 +189,7 @@ KEYCLOAK_OIDC_GOOGLE_DOMAIN=example.com  # Restrict to domain
 
 **Sync to OpenFGA**: Existing `sync_user_to_openfga()` handles federated users automatically (extracts roles from Keycloak JWT regardless of source).
 
-### References
+## References
 
-- Related ADRs: [ADR-0031](/architecture/adr-0031-keycloak-authoritative-identity), [ADR-0032](/architecture/adr-0032-jwt-standardization)
+- Related ADRs: [ADR-0031](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0031-keycloak-authoritative-identity.md), [ADR-0032](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0032-jwt-standardization.md)
 - External: [SAML 2.0](https://docs.oasis-open.org/security/saml/v2.0/), [OIDC Core](https://openid.net/specs/openid-connect-core-1_0.html), [LDAP RFC 4511](https://datatracker.ietf.org/doc/html/rfc4511)

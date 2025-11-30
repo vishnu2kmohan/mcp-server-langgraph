@@ -501,8 +501,8 @@ pytest --cov-report=term-missing               # Terminal with missing lines
 - [pytest Documentation](https://docs.pytest.org/)
 - [Hypothesis Documentation](https://hypothesis.readthedocs.io/)
 - [Coverage.py Documentation](https://coverage.readthedocs.io/)
-- [Project README](README.md)
-- [Contributing Guide](.github/CONTRIBUTING.md)
+- [Project README](../../README.md)
+- [Contributing Guide](../../.github/CONTRIBUTING.md)
 
 ---
 

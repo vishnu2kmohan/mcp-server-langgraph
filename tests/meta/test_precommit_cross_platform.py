@@ -15,6 +15,7 @@ Related Issues:
 - Cross-platform CI failures on Windows runners
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -24,8 +25,13 @@ import yaml
 pytestmark = pytest.mark.meta
 
 
+@pytest.mark.xdist_group(name="precommit_cross_platform")
 class TestPreCommitCrossPlatformCompatibility:
     """Validates pre-commit hooks work across all platforms."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @property
     def precommit_config_path(self) -> Path:
@@ -273,7 +279,7 @@ class TestPreCommitCrossPlatformCompatibility:
         )
 
         assert "bash -c" not in hook_entry or "source .venv" not in hook_entry, (
-            f"validate-test-dependencies hook should not use 'bash -c source .venv'\n" f"Current entry: {hook_entry}"
+            f"validate-test-dependencies hook should not use 'bash -c source .venv'\nCurrent entry: {hook_entry}"
         )
 
     def test_validate_fixture_scopes_hook_uses_uv(self):
@@ -308,12 +314,17 @@ class TestPreCommitCrossPlatformCompatibility:
         )
 
         assert "bash -c" not in hook_entry or "source .venv" not in hook_entry, (
-            f"validate-fixture-scopes hook should not use 'bash -c source .venv'\n" f"Current entry: {hook_entry}"
+            f"validate-fixture-scopes hook should not use 'bash -c source .venv'\nCurrent entry: {hook_entry}"
         )
 
 
+@pytest.mark.xdist_group(name="precommit_environment_isolation")
 class TestPreCommitEnvironmentIsolation:
     """Validates hooks use proper environment isolation."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @property
     def precommit_config_path(self) -> Path:

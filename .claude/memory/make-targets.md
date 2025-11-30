@@ -408,7 +408,7 @@ make health-check      # Check system health
 #### `make run`
 **Purpose**: Run MCP server (stdio mode)
 **Duration**: Runs until stopped
-**Command**: `uv run python -m mcp_server_langgraph`
+**Command**: `uv run --frozen python -m mcp_server_langgraph`
 **Mode**: Standard I/O transport
 
 #### `make run-streamable`

@@ -16,14 +16,13 @@ Test Coverage:
 4. No hardcoded parent counts without marker file validation
 """
 
-import ast
 import gc
 from pathlib import Path
 
 import pytest
 
 # Mark as unit test (validates test infrastructure)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 
 @pytest.fixture(scope="module")
@@ -109,12 +108,12 @@ class TestRepoRootCalculations:
             "with marker file validation, not hardcoded .parents[N]"
         )
         assert "pyproject.toml" in content or ".git" in content, (
-            "test_langgraph_platform.py should validate marker files " "(.git, pyproject.toml) in get_repo_root() function"
+            "test_langgraph_platform.py should validate marker files (.git, pyproject.toml) in get_repo_root() function"
         )
 
         # Verify no hardcoded .parents[N] path calculations remain
         assert "Path(__file__).parent.parent.parent" not in content, (
-            "test_langgraph_platform.py should not use hardcoded .parents[N] - " "use get_repo_root() function instead"
+            "test_langgraph_platform.py should not use hardcoded .parents[N] - use get_repo_root() function instead"
         )
 
         # Verify deployments/ directory exists at repo root
@@ -230,9 +229,9 @@ class TestPathCalculationPatterns:
         THEN pyproject.toml should exist at that path
         """
         pyproject_toml = actual_repo_root / "pyproject.toml"
-        assert (
-            pyproject_toml.exists()
-        ), f"pyproject.toml not found at {actual_repo_root}. This indicates repo_root calculation is incorrect."
+        assert pyproject_toml.exists(), (
+            f"pyproject.toml not found at {actual_repo_root}. This indicates repo_root calculation is incorrect."
+        )
 
     def test_repo_root_points_to_directory_with_git_folder(self, actual_repo_root: Path) -> None:
         """

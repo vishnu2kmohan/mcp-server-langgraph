@@ -1,210 +1,120 @@
 ---
-title: 30. Resilience Patterns
-description: 'Comprehensive resilience layer with circuit breakers, retries, timeouts, and bulkhead isolation'
-icon: 'file-lines'
-seoTitle: "ADR-0030: 30. Resilience Patterns"
-seoDescription: "Architecture Decision Record 0030: Comprehensive resilience layer with circuit breakers, retries, timeouts, and bulkhead isolation"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "30."]
-contentType: "explanation"
+title: "30. Resilience Patterns for Production Systems"
+description: "Architecture Decision Record: 30. Resilience Patterns for Production Systems"
 ---
 
-## ADR-0030: Resilience Patterns for Production Systems
+# 30. Resilience Patterns for Production Systems
 
-<Note>
-**Status**: Accepted
-**Date**: 2025-10-20
-**Deciders**: Engineering Team
-</Note>
+Date: 2025-10-20
 
-### Context
+## Status
+
+Accepted
+
+## Category
+
+Performance & Resilience
+
+## Context
 
 The MCP server integrates with multiple external services that can fail or become unavailable:
+- LLM APIs (Anthropic, OpenAI, Google Gemini) - network failures, rate limits, timeouts
+- OpenFGA authorization service - network partitions, slow responses
+- Redis session store - connection failures, evictions
+- Keycloak SSO - authentication timeouts, certificate issues
+- Prometheus metrics - query timeouts, service unavailable
 
-- **LLM APIs** (Anthropic, OpenAI, Google Gemini) - network failures, rate limits, timeouts
-- **OpenFGA** authorization service - network partitions, slow responses
-- **Redis** session store - connection failures, evictions
-- **Keycloak** SSO - authentication timeouts, certificate issues
-- **Prometheus** metrics - query timeouts, service unavailable
-
-#### Current Problems
-
-<Warning>
-Without proper resilience patterns, failures cascade throughout the system:
-- Complete system unavailability (SLA violations)
+Without proper resilience patterns, a failure in one service can cascade throughout the system, leading to:
+- Complete system unavailability (99.99% uptime SLA violation)
 - User-facing errors for unrelated operations
 - Resource exhaustion (connection pools, memory)
 - Difficult debugging and incident response
-</Warning>
 
-#### Current State
-
+**Current State**:
 - Basic error handling with try-catch blocks
-- Some retry logic but not standardized
+- Some retry logic in `alerting.py` but not standardized
 - No circuit breakers or bulkhead isolation
 - No request timeout enforcement
-- Failures in external services cause immediate user errors
+- Failures in external services cause immediate user-facing errors
 
-**Target SLA**: 99.99% uptime (&lt;0.01% error rate, &lt;52.6 minutes downtime/year)
+**Target SLA**: 99.99% uptime (< 0.01% error rate, < 52.6 minutes downtime/year)
 
-### Decision
+## Decision
 
-Implement a **comprehensive resilience layer** using four core patterns:
+Implement a **comprehensive resilience layer** using the following patterns:
 
-#### 1. Circuit Breaker Pattern
+### 1. Circuit Breaker Pattern
 
 **Implementation**: Use `pybreaker` library for production-ready circuit breaker.
 
 **Configuration**:
 ```python
+# Default circuit breaker settings (per service)
 CIRCUIT_BREAKER_FAIL_MAX = 5          # Open after 5 failures
-CIRCUIT_BREAKER_TIMEOUT_DURATION = 60  # Stay open for 60s
+CIRCUIT_BREAKER_TIMEOUT_DURATION = 60  # Stay open for 60 seconds
+CIRCUIT_BREAKER_EXPECTED_EXCEPTION = Exception
+CIRCUIT_BREAKER_LISTENERS = [CircuitBreakerMetricsListener]
 ```
-**Services Protected**:
-- LLM API calls
-- OpenFGA authorization
-- Redis operations
-- Keycloak authentication
-- Prometheus queries
 
-**States**:
+**Services Protected**:
+- LLM API calls (`llm/factory.py`)
+- OpenFGA authorization (`auth/openfga.py`)
+- Redis operations (`auth/session.py`)
+- Keycloak authentication (`auth/keycloak.py`)
+- Prometheus queries (`monitoring/prometheus_client.py`)
+
+**Behavior**:
 - **Closed** (normal): All requests pass through
 - **Open** (failing): Fail fast, return cached/default response
 - **Half-Open** (testing): Allow one test request after timeout
 
-#### Circuit Breaker State Machine
-
-```mermaid
-stateDiagram-v2
-    [*] --> Closed: Initial state
-
-    Closed --> Open: Failure threshold reached<br/>(5 consecutive failures)
-    Closed --> Closed: Success (reset counter)
-    Closed --> Closed: Failure (increment counter)
-
-    Open --> HalfOpen: Timeout elapsed<br/>(60 seconds)
-    Open --> Open: Request blocked<br/>(fail fast)
-
-    HalfOpen --> Closed: Test request succeeds<br/>(reset counter)
-    HalfOpen --> Open: Test request fails<br/>(back to Open)
-
-    note right of Closed
-        Normal Operation
-        - All requests pass through
-        - Track failure count
-        - Success resets counter
-    end note
-
-    note right of Open
-        Failing Fast
-        - Immediate rejection
-        - Return cached/default response
-        - Prevent cascading failures
-        - Wait for timeout
-    end note
-
-    note right of HalfOpen
-        Recovery Testing
-        - Allow 1 test request
-        - If success → Closed
-        - If failure → Open
-    end note
-
-    classDef closedState fill:#d4edda,stroke:#28a745,stroke-width:3px
-    classDef openState fill:#f8d7da,stroke:#dc3545,stroke-width:3px
-    classDef halfOpenState fill:#fff3cd,stroke:#ffc107,stroke-width:3px
-
-    class Closed closedState
-    class Open openState
-    class HalfOpen halfOpenState
-```
-
-**Circuit Breaker in Action**:
-```mermaid
-sequenceDiagram
-    %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
-    participant App as MCP Server
-    participant CB as Circuit Breaker
-    participant LLM as LLM API<br/>(Anthropic)
-    participant Cache as Fallback Cache
-
-    Note over App,CB: State: Closed (Normal)
-    loop First 5 requests (all fail)
-        App->>CB: Call LLM API
-        CB->>LLM: Forward request
-        LLM-->>CB: 503 Service Unavailable
-        CB->>CB: Increment failure counter<br/>(1/5, 2/5, 3/5, 4/5, 5/5)
-        CB-->>App: Error (forwarded)
-    end
-
-    Note over CB: Threshold reached (5 failures)<br/>State: Closed → Open
-
-    Note over App,CB: State: Open (Failing Fast)
-    loop Next 10 requests
-        App->>CB: Call LLM API
-        CB->>CB: Circuit is OPEN<br/>Don't call LLM
-        CB->>Cache: Get cached response
-        Cache-->>CB: Cached result
-        CB-->>App: Cached response ✓<br/>(fail fast, no delay)
-    end
-
-    Note over CB: Wait 60 seconds...
-
-    Note over CB: Timeout elapsed<br/>State: Open → Half-Open
-
-    Note over App,CB: State: Half-Open (Testing)
-    App->>CB: Call LLM API (test request)
-    CB->>LLM: Forward test request
-    LLM-->>CB: 200 OK ✓<br/>(service recovered)
-    CB->>CB: Test succeeded<br/>Reset failure counter
-
-    Note over CB: State: Half-Open → Closed
-
-    Note over App,CB: State: Closed (Recovered)
-    loop Subsequent requests
-        App->>CB: Call LLM API
-        CB->>LLM: Forward request
-        LLM-->>CB: 200 OK
-        CB-->>App: Response
-    end
-
-```
-#### 2. Retry Logic with Exponential Backoff
+### 2. Retry Logic with Exponential Backoff
 
 **Implementation**: Use `tenacity` library for declarative retry policies.
 
 **Configuration**:
 ```python
+# Retry settings by operation type
 RETRY_STOP_AFTER_ATTEMPT = 3
 RETRY_WAIT_EXPONENTIAL_MULTIPLIER = 1  # 1s, 2s, 4s
-RETRY_WAIT_EXPONENTIAL_MAX = 10        # Cap at 10s
+RETRY_WAIT_EXPONENTIAL_MAX = 10        # Cap at 10 seconds
+RETRY_RERAISE = True                   # Reraise after exhausting retries
 ```
 
 **Retry Policies**:
-- **Idempotent reads**: Retry up to 3 times (GET, queries)
-- **Idempotent writes**: Retry with idempotency key
-- **Non-idempotent**: No retries, fail immediately
-- **Network errors**: Always retry (transient)
-- **Client errors (4xx)**: Never retry (permanent)
-- **Server errors (5xx)**: Retry (temporary)
+- **Idempotent reads**: Retry up to 3 times (GET requests, queries)
+- **Idempotent writes**: Retry with idempotency key (POST with dedupe)
+- **Non-idempotent writes**: No retries, fail immediately
+- **Network errors**: Always retry (transient failures)
+- **Client errors (4xx)**: Never retry (permanent failures)
+- **Server errors (5xx)**: Retry (temporary failures)
 
-#### 3. Request Timeout Enforcement
+### 3. Request Timeout Enforcement
 
-**Implementation**: Use `asyncio.timeout()` (Python 3.11+) or `asyncio.wait_for()`.
+**Implementation**: Use `asyncio.timeout()` context manager (Python 3.11+) or `asyncio.wait_for()`.
 
 **Configuration**:
 ```python
-DEFAULT_TIMEOUT = 30   # Global default
-LLM_TIMEOUT = 60      # LLM generation
-AUTH_TIMEOUT = 5      # Auth operations
-DB_TIMEOUT = 10       # Database queries
-HTTP_TIMEOUT = 15     # External HTTP
+# Timeout hierarchy (cascading)
+DEFAULT_TIMEOUT = 30           # Global default
+LLM_TIMEOUT = 60              # LLM generation can be slow
+AUTH_TIMEOUT = 5              # Auth should be fast
+DB_TIMEOUT = 10               # Database queries
+HTTP_TIMEOUT = 15             # External HTTP calls
 ```
-#### 4. Bulkhead Isolation
+
+**Enforcement**:
+- All async operations wrapped in timeout context
+- Timeouts propagate to OpenTelemetry spans
+- Timeout violations logged with full context
+
+### 4. Bulkhead Isolation
 
 **Implementation**: Use `asyncio.Semaphore` for resource pool limits.
 
 **Configuration**:
 ```python
+# Concurrent operation limits (per resource type)
 LLM_CONCURRENCY_LIMIT = 10      # Max 10 concurrent LLM calls
 OPENFGA_CONCURRENCY_LIMIT = 50  # Max 50 concurrent auth checks
 REDIS_CONCURRENCY_LIMIT = 100   # Max 100 concurrent Redis ops
@@ -212,11 +122,13 @@ DB_CONCURRENCY_LIMIT = 20       # Max 20 concurrent DB queries
 ```
 
 **Benefits**:
-- Prevent resource exhaustion
+- Prevent resource exhaustion under load
 - Isolate failures (LLM slowdown doesn't block auth)
-- Fair resource allocation
+- Fair resource allocation across operations
 
-### Graceful Degradation
+### 5. Graceful Degradation Strategies
+
+**Fallback Behaviors**:
 
 | Service | Primary | Fallback | Degraded Mode |
 |---------|---------|----------|---------------|
@@ -226,11 +138,21 @@ DB_CONCURRENCY_LIMIT = 20       # Max 20 concurrent DB queries
 | **Prometheus** | Real-time metrics | Cached metrics | Stale data warning |
 | **Keycloak** | SSO authentication | JWT validation | Limited features |
 
-### Architecture
-
-#### New Module Structure
-
+**Decision Logic**:
 ```python
+if circuit_breaker.is_open():
+    return fallback_response()
+elif operation_timeout():
+    return cached_response()
+else:
+    return primary_response()
+```
+
+## Architecture
+
+### New Module: `src/mcp_server_langgraph/resilience/`
+
+```
 resilience/
 ├── __init__.py                    # Public API
 ├── circuit_breaker.py             # Circuit breaker decorators
@@ -239,9 +161,10 @@ resilience/
 ├── bulkhead.py                    # Concurrency limits
 ├── fallback.py                    # Fallback strategies
 ├── metrics.py                     # Resilience metrics
-└── config.py                      # Configuration
+└── config.py                      # Resilience configuration
 ```
-#### Decorator-Based API
+
+### Decorator-Based API (Developer-Friendly)
 
 ```python
 from mcp_server_langgraph.resilience import (
@@ -261,107 +184,233 @@ async def check_permission(user: str, resource: str) -> bool:
         response = await client.post(...)
         return response.json()["allowed"]
 ```
+
+### Circuit Breaker Decorator Closure Isolation
+
+**Important**: When implementing circuit breaker decorators, the decorator creates a closure over the circuit breaker instance at decoration time. This has implications for test isolation:
+
+```python
+# The @circuit_breaker decorator captures the instance at decoration time
+def decorator(func: Callable[P, T]) -> Callable[P, T]:
+    breaker = get_circuit_breaker(name)  # Closure captures this instance
+```
+
+**Reset Behavior**:
+- `reset_all_circuit_breakers()` must reset the STATE of existing instances, not clear the registry
+- Clearing the registry breaks decorator closures (decorators hold stale references)
+- See [ADR-0057](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0057-circuit-breaker-decorator-closure-isolation.md) for the full analysis
+
+```python
+def reset_all_circuit_breakers() -> None:
+    """Reset state of existing circuit breakers (preserves decorator closures)."""
+    for name, breaker in list(_circuit_breakers.items()):
+        breaker.close()  # Reset to CLOSED state, don't clear registry
+```
+
 ### Metrics & Observability
 
-#### New Metrics (30+)
-
-```
-## Circuit breaker metrics
+**New Metrics** (30+ resilience-specific):
+```python
+# Circuit breaker metrics
 circuit_breaker_state{service, state=open|closed|half_open}
 circuit_breaker_failures_total{service, error_type}
 circuit_breaker_success_total{service}
 
-## Retry metrics
+# Retry metrics
 retry_attempts_total{service, attempt_number}
 retry_exhausted_total{service}
 retry_success_after_retry_total{service}
 
-## Timeout metrics
+# Timeout metrics
 timeout_violations_total{service, operation}
 timeout_duration_seconds{service, operation}
 
-## Bulkhead metrics
+# Bulkhead metrics
 bulkhead_rejections_total{service}
 bulkhead_queue_depth{service}
 bulkhead_active_operations{service}
 ```
 
-#### Observability Features
-
+**Observability**:
 - All resilience events logged with trace context
-- Circuit breaker state changes trigger alerts
-- Retry exhaustion logged with full context
-- Timeout violations in distributed traces
-- Grafana dashboard: `resilience.json`
+- Circuit breaker state changes → alerts
+- Retry exhaustion → error logs with full context
+- Timeout violations → distributed traces
+- Grafana dashboard: `monitoring/grafana/dashboards/resilience.json`
 
-### Consequences
+## Consequences
 
-#### Positive
+### Positive
 
-<Check>**99.99% Uptime** - Achieve SLA with graceful degradation</Check>
-<Check>**Fast Failures** - No hanging requests with circuit breakers</Check>
-<Check>**Isolated Failures** - Prevent cascading issues</Check>
-<Check>**Cost Optimization** - Fewer wasted API calls</Check>
-<Check>**Developer Experience** - Simple decorator-based API</Check>
+1. **Improved Availability**
+   - Achieve 99.99% uptime SLA (< 52.6 min downtime/year)
+   - Graceful degradation instead of complete failures
+   - Isolated failures prevent cascading issues
 
-#### Negative
+2. **Better User Experience**
+   - Fast failures with circuit breakers (no hanging requests)
+   - Cached responses during outages
+   - Clear error messages about degraded services
 
-<Warning>**Complexity** - New module to maintain</Warning>
-<Warning>**Configuration Overhead** - Need to tune per-service parameters</Warning>
-<Warning>**Performance Overhead** - ~1-2ms latency, ~1% CPU</Warning>
-<Warning>**False Positives** - Circuit breaker may open during load spikes</Warning>
+3. **Operational Excellence**
+   - Clear metrics for debugging incidents
+   - Automated recovery (circuit breaker half-open state)
+   - Reduced MTTR (Mean Time To Recovery)
 
-#### Mitigations
+4. **Cost Optimization**
+   - Fewer wasted API calls (circuit breaker fail-fast)
+   - Reduced resource consumption (bulkhead limits)
+   - Lower cloud infrastructure costs
 
-1. **Start Conservative**: Lenient defaults, tighten based on metrics
-2. **A/B Testing**: Roll out incrementally (10% → 100%)
-3. **Feature Flags**: Enable/disable per service
+5. **Developer Experience**
+   - Simple decorator-based API
+   - Standardized resilience across codebase
+   - Clear configuration and documentation
+
+### Negative
+
+1. **Complexity**
+   - New module to maintain (`resilience/`)
+   - More configuration parameters
+   - Debugging is harder (need to trace through resilience layer)
+
+2. **Configuration Overhead**
+   - Need to tune per-service parameters (fail_max, timeout, etc.)
+   - Risk of misconfiguration (fail-open vs fail-closed)
+   - Requires load testing to find optimal values
+
+3. **Performance Overhead**
+   - Circuit breaker state checks add latency (~1-2ms)
+   - Retry logic increases total request time
+   - Metrics collection overhead (~1% CPU)
+
+4. **False Positives**
+   - Circuit breaker may open during legitimate load spikes
+   - Aggressive timeouts may kill slow but valid requests
+   - Bulkhead limits may reject valid traffic
+
+### Mitigations
+
+1. **Start Conservative**: Use lenient defaults, tighten based on metrics
+2. **A/B Testing**: Roll out resilience patterns incrementally (10% → 50% → 100%)
+3. **Feature Flags**: Enable/disable resilience per service
 4. **Monitoring**: Alert on circuit breaker state changes
 5. **Documentation**: Comprehensive troubleshooting guide
 
-### Success Metrics
+## Implementation Plan
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| **Availability** | 99.99% uptime | &lt;52.6 min downtime/year |
-| **Performance** | P95 &lt; 500ms | Even with failures |
-| **Error Rate** | &lt; 0.01% | Under normal load |
-| **Recovery Time** | MTTR &lt; 5 min | Circuit breaker auto-recovery |
-| **Overhead** | &lt; 2% CPU | Resilience layer impact |
+### Phase 1: Foundation (Week 1)
+- [ ] Create `resilience/` module structure
+- [ ] Implement circuit breaker with `pybreaker`
+- [ ] Implement retry logic with `tenacity`
+- [ ] Add timeout enforcement with `asyncio.timeout()`
+- [ ] Add bulkhead isolation with `asyncio.Semaphore`
+- [ ] Create configuration schema in `config.py`
+- [ ] Write 50+ unit tests for resilience patterns
+
+### Phase 2: Integration (Week 2)
+- [ ] Apply resilience decorators to `llm/factory.py`
+- [ ] Apply resilience decorators to `auth/openfga.py`
+- [ ] Apply resilience decorators to `auth/session.py`
+- [ ] Apply resilience decorators to `auth/keycloak.py`
+- [ ] Apply resilience decorators to `monitoring/prometheus_client.py`
+- [ ] Update all HTTP clients with default timeouts
+
+### Phase 3: Observability (Week 3)
+- [ ] Implement resilience metrics in `resilience/metrics.py`
+- [ ] Create Grafana dashboard `resilience.json`
+- [ ] Add circuit breaker state change alerts
+- [ ] Integrate with OpenTelemetry tracing
+- [ ] Write integration tests with failure injection
+
+### Phase 4: Validation (Week 4)
+- [ ] Chaos testing: Kill Redis, verify graceful degradation
+- [ ] Load testing: 1000 req/s, verify no cascade failures
+- [ ] Circuit breaker testing: Force failures, verify auto-recovery
+- [ ] Timeout testing: Inject slow responses, verify fail-fast
+- [ ] Performance testing: Measure overhead (target < 2%)
+
+### Phase 5: Documentation & Rollout (Week 5)
+- [ ] Update developer guide with resilience examples
+- [ ] Create runbook for circuit breaker incidents
+- [ ] Add configuration reference to docs
+- [ ] Roll out to production (10% → 50% → 100%)
+- [ ] Monitor for 2 weeks, tune configuration
+
+## Alternatives Considered
+
+### Alternative 1: Use Istio Service Mesh
+- **Pros**: Resilience at infrastructure level, language-agnostic
+- **Cons**: Requires Kubernetes, complex setup, not available locally
+- **Decision**: Keep as option for production, implement application-level first
+
+### Alternative 2: Use AWS App Mesh / Google Traffic Director
+- **Pros**: Cloud-native, managed service
+- **Cons**: Vendor lock-in, only works in specific clouds
+- **Decision**: Application-level resilience is cloud-agnostic
+
+### Alternative 3: No Resilience (Current State)
+- **Pros**: Simple, no overhead
+- **Cons**: Cannot achieve 99.99% SLA, poor user experience
+- **Decision**: Unacceptable for production
+
+### Alternative 4: Use NGINX/HAProxy for Retry/Timeout
+- **Pros**: Battle-tested, high performance
+- **Cons**: Only covers HTTP, not Redis/DB, limited customization
+- **Decision**: Combine with application-level for full coverage
+
+## References
+
+- **Circuit Breaker Pattern**: https://martinfowler.com/bliki/CircuitBreaker.html
+- **Release It! (Nygard)**: https://pragprog.com/titles/mnee2/release-it-second-edition/
+- **pybreaker Library**: https://github.com/danielfm/pybreaker
+- **tenacity Library**: https://github.com/jd/tenacity
+- **Google SRE Book - Handling Overload**: https://sre.google/sre-book/handling-overload/
+- **AWS Well-Architected - Reliability Pillar**: https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/
+- **ADR-0017: Error Handling Strategy**: ./adr-0017-error-handling-strategy.md
+- **ADR-0023: Anthropic Tool Design Best Practices**: ./adr-0023-anthropic-tool-design-best-practices.md
+
+## Success Metrics
+
+### Availability
+- **Target**: 99.99% uptime (< 52.6 min downtime/year)
+- **Measurement**: Prometheus `up` metric, SLA dashboard
+
+### Performance
+- **Target**: P95 latency < 500ms (even with failures)
+- **Measurement**: Histogram `http_request_duration_seconds{quantile="0.95"}`
+
+### Error Rate
+- **Target**: < 0.01% error rate under normal load
+- **Measurement**: `http_requests_total{status=~"5.."} / http_requests_total`
+
+### Recovery Time
+- **Target**: MTTR < 5 minutes (circuit breaker auto-recovery)
+- **Measurement**: Time from circuit open → half-open → closed
+
+### Overhead
+- **Target**: < 2% CPU overhead from resilience layer
+- **Measurement**: CPU profiling before/after resilience implementation
+
+## Migration Path
+
+### Backward Compatibility
+- All resilience patterns are **opt-in via decorators**
+- Existing code continues to work without changes
+- Feature flag: `FF_ENABLE_RESILIENCE_PATTERNS=true`
 
 ### Rollout Strategy
+1. **Development**: Enable for all services, test thoroughly
+2. **Staging**: A/B test (50% traffic with resilience)
+3. **Production**: Gradual rollout (10% → 25% → 50% → 100% over 4 weeks)
+4. **Monitoring**: Watch for regressions, roll back if needed
 
-#### Phase 1: Development (Week 1)
-- Enable for all services
-- Test thoroughly
-
-#### Phase 2: Staging (Week 2)
-- A/B test (50% traffic with resilience)
-
-#### Phase 3: Production (Weeks 3-6)
-- Gradual rollout: 10% → 25% → 50% → 100%
-- Monitor for regressions
-
-#### Rollback Plan
+### Rollback Plan
 - Disable feature flag: `FF_ENABLE_RESILIENCE_PATTERNS=false`
 - Remove decorators if causing issues
 - Fall back to basic error handling
 
-### Related
-
-- [ADR-0017: Error Handling Strategy](/architecture/adr-0017-error-handling-strategy)
-- [ADR-0023: Anthropic Tool Design Best Practices](/architecture/adr-0023-anthropic-tool-design-best-practices)
-- [Deployment Monitoring](/deployment/monitoring)
-
-### External Resources
-
-- [Circuit Breaker Pattern](https://martinfowler.com/bliki/CircuitBreaker.html)
-- [Release It! by Michael Nygard](https://pragprog.com/titles/mnee2/release-it-second-edition/)
-- [pybreaker Library](https://github.com/danielfm/pybreaker)
-- [tenacity Library](https://github.com/jd/tenacity)
-- [Google SRE Book - Handling Overload](https://sre.google/sre-book/handling-overload/)
-
 ---
 
 **Last Updated**: 2025-10-20
-**Next Review**: 2025-11-20
+**Next Review**: 2025-11-20 (after 1 month in production)

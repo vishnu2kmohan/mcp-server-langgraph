@@ -1,9 +1,22 @@
 # ADR-0049: Pytest Fixture Consolidation and Organization
 
-**Status:** Accepted
-**Date:** 2025-11-07
-**Decision Makers:** Test Infrastructure Team
-**Related ADRs:** ADR-0042 (Dependency Injection)
+Date: 2025-11-07
+
+## Status
+
+Accepted
+
+## Category
+
+Testing & Quality
+
+## Decision Makers
+
+Test Infrastructure Team
+
+## Related ADRs
+
+ADR-0042 (Dependency Injection)
 
 ## Context
 

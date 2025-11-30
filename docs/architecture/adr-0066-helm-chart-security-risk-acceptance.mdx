@@ -1,0 +1,151 @@
+---
+title: "66. Helm Chart Security Risk Acceptance"
+description: "Architecture Decision Record: 66. Helm Chart Security Risk Acceptance"
+seoTitle: "ADR-0066: Helm Chart Security Risk Acceptance for Upstream Subcharts"
+seoDescription: "Document accepted security findings in upstream Helm subcharts (OpenFGA, Bitnami PostgreSQL/Redis/Keycloak/Grafana, Jaeger) with rationale for risk acceptance vs false positives."
+keywords: ["helm security", "trivy findings", "security risk acceptance", "upstream subcharts", "bitnami", "openfga", "kubernetes security"]
+contentType: "adr"
+icon: "shield-check"
+---
+
+# 66. Helm Chart Security Risk Acceptance
+
+Date: 2025-11-29
+
+## Status
+
+Accepted
+
+## Category
+
+Security & Compliance
+
+## Context
+
+The MCP Server LangGraph Helm chart depends on upstream Helm subcharts from canonical providers. Security scanning with Trivy identifies findings in these upstream charts that represent either:
+
+1. **False positives**: Static analysis limitations (e.g., variable references detected as secrets)
+2. **Intentional design**: Required functionality (e.g., node-exporter host access)
+3. **Upstream patterns**: Standard practices from trusted maintainers (e.g., Bitnami UID/GID)
+
+### Subcharts and Providers
+
+| Chart | Version | Provider | Status |
+|-------|---------|----------|--------|
+| **openfga** | 0.2.49 | openfga.github.io ✅ | Official OpenFGA |
+| **postgresql** | 18.1.11 | charts.bitnami.com ✅ | Official Bitnami |
+| **redis** | 24.0.0 | charts.bitnami.com ✅ | Official Bitnami |
+| **keycloak** | 25.2.0 | charts.bitnami.com ✅ | Official Bitnami |
+| **grafana** | 12.1.8 | charts.bitnami.com ✅ | Official Bitnami |
+| **jaeger** | 3.4.1 | jaegertracing.github.io ✅ | Official Jaeger |
+| **kube-prometheus-stack** | 79.9.0 | prometheus-community ✅ | Official Prometheus |
+
+All charts use official/canonical providers with security-focused release processes.
+
+### Bitnami Licensing Note
+
+Beginning **August 28, 2025**, Bitnami will transition to "Bitnami Secure Images" model:
+- Non-hardened Debian-based images deprecated in free tier
+- Gradual removal of non-latest tags from public catalog
+- Migration strategy required before August 2025
+
+## Decision
+
+Accept documented security findings in upstream Helm subcharts with the following risk mitigation strategy:
+
+### 1. Severity-Based Triage
+
+| Severity | Action |
+|----------|--------|
+| **CRITICAL/HIGH** | Investigate and remediate or document with compensating controls |
+| **MEDIUM** | Evaluate impact, suppress with justification if false positive |
+| **LOW/NOTE** | Suppress with documentation, review quarterly |
+
+### 2. Accepted Findings Categories
+
+#### A. kube-prometheus-stack RBAC (Required for Cluster Monitoring)
+
+| Finding | Justification |
+|---------|--------------|
+| KSV041 (Manage secrets) | Required for scrape configurations and TLS |
+| KSV045 (Wildcard verbs) | Required for CRD management |
+| KSV048/049 (Workload management) | Required for monitoring resources |
+| KSV056 (Network management) | Required for ServiceMonitor/PodMonitor |
+| KSV113 (Namespace secrets) | Required for multi-namespace monitoring |
+| KSV114 (Webhook admission) | Required for CRD validation |
+
+**Compensating Controls**: NetworkPolicies restrict prometheus-operator access.
+
+#### B. Node Exporter (Required for Node Metrics)
+
+| Finding | Justification |
+|---------|--------------|
+| KSV009 (Host network) | Required for node-level metrics |
+| KSV010 (Host PID) | Required for process metrics |
+| KSV023/121 (hostPath) | Required for /proc, /sys access |
+
+**Compensating Controls**: DaemonSet runs only on designated monitoring nodes.
+
+#### C. Keycloak (Quarkus JIT Requirements)
+
+| Finding | Justification |
+|---------|--------------|
+| AVD-KSV-0014 (readOnlyRootFilesystem) | Quarkus JIT compilation requires write access |
+
+**Compensating Controls**: runAsNonRoot, allowPrivilegeEscalation=false, capabilities.drop=ALL.
+
+#### D. False Positives
+
+| Finding | Reason |
+|---------|--------|
+| AVD-KSV-0109 (ConfigMap secrets) | Variable references ($REDIS_PASSWORD), not secrets |
+| AVD-KSV-01010 (Sensitive content) | LLM token limits, not auth tokens |
+| KSV013 (Latest tag) | Development only; production pins versions |
+| KSV020/021 (UID/GID < 10000) | Bitnami standard (UID 1001), still non-root |
+| KSV0125 (Untrusted registry) | Bitnami is trusted, widely used registry |
+
+### 3. Suppression Documentation
+
+All accepted findings are documented in `deployments/helm/mcp-server-langgraph/.trivyignore` with:
+- Affected component
+- Justification
+- Compensating controls
+- Review expiration date
+
+### 4. Review Schedule
+
+| Activity | Frequency |
+|----------|-----------|
+| .trivyignore review | Quarterly |
+| Subchart version updates | Monthly |
+| Security advisory review | Weekly |
+| Full security audit | Annually |
+
+## Consequences
+
+### Positive
+
+- Clear documentation of security posture
+- Reduced noise in security scans
+- Focused attention on genuine issues
+- Transparent risk acceptance process
+
+### Negative
+
+- Maintenance burden for .trivyignore
+- Risk of accepting genuine issues as false positives
+- Quarterly review overhead
+
+### Mitigations
+
+- Automated CI checks flag new findings
+- Expiration dates force periodic review
+- Defense-in-depth with multiple security layers
+
+## References
+
+- [Trivy Kubernetes Security Checks](https://aquasecurity.github.io/trivy/v0.45/docs/scanner/misconfiguration/check/kubernetes/)
+- [kube-prometheus-stack RBAC Requirements](https://prometheus-operator.dev/docs/operator/rbac/)
+- [Bitnami Security Documentation](https://docs.bitnami.com/tutorials/understand-rolling-tags-containers/)
+- ADR-0052: Keycloak Security Architecture
+- `.trivyignore`: Full suppression documentation

@@ -12,7 +12,7 @@
 
 ### Current State (43 Hooks)
 
-**Issue:** Many hooks run `uv run pytest` on individual test files/functions, causing:
+**Issue:** Many hooks run `uv run --frozen pytest` on individual test files/functions, causing:
 - **43 separate pytest invocations** during each push
 - **43× Python interpreter startup overhead** (~1-2s each)
 - **43× pytest initialization overhead** (~0.5-1s each)
@@ -33,16 +33,16 @@ Hooks were designed for **granular file-specific validation** (good intent), but
 ```yaml
 # CURRENT: 4 separate hooks, 4 pytest invocations
 - id: validate-deployment-secrets
-  entry: uv run pytest tests/deployment/test_helm_configuration.py::test_deployment_secret_keys_exist_in_template
+  entry: uv run --frozen pytest tests/deployment/test_helm_configuration.py::test_deployment_secret_keys_exist_in_template
 
 - id: validate-cors-security
-  entry: uv run pytest tests/deployment/test_helm_configuration.py::test_kong_cors_not_wildcard_with_credentials
+  entry: uv run --frozen pytest tests/deployment/test_helm_configuration.py::test_kong_cors_not_wildcard_with_credentials
 
 - id: check-hardcoded-credentials
-  entry: uv run pytest tests/deployment/test_helm_configuration.py::test_no_hardcoded_credentials_in_configmap
+  entry: uv run --frozen pytest tests/deployment/test_helm_configuration.py::test_no_hardcoded_credentials_in_configmap
 
 - id: validate-redis-password-required
-  entry: uv run pytest tests/deployment/test_helm_configuration.py::test_redis_password_not_optional
+  entry: uv run --frozen pytest tests/deployment/test_helm_configuration.py::test_redis_password_not_optional
 ```
 
 **Problem:** 4× pytest startup for tests in the SAME FILE!
@@ -63,7 +63,7 @@ Hooks were designed for **granular file-specific validation** (good intent), but
 # OPTIMIZED: 1 hook, 1 pytest invocation
 - id: validate-deployment-configuration
   name: Validate Deployment Configuration (Helm + Kustomize)
-  entry: uv run pytest tests/deployment/test_helm_configuration.py -v --tb=short
+  entry: uv run --frozen pytest tests/deployment/test_helm_configuration.py -v --tb=short
   language: system
   files: ^deployments/.*\.(yaml|yml)$
   pass_filenames: false
@@ -136,19 +136,19 @@ git push
 ```yaml
 - id: validate-helm-configuration
   name: Validate Helm Configuration
-  entry: uv run pytest tests/deployment/test_helm_configuration.py -v --tb=short
+  entry: uv run --frozen pytest tests/deployment/test_helm_configuration.py -v --tb=short
   files: ^deployments/helm/.*\.(yaml|yml)$
   stages: [pre-push]
 
 - id: validate-kustomize-deployments
   name: Validate Kustomize Deployments
-  entry: uv run pytest tests/deployment/test_kustomize_builds.py tests/deployment/test_network_policies.py tests/deployment/test_service_accounts.py -v --tb=short
+  entry: uv run --frozen pytest tests/deployment/test_kustomize_builds.py tests/deployment/test_network_policies.py tests/deployment/test_service_accounts.py -v --tb=short
   files: ^deployments/kustomize/.*\.(yaml|yml)$
   stages: [pre-push]
 
 - id: validate-docker-compose
   name: Validate Docker Compose
-  entry: uv run pytest tests/test_docker_compose_validation.py -v --tb=short
+  entry: uv run --frozen pytest tests/test_docker_compose_validation.py -v --tb=short
   files: ^(docker-compose.*\.ya?ml|deployments/local/.*)$
   stages: [pre-push]
 ```
@@ -170,13 +170,13 @@ git push
 ```yaml
 - id: validate-meta-tests
   name: Validate Meta Tests (Quality, Safety, Coverage)
-  entry: uv run pytest tests/meta/ -v --tb=short -m "not slow"
+  entry: uv run --frozen pytest tests/meta/ -v --tb=short -m "not slow"
   files: ^tests/meta/.*\.py$
   stages: [pre-push]
 
 - id: validate-test-infrastructure
   name: Validate Test Infrastructure
-  entry: uv run pytest tests/test_fixture_organization.py tests/test_regression_prevention.py -v --tb=short
+  entry: uv run --frozen pytest tests/test_fixture_organization.py tests/test_regression_prevention.py -v --tb=short
   files: ^tests/(conftest|.*_fixtures).*\.py$
   stages: [pre-push]
 ```
@@ -195,7 +195,7 @@ git push
 ```yaml
 - id: validate-documentation
   name: Validate Documentation (Mintlify + ADRs)
-  entry: uv run pytest tests/test_documentation_integrity.py tests/regression/test_documentation_structure.py -v --tb=short
+  entry: uv run --frozen pytest tests/test_documentation_integrity.py tests/regression/test_documentation_structure.py -v --tb=short
   files: ^(docs/.*\.(md|mdx)|adr/.*\.md)$
   stages: [pre-push]
 ```
@@ -207,7 +207,7 @@ git push
 ```yaml
 - id: mypy
   name: MyPy Type Checking
-  entry: uv run mypy src --show-error-codes
+  entry: uv run --frozen mypy src --show-error-codes
   language: system
   types: [python]
   require_serial: false  # ← Allow parallel with other checks
@@ -224,7 +224,7 @@ git push
   entry: |
     bash -c '
       # Run bandit (always available)
-      uv run bandit -r src/ -ll || exit 1;
+      uv run --frozen bandit -r src/ -ll || exit 1;
 
       # Run trivy if available (optional)
       if command -v trivy &> /dev/null; then
@@ -272,7 +272,7 @@ git push
 
 3. Update consolidated test hooks to use `--testmon`:
    ```yaml
-   entry: uv run pytest tests/deployment/ -v --tb=short --testmon
+   entry: uv run --frozen pytest tests/deployment/ -v --tb=short --testmon
    ```
 
 4. Add `.testmondata` to `.gitignore`

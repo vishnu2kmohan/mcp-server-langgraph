@@ -11,7 +11,7 @@ import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
 # xdist_group for integration test worker isolation
-pytestmark = pytest.mark.xdist_group(name="integration_pydantic_ai_tests")
+pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="integration_pydantic_ai_tests")]
 
 
 def teardown_module():
@@ -163,8 +163,11 @@ async def test_route_message_success(mock_settings, mock_pydantic_agent_class):
     from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper, RouterDecision
 
     # Mock agent response
+    # Note: .output replaces deprecated .data in pydantic-ai 1.0+
     mock_result = Mock()
-    mock_result.data = RouterDecision(action="use_tools", reasoning="User wants to search", tool_name="search", confidence=0.9)
+    mock_result.output = RouterDecision(
+        action="use_tools", reasoning="User wants to search", tool_name="search", confidence=0.9
+    )
 
     mock_agent_instance = Mock()
     mock_agent_instance.run = AsyncMock(return_value=mock_result)
@@ -188,7 +191,7 @@ async def test_route_message_with_context(mock_settings, mock_pydantic_agent_cla
     from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper, RouterDecision
 
     mock_result = Mock()
-    mock_result.data = RouterDecision(action="respond", reasoning="Direct answer", confidence=0.95)
+    mock_result.output = RouterDecision(action="respond", reasoning="Direct answer", confidence=0.95)
 
     mock_agent_instance = Mock()
     mock_agent_instance.run = AsyncMock(return_value=mock_result)
@@ -237,8 +240,9 @@ async def test_generate_response_success(mock_settings, mock_pydantic_agent_clas
     from mcp_server_langgraph.llm.pydantic_agent import AgentResponse, PydanticAIAgentWrapper
 
     # Mock agent response
+    # Note: .output replaces deprecated .data in pydantic-ai 1.0+
     mock_result = Mock()
-    mock_result.data = AgentResponse(
+    mock_result.output = AgentResponse(
         content="Here is your answer about Python",
         confidence=0.88,
         requires_clarification=False,
@@ -268,7 +272,7 @@ async def test_generate_response_with_context(mock_settings, mock_pydantic_agent
     from mcp_server_langgraph.llm.pydantic_agent import AgentResponse, PydanticAIAgentWrapper
 
     mock_result = Mock()
-    mock_result.data = AgentResponse(content="Context-aware response", confidence=0.9)
+    mock_result.output = AgentResponse(content="Context-aware response", confidence=0.9)
 
     mock_agent_instance = Mock()
     mock_agent_instance.run = AsyncMock(return_value=mock_result)
@@ -296,7 +300,7 @@ async def test_generate_response_requires_clarification(mock_settings, mock_pyda
     from mcp_server_langgraph.llm.pydantic_agent import AgentResponse, PydanticAIAgentWrapper
 
     mock_result = Mock()
-    mock_result.data = AgentResponse(
+    mock_result.output = AgentResponse(
         content="I need more information",
         confidence=0.5,
         requires_clarification=True,

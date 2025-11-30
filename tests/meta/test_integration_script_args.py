@@ -18,6 +18,7 @@ Related Issues:
 - GitHub Issue: Matrix parallelization not working
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -26,8 +27,13 @@ import pytest
 pytestmark = pytest.mark.meta
 
 
+@pytest.mark.xdist_group(name="integration_script_args")
 class TestIntegrationScriptArgPropagation:
     """Validates integration test script respects pytest arguments."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @property
     def script_path(self) -> Path:
@@ -58,12 +64,13 @@ class TestIntegrationScriptArgPropagation:
         """
         content = self.script_path.read_text()
 
-        # Find the main pytest invocation (should be after "uv run pytest")
-        # Pattern: Look for "uv run pytest" followed by argument usage
-        pytest_invocations = re.findall(r"uv run pytest\s+([^\n]+)", content, re.MULTILINE)
+        # Find the main pytest invocation (should be after "uv run [--frozen] pytest")
+        # Pattern: Look for "uv run [--frozen] pytest" followed by argument usage
+        # Note: --frozen flag is used for reproducible builds
+        pytest_invocations = re.findall(r"uv run\s+(?:--frozen\s+)?pytest\s+([^\n]+)", content, re.MULTILINE)
 
         # There should be at least one pytest invocation
-        assert len(pytest_invocations) > 0, "No 'uv run pytest' invocations found in script"
+        assert len(pytest_invocations) > 0, "No 'uv run [--frozen] pytest' invocations found in script"
 
         # Find the main test execution invocation (not the manual psql verification)
         # This is the one that should use PYTEST_ARGS
@@ -81,8 +88,8 @@ class TestIntegrationScriptArgPropagation:
         # This enables matrix splitting, coverage collection, custom markers, etc.
         assert '"${PYTEST_ARGS[@]}"' in main_invocation or "${PYTEST_ARGS[@]}" in main_invocation, (
             f"Main pytest invocation does not use PYTEST_ARGS array!\n"
-            f"Found: uv run pytest {main_invocation}\n"
-            f'Expected: uv run pytest "${{PYTEST_ARGS[@]}}"\n\n'
+            f"Found: uv run [--frozen] pytest {main_invocation}\n"
+            f'Expected: uv run --frozen pytest "${{PYTEST_ARGS[@]}}"\n\n'
             f"This breaks GitHub Actions matrix parallelization and coverage collection.\n"
             f"The workflow passes '--splits 4 --group N --cov' but they are ignored."
         )
@@ -93,14 +100,14 @@ class TestIntegrationScriptArgPropagation:
 
         # Should check if PYTEST_ARGS is empty and set defaults
         # Pattern: if [ ${#PYTEST_ARGS[@]} -eq 0 ]; then
-        assert re.search(
-            r"if\s+\[\s+\$\{#PYTEST_ARGS\[@\]\}\s+-eq\s+0\s+\];?\s+then", content
-        ), "Script should check if PYTEST_ARGS is empty and set defaults"
+        assert re.search(r"if\s+\[\s+\$\{#PYTEST_ARGS\[@\]\}\s+-eq\s+0\s+\];?\s+then", content), (
+            "Script should check if PYTEST_ARGS is empty and set defaults"
+        )
 
         # Default should include integration marker
-        assert re.search(
-            r"PYTEST_ARGS=\([^)]*-m\s+integration[^)]*\)", content
-        ), "Default PYTEST_ARGS should include '-m integration' marker"
+        assert re.search(r"PYTEST_ARGS=\([^)]*-m\s+integration[^)]*\)", content), (
+            "Default PYTEST_ARGS should include '-m integration' marker"
+        )
 
     def test_script_documents_pytest_args_usage(self):
         """Verify the script documents how to pass pytest arguments."""
@@ -138,7 +145,7 @@ class TestIntegrationScriptArgPropagation:
         if has_double_dash:
             # If using '--' separator, verify pytest flags are passed
             assert re.search(r"--\s+.*(?:--splits|--group|--cov)", content), (
-                "Workflow should pass pytest flags (--splits, --group, --cov) " "after '--' separator"
+                "Workflow should pass pytest flags (--splits, --group, --cov) after '--' separator"
             )
 
     def test_no_hard_coded_markers_in_invocation(self):
@@ -150,8 +157,8 @@ class TestIntegrationScriptArgPropagation:
         """
         content = self.script_path.read_text()
 
-        # Find all pytest invocations
-        pytest_invocations = re.findall(r"uv run pytest\s+([^\n;]+)", content)
+        # Find all pytest invocations (including uv run --frozen pytest)
+        pytest_invocations = re.findall(r"uv run\s+(?:--frozen\s+)?pytest\s+([^\n;]+)", content)
 
         for invocation in pytest_invocations:
             # Skip verification commands
@@ -175,8 +182,13 @@ class TestIntegrationScriptArgPropagation:
                 )
 
 
+@pytest.mark.xdist_group(name="integration_script_coverage")
 class TestIntegrationScriptCoverageWorkflow:
     """Validates coverage collection works with matrix parallelization."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_coverage_files_expected_after_matrix_run(self):
         """
@@ -225,8 +237,13 @@ class TestIntegrationScriptCoverageWorkflow:
         assert "unset PYTEST_SPLIT" not in content, "Script should not unset PYTEST_SPLIT environment variables"
 
 
+@pytest.mark.xdist_group(name="integration_script_documentation")
 class TestIntegrationScriptDocumentation:
     """Validates script has proper documentation and usage examples."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_script_has_usage_examples(self):
         """Verify the script documents how to use pytest arguments."""

@@ -179,11 +179,7 @@ def test_pyproject_toml_addopts_includes_dist_flag():
     This confirms that the --dist flag exists in the default config,
     which is why the performance workflow needs to override it.
     """
-    # Python 3.10 compatibility: tomllib added in 3.11, use tomli backport for <3.11
-    try:
-        import tomllib
-    except ModuleNotFoundError:
-        import tomli as tomllib
+    import tomllib
 
     repo_root = Path(__file__).parent.parent.parent
     pyproject_path = repo_root / "pyproject.toml"

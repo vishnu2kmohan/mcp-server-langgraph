@@ -46,7 +46,7 @@ class TestMypyEnforcement:
                 break
 
         assert mypy_repo is not None, (
-            "Mypy hook not found in .pre-commit-config.yaml. " "Expected repo: https://github.com/pre-commit/mirrors-mypy"
+            "Mypy hook not found in .pre-commit-config.yaml. Expected repo: https://github.com/pre-commit/mirrors-mypy"
         )
 
     def test_mypy_hook_is_not_commented_out(self):
@@ -184,9 +184,7 @@ class TestMypyEnforcement:
         # This is informational - we document if recommended flags are missing
         if not has_recommended_flag:
             print(
-                f"\nINFO: Mypy configuration could benefit from recommended flags:\n"
-                f"{recommended_flags}\n"
-                f"Current args: {args}"
+                f"\nINFO: Mypy configuration could benefit from recommended flags:\n{recommended_flags}\nCurrent args: {args}"
             )
 
     def test_mypy_passes_on_current_codebase(self):
@@ -212,10 +210,13 @@ class TestMypyEnforcement:
 
         # Use same args as pre-commit hook to ensure parity
         # Pre-commit now uses --config-file=pyproject.toml (strict mode with per-module overrides)
+        # CRITICAL: Use --frozen to ensure lockfile-pinned versions are used, not latest
+        # This prevents CI failures due to version drift when uv recreates the virtualenv
         result = subprocess.run(
             [
                 "uv",
                 "run",
+                "--frozen",  # Use lockfile-pinned versions (prevents version drift in CI)
                 "mypy",
                 "src/mcp_server_langgraph",
                 "--config-file=pyproject.toml",

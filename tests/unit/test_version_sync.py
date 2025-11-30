@@ -8,21 +8,12 @@ Ensures that version is consistent across:
 - observability telemetry
 """
 
-import sys
+import tomllib
 from pathlib import Path
 
 import pytest
 
 pytestmark = pytest.mark.unit
-
-# Python 3.11+ has tomllib built-in, older versions need tomli
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    try:
-        import tomli as tomllib
-    except ImportError:
-        pytest.skip("tomli not available", allow_module_level=True)
 
 
 @pytest.mark.unit
@@ -40,7 +31,7 @@ def test_version_matches_pyproject():
     from mcp_server_langgraph import __version__
 
     assert __version__ == expected_version, (
-        f"Version mismatch: __init__.py has {__version__}, " f"but pyproject.toml has {expected_version}"
+        f"Version mismatch: __init__.py has {__version__}, but pyproject.toml has {expected_version}"
     )
 
 

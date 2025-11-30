@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 # Add scripts directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts" / "validation"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts" / "validators"))
 
 
 from validate_pytest_markers import get_registered_markers, get_used_markers  # noqa: E402
@@ -50,8 +50,7 @@ class TestMarkerRegistration:
         unregistered = used - registered - allowed_unregistered
 
         assert not unregistered, (
-            f"Found unregistered markers: {sorted(unregistered)}. "
-            f"Add them to pyproject.toml [tool.pytest.ini_options.markers]"
+            f"Found unregistered markers: {sorted(unregistered)}. Add them to pyproject.toml [tool.pytest.ini_options.markers]"
         )
 
     def test_critical_markers_are_registered(self):

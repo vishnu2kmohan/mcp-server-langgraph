@@ -11,8 +11,6 @@ References:
 - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 """
 
-from typing import Dict, Optional
-
 from mcp_server_langgraph.core.prompts.response_prompt import RESPONSE_SYSTEM_PROMPT
 from mcp_server_langgraph.core.prompts.router_prompt import ROUTER_SYSTEM_PROMPT
 from mcp_server_langgraph.core.prompts.verification_prompt import VERIFICATION_SYSTEM_PROMPT

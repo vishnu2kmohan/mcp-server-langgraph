@@ -241,6 +241,7 @@ def create_mock_jwt_token(user_id: str = "test-user", expiry_hours: int = 1) -> 
         "iat": datetime.now(timezone.utc),
     }
 
+    # nosemgrep: python.jwt.security.jwt-hardcode.jwt-python-hardcoded-secret
     return jwt.encode(payload, "test-secret-key", algorithm="HS256")  # type: ignore[no-any-return]
 
 

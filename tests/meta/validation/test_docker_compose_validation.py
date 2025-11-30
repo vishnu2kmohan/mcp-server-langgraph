@@ -22,7 +22,7 @@ import pytest
 import yaml
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 
 def get_repo_root() -> Path:
@@ -300,19 +300,19 @@ class TestDockerComposeHealthChecks:
             # Validate test format
             test = health_check["test"]
             assert isinstance(test, (list, str)), (
-                f"Service '{service_name}' health check 'test' must be list or string, " f"got {type(test)}"
+                f"Service '{service_name}' health check 'test' must be list or string, got {type(test)}"
             )
 
             # Validate optional fields if present
             if "interval" in health_check:
-                assert isinstance(
-                    health_check["interval"], (str, int)
-                ), f"Service '{service_name}' health check 'interval' must be string or int"
+                assert isinstance(health_check["interval"], (str, int)), (
+                    f"Service '{service_name}' health check 'interval' must be string or int"
+                )
 
             if "timeout" in health_check:
-                assert isinstance(
-                    health_check["timeout"], (str, int)
-                ), f"Service '{service_name}' health check 'timeout' must be string or int"
+                assert isinstance(health_check["timeout"], (str, int)), (
+                    f"Service '{service_name}' health check 'timeout' must be string or int"
+                )
 
             if "retries" in health_check:
                 assert isinstance(health_check["retries"], int), f"Service '{service_name}' health check 'retries' must be int"
@@ -362,12 +362,12 @@ class TestDockerComposeQdrantSpecific:
                 continue
 
             health_check = service_config.get("healthcheck")
-            assert health_check, f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} " f"MUST have a health check"
+            assert health_check, f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} MUST have a health check"
 
             # Get the raw test command (list or string)
             test_command = health_check.get("test", [])
             assert test_command, (
-                f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} " f"health check has no test command"
+                f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} health check has no test command"
             )
 
             # Convert to string for pattern matching (works for both list and string formats)
@@ -425,9 +425,9 @@ def test_all_compose_files_found():
     # We should have at least the ones we know about
     filenames = {f.name for f in compose_files}
 
-    assert (
-        "docker-compose.test.yml" in filenames
-    ), "docker-compose.test.yml not found - this file has the Qdrant health check issue"
+    assert "docker-compose.test.yml" in filenames, (
+        "docker-compose.test.yml not found - this file has the Qdrant health check issue"
+    )
 
     # Log all found files for debugging
     print(f"\n📁 Found {len(compose_files)} Docker Compose files:")

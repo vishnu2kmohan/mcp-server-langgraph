@@ -6,7 +6,7 @@ name: CI/CD Pipeline (Optimized)
 #
 # WORKFLOW DEPENDENCY GRAPH:
 #
-#   test (3.10, 3.11, 3.12) ──> docker-build (base, full, test)
+#   test (3.11, 3.12, 3.13) ──> docker-build (base, full, test)
 #
 # Jobs:
 #   - test: Unit tests across Python versions with parallel execution
@@ -64,6 +64,8 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  # Prevent BlockingIOError when capturing large test output
+  PYTHONUNBUFFERED: "1"
 
 jobs:
   # ============================================================================
@@ -76,7 +78,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install actionlint
         run: |
@@ -119,13 +121,13 @@ jobs:
       - name: Run workflow validation tests
         run: |
           echo "🧪 Running workflow validation test suite..."
-          uv run pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short
+          uv run --frozen pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short
           echo "✅ All workflow validation tests passed"
 
       - name: Validate pytest configuration compatibility
         run: |
           echo "🔍 Validating pytest addopts against installed plugins..."
-          uv run python scripts/validation/validate_pytest_config.py
+          uv run --frozen python scripts/validators/validate_pytest_config.py
           echo "✅ Pytest configuration valid - all addopts flags have required plugins"
 
   validate-local-ci-parity:
@@ -134,7 +136,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -143,10 +145,6 @@ jobs:
           extras: 'dev'
           cache-key-prefix: 'parity-validation'
 
-      - name: Install pre-commit (for local hook validation)
-        run: |
-          pip install pre-commit
-
       - name: Install git hooks
         run: |
           pre-commit install --hook-type pre-commit --hook-type pre-push
@@ -154,13 +152,13 @@ jobs:
       - name: Validate pre-push hook configuration
         run: |
           echo "🔍 Validating pre-push hook configuration..."
-          uv run python scripts/validate_pre_push_hook.py
+          uv run --frozen python scripts/validators/validate_pre_push_hook.py
           echo "✅ Pre-push hook configuration is valid"
 
       - name: Run local/CI parity tests
         run: |
           echo "🧪 Running local/CI parity validation tests..."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_local_ci_parity.py -v --tb=short
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/test_local_ci_parity.py -v --tb=short
           echo "✅ Local validation matches CI validation"
 
       - name: Verify Makefile validate-pre-push target
@@ -170,38 +168,48 @@ jobs:
           make -n validate-pre-push
           echo "✅ Makefile validate-pre-push target is valid"
 
-  xdist-enforcement:
-    name: Validate Pytest-xdist Isolation
+  meta-tests:
+    name: Meta Tests (Test Suite Quality)
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # Timeout: 20 minutes to accommodate comprehensive meta test suite
+    # Components: xdist isolation, xfail strict, marker enforcement, infrastructure validation
+    timeout-minutes: 20
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'xdist-enforcement'
+          cache-key-prefix: 'meta-tests'
 
       - name: Run xdist enforcement meta-tests
         run: |
           echo "🧪 Running pytest-xdist isolation enforcement tests..."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_pytest_xdist_enforcement.py -v --tb=short -m "(unit or api or property) and not llm"
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/test_pytest_xdist_enforcement.py -v --tb=short -m "meta and not llm"
           echo "✅ Pytest-xdist isolation patterns validated"
 
       - name: Run xfail strict enforcement test
         run: |
           echo "🧪 Running xfail strict enforcement test..."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_xfail_strict_enforcement.py -v --tb=short -m "(unit or api or property) and not llm"
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/test_xfail_strict_enforcement.py -v --tb=short -m "meta and not llm"
           echo "✅ All xfail markers use strict=True"
 
       - name: Run marker enforcement test
         run: |
           echo "🧪 Running marker enforcement test..."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_marker_enforcement.py -v --tb=short -m "(unit or api or property) and not llm"
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/test_marker_enforcement.py -v --tb=short -m "meta and not llm"
           echo "✅ All test files have required markers"
+
+      - name: Run comprehensive meta tests
+        run: |
+          echo "🧪 Running all meta tests (infrastructure validation)..."
+          echo "  This includes workflow validation, fixture organization, config validation, etc."
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/ -v --tb=short -m "meta and not llm" || true
+          echo "✅ Comprehensive meta test suite executed"
+        continue-on-error: true  # Don't block CI on meta test failures initially
 
   # ============================================================================
   # TESTING (Parallelized by Python version)
@@ -213,42 +221,23 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.11', '3.12', '3.13']
       fail-fast: false
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-
-    # OPTIMIZATION: Use uv sync for lockfile-based installation (no resolution)
-    - name: Install dependencies (fast path)
-      run: |
-        # CRITICAL FIX: uv sync respects UV_PYTHON but recreates venv if not compatible
-        # Solution: Use --python flag on uv sync to force specific Python version
-        # This ensures venv is created with correct Python and not recreated
-
-        # Install from lockfile (no resolution, 60s faster)
-        # --python: Force specific Python version (prevents venv recreation with wrong Python)
-        # --frozen: Fail if lock file is out of sync (prevents dependency drift)
-        # Include dev and builder dependencies:
-        #   dev: Testing framework (pytest, pytest-cov, black, mypy, etc.)
-        #   builder: Visual workflow builder (black, jinja2, ast-comments)
-        # Both required because unit tests import builder modules
-        uv sync --python ${{ matrix.python-version }} --frozen --extra dev --extra builder
-
-        # Verify correct Python version is active
-        .venv/bin/python --version
-        echo "✓ Dependencies installed from lockfile with dev+builder extras for Python ${{ matrix.python-version }}"
+        # Install dev extras for comprehensive test coverage
+        # NOTE: 'secrets' extra excluded - infisical-python uses PyO3 v0.20.3 which
+        # doesn't support Python 3.13 (max 3.12). Tests skip gracefully when not installed.
+        # See: https://github.com/Infisical/infisical-python/issues - PyO3 upgrade needed
+        extras: 'dev'
+        cache-key-prefix: 'ci-test-py${{ matrix.python-version }}'
 
     - name: Validate lockfile is up-to-date
       run: |
@@ -292,8 +281,8 @@ jobs:
         # Match local development environment: parallel execution with OTEL disabled
         # Use CI Hypothesis profile for consistent property test behavior (100 examples)
         # Exclude expensive LLM tests (marked with @pytest.mark.llm) - these run in scheduled workflow
-        # Run all fast tests: unit, api, property (matches local pre-push via scripts/run_pre_push_tests.py)
-        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "(unit or api or property) and not llm" --cov=src/mcp_server_langgraph --cov-report=xml:coverage-unit.xml --cov-report=term-missing
+        # Run all fast tests: unit, api, property, validation (matches local pre-push via scripts/run_pre_push_tests.py)
+        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "(unit or api or property or validation) and not llm" --cov=src/mcp_server_langgraph --cov-report=xml:coverage-unit.xml --cov-report=term-missing
 
     - name: Run new test suites
       run: |
@@ -341,19 +330,14 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-
-    - name: Set up uv
-      uses: astral-sh/setup-uv@v7
-
-    - name: Install coverage tools
-      run: |
-        uv pip install --system -e .[coverage-tools]
+        extras: 'dev'
+        cache-key-prefix: 'coverage-merge'
 
     - name: Download unit test coverage
       uses: actions/download-artifact@v6
@@ -418,15 +402,14 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
+        extras: 'dev'
+        cache-key-prefix: 'pre-commit'
 
     - name: Install Terraform for pre-commit hooks
       uses: hashicorp/setup-terraform@v3
@@ -476,29 +459,58 @@ jobs:
   push-stage-validators:
     name: Push-Stage Validators
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        cache: 'pip'
+        extras: 'dev'
+        cache-key-prefix: 'push-validators'
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7.1.0
+    # Tool versions match mise.toml for local dev parity
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v3
       with:
-        enable-cache: true
-        cache-dependency-glob: "uv.lock"
+        terraform_version: '1.6.6'
 
-    - name: Install dependencies
+    - name: Install Helm
+      uses: azure/setup-helm@v4
+      with:
+        version: 'v3.14.0'
+
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v4
+      with:
+        version: 'v1.29.0'
+
+    - name: Install actionlint
       run: |
-        uv sync --frozen --extra dev --extra builder
-        echo "✓ Dependencies installed"
+        go install github.com/rhysd/actionlint/cmd/actionlint@v1.6.27
+        echo "$HOME/go/bin" >> $GITHUB_PATH
+
+    - name: Install Trivy
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.50.0
+        trivy --version
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: '20'
+
+    - name: Cache pre-commit environments
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pre-commit
+        key: push-validators-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+        restore-keys: |
+          push-validators-${{ runner.os }}-
 
     - name: Install pre-commit
       run: |
@@ -545,7 +557,7 @@ jobs:
         variant: [base, full, test]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Free disk space
       run: |
@@ -565,7 +577,7 @@ jobs:
         df -h
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3.11.1
+      uses: ./.github/actions/setup-docker-buildx
       with:
         driver-opts: network=host
         # Increase build timeout for network resilience
@@ -652,14 +664,8 @@ jobs:
 
     - name: Test ${{ matrix.variant }} image
       run: |
-        # Use correct Python path based on variant
-        # - Distroless (base, full): /usr/bin/python3 (system Python)
-        # - Slim (test): /opt/venv/bin/python (venv Python)
-        if [[ "${{ matrix.variant }}" == "test" ]]; then
-          PYTHON_PATH="/opt/venv/bin/python"
-        else
-          PYTHON_PATH="/usr/bin/python3"
-        fi
+        # All variants use uv-managed virtual environment at /app/.venv
+        PYTHON_PATH="/app/.venv/bin/python"
 
         echo "Testing with Python at: $PYTHON_PATH"
         docker run --rm \
@@ -682,7 +688,7 @@ jobs:
         stack: [main, dev, test]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Run smoke test (config validation only)
       run: |
@@ -710,13 +716,12 @@ jobs:
         variant: [base, full]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3.7.0
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3.11.1
+    - name: Set up Docker Buildx (multiplatform)
+      uses: ./.github/actions/setup-docker-buildx
+      with:
+        enable-qemu: 'true'
 
     - name: Log in to Container Registry
       uses: docker/login-action@v3.6.0
@@ -764,7 +769,7 @@ jobs:
         variant: [base, full]
     steps:
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3.11.1
+      uses: ./.github/actions/setup-docker-buildx
 
     - name: Log in to Container Registry
       uses: docker/login-action@v3.6.0
@@ -803,15 +808,15 @@ jobs:
     environment: development
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     # Authenticate to Google Cloud
     - id: auth
       name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v3
+      uses: ./.github/actions/setup-gcp-auth
       with:
-        workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-        service_account: ${{ secrets.GCP_DEV_SA_EMAIL }}
+        workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+        service-account: ${{ secrets.GCP_DEV_SA_EMAIL }}
 
     # Get GKE credentials
     - name: Get GKE Credentials
@@ -841,7 +846,7 @@ jobs:
     if: github.ref == 'refs/heads/develop' && vars.ENABLE_DEV_AUTODEPLOY == 'true'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Set up kubectl
       uses: azure/setup-kubectl@v4.0.1

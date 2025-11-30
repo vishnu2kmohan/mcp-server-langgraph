@@ -18,7 +18,7 @@ import pytest
 import yaml
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 
 @pytest.mark.xdist_group(name="testexternalsecretsredisurlencoding")
@@ -108,11 +108,10 @@ class TestExternalSecretsRedisURLEncoding:
         checkpoint_url = template_data.get("checkpoint-redis-url", "")
 
         assert "| urlquery" in redis_url, (
-            "redis-url missing urlquery filter.\n" "This inconsistency led to production incident staging-758b8f744."
+            "redis-url missing urlquery filter.\nThis inconsistency led to production incident staging-758b8f744."
         )
         assert "| urlquery" in checkpoint_url, (
-            "checkpoint-redis-url missing urlquery filter.\n"
-            "This inconsistency led to production incident staging-758b8f744."
+            "checkpoint-redis-url missing urlquery filter.\nThis inconsistency led to production incident staging-758b8f744."
         )
 
     def test_redis_password_template_variable_correct(self, staging_external_secrets: dict):
@@ -124,12 +123,12 @@ class TestExternalSecretsRedisURLEncoding:
         checkpoint_url = template_data.get("checkpoint-redis-url", "")
 
         # Verify correct variable name (redisPassword, not redis_password or other)
-        assert (
-            "{{ .redisPassword | urlquery }}" in redis_url
-        ), "redis-url should use {{ .redisPassword | urlquery }} template variable"
-        assert (
-            "{{ .redisPassword | urlquery }}" in checkpoint_url
-        ), "checkpoint-redis-url should use {{ .redisPassword | urlquery }} template variable"
+        assert "{{ .redisPassword | urlquery }}" in redis_url, (
+            "redis-url should use {{ .redisPassword | urlquery }} template variable"
+        )
+        assert "{{ .redisPassword | urlquery }}" in checkpoint_url, (
+            "checkpoint-redis-url should use {{ .redisPassword | urlquery }} template variable"
+        )
 
     def test_redis_url_structure_is_valid(self, staging_external_secrets: dict):
         """Test that Redis URL template has valid structure."""
@@ -223,9 +222,9 @@ class TestExternalSecretsRegressionPrevention:
 
         # Should have at least 2: redis-url and checkpoint-redis-url
         assert len(redis_urls) >= 2, f"Expected at least 2 Redis URLs, found {len(redis_urls)}"
-        assert (
-            len(urlquery_filters) >= 2
-        ), f"Expected at least 2 urlquery filters for Redis passwords, found {len(urlquery_filters)}"
+        assert len(urlquery_filters) >= 2, (
+            f"Expected at least 2 urlquery filters for Redis passwords, found {len(urlquery_filters)}"
+        )
 
         # Ideally, count should match (each Redis URL should have filter)
         # But we'll be lenient and just require >= 2
@@ -295,5 +294,5 @@ class TestExternalSecretsMultiEnvironmentConsistency:
         match = re.search(incorrect_pattern, content)
 
         assert not match, (
-            f"Environment {overlay_path} has unencoded Redis password.\n" f"Found: {match.group(0) if match else 'N/A'}"
+            f"Environment {overlay_path} has unencoded Redis password.\nFound: {match.group(0) if match else 'N/A'}"
         )

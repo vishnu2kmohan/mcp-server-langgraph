@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Testing & Quality
+
 ## Context
 
 Traditional unit tests check specific examples:

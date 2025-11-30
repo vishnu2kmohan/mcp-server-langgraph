@@ -16,13 +16,9 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.meta
+import tomllib
 
-# Use built-in tomllib (Python 3.11+) or fallback to tomli for Python 3.10
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
+pytestmark = pytest.mark.meta
 
 
 def get_registered_markers() -> set[str]:
@@ -186,5 +182,5 @@ def test_marker_naming_conventions():
             invalid_markers.append(marker)
 
     assert not invalid_markers, (
-        f"The following markers don't follow naming conventions (snake_case):\n" f"  {sorted(invalid_markers)}"
+        f"The following markers don't follow naming conventions (snake_case):\n  {sorted(invalid_markers)}"
     )

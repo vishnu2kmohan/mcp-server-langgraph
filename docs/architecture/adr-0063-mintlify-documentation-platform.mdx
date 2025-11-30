@@ -1,0 +1,161 @@
+---
+title: "63. Mintlify as Documentation Platform"
+description: "Architecture Decision Record: 63. Mintlify as Documentation Platform"
+---
+
+# 63. Mintlify as Documentation Platform
+
+Date: 2025-11-29
+
+## Status
+
+Accepted
+
+## Category
+
+Development & Tooling
+
+## Context
+
+The project requires a documentation platform that:
+
+1. **Developer-friendly**: Easy to write and maintain docs
+2. **Modern UI**: Clean, searchable, mobile-responsive
+3. **API documentation**: OpenAPI/Swagger integration
+4. **Versioning**: Support for multiple versions
+5. **Custom components**: Tabs, accordions, code blocks with syntax highlighting
+6. **MDX support**: React components in markdown
+7. **CI/CD integration**: Automatic deployment on git push
+
+### Platforms Considered
+
+| Platform | Pros | Cons |
+|----------|------|------|
+| **Mintlify** | Beautiful UI, MDX, OpenAPI | Hosted service, cost |
+| **Docusaurus** | Open source, React-based | Complex config, self-hosted |
+| **MkDocs** | Simple, Python-native | Limited interactivity |
+| **GitBook** | Easy editing, hosted | Limited customization |
+| **ReadTheDocs** | Free for open source | Dated UI, limited MDX |
+
+## Decision
+
+Use **Mintlify** as the documentation platform for all public-facing documentation.
+
+### Key Reasons
+
+1. **Beautiful Default Theme**: Professional appearance out-of-the-box
+2. **MDX Support**: React components embedded in markdown
+3. **OpenAPI Integration**: Auto-generated API reference from spec
+4. **Search**: Built-in full-text search (Algolia-powered)
+5. **Analytics**: Built-in page view and engagement metrics
+6. **Deployment**: Automatic deployment from GitHub
+7. **Custom Components**: Tabs, accordions, callouts, cards
+
+### Directory Structure
+
+```
+docs/
+├── docs.json           # Navigation and configuration
+├── introduction.mdx    # Landing page
+├── quickstart.mdx      # Getting started guide
+├── api/                # API reference (auto-generated)
+├── architecture/       # Architecture documentation
+│   ├── overview.mdx
+│   └── adr/           # Synced ADRs
+├── deployment/         # Deployment guides
+├── guides/             # How-to guides
+└── reference/          # Reference documentation
+```
+
+### Configuration (docs.json)
+
+```json
+{
+  "name": "MCP Server LangGraph",
+  "logo": {"dark": "/logo-dark.svg", "light": "/logo-light.svg"},
+  "favicon": "/favicon.svg",
+  "colors": {"primary": "#0D9488"},
+  "navigation": [
+    {"group": "Getting Started", "pages": ["introduction", "quickstart"]},
+    {"group": "API Reference", "pages": ["api/overview"]}
+  ],
+  "openapi": "https://api.example.com/openapi.json"
+}
+```
+
+### MDX Components Used
+
+````mdx
+<Tabs>
+  <Tab title="Python">
+    ```python
+    import httpx
+    client = httpx.Client()
+    ```
+  </Tab>
+  <Tab title="cURL">
+    ```bash
+    curl -X POST https://api.example.com/chat
+    ```
+  </Tab>
+</Tabs>
+
+<Accordion title="Advanced Configuration">
+  Additional options for power users...
+</Accordion>
+
+<Card title="Quick Start" icon="rocket" href="/quickstart">
+  Get started in 5 minutes
+</Card>
+````
+
+## Consequences
+
+### Positive
+
+- **Professional Appearance**: Enterprise-ready documentation
+- **Low Maintenance**: Hosted platform, no infrastructure to manage
+- **Fast Iteration**: Changes deployed automatically on push
+- **SEO Optimized**: Built-in meta tags, sitemaps
+- **Interactivity**: Rich components for better UX
+
+### Negative
+
+- **Cost**: Paid service for private repos (free for open source)
+- **Vendor Lock-in**: Mintlify-specific MDX components
+- **Limited Control**: Cannot customize hosting/infrastructure
+
+### Mitigation
+
+- MDX files are portable to other platforms with minimal changes
+- Core content in standard markdown, components are progressive enhancement
+- Export to static HTML available if migration needed
+
+## Alternatives Considered
+
+### Docusaurus
+- **Considered**: Popular, React-based, highly customizable
+- **Rejected**: Requires self-hosting, more complex configuration
+- Would need to build/maintain deployment infrastructure
+
+### MkDocs + Material Theme
+- **Considered**: Python-native, simple configuration
+- **Rejected**: Limited interactivity, dated component library
+- No native MDX support
+
+### GitBook
+- **Considered**: Easy WYSIWYG editing
+- **Rejected**: Limited customization, less developer-focused
+- Harder to maintain as code (prefers web editor)
+
+### ReadTheDocs
+- **Considered**: Free for open source, Sphinx integration
+- **Rejected**: Dated UI, limited modern component support
+- Not suitable for API-first documentation
+
+## References
+
+- Documentation: `docs/` directory
+- Configuration: `docs/docs.json`
+- Validation: `scripts/docs/validate-frontmatter.py`
+- External: [Mintlify Documentation](https://mintlify.com/docs)

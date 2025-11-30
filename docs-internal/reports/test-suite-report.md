@@ -318,5 +318,5 @@ The test suite successfully:
 
 The test suite is now in place to prevent regressions and validate fixes. Run with:
 ```bash
-uv run pytest tests/scripts/ -v
+uv run --frozen pytest tests/scripts/ -v
 ```

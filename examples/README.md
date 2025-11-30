@@ -383,10 +383,10 @@ python -c "from mcp_server_langgraph.core.dynamic_context_loader import DynamicC
 ### Documentation
 
 - [Anthropic Best Practices Assessment](../reports/ANTHROPIC_BEST_PRACTICES_ASSESSMENT_20251017.md) - Full assessment report
-- [ADR-0023: Tool Design Best Practices](../adr/0023-anthropic-tool-design-best-practices.md)
-- [ADR-0024: Agentic Loop Implementation](../adr/0024-agentic-loop-implementation.md)
-- [ADR-0025: Advanced Enhancements](../adr/0025-anthropic-best-practices-enhancements.md)
-- [Agentic Loop Guide](../docs-internal/AGENTIC_LOOP_GUIDE.md) - Technical deep-dive
+- [ADR-0023: Tool Design Best Practices](../adr/adr-0023-anthropic-tool-design-best-practices.md)
+- [ADR-0024: Agentic Loop Implementation](../adr/adr-0024-agentic-loop-implementation.md)
+- [ADR-0025: Advanced Enhancements](../adr/adr-0025-anthropic-best-practices-enhancements.md)
+- [Agentic Loop Guide](../docs-internal/architecture/agentic-loop-guide.md) - Technical deep-dive
 
 ### Anthropic Articles
 

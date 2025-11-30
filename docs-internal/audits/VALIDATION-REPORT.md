@@ -646,9 +646,8 @@ All critical production failures have been resolved with:
 
 ## Appendix: References
 
-- **Primary**: [ADR-0042](adr/adr-0042-dependency-injection-configuration-fixes.md)
-- **Testing Guide**: [Dependency Injection Testing](docs/testing/dependency-injection-testing.md)
-- **Smoke Tests**: [tests/smoke/README.md](tests/smoke/README.md)
+- **Primary**: [ADR-0042](../../adr/adr-0042-dependency-injection-configuration-fixes.md)
+- **Smoke Tests**: [tests/smoke/README.md](../../tests/smoke/README.md)
 - **Original Review**: OpenAI Codex Security Review (2025-01-28)
 
 ---

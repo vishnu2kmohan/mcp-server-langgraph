@@ -81,7 +81,7 @@ make docs-validate-links                         # Via Makefile
 
 ---
 
-#### `scripts/check_version_consistency.py` (5.3KB)
+#### `scripts/validators/check_version_consistency.py` (5.3KB)
 
 **Purpose**: Ensure version references match current version
 
@@ -93,8 +93,8 @@ make docs-validate-links                         # Via Makefile
 
 **Usage**:
 ```bash
-python3 scripts/check_version_consistency.py     # Check
-uv run python3 scripts/check_version_consistency.py  # With deps
+python3 scripts/validators/check_version_consistency.py     # Check
+uv run --frozen python3 scripts/validators/check_version_consistency.py  # With deps
 make docs-validate-version                       # Via Makefile
 ```
 
@@ -417,7 +417,7 @@ git commit
 ```
 scripts/fix_mdx_syntax.py           ✅ Created (5.0KB)
 scripts/check_internal_links.py     ✅ Created (5.5KB)
-scripts/check_version_consistency.py ✅ Created (5.3KB)
+scripts/validators/check_version_consistency.py ✅ Created (5.3KB)
 ```
 
 ### Tests Created (2 files)
@@ -484,7 +484,7 @@ git commit -m "docs: update guide"
 **Monthly Audit**:
 ```bash
 make docs-audit                      # Comprehensive check
-python3 scripts/check_version_consistency.py  # Version check
+python3 scripts/validators/check_version_consistency.py  # Version check
 python3 scripts/check_internal_links.py --all  # Link check
 ```
 
@@ -748,7 +748,7 @@ git push
 ### Scripts ✅
 - [x] `scripts/fix_mdx_syntax.py` - Production ready
 - [x] `scripts/check_internal_links.py` - Production ready
-- [x] `scripts/check_version_consistency.py` - Production ready
+- [x] `scripts/validators/check_version_consistency.py` - Production ready
 
 ### Tests ✅
 - [x] `tests/test_mdx_validation.py` - 18 tests, 17 passing
@@ -852,7 +852,7 @@ python3 scripts/check_internal_links.py --all
 
 # Version consistency
 make docs-validate-version
-uv run python3 scripts/check_version_consistency.py
+uv run --frozen python3 scripts/validators/check_version_consistency.py
 
 # Mintlify build
 make docs-validate-mintlify

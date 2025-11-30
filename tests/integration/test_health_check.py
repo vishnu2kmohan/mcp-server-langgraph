@@ -251,8 +251,7 @@ class TestHealthCheckIntegration:
 
     @pytest.mark.xfail(
         strict=True,
-        reason="Requires full infrastructure stack. "
-        "Once test_infrastructure provides running FastAPI app, this will XPASS.",
+        reason="Requires full infrastructure stack. Once test_infrastructure provides running FastAPI app, this will XPASS.",
     )
     def test_full_health_check_with_infrastructure(self, test_client: TestClient) -> None:
         """Test health checks with real infrastructure components"""

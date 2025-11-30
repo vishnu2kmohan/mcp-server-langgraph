@@ -47,7 +47,7 @@ def test_trivyignore_exists_for_staging():
         content = f.read().strip()
 
     assert content, (
-        f".trivyignore file exists but is empty: {trivyignore_file}\n" "It should contain suppression rules with documentation"
+        f".trivyignore file exists but is empty: {trivyignore_file}\nIt should contain suppression rules with documentation"
     )
 
 

@@ -17,10 +17,12 @@ Resolves production TODOs:
 """
 
 import logging
+import ssl
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+import certifi
 import httpx
 from pydantic import BaseModel, Field
 
@@ -107,11 +109,23 @@ class PrometheusClient:
         )
 
     async def initialize(self) -> None:
-        """Initialize HTTP client"""
+        """Initialize HTTP client with cross-platform SSL support."""
         if self._initialized:
             return
 
-        self.client = httpx.AsyncClient(timeout=self.config.timeout, follow_redirects=True)
+        # Use certifi CA bundle for cross-platform SSL verification
+        # CI environments (especially isolated Python builds) may lack system certs
+        ssl_context = ssl.create_default_context()
+        try:
+            ssl_context.load_verify_locations(certifi.where())
+        except FileNotFoundError:
+            logger.warning("certifi CA bundle not found, falling back to system certs")
+
+        self.client = httpx.AsyncClient(
+            timeout=self.config.timeout,
+            follow_redirects=True,
+            verify=ssl_context,
+        )
 
         self._initialized = True
         logger.info(f"Prometheus client initialized: {self.config.url}")
