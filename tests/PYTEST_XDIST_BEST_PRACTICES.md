@@ -491,7 +491,6 @@ Use the worker utility library for consistent worker-scoped resources:
 from tests.utils.worker_utils import (
     get_worker_id,           # → "gw0", "gw1", "gw2"
     get_worker_num,          # → 0, 1, 2
-    get_worker_port_offset,  # → 0, 100, 200
     get_worker_postgres_schema,  # → "test_worker_gw0"
     get_worker_redis_db,     # → 1, 2, 3
     worker_tmp_path,         # → Worker-scoped temp directories
@@ -500,7 +499,8 @@ from tests.utils.worker_utils import (
 # Example usage
 worker_id = get_worker_id()  # "gw0"
 schema = get_worker_postgres_schema()  # "test_worker_gw0"
-ports_offset = get_worker_port_offset()  # 0
+# NOTE: get_worker_port_offset was removed (2025-11-30)
+# All workers use FIXED ports (Single Shared Infrastructure)
 ```
 
 ### Infrastructure Tests

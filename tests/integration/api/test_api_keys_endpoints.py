@@ -532,17 +532,20 @@ class TestValidateAPIKey:
 class TestAPIKeyEndpointAuthorization:
     """Tests for endpoint authorization (JWT required)"""
 
-    def setup_method(self):
-        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
-        import os
+    @pytest.fixture(autouse=True)
+    def setup_auth(self, disable_auth_skip):
+        """
+        Use monkeypatch-based fixture for automatic MCP_SKIP_AUTH cleanup.
 
+        The disable_auth_skip fixture sets MCP_SKIP_AUTH=false and automatically
+        cleans up after the test, preventing environment pollution in xdist workers.
+        """
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     def test_create_without_auth(self, monkeypatch):

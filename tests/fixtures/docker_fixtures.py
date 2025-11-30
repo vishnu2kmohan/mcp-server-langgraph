@@ -244,9 +244,9 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
     """
     # Set TESTING environment variable for services
     # NOTE: This is intentionally session-scoped and not cleaned up.
-    # Worker isolation is achieved via port offsets and schema/DB separation,
-    # not separate Docker instances. The TESTING env var is shared across
-    # all workers to enable test infrastructure detection.
+    # Worker isolation is achieved via logical separation (schemas, DB indices, stores),
+    # NOT port offsets. All workers connect to the same fixed ports.
+    # The TESTING env var is shared across all workers to enable test infrastructure detection.
     os.environ["TESTING"] = "true"
 
     # Detect existing test infrastructure (started by make test-integration script)

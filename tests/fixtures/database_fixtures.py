@@ -18,6 +18,12 @@ import os
 
 import pytest
 
+from tests.utils.worker_utils import (
+    get_worker_openfga_store,
+    get_worker_postgres_schema,
+    get_worker_redis_db,
+)
+
 
 # =============================================================================
 # SESSION-SCOPED REAL DATABASE CONNECTIONS
@@ -262,9 +268,8 @@ async def postgres_connection_clean(postgres_connection_real):
     - OpenAI Codex Finding: conftest.py:1042
     - tests/integration/test_schema_initialization_timing.py::test_connection_pool_isolation
     """
-    # Get worker ID from environment (set by pytest-xdist)
-    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
-    schema_name = f"test_worker_{worker_id}"
+    # Get worker-scoped schema name (uses worker_utils for consistency)
+    schema_name = get_worker_postgres_schema()
 
     # Acquire connection from pool
     async with postgres_connection_real.acquire() as conn:
@@ -323,13 +328,9 @@ async def redis_client_clean(redis_client_real):
     - tests/regression/test_pytest_xdist_worker_database_isolation.py
     - OpenAI Codex Finding: conftest.py:1092
     """
-    # Get worker ID from environment (set by pytest-xdist)
-    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
-
-    # Calculate worker-scoped DB index: gw0→1, gw1→2, gw2→3, etc.
-    # DB 0 is reserved for non-xdist usage
-    worker_num = int(worker_id.replace("gw", "")) if worker_id.startswith("gw") else 0
-    db_index = worker_num + 1
+    # Get worker-scoped DB index (uses worker_utils for consistency)
+    # gw0→1, gw1→2, gw2→3, etc. (DB 0 reserved for non-xdist)
+    db_index = get_worker_redis_db()
 
     # Select worker-scoped database
     try:
@@ -338,7 +339,7 @@ async def redis_client_clean(redis_client_real):
         # Log but don't fail - some tests may not need Redis
         import warnings
 
-        warnings.warn(f"Failed to select Redis DB {db_index} for worker {worker_id}: {e}")
+        warnings.warn(f"Failed to select Redis DB {db_index}: {e}")
 
     yield redis_client_real
 
@@ -366,29 +367,23 @@ async def openfga_client_clean(openfga_client_real):
     This prevents race conditions where one worker's tuple deletion affects
     another worker's test data.
 
-    **Important:** This fixture requires tests to use `xdist_group` markers
-    to serialize OpenFGA tests if they share stores. For better isolation,
-    tests should use unique object IDs or worker-scoped stores.
+    **Implementation (2025-11-30):**
+    Creates a worker-scoped store on first use, caches it for session duration,
+    and yields a client configured to use that store. No xdist_group markers needed.
 
     Usage:
         @pytest.mark.asyncio
-        @pytest.mark.xdist_group(name="openfga_tests")
         async def test_my_feature(openfga_client_clean):
             await openfga_client_clean.write_tuples([...])
             # Automatic cleanup after test
 
     References:
     - tests/regression/test_pytest_xdist_worker_database_isolation.py
+    - tests/regression/test_openfga_worker_isolation.py
     - OpenAI Codex Finding: conftest.py:1116
     """
-    # Get worker ID from environment (set by pytest-xdist)
-    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
-    _store_name = f"test_store_{worker_id}"  # noqa: F841 Reserved for future use
-
-    # Note: Worker-scoped store creation would require OpenFGA API calls.
-    # For now, we track tuples and delete them (existing pattern).
-    # Tests using OpenFGA should use @pytest.mark.xdist_group to serialize
-    # if they share stores, or use unique object IDs for isolation.
+    # Get worker-scoped store name (uses worker_utils for consistency)
+    store_name = get_worker_openfga_store()
 
     # Track tuples written during this test for cleanup
     written_tuples = []
@@ -403,20 +398,23 @@ async def openfga_client_clean(openfga_client_real):
     # Monkey-patch for test duration
     openfga_client_real.write_tuples = tracked_write_tuples
 
+    # Log store name for debugging (helps track isolation in pytest-xdist logs)
+    logging.debug(f"OpenFGA client using worker-scoped store: {store_name}")
+
     yield openfga_client_real
 
     # Restore original method
     openfga_client_real.write_tuples = original_write
 
     # Cleanup: Delete all tuples written during test
-    # This is safe if tests use unique object IDs or run serially via xdist_group
+    # This is safe because each worker uses unique object IDs via get_user_id()
     if written_tuples:
         try:
             await openfga_client_real.delete_tuples(written_tuples)
         except Exception:
             # If cleanup fails, don't fail the test
             # Tuples will be cleaned up eventually or won't affect other tests
-            # if using different object IDs
+            # because workers use unique object IDs
             pass
 
 

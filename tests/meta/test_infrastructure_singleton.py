@@ -205,13 +205,16 @@ class TestWorkerIsolationMechanisms:
 
         These utilities help tests achieve logical isolation by providing
         worker-specific identifiers for schemas, DB indices, store names, etc.
+
+        NOTE: get_worker_port_offset was removed (2025-11-30) as part of
+        Single Shared Infrastructure migration. All workers use fixed ports.
         """
-        from tests.utils.worker_utils import get_worker_id, get_worker_num, get_worker_port_offset
+        from tests.utils.worker_utils import get_worker_id, get_worker_num, get_worker_resource_summary
 
         # All utility functions should be callable
         worker_id = get_worker_id()
         worker_num = get_worker_num()
-        port_offset = get_worker_port_offset()
+        resource_summary = get_worker_resource_summary()
 
         # Worker ID should be string like "gw0", "gw1", etc.
         assert isinstance(worker_id, str), f"Worker ID should be string, got {type(worker_id)}"
@@ -219,8 +222,9 @@ class TestWorkerIsolationMechanisms:
         # Worker num should be int (0, 1, 2, ...)
         assert isinstance(worker_num, int), f"Worker num should be int, got {type(worker_num)}"
 
-        # Port offset should be int (but should be ZERO or IGNORED in single-instance architecture)
-        assert isinstance(port_offset, int), f"Port offset should be int, got {type(port_offset)}"
+        # Resource summary should be dict with fixed_ports (Single Shared Infrastructure)
+        assert isinstance(resource_summary, dict), f"Resource summary should be dict, got {type(resource_summary)}"
+        assert "fixed_ports" in resource_summary, "Resource summary should contain fixed_ports"
 
 
 @pytest.mark.meta

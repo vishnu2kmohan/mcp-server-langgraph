@@ -112,7 +112,7 @@ def mock_keycloak_client():
 
 
 @pytest.fixture(scope="function")
-def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock_keycloak_client):
+def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock_keycloak_client, monkeypatch):
     """
     FastAPI TestClient with mocked dependencies for service principals endpoints.
 
@@ -136,6 +136,11 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     - Router module already has stale references from previous tests
     - Reloading forces fresh import chain: middleware → router → endpoint functions
 
+    PYTEST-XDIST FIX (2025-11-30 - REVISION 8 - MONKEYPATCH ENV CLEANUP):
+    - Use monkeypatch.setenv() for automatic cleanup of MCP_SKIP_AUTH
+    - Prevents environment pollution across pytest-xdist workers
+    - monkeypatch automatically restores original value after test
+
     ROOT CAUSE OF PREVIOUS FAILURES:
     FastAPI introspects function signatures for dependency injection. When using
     monkeypatch + reload, FastAPI sees the mock function signature with Request
@@ -145,7 +150,6 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     Solution: Use dependency_overrides which properly isolates dependencies.
     """
     import importlib
-    import os
 
     from fastapi import FastAPI
     from fastapi.security import HTTPAuthorizationCredentials
@@ -159,8 +163,9 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     router = service_principals.router
     from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client, get_service_principal_manager
 
-    original_skip_auth = os.environ.get("MCP_SKIP_AUTH")
-    os.environ["MCP_SKIP_AUTH"] = "false"
+    # Use monkeypatch for automatic cleanup (pytest-xdist safe)
+    monkeypatch.setenv("MCP_SKIP_AUTH", "false")
+
     app = FastAPI()
     app.dependency_overrides[middleware.bearer_scheme] = lambda: HTTPAuthorizationCredentials(
         scheme="Bearer", credentials="mock_token_for_testing"
@@ -177,15 +182,11 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     client = TestClient(app, raise_server_exceptions=False)
     yield client
     app.dependency_overrides.clear()
-    if original_skip_auth is not None:
-        os.environ["MCP_SKIP_AUTH"] = original_skip_auth
-    else:
-        os.environ.pop("MCP_SKIP_AUTH", None)
     gc.collect()
 
 
 @pytest.fixture(scope="function")
-def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, mock_keycloak_client):
+def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, mock_keycloak_client, monkeypatch):
     """
     FastAPI TestClient with admin user for tests requiring elevated permissions.
 
@@ -204,9 +205,13 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
     - Python's import system caches modules - importing again returns cached version
     - Router module already has stale references from previous tests
     - Reloading forces fresh import chain: middleware → router → endpoint functions
+
+    PYTEST-XDIST FIX (2025-11-30 - REVISION 8 - MONKEYPATCH ENV CLEANUP):
+    - Use monkeypatch.setenv() for automatic cleanup of MCP_SKIP_AUTH
+    - Prevents environment pollution across pytest-xdist workers
+    - monkeypatch automatically restores original value after test
     """
     import importlib
-    import os
 
     from fastapi import FastAPI
     from fastapi.security import HTTPAuthorizationCredentials
@@ -220,8 +225,9 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
     router = service_principals.router
     from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client, get_service_principal_manager
 
-    original_skip_auth = os.environ.get("MCP_SKIP_AUTH")
-    os.environ["MCP_SKIP_AUTH"] = "false"
+    # Use monkeypatch for automatic cleanup (pytest-xdist safe)
+    monkeypatch.setenv("MCP_SKIP_AUTH", "false")
+
     app = FastAPI()
     app.dependency_overrides[middleware.bearer_scheme] = lambda: HTTPAuthorizationCredentials(
         scheme="Bearer", credentials="mock_token_for_testing"
@@ -238,10 +244,6 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
     client = TestClient(app, raise_server_exceptions=False)
     yield client
     app.dependency_overrides.clear()
-    if original_skip_auth is not None:
-        os.environ["MCP_SKIP_AUTH"] = original_skip_auth
-    else:
-        os.environ.pop("MCP_SKIP_AUTH", None)
     gc.collect()
 
 

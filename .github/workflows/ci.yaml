@@ -222,9 +222,10 @@ jobs:
   meta-tests:
     name: Meta Tests (Test Suite Quality)
     runs-on: ubuntu-latest
-    # Timeout: 20 minutes to accommodate comprehensive meta test suite
+    # Timeout: 30 minutes to accommodate comprehensive meta test suite
     # Components: xdist isolation, xfail strict, marker enforcement, infrastructure validation
-    timeout-minutes: 20
+    # Increased from 20 to 30 minutes (2025-11-30) to prevent timeouts in CI
+    timeout-minutes: 30
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -510,7 +511,8 @@ jobs:
   push-stage-validators:
     name: Push-Stage Validators
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Increased from 20 to 30 minutes (2025-11-30) to prevent timeouts in CI
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:

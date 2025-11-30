@@ -1600,6 +1600,29 @@ repos:
     - pre-push
     description: "Validates that integration tests use worker-safe ID helpers."
 
+  - id: check-test-environment-isolation
+    name: Check Test Environment Isolation
+    entry: uv run --frozen python -u scripts/validators/check_test_environment_isolation.py
+    language: system
+    files: ^tests/.*\.py$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Detects direct os.environ mutations in test files.
+
+      Prevents environment variable pollution in pytest-xdist workers.
+
+      Suggests using monkeypatch.setenv() or centralized fixtures:
+      - disable_auth_skip: For MCP_SKIP_AUTH=false
+      - isolated_environment: For general env isolation
+
+      References:
+      - tests/meta/test_environment_isolation_enforcement.py
+      - tests/conftest.py (disable_auth_skip, isolated_environment)
+
+      '
+
 - repo: https://github.com/antonbabenko/pre-commit-terraform
   rev: v1.96.2
   hooks:

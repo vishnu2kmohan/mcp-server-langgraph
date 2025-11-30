@@ -523,6 +523,10 @@ def enforce_worker_isolation(request):
 
     # Check enforcement after test
     # Only applies to tests marked as integration
+    # Skip if test has skip_isolation_check marker
+    if request.node.get_closest_marker("skip_isolation_check"):
+        return
+
     if request.node.get_closest_marker("integration"):
         # List of fixtures that imply stateful interactions
         stateful_fixtures = [
@@ -540,16 +544,18 @@ def enforce_worker_isolation(request):
         if used_stateful:
             # Check if helpers were used
             if not _isolation_helpers_used:
-                # We fail hard if stateful fixtures are used but no ID helpers are called
-                # This suggests hardcoded IDs are being used (or implicit IDs)
-                # Exception: Tests that only read static data or health checks
-                # For now, we warn to avoid breaking existing tests immediately,
-                # but in strict mode this should be an assertion error.
-                # logging.warning(
-                #     f"Test {request.node.name} uses stateful fixtures but didn't call get_user_id/get_api_key_id. "
-                #     "Potential for xdist collision."
-                # )
-                pass
+                # STRICT ENFORCEMENT (2025-11-30):
+                # Fail immediately if stateful fixtures are used without calling
+                # the isolation helpers (get_user_id/get_api_key_id/get_thread_id).
+                # This prevents hardcoded IDs that cause pytest-xdist collisions.
+                pytest.fail(
+                    f"Test {request.node.name} uses stateful fixtures "
+                    f"({[f for f in stateful_fixtures if f in request.fixturenames]}) "
+                    f"but didn't call any isolation helpers (get_user_id/get_api_key_id/get_thread_id). "
+                    f"This can cause pytest-xdist collisions. "
+                    f"Use the helper functions from tests/conftest.py or add "
+                    f"@pytest.mark.skip_isolation_check to opt-out."
+                )
 
 
 # ==============================================================================
