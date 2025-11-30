@@ -742,6 +742,7 @@ markers = [
     "requires_helm: Tests requiring helm CLI tool",
     "validation: Validation tests for deployments and configurations",
     "cli: CLI tool tests",
+    "skip_isolation_check: Skip enforce_worker_isolation check (for tests using worker-scoped schemas)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

@@ -614,6 +614,7 @@ class TestAPIKeyEndpointAuthorization:
 @pytest.mark.api
 @pytest.mark.slow
 @pytest.mark.xdist_group(name="api_keys_integration_tests")
+@pytest.mark.skip_isolation_check  # Uses test_fastapi_app with full stack mocking
 class TestAPIKeyEndpointsIntegration:
     """
     Integration tests with real Keycloak (requires docker-compose.test.yml)
