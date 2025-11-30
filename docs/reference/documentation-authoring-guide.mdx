@@ -130,10 +130,11 @@ docs/
 ├── security/               # Security documentation
 ├── comparisons/            # Framework comparisons
 ├── advanced/               # Advanced topics
-├── references/             # Reference documentation
+├── reference/              # Reference documentation
 │   ├── documentation-authoring-guide.mdx  # This file
 │   ├── icon-selection-guide.mdx           # Icon reference
-│   └── mermaid-guide.mdx                  # Diagram standards
+│   ├── mermaid-guide.mdx                  # Diagram standards
+│   └── sources.mdx                        # Citations & references
 │
 └── docs.json               # Mintlify navigation config
 ```
@@ -252,7 +253,7 @@ Even if the file exists, it won't be accessible unless it's in `docs.json`:
 User guide? → docs/guides/your-guide.mdx
 API docs? → docs/api-reference/your-endpoint.mdx
 Deployment? → docs/deployment/your-topic.mdx
-Reference? → docs/references/your-reference.mdx
+Reference? → docs/reference/your-reference.mdx
 ```
 
 ### Step 2: Use a Template
@@ -337,7 +338,7 @@ When converting .md to .mdx:
 ```mdx
 ✅ [Getting Started](/getting-started/introduction)
 ✅ [API Reference](/api-reference/sdk-quickstart)
-✅ [Icon Guide](/references/icon-selection-guide)
+✅ [Icon Guide](/reference/icon-selection-guide)
 ❌ [Getting Started](../getting-started/introduction.md)
 ❌ [Getting Started](./getting-started/introduction.mdx)
 ```
@@ -360,7 +361,7 @@ When converting .md to .mdx:
 
 ## Icon Selection
 
-See [Icon Selection Guide](/references/icon-selection-guide) for comprehensive icon reference.
+See [Icon Selection Guide](/reference/icon-selection-guide) for comprehensive icon reference.
 
 **Common icons**:
 - `rocket` - Getting started, quickstart
@@ -403,7 +404,7 @@ This installs development dependencies and runs unit tests.
 
 ### Screenshots/Diagrams
 
-- **Prefer Mermaid** for diagrams (see [Mermaid Guide](/references/mermaid-guide))
+- **Prefer Mermaid** for diagrams (see [Mermaid Guide](/reference/mermaid-guide))
 - **Optimize images**: Compress before committing
 - **Add alt text**: For accessibility
 
@@ -507,8 +508,8 @@ python scripts/fix_mdx_syntax.py --all
 
 ## Getting Help
 
-- **Icon reference**: [Icon Selection Guide](/references/icon-selection-guide)
-- **Mermaid diagrams**: [Mermaid Guide](/references/mermaid-guide)
+- **Icon reference**: [Icon Selection Guide](/reference/icon-selection-guide)
+- **Mermaid diagrams**: [Mermaid Guide](/reference/mermaid-guide)
 - **Templates**: `docs-templates-mintlify/` directory
 - **Mintlify docs**: https://mintlify.com/docs
 - **Questions?**: Open issue with label `documentation`

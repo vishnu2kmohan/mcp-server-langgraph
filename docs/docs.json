@@ -63,19 +63,35 @@
             ]
           },
           {
-            "group": "Development",
+            "group": "Local Development",
             "pages": [
               "development/setup",
               "development/onboarding",
-              "development/naming-conventions",
+              "advanced/development-setup",
+              "development/commands"
+            ]
+          },
+          {
+            "group": "Testing",
+            "pages": [
+              "testing/overview",
+              "testing/hypothesis-profiles",
+              "advanced/testing",
+              "development/integration-testing"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
               "advanced/contributing",
               "contributing/mdx-syntax-guide",
-              "advanced/testing",
-              "advanced/development-setup",
-              "advanced/troubleshooting",
-              "development/integration-testing",
-              "development/commands",
-              "development/validation-strategy",
+              "development/naming-conventions",
+              "development/validation-strategy"
+            ]
+          },
+          {
+            "group": "Workflows",
+            "pages": [
               "development/workflows",
               "development/workflow-diagram",
               "development/coverage-threshold-philosophy",
@@ -83,46 +99,10 @@
             ]
           },
           {
-            "group": "Testing",
-            "pages": [
-              "testing/overview",
-              "testing/hypothesis-profiles"
-            ]
-          },
-          {
             "group": "Troubleshooting",
             "pages": [
-              "troubleshooting/overview"
-            ]
-          },
-          {
-            "group": "Reference",
-            "pages": [
-              "quick-reference",
-              "references/sources",
-              "references/mermaid-guide",
-              "references/documentation-authoring-guide",
-              "references/icon-selection-guide",
-              "reference/environment-variables",
-              "reference/setup-scripts",
-              "reference/configuration-files",
-              "reference/api-endpoints",
-              "reference/kong-plugins",
-              "api-compliance-report",
-              "ci-cd-troubleshooting",
-              "reference/development/ide-setup",
-              "reference/development/github-actions",
-              "reference/development/build-verification",
-              "reference/development/ci-cd/overview",
-              "reference/development/ci-cd/workflows",
-              "reference/development/ci-cd/testing",
-              "reference/development/ci-cd/deployment",
-              "reference/development/ci-cd/troubleshooting",
-              "reference/development/development",
-              "reference/ai-tools-compatibility",
-              "reference/mcp-registry",
-              "reference/pydantic-ai",
-              "reference/recommendations"
+              "troubleshooting/overview",
+              "advanced/troubleshooting"
             ]
           },
           {
@@ -163,6 +143,12 @@
             ]
           },
           {
+            "group": "Troubleshooting",
+            "pages": [
+              "ci-cd/troubleshooting"
+            ]
+          },
+          {
             "group": "Elite Features",
             "pages": [
               "ci-cd/elite-features"
@@ -184,7 +170,8 @@
               "api-reference/scim-provisioning",
               "api-reference/mcp-endpoints",
               "api-reference/gdpr-endpoints",
-              "api-reference/health-checks"
+              "api-reference/health-checks",
+              "api-reference/api-compliance-report"
             ]
           },
           {
@@ -201,27 +188,22 @@
         "tab": "Deployment",
         "groups": [
           {
-            "group": "Deployment",
+            "group": "Getting Started",
             "pages": [
               "deployment/overview",
               "deployment/deployment-checklist",
               "deployment/environments",
+              "deployment/production-checklist"
+            ]
+          },
+          {
+            "group": "Deployment Options",
+            "pages": [
               "deployment/langgraph-platform",
               "deployment/cloud-run",
               "deployment/docker",
               "deployment/kubernetes",
-              "deployment/helm",
-              "deployment/production-checklist",
-              "deployment/gcp-configuration",
-              "deployment/iam-rbac-requirements"
-            ]
-          },
-          {
-            "group": "Infrastructure Requirements",
-            "pages": [
-              "infrastructure/gke-cluster-requirements",
-              "kubernetes-best-practices-implementation",
-              "infrastructure/docker-healthcheck-patterns"
+              "deployment/helm"
             ]
           },
           {
@@ -235,20 +217,31 @@
             ]
           },
           {
-            "group": "Kubernetes",
+            "group": "Kubernetes - GKE",
             "pages": [
               "deployment/kubernetes/gke",
               "deployment/kubernetes/gke-production",
               "deployment/kubernetes/gke-staging",
               "deployment/gke-autopilot-resource-constraints",
-              "kubernetes/configmap-best-practices",
-              "kubernetes/keycloak-readonly-filesystem",
-              "kubernetes/pod-crash-resolution-2025-11-12",
+              "deployment/kubernetes/configmap-best-practices",
+              "deployment/kubernetes/keycloak-readonly-filesystem",
+              "deployment/kubernetes/pod-crash-resolution-2025-11-12"
+            ]
+          },
+          {
+            "group": "Kubernetes - EKS & AKS",
+            "pages": [
               "deployment/kubernetes/eks",
               "deployment/kubernetes/eks-production",
               "deployment/kubernetes/aks",
               "deployment/kubernetes/kustomize",
-              "deployment/kubernetes/multi-cloud-lessons",
+              "deployment/kubernetes/multi-cloud-lessons"
+            ]
+          },
+          {
+            "group": "Kubernetes - Best Practices",
+            "pages": [
+              "deployment/kubernetes/kubernetes-best-practices-implementation",
               "deployment/vmware-resource-estimation"
             ]
           },
@@ -260,7 +253,9 @@
               "deployment/infrastructure/terraform-aws",
               "deployment/infrastructure/backend-setup",
               "deployment/infrastructure/backend-setup-aws",
-              "deployment/infrastructure/multi-environment"
+              "deployment/infrastructure/multi-environment",
+              "deployment/infrastructure/gke-cluster-requirements",
+              "deployment/infrastructure/docker-healthcheck-patterns"
             ]
           },
           {
@@ -276,7 +271,7 @@
             ]
           },
           {
-            "group": "Advanced",
+            "group": "Advanced Deployment",
             "pages": [
               "deployment/advanced/api-gateway",
               "deployment/kong-gateway",
@@ -292,6 +287,16 @@
             ]
           },
           {
+            "group": "Configuration",
+            "pages": [
+              "deployment/gcp-configuration",
+              "deployment/iam-rbac-requirements",
+              "deployment/model-configuration",
+              "deployment/infisical-installation",
+              "deployment/gdpr-storage-configuration"
+            ]
+          },
+          {
             "group": "Operations",
             "pages": [
               "deployment/operations/gke-runbooks",
@@ -300,10 +305,7 @@
               "deployment/version-pinning",
               "deployment/version-compatibility",
               "deployment/release-process",
-              "deployment/gke-staging-implementation-summary",
-              "deployment/model-configuration",
-              "deployment/infisical-installation",
-              "deployment/gdpr-storage-configuration"
+              "deployment/gke-staging-implementation-summary"
             ]
           }
         ]
@@ -312,37 +314,37 @@
         "tab": "Guides",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Quick Start",
             "pages": [
               "guides/presets",
               "guides/agent-architecture"
             ]
           },
           {
-            "group": "Guides",
+            "group": "LLM Providers",
             "pages": [
               "guides/multi-llm-setup",
-              "guides/versioning-strategy",
+              "guides/anthropic-claude",
               "guides/google-gemini",
               "guides/vertex-ai-setup",
-              "guides/anthropic-claude",
               "guides/openai-gpt",
-              "guides/local-models",
-              "guides/uv-migration"
+              "guides/local-models"
             ]
           },
           {
             "group": "Production",
             "pages": [
               "guides/schedulers",
-              "guides/resilience-patterns"
+              "guides/resilience-patterns",
+              "guides/versioning-strategy"
             ]
           },
           {
             "group": "Migration",
             "pages": [
               "guides/migration-guide",
-              "guides/container-migration"
+              "guides/container-migration",
+              "guides/uv-migration"
             ]
           },
           {
@@ -356,7 +358,7 @@
             ]
           },
           {
-            "group": "Enterprise Identity & Access - NEW",
+            "group": "Enterprise Identity & Access",
             "pages": [
               "guides/service-principals",
               "guides/api-key-management",
@@ -388,10 +390,63 @@
         ]
       },
       {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Quick Reference",
+            "pages": [
+              "reference/quick-reference",
+              "reference/sources",
+              "reference/recommendations"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "reference/environment-variables",
+              "reference/setup-scripts",
+              "reference/configuration-files",
+              "reference/api-endpoints",
+              "reference/kong-plugins"
+            ]
+          },
+          {
+            "group": "Tools & Compatibility",
+            "pages": [
+              "reference/ai-tools-compatibility",
+              "reference/mcp-registry",
+              "reference/pydantic-ai"
+            ]
+          },
+          {
+            "group": "Authoring Guides",
+            "pages": [
+              "reference/mermaid-guide",
+              "reference/documentation-authoring-guide",
+              "reference/icon-selection-guide"
+            ]
+          },
+          {
+            "group": "CI/CD Reference",
+            "pages": [
+              "reference/development/ide-setup",
+              "reference/development/github-actions",
+              "reference/development/build-verification",
+              "reference/development/ci-cd/overview",
+              "reference/development/ci-cd/workflows",
+              "reference/development/ci-cd/testing",
+              "reference/development/ci-cd/deployment",
+              "reference/development/ci-cd/troubleshooting",
+              "reference/development/development"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Architecture",
         "groups": [
           {
-            "group": "Architecture Decision Records",
+            "group": "Overview",
             "pages": [
               "architecture/overview",
               "architecture/repository-structure",
@@ -407,25 +462,21 @@
             ]
           },
           {
-            "group": "Core Architecture (ADRs 1-5)",
+            "group": "Core Platform",
             "pages": [
               "architecture/adr-0001-llm-multi-provider",
               "architecture/adr-0002-openfga-authorization",
               "architecture/adr-0003-dual-observability",
               "architecture/adr-0004-mcp-streamable-http",
-              "architecture/adr-0005-pydantic-ai-integration"
+              "architecture/adr-0005-pydantic-ai-integration",
+              "architecture/adr-0010-langgraph-functional-api"
             ]
           },
           {
-            "group": "Authentication & Sessions (ADRs 6-7)",
+            "group": "Authentication & Identity",
             "pages": [
               "architecture/adr-0006-session-storage-architecture",
-              "architecture/adr-0007-authentication-provider-pattern"
-            ]
-          },
-          {
-            "group": "Enterprise Authentication (ADRs 31-39)",
-            "pages": [
+              "architecture/adr-0007-authentication-provider-pattern",
               "architecture/adr-0031-keycloak-authoritative-identity",
               "architecture/adr-0032-jwt-standardization",
               "architecture/adr-0033-service-principal-design",
@@ -438,7 +489,7 @@
             ]
           },
           {
-            "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30, 40-48, 51-54)",
+            "group": "Infrastructure & Deployment",
             "pages": [
               "architecture/adr-0008-infisical-secrets-management",
               "architecture/adr-0009-feature-flag-system",
@@ -450,32 +501,12 @@
               "architecture/adr-0030-resilience-patterns",
               "architecture/adr-0040-gcp-gke-autopilot-deployment",
               "architecture/adr-0041-postgresql-gdpr-storage",
-              "architecture/adr-0042-dependency-injection-configuration-fixes",
-              "architecture/adr-0043-cost-monitoring-dashboard",
-              "architecture/adr-0044-test-infrastructure-quick-wins",
-              "architecture/adr-0045-test-infrastructure-phase-2-foundation",
-              "architecture/adr-0046-deployment-configuration-tdd-infrastructure",
-              "architecture/adr-0047-visual-workflow-builder",
-              "architecture/adr-0048-postgres-storage-integration-tests",
-              "architecture/adr-0051-memorystore-redis-externalname-service",
-              "architecture/adr-0052-pytest-xdist-isolation-strategy",
-              "architecture/adr-0053-ci-cd-failure-prevention-framework",
-              "architecture/adr-0054-pod-failure-prevention-framework",
-              "architecture/adr-0055-diagram-visualization-standards",
-              "architecture/adr-0056-asyncmock-configuration-prevention",
-              "architecture/adr-0060-database-architecture-and-naming-convention",
-              "architecture/adr-0061-fastapi-web-framework",
-              "architecture/adr-0062-uv-package-management",
-              "architecture/adr-0063-mintlify-documentation-platform",
-              "architecture/adr-0064-pre-commit-hooks-strategy",
-              "architecture/adr-0065-ruff-code-quality",
-              "architecture/adr-0066-helm-chart-security-risk-acceptance"
+              "architecture/adr-0051-memorystore-redis-externalname-service"
             ]
           },
           {
-            "group": "Development & Quality (ADRs 10, 14-19, 22-26, 29, 49-50)",
+            "group": "Development & Quality",
             "pages": [
-              "architecture/adr-0010-langgraph-functional-api",
               "architecture/adr-0014-pydantic-type-safety",
               "architecture/adr-0015-memory-checkpointing",
               "architecture/adr-0016-property-based-testing-strategy",
@@ -487,13 +518,47 @@
               "architecture/adr-0024-agentic-loop-implementation",
               "architecture/adr-0025-anthropic-best-practices-enhancements",
               "architecture/adr-0026-lazy-observability-initialization",
-              "architecture/adr-0029-custom-exception-hierarchy",
-              "architecture/adr-0049-pytest-fixture-consolidation",
-              "architecture/adr-0050-dependency-singleton-pattern-justification"
+              "architecture/adr-0029-custom-exception-hierarchy"
             ]
           },
           {
-            "group": "Compliance (ADRs 11-12)",
+            "group": "Testing Infrastructure",
+            "pages": [
+              "architecture/adr-0044-test-infrastructure-quick-wins",
+              "architecture/adr-0045-test-infrastructure-phase-2-foundation",
+              "architecture/adr-0046-deployment-configuration-tdd-infrastructure",
+              "architecture/adr-0048-postgres-storage-integration-tests",
+              "architecture/adr-0049-pytest-fixture-consolidation",
+              "architecture/adr-0052-pytest-xdist-isolation-strategy",
+              "architecture/adr-0056-asyncmock-configuration-prevention"
+            ]
+          },
+          {
+            "group": "CI/CD & Operations",
+            "pages": [
+              "architecture/adr-0053-ci-cd-failure-prevention-framework",
+              "architecture/adr-0054-pod-failure-prevention-framework",
+              "architecture/adr-0064-pre-commit-hooks-strategy",
+              "architecture/adr-0066-helm-chart-security-risk-acceptance"
+            ]
+          },
+          {
+            "group": "Tooling & Standards",
+            "pages": [
+              "architecture/adr-0042-dependency-injection-configuration-fixes",
+              "architecture/adr-0043-cost-monitoring-dashboard",
+              "architecture/adr-0047-visual-workflow-builder",
+              "architecture/adr-0050-dependency-singleton-pattern-justification",
+              "architecture/adr-0055-diagram-visualization-standards",
+              "architecture/adr-0060-database-architecture-and-naming-convention",
+              "architecture/adr-0061-fastapi-web-framework",
+              "architecture/adr-0062-uv-package-management",
+              "architecture/adr-0063-mintlify-documentation-platform",
+              "architecture/adr-0065-ruff-code-quality"
+            ]
+          },
+          {
+            "group": "Compliance",
             "pages": [
               "architecture/adr-0011-cookiecutter-template-strategy",
               "architecture/adr-0012-compliance-framework-integration"
