@@ -5,6 +5,7 @@ Tests GDPR Article 7 (Consent) - 7-year retention requirement
 """
 
 import gc
+import os
 from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
 
@@ -13,6 +14,7 @@ import pytest
 
 from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresConsentStore, PostgresUserProfileStore
 from mcp_server_langgraph.compliance.gdpr.storage import ConsentRecord, UserProfile
+from tests.conftest import get_user_id
 
 # Mark as integration test with xdist_group for worker isolation
 pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="postgres_consent_store")]
@@ -37,20 +39,28 @@ async def db_pool(postgres_connection_real) -> AsyncGenerator[asyncpg.Pool, None
 
     CODEX FINDING FIX (2025-11-20): Use shared pool to prevent
     "asyncpg.exceptions.InterfaceError: another operation is in progress"
+
+    XDIST ISOLATION FIX (2025-11-30): Use worker-specific cleanup pattern
+    to prevent race conditions when multiple xdist workers clean up each
+    other's data. Pattern: 'user:test_gw{N}_%' where N is the worker ID.
     """
     pool = postgres_connection_real
 
-    # Clean up test data
+    # Get worker-specific pattern for cleanup (prevents xdist race conditions)
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    cleanup_pattern = f"user:test_{worker_id}_%"
+
+    # Clean up THIS WORKER's test data only
     async with pool.acquire() as conn:
-        await conn.execute("DELETE FROM consent_records WHERE user_id LIKE 'test_%'")
-        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'test_%'")
+        await conn.execute("DELETE FROM consent_records WHERE user_id LIKE $1", cleanup_pattern)
+        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE $1", cleanup_pattern)
 
     yield pool
 
-    # Clean up after test
+    # Clean up THIS WORKER's test data only
     async with pool.acquire() as conn:
-        await conn.execute("DELETE FROM consent_records WHERE user_id LIKE 'test_%'")
-        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'test_%'")
+        await conn.execute("DELETE FROM consent_records WHERE user_id LIKE $1", cleanup_pattern)
+        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE $1", cleanup_pattern)
 
     # Note: Don't close the pool - it's session-scoped and shared across all tests
 
@@ -69,17 +79,18 @@ async def store(db_pool: asyncpg.Pool) -> PostgresConsentStore:
 
 @pytest.fixture
 async def test_user(profile_store: PostgresUserProfileStore) -> str:
-    """Create test user"""
+    """Create test user (worker-safe for pytest-xdist)"""
+    user_id = get_user_id("consent_user")  # Worker-safe ID for parallel execution
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     profile = UserProfile(
-        user_id="test_consent_user",
+        user_id=user_id,
         username="consentuser",
         email="consent@example.com",
         created_at=now,
         last_updated=now,
     )
     await profile_store.create(profile)
-    return "test_consent_user"
+    return user_id
 
 
 # ============================================================================

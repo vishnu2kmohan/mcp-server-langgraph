@@ -118,13 +118,16 @@ class TestHardcodedTestIDs:
             "get_api_key_id() helper not found in conftest.py!\nThis helper is required for worker-safe test IDs"
         )
 
-    def test_cleanup_queries_use_correct_prefix(self):
+    def test_cleanup_queries_use_worker_specific_pattern(self):
         """
-        Test that cleanup queries use the correct 'user:test_%' pattern.
+        Test that cleanup queries use worker-specific patterns.
 
-        get_user_id() returns 'user:test_gw0_...' format, so cleanup queries
-        must use LIKE 'user:test_%' pattern (NOT just 'test_%') to properly
-        clean up test data.
+        XDIST ISOLATION FIX (2025-11-30): Cleanup queries must use worker-specific
+        patterns like 'user:test_{worker_id}_%' to prevent race conditions when
+        multiple xdist workers clean up each other's data.
+
+        The pattern is built dynamically using os.getenv("PYTEST_XDIST_WORKER", "gw0")
+        and passed as a parameterized query ($1) to avoid SQL injection.
         """
         files_to_check = [
             Path("tests/integration/compliance/test_postgres_preferences_store.py"),
@@ -137,11 +140,16 @@ class TestHardcodedTestIDs:
 
             content = file_path.read_text()
 
-            # Cleanup queries must use 'user:test_%' pattern since get_user_id()
-            # returns IDs in the format 'user:test_gw0_...'
-            assert "LIKE 'user:test_%'" in content or 'LIKE "user:test_%"' in content, (
-                f"{file_path}: Cleanup queries should use LIKE 'user:test_%' pattern\n"
-                "This is required because get_user_id() returns 'user:test_gw0_...' format"
+            # Check for worker-specific cleanup pattern:
+            # 1. Must use PYTEST_XDIST_WORKER environment variable
+            # 2. Must use parameterized query ($1) for safety
+            assert "PYTEST_XDIST_WORKER" in content, (
+                f"{file_path}: Cleanup queries must use PYTEST_XDIST_WORKER for worker isolation\n"
+                "This prevents race conditions in pytest-xdist parallel execution"
+            )
+            assert "LIKE $1" in content, (
+                f"{file_path}: Cleanup queries must use parameterized pattern ($1)\n"
+                "This ensures safe, worker-specific cleanup without SQL injection"
             )
 
 
