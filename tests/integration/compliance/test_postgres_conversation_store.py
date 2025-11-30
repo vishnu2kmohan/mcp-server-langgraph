@@ -5,6 +5,7 @@ Tests GDPR Article 5(1)(e) - 90-day retention with auto-cleanup
 """
 
 import gc
+import os
 from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
 
@@ -38,20 +39,28 @@ async def db_pool(postgres_connection_real) -> AsyncGenerator[asyncpg.Pool, None
 
     CODEX FINDING FIX (2025-11-20): Use shared pool to prevent
     "asyncpg.exceptions.InterfaceError: another operation is in progress"
+
+    XDIST ISOLATION FIX (2025-11-30): Use worker-specific cleanup pattern
+    to prevent race conditions when multiple xdist workers clean up each
+    other's data. Pattern: 'user:test_gw{N}_%' where N is the worker ID.
     """
     pool = postgres_connection_real
 
-    # Clean up test data - use 'user:test_%' pattern since get_user_id returns 'user:test_gw0_...'
+    # Get worker-specific pattern for cleanup (prevents xdist race conditions)
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    cleanup_pattern = f"user:test_{worker_id}_%"
+
+    # Clean up THIS WORKER's test data only
     async with pool.acquire() as conn:
-        await conn.execute("DELETE FROM conversations WHERE user_id LIKE 'user:test_%'")
-        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'user:test_%'")
+        await conn.execute("DELETE FROM conversations WHERE user_id LIKE $1", cleanup_pattern)
+        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE $1", cleanup_pattern)
 
     yield pool
 
-    # Clean up after test
+    # Clean up THIS WORKER's test data only
     async with pool.acquire() as conn:
-        await conn.execute("DELETE FROM conversations WHERE user_id LIKE 'user:test_%'")
-        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'user:test_%'")
+        await conn.execute("DELETE FROM conversations WHERE user_id LIKE $1", cleanup_pattern)
+        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE $1", cleanup_pattern)
 
     # Note: Don't close the pool - it's session-scoped and shared across all tests
 
