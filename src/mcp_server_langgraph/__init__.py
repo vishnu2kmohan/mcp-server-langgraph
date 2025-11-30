@@ -8,6 +8,13 @@ featuring multi-LLM support, fine-grained authorization, and comprehensive obser
 import sys
 import tomllib
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+# TYPE_CHECKING imports satisfy static analysis (CodeQL, mypy) while keeping lazy loading
+# These imports only run during type checking, not at runtime
+if TYPE_CHECKING:
+    from mcp_server_langgraph.core.agent import agent_graph as agent_graph
+    from mcp_server_langgraph.observability.telemetry import tracer as tracer
 
 # Read version from pyproject.toml (single source of truth)
 try:
