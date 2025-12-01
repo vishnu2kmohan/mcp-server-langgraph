@@ -374,6 +374,7 @@ def get_project_modules() -> set[str]:
         "fix_missing_pytestmarks",  # Script for fixing missing pytestmark declarations
         "check_e2e_completion",  # Script for E2E test completion tracking
         "profile_hooks",  # Script for profiling pre-commit hooks
+        "generate_dashboard_metrics",  # Script for DORA/dependency/flakiness metrics
     }
 
 
