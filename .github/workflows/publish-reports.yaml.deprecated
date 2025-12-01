@@ -397,7 +397,7 @@ jobs:
                       <p>
                           <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph">GitHub Repository</a> •
                           <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph/actions">CI Workflows</a> •
-                          <a href="https://vishnu2kmohan.github.io/mcp-server-langgraph/docs/">Documentation</a>
+                          <a href="https://mcp-server-langgraph.mintlify.app/">Documentation</a>
                       </p>
                       <p class="last-updated">Last updated: <span id="last-updated">Loading...</span></p>
                   </footer>

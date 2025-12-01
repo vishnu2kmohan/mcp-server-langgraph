@@ -483,11 +483,15 @@ class TestMakefileTestDevParity:
 
         Reference: Codex Audit Finding - Make/Test Flow Issue 1.1
         """
-        # Extract CI marker expression
-        ci_marker_pattern = r'pytest.*-m\s+"([^"]+)".*--cov'
+        # Extract CI marker expression from the main test command
+        # The main test command in ci.yaml uses HYPOTHESIS_PROFILE=ci and -n auto:
+        #   OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "marker" \
+        #     --cov=...
+        # This distinguishes it from meta-test commands that also use -m but run different tests
+        ci_marker_pattern = r'HYPOTHESIS_PROFILE=ci\s+pytest\s+-n\s+auto\s+-m\s+"([^"]+)"'
         ci_marker_match = re.search(ci_marker_pattern, ci_workflow_content)
-        assert ci_marker_match, "Could not find pytest marker in CI workflow"
-        ci_marker = ci_marker_match.group(1)  # Expected: "(unit or api or property) and not llm"
+        assert ci_marker_match, "Could not find pytest marker in CI workflow main test command"
+        ci_marker = ci_marker_match.group(1)  # Expected: "(unit or api or property or validation) and not llm"
 
         # Extract test-dev target content
         test_dev_pattern = r"^test-dev:.*?(?=^\S|\Z)"

@@ -9,9 +9,13 @@ name: Coverage Trend Tracking
 #   Maintains historical coverage data for trend analysis.
 #
 # Triggers:
-#   - Pushes to main/develop branches
-#   - Pull requests to main
+#   - After CI workflow completes on main (via workflow_run) - reuses coverage
+#   - Pushes to develop branch (runs own tests)
+#   - Pull requests to main (runs own tests for PR comments)
 #   - Manual workflow dispatch
+#
+# OPTIMIZATION (2025-12-01): For main branch, consume coverage artifacts from
+# CI workflow instead of running tests again. PRs still run tests for comments.
 #
 # Features:
 #   - Tracks coverage percentage in CSV history (.coverage-history/)
@@ -27,14 +31,22 @@ name: Coverage Trend Tracking
 #   - ➡️  No change: -1% to +1%
 #
 # History:
+#   - 2025-12-01: Use workflow_run to consume CI coverage artifacts (DRY)
 #   - 2025-10-20: Extracted inline Python to scripts/ci/track-coverage.py
 #   - 2025-10-20: Migrated to composite action for Python setup
 #
 # ==============================================================================
 
 on:
+  # For main branch: trigger after CI completes and reuse coverage artifacts
+  workflow_run:
+    workflows: ["CI/CD Pipeline (Optimized)"]
+    types: [completed]
+    branches: [main]
+
+  # For develop branch and PRs: run our own tests
   push:
-    branches: [main, develop]
+    branches: [develop]
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
@@ -54,6 +66,11 @@ jobs:
     name: Track Coverage Trends
     runs-on: ubuntu-latest
     timeout-minutes: 30  # Prevent indefinite hanging
+
+    # Only run if CI workflow succeeded, or if push/PR/manual trigger
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
 
     steps:
     - name: Checkout code
@@ -75,7 +92,19 @@ jobs:
         path: .coverage-history
       continue-on-error: true  # First run won't have history
 
-    - name: Run unit tests with coverage
+    # For workflow_run (main branch): Download coverage from CI instead of running tests
+    - name: Download coverage from CI (workflow_run)
+      if: github.event_name == 'workflow_run'
+      uses: actions/download-artifact@v6
+      with:
+        name: coverage-json
+        path: .
+        run-id: ${{ github.event.workflow_run.id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    # For push/PR/manual: Run tests to generate coverage
+    - name: Run unit tests with coverage (push/PR/manual)
+      if: github.event_name != 'workflow_run'
       run: |
         # Match local development environment: parallel execution with OTEL disabled
         # Use CI Hypothesis profile for consistent property test behavior (100 examples)
