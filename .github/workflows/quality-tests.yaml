@@ -331,7 +331,9 @@ jobs:
   quality-summary:
     name: Quality Summary
     runs-on: ubuntu-latest
-    needs: [property-tests, contract-tests, regression-tests, benchmark-tests, mutation-tests]
+    # Note: mutation-tests excluded from needs - only runs on schedule (too slow for PRs)
+    # Including it in needs would block PRs/push events from completing
+    needs: [property-tests, contract-tests, regression-tests, benchmark-tests]
     if: always()
 
     steps:
@@ -343,11 +345,7 @@ jobs:
           echo "- Contract Tests: ${{ needs.contract-tests.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Regression Tests: ${{ needs.regression-tests.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Benchmark Tests: ${{ needs.benchmark-tests.result }}" >> $GITHUB_STEP_SUMMARY
-
-          # Mutation tests only run on schedule
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            echo "- Mutation Tests: ${{ needs.mutation-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          fi
+          # Note: Mutation tests run independently on schedule - results not aggregated here
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Check required tests (mutation tests are optional/informational)

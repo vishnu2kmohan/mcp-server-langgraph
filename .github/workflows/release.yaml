@@ -168,12 +168,11 @@ jobs:
         platforms: ${{ matrix.platform }}
         push: true
         tags: ghcr.io/${{ github.repository }}:${{ steps.platform.outputs.name }}-${{ github.ref_name }}
+        # Registry-based caching (GHCR) - eliminates GHA cache bloat
         cache-from: |
-          type=gha,scope=release-${{ steps.platform.outputs.name }}
-          type=gha,scope=build-base
+          type=registry,ref=ghcr.io/${{ github.repository }}:cache-release-${{ steps.platform.outputs.name }}
         cache-to: |
-          type=gha,mode=max,scope=release-${{ steps.platform.outputs.name }}
-          type=gha,mode=max,scope=build-base
+          type=registry,ref=ghcr.io/${{ github.repository }}:cache-release-${{ steps.platform.outputs.name }},mode=max
 
     - name: Generate SBOM
       uses: anchore/sbom-action@v0.20.10

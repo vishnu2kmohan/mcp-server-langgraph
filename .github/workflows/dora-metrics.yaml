@@ -20,23 +20,13 @@ name: DORA Metrics Tracking
 #   - Trend analysis and alerts
 #
 # ==============================================================================
-#
-# ⚠️ AUTOMATED TRIGGERS DISABLED ⚠️
-#
-# This workflow requires SLACK_WEBHOOK_URL secret to be configured.
-# Once you've added the secret in GitHub Settings → Secrets → Actions:
-# 1. Uncomment the schedule and workflow_run triggers below
-# 2. Remove this warning comment
-#
-# ==============================================================================
 
 on:
-  # Disabled until SLACK_WEBHOOK_URL secret is configured:
-  # schedule:
-  #   - cron: '0 9 * * *'  # Daily at 9 AM UTC
-  # workflow_run:
-  #   workflows: ["Deploy to GKE Production"]
-  #   types: [completed]
+  schedule:
+    - cron: '0 9 * * *'  # Daily at 9 AM UTC
+  workflow_run:
+    workflows: ["Deploy to GKE Production"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       days:
@@ -65,7 +55,16 @@ jobs:
   calculate-metrics:
     name: Calculate DORA Metrics
     runs-on: ubuntu-latest
-    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    # Run when:
+    # - Manual dispatch (workflow_dispatch)
+    # - Deployment workflow completed (workflow_run)
+    # - Schedule only if explicitly enabled via repository variable
+    # Note: SLACK_WEBHOOK_URL required for full functionality
+    if: |
+      github.repository == 'vishnu2kmohan/mcp-server-langgraph' &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.event_name == 'workflow_run' ||
+       (github.event_name == 'schedule' && vars.DORA_METRICS_ENABLED == 'true'))
     timeout-minutes: 15
     outputs:
       classification: ${{ steps.calculate.outputs.classification }}

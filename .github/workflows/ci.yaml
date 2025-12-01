@@ -780,13 +780,12 @@ jobs:
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
+        # Registry-based caching (GHCR) - eliminates GHA cache bloat
+        # Previous GHA cache was consuming 200+ GB; registry caching has no limit
         cache-from: |
-          type=gha,scope=build-${{ matrix.variant }}
-          type=gha,scope=build-base
-          type=gha,scope=build-common
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.variant }}
         cache-to: |
-          type=gha,mode=max,scope=build-${{ matrix.variant }}
-          type=gha,mode=max,scope=build-common
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.variant }},mode=max
         labels: |
           org.opencontainers.image.variant=${{ matrix.variant }}
           org.opencontainers.image.revision=${{ github.sha }}
@@ -808,13 +807,11 @@ jobs:
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
+        # Registry-based caching (GHCR) - eliminates GHA cache bloat
         cache-from: |
-          type=gha,scope=build-${{ matrix.variant }}
-          type=gha,scope=build-base
-          type=gha,scope=build-common
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.variant }}
         cache-to: |
-          type=gha,mode=max,scope=build-${{ matrix.variant }}
-          type=gha,mode=max,scope=build-common
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.variant }},mode=max
         labels: |
           org.opencontainers.image.variant=${{ matrix.variant }}
           org.opencontainers.image.revision=${{ github.sha }}
@@ -939,10 +936,11 @@ jobs:
         platforms: ${{ matrix.platform }}
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ steps.platform.outputs.name }}
+        # Registry-based caching (GHCR) for multi-platform builds
         cache-from: |
-          type=gha,scope=build-${{ matrix.variant }}-${{ steps.platform.outputs.name }}
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.variant }}-${{ steps.platform.outputs.name }}
         cache-to: |
-          type=gha,mode=max,scope=build-${{ matrix.variant }}-${{ steps.platform.outputs.name }}
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.variant }}-${{ steps.platform.outputs.name }},mode=max
 
   # ============================================================================
   # CREATE MULTI-ARCH MANIFEST

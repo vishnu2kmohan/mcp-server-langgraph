@@ -67,10 +67,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30  # Prevent indefinite hanging
 
-    # Only run if CI workflow succeeded, or if push/PR/manual trigger
+    # Only run if:
+    # - CI workflow (workflow_run) completed successfully, OR
+    # - Triggered by push, PR, or manual dispatch (not workflow_run)
     if: >
-      github.event_name != 'workflow_run' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name != 'workflow_run'
 
     steps:
     - name: Checkout code
