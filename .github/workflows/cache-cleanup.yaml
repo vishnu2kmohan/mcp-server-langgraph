@@ -1,0 +1,150 @@
+name: Cache Cleanup
+
+# ==============================================================================
+# Cache Cleanup - Prevent GitHub Actions cache bloat
+# ==============================================================================
+#
+# Purpose:
+#   Automatically clean up old GitHub Actions caches to stay within storage limits.
+#   GitHub Actions has a 10 GB default cache limit per repository.
+#
+# Triggers:
+#   - Daily at 3 AM UTC
+#   - Manual dispatch with configurable options
+#
+# What gets cleaned:
+#   - Python/uv caches older than max_age_days
+#   - Stale caches from deleted branches
+#   - Note: Docker caches moved to GHCR registry (not affected by this workflow)
+#
+# ==============================================================================
+
+on:
+  schedule:
+    # Run daily at 3 AM UTC (after most CI runs complete)
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (show what would be deleted)'
+        type: boolean
+        default: true
+      max_age_days:
+        description: 'Delete caches older than N days'
+        type: number
+        default: 7
+
+permissions:
+  actions: write
+
+jobs:
+  cleanup:
+    name: Cleanup Old Caches
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Cleanup old caches
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const maxAgeDays = ${{ inputs.max_age_days || 7 }};
+            const dryRun = ${{ inputs.dry_run || false }};
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - maxAgeDays);
+
+            console.log(`\n=== Cache Cleanup ===`);
+            console.log(`Cleaning caches older than ${maxAgeDays} days (${cutoffDate.toISOString()})`);
+            console.log(`Dry run: ${dryRun}\n`);
+
+            // Get all caches
+            let caches = [];
+            try {
+              caches = await github.paginate(
+                github.rest.actions.getActionsCacheList,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  per_page: 100
+                }
+              );
+            } catch (error) {
+              console.log(`Error fetching caches: ${error.message}`);
+              return;
+            }
+
+            console.log(`Total caches found: ${caches.length}`);
+
+            let deletedCount = 0;
+            let deletedSize = 0;
+            let skippedCount = 0;
+
+            for (const cache of caches) {
+              const lastAccessed = new Date(cache.last_accessed_at);
+              const sizeInMB = (cache.size_in_bytes / 1024 / 1024).toFixed(2);
+
+              if (lastAccessed < cutoffDate) {
+                console.log(`${dryRun ? '[DRY RUN] Would delete' : 'Deleting'}: ${cache.key}`);
+                console.log(`  Size: ${sizeInMB} MB, Last accessed: ${lastAccessed.toISOString()}`);
+
+                if (!dryRun) {
+                  try {
+                    await github.rest.actions.deleteActionsCacheById({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      cache_id: cache.id
+                    });
+                    console.log(`  Deleted successfully`);
+                  } catch (error) {
+                    console.log(`  Failed to delete: ${error.message}`);
+                    skippedCount++;
+                    continue;
+                  }
+                }
+
+                deletedCount++;
+                deletedSize += cache.size_in_bytes;
+              }
+            }
+
+            const deletedSizeGB = (deletedSize / 1024 / 1024 / 1024).toFixed(2);
+            console.log(`\n=== Summary ===`);
+            console.log(`${dryRun ? 'Would delete' : 'Deleted'}: ${deletedCount} caches (${deletedSizeGB} GB)`);
+            if (skippedCount > 0) {
+              console.log(`Skipped (errors): ${skippedCount} caches`);
+            }
+            console.log(`Remaining: ${caches.length - deletedCount} caches`);
+
+      - name: Report final cache usage
+        if: ${{ !inputs.dry_run }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              const usage = await github.rest.actions.getActionsCacheUsage({
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+
+              const sizeGB = (usage.data.active_caches_size_in_bytes / 1024 / 1024 / 1024).toFixed(2);
+              console.log(`\n=== Final Cache Usage ===`);
+              console.log(`Size: ${sizeGB} GB`);
+              console.log(`Count: ${usage.data.active_caches_count}`);
+
+              // Add to job summary
+              const summary = `
+              ## Cache Cleanup Complete
+
+              | Metric | Value |
+              |--------|-------|
+              | Total Size | ${sizeGB} GB |
+              | Cache Count | ${usage.data.active_caches_count} |
+              | Limit | 10 GB (default) |
+
+              *Cleanup ran at ${new Date().toISOString()}*
+              `;
+
+              await core.summary.addRaw(summary).write();
+            } catch (error) {
+              console.log(`Error getting cache usage: ${error.message}`);
+            }

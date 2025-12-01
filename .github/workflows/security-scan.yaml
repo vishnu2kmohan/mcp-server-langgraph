@@ -44,6 +44,11 @@ on:
     types: [published]
   workflow_dispatch:  # Allow manual triggering
   workflow_call:  # Allow being called by other workflows
+  # Note: push trigger intentionally excluded - security scans run on:
+  # - PRs (immediate feedback on changes)
+  # - Daily schedule (comprehensive coverage)
+  # - Releases (pre-deployment verification)
+  # This avoids duplicate scans on push+PR and saves CI resources.
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

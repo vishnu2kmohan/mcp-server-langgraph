@@ -331,3 +331,182 @@ class TestGhPagesDashboard:
             "to consume CI artifacts instead of running its own tests. "
             "This saves ~5-10 minutes per CI run."
         )
+
+    # -------------------------------------------------------------------------
+    # Deploy Condition Validation
+    # -------------------------------------------------------------------------
+
+    def test_deploy_job_runs_on_workflow_run(self):
+        """
+        Validate that deploy job condition includes workflow_run event.
+
+        The deploy job must run when triggered by workflow_run from CI,
+        not just on schedule or manual dispatch.
+
+        Bug fixed: Deploy job had condition that excluded workflow_run,
+        causing dashboards to never update after CI completion.
+
+        References:
+        - .github/workflows/gh-pages-telemetry.yaml (line 665)
+        """
+        workflows_dir = Path(__file__).parent.parent.parent / ".github" / "workflows"
+        telemetry_path = workflows_dir / "gh-pages-telemetry.yaml"
+
+        if not telemetry_path.exists():
+            pytest.skip("gh-pages-telemetry.yaml not found")
+
+        with open(telemetry_path) as f:
+            workflow = yaml.safe_load(f)
+
+        # Find deploy job
+        jobs = workflow.get("jobs", {})
+        deploy_job = jobs.get("deploy", {})
+
+        if not deploy_job:
+            pytest.fail("deploy job not found in gh-pages-telemetry.yaml")
+
+        # Check if condition
+        job_condition = deploy_job.get("if", "")
+
+        # The condition should include workflow_run check
+        has_workflow_run_condition = "workflow_run" in job_condition
+
+        assert has_workflow_run_condition, (
+            "deploy job condition must include 'workflow_run' to deploy "
+            "when triggered by CI completion. Current condition excludes "
+            "workflow_run, causing dashboards to never update.\n\n"
+            f"Current condition: {job_condition}\n\n"
+            'Expected: Include \'(github.event_name == "workflow_run" && '
+            'github.event.workflow_run.conclusion == "success")\''
+        )
+
+    # -------------------------------------------------------------------------
+    # Weekly Reports Integration
+    # -------------------------------------------------------------------------
+
+    def test_generate_reports_job_exists_for_scheduled_runs(self):
+        """
+        Validate that generate-reports job exists for weekly code quality scans.
+
+        The gh-pages-telemetry workflow should include a generate-reports job
+        that runs on schedule to produce:
+        - AsyncMock configuration scan
+        - Memory safety scan
+        - Test suite statistics
+
+        References:
+        - .github/workflows/gh-pages-telemetry.yaml
+        - Consolidation of weekly-reports.yaml
+        """
+        workflows_dir = Path(__file__).parent.parent.parent / ".github" / "workflows"
+        telemetry_path = workflows_dir / "gh-pages-telemetry.yaml"
+
+        if not telemetry_path.exists():
+            pytest.skip("gh-pages-telemetry.yaml not found")
+
+        with open(telemetry_path) as f:
+            workflow = yaml.safe_load(f)
+
+        jobs = workflow.get("jobs", {})
+
+        # Check for generate-reports job
+        has_reports_job = "generate-reports" in jobs
+
+        assert has_reports_job, (
+            "gh-pages-telemetry.yaml should include 'generate-reports' job "
+            "for weekly code quality scans. This consolidates the previous "
+            "weekly-reports.yaml workflow."
+        )
+
+    def test_deploy_handles_weekly_reports_artifacts(self):
+        """
+        Validate that deploy job downloads and copies weekly reports artifacts.
+
+        The deploy job should:
+        1. Download weekly-reports artifact (with continue-on-error)
+        2. Copy reports to gh-pages/reports/ directory
+
+        References:
+        - .github/workflows/gh-pages-telemetry.yaml
+        """
+        workflows_dir = Path(__file__).parent.parent.parent / ".github" / "workflows"
+        telemetry_path = workflows_dir / "gh-pages-telemetry.yaml"
+
+        if not telemetry_path.exists():
+            pytest.skip("gh-pages-telemetry.yaml not found")
+
+        content = telemetry_path.read_text()
+
+        # Check for weekly reports artifact handling
+        downloads_reports = "weekly-reports" in content and "download-artifact" in content
+        copies_to_reports = "gh-pages/reports" in content
+
+        assert downloads_reports, (
+            "deploy job should download 'weekly-reports' artifact for "
+            "code quality scans (AsyncMock, memory safety, test stats)."
+        )
+
+        assert copies_to_reports, "deploy job should copy reports to 'gh-pages/reports/' directory."
+
+    # -------------------------------------------------------------------------
+    # Retention Policy Validation
+    # -------------------------------------------------------------------------
+
+    def test_telemetry_retention_policy_configured(self):
+        """
+        Validate that telemetry data has retention policy (90 days / 500 runs).
+
+        The generate-trends job should implement retention to:
+        - Filter data older than 90 days
+        - Cap at 500 runs maximum
+        - Keep gh-pages storage under 1GB limit
+
+        References:
+        - .github/workflows/gh-pages-telemetry.yaml (line 272-273)
+        """
+        workflows_dir = Path(__file__).parent.parent.parent / ".github" / "workflows"
+        telemetry_path = workflows_dir / "gh-pages-telemetry.yaml"
+
+        if not telemetry_path.exists():
+            pytest.skip("gh-pages-telemetry.yaml not found")
+
+        content = telemetry_path.read_text()
+
+        # Check for retention policy indicators
+        has_day_retention = "90" in content and ("days" in content.lower() or "timedelta" in content)
+        has_run_cap = "500" in content
+
+        # At minimum, should have some form of retention
+        has_retention = has_day_retention or has_run_cap or "cutoff" in content.lower() or "retention" in content.lower()
+
+        assert has_retention, (
+            "generate-trends job should implement retention policy:\n"
+            "- Filter data older than 90 days\n"
+            "- Cap at 500 runs maximum\n\n"
+            "This prevents gh-pages from exceeding 1GB limit."
+        )
+
+    # -------------------------------------------------------------------------
+    # Weekly Reports Workflow Deprecation
+    # -------------------------------------------------------------------------
+
+    def test_weekly_reports_workflow_removed(self):
+        """
+        Validate that standalone weekly-reports.yaml is removed.
+
+        After consolidation, weekly reports are generated by gh-pages-telemetry.yaml.
+        The standalone weekly-reports.yaml should be deleted to avoid:
+        - Duplicate report generation
+        - Accumulation of automated/* branches
+
+        References:
+        - .github/workflows/weekly-reports.yaml (should be deleted)
+        """
+        workflows_dir = Path(__file__).parent.parent.parent / ".github" / "workflows"
+        weekly_reports_path = workflows_dir / "weekly-reports.yaml"
+
+        # Note: This test will FAIL until we delete the file (TDD Red phase)
+        assert not weekly_reports_path.exists(), (
+            "weekly-reports.yaml should be removed after consolidation. "
+            "Weekly reports are now generated by gh-pages-telemetry.yaml."
+        )

@@ -126,13 +126,21 @@ class TestReportFreshness:
         """
         GIVEN: Automated report generation is configured
         WHEN: Checking for GitHub Actions workflow
-        THEN: weekly-reports.yaml should exist
+        THEN: generate-reports job should exist in gh-pages-telemetry.yaml
+
+        Note: Weekly reports were consolidated into gh-pages-telemetry.yaml
+        (previously in standalone weekly-reports.yaml)
         """
-        workflow_path = Path(".github/workflows/weekly-reports.yaml")
+        workflow_path = Path(".github/workflows/gh-pages-telemetry.yaml")
 
         assert workflow_path.exists(), (
-            f"Weekly reports workflow not found: {workflow_path}\\n"
-            f"Expected: Automated weekly report regeneration via GitHub Actions"
+            f"Telemetry workflow not found: {workflow_path}\nExpected: gh-pages-telemetry.yaml with generate-reports job"
+        )
+
+        content = workflow_path.read_text()
+        assert "generate-reports:" in content, (
+            f"generate-reports job not found in {workflow_path}\n"
+            f"Expected: Automated weekly report regeneration via generate-reports job"
         )
 
     def test_generate_reports_makefile_target_exists(self):

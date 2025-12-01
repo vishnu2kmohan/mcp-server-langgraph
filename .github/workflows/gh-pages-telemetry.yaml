@@ -655,6 +655,54 @@ jobs:
           retention-days: 30
 
   # ============================================================================
+  # Generate Weekly Reports (AsyncMock, Memory Safety, Test Stats)
+  # Consolidated from weekly-reports.yaml
+  # ============================================================================
+  generate-reports:
+    name: Generate Weekly Reports
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Only run on schedule or manual dispatch with force_update
+    # Not on workflow_run (CI completion) - these are weekly scans
+    if: github.event_name == 'schedule' || github.event.inputs.force_update == 'true'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # Full history for accurate stats
+
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          extras: 'dev monitoring release-tools'
+          cache-key-prefix: 'weekly-reports'
+
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      - name: Generate reports
+        run: make generate-reports
+
+      - name: Copy reports to artifact directory
+        run: |
+          if [ -d docs-internal/reports ]; then
+            cp -r docs-internal/reports/* reports/
+            echo "📊 Reports copied:"
+            ls -la reports/
+          else
+            echo "⚠️ No reports generated"
+          fi
+
+      - name: Upload reports artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: weekly-reports
+          path: reports/
+          retention-days: 30
+
+  # ============================================================================
   # Deploy to GitHub Pages
   # ============================================================================
   deploy:
@@ -662,7 +710,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [collect-coverage, generate-trends, generate-badges, generate-dashboard, generate-metrics]
-    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.force_update == 'true'
+    # Deploy when:
+    # - Triggered by CI workflow completion (workflow_run) with success
+    # - Scheduled run (weekly telemetry collection)
+    # - Manual dispatch with force_update
+    # Note: 'push' removed - workflow no longer has push trigger (changed to workflow_run in 8ef05b8)
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.force_update == 'true' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
 
     steps:
       - name: Checkout gh-pages branch
@@ -704,6 +760,15 @@ jobs:
             echo "  ✅ Metrics copied"
           else
             echo "  ⚠️ No metrics artifacts found"
+          fi
+
+          echo "📁 Copying weekly reports (if available)..."
+          mkdir -p gh-pages/reports
+          if [ -d artifacts/weekly-reports ]; then
+            cp -r artifacts/weekly-reports/* gh-pages/reports/
+            echo "  ✅ Weekly reports copied (AsyncMock, Memory Safety, Test Stats)"
+          else
+            echo "  ⚠️ No weekly reports artifact (only generated on schedule)"
           fi
 
           echo "📁 Creating .last-updated timestamp..."
