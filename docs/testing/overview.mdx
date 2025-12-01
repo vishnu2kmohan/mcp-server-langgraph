@@ -751,9 +751,32 @@ def test_delete():
 
 ### Overview
 
-Regression tests prevent fixed bugs from reoccurring by encoding the fix as a permanent test case. This section documents patterns for writing effective regression tests based on real Codex findings.
+Regression tests prevent fixed bugs from reoccurring by encoding the fix as a permanent test case. The project maintains a comprehensive suite of regression tests in `tests/regression/` that encode fixes for real Codex findings and production issues.
 
-[... rest of TESTING.md content continues as in the original ...]
+### Key Regression Test Categories
+
+| Category | Location | Purpose |
+|----------|----------|---------|
+| pytest-xdist Isolation | `tests/regression/test_pytest_xdist_*.py` | Prevent parallel test pollution |
+| Service Principal | `tests/regression/test_service_principal_*.py` | Auth isolation between tests |
+| LangGraph Types | `tests/regression/test_langgraph_return_types.py` | Type safety for agent responses |
+| FastAPI Auth | `tests/regression/test_fastapi_auth_override_*.py` | Dependency injection correctness |
+| GDPR Isolation | `tests/regression/test_gdpr_singleton_*.py` | Privacy compliance isolation |
+
+### Running Regression Tests
+
+```bash
+# Run all regression tests
+pytest tests/regression/ -v
+
+# Run specific regression category
+pytest tests/regression/test_pytest_xdist*.py -v
+
+# Include in CI pipeline
+pytest -m regression
+```
+
+For detailed examples, see the test files in `tests/regression/` which document the original issue and fix in their docstrings.
 
 ---
 
