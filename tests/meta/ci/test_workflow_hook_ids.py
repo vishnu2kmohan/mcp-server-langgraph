@@ -9,6 +9,7 @@ This prevents CI failures like:
 Run with: pytest tests/meta/ci/test_workflow_hook_ids.py -v
 """
 
+import gc
 from pathlib import Path
 
 import pytest
@@ -71,8 +72,13 @@ def get_ci_workflow_hook_references() -> dict[str, list[str]]:
     return hook_refs
 
 
+@pytest.mark.xdist_group(name="workflow_hook_ids")
 class TestWorkflowHookIds:
     """Test that CI workflow hook IDs are valid."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_all_ci_hook_ids_exist_in_pre_push_stage(self):
         """Verify all hook IDs in CI workflow exist in pre-push stage.
