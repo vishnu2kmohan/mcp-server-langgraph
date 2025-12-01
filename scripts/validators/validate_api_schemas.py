@@ -149,14 +149,14 @@ def main():
         if errors or (strict and warnings):
             print("💡 Tip: Ensure all response model fields are returned by implementations")
             print("   See TESTING.md 'Regression Test Patterns' for guidance\n")
-            sys.exit(1)
+            return 1
         else:
             print("✅ Passed (warnings are non-blocking)\n")
-            sys.exit(0)
+            return 0
     else:
         print(f"✅ API Schema Validation: All {files_checked} files passed\n")
-        sys.exit(0)
+        return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

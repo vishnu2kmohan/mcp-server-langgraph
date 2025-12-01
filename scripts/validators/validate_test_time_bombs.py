@@ -149,14 +149,14 @@ def check_file(filepath: Path) -> list[dict[str, Any]]:
     return issues
 
 
-def main():
+def main() -> int:
     """Main validation function."""
     strict = "--strict" in sys.argv
 
     test_dir = Path("tests")
     if not test_dir.exists():
         print("❌ tests/ directory not found")
-        sys.exit(1)
+        return 1
 
     all_issues = []
     files_checked = 0
@@ -192,14 +192,14 @@ def main():
             print("💡 Tip: Replace future model names with clearly fake constants")
             print("   Example: TEST_NONEXISTENT_OPENAI_MODEL = 'gpt-999-test-nonexistent'")
             print("   See tests/test_config_validation.py for reference\n")
-            sys.exit(1)
+            return 1
         else:
             print("✅ Passed (warnings are non-blocking)\n")
-            sys.exit(0)
+            return 0
     else:
         print(f"✅ Test Time Bomb Detection: All {files_checked} files passed\n")
-        sys.exit(0)
+        return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

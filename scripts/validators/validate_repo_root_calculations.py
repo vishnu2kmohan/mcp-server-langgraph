@@ -146,9 +146,13 @@ def validate_file(file_path: Path) -> list[Violation]:
     return real_violations
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     """
     Main entry point for validation script.
+
+    Args:
+        argv: Command-line arguments. If None, uses sys.argv (CLI mode).
+              Pass [] for module import mode with defaults.
 
     Returns:
         Exit code (0 = success, 1 = violations found, 2 = error)
@@ -156,7 +160,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Validate repo root path calculations")
     parser.add_argument("--fix", action="store_true", help="Auto-fix violations (not implemented)")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
-    args = parser.parse_args()
+    args = parser.parse_args(argv if argv is not None else None)
 
     # Find repository root
     script_dir = Path(__file__).parent
