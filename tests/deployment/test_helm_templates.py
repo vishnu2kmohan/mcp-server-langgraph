@@ -37,12 +37,21 @@ def helm_dependencies_built():
 
     This fixture runs once per module and builds the Helm dependencies
     (redis, kube-prometheus-stack) required for helm template to work.
+
+    Cleanup: Removes any stale tmpcharts/ directory that may have been left
+    from an interrupted previous run, which can cause helm dependency build
+    to fail or produce inconsistent results.
     """
     if not shutil.which("helm"):
         pytest.skip("helm CLI not installed")
 
     if not CHART_PATH.exists():
         pytest.skip("Helm chart directory does not exist")
+
+    # Clean up any stale tmpcharts directory from interrupted previous runs
+    tmpcharts_path = CHART_PATH / "tmpcharts"
+    if tmpcharts_path.exists():
+        shutil.rmtree(tmpcharts_path, ignore_errors=True)
 
     # Build dependencies (downloads redis, kube-prometheus-stack charts)
     result = subprocess.run(

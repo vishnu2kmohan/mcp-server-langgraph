@@ -19,9 +19,14 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
       - name: Run dependency validation
         run: |
-          python .githooks/pre-commit-dependency-validation
+          uv run --frozen python scripts/validators/validate_dependency_injection.py
 
       - name: Validation passed
         if: success()

@@ -63,6 +63,63 @@ def check_docker_available() -> bool:
         return False
 
 
+def matches_workflow_pattern(changed_file: str) -> bool:
+    """
+    Check if a changed file matches workflow/infrastructure patterns.
+
+    This function determines whether a file change should trigger meta test
+    execution during pre-push validation.
+
+    Args:
+        changed_file: Path to the changed file (relative to repo root)
+
+    Returns:
+        True if the file is infrastructure-related and should trigger meta tests
+        False if the file is regular source/test code
+
+    Patterns that trigger meta tests:
+    - .github/ (CI workflows, actions)
+    - scripts/validators/ (validation scripts)
+    - scripts/security/ (security scanning scripts)
+    - scripts/run_pre_push_tests.py (this orchestrator)
+    - .githooks/ (git hook scripts)
+    - .pre-commit-hooks/ (pre-commit hook scripts)
+    - .pre-commit-config.yaml (hook configuration)
+    - pytest.ini (test configuration)
+    - pyproject.toml (root only, not clients/*/pyproject.toml)
+    - Makefile (build/test targets)
+    - tests/**/conftest.py (fixture files at any level)
+
+    Reference: Codex Audit - Change detection gaps (2025-12-01)
+    Reference: P0-1 - Pre-commit/Pre-push Hook & CI Pipeline Remediation Plan
+    """
+    # Directory patterns (prefix match)
+    workflow_dirs = [
+        ".github/",
+        "scripts/validators/",
+        "scripts/security/",
+        ".githooks/",
+        ".pre-commit-hooks/",
+    ]
+    for dir_prefix in workflow_dirs:
+        if changed_file.startswith(dir_prefix):
+            return True
+
+    # Any conftest.py in tests/ (root or subdirectories)
+    if changed_file.startswith("tests/") and changed_file.endswith("conftest.py"):
+        return True
+
+    # Exact file patterns (not substring match)
+    exact_patterns = [
+        ".pre-commit-config.yaml",
+        "pytest.ini",
+        "pyproject.toml",  # Only root pyproject.toml, not clients/*/pyproject.toml
+        "Makefile",
+        "scripts/run_pre_push_tests.py",
+    ]
+    return changed_file in exact_patterns
+
+
 def should_run_meta_tests() -> bool:
     """
     Check if meta tests should run based on changed files.
@@ -82,37 +139,9 @@ def should_run_meta_tests() -> bool:
         True if workflow files changed (run meta tests)
         False if only non-workflow files changed (skip meta tests for performance)
 
-    Workflow-related patterns that trigger meta tests:
-    - .github/ (CI workflows, actions)
-    - .pre-commit-config.yaml (hook configuration)
-    - pytest.ini (test configuration)
-    - pyproject.toml (root only, not clients/*/pyproject.toml)
-    - tests/conftest.py (shared fixtures)
-
     Reference: Codex Audit Finding - Make/Test Flow Issue 1.4
     Reference: P0-1 - Pre-commit/Pre-push Hook & CI Pipeline Remediation Plan
     """
-
-    def matches_workflow_pattern(changed_file: str) -> bool:
-        """Check if a changed file matches workflow patterns."""
-        # Directory patterns (prefix match)
-        if changed_file.startswith(".github/"):
-            return True
-        if changed_file.startswith("tests/conftest.py"):
-            return True
-
-        # Exact file patterns (not substring match)
-        exact_patterns = [
-            ".pre-commit-config.yaml",
-            "pytest.ini",
-            "pyproject.toml",  # Only root pyproject.toml, not clients/*/pyproject.toml
-        ]
-        for pattern in exact_patterns:
-            # Match only if file is exactly the pattern or ends with /pattern
-            if changed_file == pattern:
-                return True
-
-        return False
 
     # Strategy 1: Use PRE_COMMIT_FROM_REF/TO_REF if available (during pre-commit hook execution)
     from_ref = os.getenv("PRE_COMMIT_FROM_REF")
