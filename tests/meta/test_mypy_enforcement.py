@@ -206,12 +206,20 @@ class TestMypyEnforcement:
         - Test: uv run mypy src/mcp_server_langgraph --config-file=pyproject.toml
         - FULL PARITY: Both use same command, same environment, same dependencies
         """
+        import os
         import subprocess
 
         # Use same args as pre-commit hook to ensure parity
         # Pre-commit now uses --config-file=pyproject.toml (strict mode with per-module overrides)
         # CRITICAL: Use --frozen to ensure lockfile-pinned versions are used, not latest
         # This prevents CI failures due to version drift when uv recreates the virtualenv
+        #
+        # IMPORTANT: Disable OpenTelemetry SDK in subprocess to prevent pytest-xdist timeouts.
+        # Without this, OTEL background threads (OtelPeriodicExportingMetricReader,
+        # OtelBatchSpanRecordProcessor) can block test completion in xdist workers.
+        env = os.environ.copy()
+        env["OTEL_SDK_DISABLED"] = "true"
+
         result = subprocess.run(
             [
                 "uv",
@@ -227,6 +235,7 @@ class TestMypyEnforcement:
             capture_output=True,
             text=True,
             timeout=60,
+            env=env,
         )
 
         assert result.returncode == 0, (
