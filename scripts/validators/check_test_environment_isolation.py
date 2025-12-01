@@ -35,6 +35,15 @@ def check_file(file_path: Path) -> list[tuple[int, str]]:
     if file_path.name == "conftest.py":
         return violations
 
+    # Skip TDD documentation tests that intentionally demonstrate anti-patterns
+    # These files document bad patterns for educational/regression purposes
+    excluded_files = [
+        "test_pytest_xdist_environment_pollution.py",  # TDD RED tests showing pollution
+        "test_environment_isolation_enforcement.py",  # Meta-test documenting patterns
+    ]
+    if file_path.name in excluded_files:
+        return violations
+
     try:
         content = file_path.read_text()
         lines = content.split("\n")
