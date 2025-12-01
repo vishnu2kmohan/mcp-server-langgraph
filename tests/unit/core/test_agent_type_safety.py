@@ -13,6 +13,7 @@ Regression prevention for validation audit findings:
 """
 
 import gc
+import os
 import subprocess
 from pathlib import Path
 
@@ -50,11 +51,16 @@ class TestAgentTypeCompliance:
 
         # Run MyPy on agent.py
         # Use --frozen to ensure lockfile-pinned versions (prevents version drift in CI)
+        # IMPORTANT: Disable OpenTelemetry SDK to prevent pytest-xdist timeouts
+        env = os.environ.copy()
+        env["OTEL_SDK_DISABLED"] = "true"
+
         result = subprocess.run(
             ["uv", "run", "--frozen", "mypy", str(agent_file), "--no-error-summary"],
             capture_output=True,
             text=True,
             timeout=30,
+            env=env,
         )
 
         # Check for specific type errors that need to be fixed
@@ -117,11 +123,16 @@ class TestAgentTypeCompliance:
         """
         # CI runners are slower - allow 90 seconds for full codebase mypy check
         # Use --frozen to ensure lockfile-pinned versions (prevents version drift in CI)
+        # IMPORTANT: Disable OpenTelemetry SDK to prevent pytest-xdist timeouts
+        env = os.environ.copy()
+        env["OTEL_SDK_DISABLED"] = "true"
+
         result = subprocess.run(
             ["uv", "run", "--frozen", "mypy", "src/mcp_server_langgraph", "--no-error-summary"],
             capture_output=True,
             text=True,
             timeout=90,
+            env=env,
         )
 
         if result.returncode != 0:

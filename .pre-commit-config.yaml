@@ -160,7 +160,10 @@ repos:
       '
   - id: run-pre-push-tests
     name: Run Pre-Push Tests (consolidated - dev profile)
-    entry: uv run --frozen python -u scripts/run_pre_push_tests.py
+    # CRITICAL: OTEL_SDK_DISABLED must be set BEFORE uv run to prevent pytest-xdist
+    # workers from initializing OpenTelemetry background threads that cause timeouts.
+    # See: tests/meta/test_mypy_enforcement.py timeout fix (2025-12-01)
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run --frozen python -u scripts/run_pre_push_tests.py'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml|deployments/.*\.(yaml|yml)|docker/.*\.(yaml|yml)|\.github/.*\.ya?ml)$
@@ -939,7 +942,8 @@ repos:
       '
   - id: validate-test-collection
     name: Validate Pytest Can Collect All Tests
-    entry: bash -c 'uv run --frozen pytest --collect-only tests/ -q --quiet 2>&1 | grep -q "tests collected" || exit 1'
+    # CRITICAL: OTEL_SDK_DISABLED prevents OpenTelemetry initialization during collection
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run --frozen pytest --collect-only tests/ -q --quiet 2>&1 | grep -q "tests collected" || exit 1'
     language: system
     files: ^tests/.*\.py$
     pass_filenames: false
@@ -1423,7 +1427,8 @@ repos:
   # tests/meta/test_fixture_validation.py runs automatically with other meta tests
   - id: validate-minimum-coverage
     name: "Validate Minimum Test Coverage Threshold (\u2265 64%)"
-    entry: uv run --frozen pytest tests/meta/test_coverage_enforcement.py -v --tb=short
+    # CRITICAL: OTEL_SDK_DISABLED prevents OpenTelemetry initialization in pytest
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/test_coverage_enforcement.py -v --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$

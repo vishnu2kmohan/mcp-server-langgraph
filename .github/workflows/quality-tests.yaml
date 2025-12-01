@@ -291,9 +291,17 @@ jobs:
 
       - name: Run benchmarks
         run: |
-          # Disable xdist to prevent conflict with --benchmark-only
-          uv run --frozen pytest -m benchmark -v -p no:xdist --benchmark-only --benchmark-autosave --benchmark-json=benchmarks.json
-        continue-on-error: true  # Don't fail if no benchmarks exist yet
+          # IMPORTANT: Disable xdist AND override addopts to prevent conflicts
+          # - -p no:xdist: Disables pytest-xdist plugin
+          # - -o addopts="...": Overrides pyproject.toml's addopts which includes --dist loadgroup
+          # Without the override, pytest errors with "unrecognized arguments: --dist"
+          # See: https://github.com/pytest-dev/pytest/issues/5765
+          uv run --frozen pytest -m benchmark -v \
+            -p no:xdist \
+            -o "addopts=-v --strict-markers --tb=short --timeout=60" \
+            --benchmark-only \
+            --benchmark-autosave \
+            --benchmark-json=benchmarks.json
 
       - name: Store benchmark results
         continue-on-error: true  # Don't fail workflow if gh-pages push fails
