@@ -44,12 +44,13 @@ except ImportError:
     freeze_time = None  # Define as None for type checking
 
 try:
-    from hypothesis import settings  # noqa: E402
+    from hypothesis import Phase, settings  # noqa: E402
 
     HYPOTHESIS_AVAILABLE = True
 except ImportError:
     HYPOTHESIS_AVAILABLE = False
     settings = None  # Define as None for type checking
+    Phase = None  # Define as None for type checking
 
 from langchain_core.messages import HumanMessage  # noqa: E402
 from opentelemetry import trace  # noqa: E402
@@ -78,6 +79,13 @@ logging.getLogger("opentelemetry.exporter.otlp").setLevel(logging.CRITICAL)
 # Configure Hypothesis profiles for property-based testing
 # Only configure if Hypothesis is available to prevent AttributeError
 if HYPOTHESIS_AVAILABLE:
+    # WORKAROUND: Exclude Phase.target to avoid pytest-xdist import race condition
+    # hypothesis.internal.conjecture.optimiser is lazily imported in optimise_targets(),
+    # but on Python 3.11/3.13 with xdist workers, this import fails with ModuleNotFoundError.
+    # Phase.target is for target optimization, which is nice-to-have but not essential.
+    # See: https://github.com/HypothesisWorks/hypothesis/issues/3987 (similar issue)
+    _phases_without_target = (Phase.explicit, Phase.reuse, Phase.generate, Phase.shrink)
+
     # Register CI profile with comprehensive testing (100 examples)
     settings.register_profile(
         "ci",
@@ -85,6 +93,7 @@ if HYPOTHESIS_AVAILABLE:
         deadline=None,  # No deadline in CI for comprehensive testing
         print_blob=True,  # Print failing examples for debugging
         derandomize=True,  # Deterministic test execution in CI
+        phases=_phases_without_target,  # Exclude target phase to avoid xdist import race
     )
 
     # Register dev profile for fast iteration (25 examples)
@@ -94,6 +103,7 @@ if HYPOTHESIS_AVAILABLE:
         deadline=2000,  # 2 second deadline for fast feedback
         print_blob=False,  # No blob printing in dev for clean output
         derandomize=False,  # Randomized for better coverage
+        phases=_phases_without_target,  # Exclude target phase to avoid xdist import race
     )
 
     # Load appropriate profile based on environment

@@ -354,7 +354,8 @@ class TestCodexFindingsRemediation:
 
         # Verify Hypothesis import has try/except guard with HYPOTHESIS_AVAILABLE flag
         assert "try:" in content, "Expected try/except block for Hypothesis import"
-        assert "from hypothesis import settings" in content, "Expected Hypothesis import"
+        # Check for hypothesis import - may include Phase for xdist compatibility workaround
+        assert "from hypothesis import" in content and "settings" in content, "Expected Hypothesis import with settings"
         assert "HYPOTHESIS_AVAILABLE = True" in content, "Expected HYPOTHESIS_AVAILABLE flag"
         assert "except ImportError:" in content, "Expected ImportError handler"
         assert "HYPOTHESIS_AVAILABLE = False" in content, "Expected HYPOTHESIS_AVAILABLE = False in except"
