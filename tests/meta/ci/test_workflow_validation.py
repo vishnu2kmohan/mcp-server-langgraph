@@ -145,7 +145,22 @@ class TestWorkflowValidation:
 
                             # Check for file operations (cp, mv, cat, etc.)
                             has_file_op = any(cmd in script for cmd in ["cp ", "mv ", "cat "])
-                            has_check = any(pattern in script for pattern in ["if [ -f", "[ -f", "test -f", "if [[ -f"])
+                            # Check for file OR directory existence checks (both are valid guards)
+                            has_check = any(
+                                pattern in script
+                                for pattern in [
+                                    "if [ -f",
+                                    "[ -f",
+                                    "test -f",
+                                    "if [[ -f",
+                                    "if [ -d",
+                                    "[ -d",
+                                    "test -d",
+                                    "if [[ -d",
+                                    "if [ ! -d",  # Guard pattern: exit if dir doesn't exist
+                                    "[ ! -d",
+                                ]
+                            )
 
                             if has_file_op and not has_check and path and path in script:
                                 issues_found.append(

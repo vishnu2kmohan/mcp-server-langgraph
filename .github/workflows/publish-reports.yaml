@@ -172,6 +172,12 @@ jobs:
           # Create directory structure if not exists
           mkdir -p coverage security compliance mutation dora
 
+          # Guard: Skip if artifact download failed (continue-on-error)
+          if [ ! -d new-reports ]; then
+            echo "No reports artifact downloaded - skipping update"
+            exit 0
+          fi
+
           # Move benchmark data (handled by benchmark-action, skip here)
           # Benchmarks are already published by quality-tests.yaml
 
