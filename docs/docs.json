@@ -102,6 +102,13 @@
             "group": "Troubleshooting",
             "pages": [
               "troubleshooting/overview",
+              "troubleshooting/installation",
+              "troubleshooting/deployment",
+              "troubleshooting/authentication",
+              "troubleshooting/performance",
+              "troubleshooting/ci-cd",
+              "troubleshooting/database",
+              "troubleshooting/pod-failures",
               "advanced/troubleshooting"
             ]
           },

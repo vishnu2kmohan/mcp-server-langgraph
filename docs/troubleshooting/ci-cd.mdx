@@ -1,0 +1,297 @@
+---
+title: CI/CD Failures
+description: 'Troubleshooting guide for GitHub Actions, test failures, and build problems'
+seoTitle: "Troubleshooting CI/CD Failures - MCP Server with LangGraph"
+seoDescription: "Solutions for GitHub Actions errors, test failures, Docker build issues, and Kustomize problems"
+keywords: ["ci/cd", "github actions", "tests", "build", "troubleshooting", "MCP Server"]
+contentType: "reference"
+icon: 'code-branch'
+---
+
+# CI/CD Failures
+
+This guide covers common CI/CD issues with GitHub Actions, testing, and builds.
+
+## GitHub Actions Test Failures
+
+**Symptom**: Tests pass locally but fail in CI
+
+**Common Causes**:
+
+### 1. Missing Test Dependencies
+```yaml
+# Fix: Ensure dev extras are installed
+- name: Install dependencies
+  run: |
+    uv sync --extra dev
+```
+
+### 2. Timezone Differences
+```python
+# Use UTC explicitly in tests
+from datetime import datetime, timezone
+
+now = datetime.now(timezone.utc)  # Not datetime.now()
+```
+
+### 3. pytest-xdist Race Conditions
+```python
+# Add xdist_group to related tests
+@pytest.mark.xdist_group(name="redis_tests")
+class TestRedisFeatures:
+    def teardown_method(self):
+        import gc
+        gc.collect()  # Prevent memory leaks
+```
+
+### 4. Environment Variable Differences
+```yaml
+# Ensure CI has all required env vars
+env:
+  LOG_LEVEL: DEBUG
+  REDIS_URL: redis://localhost:6379
+  DATABASE_URL: postgresql://test:test@localhost:5432/test
+```
+
+---
+
+## Docker Build Fails
+
+**Symptom**: `ERROR [internal] load metadata for docker.io/library/python:3.12-slim`
+
+**Solutions**:
+
+### 1. Base Image Not Found
+```dockerfile
+# Use specific SHA instead of tag
+FROM python:3.12-slim@sha256:abc123...
+
+# Or use stable tag
+FROM python:3.12.7-slim
+```
+
+### 2. Build Context Too Large
+```bash
+# Add to .dockerignore
+.venv
+.git
+__pycache__
+*.pyc
+tests/
+docs/
+```
+
+### 3. Multi-stage Build Cache Issues
+```dockerfile
+# Invalidate cache explicitly
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install --no-cache-dir -r requirements.txt
+```
+
+### 4. Out of Disk Space
+```yaml
+# Clean up before build in CI
+- name: Free disk space
+  run: |
+    docker system prune -af
+    sudo rm -rf /opt/hostedtoolcache
+```
+
+---
+
+## Pre-commit Hook Failures
+
+**Symptom**: Pre-commit hooks fail on specific files
+
+**Common Issues**:
+
+### 1. Ruff Formatting
+```bash
+# Auto-fix with ruff
+ruff format .
+ruff check --fix .
+```
+
+### 2. MyPy Type Errors
+```bash
+# Run mypy locally to see full errors
+mypy src/ --show-error-codes
+```
+
+### 3. Security Scanning (Bandit)
+```python
+# Suppress false positives with comments
+result = subprocess.run(cmd)  # nosec B603
+```
+
+### 4. Hook Version Mismatch
+```bash
+# Update hooks to latest
+pre-commit autoupdate
+pre-commit install --install-hooks
+```
+
+---
+
+## Workflow Permission Errors
+
+**Symptom**: `Resource not accessible by integration` or `403 Forbidden`
+
+**Solutions**:
+
+### 1. Missing GITHUB_TOKEN Permissions
+```yaml
+permissions:
+  contents: read
+  packages: write
+  id-token: write  # For OIDC
+```
+
+### 2. Missing Repository Secrets
+```bash
+# Check required secrets are set
+gh secret list
+
+# Set missing secret
+gh secret set MY_SECRET
+```
+
+### 3. Branch Protection Rules
+```yaml
+# Use allowed labels or admin override
+# Check repository settings for branch protection
+```
+
+---
+
+## Test Timeout Issues
+
+**Symptom**: Tests timeout in CI but pass locally
+
+**Solutions**:
+
+### 1. Increase Timeout
+```yaml
+- name: Run tests
+  run: pytest tests/ -v --timeout=300
+  timeout-minutes: 30
+```
+
+### 2. Skip Slow Tests in CI
+```python
+@pytest.mark.skipif(
+    os.getenv("CI") == "true",
+    reason="Slow test, run locally"
+)
+def test_slow_operation():
+    pass
+```
+
+### 3. Use Faster Test Profile
+```bash
+# Use CI-optimized settings
+pytest tests/ -x --lf -n auto --dist loadscope
+```
+
+---
+
+## Artifact Upload Failures
+
+**Symptom**: `Error: Unable to upload artifact`
+
+**Solutions**:
+
+### 1. File Path Issues
+```yaml
+- uses: actions/upload-artifact@v4
+  with:
+    name: coverage-report
+    path: coverage.xml  # Must exist
+    if-no-files-found: warn
+```
+
+### 2. Size Limits
+```yaml
+# Compress large artifacts
+- name: Compress artifacts
+  run: tar -czf artifacts.tar.gz ./build/
+
+- uses: actions/upload-artifact@v4
+  with:
+    name: build
+    path: artifacts.tar.gz
+    compression-level: 9
+```
+
+---
+
+## Kustomize Build Errors in CI
+
+**Symptom**: `Error: accumulating resources` in Kustomize validation
+
+**Solutions**:
+
+### 1. Validate Locally First
+```bash
+kubectl kustomize deployments/overlays/staging-gke --enable-helm
+```
+
+### 2. Check for Missing Files
+```bash
+# List all referenced files
+kustomize cfg grep "kind=ConfigMap" deployments/
+```
+
+### 3. Version Mismatch
+```yaml
+# Use specific kustomize version
+- uses: imranismail/setup-kustomize@v2
+  with:
+    kustomize-version: "5.3.0"
+```
+
+---
+
+## Workflow Not Triggering
+
+**Symptom**: Push/PR doesn't trigger expected workflow
+
+**Checklist**:
+
+### 1. Check Trigger Conditions
+```yaml
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+  pull_request:
+    branches: [main]
+```
+
+### 2. Check Workflow Status
+```bash
+# View workflow runs
+gh run list --workflow=ci.yml
+
+# View specific run
+gh run view <run-id>
+```
+
+### 3. Verify Workflow File
+```bash
+# Validate workflow syntax
+actionlint .github/workflows/ci.yml
+```
+
+---
+
+## Still Having Issues?
+
+For advanced CI/CD troubleshooting:
+
+1. **Check Workflow Logs**: `gh run view <run-id> --log`
+2. **Debug Mode**: Add `ACTIONS_RUNNER_DEBUG: true` to env
+3. **Review Documentation**: See [CI/CD Overview](/ci-cd/overview)
+4. **Search Issues**: Check [GitHub Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)

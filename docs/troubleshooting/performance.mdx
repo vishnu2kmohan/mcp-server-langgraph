@@ -1,0 +1,295 @@
+---
+title: Performance Problems
+description: 'Troubleshooting guide for slow responses, memory leaks, and connection timeouts'
+seoTitle: "Troubleshooting Performance Issues - MCP Server with LangGraph"
+seoDescription: "Solutions for slow LLM responses, memory leaks, Redis timeouts, and other performance problems"
+keywords: ["performance", "memory leak", "slow response", "timeout", "troubleshooting", "MCP Server"]
+contentType: "reference"
+icon: 'gauge'
+---
+
+# Performance Problems
+
+This guide covers common performance issues and optimization strategies.
+
+## Slow LLM Responses
+
+**Symptom**: Requests take 30+ seconds to complete
+
+**Diagnosis**:
+```python
+# Enable detailed logging
+import logging
+logging.getLogger("mcp_server_langgraph").setLevel(logging.DEBUG)
+
+# Check LangSmith trace
+# Look for slow steps in execution
+```
+
+**Common Causes**:
+
+### 1. Large Context Window
+```python
+# Solution: Reduce context size
+from langchain_core.messages import trim_messages
+
+messages = trim_messages(
+    messages,
+    max_tokens=4000,  # Reduce from 8000+
+    strategy="last",  # Keep most recent
+)
+```
+
+### 2. Too Many Tool Calls
+```python
+# Limit tool execution iterations
+agent = create_langgraph_agent(
+    max_iterations=5,  # Add limit
+)
+```
+
+### 3. Slow External Tool Calls
+```python
+# Add timeouts to tool calls
+import asyncio
+
+async def tool_with_timeout():
+    try:
+        return await asyncio.wait_for(
+            slow_tool(),
+            timeout=10.0  # 10 second timeout
+        )
+    except asyncio.TimeoutError:
+        return "Tool execution timed out"
+```
+
+---
+
+## Memory Leaks
+
+**Symptom**: Memory usage grows over time, eventually OOMKilled
+
+**Diagnosis**:
+```python
+# Add memory profiling
+import tracemalloc
+
+tracemalloc.start()
+
+# ... run your code ...
+
+current, peak = tracemalloc.get_traced_memory()
+print(f"Current memory usage: {current / 10**6}MB")
+print(f"Peak memory usage: {peak / 10**6}MB")
+tracemalloc.stop()
+```
+
+**Common Causes**:
+
+### 1. Session Store Not Clearing Old Sessions
+```python
+# Add session cleanup
+from datetime import datetime, timedelta
+
+async def cleanup_old_sessions():
+    cutoff = datetime.utcnow() - timedelta(days=7)
+    await session_store.delete_expired(cutoff)
+
+# Run periodically
+import asyncio
+asyncio.create_task(periodic_cleanup())
+```
+
+### 2. Large Conversation History
+```python
+# Limit checkpointed messages
+from langgraph.checkpoint import MemorySaver
+
+checkpointer = MemorySaver(
+    max_history=20  # Keep last 20 messages only
+)
+```
+
+### 3. Unclosed AsyncMock in Tests
+```python
+# See: tests/MEMORY_SAFETY_GUIDELINES.md
+class TestMyFeature:
+    def teardown_method(self):
+        # Force garbage collection
+        import gc
+        gc.collect()
+```
+
+---
+
+## Redis Connection Timeouts
+
+**Symptom**: `redis.exceptions.TimeoutError: Timeout reading from socket`
+
+**Solutions**:
+
+### 1. Connection Pool Exhausted
+```python
+# Increase connection pool size
+REDIS_SESSION_POOL_SIZE=50  # Increase from default 10
+```
+
+### 2. Redis Under Load
+```bash
+# Check Redis stats
+redis-cli INFO stats
+
+# Look for:
+# - instantaneous_ops_per_sec
+# - used_memory_human
+# - evicted_keys
+
+# Scale Redis if needed
+kubectl scale statefulset redis --replicas=3 -n mcp-server
+```
+
+### 3. Network Latency
+```bash
+# Test Redis latency
+redis-cli --latency -h redis -p 6379
+
+# If high latency, consider:
+# - Using Redis Cluster
+# - Enabling Redis pipelining
+# - Collocating Redis with app
+```
+
+---
+
+## High CPU Usage
+
+**Symptom**: CPU usage consistently at 80%+
+
+**Diagnosis**:
+```bash
+# Profile in production
+kubectl top pods -n mcp-server
+
+# Get detailed CPU usage
+kubectl exec -it <pod-name> -n mcp-server -- top -b -n 1
+```
+
+**Solutions**:
+
+### 1. Inefficient Serialization
+```python
+# Use orjson instead of json
+import orjson
+
+data = orjson.dumps(obj)  # Faster than json.dumps
+```
+
+### 2. Synchronous Operations Blocking Event Loop
+```python
+# Move CPU-intensive work to thread pool
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+executor = ThreadPoolExecutor(max_workers=4)
+
+async def cpu_intensive_task():
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(executor, blocking_function)
+```
+
+### 3. Missing Connection Pooling
+```python
+# Use connection pooling for database
+from sqlalchemy.pool import QueuePool
+
+engine = create_async_engine(
+    DATABASE_URL,
+    poolclass=QueuePool,
+    pool_size=10,
+    max_overflow=20,
+)
+```
+
+---
+
+## Slow Startup Time
+
+**Symptom**: Application takes 60+ seconds to start
+
+**Causes & Solutions**:
+
+### 1. Large Model Loading
+```python
+# Lazy load models
+_model = None
+
+def get_model():
+    global _model
+    if _model is None:
+        _model = load_model()
+    return _model
+```
+
+### 2. Synchronous Initialization
+```python
+# Use lazy initialization pattern
+from mcp_server_langgraph.observability.lazy_init import LazyTelemetryProvider
+
+# Telemetry initializes on first use, not at import
+```
+
+### 3. Health Check Too Aggressive
+```yaml
+# Increase initial delay
+livenessProbe:
+  initialDelaySeconds: 60  # Increase from 30
+  periodSeconds: 15
+```
+
+---
+
+## Request Queue Buildup
+
+**Symptom**: Requests queuing, response times increasing
+
+**Diagnosis**:
+```python
+# Check active connections
+from prometheus_client import Gauge
+
+active_requests = Gauge('active_requests', 'Number of active requests')
+```
+
+**Solutions**:
+
+### 1. Scale Horizontally
+```bash
+# Increase replicas
+kubectl scale deployment mcp-server --replicas=5 -n mcp-server
+```
+
+### 2. Add Rate Limiting
+```python
+# Configure rate limits
+RATE_LIMIT_REQUESTS_PER_MINUTE=100
+RATE_LIMIT_TOKENS_PER_MINUTE=10000
+```
+
+### 3. Enable Request Timeouts
+```python
+# Add global timeout
+import httpx
+
+client = httpx.AsyncClient(timeout=30.0)  # 30 second timeout
+```
+
+---
+
+## Still Having Issues?
+
+For advanced performance optimization:
+
+1. **Enable Metrics**: Set up Prometheus metrics collection
+2. **Use LangSmith**: Enable tracing for LLM call analysis
+3. **Profile Locally**: Use cProfile for detailed profiling
+4. **Review Architecture**: See [performance best practices](/guides/resilience-patterns)

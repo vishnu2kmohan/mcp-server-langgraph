@@ -1,0 +1,207 @@
+---
+title: Deployment Problems
+description: 'Troubleshooting guide for Kubernetes, Docker, and Cloud Run deployment issues'
+seoTitle: "Troubleshooting Deployment Issues - MCP Server with LangGraph"
+seoDescription: "Solutions for Kubernetes pod failures, Docker container issues, and Cloud Run deployment problems"
+keywords: ["deployment", "kubernetes", "docker", "cloud run", "troubleshooting", "MCP Server"]
+contentType: "reference"
+icon: 'rocket'
+---
+
+# Deployment Problems
+
+This guide covers common deployment issues across Kubernetes, Docker, and Cloud Run environments.
+
+## Kubernetes Pod CrashLoopBackOff
+
+**Symptom**: Pods continuously restart with `CrashLoopBackOff` status
+
+**Diagnosis**:
+```bash
+# Check pod logs
+kubectl logs -n mcp-server <pod-name> --previous
+
+# Describe pod for events
+kubectl describe pod -n mcp-server <pod-name>
+
+# Check resource constraints
+kubectl top pod -n mcp-server <pod-name>
+```
+
+**Common Causes & Solutions**:
+
+### 1. Missing Environment Variables
+```bash
+# Check ConfigMap
+kubectl get configmap -n mcp-server mcp-server-config -o yaml
+
+# Check Secrets
+kubectl get secret -n mcp-server mcp-server-secrets -o yaml
+
+# Verify required secrets exist
+kubectl get secret -n mcp-server cloud-sql-credentials
+kubectl get secret -n mcp-server keycloak-admin
+```
+
+**Fix**: Add missing secrets to `deployments/base/secrets.yaml` or External Secrets configuration.
+
+### 2. Cloud SQL Proxy Connection Failure
+```bash
+# Check Cloud SQL Proxy sidecar logs
+kubectl logs -n mcp-server <pod-name> -c cloud-sql-proxy
+
+# Common errors:
+# - "could not refresh token": IAM permissions issue
+# - "connection refused": Wrong connection name
+# - "invalid instance": Instance doesn't exist
+```
+
+**Fix**: See our [GKE Runbooks](/deployment/operations/gke-runbooks#cloud-sql-connection-issues).
+
+### 3. Resource Limits Too Low
+```yaml
+# Check if OOMKilled
+kubectl get events -n mcp-server | grep OOMKilled
+
+# Increase memory limits in deployment
+resources:
+  requests:
+    memory: "512Mi"  # Increase from 256Mi
+  limits:
+    memory: "2Gi"    # Increase from 1Gi
+```
+
+---
+
+## Docker Container Won't Start
+
+**Symptom**: `docker-compose up` fails with container exit code
+
+**Diagnosis**:
+```bash
+# View container logs
+docker-compose logs mcp-server
+
+# Check specific service
+docker-compose logs keycloak
+docker-compose logs redis
+
+# Inspect container
+docker inspect mcp-server_mcp-server_1
+```
+
+**Common Causes**:
+
+### 1. Port Already in Use
+```bash
+# Find process using port
+lsof -i :8000  # For MCP server
+lsof -i :8080  # For Keycloak
+
+# Kill the process or change port in docker-compose.yml
+```
+
+### 2. Health Check Failing
+```yaml
+# Fix Qdrant health check (grpc_health_probe required)
+qdrant:
+  healthcheck:
+    test: ["CMD", "grpc_health_probe", "-addr=:6334"]
+    # NOT: test: ["CMD", "curl", "-f", "http://localhost:6333"]
+```
+
+### 3. Volume Mount Permissions
+```bash
+# Fix permissions for PostgreSQL data volume
+sudo chown -R 999:999 ./data/postgres
+
+# Fix permissions for Redis data
+sudo chown -R 999:999 ./data/redis
+```
+
+---
+
+## Cloud Run Deployment Fails
+
+**Symptom**: Cloud Run deployment fails with `ERROR: (gcloud.run.deploy) INVALID_ARGUMENT`
+
+**Common Errors**:
+
+### 1. Container Image Not Found
+```bash
+# Verify image exists in Artifact Registry
+gcloud artifacts docker images list \
+  us-central1-docker.pkg.dev/YOUR_PROJECT/mcp-server
+
+# Ensure image is pushed
+docker tag mcp-server:latest \
+  us-central1-docker.pkg.dev/YOUR_PROJECT/mcp-server/mcp-server:latest
+docker push us-central1-docker.pkg.dev/YOUR_PROJECT/mcp-server/mcp-server:latest
+```
+
+### 2. Service Account Permissions
+```bash
+# Grant required permissions
+gcloud projects add-iam-policy-binding YOUR_PROJECT \
+  --member="serviceAccount:mcp-server@YOUR_PROJECT.iam.gserviceaccount.com" \
+  --role="roles/cloudsql.client"
+
+# Check current permissions
+gcloud projects get-iam-policy YOUR_PROJECT \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:mcp-server@"
+```
+
+### 3. Environment Variables Too Large
+```bash
+# Error: "The total size of environment variables exceeds 32KB"
+# Solution: Use Secret Manager instead
+gcloud run services update mcp-server \
+  --update-secrets=OPENAI_API_KEY=openai-api-key:latest \
+  --region=us-central1
+```
+
+---
+
+## Kustomize Build Errors
+
+**Symptom**: `Error: accumulating resources: accumulation err='merging resources...'`
+
+**Common Issues**:
+
+### 1. ConfigMap Generator with `behavior: replace`
+```yaml
+# Don't use behavior: replace with generators
+configMapGenerator:
+  - name: app-config
+    # behavior: replace  # REMOVE THIS
+    literals:
+      - KEY=value
+```
+
+### 2. Missing Base Resources
+```yaml
+# Ensure base exists
+bases:
+  - ../../base  # Path must exist
+```
+
+### 3. Duplicate Resource Names
+```yaml
+# Each resource must have unique metadata.name
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config  # Must be unique
+```
+
+---
+
+## Still Having Issues?
+
+For more detailed deployment troubleshooting:
+
+- **Kubernetes**: See [Pod Failures Troubleshooting](/troubleshooting/pod-failures)
+- **GKE Specific**: See [GKE Runbooks](/deployment/operations/gke-runbooks)
+- **EKS Specific**: See [EKS Runbooks](/deployment/operations/eks-runbooks)
+- **Report Bug**: [Create an issue](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues/new)

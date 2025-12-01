@@ -15,703 +15,92 @@ This guide provides solutions to common issues encountered when working with MCP
 ## Quick Navigation
 
 <CardGroup cols={2}>
-  <Card title="Installation Issues" icon="download" href="#installation-issues">
+  <Card title="Installation Issues" icon="download" href="/troubleshooting/installation">
     Dependency conflicts, Python version mismatches, package errors
   </Card>
-  <Card title="Deployment Problems" icon="rocket" href="#deployment-problems">
+  <Card title="Deployment Problems" icon="rocket" href="/troubleshooting/deployment">
     Kubernetes, Docker, Cloud Run deployment failures
   </Card>
-  <Card title="Authentication Issues" icon="shield" href="#authentication-issues">
+  <Card title="Authentication Issues" icon="shield" href="/troubleshooting/authentication">
     JWT errors, Keycloak problems, OpenFGA authorization
   </Card>
-  <Card title="Performance Problems" icon="gauge" href="#performance-problems">
+  <Card title="Performance Problems" icon="gauge" href="/troubleshooting/performance">
     Slow responses, memory leaks, connection timeouts
   </Card>
-  <Card title="CI/CD Failures" icon="code-branch" href="#cicd-failures">
+  <Card title="CI/CD Failures" icon="code-branch" href="/troubleshooting/ci-cd">
     GitHub Actions errors, test failures, build problems
   </Card>
-  <Card title="Database Issues" icon="database" href="#database-issues">
+  <Card title="Database Issues" icon="database" href="/troubleshooting/database">
     Redis connection errors, PostgreSQL problems, session storage
   </Card>
 </CardGroup>
 
 ---
 
-## Installation Issues
+## Kubernetes-Specific Guides
 
-### Python Version Mismatch
+<CardGroup cols={2}>
+  <Card title="Pod Failures" icon="cube" href="/troubleshooting/pod-failures">
+    CrashLoopBackOff, ImagePullBackOff, pending pods, GKE Autopilot issues
+  </Card>
+  <Card title="GKE Runbooks" icon="book" href="/deployment/operations/gke-runbooks">
+    GKE-specific troubleshooting and operational procedures
+  </Card>
+  <Card title="EKS Runbooks" icon="book" href="/deployment/operations/eks-runbooks">
+    AWS EKS troubleshooting and operational procedures
+  </Card>
+  <Card title="Advanced Troubleshooting" icon="microscope" href="/advanced/troubleshooting">
+    Deep-dive debugging techniques
+  </Card>
+</CardGroup>
 
-**Symptom**: `ERROR: This package requires Python >=3.10,\<3.13`
+---
 
-**Solution**:
+## Quick Diagnostic Commands
+
+### Check Service Health
+
 ```bash
-# Check your Python version
-python --version
+# Local development
+curl http://localhost:8000/health
 
-# If using pyenv, install correct version
-pyenv install 3.12.7
-pyenv local 3.12.7
-
-# Recreate virtual environment
-rm -rf .venv
-python -m venv .venv
-source .venv/bin/activate
+# Kubernetes
+kubectl get pods -n mcp-server
+kubectl logs -n mcp-server <pod-name>
 ```
 
-### uv Lock File Out of Sync
+### Enable Debug Logging
 
-**Symptom**: `ERROR: uv.lock out of sync with pyproject.toml`
-
-**Solution**:
 ```bash
-# Regenerate lock file
-uv lock
+# Set environment variable
+export LOG_LEVEL=DEBUG
 
-# Install dependencies
-uv sync
-
-# For development extras
-uv sync --extra dev
+# Or in .env file
+LOG_LEVEL=DEBUG
 ```
 
-### Missing Optional Dependencies
+### View Traces
 
-**Symptom**: `ModuleNotFoundError: No module named 'google.cloud'`
-
-**Solution**:
 ```bash
-# Install specific extras
-uv sync --extra gcp          # For Google Cloud
-uv sync --extra aws          # For AWS
-uv sync --extra secrets      # For Infisical
-uv sync --extra code-execution  # For code execution
+# Open LangSmith dashboard (if configured)
+open https://smith.langchain.com
 
-# Install all extras
-uv sync --all-extras
-```
-
-### Conflicting Dependencies
-
-**Symptom**: `ERROR: Cannot install X and Y because these package versions have conflicting dependencies`
-
-**Solution**:
-```bash
-# Clear uv cache
-uv cache clean
-
-# Remove lock file and regenerate
-rm uv.lock
-uv lock
-
-# If issue persists, check pyproject.toml for version constraints
-# Look for overly restrictive version pins like ==1.2.3
-# Consider changing to >=1.2.3,&lt;2.0.0
+# Or check local Jaeger
+open http://localhost:16686
 ```
 
 ---
 
-## Deployment Problems
-
-### Kubernetes Pod CrashLoopBackOff
-
-**Symptom**: Pods continuously restart with `CrashLoopBackOff` status
-
-**Diagnosis**:
-```bash
-# Check pod logs
-kubectl logs -n mcp-server <pod-name> --previous
-
-# Describe pod for events
-kubectl describe pod -n mcp-server <pod-name>
-
-# Check resource constraints
-kubectl top pod -n mcp-server <pod-name>
-```
-
-**Common Causes & Solutions**:
-
-#### 1. Missing Environment Variables
-```bash
-# Check ConfigMap
-kubectl get configmap -n mcp-server mcp-server-config -o yaml
-
-# Check Secrets
-kubectl get secret -n mcp-server mcp-server-secrets -o yaml
-
-# Verify required secrets exist
-kubectl get secret -n mcp-server cloud-sql-credentials
-kubectl get secret -n mcp-server keycloak-admin
-```
-
-**Fix**: Add missing secrets to `deployments/base/secrets.yaml` or External Secrets configuration.
-
-#### 2. Cloud SQL Proxy Connection Failure
-```bash
-# Check Cloud SQL Proxy sidecar logs
-kubectl logs -n mcp-server <pod-name> -c cloud-sql-proxy
-
-# Common errors:
-# - "could not refresh token": IAM permissions issue
-# - "connection refused": Wrong connection name
-# - "invalid instance": Instance doesn't exist
-```
-
-**Fix**: See our [Cloud SQL troubleshooting guide](/deployment/operations/gke-runbooks#cloud-sql-connection-issues).
-
-#### 3. Resource Limits Too Low
-```yaml
-# Check if OOMKilled
-kubectl get events -n mcp-server | grep OOMKilled
-
-# Increase memory limits in deployment
-resources:
-  requests:
-    memory: "512Mi"  # Increase from 256Mi
-  limits:
-    memory: "2Gi"    # Increase from 1Gi
-```
-
-### Docker Container Won't Start
-
-**Symptom**: `docker-compose up` fails with container exit code
-
-**Diagnosis**:
-```bash
-# View container logs
-docker-compose logs mcp-server
-
-# Check specific service
-docker-compose logs keycloak
-docker-compose logs redis
-
-# Inspect container
-docker inspect mcp-server_mcp-server_1
-```
-
-**Common Causes**:
-
-#### 1. Port Already in Use
-```bash
-# Find process using port
-lsof -i :8000  # For MCP server
-lsof -i :8080  # For Keycloak
-
-# Kill the process or change port in docker-compose.yml
-```
-
-#### 2. Health Check Failing
-```yaml
-# Fix Qdrant health check (grpc_health_probe required)
-qdrant:
-  healthcheck:
-    test: ["CMD", "grpc_health_probe", "-addr=:6334"]
-    # NOT: test: ["CMD", "curl", "-f", "http://localhost:6333"]
-```
-
-#### 3. Volume Mount Permissions
-```bash
-# Fix permissions for PostgreSQL data volume
-sudo chown -R 999:999 ./data/postgres
-
-# Fix permissions for Redis data
-sudo chown -R 999:999 ./data/redis
-```
-
-### Cloud Run Deployment Fails
-
-**Symptom**: Cloud Run deployment fails with `ERROR: (gcloud.run.deploy) INVALID_ARGUMENT`
-
-**Common Errors**:
-
-#### 1. Container Image Not Found
-```bash
-# Verify image exists in Artifact Registry
-gcloud artifacts docker images list \
-  us-central1-docker.pkg.dev/YOUR_PROJECT/mcp-server
-
-# Ensure image is pushed
-docker tag mcp-server:latest \
-  us-central1-docker.pkg.dev/YOUR_PROJECT/mcp-server/mcp-server:latest
-docker push us-central1-docker.pkg.dev/YOUR_PROJECT/mcp-server/mcp-server:latest
-```
-
-#### 2. Service Account Permissions
-```bash
-# Grant required permissions
-gcloud projects add-iam-policy-binding YOUR_PROJECT \
-  --member="serviceAccount:mcp-server@YOUR_PROJECT.iam.gserviceaccount.com" \
-  --role="roles/cloudsql.client"
-
-# Check current permissions
-gcloud projects get-iam-policy YOUR_PROJECT \
-  --flatten="bindings[].members" \
-  --filter="bindings.members:mcp-server@"
-```
-
-#### 3. Environment Variables Too Large
-```bash
-# Error: "The total size of environment variables exceeds 32KB"
-# Solution: Use Secret Manager instead
-gcloud run services update mcp-server \
-  --update-secrets=OPENAI_API_KEY=openai-api-key:latest \
-  --region=us-central1
-```
-
----
-
-## Authentication Issues
-
-### JWT Token Validation Fails
-
-**Symptom**: `401 Unauthorized` or `Invalid token`
-
-**Diagnosis**:
-```bash
-# Decode JWT to inspect claims
-echo "YOUR_JWT_TOKEN" | base64 -d | jq .
-
-# Check token expiration
-python3 <<EOF
-import jwt
-token = "YOUR_JWT_TOKEN"
-decoded = jwt.decode(token, options={"verify_signature": False})
-print(f"Expires: {decoded.get('exp')}")
-print(f"Issued: {decoded.get('iat')}")
-EOF
-```
-
-**Common Causes**:
-
-#### 1. Token Expired
-```python
-# Solution: Implement token refresh
-from datetime import datetime, timedelta
-
-if token_exp < datetime.utcnow() + timedelta(minutes=5):
-    # Refresh token before it expires
-    new_token = refresh_jwt_token(refresh_token)
-```
-
-#### 2. Wrong Public Key
-```bash
-# Verify Keycloak public key matches
-curl http://keycloak:8080/realms/mcp-server/protocol/openid-connect/certs
-
-# Check AUTH_PUBLIC_KEY_URL in config
-echo $AUTH_PUBLIC_KEY_URL
-```
-
-#### 3. Missing Required Claims
-```json
-// Token must include:
-{
-  "sub": "user-id",
-  "preferred_username": "username",
-  "realm_access": {
-    "roles": ["user", "admin"]
-  }
-}
-```
-
-### Keycloak Connection Refused
-
-**Symptom**: `ConnectionError: ('Connection aborted.', ConnectionRefusedError(111, 'Connection refused'))`
-
-**Solutions**:
-
-#### 1. Keycloak Not Ready
-```bash
-# Wait for Keycloak to fully start
-docker-compose logs -f keycloak
-
-# Look for: "Keycloak 25.0.0 started in XXms"
-```
-
-#### 2. Wrong Keycloak URL
-```bash
-# Check KEYCLOAK_URL environment variable
-echo $KEYCLOAK_URL
-
-# Should match Keycloak service name in docker-compose.yml
-# Inside container: http://keycloak:8080
-# From host: http://localhost:8080
-```
-
-#### 3. Keycloak Admin Credentials Invalid
-```bash
-# Reset Keycloak admin password
-docker-compose exec keycloak \
-  /opt/keycloak/bin/kcadm.sh set-password \
-  --username admin \
-  --new-password admin \
-  --realm master
-```
-
-### OpenFGA Authorization Denied
-
-**Symptom**: `403 Forbidden` or `OpenFGA authorization check failed`
-
-**Diagnosis**:
-```bash
-# Check OpenFGA connection
-curl http://openfga:8080/healthz
-
-# List stores
-curl http://openfga:8080/stores
-
-# Check user permissions
-curl -X POST http://openfga:8080/stores/YOUR_STORE_ID/check \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tuple_key": {
-      "user": "user:alice",
-      "relation": "read",
-      "object": "document:readme"
-    }
-  }'
-```
-
-**Common Issues**:
-
-#### 1. Store ID Not Set
-```bash
-# Verify OPENFGA_STORE_ID environment variable
-echo $OPENFGA_STORE_ID
-
-# Create store if missing
-curl -X POST http://openfga:8080/stores \
-  -H "Content-Type: application/json" \
-  -d '{"name": "mcp-server"}'
-```
-
-#### 2. Missing Relationship Tuples
-```bash
-# Write relationship tuple
-fga tuple write --store-id $OPENFGA_STORE_ID \
-  user:alice member organization:acme
-```
-
-#### 3. Authorization Model Not Set
-```bash
-# Upload authorization model
-curl -X POST http://openfga:8080/stores/$OPENFGA_STORE_ID/authorization-models \
-  -H "Content-Type: application/json" \
-  -d @config/openfga-model.json
-```
-
----
-
-## Performance Problems
-
-### Slow LLM Responses
-
-**Symptom**: Requests take 30+ seconds to complete
-
-**Diagnosis**:
-```python
-# Enable detailed logging
-import logging
-logging.getLogger("mcp_server_langgraph").setLevel(logging.DEBUG)
-
-# Check LangSmith trace
-# Look for slow steps in execution
-```
-
-**Common Causes**:
-
-#### 1. Large Context Window
-```python
-# Solution: Reduce context size
-from langchain_core.messages import trim_messages
-
-messages = trim_messages(
-    messages,
-    max_tokens=4000,  # Reduce from 8000+
-    strategy="last",  # Keep most recent
-)
-```
-
-#### 2. Too Many Tool Calls
-```python
-# Limit tool execution iterations
-agent = create_langgraph_agent(
-    max_iterations=5,  # Add limit
-)
-```
-
-#### 3. Slow External Tool Calls
-```python
-# Add timeouts to tool calls
-import asyncio
-
-async def tool_with_timeout():
-    try:
-        return await asyncio.wait_for(
-            slow_tool(),
-            timeout=10.0  # 10 second timeout
-        )
-    except asyncio.TimeoutError:
-        return "Tool execution timed out"
-```
-
-### Memory Leaks
-
-**Symptom**: Memory usage grows over time, eventually OOMKilled
-
-**Diagnosis**:
-```python
-# Add memory profiling
-import tracemalloc
-
-tracemalloc.start()
-
-# ... run your code ...
-
-current, peak = tracemalloc.get_traced_memory()
-print(f"Current memory usage: {current / 10**6}MB")
-print(f"Peak memory usage: {peak / 10**6}MB")
-tracemalloc.stop()
-```
-
-**Common Causes**:
-
-#### 1. Session Store Not Clearing Old Sessions
-```python
-# Add session cleanup
-from datetime import datetime, timedelta
-
-async def cleanup_old_sessions():
-    cutoff = datetime.utcnow() - timedelta(days=7)
-    await session_store.delete_expired(cutoff)
-
-# Run periodically
-import asyncio
-asyncio.create_task(periodic_cleanup())
-```
-
-#### 2. Large Conversation History
-```python
-# Limit checkpointed messages
-from langgraph.checkpoint import MemorySaver
-
-checkpointer = MemorySaver(
-    max_history=20  # Keep last 20 messages only
-)
-```
-
-#### 3. Unclosed AsyncMock in Tests
-```python
-# See: tests/MEMORY_SAFETY_GUIDELINES.md
-class TestMyFeature:
-    def teardown_method(self):
-        # Force garbage collection
-        import gc
-        gc.collect()
-```
-
-### Redis Connection Timeouts
-
-**Symptom**: `redis.exceptions.TimeoutError: Timeout reading from socket`
-
-**Solutions**:
-
-#### 1. Connection Pool Exhausted
-```python
-# Increase connection pool size
-REDIS_SESSION_POOL_SIZE=50  # Increase from default 10
-```
-
-#### 2. Redis Under Load
-```bash
-# Check Redis stats
-redis-cli INFO stats
-
-# Look for:
-# - instantaneous_ops_per_sec
-# - used_memory_human
-# - evicted_keys
-
-# Scale Redis if needed
-kubectl scale statefulset redis --replicas=3 -n mcp-server
-```
-
-#### 3. Network Latency
-```bash
-# Test Redis latency
-redis-cli --latency -h redis -p 6379
-
-# If high latency, consider:
-# - Using Redis Cluster
-# - Enabling Redis pipelining
-# - Collocating Redis with app
-```
-
----
-
-## CI/CD Failures
-
-### GitHub Actions Test Failures
-
-**Symptom**: Tests pass locally but fail in CI
-
-**Common Causes**:
-
-#### 1. Missing Test Dependencies
-```yaml
-# Fix: Ensure dev extras are installed
-- name: Install dependencies
-  run: |
-    uv sync --extra dev
-```
-
-#### 2. Timezone Differences
-```python
-# Use UTC explicitly in tests
-from datetime import datetime, timezone
-
-now = datetime.now(timezone.utc)  # Not datetime.now()
-```
-
-#### 3. pytest-xdist Race Conditions
-```python
-# Add xdist_group to related tests
-@pytest.mark.xdist_group(name="redis_tests")
-class TestRedisFeatures:
-    def teardown_method(self):
-        import gc
-        gc.collect()  # Prevent memory leaks
-```
-
-### Docker Build Fails
-
-**Symptom**: `ERROR [internal] load metadata for docker.io/library/python:3.12-slim`
-
-**Solutions**:
-
-#### 1. Base Image Not Found
-```dockerfile
-# Use specific SHA instead of tag
-FROM python:3.12-slim@sha256:abc123...
-
-# Or use stable tag
-FROM python:3.12.7-slim
-```
-
-#### 2. Build Context Too Large
-```bash
-# Add to .dockerignore
-.venv
-.git
-__pycache__
-*.pyc
-tests/
-docs/
-```
-
-#### 3. Multi-stage Build Cache Issues
-```dockerfile
-# Invalidate cache explicitly
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --no-cache-dir -r requirements.txt
-```
-
-### Kustomize Build Errors
-
-**Symptom**: `Error: accumulating resources: accumulation err='merging resources...'`
-
-**Common Issues**:
-
-#### 1. ConfigMap Generator with `behavior: replace`
-```yaml
-# Don't use behavior: replace with generators
-configMapGenerator:
-  - name: app-config
-    # behavior: replace  # REMOVE THIS
-    literals:
-      - KEY=value
-```
-
-#### 2. Missing Base Resources
-```yaml
-# Ensure base exists
-bases:
-  - ../../base  # Path must exist
-```
-
-#### 3. Duplicate Resource Names
-```yaml
-# Each resource must have unique metadata.name
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: app-config  # Must be unique
-```
-
----
-
-## Database Issues
-
-### PostgreSQL Connection Failed
-
-**Symptom**: `psycopg2.OperationalError: could not connect to server`
-
-**Solutions**:
-
-#### 1. Cloud SQL Proxy Not Running
-```bash
-# Check proxy status
-ps aux | grep cloud_sql_proxy
-
-# Start proxy manually
-cloud_sql_proxy \
-  -instances=PROJECT:REGION:INSTANCE=tcp:5432 \
-  -credential_file=credentials.json
-```
-
-#### 2. Wrong Connection String
-```bash
-# Inside Kubernetes with Cloud SQL Proxy sidecar
-DATABASE_URL=postgresql://user:pass@localhost:5432/dbname
-
-# Direct connection (not recommended for production)
-DATABASE_URL=postgresql://user:pass@INSTANCE_IP:5432/dbname
-```
-
-#### 3. SSL Mode Mismatch
-```bash
-# For Cloud SQL with proxy
-DATABASE_SSL_MODE=disable  # Proxy handles SSL
-
-# For direct connection
-DATABASE_SSL_MODE=require
-```
-
-### Redis Out of Memory
-
-**Symptom**: `OOM command not allowed when used memory > 'maxmemory'`
-
-**Solutions**:
-
-#### 1. Increase Memory Limit
-```yaml
-# In Kubernetes
-resources:
-  limits:
-    memory: "4Gi"  # Increase from 2Gi
-```
-
-#### 2. Configure Eviction Policy
-```bash
-# Redis config
-maxmemory-policy allkeys-lru  # Evict least recently used keys
-```
-
-#### 3. Use Redis Persistence
-```yaml
-# Enable RDB snapshots
-appendonly: yes
-save: "900 1"  # Save after 900 seconds if at least 1 key changed
-```
+## Common Quick Fixes
+
+| Issue | Quick Fix |
+|-------|-----------|
+| `ModuleNotFoundError` | `uv sync --extra dev` |
+| Pod `CrashLoopBackOff` | Check logs: `kubectl logs <pod> --previous` |
+| `401 Unauthorized` | Verify JWT token is valid and not expired |
+| `503 Service Unavailable` | Check upstream service health |
+| `OOM Killed` | Increase memory limits in deployment |
+| Tests fail in CI | Ensure `uv sync --extra dev` in workflow |
 
 ---
 
@@ -729,16 +118,16 @@ If you're still experiencing issues:
    - Environment details (`python --version`, `kubectl version`, etc.)
    - Relevant logs
 
-## Related Guides
+---
 
-<CardGroup cols={3}>
-  <Card title="Advanced Troubleshooting" icon="microscope" href="/advanced/troubleshooting">
-    Deep-dive debugging techniques
-  </Card>
-  <Card title="GKE Runbooks" icon="book" href="/deployment/operations/gke-runbooks">
-    Kubernetes-specific troubleshooting
-  </Card>
-  <Card title="EKS Runbooks" icon="book" href="/deployment/operations/eks-runbooks">
-    AWS EKS troubleshooting
-  </Card>
-</CardGroup>
+## Troubleshooting Guides Index
+
+| Guide | Description |
+|-------|-------------|
+| [Installation](/troubleshooting/installation) | Python, uv, dependencies |
+| [Deployment](/troubleshooting/deployment) | Kubernetes, Docker, Cloud Run |
+| [Authentication](/troubleshooting/authentication) | JWT, Keycloak, OpenFGA |
+| [Performance](/troubleshooting/performance) | Memory, CPU, latency |
+| [CI/CD](/troubleshooting/ci-cd) | GitHub Actions, builds, tests |
+| [Database](/troubleshooting/database) | PostgreSQL, Redis, sessions |
+| [Pod Failures](/troubleshooting/pod-failures) | Kubernetes pod issues |
