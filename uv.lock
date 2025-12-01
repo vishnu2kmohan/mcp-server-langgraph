@@ -2886,6 +2886,7 @@ dev = [
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
     { name = "python-hcl2" },
+    { name = "semgrep" },
     { name = "types-pyyaml" },
 ]
 
@@ -3018,6 +3019,7 @@ dev = [
     { name = "pytest-timeout", specifier = ">=2.2.0" },
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "python-hcl2", specifier = ">=7.3.1" },
+    { name = "semgrep", specifier = ">=1.79.0" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
 ]
 
