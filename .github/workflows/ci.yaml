@@ -545,24 +545,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # OPTIMIZATION (2025-12-01): Reduced from 5 to 3 categories
+        # Removed:
+        #   - type-check: mypy already runs in 'test' job (line 357)
+        #   - tests: run-pre-push-tests duplicates 'test' job with same markers
+        #            python-version-smoke-test covered by 'test' matrix (3.11, 3.12, 3.13)
+        #            docker-build-smoke-test covered by 'docker-build' job
+        # Savings: ~20-25 min per CI run
         include:
-          - category: type-check
-            hooks: mypy
-            needs_helm: false
-            needs_trivy: false
-            needs_terraform: false
-            needs_actionlint: false
-            needs_node: false
-          - category: tests
-            hooks: run-pre-push-tests python-version-smoke-test docker-build-smoke-test
-            needs_helm: false
-            needs_trivy: false
-            needs_terraform: false
-            needs_actionlint: false
-            needs_node: false
           - category: security
-            # Fixed hook IDs: trivy-scan-k8s-manifests (not trivy-k8s-scan), semgrep-security-scan (not semgrep)
-            # Removed gitleaks (not in pre-push stage), added security-tools-check, checkov-terraform
+            # Security scans unique to this job (not duplicated elsewhere)
             hooks: bandit trivy-scan-k8s-manifests trivy-helm-scan trivy-helm-full-scan semgrep-security-scan security-tools-check checkov-terraform
             needs_helm: true
             needs_trivy: true
@@ -570,8 +562,7 @@ jobs:
             needs_actionlint: false
             needs_node: false
           - category: deployment
-            # Fixed hook IDs: terraform_validate (underscore, not hyphen)
-            # Removed terraform-fmt (not in pre-push stage)
+            # Deployment validation unique to this job
             hooks: helm-lint validate-cloud-overlays validate-gke-autopilot-compliance validate-no-placeholders check-helm-placeholders terraform_validate validate-dependency-injection
             needs_helm: true
             needs_trivy: false
@@ -579,14 +570,13 @@ jobs:
             needs_actionlint: false
             needs_node: false
           - category: quality
-            # Fixed hook IDs: check-test-environment-isolation (not check-test-env-isolation)
-            # mintlify-broken-links-check (not mintlify-broken-links)
-            # Removed validate-pre-push-hook (doesn't exist as pre-commit hook)
-            hooks: validate-fast validate-docs validate-test-fixtures validate-test-collection detect-dead-test-code validate-test-isolation validate-workflow-test-deps actionlint-workflow-validation validate-github-workflows-comprehensive validate-adr-index check-internal-links check-mermaid-styling uv-lock-check uv-pip-check check-subprocess-timeout check-banned-imports check-test-memory-safety validate-pytest-config validate-test-ids check-test-environment-isolation mintlify-broken-links-check
+            # Quality checks - removed actionlint (already in validate-workflows job)
+            # Removed actionlint-workflow-validation, validate-github-workflows-comprehensive (duplicate)
+            hooks: validate-fast validate-docs validate-test-fixtures validate-test-collection detect-dead-test-code validate-test-isolation validate-workflow-test-deps validate-adr-index check-internal-links check-mermaid-styling uv-lock-check uv-pip-check check-subprocess-timeout check-banned-imports check-test-memory-safety validate-pytest-config validate-test-ids check-test-environment-isolation mintlify-broken-links-check
             needs_helm: false
             needs_trivy: false
             needs_terraform: false
-            needs_actionlint: true
+            needs_actionlint: false
             needs_node: true
 
     steps:
