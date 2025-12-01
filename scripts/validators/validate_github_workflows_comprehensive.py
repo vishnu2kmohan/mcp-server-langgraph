@@ -170,6 +170,11 @@ class WorkflowValidator:
             # Fallback patterns with || operator (safe because of fallback)
             # github.event.pull_request.number || github.ref
             re.compile(rf"github\.event\.{context_name}\.\w+\s+\|\|"),
+            # Multi-line YAML guard with && operator
+            # (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+            re.compile(rf"github\.event_name\s*==\s*['\"]{context_name}['\"]\s*&&"),
+            # Guard with && before the context check (parenthesized)
+            re.compile(rf"\(github\.event_name\s*==\s*['\"]{context_name}['\"]\s*&&"),
         ]
 
         for pattern in guard_patterns:
