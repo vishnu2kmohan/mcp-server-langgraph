@@ -73,6 +73,11 @@ def test_no_slow_unit_tests():
     if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
         pytest.skip("Slow test detection skipped in CI (CI already captures test durations)")
 
+    # Skip in pre-commit/pre-push hook execution - these hooks already run the full test suite
+    # via run_pre_push_tests.py, so running it again would double the time
+    if os.environ.get("PRE_COMMIT") == "1":
+        pytest.skip("Slow test detection skipped in pre-push (run_pre_push_tests.py already runs suite)")
+
     # Skip in xdist workers
     if os.getenv("PYTEST_XDIST_WORKER"):
         pytest.skip("Slow test detection must run sequentially")

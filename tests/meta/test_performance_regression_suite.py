@@ -67,6 +67,11 @@ def test_unit_test_suite_performance():
     if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
         pytest.skip("Performance meta-test skipped in CI (CI already runs full test suite)")
 
+    # Skip in pre-commit/pre-push hook execution - these hooks already run the full test suite
+    # via run_pre_push_tests.py, so running it again would double the time
+    if os.environ.get("PRE_COMMIT") == "1":
+        pytest.skip("Performance meta-test skipped in pre-push (run_pre_push_tests.py already runs suite)")
+
     # Skip in xdist workers (this test must run sequentially)
     if os.getenv("PYTEST_XDIST_WORKER"):
         pytest.skip("Performance regression test must run sequentially, not in xdist workers")
