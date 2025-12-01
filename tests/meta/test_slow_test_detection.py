@@ -62,7 +62,17 @@ def test_no_slow_unit_tests():
     - Retry timing test: 14s (freezegun needed)
 
     These are documented and tracked. New slow tests should not be added.
+
+    This test should be run:
+    - Before releases to catch slow tests
+    - NOT in CI (CI already runs the full test suite via --durations, no need to run again)
+    - NOT in regular development (too slow for TDD workflow)
     """
+    # Skip in CI - CI already runs the full test suite with --durations output
+    # Running it again via subprocess would double the CI time and cause timeout issues
+    if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+        pytest.skip("Slow test detection skipped in CI (CI already captures test durations)")
+
     # Skip in xdist workers
     if os.getenv("PYTEST_XDIST_WORKER"):
         pytest.skip("Slow test detection must run sequentially")

@@ -380,6 +380,13 @@ def check_pre_push_hook() -> tuple[bool, list[str]]:
 
 def main() -> int:
     """Main validation function."""
+    # Skip validation in CI - CI runs pre-commit directly, not via git hooks
+    # CI environments don't have .git/hooks installed
+    if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+        print("ℹ️  Running in CI environment - skipping pre-push hook validation")
+        print("   CI runs pre-commit directly via 'pre-commit run', not via git hooks")
+        return 0
+
     try:
         is_valid, errors = check_pre_push_hook()
 

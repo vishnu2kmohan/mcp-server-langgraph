@@ -56,12 +56,17 @@ def test_unit_test_suite_performance():
 
     IMPORTANT: This test runs the full unit test suite, so it's slow by design.
     It should be run:
-    - In CI/CD to catch performance regressions
     - Before releases to ensure acceptable performance
+    - NOT in CI (CI already runs the full test suite, no need to run again)
     - NOT in regular development (too slow for TDD workflow)
 
     Skip in development with: pytest -m "not performance"
     """
+    # Skip in CI - CI already runs the full test suite, running it again via subprocess
+    # would double the CI time and cause timeout issues
+    if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+        pytest.skip("Performance meta-test skipped in CI (CI already runs full test suite)")
+
     # Skip in xdist workers (this test must run sequentially)
     if os.getenv("PYTEST_XDIST_WORKER"):
         pytest.skip("Performance regression test must run sequentially, not in xdist workers")
