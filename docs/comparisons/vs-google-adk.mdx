@@ -112,13 +112,13 @@ contentType: "explanation"
     # Define specialized agents
     researcher = LlmAgent(
         name="Researcher",
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         tools=[search_tool]
     )
 
     writer = LlmAgent(
         name="Writer",
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         tools=[write_tool]
     )
 
@@ -370,10 +370,10 @@ If you need to expand beyond Google Cloud:
     Switch from Gemini-specific to multi-provider:
     ```python
     # Google ADK
-    model = "gemini-2.0-flash"
+    model = "gemini-2.5-flash"
 
     # MCP Server with LangGraph
-    model = "gemini/gemini-2.0-flash"  # or any LiteLLM model
+    model = "gemini/gemini-2.5-flash"  # or any LiteLLM model
     ```
   </Step>
 

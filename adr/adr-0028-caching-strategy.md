@@ -155,7 +155,7 @@ async def get_llm_response_cached(prompt: str) -> str:
 ```python
 # Anthropic supports prompt caching for repeated prefixes
 response = anthropic.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-4-5-20250929",
     max_tokens=1024,
     system=[
         {
@@ -175,7 +175,7 @@ response = anthropic.messages.create(
 from google.generativeai import caching
 
 cached_content = caching.CachedContent.create(
-    model="gemini-1.5-flash-001",
+    model="gemini-2.5-flash",
     system_instruction="You are an AI assistant...",
     contents=["..."],
     ttl=datetime.timedelta(minutes=5),

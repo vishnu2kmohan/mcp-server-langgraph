@@ -63,7 +63,7 @@ class TestTokenUsageRecord:
             created_at=datetime(2025, 1, 15, 12, 0, 0, tzinfo=UTC),
             user_id="user123",
             session_id="session456",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=100,
             completion_tokens=50,
@@ -75,7 +75,7 @@ class TestTokenUsageRecord:
         assert "TokenUsageRecord" in repr_str
         assert "id=1" in repr_str
         assert "user_id=user123" in repr_str
-        assert "model=claude-3-5-sonnet-20241022" in repr_str
+        assert "model=claude-sonnet-4-5-20250929" in repr_str
         assert "tokens=150" in repr_str
 
     def test_token_usage_record_to_dict(self) -> None:
@@ -87,7 +87,7 @@ class TestTokenUsageRecord:
             created_at=timestamp,
             user_id="user123",
             session_id="session456",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=100,
             completion_tokens=50,
@@ -102,7 +102,7 @@ class TestTokenUsageRecord:
         assert result["id"] == 1
         assert result["user_id"] == "user123"
         assert result["session_id"] == "session456"
-        assert result["model"] == "claude-3-5-sonnet-20241022"
+        assert result["model"] == "claude-sonnet-4-5-20250929"
         assert result["provider"] == "anthropic"
         assert result["prompt_tokens"] == 100
         assert result["completion_tokens"] == 50

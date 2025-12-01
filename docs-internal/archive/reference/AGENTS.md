@@ -252,7 +252,7 @@ agent = Agent(
 # Runtime override
 result = await agent.run(
     "Your query",
-    model="anthropic:claude-3-5-sonnet-20241022"  # Override
+    model="anthropic:claude-sonnet-4-5-20250929"  # Override
 )
 ```
 
@@ -270,7 +270,7 @@ class CodeReview(BaseModel):
     rating: int = Field(ge=1, le=10, description="Code quality rating")
 
 review_agent = Agent(
-    model="anthropic:claude-3-5-sonnet-20241022",
+    model="anthropic:claude-sonnet-4-5-20250929",
     result_type=CodeReview,
     system_prompt="You are an expert code reviewer"
 )
@@ -291,7 +291,7 @@ from mcp_server_langgraph.llm.factory import create_llm_from_config
 
 # Configuration via settings
 llm = create_llm_from_config(
-    model_name="anthropic/claude-3-5-sonnet-20241022",
+    model_name="anthropic/claude-sonnet-4-5-20250929",
     temperature=0.7,
     max_tokens=4096,
     fallback_models=["openai/gpt-4", "google/gemini-pro"]
@@ -302,7 +302,7 @@ llm = create_llm_from_config(
 
 ```bash
 # Primary model
-export MODEL_NAME="anthropic/claude-3-5-sonnet-20241022"
+export MODEL_NAME="anthropic/claude-sonnet-4-5-20250929"
 export ANTHROPIC_API_KEY="sk-ant-..."
 
 # Fallback models
@@ -321,7 +321,7 @@ export MAX_TOKENS=4096
 from mcp_server_langgraph.llm.factory import LLMFactory
 
 factory = LLMFactory(
-    primary_model="anthropic/claude-3-5-sonnet-20241022",
+    primary_model="anthropic/claude-sonnet-4-5-20250929",
     fallback_models=[
         "openai/gpt-4",
         "google/gemini-pro",
@@ -515,7 +515,7 @@ rate_limiter = InMemoryRateLimiter(
 )
 
 llm = ChatAnthropic(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-4-5-20250929",
     rate_limiter=rate_limiter
 )
 ```

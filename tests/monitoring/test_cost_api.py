@@ -47,7 +47,7 @@ def sample_token_usage_records():
             timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session1",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -59,7 +59,7 @@ def sample_token_usage_records():
             timestamp=datetime.now(UTC),
             user_id="user2",
             session_id="session2",
-            model="gpt-4-turbo",
+            model="gpt-5.1",
             provider="openai",
             prompt_tokens=2000,
             completion_tokens=1000,
@@ -151,8 +151,8 @@ class TestCostSummaryEndpoint:
             # Assert
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
-            assert "claude-3-5-sonnet-20241022" in data["by_model"]
-            assert "gpt-4-turbo" in data["by_model"]
+            assert "claude-sonnet-4-5-20250929" in data["by_model"]
+            assert "gpt-5.1" in data["by_model"]
 
     @pytest.mark.unit
     def test_get_cost_summary_supports_different_periods(self, cost_api_client):
@@ -231,7 +231,7 @@ class TestUsageRecordsEndpoint:
     def test_get_usage_records_filters_by_model(self, cost_api_client, sample_token_usage_records):
         """Test GET /api/cost/usage filters by model."""
         # Arrange
-        sonnet_records = [r for r in sample_token_usage_records if r.model == "claude-3-5-sonnet-20241022"]
+        sonnet_records = [r for r in sample_token_usage_records if r.model == "claude-sonnet-4-5-20250929"]
 
         with patch("mcp_server_langgraph.monitoring.cost_api.get_cost_collector") as mock_get_collector:
             mock_collector = MagicMock()
@@ -239,12 +239,12 @@ class TestUsageRecordsEndpoint:
             mock_get_collector.return_value = mock_collector
 
             # Act
-            response = cost_api_client.get("/api/cost/usage?model=claude-3-5-sonnet-20241022")
+            response = cost_api_client.get("/api/cost/usage?model=claude-sonnet-4-5-20250929")
 
             # Assert
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
-            assert all(record["model"] == "claude-3-5-sonnet-20241022" for record in data)
+            assert all(record["model"] == "claude-sonnet-4-5-20250929" for record in data)
 
     @pytest.mark.unit
     def test_get_usage_records_respects_limit_parameter(self, cost_api_client, sample_token_usage_records):

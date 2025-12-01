@@ -596,7 +596,7 @@ tracer = trace.get_tracer(__name__)
 ## Create spans
 with tracer.start_as_current_span("llm_request") as span:
     span.set_attribute("provider", "anthropic")
-    span.set_attribute("model", "claude-3-5-sonnet")
+    span.set_attribute("model", "claude-sonnet-4-5")
     # Your code here
 ```
 

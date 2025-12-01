@@ -66,13 +66,13 @@ Edit your configuration to use lighter models for summarization and verification
 
 # Summarization (lighter/cheaper)
 use_dedicated_summarization_model=true
-summarization_model_name="gemini-2.0-flash-lite"  # Example: cheaper model
+summarization_model_name="gemini-2.5-flash-lite"  # Example: cheaper model
 summarization_model_temperature=0.3
 summarization_model_max_tokens=2000
 
 # Verification (deterministic)
 use_dedicated_verification_model=true
-verification_model_name="gemini-2.0-flash-lite"
+verification_model_name="gemini-2.5-flash-lite"
 verification_model_temperature=0.0
 verification_model_max_tokens=1000
 ```
@@ -295,8 +295,8 @@ If issues arise during deployment:
 1. **Cost Reduction**
    ```
    # Monitor token usage by model
-   agent.calls.successful{model=gemini-2.0-flash-lite}  # Summarization
-   agent.calls.successful{model=gemini-2.5-flash-002}  # Primary chat
+   agent.calls.successful{model=gemini-2.5-flash-lite}  # Summarization
+   agent.calls.successful{model=gemini-2.5-flash}  # Primary chat
 
    # Expected: 40-60% reduction in summarization costs
    ```

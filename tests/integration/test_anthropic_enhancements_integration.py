@@ -36,7 +36,7 @@ def mock_settings():
         mock.max_parallel_tools = 5
         mock.max_refinement_attempts = 3
         mock.checkpoint_backend = "memory"
-        mock.model_name = "claude-3-5-sonnet-20241022"
+        mock.model_name = "claude-sonnet-4-5-20250929"
         mock.model_provider = "anthropic"
         mock.temperature = 0.7
         yield mock

@@ -588,7 +588,7 @@ if __name__ == "__main__":
         description="Research agent that searches and summarizes",
         nodes=[
             NodeDefinition(id="search", type="tool", label="Web Search", config={"tool": "tavily_search"}),
-            NodeDefinition(id="summarize", type="llm", label="Summarize", config={"model": "gemini-2.5-flash-preview-001"}),
+            NodeDefinition(id="summarize", type="llm", label="Summarize", config={"model": "gemini-2.5-flash"}),
             NodeDefinition(id="validate", type="conditional", label="Validate Quality"),
         ],
         edges=[

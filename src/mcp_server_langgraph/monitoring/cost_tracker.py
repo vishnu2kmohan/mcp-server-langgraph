@@ -10,7 +10,7 @@ Example:
     >>> await collector.record_usage(
     ...     user_id="user123",
     ...     session_id="session456",
-    ...     model="claude-3-5-sonnet-20241022",
+    ...     model="claude-sonnet-4-5-20250929",
     ...     provider="anthropic",
     ...     prompt_tokens=1000,
     ...     completion_tokens=500
@@ -225,7 +225,7 @@ class CostMetricsCollector:
             ...     timestamp=datetime.now(timezone.utc),
             ...     user_id="user123",
             ...     session_id="session456",
-            ...     model="claude-3-5-sonnet-20241022",
+            ...     model="claude-sonnet-4-5-20250929",
             ...     provider="anthropic",
             ...     prompt_tokens=1000,
             ...     completion_tokens=500

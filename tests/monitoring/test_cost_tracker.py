@@ -36,7 +36,7 @@ def sample_token_usage():
         "timestamp": datetime.now(UTC),
         "user_id": "user123",
         "session_id": "session456",
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "claude-sonnet-4-5-20250929",
         "provider": "anthropic",
         "prompt_tokens": 1000,
         "completion_tokens": 500,
@@ -72,7 +72,7 @@ def test_calculate_cost_for_anthropic_sonnet():
 
     # Act
     cost = calculate_cost(
-        model="claude-3-5-sonnet-20241022",
+        model="claude-sonnet-4-5-20250929",
         provider="anthropic",
         prompt_tokens=1000,
         completion_tokens=500,
@@ -87,56 +87,56 @@ def test_calculate_cost_for_anthropic_sonnet():
 
 @pytest.mark.unit
 def test_calculate_cost_for_anthropic_haiku():
-    """Test cost calculation for Anthropic Claude 3.5 Haiku (cheaper model)."""
+    """Test cost calculation for Anthropic Claude 4.5 Haiku (cost-effective model)."""
     from mcp_server_langgraph.monitoring.pricing import calculate_cost
 
     cost = calculate_cost(
-        model="claude-3-5-haiku-20241022",
+        model="claude-haiku-4-5-20251001",
         provider="anthropic",
         prompt_tokens=1000,
         completion_tokens=500,
     )
 
-    # Input: 1000 * $0.0008/1K = $0.0008
-    # Output: 500 * $0.004/1K = $0.002
-    # Total: $0.0028
-    assert cost == Decimal("0.0028")
+    # Input: 1000 * $0.001/1K = $0.001
+    # Output: 500 * $0.005/1K = $0.0025
+    # Total: $0.0035
+    assert cost == Decimal("0.0035")
 
 
 @pytest.mark.unit
-def test_calculate_cost_for_openai_gpt4_turbo():
-    """Test cost calculation for OpenAI GPT-4 Turbo."""
+def test_calculate_cost_for_openai_gpt5():
+    """Test cost calculation for OpenAI GPT-5.1."""
     from mcp_server_langgraph.monitoring.pricing import calculate_cost
 
     cost = calculate_cost(
-        model="gpt-4-turbo",
+        model="gpt-5.1",
         provider="openai",
         prompt_tokens=1000,
         completion_tokens=500,
     )
 
-    # Input: 1000 * $0.01/1K = $0.01
-    # Output: 500 * $0.03/1K = $0.015
-    # Total: $0.025
-    assert cost == Decimal("0.025")
+    # Input: 1000 * $0.00125/1K = $0.00125
+    # Output: 500 * $0.01/1K = $0.005
+    # Total: $0.00625
+    assert cost == Decimal("0.00625")
 
 
 @pytest.mark.unit
 def test_calculate_cost_for_google_gemini_flash():
-    """Test cost calculation for Google Gemini 2.5 Flash (free tier)."""
+    """Test cost calculation for Google Gemini 2.5 Flash."""
     from mcp_server_langgraph.monitoring.pricing import calculate_cost
 
     cost = calculate_cost(
-        model="gemini-2.5-flash-preview-001",
+        model="gemini-2.5-flash",
         provider="google",
-        prompt_tokens=10000,  # Higher volume for free tier
+        prompt_tokens=10000,
         completion_tokens=5000,
     )
 
-    # Input: 10000 * $0.000075/1K = $0.00075
-    # Output: 5000 * $0.0003/1K = $0.0015
-    # Total: $0.00225
-    assert cost == Decimal("0.00225")
+    # Input: 10000 * $0.0003/1K = $0.003
+    # Output: 5000 * $0.0025/1K = $0.0125
+    # Total: $0.0155
+    assert cost == Decimal("0.0155")
 
 
 @pytest.mark.unit
@@ -145,7 +145,7 @@ def test_calculate_cost_with_zero_tokens_returns_zero():
     from mcp_server_langgraph.monitoring.pricing import calculate_cost
 
     cost = calculate_cost(
-        model="claude-3-5-sonnet-20241022",
+        model="claude-sonnet-4-5-20250929",
         provider="anthropic",
         prompt_tokens=0,
         completion_tokens=0,
@@ -203,7 +203,7 @@ async def test_cost_metrics_collector_calculates_cost_automatically():
         timestamp=datetime.now(UTC),
         user_id="user123",
         session_id="session456",
-        model="claude-3-5-sonnet-20241022",
+        model="claude-sonnet-4-5-20250929",
         provider="anthropic",
         prompt_tokens=1000,
         completion_tokens=500,
@@ -228,7 +228,7 @@ async def test_cost_metrics_collector_increments_prometheus_counters():
             timestamp=datetime.now(UTC),
             user_id="user123",
             session_id="session456",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -253,17 +253,17 @@ async def test_cost_aggregator_sums_by_model():
 
     # Arrange - mock data
     records = [
-        {"model": "claude-3-5-sonnet-20241022", "cost": Decimal("0.01")},
-        {"model": "claude-3-5-sonnet-20241022", "cost": Decimal("0.02")},
-        {"model": "gpt-4-turbo", "cost": Decimal("0.03")},
+        {"model": "claude-sonnet-4-5-20250929", "cost": Decimal("0.01")},
+        {"model": "claude-sonnet-4-5-20250929", "cost": Decimal("0.02")},
+        {"model": "gpt-5.1", "cost": Decimal("0.03")},
     ]
 
     # Act
     summary = await aggregator.aggregate_by_model(records)
 
     # Assert
-    assert summary["claude-3-5-sonnet-20241022"] == Decimal("0.03")
-    assert summary["gpt-4-turbo"] == Decimal("0.03")
+    assert summary["claude-sonnet-4-5-20250929"] == Decimal("0.03")
+    assert summary["gpt-5.1"] == Decimal("0.03")
 
 
 @pytest.mark.unit
@@ -474,7 +474,7 @@ def test_get_cost_summary_returns_aggregated_data(cost_api_client):
             "total_cost_usd": Decimal("123.45"),
             "total_tokens": 100000,
             "request_count": 500,
-            "by_model": {"claude-3-5-sonnet-20241022": Decimal("100.00")},
+            "by_model": {"claude-sonnet-4-5-20250929": Decimal("100.00")},
             "by_user": {"user1": Decimal("50.00")},
         }
 
@@ -577,7 +577,7 @@ async def test_end_to_end_cost_tracking_flow():
         timestamp=datetime.now(UTC),
         user_id="user123",
         session_id="session456",
-        model="claude-3-5-sonnet-20241022",
+        model="claude-sonnet-4-5-20250929",
         provider="anthropic",
         prompt_tokens=10000,
         completion_tokens=5000,
@@ -623,7 +623,7 @@ async def test_cost_tracker_handles_concurrent_writes():
             timestamp=datetime.now(UTC),
             user_id=f"user{i}",
             session_id=f"session{i}",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -648,9 +648,9 @@ def test_pricing_table_has_all_supported_models():
     assert "google" in PRICING_TABLE
 
     # Verify key models present
-    assert "claude-3-5-sonnet-20241022" in PRICING_TABLE["anthropic"]
-    assert "gpt-4-turbo" in PRICING_TABLE["openai"]
-    assert "gemini-2.5-flash-preview-001" in PRICING_TABLE["google"]
+    assert "claude-sonnet-4-5-20250929" in PRICING_TABLE["anthropic"]
+    assert "gpt-5.1" in PRICING_TABLE["openai"]
+    assert "gemini-2.5-flash" in PRICING_TABLE["google"]
 
 
 # ==============================================================================
@@ -675,7 +675,7 @@ class TestTokenUsageModel:
             timestamp=datetime.now(UTC),
             user_id="user123",
             session_id="session456",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -693,7 +693,7 @@ class TestTokenUsageModel:
             timestamp=datetime.now(UTC),
             user_id="user123",
             session_id="session456",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -715,7 +715,7 @@ class TestTokenUsageModel:
             timestamp=ts,
             user_id="user123",
             session_id="session456",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -753,7 +753,7 @@ class TestCostMetricsCollectorExtended:
             timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session1",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -762,7 +762,7 @@ class TestCostMetricsCollectorExtended:
             timestamp=datetime.now(UTC),
             user_id="user2",
             session_id="session2",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -785,7 +785,7 @@ class TestCostMetricsCollectorExtended:
             timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session1",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -794,15 +794,15 @@ class TestCostMetricsCollectorExtended:
             timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session2",
-            model="gpt-4-turbo",
+            model="gpt-5.1",
             provider="openai",
             prompt_tokens=1000,
             completion_tokens=500,
         )
 
-        records = await collector.get_records(model="gpt-4-turbo")
+        records = await collector.get_records(model="gpt-5.1")
         assert len(records) == 1
-        assert records[0].model == "gpt-4-turbo"
+        assert records[0].model == "gpt-5.1"
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -816,7 +816,7 @@ class TestCostMetricsCollectorExtended:
             timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session1",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -826,7 +826,7 @@ class TestCostMetricsCollectorExtended:
             timestamp=datetime.now(UTC),
             user_id="user2",
             session_id="session2",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -862,7 +862,7 @@ class TestCostMetricsCollectorExtended:
             timestamp=old_timestamp,
             user_id="user1",
             session_id="session1",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -871,7 +871,7 @@ class TestCostMetricsCollectorExtended:
             timestamp=new_timestamp,
             user_id="user2",
             session_id="session2",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,
@@ -896,7 +896,7 @@ class TestCostMetricsCollectorExtended:
             timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session1",
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             provider="anthropic",
             prompt_tokens=1000,
             completion_tokens=500,

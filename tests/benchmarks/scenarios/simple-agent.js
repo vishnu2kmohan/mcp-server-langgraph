@@ -32,7 +32,7 @@ export default function () {
     query: 'What is the capital of France?',
     agent_type: 'simple',
     config: {
-      model: 'gemini/gemini-2.0-flash',
+      model: 'gemini/gemini-2.5-flash',
       temperature: 0.7,
       max_tokens: 500,
     },

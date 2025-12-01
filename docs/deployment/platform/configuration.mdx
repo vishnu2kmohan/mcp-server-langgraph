@@ -46,7 +46,7 @@ The `langgraph.json` file in your project root defines your deployment configura
 <ParamField path="env" type="object">
   Environment variables for your deployment. **Never** put actual API keys here - use LangSmith secrets instead.
 
-  Example: `"env": { "MODEL_NAME": "claude-3-5-sonnet-20241022", "LANGSMITH_TRACING": "true" }`
+  Example: `"env": { "MODEL_NAME": "claude-sonnet-4-5-20250929", "LANGSMITH_TRACING": "true" }`
 </ParamField>
 
 <ParamField path="python_version" type="string">
@@ -118,7 +118,7 @@ Access environment variables in your code:
 import os
 
 api_key = os.environ["ANTHROPIC_API_KEY"]
-model_name = os.environ.get("MODEL_NAME", "claude-3-5-sonnet-20241022")
+model_name = os.environ.get("MODEL_NAME", "claude-sonnet-4-5-20250929")
 ```
 
 ### Multiple Environments
@@ -232,7 +232,7 @@ Complete configuration file with all options:
     "agent": "./langgraph/agent.py:graph"
   },
   "env": {
-    "MODEL_NAME": "claude-3-5-sonnet-20241022",
+    "MODEL_NAME": "claude-sonnet-4-5-20250929",
     "LANGSMITH_TRACING": "true",
     "LANGSMITH_PROJECT": "my-agent-prod",
     "MAX_ITERATIONS": "10"

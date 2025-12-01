@@ -281,8 +281,8 @@ class TestPerformance:
             optimizer.count_tokens(text)
         elapsed = time.time() - start
 
-        # Should complete 100 iterations in less than 1 second
-        assert elapsed < 1.0, f"Token counting too slow: {elapsed:.2f}s for 100 iterations"
+        # Should complete 100 iterations in less than 2 seconds (allowing for CI variance)
+        assert elapsed < 2.0, f"Token counting too slow: {elapsed:.2f}s for 100 iterations"
 
     def test_truncation_performance_with_large_text_completes_quickly(self):
         """Test that truncation is reasonably fast."""

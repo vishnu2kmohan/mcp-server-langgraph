@@ -20,12 +20,12 @@ GPT-5 is OpenAI's latest flagship model with enhanced reasoning, multimodal capa
 
 | Model | Context Window | Use Case | Pricing (per 1M tokens) |
 |-------|---------------|----------|-------------------------|
-| gpt-5 | 128K tokens | Best all-around, latest flagship | $2.50 input / $10.00 output |
-| gpt-5-pro | 128K tokens | Most capable, advanced reasoning | $10.00 input / $30.00 output |
+| gpt-5.1 | 128K tokens | Best all-around, latest flagship | $2.50 input / $10.00 output |
+| gpt-5.1-pro | 128K tokens | Most capable, advanced reasoning | $10.00 input / $30.00 output |
 | gpt-5-mini | 128K tokens | Fast and cost-effective | $0.15 input / $0.60 output |
-| gpt-5-nano | 128K tokens | Smallest, fastest, ultra low-cost | $0.10 input / $0.40 output |
+| gpt-5.1-nano | 128K tokens | Smallest, fastest, ultra low-cost | $0.10 input / $0.40 output |
 
-**Recommended**: `gpt-5` for production (best performance/cost ratio)
+**Recommended**: `gpt-5.1` for production (best performance/cost ratio)
 
 ### Quick Start
 
@@ -53,7 +53,7 @@ GPT-5 is OpenAI's latest flagship model with enhanced reasoning, multimodal capa
     # .env
     LLM_PROVIDER=openai
     OPENAI_API_KEY=sk-...your-key
-    LLM_MODEL_NAME=gpt-5
+    LLM_MODEL_NAME=gpt-5.1
     ```
   </Step>
 
@@ -63,7 +63,7 @@ GPT-5 is OpenAI's latest flagship model with enhanced reasoning, multimodal capa
 
     llm = LLMFactory(
         provider="openai",
-        model_name="gpt-5"
+        model_name="gpt-5.1"
     )
 
     response = await llm.ainvoke("Explain machine learning in simple terms")
@@ -81,7 +81,7 @@ from mcp_server_langgraph.llm.factory import LLMFactory
 
 llm = LLMFactory(
     provider="openai",
-    model_name="gpt-5",
+    model_name="gpt-5.1",
     temperature=1.0,  # 0.0 to 2.0
     max_tokens=4096,
     timeout=60
@@ -97,7 +97,7 @@ print(response.content)
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(
-    model="gpt-5",
+    model="gpt-5.1",
     openai_api_key=settings.openai_api_key,
 
     # Generation parameters
@@ -132,7 +132,7 @@ def select_openai_model(task_type: str, complexity: str) -> str:
 
     # Fast, simple tasks
     if task_type == "chat" and complexity == "simple":
-        return "gpt-5-nano"  # Smallest, fastest, ultra low-cost
+        return "gpt-5.1-nano"  # Smallest, fastest, ultra low-cost
 
     # Standard tasks
     elif complexity == "low":
@@ -140,14 +140,14 @@ def select_openai_model(task_type: str, complexity: str) -> str:
 
     # Multimodal or complex reasoning
     elif task_type in ["vision", "multimodal"] or complexity == "high":
-        return "gpt-5"  # Best all-around flagship
+        return "gpt-5.1"  # Best all-around flagship
 
     # Maximum intelligence and advanced reasoning
     elif complexity == "expert":
-        return "gpt-5-pro"  # Most capable
+        return "gpt-5.1-pro"  # Most capable
 
     # Default
-    return "gpt-5"
+    return "gpt-5.1"
 
 ## Use dynamically
 llm = LLMFactory(
@@ -319,7 +319,7 @@ print(response.content)
 ```toml
 ## Force JSON output
 llm_json = ChatOpenAI(
-    model="gpt-5",
+    model="gpt-5.1",
     model_kwargs={"response_format": {"type": "json_object"}}
 )
 
@@ -354,7 +354,7 @@ spec:
         - name: LLM_PROVIDER
           value: "openai"
         - name: LLM_MODEL_NAME
-          value: "gpt-5"
+          value: "gpt-5.1"
 
         # API key from secret (loaded by Infisical operator)
         - name: OPENAI_API_KEY
@@ -491,13 +491,13 @@ for query, response in zip(queries, results):
 import tiktoken
 
 ## Count tokens (accurate for OpenAI)
-def count_tokens(text: str, model: str = "gpt-5") -> int:
+def count_tokens(text: str, model: str = "gpt-5.1") -> int:
     """Count tokens using tiktoken"""
     encoding = tiktoken.encoding_for_model(model)
     return len(encoding.encode(text))
 
 ## Truncate to fit context
-def truncate_to_tokens(text: str, max_tokens: int, model: str = "gpt-5") -> str:
+def truncate_to_tokens(text: str, max_tokens: int, model: str = "gpt-5.1") -> str:
     """Truncate text to fit token limit"""
     encoding = tiktoken.encoding_for_model(model)
     tokens = encoding.encode(text)
@@ -554,13 +554,13 @@ async def call_with_redis_cache(query: str):
 ## Use cheaper model for simple tasks
 def get_optimal_model(complexity: str) -> str:
     if complexity == "simple":
-        return "gpt-5-nano"  # $0.10/$0.40 per 1M tokens (smallest, fastest)
+        return "gpt-5.1-nano"  # $0.10/$0.40 per 1M tokens (smallest, fastest)
     elif complexity == "low":
         return "gpt-5-mini"  # $0.15/$0.60 per 1M tokens (cost-effective)
     elif complexity == "medium":
-        return "gpt-5"  # $2.50/$10.00 per 1M tokens (flagship)
+        return "gpt-5.1"  # $2.50/$10.00 per 1M tokens (flagship)
     else:
-        return "gpt-5-pro"  # $10/$30 per 1M tokens (most capable)
+        return "gpt-5.1-pro"  # $10/$30 per 1M tokens (most capable)
 
 llm = LLMFactory(
     provider="openai",
@@ -584,7 +584,7 @@ with get_openai_callback() as cb:
 
 ## Store metrics
 await store_usage_metrics({
-    "model": "gpt-5",
+    "model": "gpt-5.1",
     "tokens": cb.total_tokens,
     "cost": cb.total_cost,
     "user_id": user.id,
@@ -611,7 +611,7 @@ async def send_message(
     user: User = Depends(get_current_user)
 ):
     # Estimate cost
-    input_tokens = count_tokens(request.query, model="gpt-5")
+    input_tokens = count_tokens(request.query, model="gpt-5.1")
     estimated_cost = (input_tokens / 1_000_000) * 2.50  # $2.50 per 1M input tokens
 
     # Check budget
@@ -675,17 +675,17 @@ async def call_openai_with_metrics(query: str):
 
             # Record metrics
             openai_requests.labels(
-                model="gpt-5",
+                model="gpt-5.1",
                 status="success"
             ).inc()
 
             openai_tokens.labels(
-                model="gpt-5",
+                model="gpt-5.1",
                 type="input"
             ).inc(cb.prompt_tokens)
 
             openai_tokens.labels(
-                model="gpt-5",
+                model="gpt-5.1",
                 type="output"
             ).inc(cb.completion_tokens)
 
@@ -693,14 +693,14 @@ async def call_openai_with_metrics(query: str):
 
     except Exception as e:
         openai_requests.labels(
-            model="gpt-5",
+            model="gpt-5.1",
             status="error"
         ).inc()
         raise
 
     finally:
         duration = time.time() - start_time
-        openai_latency.labels(model="gpt-5").observe(duration)
+        openai_latency.labels(model="gpt-5.1").observe(duration)
 ```
 
 ### Troubleshooting
@@ -759,7 +759,7 @@ async def call_openai_with_metrics(query: str):
     ```python
     # Truncate input
     max_input_tokens = 120000  # Leave room for response
-    truncated = truncate_to_tokens(long_text, max_input_tokens, model="gpt-5")
+    truncated = truncate_to_tokens(long_text, max_input_tokens, model="gpt-5.1")
 
     # Summarize first
     summary_llm = LLMFactory(provider="openai", model_name="gpt-5-mini")
@@ -777,14 +777,14 @@ async def call_openai_with_metrics(query: str):
     ```python
     # Increase timeout
     llm = ChatOpenAI(
-        model="gpt-5",
+        model="gpt-5.1",
         request_timeout=120,  # 2 minutes
         max_retries=3
     )
 
     # Reduce max_tokens
     llm = ChatOpenAI(
-        model="gpt-5",
+        model="gpt-5.1",
         max_tokens=2048  # Smaller responses
     )
 
@@ -819,10 +819,10 @@ async def call_openai_with_metrics(query: str):
   <Accordion title="Cost Management" icon="dollar-sign">
     - Track usage per user/team
     - Set budget alerts
-    - Use cheaper models for simple tasks (gpt-5-nano, gpt-5-mini)
+    - Use cheaper models for simple tasks (gpt-5.1-nano, gpt-5-mini)
     - Implement token limits
     - Monitor and optimize prompt efficiency
-    - Use gpt-5-mini or gpt-5-nano for development/testing
+    - Use gpt-5-mini or gpt-5.1-nano for development/testing
   </Accordion>
 
   <Accordion title="Reliability" icon="shield-check">

@@ -32,8 +32,8 @@ class LLMFactory:
 
     def __init__(  # type: ignore[no-untyped-def]
         self,
-        provider: str = "anthropic",
-        model_name: str = "claude-3-5-sonnet-20241022",
+        provider: str = "google",
+        model_name: str = "gemini-2.5-flash",
         api_key: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,

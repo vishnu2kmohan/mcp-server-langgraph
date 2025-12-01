@@ -79,11 +79,11 @@ def test_get_pydantic_model_name_anthropic(mock_settings, mock_pydantic_agent_cl
     from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
     mock_settings.llm_provider = "anthropic"
-    mock_settings.model_name = "claude-3-5-sonnet-20241022"
+    mock_settings.model_name = "claude-sonnet-4-5-20250929"
 
-    wrapper = PydanticAIAgentWrapper(provider="anthropic", model_name="claude-3-5-sonnet-20241022")
+    wrapper = PydanticAIAgentWrapper(provider="anthropic", model_name="claude-sonnet-4-5-20250929")
 
-    assert wrapper.pydantic_model_name == "anthropic:claude-3-5-sonnet-20241022"
+    assert wrapper.pydantic_model_name == "anthropic:claude-sonnet-4-5-20250929"
 
 
 @pytest.mark.unit

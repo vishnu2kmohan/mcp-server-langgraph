@@ -314,7 +314,7 @@ This runbook covers operational procedures for managing Service Level Agreements
    ```bash
    # Force fallback to backup model
    kubectl set env deployment/mcp-server-langgraph -n production \
-     PRIMARY_MODEL=gpt-4o-mini FALLBACK_MODEL=claude-3-5-sonnet-20241022
+     PRIMARY_MODEL=gpt-5-mini FALLBACK_MODEL=claude-sonnet-4-5-20250929
    ```
 
    **Memory Pressure**:
@@ -430,7 +430,7 @@ This runbook covers operational procedures for managing Service Level Agreements
    ```bash
    # Switch to backup provider
    kubectl set env deployment/mcp-server-langgraph -n production \
-     PRIMARY_MODEL=claude-3-5-sonnet-20241022 FALLBACK_MODEL=gpt-4o-mini
+     PRIMARY_MODEL=claude-sonnet-4-5-20250929 FALLBACK_MODEL=gpt-5-mini
    ```
 
 8. **Verify Recovery**

@@ -634,7 +634,7 @@ def create_anthropic_cached_message(system_prompt: str, messages: list) -> dict[
         Message dict with cache_control
     """
     return {
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "claude-sonnet-4-5-20250929",
         "system": [
             {
                 "type": "text",

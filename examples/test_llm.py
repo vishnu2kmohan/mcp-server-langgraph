@@ -73,9 +73,9 @@ async def test_llm():
 async def test_multiple_providers():
     """Test multiple providers sequentially"""
     providers = [
-        ("anthropic", "claude-3-5-sonnet-20241022"),
-        ("openai", "gpt-5"),
-        ("google", "gemini-1.5-pro"),
+        ("anthropic", "claude-sonnet-4-5-20250929"),
+        ("openai", "gpt-5.1"),
+        ("google", "gemini-2.5-pro"),
         ("ollama", "ollama/llama3.1:8b"),
     ]
 

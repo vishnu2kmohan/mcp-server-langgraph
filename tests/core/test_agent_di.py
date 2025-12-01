@@ -340,7 +340,7 @@ class TestSettingsInjectionRegression:
         from mcp_server_langgraph.core.config import Settings
 
         # Create settings with custom model
-        custom_settings = Settings(environment="test", model_name="gpt-4o-mini", temperature=0.3)
+        custom_settings = Settings(environment="test", model_name="gpt-5-mini", temperature=0.3)
 
         # Should create graph with custom model settings
         # (Note: May fail if API keys not configured, but settings should be used)
