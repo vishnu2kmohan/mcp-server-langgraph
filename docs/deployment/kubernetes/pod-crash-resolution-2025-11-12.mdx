@@ -218,7 +218,7 @@ $ python scripts/validators/k8s_config_validator.py
 ✓ All ConfigMap keys exist for deployments/overlays/production-gke
 === Validation Summary ===
 ✓ All validations passed!
-```
+```markdown
 
 ### Cluster State ✅
 
@@ -227,7 +227,7 @@ $ python scripts/validators/k8s_config_validator.py
 Status: Ready
 Message: secret synced
 Refresh Time: 2025-11-12T22:08:02Z
-```
+```markdown
 
 **Secret Keys Created** (23 total):
 ```
@@ -254,7 +254,7 @@ qdrant-api-key ✓ (NEW)
 redis-host ✓
 redis-password ✓
 redis-url ✓
-```
+```markdown
 
 **Pod Health**:
 ```
@@ -264,7 +264,7 @@ MCP Server (new):  1/2 CrashLoopBackOff ⚠️ (expected - placeholder secrets)
 OpenFGA:           2/2 Running ✅
 OTel Collector:    2/2 Running ✅
 Qdrant:            1/1 Running ✅
-```
+```bash
 
 ## Files Modified
 
@@ -312,7 +312,7 @@ Qdrant:            1/1 Running ✅
    ```
    kubectl scale deployment staging-mcp-server-langgraph --replicas=3 -n staging-mcp-server-langgraph
    kubectl scale replicaset staging-mcp-server-langgraph-97c744bbd --replicas=0 -n staging-mcp-server-langgraph
-   ```
+   ```diff
 
 ### Short-term (This Sprint)
 4. **Implement Keycloak pre-built image**
@@ -396,7 +396,7 @@ Qdrant:            1/1 Running ✅
 - [ ] Run validation script before all deployments:
   ```
   python scripts/validators/k8s_config_validator.py
-  ```
+  ```diff
 - [ ] Review ConfigMap best practices documentation
 - [ ] Use required keys checklist when adding config
 

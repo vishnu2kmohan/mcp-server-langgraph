@@ -115,7 +115,7 @@ ENABLE_FALLBACK=true
 
 Override for a specific deployment:
 
-```
+```bash
 ## Use OpenAI GPT-4
 export LLM_PROVIDER=openai
 export MODEL_NAME=gpt-5
@@ -141,7 +141,7 @@ helm upgrade --install mcp-server-langgraph ./deployments/helm/mcp-server-langgr
 
 For Kustomize deployments, create a patch file:
 
-```
+```yaml
 ## deployments/kustomize/overlays/custom/configmap-patch.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -156,7 +156,7 @@ data:
 
 #### Method 4: .env File (Local Development)
 
-```
+```properties
 ## .env
 LLM_PROVIDER=ollama
 MODEL_NAME=llama3.1:70b
@@ -348,7 +348,7 @@ ENABLE_FALLBACK=false
 
 Configure rate limits per environment:
 
-```
+```yaml
 ## Development
 LLM_RATE_LIMIT_RPM: 60  # 60 requests per minute
 
@@ -368,7 +368,7 @@ LLM_RATE_LIMIT_RPM: 1000
 **Cause**: Invalid or expired API key
 
 **Solution**:
-```
+```bash
 ## Verify API key is set
 echo $ANTHROPIC_API_KEY | head -c 10
 

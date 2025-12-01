@@ -366,6 +366,7 @@ grafana:
       enabled: true
 ```
 
+```bash
 helm install loki-stack grafana/loki-stack \
   --namespace monitoring \
   --values deployments/monitoring/loki-stack-values.yaml
@@ -398,6 +399,7 @@ spec:
     services.loadbalancers: "3"
 ```
 
+```yaml
 # deployments/base/limitrange.yaml
 apiVersion: v1
 kind: LimitRange
@@ -444,6 +446,7 @@ ingress:
     - kubecost.example.com
 ```
 
+```bash
 helm install kubecost kubecost/cost-analyzer \
   --namespace kubecost \
   --create-namespace \
@@ -491,6 +494,7 @@ resource "aws_iam_role" "karpenter_controller" {
 # ... (see full implementation in terraform/modules/karpenter/)
 ```
 
+```yaml
 # Provisioner configuration
 apiVersion: karpenter.sh/v1alpha5
 kind: Provisioner

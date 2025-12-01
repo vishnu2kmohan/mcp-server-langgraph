@@ -541,7 +541,7 @@ spec:
 
 #### JSON Patches
 
-```
+```yaml
 ## overlays/production/kustomization.yaml
 patchesJson6902:
   - target:
@@ -559,7 +559,7 @@ patchesJson6902:
 
 #### Strategic Merge Patch
 
-```
+```yaml
 ## Add sidecar container
 apiVersion: apps/v1
 kind: Deployment
@@ -578,7 +578,7 @@ spec:
 ```
 #### Transformers
 
-```
+```yaml
 ## overlays/production/kustomization.yaml
 transformers:
   - |-
@@ -594,7 +594,7 @@ transformers:
 
 #### Generators
 
-```
+```yaml
 ## overlays/production/kustomization.yaml
 generators:
   - secret-generator.yaml
@@ -615,7 +615,7 @@ type: Opaque
 
 #### Build and Preview
 
-```
+```bash
 ## Development
 kubectl kustomize overlays/development
 
@@ -627,7 +627,7 @@ kubectl kustomize overlays/production
 ```
 #### Deploy
 
-```
+```bash
 ## Development
 kubectl apply -k overlays/development
 
@@ -640,7 +640,7 @@ kubectl apply -k overlays/production
 
 #### Delete
 
-```
+```bash
 ## Delete environment
 kubectl delete -k overlays/staging
 ```
@@ -729,7 +729,7 @@ spec:
 
 #### Deploy with ArgoCD
 
-```
+```bash
 ## Install ArgoCD
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
@@ -858,7 +858,7 @@ argocd app sync mcp-server-langgraph-production
 
 ### Testing Kustomize
 
-```
+```bash
 ## Validate YAML syntax
 kubectl kustomize overlays/production | kubectl apply --dry-run=client -f -
 

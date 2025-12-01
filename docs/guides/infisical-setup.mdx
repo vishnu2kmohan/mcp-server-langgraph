@@ -162,7 +162,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
 
 Secrets are automatically loaded on application startup:
 
-```
+```python
 from mcp_server_langgraph.core.config import settings
 
 ## All secrets loaded from Infisical
@@ -172,7 +172,7 @@ jwt_secret = settings.jwt_secret_key
 ```
 #### Manual Secret Retrieval
 
-```
+```python
 from infisical import InfisicalClient
 
 client = InfisicalClient(
@@ -200,7 +200,7 @@ for secret in secrets:
 
 #### Environment-Specific Secrets
 
-```
+```properties
 ## Load secrets based on environment
 environment = os.getenv("ENVIRONMENT", "development")
 
@@ -213,7 +213,7 @@ secrets = client.get_all_secrets(
 
 #### Infisical Operator
 
-```
+```yaml
 ## Install operator
 kubectl apply -f https://raw.githubusercontent.com/Infisical/infisical/main/k8s-operator/operator.yaml
 
@@ -305,7 +305,7 @@ mcp-server-langgraph/
 
 #### Role-Based Access
 
-```
+```toml
 ## Read-only for application
 service_account_read = client.create_service_account(
     name="langgraph-prod-readonly",
@@ -323,7 +323,7 @@ service_account_write = client.create_service_account(
 
 Enable audit logs to track secret access:
 
-```
+```toml
 ## View audit logs
 logs = client.get_audit_logs(
     project_id=project_id,
@@ -339,7 +339,7 @@ for log in logs:
 
 #### Manual Rotation
 
-```
+```toml
 ## Update secret value
 client.update_secret(
     secret_name="ANTHROPIC_API_KEY",
@@ -380,7 +380,7 @@ while True:
 
 #### Zero-Downtime Rotation
 
-```
+```toml
 ## 1. Add new secret with version suffix
 client.create_secret(
     secret_name="ANTHROPIC_API_KEY_V2",
@@ -475,7 +475,7 @@ client.delete_secret(
 
 <Steps>
   <Step title="Export Secrets">
-    ```
+    ```bash
     # Extract from .env
     grep -v '^#' .env | grep -v '^$' > secrets.txt
     ```html

@@ -195,7 +195,7 @@ flowchart TB
                       number: 443
         ```
 
-        ```
+        ```bash
         kubectl apply -f argocd-ingress.yaml
         ```
       </Tab>
@@ -205,7 +205,7 @@ flowchart TB
   <Step title="Add GKE Clusters">
     <Tabs>
       <Tab title="Using argocd CLI">
-        ```
+        ```bash
         # Get cluster contexts
         gcloud container clusters get-credentials mcp-dev-gke \
           --region us-central1 --project YOUR_PROJECT_ID
@@ -229,7 +229,7 @@ flowchart TB
       </Tab>
 
       <Tab title="Using Secrets (Declarative)">
-        ```
+        ```bash
         # Generate cluster secret YAML
         kubectl config view --minify --flatten \
           --context=gke_YOUR_PROJECT_ID_us-central1_production-mcp-server-langgraph-gke > prod-cluster.yaml
@@ -244,7 +244,7 @@ flowchart TB
   </Step>
 
   <Step title="Deploy ApplicationSet">
-    ```
+    ```bash
     # Edit cluster endpoints in the file
     vim deployments/argocd/gcp-multi-cluster-setup.yaml
 
@@ -256,7 +256,7 @@ flowchart TB
   </Step>
 
   <Step title="Verify Sync">
-    ```
+    ```bash
     # List applications
     argocd app list
 
@@ -355,7 +355,7 @@ spec:
 
 <Tabs>
   <Tab title="Automated (Recommended)">
-    ```
+    ```yaml
     syncPolicy:
       automated:
         prune: true      # Auto-delete removed resources
@@ -371,7 +371,7 @@ spec:
   </Tab>
 
   <Tab title="Manual">
-    ```
+    ```yaml
     syncPolicy:
       automated: null  # No automation
     ```
@@ -385,7 +385,7 @@ spec:
   </Tab>
 
   <Tab title="Hybrid">
-    ```
+    ```yaml
     syncPolicy:
       automated:
         prune: false     # Don't auto-delete
@@ -588,7 +588,7 @@ sequenceDiagram
       </Tab>
 
       <Tab title="Via ArgoCD Sync Waves">
-        ```
+        ```yaml
         apiVersion: argoproj.io/v1alpha1
         kind: Application
         metadata:
@@ -606,7 +606,7 @@ sequenceDiagram
 
 Use Flagger with ArgoCD for automated canary analysis:
 
-```
+```yaml
 apiVersion: flagger.app/v1beta1
 kind: Canary
 metadata:
@@ -650,7 +650,7 @@ spec:
 
 <Tabs>
   <Tab title="Via CLI">
-    ```
+    ```bash
     # List all apps
     argocd app list
 
@@ -692,7 +692,7 @@ spec:
     - Image pull errors
 
     **Solution**:
-    ```
+    ```bash
     # Check pod status
     kubectl get pods -n production-mcp-server-langgraph
 
@@ -713,7 +713,7 @@ spec:
     - Sync failed due to error
 
     **Solution**:
-    ```
+    ```bash
     # Force sync
     argocd app sync mcp-server-gcp-production --force
 
@@ -730,7 +730,7 @@ spec:
     **Symptom**: New images pushed to Artifact Registry, but no PR created
 
     **Checks**:
-    ```
+    ```bash
     # View Image Updater logs
     kubectl logs -n argocd deployment/argocd-image-updater
 
@@ -750,7 +750,7 @@ spec:
     **Symptom**: ArgoCD can't connect to GKE cluster
 
     **Solution**:
-    ```
+    ```bash
     # Re-add cluster
     argocd cluster add CONTEXT_NAME --name gcp-production
 
@@ -766,7 +766,7 @@ spec:
 
 <Check>**Enable RBAC** for ArgoCD users</Check>
 
-```
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -791,7 +791,7 @@ Already configured by setup script.
 
 <Check>**Enable audit logging**</Check>
 
-```
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -804,7 +804,7 @@ data:
 ```
 <Check>**Restrict allowed Git repos**</Check>
 
-```
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -854,7 +854,7 @@ data:
   </Step>
 
   <Step title="Deploy ApplicationSet">
-    ```
+    ```bash
     kubectl apply -f deployments/argocd/gcp-multi-cluster-setup.yaml
     ```
   </Step>

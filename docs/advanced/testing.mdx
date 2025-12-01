@@ -97,7 +97,7 @@ tests/
 ```
 #### Test Markers
 
-```
+```python
 ## conftest.py
 import pytest
 
@@ -110,7 +110,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "security: Security tests")
 ```
 **Usage**:
-```
+```bash
 ## Run unit tests only
 pytest -m unit
 
@@ -127,7 +127,7 @@ pytest -m security
 
 #### Writing Unit Tests
 
-```
+```python
 ## tests/unit/test_auth.py
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
@@ -195,7 +195,7 @@ async def test_multiple_users(auth_middleware, user_id, expires_in):
 
 #### Mocking Dependencies
 
-```
+```python
 ## tests/unit/test_agent.py
 import pytest
 from unittest.mock import AsyncMock, patch
@@ -251,7 +251,7 @@ async def test_agent_with_authorization(mock_openfga_class, mock_llm):
 ```
 #### Testing Async Code
 
-```
+```python
 ## tests/unit/test_session.py
 import pytest
 from src.session.redis_session import RedisSessionStore
@@ -313,7 +313,7 @@ async def test_session_delete(mock_redis):
 
 #### Setup Test Environment
 
-```
+```python
 ## tests/conftest.py
 import pytest
 import asyncpg
@@ -357,7 +357,7 @@ async def redis_client(redis_container):
 ```
 #### Integration Tests
 
-```
+```python
 ## tests/integration/test_database.py
 import pytest
 
@@ -404,7 +404,7 @@ async def test_redis_operations(redis_client):
 
 #### API Integration Tests
 
-```
+```python
 ## tests/integration/test_api.py
 import pytest
 from httpx import AsyncClient
@@ -453,7 +453,7 @@ async def test_chat_endpoint(client):
 
 #### Using Hypothesis
 
-```
+```python
 ## tests/property/test_auth_properties.py
 import pytest
 from hypothesis import given, strategies as st
@@ -516,7 +516,7 @@ def test_llm_factory_properties(provider, temperature, max_tokens):
 
 #### Using Locust
 
-```
+```python
 ## tests/load/locustfile.py
 from locust import HttpUser, task, between
 import random
@@ -565,7 +565,7 @@ class MCPServerUser(HttpUser):
 ```
 
 **Run load test**:
-```
+```bash
 ## Install Locust
 uv tool install locust
 
@@ -634,7 +634,7 @@ export default function () {
 }
 ```
 **Run k6 test**:
-```
+```bash
 ## Install k6
 brew install k6
 
@@ -649,7 +649,7 @@ k6 run --out cloud tests/load/k6_script.js
 
 #### SQL Injection Tests
 
-```
+```python
 ## tests/security/test_injection.py
 import pytest
 from httpx import AsyncClient
@@ -694,7 +694,7 @@ async def test_xss_protection(client, token, xss_input):
 ```
 #### Authentication Tests
 
-```
+```python
 ## tests/security/test_auth_security.py
 import pytest
 
@@ -735,7 +735,7 @@ async def test_expired_token_rejected(client):
 
 #### GitHub Actions Workflow
 
-```
+```yaml
 ## .github/workflows/test.yml
 name: Tests
 
@@ -846,7 +846,7 @@ jobs:
 
 #### Measuring Coverage
 
-```
+```bash
 ## Run with coverage
 pytest --cov=src --cov-report=html --cov-report=term
 
@@ -862,7 +862,7 @@ pytest --cov=src --cov-fail-under=80
 
 #### Coverage Configuration
 
-```
+```toml
 ## .coveragerc
 [run]
 source = src
@@ -1133,7 +1133,7 @@ code-execution = [
     4. Re-run tests locally to verify
 
     **Example**:
-    ```
+    ```diff
     # Test output shows missing package
     Test files import packages not in any dependency group:
       - docker
@@ -1167,7 +1167,7 @@ code-execution = [
 
     **Solution**:
     Update workflow to include `dev` in extras:
-    ```
+    ```yaml
     - uses: ./.github/actions/setup-python-deps
       with:
         extras: 'dev'  # or 'dev builder' for multiple

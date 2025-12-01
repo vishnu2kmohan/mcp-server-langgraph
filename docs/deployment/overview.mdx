@@ -244,7 +244,7 @@ flowchart TB
 
 For a quick test deployment:
 
-```
+```bash
 ## 1. Configure environment
 cp .env.example .env.production
 ## Edit .env.production with your values
@@ -260,7 +260,7 @@ curl http://localhost:8000/health
 
 For production deployment:
 
-```
+```bash
 ## 1. Create namespace
 kubectl create namespace mcp-server-langgraph
 
@@ -333,7 +333,7 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 Deploy the monitoring stack:
 
-```
+```bash
 ## Prometheus + Grafana
 helm install prometheus prometheus-community/kube-prometheus-stack \
   --namespace monitoring --create-namespace

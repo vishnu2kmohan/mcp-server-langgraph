@@ -317,7 +317,7 @@ python scripts/setup/setup_saml_idp.py
 
 After configuration, test SAML authentication:
 
-```
+```bash
 ## Get Keycloak SP metadata for configuring external IdP
 curl https://keycloak.example.com/realms/langgraph-agent/protocol/saml/descriptor
 ```
@@ -435,7 +435,7 @@ Synchronizes Keycloak's public keys with Kong Gateway to enable JWT validation. 
 
 #### Usage
 
-```
+```bash
 ## Manual execution
 python scripts/update_kong_jwks.py
 
@@ -538,7 +538,7 @@ spec:
 
 All scripts include health checks for dependencies:
 
-```
+```bash
 ## Wait for Keycloak to be ready (max 30 retries, 2s delay)
 ./scripts/setup/setup_keycloak.py
 ## ✓ Keycloak is ready!
@@ -563,7 +563,7 @@ All scripts provide detailed error messages:
 
 Some scripts support dry-run for validation:
 
-```
+```properties
 ## Preview changes without applying
 DRY_RUN=true python scripts/setup/setup_keycloak.py
 ```

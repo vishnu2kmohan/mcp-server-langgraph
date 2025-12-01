@@ -260,7 +260,7 @@ az aks update \
 
 #### Generate Load
 
-```
+```bash
 ## Install k6
 brew install k6  # macOS
 ## or download from https://k6.io
@@ -309,7 +309,7 @@ k6 run load-test.js
 
 #### Monitor Scaling
 
-```
+```bash
 ## Watch pods scaling
 watch kubectl get pods -n mcp-server-langgraph
 
@@ -342,7 +342,7 @@ resources:
 
 #### Quality of Service (QoS)
 
-```
+```yaml
 ## Guaranteed QoS (best)
 resources:
   requests:
@@ -388,7 +388,7 @@ RATE_LIMIT_PER_MINUTE = 1000
 ```
 #### Kubernetes-Level
 
-```
+```yaml
 ## Deployment optimizations
 spec:
   replicas: 3
@@ -442,7 +442,7 @@ random_page_cost = 1.1
 
 #### Right-Size Instances
 
-```
+```yaml
 ## Use VPA recommendations
 kubectl get vpa mcp-server-langgraph-vpa -o yaml
 
@@ -480,7 +480,7 @@ nodeGroups:
 
 #### Scheduled Scaling
 
-```
+```yaml
 ## Scale down at night
 apiVersion: batch/v1
 kind: CronJob

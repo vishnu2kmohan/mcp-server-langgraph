@@ -112,7 +112,7 @@ The `langgraph.json` file configures your deployment:
 
 Store API keys securely in LangSmith:
 
-```
+```bash
 ## Set LLM API keys
 langsmith secret set ANTHROPIC_API_KEY "your-key"
 langsmith secret set OPENAI_API_KEY "your-key"
@@ -131,7 +131,7 @@ langsmith secret list
 
 #### Deploy
 
-```
+```bash
 ## Deploy with automatic name
 langgraph deploy
 
@@ -144,7 +144,7 @@ langgraph deploy my-agent-prod --tag production
 
 #### Test Locally First
 
-```
+```bash
 ## Start local dev server
 langgraph dev
 
@@ -154,7 +154,7 @@ langgraph deployment invoke --local \
 ```
 #### Invoke Deployed Graph
 
-```
+```bash
 ## Basic invocation
 langgraph deployment invoke my-agent-prod \
   --input '{"messages": [{"role": "user", "content": "Hello!"}]}'
@@ -172,7 +172,7 @@ langgraph deployment invoke my-agent-prod \
 
 #### Manage Deployments
 
-```
+```bash
 ## List all deployments
 langgraph deployment list
 
@@ -212,7 +212,7 @@ LANGSMITH_PROJECT=my-agent-staging langgraph deploy my-agent-staging
 
 ## Production
 LANGSMITH_PROJECT=my-agent-prod langgraph deploy my-agent-prod
-```
+```typescript
 ### Monitoring
 
 #### LangSmith Integration
@@ -304,7 +304,7 @@ deploy:
   <Accordion title="Test Locally First">
     Always test with `langgraph dev` before deploying:
 
-    ```
+    ```bash
     # Start local server
     langgraph dev
 
@@ -317,7 +317,7 @@ deploy:
   <Accordion title="Use Staging Environment">
     Deploy to staging before production:
 
-    ```
+    ```bash
     # Deploy to staging
     langgraph deploy my-agent-staging
 
@@ -352,7 +352,7 @@ deploy:
   <Accordion title="Use Secrets for All Keys">
     Never put API keys in `langgraph.json`:
 
-    ```
+    ```bash
     # Good: Use LangSmith secrets
     langsmith secret set ANTHROPIC_API_KEY "..."
 
@@ -373,7 +373,7 @@ deploy:
     - Ensure file exists at `./langgraph/agent.py`
     - Check variable name is `graph` (not `agent_graph`)
 
-    ```
+    ```json
     {
       "graphs": {
         "agent": "./langgraph/agent.py:graph"  // ✅ Correct
@@ -386,7 +386,7 @@ deploy:
     **Symptom**: `401 Unauthorized`
 
     **Solution**:
-    ```
+    ```bash
     # Re-login
     langgraph logout
     langgraph login
@@ -408,7 +408,7 @@ deploy:
     **Symptom**: Agent fails with missing API key
 
     **Solution**:
-    ```
+    ```bash
     # Set secret
     langsmith secret set ANTHROPIC_API_KEY "your-key"
 

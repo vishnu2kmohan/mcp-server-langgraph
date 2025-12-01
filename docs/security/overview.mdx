@@ -327,7 +327,7 @@ flowchart TB
 
 #### Session Security
 
-```
+```toml
 ## Secure session configuration
 SESSION_COOKIE_SECURE = True      # HTTPS only
 SESSION_COOKIE_HTTPONLY = True    # No JavaScript access
@@ -337,7 +337,7 @@ SESSION_SLIDING_WINDOW = True     # Extend on activity
 SESSION_MAX_CONCURRENT = 3        # Limit sessions per user
 ```
 **Session Fixation Protection**:
-```
+```python
 ## Regenerate session ID on login
 async def login(username: str, password: str):
     user = await authenticate(username, password)
@@ -359,7 +359,7 @@ async def login(username: str, password: str):
 #### Principle of Least Privilege
 
 **Default Deny**:
-```
+```python
 ## Deny by default, explicit allow
 async def check_access(user_id: str, resource: str, action: str):
     # Check explicit permission
@@ -387,7 +387,7 @@ type organization
 
 #### Permission Boundaries
 
-```
+```python
 ## Enforce organization boundaries
 async def check_org_access(user_id: str, resource_id: str):
     # Get user's organization
@@ -409,7 +409,7 @@ async def check_org_access(user_id: str, resource_id: str):
 #### Encryption at Rest
 
 **Database Encryption**:
-```
+```yaml
 ## PostgreSQL with encryption
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -447,7 +447,7 @@ user.email = cipher.encrypt("alice@example.com")
 #### Encryption in Transit
 
 **TLS Configuration**:
-```
+```yaml
 ## Ingress with TLS
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -476,7 +476,7 @@ spec:
 ```
 
 **mTLS Between Services**:
-```
+```yaml
 ## Service mesh (Istio)
 apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
@@ -498,7 +498,7 @@ db_password = settings.redis_password  # Never in Git
 ```
 
 **Kubernetes Secrets**:
-```
+```yaml
 ## External Secrets Operator
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
@@ -544,7 +544,7 @@ class MessageRequest(BaseModel):
 
 #### SQL Injection Prevention
 
-```
+```graphql
 ## NEVER do this
 query = f"SELECT * FROM users WHERE username = '{username}'"  # VULNERABLE
 
@@ -569,7 +569,7 @@ response = {
 
 #### CSRF Protection
 
-```
+```python
 ## CSRF token validation
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
@@ -746,7 +746,7 @@ logger.info(
 
 #### GDPR Compliance
 
-```
+```python
 ## Right to erasure
 async def delete_user_data(user_id: str):
     """Permanently delete all user data"""
@@ -774,7 +774,7 @@ async def delete_user_data(user_id: str):
 - Risk management (RM)
 
 **Evidence Collection**:
-```
+```python
 ## Automated evidence collection
 async def collect_compliance_evidence():
     evidence = {
@@ -792,7 +792,7 @@ async def collect_compliance_evidence():
 
 #### Dependency Scanning
 
-```
+```yaml
 ## .github/workflows/security-scan.yml
 name: Security Scan
 on: [push, pull_request]
@@ -822,7 +822,7 @@ jobs:
 ```
 #### Container Scanning
 
-```
+```bash
 ## Scan Docker images
 trivy image openfga/openfga:latest
 trivy image bitnami/keycloak:latest
@@ -875,7 +875,7 @@ grype mcp-server-langgraph:latest
 
 #### Security Contacts
 
-```
+```yaml
 ## security-contacts.yaml
 security_team:
   email: security@company.com

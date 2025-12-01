@@ -29,13 +29,13 @@ This guide documents common MDX parsing errors in Mintlify documentation and how
 **Solution**: Use HTML entities
 
 ❌ **Wrong:**
-```
+```diff
 - Low volume (<100K requests/mo)
 - High volume (>1M requests/mo)
 ```
 
 ✅ **Correct:**
-```
+```diff
 - Low volume (&lt;100K requests/mo)
 - High volume (&gt;1M requests/mo)
 ```
@@ -51,7 +51,7 @@ This guide documents common MDX parsing errors in Mintlify documentation and how
 **Solution**: Always add blank lines
 
 ❌ **Wrong:**
-```
+```typescript
 <CodeGroup>
   (backticks)bash
   code here
@@ -60,7 +60,7 @@ This guide documents common MDX parsing errors in Mintlify documentation and how
 ```
 
 ✅ **Correct:**
-```
+```typescript
 <CodeGroup>
 
   (backticks)bash
@@ -137,7 +137,7 @@ spec:
 **Solution**: Ensure all tags are properly matched
 
 ❌ **Wrong** (missing closing tag):
-```
+```typescript
 <AccordionGroup>
   <Accordion title="First">
     Content
@@ -149,7 +149,7 @@ spec:
 ```
 
 ✅ **Correct:**
-```
+```typescript
 <AccordionGroup>
   <Accordion title="First">
     Content
@@ -233,7 +233,7 @@ Always escape comparison operators when followed by numbers:
 ### Component Nesting
 Keep component nesting clean and well-spaced:
 
-```
+```typescript
 <OuterComponent>
 
   <InnerComponent>

@@ -153,7 +153,7 @@ console.log('Key ID:', data.key_id);
 
 **Response**:
 
-```
+```json
 {
   "key_id": "key_abc123def456",
   "name": "Production CLI Tool",
@@ -176,7 +176,7 @@ console.log('Key ID:', data.key_id);
 
 <ResponseField name="400" type="Bad Request">
   Invalid input or exceeded key limit
-  ```
+  ```json
   {
     "error": "validation_error",
     "message": "Maximum 5 API keys allowed per user. Revoke an existing key first."
@@ -312,7 +312,7 @@ console.log('New API Key:', data.new_api_key);
 
 **Response**:
 
-```
+```json
 {
   "key_id": "key_abc123def456",
   "new_api_key": "ak_live_newkey123...",
@@ -336,7 +336,7 @@ console.log('New API Key:', data.new_api_key);
 
 <ResponseField name="404" type="Not Found">
   API key not found or not owned by current user
-  ```
+  ```json
   {
     "error": "not_found",
     "message": "API key 'key_abc123def456' not found"

@@ -18,7 +18,7 @@ By contributing to this project, you agree to abide by our [Code of Conduct](htt
 
 ### Quick Start
 
-```
+```bash
 ## 1. Fork the repository
 gh repo fork vishnu2kmohan/mcp-server-langgraph
 
@@ -50,7 +50,7 @@ gh pr create --title "feat: add awesome new feature" --body "Description of chan
 
 #### Prerequisites
 
-```
+```diff
 ## Required
 - Python 3.12+
 - Docker & Docker Compose
@@ -64,7 +64,7 @@ gh pr create --title "feat: add awesome new feature" --body "Description of chan
 
 #### Local Environment
 
-```
+```bash
 ## Install uv (fast Python package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
@@ -88,7 +88,7 @@ Use `uv run <command>` to run commands without activating the virtual environmen
 
 #### Environment Variables
 
-```
+```bash
 ## Copy example environment file
 cp .env.example .env
 
@@ -113,7 +113,7 @@ ENABLE_METRICS=false
 ```
 #### Start Development Services
 
-```
+```bash
 ## Start all services
 docker compose -f docker-compose.dev.yml up -d
 
@@ -133,7 +133,7 @@ docker compose down
 
 We follow **PEP 8** with some modifications:
 
-```
+```python
 ## Line length: 100 characters (not 79)
 ## String quotes: Double quotes preferred
 ## Imports: Organized with isort
@@ -179,7 +179,7 @@ async def get_user_profile(
 
 We use automated formatters:
 
-```
+```bash
 ## Format code with black
 black src/ tests/
 
@@ -200,7 +200,7 @@ make lint
 
 Pre-commit hooks automatically run formatters and linters:
 
-```
+```yaml
 ## .pre-commit-config.yaml
 repos:
   - repo: https://github.com/psf/black
@@ -262,7 +262,7 @@ tests/
 
 #### Writing Tests
 
-```
+```python
 ## tests/unit/test_auth.py
 import pytest
 from src.auth.middleware import AuthMiddleware
@@ -315,7 +315,7 @@ async def test_multiple_users(auth_middleware, user_id, expected):
 ```
 #### Running Tests
 
-```
+```bash
 ## Run all unit tests
 uv run pytest -m unit
 
@@ -343,7 +343,7 @@ uv run pytest
 
 We aim for **&gt;80% code coverage**:
 
-```
+```bash
 ## Generate coverage report
 uv run pytest --cov=src --cov-report=html --cov-report=term
 
@@ -381,7 +381,7 @@ We use the [Conventional Commits](https://www.conventionalcommits.org/) specific
 
 **Examples**:
 
-```
+```bash
 ## Feature
 git commit -m "feat(auth): add Keycloak SSO support"
 
@@ -544,7 +544,7 @@ Fixes #(issue number)
 
 We use **Mintlify** for documentation:
 
-```
+```bash
 ## Install Mintlify CLI
 npm install -g mintlify
 

@@ -417,7 +417,7 @@ print(f"Max retries: {config.max_retries}")
 
 All resilience patterns emit OpenTelemetry metrics:
 
-```
+```css
 # Circuit Breaker
 circuit_breaker_state{name="llm_api"} gauge
 circuit_breaker_failures_total{name="llm_api"} counter

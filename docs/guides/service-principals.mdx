@@ -104,7 +104,7 @@ curl -X POST https://api.example.com/api/v1/service-principals \
 ```
 
 **Authentication**:
-```
+```json
 ## Use Resource Owner Password Credentials (ROPC)
 response = await httpx.post(
     "https://keycloak.example.com/realms/langgraph-agent/protocol/openid-connect/token",
@@ -155,7 +155,7 @@ Service principals support 30-day refresh tokens for persistent authentication.
 
 #### Configuration
 
-```
+```properties
 ## .env
 SERVICE_PRINCIPAL_REFRESH_TOKEN_LIFESPAN=2592000  # 30 days
 SERVICE_PRINCIPAL_SESSION_ENABLED=true

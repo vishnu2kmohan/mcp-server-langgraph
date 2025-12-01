@@ -250,7 +250,7 @@ flowchart LR
 
 #### Create Service
 
-```
+```bash
 ## Add MCP Server as a service
 curl -X POST http://localhost:8001/services \
   --data name=mcp-server-langgraph \
@@ -274,7 +274,7 @@ deck sync -s kong.yaml
 ```
 #### Create Routes
 
-```
+```bash
 ## Create route for /message endpoint
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/routes \
   --data paths[]=/message \
@@ -317,7 +317,7 @@ deck sync -s kong.yaml
 
 #### JWT Authentication
 
-```
+```bash
 ## Enable JWT plugin
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=jwt \
@@ -345,7 +345,7 @@ curl http://localhost:8000/message \
 ```
 #### Rate Limiting
 
-```
+```bash
 ## Global rate limiting
 curl -X POST http://localhost:8001/plugins \
   --data name=rate-limiting \
@@ -382,7 +382,7 @@ EOF
 
 #### CORS
 
-```
+```bash
 ## Enable CORS
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=cors \
@@ -409,7 +409,7 @@ EOF
 ```
 #### Response Caching
 
-```
+```bash
 ## Enable proxy cache
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=proxy-cache \
@@ -428,7 +428,7 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
 
 #### Request Transformation
 
-```
+```bash
 ## Add/modify request headers
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-transformer \
@@ -443,7 +443,7 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
 ```
 #### Logging
 
-```
+```bash
 ## HTTP log
 curl -X POST http://localhost:8001/plugins \
   --data name=http-log \
@@ -472,7 +472,7 @@ curl -X POST http://localhost:8001/plugins \
 
 #### Load Balancing
 
-```
+```yaml
 ## kong.yaml
 upstreams:
 - name: langgraph-upstream
@@ -511,7 +511,7 @@ services:
 ```
 #### Circuit Breaker
 
-```
+```bash
 ## Enable circuit breaker
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=circuit-breaker \
@@ -525,7 +525,7 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
 
 #### Request Validation
 
-```
+```bash
 ## JSON Schema validation
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-validator \
@@ -534,7 +534,7 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
 ```
 #### Canary Deployment
 
-```
+```yaml
 ## kong.yaml
 services:
 - name: langgraph-stable
@@ -565,7 +565,7 @@ services:
 
 #### Prometheus Plugin
 
-```
+```bash
 ## Enable Prometheus plugin
 curl -X POST http://localhost:8001/plugins \
   --data name=prometheus
@@ -579,7 +579,7 @@ curl http://localhost:8001/metrics
 ## kong_bandwidth_bytes{type="ingress",service="mcp-server-langgraph"} 1024000
 ```
 **Prometheus config**:
-```
+```yaml
 ## prometheus.yml
 scrape_configs:
 - job_name: 'kong'
@@ -619,7 +619,7 @@ scrape_configs:
 ```
 #### Distributed Tracing
 
-```
+```bash
 ## Enable Zipkin tracing
 curl -X POST http://localhost:8001/plugins \
   --data name=zipkin \
@@ -637,7 +637,7 @@ curl -X POST http://localhost:8001/plugins \
 
 #### IP Restriction
 
-```
+```bash
 ## Whitelist IPs
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=ip-restriction \
@@ -652,7 +652,7 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
 ```
 #### Bot Detection
 
-```
+```bash
 ## Enable bot detection
 curl -X POST http://localhost:8001/plugins \
   --data name=bot-detection \
@@ -663,7 +663,7 @@ curl -X POST http://localhost:8001/plugins \
 
 #### Request Size Limiting
 
-```
+```bash
 ## Limit request body size
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-size-limiting \
@@ -673,7 +673,7 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
 
 #### High Availability
 
-```
+```yaml
 ## Kubernetes deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -728,7 +728,7 @@ spec:
 
 #### Database HA
 
-```
+```yaml
 ## PostgreSQL with replication
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster

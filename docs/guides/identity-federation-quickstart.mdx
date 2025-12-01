@@ -158,7 +158,7 @@ flowchart TB
 
 #### LDAP/Active Directory
 
-```
+```bash
 ## Set environment variables
 export LDAP_CONNECTION_URL='ldap://ad.example.com:389'
 export LDAP_BIND_DN='CN=Service Account,OU=Service Accounts,DC=example,DC=com'
@@ -173,7 +173,7 @@ See [setup_ldap_federation.py](/reference/setup-scripts#setup_ldap_federation-py
 
 #### Google Workspace
 
-```
+```bash
 ## Set credentials
 export GOOGLE_CLIENT_ID='your-client-id.apps.googleusercontent.com'
 export GOOGLE_CLIENT_SECRET='your-secret'
@@ -303,7 +303,7 @@ providers:
 
 #### Test LDAP Connection
 
-```
+```bash
 ## In Keycloak Admin Console:
 ## User Federation → ldap → Test connection
 ## User Federation → ldap → Test authentication
@@ -311,7 +311,7 @@ providers:
 ```
 #### Test OIDC Login
 
-```
+```bash
 ## Visit Keycloak account console
 https://keycloak.example.com/realms/langgraph-agent/account
 
@@ -321,7 +321,7 @@ https://keycloak.example.com/realms/langgraph-agent/account
 ```
 #### Verify JWT Issuance
 
-```
+```bash
 ## After federated login, get JWT
 curl -X POST http://localhost:8080/auth/login \
   -d '{"username": "alice@example.com", "password": "federated-password"}'

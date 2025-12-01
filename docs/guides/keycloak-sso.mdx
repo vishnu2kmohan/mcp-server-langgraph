@@ -264,7 +264,7 @@ const { access_token, refresh_token, expires_in } = await tokens.json();
 
 For testing or CLI applications:
 
-```
+```python
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 
 client = KeycloakClient()
@@ -287,7 +287,7 @@ refresh_token = result['refresh_token']
 
 Refresh tokens have longer lifetime and can be used to get new access tokens:
 
-```
+```bash
 ## Refresh access token
 new_tokens = await client.refresh_token(refresh_token)
 
@@ -302,7 +302,7 @@ new_refresh_token = new_tokens['refresh_token']  # Rotated!
 
 Edit `config/role_mappings.yaml`:
 
-```
+```yaml
 ## Simple 1:1 role mappings
 simple_mappings:
   admin: admin
@@ -335,7 +335,7 @@ hierarchies:
 
 When user authenticates, roles are synced to OpenFGA:
 
-```
+```python
 from mcp_server_langgraph.auth.keycloak import sync_user_to_openfga
 
 ## Get user info from token
@@ -355,7 +355,7 @@ await sync_user_to_openfga(
 
 Trigger sync for existing users:
 
-```
+```toml
 ## Sync single user
 await sync_user_to_openfga(
     user_id="alice",
@@ -380,7 +380,7 @@ for user in users:
 
 Deploy Keycloak with 2+ replicas:
 
-```
+```yaml
 ## values.yaml for Helm
 replicaCount: 2
 
@@ -436,7 +436,7 @@ KEYCLOAK_VERIFY_SSL=true  # REQUIRED!
 
 #### Performance Tuning
 
-```
+```yaml
 ## Kubernetes resources
 resources:
   requests:
@@ -464,7 +464,7 @@ postgresql:
 ```
 #### Backup & Recovery
 
-```
+```bash
 ## Backup PostgreSQL (Keycloak database)
 kubectl exec -n mcp-server-langgraph \
   $(kubectl get pod -n mcp-server-langgraph -l app=postgresql -o jsonpath='{.items[0].metadata.name}') \
@@ -479,7 +479,7 @@ kubectl exec -i -n mcp-server-langgraph \
 
 #### Health Checks
 
-```
+```bash
 ## Keycloak health
 curl https://sso.yourdomain.com/health
 
@@ -493,7 +493,7 @@ curl https://sso.yourdomain.com/health/live
 
 Keycloak exposes Prometheus metrics:
 
-```
+```yaml
 ## ServiceMonitor for Prometheus
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -521,7 +521,7 @@ rate(keycloak_tokens_created_total[5m])
 
 ## Active sessions
 keycloak_sessions_active
-```
+```yaml
 #### Logging
 
 Configure structured logging:
@@ -566,7 +566,7 @@ extraEnv:
     - Token not expired
     - JWKS endpoint accessible
 
-    ```
+    ```python
     # Debug token
     import jwt
     decoded = jwt.decode(token, options={"verify_signature": False})

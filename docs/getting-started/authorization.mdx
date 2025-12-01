@@ -68,7 +68,7 @@ flowchart TD
 
 The default model supports:
 
-```
+```diff
 ## Users can be:
 - Owners (full access)
 - Admins (manage permissions)
@@ -230,7 +230,7 @@ type document
 
 Isolate resources by organization:
 
-```
+```json
 ## Organization setup
 await client.write_tuples([
     # Alice owns org
@@ -251,7 +251,7 @@ allowed = await client.check_permission(
 
 Admins inherit all member permissions:
 
-```
+```json
 ## Model defines: member or admin can execute
 ## So admins automatically get member permissions
 
@@ -274,7 +274,7 @@ allowed = await client.check_permission(
 
 Fine-grained document permissions:
 
-```
+```json
 ## Document ownership
 await client.write_tuples([{
     "user": "user:alice",
@@ -379,7 +379,7 @@ sequenceDiagram
 
 #### Check Permission
 
-```
+```toml
 ## Check if user can perform action
 allowed = await client.check_permission(
     user="user:alice",
@@ -396,7 +396,7 @@ else:
 
 #### Grant Permission
 
-```
+```json
 ## Single tuple
 await client.write_tuples([{
     "user": "user:alice",
@@ -413,7 +413,7 @@ await client.write_tuples([
 ```
 #### Revoke Permission
 
-```
+```json
 ## Delete specific tuple
 await client.delete_tuples([{
     "user": "user:bob",
@@ -428,7 +428,7 @@ await client.delete_tuples([t for t in tuples if t['user'] == 'user:bob'])
 
 #### List User Permissions
 
-```
+```toml
 ## What can user access?
 objects = await client.list_objects(
     user="user:alice",
@@ -449,7 +449,7 @@ print(f"Can execute chat: {users}")
 
 #### Enable Authorization Logging
 
-```
+```bash
 ## .env
 LOG_LEVEL=DEBUG
 

@@ -222,7 +222,7 @@ External IdPs (LDAP, SAML, OIDC) → Keycloak (Authoritative)
 
 #### Environment Variables
 
-```
+```properties
 ## Keycloak (Authoritative Identity)
 AUTH_PROVIDER=keycloak
 KEYCLOAK_SERVER_URL=https://keycloak.example.com
@@ -267,7 +267,7 @@ SESSION_TTL_SECONDS=86400
 ```
 #### Kubernetes Resources
 
-```
+```bash
 ## Keycloak
 kubectl apply -f deployments/base/keycloak-deployment.yaml
 kubectl apply -f deployments/base/keycloak-service.yaml
@@ -310,7 +310,7 @@ rate(openfga_check_requests_total[5m])
 ```
 #### Health Checks
 
-```
+```bash
 ## Keycloak
 curl http://keycloak:8080/health/ready
 
@@ -326,7 +326,7 @@ curl http://openfga:8080/healthz
 
 #### Logs
 
-```
+```bash
 ## View Keycloak logs
 kubectl logs -n mcp-server-langgraph deployment/keycloak --tail=100
 
@@ -468,7 +468,7 @@ If issues arise, rollback steps:
 
 #### 1. Revert to Previous Auth
 
-```
+```bash
 ## Update ConfigMap
 kubectl edit configmap mcp-server-config
 ## Set: AUTH_PROVIDER=inmemory
@@ -478,14 +478,14 @@ kubectl rollout restart deployment/mcp-server-langgraph
 ```
 #### 2. Revert Kong Configuration
 
-```
+```bash
 ## Reapply old Kong plugins
 kubectl apply -f deployments/kubernetes/kong/kong-plugins-backup.yaml
 ```
 
 #### 3. Disable New Features
 
-```
+```properties
 ## Update .env
 ENABLE_SERVICE_PRINCIPALS=false
 API_KEY_ENABLED=false
@@ -495,7 +495,7 @@ SCIM_ENABLED=false
 
 #### Keycloak
 
-```
+```yaml
 ## Increase replicas
 spec:
   replicas: 3
@@ -519,7 +519,7 @@ env:
 
 #### Kong
 
-```
+```yaml
 ## Increase worker processes
 env:
 - name: KONG_NGINX_WORKER_PROCESSES
@@ -531,7 +531,7 @@ env:
 ```
 #### OpenFGA
 
-```
+```bash
 ## Tune check cache
 --check-query-cache-enabled=true
 --check-query-cache-ttl=10s
@@ -542,7 +542,7 @@ env:
 
 Run both old and new auth in parallel:
 
-```
+```yaml
 ## Support both inmemory and keycloak
 if token.startswith("old_"):
     # Validate with old system
@@ -559,7 +559,7 @@ Gradually migrate clients:
 #### Step 3: Sunset Old Auth (Week 4)
 
 Remove old authentication system:
-```
+```bash
 ## Remove old providers
 ## Update AUTH_PROVIDER=keycloak (no fallback)
 ```

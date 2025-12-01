@@ -559,7 +559,7 @@ terraform/environments/
 
 Variables defined in `variables.tf` are **identical** across environments:
 
-```
+```hcl
 variable "project_id" {
   description = "GCP project ID"
   type        = string
@@ -613,7 +613,7 @@ variable "enable_binary_authorization" {
 
 <Steps>
   <Step title="Unit Tests (Terraform Validate)">
-    ```
+    ```bash
     for env in gcp-dev gcp-staging gcp-prod; do
       cd terraform/environments/$env
       terraform init -backend=false
@@ -625,7 +625,7 @@ variable "enable_binary_authorization" {
   </Step>
 
   <Step title="Integration Tests (Terraform Plan)">
-    ```
+    ```bash
     cd terraform/environments/gcp-dev
     terraform plan -detailed-exitcode
     ```
@@ -637,7 +637,7 @@ variable "enable_binary_authorization" {
   </Step>
 
   <Step title="Compliance Scans">
-    ```
+    ```bash
     # Run compliance workflow
     gh workflow run gcp-compliance-scan.yaml
     ```
@@ -649,7 +649,7 @@ variable "enable_binary_authorization" {
   </Step>
 
   <Step title="Load Testing (Staging)">
-    ```
+    ```bash
     # Deploy to staging
     cd terraform/environments/gcp-staging
     terraform apply
@@ -690,7 +690,7 @@ gcloud scheduler jobs create http scale-up-dev \
 
 <Check>**Right-size** based on actual load test results</Check>
 
-```
+```bash
 # Monitor actual usage
 kubectl top pods -n staging-mcp-server-langgraph --containers
 
@@ -708,7 +708,7 @@ kubectl patch deployment mcp-server-langgraph \
 ```
 enable_committed_use_discounts = true
 committed_use_term             = "3_YEAR"  # 52% discount
-```
+```yaml
 
 **Savings**: $486/month (50%)
 
@@ -744,14 +744,14 @@ committed_use_term             = "3_YEAR"  # 52% discount
     ```
     cd terraform/environments/gcp-dev
     terraform init && terraform apply
-    ```
+    ```xml
   </Step>
 
   <Step title="Validate in Staging">
     ```
     cd terraform/environments/gcp-staging
     terraform init && terraform apply
-    ```
+    ```xml
   </Step>
 
   <Step title="Production Deployment">

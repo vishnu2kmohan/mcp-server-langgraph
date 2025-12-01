@@ -181,7 +181,7 @@ llm = LLMFactory(
 ```
 #### Advanced Configuration
 
-```
+```python
 ## Multimodal with vision
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -396,7 +396,7 @@ kubectl create secret generic gcp-service-account \
 
 #### Workload Identity (GKE)
 
-```
+```bash
 ## Enable Workload Identity on cluster
 gcloud container clusters update CLUSTER_NAME \
   --workload-pool=PROJECT_ID.svc.id.goog
@@ -431,7 +431,7 @@ spec:
 
 #### Caching
 
-```
+```python
 ## Enable prompt caching (Gemini 2.5 Pro only)
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -450,7 +450,7 @@ response2 = await llm.ainvoke("What are the key points in the document?")
 
 #### Batching
 
-```
+```python
 ## Process multiple requests in parallel
 import asyncio
 
@@ -470,7 +470,7 @@ for query, response in zip(queries, responses):
 ```
 #### Streaming
 
-```
+```python
 ## Stream responses for better UX
 async def stream_response(query: str):
     async for chunk in llm.astream(query):
@@ -494,7 +494,7 @@ async def stream_message(request: Request):
 
 #### Model Selection
 
-```
+```python
 ## Use cheaper model for simple tasks
 def select_model(task_complexity: str) -> str:
     if task_complexity == "simple":
@@ -533,7 +533,7 @@ if cb.total_tokens > MAX_TOKENS_PER_REQUEST:
 
 #### Quota Management
 
-```
+```bash
 ## Check quota usage (Vertex AI)
 gcloud alpha monitoring time-series list \
   --filter='metric.type="aiplatform.googleapis.com/quota/online_prediction_requests/usage"'
@@ -576,7 +576,7 @@ except Exception as e:
 
 #### LangSmith Integration
 
-```
+```python
 ## Track Gemini usage in LangSmith
 import os
 os.environ["LANGCHAIN_TRACING_V2"] = "true"

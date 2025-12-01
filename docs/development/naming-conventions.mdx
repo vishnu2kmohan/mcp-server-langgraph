@@ -65,28 +65,28 @@ Due to GCP character limits on certain resources, we use a **dual-prefix approac
 ### Google Cloud Platform (GKE)
 
 #### Cluster Names
-```
+```yaml
 Development:  dev-mcp-server-langgraph-gke
 Staging:      staging-mcp-server-langgraph-gke
 Production:   production-mcp-server-langgraph-gke
 ```
 
 #### Namespaces
-```
+```yaml
 Development:  dev-mcp-server-langgraph
 Staging:      staging-mcp-server-langgraph
 Production:   production-mcp-server-langgraph
 ```
 
 #### Deployments (with Kustomize namePrefix)
-```
+```yaml
 Development:  dev-mcp-server-langgraph
 Staging:      staging-mcp-server-langgraph
 Production:   production-mcp-server-langgraph
 ```
 
 #### Services
-```
+```yaml
 Main:         {env}-mcp-server-langgraph
 SSE:          {env}-mcp-server-langgraph-sse
 Headless:     {env}-mcp-server-langgraph-headless
@@ -110,14 +110,14 @@ Headless:     {env}-mcp-server-langgraph-headless
 ### Amazon Web Services (EKS)
 
 #### Cluster Names
-```
+```yaml
 Development:  dev-mcp-server-langgraph-eks
 Staging:      staging-mcp-server-langgraph-eks
 Production:   production-mcp-server-langgraph-eks
 ```
 
 #### Namespaces
-```
+```yaml
 (Same as GKE - platform-agnostic)
 Development:  dev-mcp-server-langgraph
 Staging:      staging-mcp-server-langgraph
@@ -140,14 +140,14 @@ Production:   production-mcp-server-langgraph
 ### Microsoft Azure (AKS)
 
 #### Cluster Names
-```
+```yaml
 Development:  dev-mcp-server-langgraph-aks
 Staging:      staging-mcp-server-langgraph-aks
 Production:   production-mcp-server-langgraph-aks
 ```
 
 #### Namespaces
-```
+```yaml
 (Same as GKE/EKS - platform-agnostic)
 Development:  dev-mcp-server-langgraph
 Staging:      staging-mcp-server-langgraph
@@ -170,12 +170,12 @@ Production:   production-mcp-server-langgraph
 ### Kustomize Configuration
 
 #### Base Resources
-```
+```yaml
 namespace: mcp-server-langgraph (generic base)
 ```
 
 #### Environment Overlays
-```
+```yaml
 Development:
   namespace: dev-mcp-server-langgraph
   namePrefix: dev-
@@ -212,7 +212,7 @@ ghcr.io/vishnu2kmohan/mcp-server-langgraph
 ```
 
 #### Google Artifact Registry (GAR)
-```
+```yaml
 Pattern: {region}-docker.pkg.dev/{project-id}/mcp-{env}/{image-name}
 
 Development:  ghcr.io/vishnu2kmohan/mcp-server-langgraph
@@ -221,7 +221,7 @@ Production:   us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-la
 ```
 
 #### AWS ECR
-```
+```yaml
 Pattern: {account-id}.dkr.ecr.{region}.amazonaws.com/mcp-server-langgraph
 
 All Environments: mcp-server-langgraph (environment in tags)
@@ -229,7 +229,7 @@ All Environments: mcp-server-langgraph (environment in tags)
 
 ### Image Tags
 
-```
+```yaml
 Development:  2.8.0-dev, dev-latest, dev-{sha}
 Staging:      2.8.0-staging, staging-latest, staging-{sha}
 Production:   2.8.0, latest, {sha}

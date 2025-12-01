@@ -284,7 +284,7 @@ workflows:
 
 <AccordionGroup>
   <Accordion title="Always Test Before Deploy">
-    ```
+    ```yaml
     jobs:
       test:
         # Run unit tests, integration tests
@@ -295,7 +295,7 @@ workflows:
   </Accordion>
 
   <Accordion title="Use Staging Environment">
-    ```
+    ```yaml
     deploy-staging:
       # Deploy to staging first
       # Run smoke tests
@@ -306,7 +306,7 @@ workflows:
   </Accordion>
 
   <Accordion title="Tag Deployments">
-    ```
+    ```bash
     # Tag with git commit SHA
     langgraph deploy my-agent-prod --tag "$(git rev-parse --short HEAD)"
 
@@ -321,7 +321,7 @@ workflows:
   <Accordion title="Require Approvals for Production">
     Use GitHub Environments or GitLab's manual approval:
 
-    ```
+    ```yaml
     deploy-production:
       environment: production  # Requires approval
       when: manual
@@ -338,7 +338,7 @@ workflows:
   </Accordion>
 
   <Accordion title="Notify on Deployment">
-```
+```yaml
     - name: Notify Slack
       if: success()
       uses: slackapi/slack-github-action@v1
@@ -357,7 +357,7 @@ workflows:
 
 #### Automatic Rollback on Failure
 
-```
+```yaml
 - name: Deploy to Production
   id: deploy
   run: langgraph deploy my-agent-prod --tag production
@@ -379,7 +379,7 @@ workflows:
 
 #### Manual Rollback
 
-```
+```bash
 ## List revisions
 langgraph deployment list my-agent-prod
 
@@ -397,7 +397,7 @@ langgraph deployment rollback my-agent-prod
 
     > NOTE: Automatic deploys only run when the repository variable `ENABLE_DEV_AUTODEPLOY` is set to `true`. This keeps CI from waiting on environment approvals by default.
 
-    ```
+    ```yaml
     deploy-dev:
       if: github.ref == 'refs/heads/develop'
       run: langgraph deploy my-agent-dev --tag development
@@ -409,7 +409,7 @@ langgraph deployment rollback my-agent-prod
 
     > NOTE: Set the repository variable `ENABLE_STAGING_AUTODEPLOY` to `true` to enable automated staging deploys. Leaving it unset keeps CI from stalling on staging approvals.
 
-    ```
+    ```yaml
     deploy-staging:
       if: github.ref == 'refs/heads/main'
       run: langgraph deploy my-agent-staging --tag staging
@@ -419,7 +419,7 @@ langgraph deployment rollback my-agent-prod
   <Tab title="Production">
     **Trigger**: Manual approval or git tag
 
-    ```
+    ```yaml
     deploy-production:
       if: startsWith(github.ref, 'refs/tags/v')
       environment: production
@@ -432,7 +432,7 @@ langgraph deployment rollback my-agent-prod
 
 View deployment status:
 
-```
+```bash
 ## Get deployment info
 langgraph deployment get my-agent-prod
 

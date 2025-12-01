@@ -409,7 +409,7 @@ terraform apply
 
 #### Cluster Resource Monitoring
 
-```
+```bash
 ## View resource usage
 kubectl top pods -n production-mcp-server-langgraph
 kubectl top nodes
@@ -428,7 +428,7 @@ gcloud monitoring time-series list \
 
 <Steps>
   <Step title="Generate New Secrets">
-    ```
+    ```properties
     NEW_JWT_SECRET=$(openssl rand -base64 32)
     NEW_API_KEY=$(openssl rand -base64 32)
     ```
@@ -436,7 +436,7 @@ gcloud monitoring time-series list \
   </Step>
 
   <Step title="Update Secret Manager">
-    ```
+    ```bash
     # Update secret version
     gcloud secrets versions add mcp-production-secrets \
       --data-file=<(jq --arg jwt "$NEW_JWT_SECRET" '.jwt_secret = $jwt' secrets.json) \
@@ -448,7 +448,7 @@ gcloud monitoring time-series list \
     External Secrets Operator automatically syncs secrets and Reloader restarts pods.
 
     Monitor:
-    ```
+    ```bash
     kubectl get pods -n production-mcp-server-langgraph -w
     ```
   </Step>
@@ -456,7 +456,7 @@ gcloud monitoring time-series list \
 
 #### Audit Access Logs
 
-```
+```bash
 ## View cluster access
 gcloud logging read \
   'protoPayload.serviceName="container.googleapis.com" AND protoPayload.methodName="io.k8s.core.v1.pods.exec"' \
@@ -469,7 +469,7 @@ gcloud logging read \
 ```
 #### Review Binary Authorization Denials
 
-```
+```bash
 gcloud logging read \
   'protoPayload.serviceName="binaryauthorization.googleapis.com" AND protoPayload.response.allow=false' \
   --limit=20
@@ -568,7 +568,7 @@ gcloud container clusters describe production-mcp-server-langgraph-gke \
   --format="yaml(currentMasterVersion,releaseChannel)"
 ```
 **Manual upgrade** (if needed):
-```
+```bash
 ## Check available versions
 gcloud container get-server-config --region=us-central1
 
@@ -599,7 +599,7 @@ gcloud sql instances reschedule-maintenance mcp-prod-postgres \
 
 #### Active Alerts
 
-```
+```bash
 ## List firing alerts
 gcloud alpha monitoring policies list \
   --filter="enabled=true" \
@@ -667,7 +667,7 @@ For complete disaster recovery automation:
   **This stops all traffic**. Use only in critical situations (security breach, data corruption).
 </Warning>
 
-```
+```bash
 ## Scale to zero
 kubectl scale deployment production-mcp-server-langgraph \
   -n production-mcp-server-langgraph \
@@ -680,7 +680,7 @@ kubectl scale deployment production-mcp-server-langgraph \
 ```
 #### Emergency Maintenance Mode
 
-```
+```yaml
 ## Apply maintenance page
 apiVersion: v1
 kind: Service

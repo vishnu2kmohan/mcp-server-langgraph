@@ -133,7 +133,7 @@ async def main():
 ```
 
 **Communication Flow**:
-```
+```json
 Client (Claude Desktop)
     ↓ (stdin)
     {"jsonrpc": "2.0", "method": "tools/list", "id": 1}
@@ -191,7 +191,7 @@ async def call_tool(request: ToolCallRequest):
 ```
 
 **Communication Flow**:
-```
+```yaml
 Client (Web App)
     ↓ (HTTP POST)
     POST /mcp/tools/call {"name": "chat", "args": {...}}

@@ -202,7 +202,7 @@ At least one LLM provider API key is required for the agent to function:
 
 Create a `.env` file in the project root for local development:
 
-```
+```properties
 ## Core (Required)
 JWT_SECRET_KEY=development-secret-key-change-in-production
 
@@ -273,7 +273,7 @@ Required repository secrets:
 
 #### Minimal Setup (Development)
 
-```
+```bash
 ## 1. Copy environment template
 cp .env.example .env
 
@@ -286,7 +286,7 @@ make test-unit
 ```
 #### Full Setup (with Infrastructure)
 
-```
+```bash
 ## 1. Set core variables
 export JWT_SECRET_KEY="$(openssl rand -hex 32)"
 export ANTHROPIC_API_KEY="your-anthropic-key"

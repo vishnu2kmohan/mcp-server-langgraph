@@ -211,7 +211,7 @@ kubectl apply -k deployments/kubernetes/overlays/aks
 
 #### 1. Namespace and RBAC
 
-```
+```yaml
 ## Create namespace
 kubectl apply -f - << 'EOF'
 apiVersion: v1
@@ -273,7 +273,7 @@ data:
 
 **Secrets** for sensitive data:
 
-```
+```bash
 ## Generate secrets
 export JWT_SECRET=$(openssl rand -base64 32)
 export REDIS_PASSWORD=$(openssl rand -base64 32)
@@ -296,7 +296,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
 
 #### 3. Deploy Keycloak
 
-```
+```bash
 ## Deploy Keycloak with PostgreSQL
 helm install keycloak bitnami/keycloak \
   --namespace mcp-server-langgraph \
@@ -325,7 +325,7 @@ See [Keycloak SSO Guide](/guides/keycloak-sso) for detailed setup.
 
 #### 4. Deploy Redis
 
-```
+```bash
 ## Deploy Redis with replication
 helm install redis-session bitnami/redis \
   --namespace mcp-server-langgraph \
@@ -353,7 +353,7 @@ See [Redis Sessions Guide](/guides/redis-sessions) for details.
 
 #### 5. Deploy OpenFGA
 
-```
+```yaml
 ## Deploy OpenFGA with PostgreSQL
 kubectl apply -f - << 'EOF'
 apiVersion: apps/v1
@@ -410,7 +410,7 @@ python scripts/setup/setup_openfga.py
 
 #### 6. Deploy Application
 
-```
+```bash
 ## Deploy all manifests
 kubectl apply -f deployments/kubernetes/base/deployment.yaml
 kubectl apply -f deployments/kubernetes/base/service.yaml
@@ -463,7 +463,7 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
   </Tab>
 
   <Tab title="GKE Ingress">
-    ```
+    ```yaml
     apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
@@ -498,7 +498,7 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
   </Tab>
 
   <Tab title="AWS ALB">
-    ```
+    ```yaml
     apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
@@ -530,7 +530,7 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
 
 #### Horizontal Pod Autoscaling
 
-```
+```yaml
 ## deployments/kubernetes/base/hpa.yaml
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -574,7 +574,7 @@ spec:
 
 #### Pod Disruption Budget
 
-```
+```yaml
 ## deployments/kubernetes/base/pdb.yaml
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -591,7 +591,7 @@ spec:
 
 Spread pods across availability zones:
 
-```
+```yaml
 affinity:
   podAntiAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:
@@ -610,7 +610,7 @@ affinity:
 
 #### Network Policies
 
-```
+```yaml
 ## deployments/kubernetes/base/networkpolicy.yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -662,7 +662,7 @@ spec:
 ```
 #### Pod Security Standards
 
-```
+```yaml
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -675,7 +675,7 @@ metadata:
 
 #### Security Context
 
-```
+```yaml
 securityContext:
   runAsNonRoot: true
   runAsUser: 1000
@@ -692,7 +692,7 @@ securityContext:
 
 #### Prometheus Metrics
 
-```
+```yaml
 ## Pod annotations for Prometheus scraping
 annotations:
   prometheus.io/scrape: "true"
@@ -701,7 +701,7 @@ annotations:
 ```
 
 Deploy Prometheus:
-```
+```bash
 helm install prometheus prometheus-community/kube-prometheus-stack \
   --namespace observability --create-namespace
 ```
@@ -709,7 +709,7 @@ helm install prometheus prometheus-community/kube-prometheus-stack \
 
 Deploy OpenTelemetry Collector:
 
-```
+```bash
 helm install opentelemetry-collector open-telemetry/opentelemetry-collector \
   --namespace observability \
   --set mode=deployment \
@@ -718,7 +718,7 @@ helm install opentelemetry-collector open-telemetry/opentelemetry-collector \
 
 #### Jaeger Tracing
 
-```
+```bash
 helm install jaeger jaegertracing/jaeger \
   --namespace observability \
   --set provisionDataStore.cassandra=false \
@@ -726,7 +726,7 @@ helm install jaeger jaegertracing/jaeger \
   --set storage.type=memory
 ```
 Access Jaeger UI:
-```
+```bash
 kubectl port-forward svc/jaeger-query 16686:16686 -n observability
 ## Open: http://localhost:16686
 ```
@@ -735,7 +735,7 @@ kubectl port-forward svc/jaeger-query 16686:16686 -n observability
 
 The deployment includes comprehensive health checks:
 
-```
+```yaml
 startupProbe:
   httpGet:
     path: /health/startup
@@ -761,7 +761,7 @@ readinessProbe:
 
 **Check health:**
 
-```
+```bash
 kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
   curl http://localhost:8000/health
 ```
@@ -770,7 +770,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
 
 <AccordionGroup>
   <Accordion title="Pods not starting">
-    ```
+    ```bash
     # Check pod status
     kubectl get pods -n mcp-server-langgraph
 
@@ -786,7 +786,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
   </Accordion>
 
   <Accordion title="Init containers failing">
-    ```
+    ```bash
     # Check init container logs
     kubectl logs POD_NAME -n mcp-server-langgraph -c wait-for-keycloak
     kubectl logs POD_NAME -n mcp-server-langgraph -c wait-for-redis
@@ -801,7 +801,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
   </Accordion>
 
   <Accordion title="Health checks failing">
-    ```
+    ```bash
     # Check readiness
     kubectl get pods -n mcp-server-langgraph -o wide
 
@@ -815,7 +815,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
   </Accordion>
 
   <Accordion title="High memory usage">
-    ```
+    ```bash
     # Check resource usage
     kubectl top pods -n mcp-server-langgraph
 

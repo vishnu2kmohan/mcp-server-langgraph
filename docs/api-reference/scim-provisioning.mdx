@@ -241,7 +241,7 @@ console.log('Created user:', user.id);
 
 **Response**:
 
-```
+```json
 {
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
   "id": "f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
@@ -274,7 +274,7 @@ console.log('Created user:', user.id);
 
 <ResponseField name="400" type="Bad Request">
   Invalid SCIM schema or missing required fields
-  ```
+  ```json
   {
     "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
     "status": 400,
@@ -286,7 +286,7 @@ console.log('Created user:', user.id);
 
 <ResponseField name="409" type="Conflict">
   User already exists
-  ```
+  ```json
   {
     "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
     "status": 409,
@@ -312,7 +312,7 @@ Returns user in SCIM format.
 
 **Request Example**:
 
-```
+```bash
 curl https://api.yourdomain.com/scim/v2/Users/f81d4fae-7dec-11d0-a765-00a0c91e6bf6 \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 ```
@@ -327,7 +327,7 @@ curl https://api.yourdomain.com/scim/v2/Users/f81d4fae-7dec-11d0-a765-00a0c91e6b
 
 <ResponseField name="404" type="Not Found">
   User not found
-  ```
+  ```json
   {
     "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
     "status": 404,
@@ -580,7 +580,7 @@ print(f"Total users: {users['totalResults']}")
 
 **Response**:
 
-```
+```json
 {
   "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
   "totalResults": 2,
@@ -721,7 +721,7 @@ Get group by ID (SCIM 2.0).
 
 **Request Example**:
 
-```
+```bash
 curl https://api.yourdomain.com/scim/v2/Groups/a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 ```
@@ -743,7 +743,7 @@ curl https://api.yourdomain.com/scim/v2/Groups/a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4
 
 ### Okta SCIM Integration
 
-```
+```yaml
 # Okta Application Settings
 SCIM Base URL: https://api.yourdomain.com/scim/v2
 Authentication: OAuth 2.0 Bearer Token
@@ -799,7 +799,7 @@ Set-AzureADApplication -ObjectId $AppId `
 
 ### Test User Provisioning Flow
 
-```
+```properties
 # 1. Create user
 USER_ID=$(curl -X POST https://api.yourdomain.com/scim/v2/Users \
   -H "Authorization: Bearer $TOKEN" \
