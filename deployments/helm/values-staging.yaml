@@ -5,6 +5,7 @@
 image:
   repository: ghcr.io/vishnu2kmohan/mcp-server-langgraph
   tag: "staging"  # Staging uses 'staging' tag (schema forbids 'latest')
+  pullPolicy: Always  # Required for mutable tags to ensure fresh images on every deploy
   variant: "base"
 
 # Reduced replicas for staging
