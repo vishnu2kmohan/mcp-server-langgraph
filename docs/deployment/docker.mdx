@@ -237,13 +237,13 @@ Override settings with environment variables:
 
 ```properties
 ## Use different model
-MODEL_NAME=claude-3-5-sonnet-20241022 docker compose up
+MODEL_NAME=claude-sonnet-4-5-20250929 docker compose up
 
 ## Enable debug logging
 LOG_LEVEL=DEBUG docker compose up
 
 ## Use OpenAI instead of Google
-LLM_PROVIDER=openai MODEL_NAME=gpt-5 docker compose up
+LLM_PROVIDER=openai MODEL_NAME=gpt-5.1 docker compose up
 ```
 
 ### Observability

@@ -27,7 +27,7 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 
 ## Usage Configuration
 
-<div style={{padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px', marginBottom: '20px'}}>
+<div style={{padding: '20px', backgroundColor: 'var(--card-background, rgba(0,0,0,0.02))', borderRadius: '8px', marginBottom: '20px', border: '1px solid var(--border-color, rgba(0,0,0,0.1))'}}>
 
 ### Monthly Request Volume
 
@@ -42,7 +42,7 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 />
 <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginTop: '5px'}}>
   <span>10K</span>
-  <span id="requestVolumeDisplay" style={{fontWeight: 'bold', color: '#2563eb'}}>1M requests/month</span>
+  <span id="requestVolumeDisplay" style={{fontWeight: 'bold', color: 'var(--accent-color, #2563eb)'}}>1M requests/month</span>
   <span>10M</span>
 </div>
 
@@ -61,7 +61,7 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 />
 <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginTop: '5px'}}>
   <span>100</span>
-  <span id="tokensDisplay" style={{fontWeight: 'bold', color: '#2563eb'}}>1,000 tokens/request</span>
+  <span id="tokensDisplay" style={{fontWeight: 'bold', color: 'var(--accent-color, #2563eb)'}}>1,000 tokens/request</span>
   <span>10K</span>
 </div>
 
@@ -80,7 +80,7 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 />
 <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginTop: '5px'}}>
   <span>1</span>
-  <span id="teamSizeDisplay" style={{fontWeight: 'bold', color: '#2563eb'}}>3 developers</span>
+  <span id="teamSizeDisplay" style={{fontWeight: 'bold', color: 'var(--accent-color, #2563eb)'}}>3 developers</span>
   <span>20</span>
 </div>
 
@@ -88,7 +88,7 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 
 ### Workflow Complexity
 
-<select id="workflowComplexity" style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db'}}>
+<select id="workflowComplexity" style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color, #d1d5db)', backgroundColor: 'var(--background-color, #ffffff)', color: 'var(--text-color, inherit)'}}>
   <option value="simple">Simple (Single-agent, basic tools)</option>
   <option value="moderate" selected>Moderate (Multi-agent, state management)</option>
   <option value="complex">Complex (Conditionals, human-in-the-loop, persistence)</option>
@@ -98,10 +98,34 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 
 ### Deployment Region
 
-<select id="deploymentRegion" style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db'}}>
+<select id="deploymentRegion" style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color, #d1d5db)', backgroundColor: 'var(--background-color, #ffffff)', color: 'var(--text-color, inherit)'}}>
   <option value="us" selected>United States</option>
   <option value="eu">Europe (GDPR)</option>
   <option value="asia">Asia Pacific</option>
+</select>
+
+---
+
+### LLM Model Selection
+
+<select id="llmModel" style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color, #d1d5db)', backgroundColor: 'var(--background-color, #ffffff)', color: 'var(--text-color, inherit)'}}>
+  <optgroup label="Google Gemini (Recommended)">
+    <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash ($0.30/$2.50 per 1M)</option>
+    <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite ($0.10/$0.40 per 1M)</option>
+    <option value="gemini-2.5-pro">Gemini 2.5 Pro ($1.25/$10 per 1M)</option>
+    <option value="gemini-3-pro-preview">Gemini 3 Pro Preview ($2/$12 per 1M)</option>
+  </optgroup>
+  <optgroup label="Anthropic Claude 4.5 (Fallback)">
+    <option value="claude-4.5-haiku">Claude 4.5 Haiku ($1/$5 per 1M)</option>
+    <option value="claude-4.5-sonnet">Claude 4.5 Sonnet ($3/$15 per 1M)</option>
+    <option value="claude-4.5-opus">Claude 4.5 Opus ($5/$25 per 1M)</option>
+  </optgroup>
+  <optgroup label="OpenAI GPT-5.x (Last Resort)">
+    <option value="gpt-5.1">GPT-5.1 ($1.25/$10 per 1M)</option>
+    <option value="gpt-5.1-thinking">GPT-5.1 Thinking ($2.50/$15 per 1M)</option>
+    <option value="gpt-5-mini">GPT-5 Mini ($0.25/$2 per 1M)</option>
+    <option value="gpt-5.1-nano">GPT-5 Nano ($0.05/$0.40 per 1M)</option>
+  </optgroup>
 </select>
 
 </div>
@@ -110,25 +134,29 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 
 ## Cost Breakdown by Framework
 
+<Info>
+The costs below are **baseline estimates** for 1M requests/month with Gemini 2.5 Flash. Use the sliders and dropdowns above to see dynamic calculations based on your specific configuration.
+</Info>
+
 <div id="costResults" style={{marginTop: '30px'}}>
 
 ### MCP Server with LangGraph (Self-Hosted - Kubernetes)
 
-<div style={{padding: '20px', backgroundColor: '#ecfdf5', border: '2px solid #10b981', borderRadius: '8px', marginBottom: '20px'}}>
+<div style={{padding: '20px', backgroundColor: 'var(--card-background, #ecfdf5)', border: '2px solid #10b981', borderRadius: '8px', marginBottom: '20px'}}>
 
 | Cost Component | Monthly Cost | Notes |
 |----------------|--------------|-------|
 | **Infrastructure** | **$350** | GKE cluster (4 pods, n2-standard-4) |
-| **LLM API Costs** | **$75** | Gemini 2.0 Flash @ $0.075/1M tokens |
+| **LLM API Costs** | **$420** | Gemini 2.5 Flash @ $0.30/$2.50 per 1M tokens |
 | **Observability** | **$50** | LangSmith + Prometheus + Grafana |
 | **Storage** | **$20** | PostgreSQL + Redis (state/checkpoints) |
 | **Networking** | **$15** | Load balancer + egress |
 | **DevOps Time** | **$500** | ~10 hours/month @ $50/hr (maintenance) |
 | | | |
-| **Total TCO** | **$1,010/month** | **$1.01 per 1,000 requests** |
+| **Total TCO** | **$1,355/month** | **$1.36 per 1,000 requests** |
 
-<div style={{marginTop: '15px', padding: '10px', backgroundColor: '#d1fae5', borderRadius: '4px'}}>
-💰 **Cost Savings**: $4,990/month vs LangGraph Cloud (83% cheaper)
+<div style={{marginTop: '15px', padding: '10px', backgroundColor: 'var(--card-background, #d1fae5)', borderRadius: '4px'}}>
+💰 **Cost Savings**: $3,745/month vs LangGraph Cloud (73% cheaper)
 </div>
 
 </div>
@@ -137,21 +165,21 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 
 ### MCP Server with LangGraph (Cloud Run - Serverless)
 
-<div style={{padding: '20px', backgroundColor: '#eff6ff', border: '2px solid #3b82f6', borderRadius: '8px', marginBottom: '20px'}}>
+<div style={{padding: '20px', backgroundColor: 'var(--card-background, #eff6ff)', border: '2px solid #3b82f6', borderRadius: '8px', marginBottom: '20px'}}>
 
 | Cost Component | Monthly Cost | Notes |
 |----------------|--------------|-------|
 | **Cloud Run** | **$600** | Serverless container hosting |
-| **LLM API Costs** | **$75** | Gemini 2.0 Flash @ $0.075/1M tokens |
+| **LLM API Costs** | **$420** | Gemini 2.5 Flash @ $0.30/$2.50 per 1M tokens |
 | **Observability** | **$50** | LangSmith + Cloud Monitoring |
 | **Storage** | **$30** | Cloud SQL + Memorystore |
 | **Networking** | **$25** | Cloud Load Balancer |
 | **DevOps Time** | **$200** | ~4 hours/month (less maintenance) |
 | | | |
-| **Total TCO** | **$980/month** | **$0.98 per 1,000 requests** |
+| **Total TCO** | **$1,325/month** | **$1.33 per 1,000 requests** |
 
-<div style={{marginTop: '15px', padding: '10px', backgroundColor: '#dbeafe', borderRadius: '4px'}}>
-💰 **Cost Savings**: $5,020/month vs LangGraph Cloud (84% cheaper)
+<div style={{marginTop: '15px', padding: '10px', backgroundColor: 'var(--card-background, #dbeafe)', borderRadius: '4px'}}>
+💰 **Cost Savings**: $3,775/month vs LangGraph Cloud (74% cheaper)
 </div>
 
 </div>
@@ -160,7 +188,7 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 
 ### LangGraph Cloud (Managed Platform)
 
-<div style={{padding: '20px', backgroundColor: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '8px', marginBottom: '20px'}}>
+<div style={{padding: '20px', backgroundColor: 'var(--card-background, #fef3c7)', border: '2px solid #f59e0b', borderRadius: '8px', marginBottom: '20px'}}>
 
 | Cost Component | Monthly Cost | Notes |
 |----------------|--------------|-------|
@@ -173,8 +201,8 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 | | | |
 | **Total TCO** | **$5,100/month** | **$5.10 per 1,000 requests** |
 
-<div style={{marginTop: '15px', padding: '10px', backgroundColor: '#fde68a', borderRadius: '4px'}}>
-- ⚠️ **Trade-off**: Zero DevOps effort, but 5x higher cost at scale
+<div style={{marginTop: '15px', padding: '10px', backgroundColor: 'var(--card-background, #fde68a)', borderRadius: '4px'}}>
+⚠️ **Trade-off**: Zero DevOps effort, but 4x higher cost at scale
 </div>
 
 </div>
@@ -183,21 +211,21 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 
 ### OpenAI AgentKit (Platform)
 
-<div style={{padding: '20px', backgroundColor: '#fce7f3', border: '2px solid #ec4899', borderRadius: '8px', marginBottom: '20px'}}>
+<div style={{padding: '20px', backgroundColor: 'var(--card-background, #fce7f3)', border: '2px solid #ec4899', borderRadius: '8px', marginBottom: '20px'}}>
 
 | Cost Component | Monthly Cost | Notes |
 |----------------|--------------|-------|
 | **Platform Fees** | **$0** | No separate AgentKit fee |
-| **GPT-4 API** | **$10,000** | 1B tokens @ $10/1M input tokens |
+| **GPT-5.1 API** | **$1,688** | 1B tokens @ $1.25/$10 per 1M tokens |
 | **Web Search** | **$500** | 50K searches @ $10/1K calls |
 | **ChatKit Storage** | **$20** | 200 GB-days @ $0.10/GB-day |
 | **Observability** | **$0** | Basic Evals included |
 | **DevOps Time** | **$0** | Fully managed |
 | | | |
-| **Total TCO** | **$10,520/month** | **$10.52 per 1,000 requests** |
+| **Total TCO** | **$2,208/month** | **$2.21 per 1,000 requests** |
 
-<div style={{marginTop: '15px', padding: '10px', backgroundColor: '#fbcfe8', borderRadius: '4px'}}>
-- ❌ **Vendor Lock-in**: OpenAI models only, 10x more expensive
+<div style={{marginTop: '15px', padding: '10px', backgroundColor: 'var(--card-background, #fbcfe8)', borderRadius: '4px'}}>
+- ❌ **Vendor Lock-in**: OpenAI models only, limited flexibility
 </div>
 
 </div>
@@ -206,21 +234,21 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 
 ### CrewAI (Self-Hosted)
 
-<div style={{padding: '20px', backgroundColor: '#f3f4f6', border: '2px solid #6b7280', borderRadius: '8px', marginBottom: '20px'}}>
+<div style={{padding: '20px', backgroundColor: 'var(--card-background, #f3f4f6)', border: '2px solid #6b7280', borderRadius: '8px', marginBottom: '20px'}}>
 
 | Cost Component | Monthly Cost | Notes |
 |----------------|--------------|-------|
 | **Infrastructure** | **$200** | Single VM (n2-standard-2) |
-| **LLM API Costs** | **$75** | Gemini 2.0 Flash @ $0.075/1M tokens |
+| **LLM API Costs** | **$420** | Gemini 2.5 Flash @ $0.30/$2.50 per 1M tokens |
 | **Observability** | **$0** | Basic logging only |
 | **Storage** | **$10** | Local SQLite (not production-ready) |
 | **Networking** | **$5** | Minimal |
 | **DevOps Time** | **$800** | ~16 hours/month (manual setup) |
 | | | |
-| **Total TCO** | **$1,090/month** | **$1.09 per 1,000 requests** |
+| **Total TCO** | **$1,435/month** | **$1.44 per 1,000 requests** |
 
-<div style={{marginTop: '15px', padding: '10px', backgroundColor: '#e5e7eb', borderRadius: '4px'}}>
-- ⚠️ **Note**: Low infrastructure cost, but high DevOps burden for production features
+<div style={{marginTop: '15px', padding: '10px', backgroundColor: 'var(--card-background, #e5e7eb)', borderRadius: '4px'}}>
+⚠️ **Note**: Low infrastructure cost, but high DevOps burden for production features
 </div>
 
 </div>
@@ -229,21 +257,21 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 
 ### Google ADK (Vertex AI Agent Engine)
 
-<div style={{padding: '20px', backgroundColor: '#fef2f2', border: '2px solid #ef4444', borderRadius: '8px', marginBottom: '20px'}}>
+<div style={{padding: '20px', backgroundColor: 'var(--card-background, #fef2f2)', border: '2px solid #ef4444', borderRadius: '8px', marginBottom: '20px'}}>
 
 | Cost Component | Monthly Cost | Notes |
 |----------------|--------------|-------|
 | **Vertex AI Agent Engine** | **$1,500** | Platform fees |
-| **Gemini Pro API** | **$150** | 1B tokens @ $0.15/1M tokens |
+| **Gemini 2.5 Pro API** | **$1,688** | 1B tokens @ $1.25/$10 per 1M tokens |
 | **Cloud Storage** | **$30** | Agent state/artifacts |
 | **Networking** | **$20** | VPC, load balancer |
 | **Observability** | **$100** | Cloud Monitoring + Trace |
 | **DevOps Time** | **$300** | ~6 hours/month |
 | | | |
-| **Total TCO** | **$2,100/month** | **$2.10 per 1,000 requests** |
+| **Total TCO** | **$3,638/month** | **$3.64 per 1,000 requests** |
 
-<div style={{marginTop: '15px', padding: '10px', backgroundColor: '#fee2e2', borderRadius: '4px'}}>
-- ⚠️ **Trade-off**: Good for GCP-native, but 2x more expensive than MCP Server
+<div style={{marginTop: '15px', padding: '10px', backgroundColor: 'var(--card-background, #fee2e2)', borderRadius: '4px'}}>
+- ⚠️ **Trade-off**: Good for GCP-native, but 2.5x more expensive than self-hosted MCP Server
 </div>
 
 </div>
@@ -254,24 +282,15 @@ Calculate the **Total Cost of Ownership (TCO)** for deploying AI agents across d
 
 ## Cost Comparison Chart
 
-<div style={{padding: '20px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', marginBottom: '30px'}}>
+<div id="costComparisonChart" style={{padding: '20px', backgroundColor: 'var(--card-background, rgba(0,0,0,0.02))', border: '1px solid var(--border-color, rgba(0,0,0,0.1))', borderRadius: '8px', marginBottom: '30px'}}>
 
-```text
-Framework TCO Comparison (1M requests/month)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+*Loading dynamic cost comparison chart...*
 
-MCP Server (K8s)      ████▌ $1,010
-MCP Server (Cloud Run)████▍ $980
-CrewAI                ████▋ $1,090
-Google ADK            ██████████ $2,100
-LangGraph Cloud       █████████████████████████ $5,100
-OpenAI AgentKit       ██████████████████████████████████████████████ $10,520
+</div>
 
-                      0    2K   4K   6K   8K   10K  12K
-                           Cost per Month (USD)
-```
+<div id="bestValueDisplay" style={{padding: '15px', backgroundColor: 'var(--card-background, rgba(0,0,0,0.02))', border: '1px solid var(--border-color, rgba(0,0,0,0.1))', borderRadius: '8px', marginBottom: '20px', textAlign: 'center'}}>
 
-**Best Value**: MCP Server (Cloud Run) - **$980/month** (84% cheaper than managed platforms)
+**Best Value**: Calculating based on your configuration...
 
 </div>
 
@@ -557,50 +576,6 @@ OpenAI AgentKit       ███████████████████�
   </Card>
 </CardGroup>
 
----
 
-<script>
-{`
-// Interactive calculator logic
-document.addEventListener('DOMContentLoaded', function() {
-  const requestVolume = document.getElementById('requestVolume');
-  const tokensPerRequest = document.getElementById('tokensPerRequest');
-  const teamSize = document.getElementById('teamSize');
 
-  function updateDisplay() {
-    const volume = parseInt(requestVolume?.value || 1000000);
-    const tokens = parseInt(tokensPerRequest?.value || 1000);
-    const team = parseInt(teamSize?.value || 3);
-
-    // Update display values
-    if (document.getElementById('requestVolumeDisplay')) {
-      const displayVolume = volume >= 1000000 ?
-        (volume / 1000000).toFixed(1) + 'M' :
-        (volume / 1000).toFixed(0) + 'K';
-      document.getElementById('requestVolumeDisplay').textContent = displayVolume + ' requests/month';
-    }
-
-    if (document.getElementById('tokensDisplay')) {
-      document.getElementById('tokensDisplay').textContent = tokens.toLocaleString() + ' tokens/request';
-    }
-
-    if (document.getElementById('teamSizeDisplay')) {
-      document.getElementById('teamSizeDisplay').textContent = team + ' developer' + (team > 1 ? 's' : '');
-    }
-
-    // Calculate costs (placeholder - would need full implementation)
-    // This would recalculate all costs in the tables dynamically
-  }
-
-  requestVolume?.addEventListener('input', updateDisplay);
-  tokensPerRequest?.addEventListener('input', updateDisplay);
-  teamSize?.addEventListener('input', updateDisplay);
-
-  updateDisplay();
-});
-`}
-</script>
-
-<Note>
-**Calculator Interactivity**: The sliders above update display values. For a fully functional calculator with real-time cost recalculation, integrate with React components or use a dedicated calculator tool.
-</Note>
+<script src="/tco-calculator.js" />

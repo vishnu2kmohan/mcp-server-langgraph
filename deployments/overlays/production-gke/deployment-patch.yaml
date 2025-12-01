@@ -83,7 +83,7 @@ spec:
           value: google
           valueFrom: null
         - name: MODEL_NAME
-          value: gemini-2.0-flash-exp
+          value: gemini-2.5-flash
           valueFrom: null
         - name: VERTEX_PROJECT
           valueFrom:

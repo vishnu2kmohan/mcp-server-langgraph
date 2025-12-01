@@ -548,7 +548,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
 
     llm = LLMFactory(
         provider="anthropic",
-        model_name="claude-3-5-sonnet-20241022",
+        model_name="claude-sonnet-4-5-20250929",
         enable_fallback=True,
         fallback_models=[
             "gemini-2.5-flash",  # Google fallback
@@ -595,7 +595,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
 
     client = Anthropic(api_key=settings.anthropic_api_key)
     response = client.messages.create(
-        model="claude-3-5-sonnet-20241022",
+        model="claude-sonnet-4-5-20250929",
         max_tokens=100,
         messages=[{"role": "user", "content": "Hi"}]
     )
@@ -646,7 +646,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
       -H "x-api-key: $ANTHROPIC_API_KEY" \
       -H "anthropic-version: 2023-06-01" \
       -H "content-type: application/json" \
-      -d '{"model":"claude-3-5-sonnet-20241022","max_tokens":10,"messages":[{"role":"user","content":"Hi"}]}'
+      -d '{"model":"claude-sonnet-4-5-20250929","max_tokens":10,"messages":[{"role":"user","content":"Hi"}]}'
     ```
 
     **Fix**:

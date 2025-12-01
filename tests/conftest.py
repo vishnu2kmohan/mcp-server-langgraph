@@ -971,7 +971,7 @@ def mock_settings(test_container):
         otlp_endpoint="http://localhost:4317",
         jwt_secret_key="test-secret-key",
         anthropic_api_key="test-anthropic-key",
-        model_name="claude-3-5-sonnet-20241022",
+        model_name="claude-sonnet-4-5-20250929",
         log_level="DEBUG",
         openfga_api_url="http://localhost:8080",
         openfga_store_id="test-store-id",

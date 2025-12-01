@@ -176,8 +176,8 @@ export AWS_REGION=us-east-1
 export MODEL_NAME=anthropic.claude-3-sonnet-20240229-v1:0
 
 # Available models:
-# - anthropic.claude-3-5-sonnet-20241022-v2:0
-# - anthropic.claude-3-opus-20240229-v1:0
+# - anthropic.claude-sonnet-4-5-20250929-v2:0
+# - anthropic.claude-opus-4-5-20251101-v1:0
 # - meta.llama3-1-70b-instruct-v1:0
 # - amazon.titan-text-premier-v1:0
 ```

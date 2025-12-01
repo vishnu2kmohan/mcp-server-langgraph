@@ -175,13 +175,12 @@ class TestTokenCounterRegistry:
         """
         Test that all Gemini model variants use Google tokenizer
 
-        Models: gemini-2.0-flash, gemini-2.5-flash, gemini-pro, etc.
+        Models: gemini-2.5-flash, gemini-2.5-pro, gemini-3-pro-preview, etc.
         """
         gemini_models = [
             "gemini-2.5-flash",
-            "gemini-2.0-flash-exp",
-            "gemini-pro",
-            "gemini-1.5-pro",
+            "gemini-2.5-pro",
+            "gemini-3-pro-preview",
         ]
 
         text = "Test text for tokenization"
@@ -197,13 +196,12 @@ class TestTokenCounterRegistry:
         """
         Test that all OpenAI model variants use tiktoken
 
-        Models: gpt-4, gpt-3.5-turbo, o1, etc.
+        Models: gpt-5.1, gpt-5-mini, gpt-5-nano, etc.
         """
         openai_models = [
-            "gpt-4",
-            "gpt-4-turbo",
-            "gpt-3.5-turbo",
-            "gpt-4o",
+            "gpt-5.1",
+            "gpt-5-mini",
+            "gpt-5-nano",
         ]
 
         text = "Test text for tokenization"

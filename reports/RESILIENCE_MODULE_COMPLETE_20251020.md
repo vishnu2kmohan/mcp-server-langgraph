@@ -348,7 +348,7 @@ async def call_llm_with_full_resilience(prompt: str) -> Optional[str]:
     async with httpx.AsyncClient() as client:
         response = await client.post(
             "https://api.anthropic.com/v1/messages",
-            json={"model": "claude-3-5-sonnet-20241022", "messages": [{"role": "user", "content": prompt}]},
+            json={"model": "claude-sonnet-4-5-20250929", "messages": [{"role": "user", "content": prompt}]},
         )
         return response.json()["content"][0]["text"]
 ```

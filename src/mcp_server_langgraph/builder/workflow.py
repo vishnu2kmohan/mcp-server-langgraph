@@ -266,7 +266,7 @@ if __name__ == "__main__":
 
     # Add nodes
     builder.add_node("search", "tool", {"tool": "tavily_search"}, "Search Web")
-    builder.add_node("summarize", "llm", {"model": "gemini-2.5-flash-preview-001"}, "Summarize Results")
+    builder.add_node("summarize", "llm", {"model": "gemini-2.5-flash"}, "Summarize Results")
     builder.add_node("validate", "conditional", {}, "Validate Quality")
 
     # Add edges

@@ -277,14 +277,14 @@ agent = PydanticAIAgentWrapper(
 
 # Anthropic
 agent = PydanticAIAgentWrapper(
-    model_name="claude-3-5-sonnet-20241022",
+    model_name="claude-sonnet-4-5-20250929",
     provider="anthropic"
 )
-# → Uses: "anthropic:claude-3-5-sonnet-20241022"
+# → Uses: "anthropic:claude-sonnet-4-5-20250929"
 
 # OpenAI
 agent = PydanticAIAgentWrapper(
-    model_name="gpt-4o",
+    model_name="gpt-5.1",
     provider="openai"
 )
 # → Uses: "openai:gpt-4o"

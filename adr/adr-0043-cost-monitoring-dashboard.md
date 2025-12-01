@@ -166,29 +166,29 @@ For organizations wanting embedded dashboards:
 
 PRICING_TABLE = {
     "anthropic": {
-        "claude-3-5-sonnet-20241022": {
+        "claude-sonnet-4-5-20250929": {
             "input": Decimal("0.003"),   # $ per 1K tokens
             "output": Decimal("0.015"),
         },
-        "claude-3-5-haiku-20241022": {
+        "claude-haiku-4-5-20251001": {
             "input": Decimal("0.0008"),
             "output": Decimal("0.004"),
         },
     },
     "openai": {
-        "gpt-4-turbo": {
+        "gpt-5.1": {
             "input": Decimal("0.01"),
             "output": Decimal("0.03"),
         },
-        "gpt-4o-mini": {
+        "gpt-5-mini": {
             "input": Decimal("0.00015"),
             "output": Decimal("0.0006"),
         },
     },
     "google": {
-        "gemini-2.5-flash-preview-001": {
-            "input": Decimal("0.000075"),  # FREE tier pricing
-            "output": Decimal("0.0003"),
+        "gemini-2.5-flash": {
+            "input": Decimal("0.0003"),  # $0.30 per 1M tokens
+            "output": Decimal("0.0025"),  # $2.50 per 1M tokens
         },
     },
 }

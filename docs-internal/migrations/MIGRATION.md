@@ -181,7 +181,7 @@ If you use multiple providers in your fallback chain, you must now configure API
 ```python
 # config.py or .env
 llm_provider="google"
-fallback_models=["claude-haiku-4-5", "claude-sonnet-4-5", "gpt-4o"]
+fallback_models=["claude-haiku-4-5", "claude-sonnet-4-5", "gpt-5.1"]
 ```
 
 **Required Environment Variables:**

@@ -12,7 +12,7 @@ Pricing is updated monthly based on provider pricing pages:
 Example:
     >>> from mcp_server_langgraph.monitoring.pricing import calculate_cost
     >>> cost = calculate_cost(
-    ...     model="claude-3-5-sonnet-20241022",
+    ...     model="claude-sonnet-4-5-20250929",
     ...     provider="anthropic",
     ...     prompt_tokens=1000,
     ...     completion_tokens=500
@@ -24,7 +24,7 @@ Example:
 from decimal import Decimal
 
 # ==============================================================================
-# Pricing Table - Updated: 2025-11-20
+# Pricing Table - Updated: 2025-12-01
 # ==============================================================================
 
 PRICING_TABLE: dict[str, dict[str, dict[str, Decimal]]] = {
@@ -38,20 +38,11 @@ PRICING_TABLE: dict[str, dict[str, dict[str, Decimal]]] = {
             "input": Decimal("0.001"),  # $1.00 per 1M tokens
             "output": Decimal("0.005"),  # $5.00 per 1M tokens
         },
+        "claude-opus-4-5-20251101": {
+            "input": Decimal("0.005"),  # $5.00 per 1M tokens (66% reduction from Opus 4.1)
+            "output": Decimal("0.025"),  # $25.00 per 1M tokens
+        },
         "claude-opus-4-1-20250805": {
-            "input": Decimal("0.015"),  # $15.00 per 1M tokens
-            "output": Decimal("0.075"),  # $75.00 per 1M tokens
-        },
-        # Older Claude 3.x models (kept for backward compatibility)
-        "claude-3-5-sonnet-20241022": {
-            "input": Decimal("0.003"),  # $3.00 per 1M tokens
-            "output": Decimal("0.015"),  # $15.00 per 1M tokens
-        },
-        "claude-3-5-haiku-20241022": {
-            "input": Decimal("0.0008"),  # $0.80 per 1M tokens
-            "output": Decimal("0.004"),  # $4.00 per 1M tokens
-        },
-        "claude-3-opus-20240229": {
             "input": Decimal("0.015"),  # $15.00 per 1M tokens
             "output": Decimal("0.075"),  # $75.00 per 1M tokens
         },
@@ -66,6 +57,10 @@ PRICING_TABLE: dict[str, dict[str, dict[str, Decimal]]] = {
             "input": Decimal("0.001"),  # $1.00 per 1M tokens
             "output": Decimal("0.005"),  # $5.00 per 1M tokens
         },
+        "claude-opus-4-5@20251101": {
+            "input": Decimal("0.005"),  # $5.00 per 1M tokens
+            "output": Decimal("0.025"),  # $25.00 per 1M tokens
+        },
         "claude-opus-4-1@20250805": {
             "input": Decimal("0.015"),  # $15.00 per 1M tokens
             "output": Decimal("0.075"),  # $75.00 per 1M tokens
@@ -76,8 +71,12 @@ PRICING_TABLE: dict[str, dict[str, dict[str, Decimal]]] = {
             "output": Decimal("0.012"),  # $12.00 per 1M tokens
         },
         "gemini-2.5-flash": {
-            "input": Decimal("0.00015"),  # $0.15 per 1M tokens
-            "output": Decimal("0.0006"),  # $0.60 per 1M tokens
+            "input": Decimal("0.0003"),  # $0.30 per 1M tokens
+            "output": Decimal("0.0025"),  # $2.50 per 1M tokens
+        },
+        "gemini-2.5-flash-lite": {
+            "input": Decimal("0.0001"),  # $0.10 per 1M tokens
+            "output": Decimal("0.0004"),  # $0.40 per 1M tokens
         },
         "gemini-2.5-pro": {
             "input": Decimal("0.00125"),  # $1.25 per 1M tokens (≤200K)
@@ -85,25 +84,22 @@ PRICING_TABLE: dict[str, dict[str, dict[str, Decimal]]] = {
         },
     },
     "openai": {
-        "gpt-4-turbo": {
-            "input": Decimal("0.01"),  # $10.00 per 1M tokens
-            "output": Decimal("0.03"),  # $30.00 per 1M tokens
-        },
-        "gpt-4-turbo-2024-04-09": {
-            "input": Decimal("0.01"),
-            "output": Decimal("0.03"),
-        },
-        "gpt-4o": {
-            "input": Decimal("0.0025"),  # $2.50 per 1M tokens
+        # Latest GPT-5.x models (Nov 2025)
+        "gpt-5.1": {
+            "input": Decimal("0.00125"),  # $1.25 per 1M tokens
             "output": Decimal("0.01"),  # $10.00 per 1M tokens
         },
-        "gpt-4o-mini": {
-            "input": Decimal("0.00015"),  # $0.15 per 1M tokens
-            "output": Decimal("0.0006"),  # $0.60 per 1M tokens
+        "gpt-5.1-thinking": {
+            "input": Decimal("0.0025"),  # $2.50 per 1M tokens
+            "output": Decimal("0.015"),  # $15.00 per 1M tokens
         },
-        "gpt-3.5-turbo": {
-            "input": Decimal("0.0005"),  # $0.50 per 1M tokens
-            "output": Decimal("0.0015"),  # $1.50 per 1M tokens
+        "gpt-5-mini": {
+            "input": Decimal("0.00025"),  # $0.25 per 1M tokens
+            "output": Decimal("0.002"),  # $2.00 per 1M tokens
+        },
+        "gpt-5-nano": {
+            "input": Decimal("0.00005"),  # $0.05 per 1M tokens
+            "output": Decimal("0.0004"),  # $0.40 per 1M tokens
         },
     },
     "google": {
@@ -118,21 +114,12 @@ PRICING_TABLE: dict[str, dict[str, dict[str, Decimal]]] = {
             "output": Decimal("0.010"),  # $10.00 per 1M tokens (≤200K)
         },
         "gemini-2.5-flash": {
-            "input": Decimal("0.00015"),  # $0.15 per 1M tokens
-            "output": Decimal("0.0006"),  # $0.60 per 1M tokens
+            "input": Decimal("0.0003"),  # $0.30 per 1M tokens
+            "output": Decimal("0.0025"),  # $2.50 per 1M tokens
         },
-        "gemini-2.5-flash-preview-001": {
-            "input": Decimal("0.000075"),  # $0.075 per 1M tokens (free tier)
-            "output": Decimal("0.0003"),  # $0.30 per 1M tokens (free tier)
-        },
-        # Older Gemini 1.5 (backward compatibility)
-        "gemini-1.5-pro": {
-            "input": Decimal("0.00125"),  # $1.25 per 1M tokens
-            "output": Decimal("0.005"),  # $5.00 per 1M tokens
-        },
-        "gemini-1.5-flash": {
-            "input": Decimal("0.000075"),
-            "output": Decimal("0.0003"),
+        "gemini-2.5-flash-lite": {
+            "input": Decimal("0.0001"),  # $0.10 per 1M tokens
+            "output": Decimal("0.0004"),  # $0.40 per 1M tokens
         },
     },
 }
@@ -148,7 +135,7 @@ def calculate_cost(
     Calculate cost for an LLM API call based on token usage.
 
     Args:
-        model: Model name (e.g., "claude-3-5-sonnet-20241022")
+        model: Model name (e.g., "claude-sonnet-4-5-20250929")
         provider: Provider name ("anthropic", "openai", "google")
         prompt_tokens: Number of input/prompt tokens
         completion_tokens: Number of output/completion tokens
@@ -161,7 +148,7 @@ def calculate_cost(
 
     Example:
         >>> cost = calculate_cost(
-        ...     model="claude-3-5-sonnet-20241022",
+        ...     model="claude-sonnet-4-5-20250929",
         ...     provider="anthropic",
         ...     prompt_tokens=1000,
         ...     completion_tokens=500
@@ -192,7 +179,7 @@ def get_all_models() -> dict[str, list[str]]:
     Example:
         >>> models = get_all_models()
         >>> models["anthropic"]
-        ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', ...]
+        ['claude-sonnet-4-5-20250929', 'claude-haiku-4-5-20251001', ...]
     """
     return {provider: list(models.keys()) for provider, models in PRICING_TABLE.items()}
 
@@ -212,7 +199,7 @@ def get_model_pricing(provider: str, model: str) -> dict[str, Decimal]:
         KeyError: If provider or model not found
 
     Example:
-        >>> pricing = get_model_pricing("anthropic", "claude-3-5-sonnet-20241022")
+        >>> pricing = get_model_pricing("anthropic", "claude-sonnet-4-5-20250929")
         >>> pricing["input"]
         Decimal('0.003')
     """
@@ -244,7 +231,7 @@ def estimate_cost_from_text(
     Example:
         >>> text = "Explain quantum computing in simple terms."
         >>> cost = estimate_cost_from_text(
-        ...     model="claude-3-5-sonnet-20241022",
+        ...     model="claude-sonnet-4-5-20250929",
         ...     provider="anthropic",
         ...     input_text=text,
         ...     estimated_output_tokens=300

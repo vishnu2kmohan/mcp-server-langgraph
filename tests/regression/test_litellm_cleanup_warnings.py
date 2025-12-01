@@ -82,7 +82,7 @@ class TestLitellmCleanupWarnings:
             mock_acompletion.return_value = mock_response
             from mcp_server_langgraph.llm.factory import LLMFactory
 
-            llm = LLMFactory(provider="anthropic", model_name="claude-3-5-sonnet-20241022")
+            llm = LLMFactory(provider="anthropic", model_name="claude-sonnet-4-5-20250929")
             with warnings.catch_warnings(record=True) as captured_warnings:
                 warnings.simplefilter("always", RuntimeWarning)
                 from langchain_core.messages import HumanMessage
@@ -114,7 +114,7 @@ class TestLitellmCleanupWarnings:
             mock_completion.return_value = mock_response
             from mcp_server_langgraph.llm.factory import LLMFactory
 
-            llm = LLMFactory(provider="anthropic", model_name="claude-3-5-sonnet-20241022")
+            llm = LLMFactory(provider="anthropic", model_name="claude-sonnet-4-5-20250929")
             with warnings.catch_warnings(record=True) as captured_warnings:
                 warnings.simplefilter("always", RuntimeWarning)
                 from langchain_core.messages import HumanMessage
@@ -152,7 +152,7 @@ class TestLitellmCleanupWarnings:
 
             from mcp_server_langgraph.llm.factory import LLMFactory
 
-            llm = LLMFactory(provider="anthropic", model_name="claude-3-5-sonnet-20241022")
+            llm = LLMFactory(provider="anthropic", model_name="claude-sonnet-4-5-20250929")
             messages = [HumanMessage(content="test")]
             await llm.ainvoke(messages)
 
@@ -172,7 +172,7 @@ class TestLitellmCleanupWarnings:
 
             from mcp_server_langgraph.llm.factory import LLMFactory
 
-            llm = LLMFactory(provider="anthropic", model_name="claude-3-5-sonnet-20241022")
+            llm = LLMFactory(provider="anthropic", model_name="claude-sonnet-4-5-20250929")
             messages = [HumanMessage(content="test")]
             with warnings.catch_warnings(record=True) as captured_warnings:
                 warnings.simplefilter("always", RuntimeWarning)

@@ -72,7 +72,7 @@ class TokenUsageRecord(Base):  # type: ignore[misc,valid-type]
         String(255),
         nullable=False,
         index=True,
-        doc="Model name (e.g., claude-3-5-sonnet-20241022)",
+        doc="Model name (e.g., claude-sonnet-4-5-20250929)",
     )
     provider: Mapped[str] = mapped_column(
         String(100),

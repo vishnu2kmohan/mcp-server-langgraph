@@ -100,7 +100,7 @@ class TestVertexAIProviderDetection:
 
     def test_detect_openai_models(self, llm_factory):
         """Test detection of OpenAI models (should not be affected)."""
-        model_names = ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "o1-preview"]
+        model_names = ["gpt-4", "gpt-5.1", "gpt-3.5-turbo", "o1-preview"]
         for model_name in model_names:
             provider = llm_factory._get_provider_from_model(model_name)
             assert provider == "openai", f"Failed for model: {model_name}"

@@ -27,7 +27,7 @@ The following models are **production-ready** and suitable for enterprise use:
 | Model | Context Window | Use Case | Pricing (per 1M tokens) | Status |
 |-------|---------------|----------|-------------------------|--------|
 | gemini-3-pro-preview | 1M tokens | Latest, advanced reasoning | $2 input / $12 output | 🆕 Preview (Nov 2025) |
-| gemini-2.5-flash | 1M tokens | Fast responses, chat | $0.15 input / $0.60 output | ✅ Production |
+| gemini-2.5-flash | 1M tokens | Fast responses, chat | $0.30 input / $2.50 output | ✅ Production |
 | gemini-2.5-pro | 2M tokens | Complex reasoning | $1.25 input / $10.00 output | ✅ Production |
 
 **Vertex AI models** (use `vertex_ai/` prefix):
@@ -682,7 +682,7 @@ async def call_gemini(query: str):
         provider="google",
         model_name="gemini-2.5-flash",
         enable_fallback=True,
-        fallback_models=["claude-3-5-sonnet-20241022"]
+        fallback_models=["claude-sonnet-4-5-20250929"]
     )
     ```
   </Accordion>

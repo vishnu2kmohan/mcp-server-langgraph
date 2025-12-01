@@ -141,7 +141,7 @@ from litellm import acompletion
 
 async def llm_process(state: AgentState) -> AgentState:
     response = await acompletion(
-        model="gemini/gemini-2.5-flash-preview-001",
+        model="gemini/gemini-2.5-flash",
         messages=[{"role": "user", "content": state.query}]
     )
     state.llm_response = response.choices[0].message.content

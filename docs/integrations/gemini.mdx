@@ -146,7 +146,7 @@ MODEL_NAME=gemini-2.5-flash
 
 # Fallbacks (in order):
 ENABLE_FALLBACK=true
-FALLBACK_MODELS=["gemini-2.5-pro","claude-sonnet-4-5","gpt-5"]
+FALLBACK_MODELS=["gemini-2.5-pro","claude-sonnet-4-5","gpt-5.1"]
 ```
 
 **Fallback triggers:**
@@ -308,7 +308,7 @@ export MODEL_NAME=claude-sonnet-4-5
 ```bash
 export LLM_PROVIDER=openai
 export OPENAI_API_KEY=sk-...
-export MODEL_NAME=gpt-5
+export MODEL_NAME=gpt-5.1
 ```
 
 ### Switch to Local (Ollama)
@@ -344,7 +344,7 @@ export MODEL_NAME=ollama/llama3.1:8b
 **Default Configuration Summary:**
 - **Provider**: Google
 - **Model**: gemini-2.5-flash
-- **Fallback**: gemini-2.5-pro, claude-sonnet-4-5, gpt-5
+- **Fallback**: gemini-2.5-pro, claude-sonnet-4-5, gpt-5.1
 - **Cost**: ~75% cheaper than alternatives
 - **Speed**: Fastest available
 

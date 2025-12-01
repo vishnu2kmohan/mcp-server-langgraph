@@ -574,7 +574,7 @@ class TestAnthropicPromptCaching:
 
         result = create_anthropic_cached_message(system_prompt, messages)
 
-        assert result["model"] == "claude-3-5-sonnet-20241022"
+        assert result["model"] == "claude-sonnet-4-5-20250929"
         assert len(result["system"]) == 1
         assert result["system"][0]["type"] == "text"
         assert result["system"][0]["text"] == system_prompt

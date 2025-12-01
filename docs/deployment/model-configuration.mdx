@@ -57,7 +57,7 @@ ENABLE_FALLBACK=true
 **Default Configuration**:
 ```bash
 LLM_PROVIDER=anthropic
-MODEL_NAME=claude-3-5-sonnet-20241022
+MODEL_NAME=claude-sonnet-4-5-20250929
 MODEL_TEMPERATURE=0.7
 MODEL_MAX_TOKENS=4096
 MODEL_TIMEOUT=60
@@ -83,7 +83,7 @@ ENABLE_FALLBACK=true
 **Default Configuration**:
 ```bash
 LLM_PROVIDER=anthropic
-MODEL_NAME=claude-3-5-sonnet-20241022
+MODEL_NAME=claude-sonnet-4-5-20250929
 MODEL_TEMPERATURE=0.7
 MODEL_MAX_TOKENS=4096
 MODEL_TIMEOUT=60
@@ -116,9 +116,9 @@ ENABLE_FALLBACK=true
 Override for a specific deployment:
 
 ```bash
-## Use OpenAI GPT-4
+## Use OpenAI GPT-5.1
 export LLM_PROVIDER=openai
-export MODEL_NAME=gpt-5
+export MODEL_NAME=gpt-5.1
 export OPENAI_API_KEY=sk-...
 
 ## Use Google Gemini Pro
@@ -134,7 +134,7 @@ For production Helm deployments:
 ```bash
 helm upgrade --install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set config.llmProvider=openai \
-  --set config.modelName=gpt-5 \
+  --set config.modelName=gpt-5.1 \
   --set secrets.openaiApiKey=$OPENAI_API_KEY
 ```
 #### Method 3: Kustomize Patch
@@ -149,7 +149,7 @@ metadata:
   name: mcp-server-langgraph-config
 data:
   llm_provider: "openai"
-  model_name: "gpt-5"
+  model_name: "gpt-5.1"
   model_temperature: "0.8"
   model_max_tokens: "8192"
 ```
@@ -172,15 +172,15 @@ When `ENABLE_FALLBACK=true`, the system attempts models in this order:
 
 1. **Primary**: Configured `MODEL_NAME`
 2. **Fallback 1**: `gemini-2.5-pro` (Google)
-3. **Fallback 2**: `claude-3-5-sonnet-20241022` (Anthropic)
-4. **Fallback 3**: `gpt-5` (OpenAI)
+3. **Fallback 2**: `claude-sonnet-4-5-20250929` (Anthropic)
+4. **Fallback 3**: `gpt-5.1` (OpenAI)
 
 #### Custom Fallback Chain
 
 Override via environment variable:
 
 ```bash
-FALLBACK_MODELS='["claude-3-5-sonnet-20241022","gpt-5","gemini-2.5-pro"]'
+FALLBACK_MODELS='["claude-sonnet-4-5-20250929","gpt-5.1","gemini-2.5-pro"]'
 ```
 
 #### Disabling Fallback
@@ -200,8 +200,8 @@ ENABLE_FALLBACK=false
 |----------|-------|------|----------|
 | Google | gemini-2.5-flash-002 | $0.075 | 1x (baseline) |
 | Google | gemini-2.5-pro | $1.25 | 17x |
-| Anthropic | claude-3-5-sonnet-20241022 | $3.00 | 40x |
-| OpenAI | gpt-5 | $2.50 | 33x |
+| Anthropic | claude-sonnet-4-5-20250929 | $3.00 | 40x |
+| OpenAI | gpt-5.1 | $1.25 | 17x |
 
 #### Output Tokens (per 1M tokens)
 
@@ -209,8 +209,8 @@ ENABLE_FALLBACK=false
 |----------|-------|------|----------|
 | Google | gemini-2.5-flash-002 | $0.30 | 1x (baseline) |
 | Google | gemini-2.5-pro | $5.00 | 17x |
-| Anthropic | claude-3-5-sonnet-20241022 | $15.00 | 50x |
-| OpenAI | gpt-5 | $10.00 | 33x |
+| Anthropic | claude-sonnet-4-5-20250929 | $15.00 | 50x |
+| OpenAI | gpt-5.1 | $10.00 | 33x |
 
 #### Typical Request Cost (1000 input + 500 output tokens)
 
@@ -218,8 +218,8 @@ ENABLE_FALLBACK=false
 |-------|-----------|------------------------|
 | gemini-2.5-flash-002 | $0.00023 | $23 |
 | gemini-2.5-pro | $0.00375 | $375 |
-| claude-3-5-sonnet-20241022 | $0.0105 | $1,050 |
-| gpt-5 | $0.0075 | $750 |
+| claude-sonnet-4-5-20250929 | $0.0105 | $1,050 |
+| gpt-5.1 | $0.00625 | $625 |
 
 **Recommendation**: Use Gemini Flash for development, Claude for production quality.
 
@@ -233,8 +233,8 @@ ENABLE_FALLBACK=false
 |-------|---------|----------|
 | gemini-2.5-flash-002 | ~1.5s | Interactive applications |
 | gemini-2.5-pro | ~3s | Background processing |
-| claude-3-5-sonnet-20241022 | ~4s | Quality-critical tasks |
-| gpt-5 | ~3.5s | Balanced performance |
+| claude-sonnet-4-5-20250929 | ~4s | Quality-critical tasks |
+| gpt-5.1 | ~3.5s | Balanced performance |
 
 #### Quality (Subjective, 1-10 scale)
 
@@ -242,8 +242,8 @@ ENABLE_FALLBACK=false
 |-------|-----------|------------|----------|--------|
 | gemini-2.5-flash-002 | 7 | 7 | 8 | 8 |
 | gemini-2.5-pro | 9 | 8 | 9 | 9 |
-| claude-3-5-sonnet-20241022 | 10 | 9 | 10 | 10 |
-| gpt-5 | 9 | 10 | 9 | 8 |
+| claude-sonnet-4-5-20250929 | 10 | 9 | 10 | 10 |
+| gpt-5.1 | 9 | 10 | 9 | 8 |
 
 ---
 
@@ -269,7 +269,7 @@ ENABLE_FALLBACK=false
 - ✅ Safety/content moderation critical
 - ✅ Production customer-facing deployment
 
-#### Choose GPT-5 When:
+#### Choose GPT-5.1 When:
 - ✅ Need creative content generation
 - ✅ Existing OpenAI integration
 - ✅ Require vision capabilities
@@ -314,7 +314,7 @@ ENABLE_FALLBACK=false
 2. **Smart Routing**:
    - Simple queries → Gemini Flash
    - Complex queries → Claude Sonnet
-   - Code generation → Claude Sonnet or GPT-5
+   - Code generation → Claude Sonnet or GPT-5.1
 
 3. **Batching**:
    - Batch non-urgent requests

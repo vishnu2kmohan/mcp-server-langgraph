@@ -101,10 +101,10 @@ logger.info("Hello")  # RuntimeError: Observability not initialized
 **What Changed:**
 - LLMFactory now provisions credentials for **all** fallback providers, not just the primary provider
 - Startup validation warns if fallback models are configured without required API keys
-- `_get_provider_from_model(model_name)` extracts provider from model name (e.g., "gpt-4o" → "openai")
+- `_get_provider_from_model(model_name)` extracts provider from model name (e.g., "gpt-5.1" → "openai")
 
 **Why:**
-The default fallback configuration `fallback_models = ["claude-haiku-4-5", "claude-sonnet-4-5", "gpt-4o"]` with `llm_provider="google"` previously failed at runtime because:
+The default fallback configuration `fallback_models = ["claude-haiku-4-5", "claude-sonnet-4-5", "gpt-5.1"]` with `llm_provider="google"` previously failed at runtime because:
 - Primary provider (Google) credentials were set
 - Fallback providers (Anthropic, OpenAI) credentials were NOT set
 - Result: Fallback attempt → authentication failure

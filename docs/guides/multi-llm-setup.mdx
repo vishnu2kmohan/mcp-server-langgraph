@@ -112,7 +112,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     ```bash
     # .env
     LLM_PROVIDER=openai
-    MODEL_NAME=gpt-5
+    MODEL_NAME=gpt-5.1
     OPENAI_API_KEY=sk-proj-...
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=4096
@@ -123,7 +123,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     ```python
     llm = LLMFactory(
         provider="openai",
-        model_name="gpt-5"
+        model_name="gpt-5.1"
     )
 
     response = llm.invoke([
@@ -303,7 +303,7 @@ Configure automatic fallback when primary model fails:
 LLM_PROVIDER=anthropic
 MODEL_NAME=claude-sonnet-4-5
 ENABLE_FALLBACK=true
-FALLBACK_MODELS=gemini-2.5-flash,gpt-5,ollama/llama3.1:8b
+FALLBACK_MODELS=gemini-2.5-flash,gpt-5.1,ollama/llama3.1:8b
 ```
 **Fallback Flow**:
 
@@ -348,7 +348,7 @@ llm = LLMFactory(
     enable_fallback=True,
     fallback_models=[
         "gemini-2.5-flash",
-        "gpt-5",
+        "gpt-5.1",
         "ollama/llama3.1:8b"
     ]
 )
@@ -418,9 +418,9 @@ router = Router(
             }
         },
         {
-            "model_name": "gpt-5",
+            "model_name": "gpt-5.1",
             "litellm_params": {
-                "model": "gpt-5",
+                "model": "gpt-5.1",
                 "api_key": os.getenv("OPENAI_API_KEY")
             }
         }
@@ -612,10 +612,10 @@ OLLAMA_API_BASE=http://localhost:11434
 
   <Tab title="OpenAI">
     ```bash
-    gpt-5                         # GPT-5 (flagship)
-    gpt-5-pro                     # GPT-5 Pro (most capable)
+    gpt-5.1                         # GPT-5 (flagship)
+    gpt-5.1-pro                     # GPT-5 Pro (most capable)
     gpt-5-mini                    # GPT-5 Mini (fast, cost-effective)
-    gpt-5-nano                    # GPT-5 Nano (smallest, fastest)
+    gpt-5.1-nano                    # GPT-5 Nano (smallest, fastest)
     ```
   </Tab>
 

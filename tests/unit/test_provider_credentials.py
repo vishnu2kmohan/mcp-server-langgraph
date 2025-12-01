@@ -105,7 +105,7 @@ class TestProviderCredentialSetup:
         # GIVEN: Primary provider is Anthropic, Azure is fallback
         mock_settings = MagicMock()
         mock_settings.llm_provider = "anthropic"
-        mock_settings.llm_model = "claude-3-5-sonnet-20241022"
+        mock_settings.llm_model = "claude-sonnet-4-5-20250929"
         mock_settings.llm_api_key = "test-anthropic-key"
         mock_settings.anthropic_api_key = "test-anthropic-key"
         mock_settings.llm_fallback_models = ["azure/gpt-4"]
@@ -123,7 +123,7 @@ class TestProviderCredentialSetup:
         # WHEN: Creating LLMFactory and setting up environment
         factory = LLMFactory(
             provider="anthropic",
-            model_name="claude-3-5-sonnet-20241022",
+            model_name="claude-sonnet-4-5-20250929",
             api_key="test-anthropic-key",
             fallback_models=["azure/gpt-4"],
         )

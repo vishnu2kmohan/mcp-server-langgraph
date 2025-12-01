@@ -51,7 +51,7 @@ async def chat(query: str, user_id: str):
         logger.info(
             "LLM response generated",
             user_id=user_id,
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             prompt_tokens=response.usage.prompt_tokens,
             completion_tokens=response.usage.completion_tokens,
             latency_ms=(time.time() - start_time) * 1000

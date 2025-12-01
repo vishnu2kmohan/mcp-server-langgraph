@@ -225,19 +225,19 @@ async def chat(query: str):
     # Track LLM metrics
     llm_requests_total.labels(
         provider="anthropic",
-        model="claude-3-5-sonnet-20241022",
+        model="claude-sonnet-4-5-20250929",
         status="success"
     ).inc()
 
     llm_tokens_total.labels(
         provider="anthropic",
-        model="claude-3-5-sonnet-20241022",
+        model="claude-sonnet-4-5-20250929",
         type="prompt"
     ).inc(response.usage.prompt_tokens)
 
     llm_tokens_total.labels(
         provider="anthropic",
-        model="claude-3-5-sonnet-20241022",
+        model="claude-sonnet-4-5-20250929",
         type="completion"
     ).inc(response.usage.completion_tokens)
 
