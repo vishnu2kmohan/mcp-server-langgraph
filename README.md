@@ -12,9 +12,10 @@
 
 [![Main Pipeline](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml)
 [![Security Scan](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml)
-[![Code Quality](https://img.shields.io/badge/code%20quality-9.6%2F10-brightgreen.svg)](#quality-practices)
+[![Coverage](https://vishnu2kmohan.github.io/mcp-server-langgraph/badges/coverage.svg)](https://vishnu2kmohan.github.io/mcp-server-langgraph/coverage/)
+[![Tests](https://vishnu2kmohan.github.io/mcp-server-langgraph/badges/tests.svg)](https://vishnu2kmohan.github.io/mcp-server-langgraph/)
 
-> **Full CI/CD status & all badges**: [docs/ci-cd/badges.mdx](docs/ci-cd/badges.mdx)
+> **Full CI/CD status & all badges**: [docs/ci-cd/badges.mdx](docs/ci-cd/badges.mdx) | **Telemetry Dashboard**: [vishnu2kmohan.github.io/mcp-server-langgraph](https://vishnu2kmohan.github.io/mcp-server-langgraph/)
 
 A **production-ready cookie-cutter template** for building MCP servers with LangGraph's Functional API. Features comprehensive authentication (JWT), fine-grained authorization (OpenFGA), secrets management (Infisical), and OpenTelemetry-based observability.
 
