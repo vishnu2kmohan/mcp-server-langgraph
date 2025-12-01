@@ -1,0 +1,624 @@
+name: GitHub Pages Telemetry
+
+# ==============================================================================
+# GitHub Pages Telemetry - Self-Hosted Project Metrics
+# ==============================================================================
+#
+# Purpose:
+#   Publishes comprehensive project telemetry to GitHub Pages including:
+#   - HTML coverage reports (browsable code coverage)
+#   - Test duration trends (performance tracking)
+#   - Self-hosted badges (coverage, build status)
+#   - Project dashboard (aggregated metrics view)
+#
+# Triggers:
+#   - Push to main branch (after CI passes)
+#   - Weekly schedule for trend updates
+#   - Manual dispatch for ad-hoc updates
+#
+# Published to: https://vishnu2kmohan.github.io/mcp-server-langgraph/
+#
+# Structure:
+#   gh-pages/
+#   ├── index.html           # Dashboard landing page
+#   ├── coverage/            # HTML coverage reports
+#   ├── badges/              # Self-hosted SVG badges
+#   ├── trends/              # Test duration trends
+#   └── dev/bench/           # Benchmark history (existing)
+#
+# ==============================================================================
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '**.mdx'
+      - 'adr/**'
+  schedule:
+    # Update weekly on Monday at 6 AM UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force update all telemetry'
+        type: boolean
+        default: false
+
+concurrency:
+  group: gh-pages-telemetry
+  cancel-in-progress: false  # Don't cancel ongoing deployments
+
+permissions:
+  contents: write  # Required for gh-pages push
+  pages: write
+  id-token: write
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  # ============================================================================
+  # Generate Coverage Report
+  # ============================================================================
+  generate-coverage:
+    name: Generate Coverage Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    outputs:
+      coverage_percent: ${{ steps.coverage.outputs.percent }}
+      tests_passed: ${{ steps.coverage.outputs.passed }}
+      tests_failed: ${{ steps.coverage.outputs.failed }}
+      tests_total: ${{ steps.coverage.outputs.total }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          extras: 'dev'
+          cache-key-prefix: 'gh-pages-coverage'
+
+      - name: Run tests with coverage
+        id: coverage
+        run: |
+          # Run tests and generate HTML coverage report
+          OTEL_SDK_DISABLED=true uv run --frozen pytest \
+            -n auto \
+            -m "(unit or api or property or validation) and not llm" \
+            --cov=src/mcp_server_langgraph \
+            --cov-report=html:coverage-html \
+            --cov-report=json:coverage.json \
+            --cov-report=term \
+            --durations=50 \
+            --tb=short \
+            2>&1 | tee test-output.txt
+
+          # Extract coverage percentage
+          COVERAGE=$(python -c "import json; data=json.load(open('coverage.json')); print(f\"{data['totals']['percent_covered']:.1f}\")")
+          echo "percent=$COVERAGE" >> $GITHUB_OUTPUT
+
+          # Extract test counts from output
+          PASSED=$(grep -oP '\d+(?= passed)' test-output.txt | tail -1 || echo "0")
+          FAILED=$(grep -oP '\d+(?= failed)' test-output.txt | tail -1 || echo "0")
+          TOTAL=$((PASSED + FAILED))
+          echo "passed=$PASSED" >> $GITHUB_OUTPUT
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+
+          echo "📊 Coverage: $COVERAGE%"
+          echo "✅ Passed: $PASSED"
+          echo "❌ Failed: $FAILED"
+
+      - name: Upload coverage HTML artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: coverage-html
+          path: coverage-html/
+          retention-days: 30
+
+      - name: Upload test output artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: test-output
+          path: test-output.txt
+          retention-days: 7
+
+  # ============================================================================
+  # Generate Test Duration Trends
+  # ============================================================================
+  generate-trends:
+    name: Generate Test Duration Trends
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: generate-coverage
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Checkout gh-pages for existing data
+        uses: actions/checkout@v6
+        with:
+          ref: gh-pages
+          path: gh-pages-data
+        continue-on-error: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download test output
+        uses: actions/download-artifact@v6
+        with:
+          name: test-output
+          path: .
+
+      - name: Generate trend data
+        run: |
+          mkdir -p trends
+
+          # Create or update trends JSON
+          python << 'EOF'
+          import json
+          import os
+          from datetime import datetime
+          from pathlib import Path
+
+          # Load existing trends
+          trends_file = Path("gh-pages-data/trends/test-durations.json")
+          if trends_file.exists():
+              with open(trends_file) as f:
+                  trends = json.load(f)
+          else:
+              trends = {"runs": [], "metadata": {"created": datetime.now().isoformat()}}
+
+          # Parse test durations from output
+          durations = []
+          try:
+              with open("test-output.txt") as f:
+                  content = f.read()
+                  # Extract slowest durations section
+                  if "slowest durations" in content.lower():
+                      lines = content.split("\n")
+                      for line in lines:
+                          if "s call" in line or "s setup" in line:
+                              parts = line.strip().split()
+                              if parts and parts[0].replace(".", "").replace("s", "").isdigit():
+                                  duration = float(parts[0].rstrip("s"))
+                                  test_name = " ".join(parts[1:])
+                                  durations.append({"name": test_name[:100], "duration": duration})
+          except Exception as e:
+              print(f"Warning: Could not parse durations: {e}")
+
+          # Add new run data
+          new_run = {
+              "timestamp": datetime.now().isoformat(),
+              "commit": os.environ.get("GITHUB_SHA", "unknown")[:8],
+              "branch": os.environ.get("GITHUB_REF_NAME", "unknown"),
+              "coverage": float(os.environ.get("COVERAGE_PERCENT", "0")),
+              "tests_passed": int(os.environ.get("TESTS_PASSED", "0")),
+              "tests_failed": int(os.environ.get("TESTS_FAILED", "0")),
+              "slowest_tests": durations[:20]  # Keep top 20 slowest
+          }
+          trends["runs"].append(new_run)
+
+          # Keep last 100 runs
+          trends["runs"] = trends["runs"][-100:]
+          trends["metadata"]["updated"] = datetime.now().isoformat()
+
+          # Save trends
+          Path("trends").mkdir(exist_ok=True)
+          with open("trends/test-durations.json", "w") as f:
+              json.dump(trends, f, indent=2)
+
+          print(f"✅ Added run data: {new_run['timestamp']}")
+          print(f"📊 Total runs tracked: {len(trends['runs'])}")
+          EOF
+        env:
+          COVERAGE_PERCENT: ${{ needs.generate-coverage.outputs.coverage_percent }}
+          TESTS_PASSED: ${{ needs.generate-coverage.outputs.tests_passed }}
+          TESTS_FAILED: ${{ needs.generate-coverage.outputs.tests_failed }}
+
+      - name: Upload trends artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: trends-data
+          path: trends/
+          retention-days: 30
+
+  # ============================================================================
+  # Generate Badges
+  # ============================================================================
+  generate-badges:
+    name: Generate Self-Hosted Badges
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: generate-coverage
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install badge generator
+        run: pip install pybadges
+
+      - name: Generate badges
+        run: |
+          mkdir -p badges
+
+          # Coverage badge
+          COVERAGE="${{ needs.generate-coverage.outputs.coverage_percent }}"
+          if (( $(echo "$COVERAGE >= 80" | bc -l) )); then
+            COLOR="brightgreen"
+          elif (( $(echo "$COVERAGE >= 60" | bc -l) )); then
+            COLOR="yellow"
+          else
+            COLOR="red"
+          fi
+
+          python -m pybadges \
+            --left-text="coverage" \
+            --right-text="${COVERAGE}%" \
+            --right-color="$COLOR" \
+            > badges/coverage.svg
+
+          # Tests badge
+          PASSED="${{ needs.generate-coverage.outputs.tests_passed }}"
+          FAILED="${{ needs.generate-coverage.outputs.tests_failed }}"
+          if [ "$FAILED" = "0" ]; then
+            python -m pybadges \
+              --left-text="tests" \
+              --right-text="$PASSED passed" \
+              --right-color="brightgreen" \
+              > badges/tests.svg
+          else
+            python -m pybadges \
+              --left-text="tests" \
+              --right-text="$PASSED passed, $FAILED failed" \
+              --right-color="red" \
+              > badges/tests.svg
+          fi
+
+          # Build status badge
+          python -m pybadges \
+            --left-text="build" \
+            --right-text="passing" \
+            --right-color="brightgreen" \
+            > badges/build.svg
+
+          # Python version badge
+          python -m pybadges \
+            --left-text="python" \
+            --right-text="3.11 | 3.12 | 3.13" \
+            --right-color="blue" \
+            > badges/python.svg
+
+          echo "✅ Generated badges:"
+          ls -la badges/
+
+      - name: Upload badges artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: badges
+          path: badges/
+          retention-days: 30
+
+  # ============================================================================
+  # Generate Dashboard
+  # ============================================================================
+  generate-dashboard:
+    name: Generate Dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [generate-coverage, generate-badges]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Generate dashboard HTML
+        run: |
+          mkdir -p dashboard
+
+          COVERAGE="${{ needs.generate-coverage.outputs.coverage_percent }}"
+          PASSED="${{ needs.generate-coverage.outputs.tests_passed }}"
+          FAILED="${{ needs.generate-coverage.outputs.tests_failed }}"
+          TOTAL="${{ needs.generate-coverage.outputs.tests_total }}"
+          COMMIT="${GITHUB_SHA:0:8}"
+          DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
+
+          cat > dashboard/index.html << 'DASHBOARD_EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>MCP Server LangGraph - Project Telemetry</title>
+              <style>
+                  :root {
+                      --bg-primary: #0d1117;
+                      --bg-secondary: #161b22;
+                      --bg-tertiary: #21262d;
+                      --text-primary: #c9d1d9;
+                      --text-secondary: #8b949e;
+                      --accent-green: #3fb950;
+                      --accent-yellow: #d29922;
+                      --accent-red: #f85149;
+                      --accent-blue: #58a6ff;
+                      --border-color: #30363d;
+                  }
+                  * { box-sizing: border-box; margin: 0; padding: 0; }
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+                      background: var(--bg-primary);
+                      color: var(--text-primary);
+                      line-height: 1.6;
+                      padding: 2rem;
+                  }
+                  .container { max-width: 1200px; margin: 0 auto; }
+                  header {
+                      text-align: center;
+                      margin-bottom: 2rem;
+                      padding-bottom: 1rem;
+                      border-bottom: 1px solid var(--border-color);
+                  }
+                  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+                  .subtitle { color: var(--text-secondary); }
+                  .badges {
+                      display: flex;
+                      justify-content: center;
+                      gap: 0.5rem;
+                      margin: 1rem 0;
+                      flex-wrap: wrap;
+                  }
+                  .badges img { height: 20px; }
+                  .grid {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                      gap: 1.5rem;
+                      margin: 2rem 0;
+                  }
+                  .card {
+                      background: var(--bg-secondary);
+                      border: 1px solid var(--border-color);
+                      border-radius: 8px;
+                      padding: 1.5rem;
+                  }
+                  .card h2 {
+                      font-size: 1rem;
+                      color: var(--text-secondary);
+                      margin-bottom: 1rem;
+                      text-transform: uppercase;
+                      letter-spacing: 0.05em;
+                  }
+                  .metric {
+                      font-size: 2.5rem;
+                      font-weight: 600;
+                      margin-bottom: 0.5rem;
+                  }
+                  .metric.green { color: var(--accent-green); }
+                  .metric.yellow { color: var(--accent-yellow); }
+                  .metric.red { color: var(--accent-red); }
+                  .metric.blue { color: var(--accent-blue); }
+                  .metric-label { color: var(--text-secondary); font-size: 0.9rem; }
+                  .links {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 0.75rem;
+                  }
+                  .links a {
+                      color: var(--accent-blue);
+                      text-decoration: none;
+                      padding: 0.75rem 1rem;
+                      background: var(--bg-tertiary);
+                      border-radius: 6px;
+                      display: flex;
+                      align-items: center;
+                      gap: 0.5rem;
+                      transition: background 0.2s;
+                  }
+                  .links a:hover { background: var(--border-color); }
+                  footer {
+                      text-align: center;
+                      margin-top: 2rem;
+                      padding-top: 1rem;
+                      border-top: 1px solid var(--border-color);
+                      color: var(--text-secondary);
+                      font-size: 0.85rem;
+                  }
+                  .update-info { margin-top: 0.5rem; }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <header>
+                      <h1>🚀 MCP Server LangGraph</h1>
+                      <p class="subtitle">Project Telemetry Dashboard</p>
+                      <div class="badges">
+                          <img src="badges/build.svg" alt="Build Status">
+                          <img src="badges/coverage.svg" alt="Coverage">
+                          <img src="badges/tests.svg" alt="Tests">
+                          <img src="badges/python.svg" alt="Python Versions">
+                      </div>
+                  </header>
+
+                  <div class="grid">
+                      <div class="card">
+                          <h2>📊 Code Coverage</h2>
+                          <div class="metric COVERAGE_COLOR">COVERAGE_VALUE%</div>
+                          <div class="metric-label">of codebase covered by tests</div>
+                      </div>
+
+                      <div class="card">
+                          <h2>✅ Test Results</h2>
+                          <div class="metric TESTS_COLOR">PASSED_VALUE</div>
+                          <div class="metric-label">tests passing (FAILED_VALUE failed)</div>
+                      </div>
+
+                      <div class="card">
+                          <h2>📈 Reports & Trends</h2>
+                          <div class="links">
+                              <a href="coverage/">📁 Coverage Report (HTML)</a>
+                              <a href="dev/bench/">⚡ Benchmark Dashboard</a>
+                              <a href="trends/test-durations.json">📊 Test Duration Trends (JSON)</a>
+                          </div>
+                      </div>
+
+                      <div class="card">
+                          <h2>🔗 Quick Links</h2>
+                          <div class="links">
+                              <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph">📦 GitHub Repository</a>
+                              <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph/actions">🔄 CI/CD Workflows</a>
+                              <a href="https://codecov.io/gh/vishnu2kmohan/mcp-server-langgraph">📈 Codecov (Detailed)</a>
+                          </div>
+                      </div>
+                  </div>
+
+                  <footer>
+                      <p>Generated automatically by GitHub Actions</p>
+                      <p class="update-info">Last updated: UPDATE_DATE | Commit: COMMIT_SHA</p>
+                  </footer>
+              </div>
+          </body>
+          </html>
+          DASHBOARD_EOF
+
+          # Replace placeholders
+          if (( $(echo "$COVERAGE >= 80" | bc -l) )); then
+            COLOR_CLASS="green"
+          elif (( $(echo "$COVERAGE >= 60" | bc -l) )); then
+            COLOR_CLASS="yellow"
+          else
+            COLOR_CLASS="red"
+          fi
+
+          if [ "$FAILED" = "0" ]; then
+            TESTS_COLOR="green"
+          else
+            TESTS_COLOR="red"
+          fi
+
+          sed -i "s/COVERAGE_VALUE/$COVERAGE/g" dashboard/index.html
+          sed -i "s/COVERAGE_COLOR/$COLOR_CLASS/g" dashboard/index.html
+          sed -i "s/PASSED_VALUE/$PASSED/g" dashboard/index.html
+          sed -i "s/FAILED_VALUE/$FAILED/g" dashboard/index.html
+          sed -i "s/TESTS_COLOR/$TESTS_COLOR/g" dashboard/index.html
+          sed -i "s/UPDATE_DATE/$DATE/g" dashboard/index.html
+          sed -i "s/COMMIT_SHA/$COMMIT/g" dashboard/index.html
+
+          echo "✅ Generated dashboard"
+
+      - name: Upload dashboard artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: dashboard
+          path: dashboard/
+          retention-days: 30
+
+  # ============================================================================
+  # Deploy to GitHub Pages
+  # ============================================================================
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [generate-coverage, generate-trends, generate-badges, generate-dashboard]
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.force_update == 'true'
+
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v6
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v6
+        with:
+          path: artifacts
+
+      - name: Assemble gh-pages content
+        run: |
+          # Keep existing benchmark data
+          echo "📁 Preserving existing benchmark data..."
+
+          # Copy new content
+          echo "📁 Copying coverage report..."
+          rm -rf gh-pages/coverage
+          cp -r artifacts/coverage-html gh-pages/coverage
+
+          echo "📁 Copying badges..."
+          rm -rf gh-pages/badges
+          cp -r artifacts/badges gh-pages/badges
+
+          echo "📁 Copying trends..."
+          mkdir -p gh-pages/trends
+          cp -r artifacts/trends-data/* gh-pages/trends/
+
+          echo "📁 Copying dashboard..."
+          cp artifacts/dashboard/index.html gh-pages/index.html
+
+          echo "✅ Content assembled"
+          ls -la gh-pages/
+
+      - name: Deploy to GitHub Pages
+        run: |
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to deploy"
+          else
+            git commit -m "📊 Update telemetry dashboard
+
+          Coverage: ${{ needs.generate-coverage.outputs.coverage_percent }}%
+          Tests: ${{ needs.generate-coverage.outputs.tests_passed }} passed, ${{ needs.generate-coverage.outputs.tests_failed }} failed
+
+          🤖 Generated by GitHub Actions"
+            git push
+            echo "✅ Deployed to GitHub Pages"
+          fi
+
+  # ============================================================================
+  # Summary
+  # ============================================================================
+  summary:
+    name: Telemetry Summary
+    runs-on: ubuntu-latest
+    needs: [generate-coverage, deploy]
+    if: always()
+
+    steps:
+      - name: Create summary
+        run: |
+          echo "## 📊 Telemetry Update Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Coverage | ${{ needs.generate-coverage.outputs.coverage_percent }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests Passed | ${{ needs.generate-coverage.outputs.tests_passed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests Failed | ${{ needs.generate-coverage.outputs.tests_failed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View the telemetry dashboard: https://vishnu2kmohan.github.io/mcp-server-langgraph/" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📁 Reports" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- [Coverage Report](https://vishnu2kmohan.github.io/mcp-server-langgraph/coverage/)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Benchmark Dashboard](https://vishnu2kmohan.github.io/mcp-server-langgraph/dev/bench/)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Self-Hosted Badges](https://vishnu2kmohan.github.io/mcp-server-langgraph/badges/)" >> $GITHUB_STEP_SUMMARY

@@ -1171,6 +1171,8 @@ repos:
       echo "Install via mise: curl https://mise.run | sh && mise install";
       echo "Or: https://helm.sh/docs/intro/install/";
       exit 1; fi;
+      echo "Building Helm dependencies..." &&
+      helm dependency build deployments/helm/mcp-server-langgraph 2>/dev/null || true &&
       helm lint deployments/helm/mcp-server-langgraph'
     language: system
     files: ^deployments/helm/.*\.(yaml|yml)$

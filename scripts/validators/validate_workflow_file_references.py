@@ -174,6 +174,19 @@ class WorkflowFileReferenceValidator:
                     if "::" in file_ref:  # pytest::test_name syntax
                         file_ref = file_ref.split("::")[0]
 
+                    # Skip runtime-created paths (created by workflow during execution)
+                    # These are checked out or created in the workflow, not pre-existing
+                    runtime_prefixes = [
+                        "gh-pages",  # Checked out gh-pages branch
+                        "artifacts",  # Downloaded artifacts
+                        "trends",  # Created during workflow
+                        "dashboard",  # Created during workflow
+                        "badges",  # Created during workflow
+                        "coverage-html",  # Generated coverage reports
+                    ]
+                    if any(file_ref.startswith(prefix) for prefix in runtime_prefixes):
+                        continue
+
                     # Check if file exists
                     full_path = self.repo_root / file_ref
                     if not full_path.exists():
