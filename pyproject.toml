@@ -103,7 +103,7 @@ dev = [
     # Time mocking for deterministic tests
     "freezegun>=1.5.1",  # Freeze time for deterministic timestamp testing
     # Property-based testing
-    "hypothesis>=6.100.0,<6.148.0",  # Pin <6.148.0: 6.148.x removed internal.conjecture.optimiser (breaks xdist on 3.11/3.13)
+    "hypothesis>=6.100.0,<6.147.0",  # Pin <6.147.0: 6.147.x has xdist import race on 3.11, 6.148.x removed optimiser module
     "hypothesis-jsonschema>=0.22.1",
     # Contract testing
     "jsonschema>=4.21.0",
@@ -742,6 +742,7 @@ markers = [
     "requires_helm: Tests requiring helm CLI tool",
     "validation: Validation tests for deployments and configurations",
     "cli: CLI tool tests",
+    "skip_isolation_check: Skip enforce_worker_isolation check (for tests using worker-scoped schemas)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)
@@ -838,7 +839,7 @@ dict_synonyms = "Struct,NamedStruct"
 [dependency-groups]
 dev = [
     "bandit>=1.8.0",
-    "hypothesis>=6.100.0,<6.148.0",  # Pin <6.148.0: 6.148.x removed internal.conjecture.optimiser (breaks xdist on 3.11/3.13)
+    "hypothesis>=6.100.0,<6.147.0",  # Pin <6.147.0: 6.147.x has xdist import race on 3.11, 6.148.x removed optimiser module
     "hypothesis-jsonschema>=0.23.1",
     "mypy>=1.19.0",  # Updated 2025-11-28: 40% faster type checking
     "pre-commit>=4.5.0",  # Updated 2025-11-28: Latest updates

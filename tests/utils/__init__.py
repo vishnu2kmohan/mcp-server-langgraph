@@ -15,7 +15,6 @@ from tests.utils.worker_utils import (
     get_worker_id,
     get_worker_num,
     get_worker_openfga_store,
-    get_worker_port_offset,
     get_worker_postgres_schema,
     get_worker_redis_db,
     get_worker_resource_summary,
@@ -35,7 +34,6 @@ __all__ = [
     # Worker utilities (pytest-xdist isolation)
     "get_worker_id",
     "get_worker_num",
-    "get_worker_port_offset",
     "get_worker_db_index",
     "get_worker_postgres_schema",
     "get_worker_redis_db",

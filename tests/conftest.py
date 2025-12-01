@@ -44,12 +44,13 @@ except ImportError:
     freeze_time = None  # Define as None for type checking
 
 try:
-    from hypothesis import settings  # noqa: E402
+    from hypothesis import Phase, settings  # noqa: E402
 
     HYPOTHESIS_AVAILABLE = True
 except ImportError:
     HYPOTHESIS_AVAILABLE = False
     settings = None  # Define as None for type checking
+    Phase = None  # Define as None for type checking
 
 from langchain_core.messages import HumanMessage  # noqa: E402
 from opentelemetry import trace  # noqa: E402
@@ -78,6 +79,13 @@ logging.getLogger("opentelemetry.exporter.otlp").setLevel(logging.CRITICAL)
 # Configure Hypothesis profiles for property-based testing
 # Only configure if Hypothesis is available to prevent AttributeError
 if HYPOTHESIS_AVAILABLE:
+    # WORKAROUND: Exclude Phase.target to avoid pytest-xdist import race condition
+    # hypothesis.internal.conjecture.optimiser is lazily imported in optimise_targets(),
+    # but on Python 3.11/3.13 with xdist workers, this import fails with ModuleNotFoundError.
+    # Phase.target is for target optimization, which is nice-to-have but not essential.
+    # See: https://github.com/HypothesisWorks/hypothesis/issues/3987 (similar issue)
+    _phases_without_target = (Phase.explicit, Phase.reuse, Phase.generate, Phase.shrink)
+
     # Register CI profile with comprehensive testing (100 examples)
     settings.register_profile(
         "ci",
@@ -85,6 +93,7 @@ if HYPOTHESIS_AVAILABLE:
         deadline=None,  # No deadline in CI for comprehensive testing
         print_blob=True,  # Print failing examples for debugging
         derandomize=True,  # Deterministic test execution in CI
+        phases=_phases_without_target,  # Exclude target phase to avoid xdist import race
     )
 
     # Register dev profile for fast iteration (25 examples)
@@ -94,6 +103,7 @@ if HYPOTHESIS_AVAILABLE:
         deadline=2000,  # 2 second deadline for fast feedback
         print_blob=False,  # No blob printing in dev for clean output
         derandomize=False,  # Randomized for better coverage
+        phases=_phases_without_target,  # Exclude target phase to avoid xdist import race
     )
 
     # Load appropriate profile based on environment
@@ -523,6 +533,10 @@ def enforce_worker_isolation(request):
 
     # Check enforcement after test
     # Only applies to tests marked as integration
+    # Skip if test has skip_isolation_check marker
+    if request.node.get_closest_marker("skip_isolation_check"):
+        return
+
     if request.node.get_closest_marker("integration"):
         # List of fixtures that imply stateful interactions
         stateful_fixtures = [
@@ -540,16 +554,18 @@ def enforce_worker_isolation(request):
         if used_stateful:
             # Check if helpers were used
             if not _isolation_helpers_used:
-                # We fail hard if stateful fixtures are used but no ID helpers are called
-                # This suggests hardcoded IDs are being used (or implicit IDs)
-                # Exception: Tests that only read static data or health checks
-                # For now, we warn to avoid breaking existing tests immediately,
-                # but in strict mode this should be an assertion error.
-                # logging.warning(
-                #     f"Test {request.node.name} uses stateful fixtures but didn't call get_user_id/get_api_key_id. "
-                #     "Potential for xdist collision."
-                # )
-                pass
+                # STRICT ENFORCEMENT (2025-11-30):
+                # Fail immediately if stateful fixtures are used without calling
+                # the isolation helpers (get_user_id/get_api_key_id/get_thread_id).
+                # This prevents hardcoded IDs that cause pytest-xdist collisions.
+                pytest.fail(
+                    f"Test {request.node.name} uses stateful fixtures "
+                    f"({[f for f in stateful_fixtures if f in request.fixturenames]}) "
+                    f"but didn't call any isolation helpers (get_user_id/get_api_key_id/get_thread_id). "
+                    f"This can cause pytest-xdist collisions. "
+                    f"Use the helper functions from tests/conftest.py or add "
+                    f"@pytest.mark.skip_isolation_check to opt-out."
+                )
 
 
 # ==============================================================================
@@ -1409,7 +1425,7 @@ def fast_retry_config():
 
     Related:
     - fast_resilience_config: Reduces circuit breaker timeout_duration
-    - tests/meta/test_slow_test_detection.py: Detects slow tests > 10s
+    - pytest --durations=50: Use in CI to detect slow tests
     """
     from mcp_server_langgraph.resilience.config import ResilienceConfig, RetryConfig, set_resilience_config
 

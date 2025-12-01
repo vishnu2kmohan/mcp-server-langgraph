@@ -104,7 +104,6 @@ class TestApplicationContainer:
 
     def test_container_settings_injectable(self):
         """Test that settings can be injected (overridden) for testing"""
-        from mcp_server_langgraph.core.config import Settings
 
         # Create custom settings
         custom_settings = Settings(environment="test", log_level="DEBUG", jwt_secret_key="test-secret-123")
@@ -199,7 +198,6 @@ class TestTelemetryProvider:
 
     def test_production_telemetry_provider_initializes(self):
         """Test that production telemetry provider initializes correctly"""
-        from mcp_server_langgraph.core.config import Settings
         from mcp_server_langgraph.core.container import ProductionTelemetryProvider
 
         settings = Settings(
@@ -222,18 +220,21 @@ class TestTelemetryProvider:
 class TestAuthProvider:
     """Test the auth provider abstraction"""
 
-    def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
-        gc.collect()
+    @pytest.fixture(autouse=True)
+    def setup_auth(self, disable_auth_skip):
+        """
+        Use monkeypatch-based fixture for automatic MCP_SKIP_AUTH cleanup.
 
-    def setup_method(self):
-        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
-        import os
-
+        The disable_auth_skip fixture sets MCP_SKIP_AUTH=false and automatically
+        cleans up after the test, preventing environment pollution in xdist workers.
+        """
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_noop_auth_provider(self):
         """Test that no-op auth provider works for tests"""
@@ -291,7 +292,6 @@ class TestStorageProvider:
 
     def test_redis_storage_provider(self):
         """Test Redis storage provider configuration"""
-        from mcp_server_langgraph.core.config import Settings
         from mcp_server_langgraph.core.container import RedisStorageProvider
 
         settings = Settings(environment="development", redis_host="localhost", redis_port=6379)
@@ -305,13 +305,24 @@ class TestStorageProvider:
 class TestContainerTestHelpers:
     """Test helper functions for creating test containers"""
 
+    @pytest.fixture(autouse=True)
+    def setup_auth(self, disable_auth_skip):
+        """
+        Use monkeypatch-based fixture for automatic MCP_SKIP_AUTH cleanup.
+
+        The disable_auth_skip fixture sets MCP_SKIP_AUTH=false and automatically
+        cleans up after the test, preventing environment pollution in xdist workers.
+        """
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     def test_create_test_container_helper(self):
         """Test that create_test_container helper works"""
-        from mcp_server_langgraph.core.container import create_test_container
 
         container = create_test_container()
 
@@ -322,15 +333,7 @@ class TestContainerTestHelpers:
 
     def test_create_test_container_with_overrides(self):
         """Test that test container accepts overrides"""
-
-    def setup_method(self):
-        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
-        import os
-
-        import mcp_server_langgraph.auth.middleware as middleware_module
-
-        middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
+        from mcp_server_langgraph.core.container import create_test_container
 
         custom_settings = Settings(environment="test", log_level="DEBUG")
 
@@ -343,18 +346,21 @@ class TestContainerTestHelpers:
 class TestProductionAuthValidation:
     """Test that production environments require proper external auth"""
 
-    def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
-        gc.collect()
+    @pytest.fixture(autouse=True)
+    def setup_auth(self, disable_auth_skip):
+        """
+        Use monkeypatch-based fixture for automatic MCP_SKIP_AUTH cleanup.
 
-    def setup_method(self):
-        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
-        import os
-
+        The disable_auth_skip fixture sets MCP_SKIP_AUTH=false and automatically
+        cleans up after the test, preventing environment pollution in xdist workers.
+        """
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_production_validates_auth_provider_at_settings_level(self):
         """
@@ -366,8 +372,6 @@ class TestProductionAuthValidation:
         This test documents the EXISTING security feature that prevents the issue.
         """
         from pydantic_core import ValidationError
-
-        from mcp_server_langgraph.core.config import Settings
 
         # Act & Assert: Settings validation should fail for production with inmemory auth
         with pytest.raises(ValidationError) as exc_info:
@@ -390,8 +394,6 @@ class TestProductionAuthValidation:
         """
         from pydantic_core import ValidationError
 
-        from mcp_server_langgraph.core.config import Settings
-
         # Act & Assert: Settings validation should fail for production with memory storage
         with pytest.raises(ValidationError) as exc_info:
             Settings(
@@ -409,7 +411,6 @@ class TestProductionAuthValidation:
 
     def test_production_allows_keycloak_when_configured(self):
         """Test that production with Keycloak configuration succeeds"""
-        from mcp_server_langgraph.core.config import Settings
 
         # Production with Keycloak AND postgres properly configured
         settings = Settings(
@@ -433,7 +434,6 @@ class TestProductionAuthValidation:
 
     def test_development_allows_inmemory_auth(self):
         """Test that development mode allows InMemoryAuthProvider"""
-        from mcp_server_langgraph.core.config import Settings
         from mcp_server_langgraph.core.container import InMemoryAuthProvider
 
         settings = Settings(environment="development", enable_auth=True)
@@ -454,8 +454,6 @@ class TestProductionAuthValidation:
         deployments have production-grade backends configured.
         """
         from pydantic_core import ValidationError
-
-        from mcp_server_langgraph.core.config import Settings
 
         # Act & Assert: Production validation is STRICT - even with enable_auth=False
         with pytest.raises(ValidationError) as exc_info:
@@ -481,7 +479,6 @@ class TestContainerIntegrationWithExistingCode:
 
     def test_container_compatible_with_current_settings(self):
         """Test that container works with existing Settings class"""
-        from mcp_server_langgraph.core.config import Settings
         from mcp_server_langgraph.core.container import ApplicationContainer, ContainerConfig
 
         # Existing Settings class should work
@@ -495,7 +492,6 @@ class TestContainerIntegrationWithExistingCode:
     @pytest.mark.integration
     def test_container_can_create_agent(self):
         """Test that container can provide dependencies for agent creation"""
-        from mcp_server_langgraph.core.container import create_test_container
 
         container = create_test_container()
 
@@ -514,7 +510,6 @@ class TestContainerIntegrationWithExistingCode:
     @pytest.mark.integration
     def test_container_can_create_mcp_server(self):
         """Test that container can provide dependencies for MCP server creation"""
-        from mcp_server_langgraph.core.container import create_test_container
 
         container = create_test_container()
 

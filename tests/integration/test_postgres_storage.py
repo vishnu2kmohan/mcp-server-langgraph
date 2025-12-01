@@ -31,6 +31,7 @@ pytestmark = pytest.mark.integration
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.xdist_group(name="testpostgresauditlogstore")
+@pytest.mark.skip_isolation_check  # Uses worker-scoped Postgres schemas for isolation
 class TestPostgresAuditLogStore:
     """
     Test PostgresAuditLogStore with real PostgreSQL

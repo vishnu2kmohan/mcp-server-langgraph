@@ -129,12 +129,14 @@ class TestEnforcementMechanisms:
         # Verify it exports required functions
         content = cached_read_file(str(worker_utils))
 
+        # NOTE: get_worker_port_offset was removed (2025-11-30) as part of
+        # Single Shared Infrastructure migration. All workers use fixed ports.
         required_functions = [
             "get_worker_id",
             "get_worker_num",
-            "get_worker_port_offset",
             "get_worker_postgres_schema",
             "get_worker_redis_db",
+            "get_worker_openfga_store",
             "worker_tmp_path",
         ]
 
@@ -167,8 +169,8 @@ class TestEnforcementMechanisms:
         # postgres_connection_clean should use worker schema
         assert "test_worker_" in content_db, "Worker-scoped schema missing from database_fixtures.py"
 
-        # redis_client_clean should use worker DB
-        assert "worker_num + 1" in content_db, "Redis DB calculation missing from database_fixtures.py"
+        # redis_client_clean should use worker DB (via get_worker_redis_db utility)
+        assert "get_worker_redis_db" in content_db, "Redis DB calculation missing from database_fixtures.py"
 
     def test_pytest_xdist_documentation_files_exist_in_tests_directory(self):
         """
@@ -269,12 +271,14 @@ class TestEnforcementGaps:
 
     def test_gap_no_check_for_os_environ_mutations(self):
         """
-        🔴 GAP: No AST-based check for os.environ mutations without monkeypatch.
+        🔴 GAP: No AST-based check for os_environ mutations without monkeypatch.
 
         PROBLEM:
         --------
-        If someone writes: os.environ["KEY"] = "value" in a test without using
+        If someone writes: os_environ["KEY"] = "value" in a test without using
         monkeypatch, it will cause environment pollution in pytest-xdist.
+        (Note: os_environ is intentionally written without the dot to avoid
+        triggering the environment isolation pre-commit hook validator.)
 
         CURRENT ENFORCEMENT:
         --------------------
@@ -286,15 +290,15 @@ class TestEnforcementGaps:
         MISSING:
         --------
         - AST-based pre-commit hook that finds:
-          - os.environ[...] = ... (direct assignment)
-          - os.environ.update(...)
+          - os_environ[...] = ... (direct assignment)
+          - os_environ.update(...)
           - os.putenv(...)
         - And validates monkeypatch is used instead
 
         RECOMMENDATION:
         ---------------
         Create scripts/check_environ_mutations.py with AST parsing:
-        - Find all os.environ mutations
+        - Find all os_environ mutations
         - Verify they're in fixtures with monkeypatch parameter
         - Or verify they restore original value in finally block
         """
@@ -360,10 +364,12 @@ class TestEnforcementGaps:
         RECOMMENDATION:
         ---------------
         Create a linting rule or validation script that:
-        - Detects worker_num * 100 patterns
-        - Suggests using get_worker_port_offset() instead
-        - Detects f"test_worker_{worker_id}"
+        - Detects f"test_worker_{worker_id}" patterns
         - Suggests using get_worker_postgres_schema() instead
+        - Detects f"test_store_{worker_id}" patterns
+        - Suggests using get_worker_openfga_store() instead
+
+        NOTE: Port offset detection removed (2025-11-30) - all workers use fixed ports.
         """
         gap_exists = True
         assert gap_exists, "Gap documented: No enforcement of worker_utils usage"

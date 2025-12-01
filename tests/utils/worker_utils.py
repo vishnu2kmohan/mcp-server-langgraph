@@ -4,11 +4,16 @@ Worker utilities for pytest-xdist isolation.
 Provides helper functions to identify and configure worker-specific resources
 for parallel test execution with pytest-xdist.
 
+ARCHITECTURE (2025-11-30):
+- Single Shared Infrastructure: All workers connect to the same Docker services
+- Fixed ports: Postgres 9432, Redis 9379, OpenFGA 9080, etc.
+- Logical isolation: Each worker gets its own schema/db/store via naming conventions
+- No per-worker Docker stacks or port offsets needed
+
 Usage:
     from tests.utils.worker_utils import (
         get_worker_id,
         get_worker_num,
-        get_worker_port_offset,
         get_worker_db_index,
         get_worker_postgres_schema,
         get_worker_redis_db,
@@ -63,36 +68,6 @@ def get_worker_num() -> int:
     """
     worker_id = get_worker_id()
     return int(worker_id.replace("gw", "")) if worker_id.startswith("gw") else 0
-
-
-def get_worker_port_offset() -> int:
-    """
-    Get the port offset for the current worker.
-
-    Port offset formula: worker_num * 100
-
-    This allows each worker to use a unique set of ports for docker-compose
-    services, preventing "address already in use" errors.
-
-    Returns:
-        int: Port offset (0, 100, 200, 300, ...)
-
-    Example:
-        >>> # Worker gw0
-        >>> offset = get_worker_port_offset()
-        >>> # offset = 0
-        >>> postgres_port = 9432 + offset  # 9432
-
-        >>> # Worker gw1
-        >>> offset = get_worker_port_offset()
-        >>> # offset = 100
-        >>> postgres_port = 9432 + offset  # 9532
-
-    References:
-        - tests/conftest.py:test_infrastructure_ports
-        - tests/regression/test_pytest_xdist_port_conflicts.py
-    """
-    return get_worker_num() * 100
 
 
 def get_worker_db_index() -> int:
@@ -242,53 +217,61 @@ def get_worker_resource_summary() -> dict:
 
     Useful for debugging and logging.
 
+    ARCHITECTURE (2025-11-30):
+    - All workers share the same Docker infrastructure (fixed ports)
+    - Isolation is achieved through logical separation (schemas, DBs, stores)
+    - No port offsets - all workers connect to the same services
+
     Returns:
         dict: Summary of worker resources with keys:
             - worker_id (str)
             - worker_num (int)
-            - port_offset (int)
             - postgres_schema (str)
             - redis_db (int)
             - openfga_store (str)
-            - sample_ports (dict): Example ports with offsets
+            - fixed_ports (dict): Shared infrastructure ports (same for all workers)
 
     Example:
         >>> summary = get_worker_resource_summary()
         >>> print(summary)
         {
-            'worker_id': 'gw0',
-            'worker_num': 0,
-            'port_offset': 0,
-            'postgres_schema': 'test_worker_gw0',
-            'redis_db': 1,
-            'openfga_store': 'test_store_gw0',
-            'sample_ports': {
+            'worker_id': 'gw1',
+            'worker_num': 1,
+            'postgres_schema': 'test_worker_gw1',
+            'redis_db': 2,
+            'openfga_store': 'test_store_gw1',
+            'fixed_ports': {
                 'postgres': 9432,
-                'redis': 9379,
+                'redis_checkpoints': 9379,
+                'redis_sessions': 9380,
                 'qdrant': 9333,
+                'qdrant_grpc': 9334,
+                'openfga_http': 9080,
+                'openfga_grpc': 9081,
+                'keycloak': 9082,
             }
         }
     """
     worker_id = get_worker_id()
     worker_num = get_worker_num()
-    port_offset = get_worker_port_offset()
 
     return {
         "worker_id": worker_id,
         "worker_num": worker_num,
-        "port_offset": port_offset,
         "postgres_schema": get_worker_postgres_schema(),
         "redis_db": get_worker_redis_db(),
         "openfga_store": get_worker_openfga_store(),
-        "sample_ports": {
-            "postgres": 9432 + port_offset,
-            "redis_checkpoints": 9379 + port_offset,
-            "redis_sessions": 9380 + port_offset,
-            "qdrant": 9333 + port_offset,
-            "qdrant_grpc": 9334 + port_offset,
-            "openfga_http": 9080 + port_offset,
-            "openfga_grpc": 9081 + port_offset,
-            "keycloak": 9082 + port_offset,
+        # Fixed ports - all workers share the same infrastructure
+        # Isolation is achieved through logical separation, not separate instances
+        "fixed_ports": {
+            "postgres": 9432,
+            "redis_checkpoints": 9379,
+            "redis_sessions": 9380,
+            "qdrant": 9333,
+            "qdrant_grpc": 9334,
+            "openfga_http": 9080,
+            "openfga_grpc": 9081,
+            "keycloak": 9082,
         },
     }
 
@@ -297,7 +280,6 @@ def get_worker_resource_summary() -> dict:
 __all__ = [
     "get_worker_id",
     "get_worker_num",
-    "get_worker_port_offset",
     "get_worker_db_index",
     "get_worker_postgres_schema",
     "get_worker_redis_db",

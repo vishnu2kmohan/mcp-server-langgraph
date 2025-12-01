@@ -25,7 +25,14 @@ from mcp_server_langgraph.compliance.gdpr.storage import UserProfile
 from tests.conftest import get_user_id
 
 # Mark as integration test with xdist_group for worker isolation
-pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="postgres_user_profile_store")]
+# Note: skip_isolation_check is used because these tests use worker-scoped Postgres schemas
+# (via postgres_connection_real fixture) which already provides data isolation.
+# The hardcoded user IDs won't collide across workers because each worker has its own schema.
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.xdist_group(name="postgres_user_profile_store"),
+    pytest.mark.skip_isolation_check,  # Uses worker-scoped schemas for isolation
+]
 
 
 def teardown_module():

@@ -82,11 +82,12 @@ Provide tools and patterns that make it easy to do the right thing.
 from tests.utils.worker_utils import (
     get_worker_id,               # "gw0", "gw1", "gw2"
     get_worker_num,              # 0, 1, 2
-    get_worker_port_offset,      # 0, 100, 200
     get_worker_postgres_schema,  # "test_worker_gw0"
     get_worker_redis_db,         # 1, 2, 3
     worker_tmp_path,             # Worker-scoped temp dirs
 )
+# NOTE: get_worker_port_offset was removed (2025-11-30)
+# All workers use FIXED ports (Single Shared Infrastructure)
 ```
 
 **Benefits**:
@@ -419,12 +420,12 @@ Detect issues that slip through previous layers.
 
 ### Issue 1: Port Conflicts (conftest.py:583)
 
-**What could go wrong**: Developer hardcodes ports instead of using worker offsets
+**What could go wrong**: Developer changes fixed ports used by Single Shared Infrastructure
 
 **Enforcement Layers**:
 1. ✅ Documentation: PYTEST_XDIST_BEST_PRACTICES.md shows pattern
-2. ✅ Regression Tests: test_current_ports_are_hardcoded fails if hardcoded
-3. ✅ Worker Utils: get_worker_port_offset() provides correct value
+2. ✅ Regression Tests: test_current_ports_are_hardcoded fails if changed
+3. ✅ Fixed Ports: All workers use same FIXED ports (Single Shared Infrastructure)
 4. ✅ Meta-test: test_conftest_uses_worker_aware_patterns validates pattern
 5. ✅ Code Review: Change is obvious in diff
 
@@ -665,8 +666,9 @@ def validate_fastapi_dependency_overrides(session):
 ```python
 def check_manual_worker_calculations(file_path):
     content = file_path.read_text()
-    if "worker_num * 100" in content and "worker_utils" not in content:
-        warn("Use get_worker_port_offset() from worker_utils")
+    # NOTE: Port offsets removed (2025-11-30) - all workers use fixed ports
+    if "get_worker_redis_db" not in content and "worker_num + 1" in content:
+        warn("Use get_worker_redis_db() from worker_utils")
 ```
 
 **When to implement**: If manual calculations appear in new code

@@ -49,36 +49,31 @@ def auth_middleware_with_users():
 class TestAuthMiddleware:
     """Test AuthMiddleware class"""
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup_auth(self, disable_auth_skip):
         """
-        Setup clean state BEFORE each test.
+        Setup clean state BEFORE each test using monkeypatch-based fixture.
 
-        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        The disable_auth_skip fixture sets MCP_SKIP_AUTH=false and automatically
+        cleans up after the test, preventing environment pollution in xdist workers.
+
         This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
         which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
         """
-        import os
-
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """
         Force GC to prevent mock accumulation in xdist workers.
 
-        CRITICAL: Reset global state to prevent test pollution.
-        Without this, tests running in parallel (-n auto) will interfere with each other
-        because they share global variables and environment variables across the worker process.
+        Note: MCP_SKIP_AUTH cleanup is now handled by the disable_auth_skip fixture
+        which uses monkeypatch for automatic cleanup.
         """
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        import os
-
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
         gc.collect()
 
     def test_auth_middleware_initialization_with_users_creates_expected_config(self, auth_middleware_with_users):
@@ -349,36 +344,31 @@ class TestAuthMiddleware:
 class TestRequireAuthDecorator:
     """Test require_auth decorator"""
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup_auth(self, disable_auth_skip):
         """
-        Setup clean state BEFORE each test.
+        Setup clean state BEFORE each test using monkeypatch-based fixture.
 
-        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        The disable_auth_skip fixture sets MCP_SKIP_AUTH=false and automatically
+        cleans up after the test, preventing environment pollution in xdist workers.
+
         This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
         which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
         """
-        import os
-
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """
         Force GC to prevent mock accumulation in xdist workers.
 
-        CRITICAL: Reset global state to prevent test pollution.
-        Without this, tests running in parallel (-n auto) will interfere with each other
-        because they share global variables and environment variables across the worker process.
+        Note: MCP_SKIP_AUTH cleanup is now handled by the disable_auth_skip fixture
+        which uses monkeypatch for automatic cleanup.
         """
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        import os
-
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
         gc.collect()
 
     @pytest.mark.asyncio
@@ -454,36 +444,31 @@ class TestRequireAuthDecorator:
 class TestStandaloneVerifyToken:
     """Test standalone verify_token function"""
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup_auth(self, disable_auth_skip):
         """
-        Setup clean state BEFORE each test.
+        Setup clean state BEFORE each test using monkeypatch-based fixture.
 
-        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        The disable_auth_skip fixture sets MCP_SKIP_AUTH=false and automatically
+        cleans up after the test, preventing environment pollution in xdist workers.
+
         This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
         which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
         """
-        import os
-
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """
         Force GC to prevent mock accumulation in xdist workers.
 
-        CRITICAL: Reset global state to prevent test pollution.
-        Without this, tests running in parallel (-n auto) will interfere with each other
-        because they share global variables and environment variables across the worker process.
+        Note: MCP_SKIP_AUTH cleanup is now handled by the disable_auth_skip fixture
+        which uses monkeypatch for automatic cleanup.
         """
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        import os
-
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
         gc.collect()
 
     @pytest.mark.asyncio
@@ -520,36 +505,31 @@ class TestStandaloneVerifyToken:
 class TestGetCurrentUser:
     """Test get_current_user FastAPI dependency for bearer token authentication"""
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup_auth(self, disable_auth_skip):
         """
-        Setup clean state BEFORE each test.
+        Setup clean state BEFORE each test using monkeypatch-based fixture.
 
-        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        The disable_auth_skip fixture sets MCP_SKIP_AUTH=false and automatically
+        cleans up after the test, preventing environment pollution in xdist workers.
+
         This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
         which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
         """
-        import os
-
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """
         Force GC to prevent mock accumulation in xdist workers.
 
-        CRITICAL: Reset global state to prevent test pollution.
-        Without this, tests running in parallel (-n auto) will interfere with each other
-        because they share global variables and environment variables across the worker process.
+        Note: MCP_SKIP_AUTH cleanup is now handled by the disable_auth_skip fixture
+        which uses monkeypatch for automatic cleanup.
         """
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        import os
-
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
         gc.collect()
 
     @pytest.mark.asyncio
@@ -769,36 +749,31 @@ class TestAuthFallbackWithExternalProviders:
     instead of relying on in-memory user database.
     """
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup_auth(self, disable_auth_skip):
         """
-        Setup clean state BEFORE each test.
+        Setup clean state BEFORE each test using monkeypatch-based fixture.
 
-        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        The disable_auth_skip fixture sets MCP_SKIP_AUTH=false and automatically
+        cleans up after the test, preventing environment pollution in xdist workers.
+
         This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
         which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
         """
-        import os
-
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """
         Force GC to prevent mock accumulation in xdist workers.
 
-        CRITICAL: Reset global state to prevent test pollution.
-        Without this, tests running in parallel (-n auto) will interfere with each other
-        because they share global variables and environment variables across the worker process.
+        Note: MCP_SKIP_AUTH cleanup is now handled by the disable_auth_skip fixture
+        which uses monkeypatch for automatic cleanup.
         """
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        import os
-
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
         gc.collect()
 
     @pytest.mark.asyncio
@@ -982,36 +957,31 @@ class TestAuthMiddlewareProductionControls:
     In production, fallback should be disabled to prevent security bypasses
     """
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup_auth(self, disable_auth_skip):
         """
-        Setup clean state BEFORE each test.
+        Setup clean state BEFORE each test using monkeypatch-based fixture.
 
-        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        The disable_auth_skip fixture sets MCP_SKIP_AUTH=false and automatically
+        cleans up after the test, preventing environment pollution in xdist workers.
+
         This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
         which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
         """
-        import os
-
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """
         Force GC to prevent mock accumulation in xdist workers.
 
-        CRITICAL: Reset global state to prevent test pollution.
-        Without this, tests running in parallel (-n auto) will interfere with each other
-        because they share global variables and environment variables across the worker process.
+        Note: MCP_SKIP_AUTH cleanup is now handled by the disable_auth_skip fixture
+        which uses monkeypatch for automatic cleanup.
         """
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        import os
-
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
         gc.collect()
 
     @pytest.mark.asyncio

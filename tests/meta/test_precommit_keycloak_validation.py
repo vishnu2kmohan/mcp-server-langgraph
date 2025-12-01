@@ -21,6 +21,33 @@ import yaml
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = pytest.mark.unit
 
+# Repository root - absolute path for reliable subprocess invocation
+_REPO_ROOT = Path(__file__).parent.parent.parent
+
+
+def _run_validation_script(compose_file_path: Path) -> subprocess.CompletedProcess:
+    """
+    Run the keycloak validation script as subprocess with proper environment.
+
+    Uses absolute paths and explicit cwd to ensure the subprocess runs correctly
+    regardless of where pytest is invoked from (especially in pytest-xdist workers).
+
+    Args:
+        compose_file_path: Path to the docker-compose file to validate
+
+    Returns:
+        CompletedProcess with stdout, stderr, and returncode
+    """
+    script_path = _REPO_ROOT / "scripts" / "validators" / "validate_keycloak_config.py"
+
+    return subprocess.run(
+        [sys.executable, str(script_path), str(compose_file_path)],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        cwd=str(_REPO_ROOT),  # Ensure consistent working directory
+    )
+
 
 @pytest.mark.xdist_group(name="testkeycloakconfigvalidationhook")
 class TestKeycloakConfigValidationHook:
@@ -38,7 +65,7 @@ class TestKeycloakConfigValidationHook:
         WHEN: Checking for validate_keycloak_config.py
         THEN: The script should exist and be executable
         """
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "validators" / "validate_keycloak_config.py"
+        script_path = _REPO_ROOT / "scripts" / "validators" / "validate_keycloak_config.py"
         assert script_path.exists(), f"Hook script not found: {script_path}"
         assert script_path.is_file(), "Hook script must be a file"
 
@@ -76,14 +103,7 @@ class TestKeycloakConfigValidationHook:
             temp_file = Path(f.name)
 
         try:
-            # Run validation script using current interpreter (venv-aware)
-            result = subprocess.run(
-                [sys.executable, "scripts/validators/validate_keycloak_config.py", str(temp_file)],
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-
+            result = _run_validation_script(temp_file)
             assert result.returncode == 0, f"Hook should pass with Keycloak enabled. stderr: {result.stderr}"
         finally:
             temp_file.unlink()
@@ -108,13 +128,7 @@ class TestKeycloakConfigValidationHook:
             temp_file = Path(f.name)
 
         try:
-            result = subprocess.run(
-                [sys.executable, "scripts/validators/validate_keycloak_config.py", str(temp_file)],
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-
+            result = _run_validation_script(temp_file)
             assert result.returncode == 1, "Hook should fail when Keycloak service missing"
             assert "keycloak-test service not found" in result.stderr.lower() or "keycloak" in result.stdout.lower()
         finally:
@@ -143,13 +157,7 @@ class TestKeycloakConfigValidationHook:
             temp_file = Path(f.name)
 
         try:
-            result = subprocess.run(
-                [sys.executable, "scripts/validators/validate_keycloak_config.py", str(temp_file)],
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-
+            result = _run_validation_script(temp_file)
             assert result.returncode == 1, "Hook should fail when health check missing"
             assert "healthcheck" in result.stderr.lower() or "health" in result.stdout.lower()
         finally:
@@ -183,13 +191,7 @@ class TestKeycloakConfigValidationHook:
             temp_file = Path(f.name)
 
         try:
-            result = subprocess.run(
-                [sys.executable, "scripts/validators/validate_keycloak_config.py", str(temp_file)],
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-
+            result = _run_validation_script(temp_file)
             assert result.returncode == 1, "Hook should fail when required env vars missing"
             assert (
                 "keycloak_admin" in result.stderr.lower()
@@ -232,13 +234,7 @@ class TestKeycloakConfigValidationHook:
             temp_file = Path(f.name)
 
         try:
-            result = subprocess.run(
-                [sys.executable, "scripts/validators/validate_keycloak_config.py", str(temp_file)],
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-
+            result = _run_validation_script(temp_file)
             # Hook should warn or fail about inadequate start_period
             assert result.returncode == 1 or "start_period" in result.stdout.lower() or "60s" in result.stdout.lower(), (
                 "Hook should warn about inadequate start_period"
@@ -254,16 +250,11 @@ class TestKeycloakConfigValidationHook:
         WHEN: Running the validation hook
         THEN: Hook should pass (Keycloak is enabled per ADR-0053)
         """
-        compose_file = Path(__file__).parent.parent.parent / "docker-compose.test.yml"
+        compose_file = _REPO_ROOT / "docker-compose.test.yml"
 
         assert compose_file.exists(), "docker-compose.test.yml not found"
 
-        result = subprocess.run(
-            [sys.executable, "scripts/validators/validate_keycloak_config.py", str(compose_file)],
-            capture_output=True,
-            text=True,
-            timeout=60,
-        )
+        result = _run_validation_script(compose_file)
 
         assert result.returncode == 0, (
             f"Hook should pass with production docker-compose.test.yml. "

@@ -19,6 +19,7 @@ pytestmark = pytest.mark.integration
 
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="testpostgresqlcleanup")
+@pytest.mark.skip_isolation_check  # Uses worker-scoped Postgres schemas for isolation
 class TestPostgreSQLCleanup:
     """Test PostgreSQL cleanup between tests"""
 
@@ -108,6 +109,7 @@ class TestOpenFGACleanup:
 
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="testcleanupfixtureperformance")
+@pytest.mark.skip_isolation_check  # Uses worker-scoped Postgres schemas for isolation
 class TestCleanupFixturePerformance:
     """Verify cleanup fixtures don't add excessive overhead"""
 
