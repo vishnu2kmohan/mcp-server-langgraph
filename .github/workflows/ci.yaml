@@ -334,7 +334,8 @@ jobs:
         # Use CI Hypothesis profile for consistent property test behavior (100 examples)
         # Exclude expensive LLM tests (marked with @pytest.mark.llm) - these run in scheduled workflow
         # Run all fast tests: unit, api, property, validation (matches local pre-push via scripts/run_pre_push_tests.py)
-        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "(unit or api or property or validation) and not llm" --cov=src/mcp_server_langgraph --cov-report=xml:coverage-unit.xml --cov-report=term-missing
+        # --durations=50: Capture slowest 50 tests for performance monitoring (replaces deleted meta-tests)
+        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "(unit or api or property or validation) and not llm" --cov=src/mcp_server_langgraph --cov-report=xml:coverage-unit.xml --cov-report=term-missing --durations=50 | tee test-durations.txt
 
     - name: Run new test suites
       run: |
@@ -360,6 +361,14 @@ jobs:
         name: coverage-unit-py${{ matrix.python-version }}
         path: coverage-unit.xml
         retention-days: 1
+
+    - name: Upload test durations artifact
+      if: matrix.python-version == '3.12'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-durations-py${{ matrix.python-version }}
+        path: test-durations.txt
+        retention-days: 7  # Keep longer for performance trend analysis
 
     - name: Upload coverage to Codecov (legacy)
       if: matrix.python-version == '3.12'

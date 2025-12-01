@@ -1425,7 +1425,7 @@ def fast_retry_config():
 
     Related:
     - fast_resilience_config: Reduces circuit breaker timeout_duration
-    - tests/meta/test_slow_test_detection.py: Detects slow tests > 10s
+    - pytest --durations=50: Use in CI to detect slow tests
     """
     from mcp_server_langgraph.resilience.config import ResilienceConfig, RetryConfig, set_resilience_config
 
