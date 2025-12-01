@@ -64,7 +64,7 @@ jobs:
     if: >
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'schedule' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
 
     outputs:
       has_benchmarks: ${{ steps.check.outputs.has_benchmarks }}
