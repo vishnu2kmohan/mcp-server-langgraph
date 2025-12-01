@@ -31,41 +31,69 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 CHART_PATH = REPO_ROOT / "deployments" / "helm" / "mcp-server-langgraph"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def helm_dependencies_built():
     """Build Helm chart dependencies before running template tests.
 
-    This fixture runs once per module and builds the Helm dependencies
-    (redis, kube-prometheus-stack) required for helm template to work.
+    This fixture runs once per session and builds the Helm dependencies
+    (redis, grafana, kube-prometheus-stack, etc.) required for helm template to work.
+
+    Uses session scope with file locking to ensure only one pytest-xdist worker
+    builds the dependencies, preventing race conditions.
 
     Cleanup: Removes any stale tmpcharts/ directory that may have been left
     from an interrupted previous run, which can cause helm dependency build
     to fail or produce inconsistent results.
     """
+    import fcntl
+
     if not shutil.which("helm"):
         pytest.skip("helm CLI not installed")
 
     if not CHART_PATH.exists():
         pytest.skip("Helm chart directory does not exist")
 
-    # Clean up any stale tmpcharts directory from interrupted previous runs
-    tmpcharts_path = CHART_PATH / "tmpcharts"
-    if tmpcharts_path.exists():
-        shutil.rmtree(tmpcharts_path, ignore_errors=True)
+    charts_dir = CHART_PATH / "charts"
 
-    # Build dependencies (downloads redis, kube-prometheus-stack charts)
-    result = subprocess.run(
-        ["helm", "dependency", "build", str(CHART_PATH)],
-        capture_output=True,
-        text=True,
-        cwd=REPO_ROOT,
-        timeout=120,
-    )
+    # Use file-based locking to prevent multiple xdist workers from racing
+    # Lock file is in the chart path (part of the repo, gitignored)
+    lock_file = CHART_PATH / ".helm_dependency_build.lock"
 
-    if result.returncode != 0:
-        pytest.skip(f"Failed to build Helm dependencies (may need network access):\n{result.stderr}")
+    with open(lock_file, "w") as lock_fd:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        try:
+            # Check if charts are already built (another worker might have done it)
+            if charts_dir.exists() and any(charts_dir.glob("*.tgz")):
+                # Charts already present, no need to rebuild
+                return True
 
-    return True
+            # Clean up any stale tmpcharts directory from interrupted previous runs
+            tmpcharts_path = CHART_PATH / "tmpcharts"
+            if tmpcharts_path.exists():
+                shutil.rmtree(tmpcharts_path, ignore_errors=True)
+
+            # Build dependencies (downloads redis, kube-prometheus-stack charts)
+            result = subprocess.run(
+                ["helm", "dependency", "build", str(CHART_PATH)],
+                capture_output=True,
+                text=True,
+                cwd=REPO_ROOT,
+                timeout=180,  # Increased timeout for network downloads
+            )
+
+            if result.returncode != 0:
+                pytest.skip(f"Failed to build Helm dependencies (may need network access):\n{result.stderr}")
+
+            # Verify charts were actually downloaded
+            if not charts_dir.exists() or not any(charts_dir.glob("*.tgz")):
+                pytest.skip(
+                    "Helm dependency build succeeded but charts directory is empty. "
+                    "This may indicate a network issue or missing chart repositories."
+                )
+
+            return True
+        finally:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
 
 
 @pytest.mark.requires_helm
