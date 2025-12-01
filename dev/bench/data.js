@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764618491104,
+  "lastUpdate": 1764625422821,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -39594,6 +39594,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001740363551495338",
             "extra": "mean: 57.528799741917744 usec\nrounds: 4649"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vishnu2kmohan@users.noreply.github.com",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8e247c288535fcfbce6f763fe908feb916699c7d",
+          "message": "feat(docs): fix TCO calculator and update to latest LLM models (#136)\n\n- Fix broken TCO Calculator with dynamic JavaScript calculations\n- Add new /docs/tco-calculator.js with full cost calculation logic\n- Update MDX with LLM model selector dropdown and theme-compatible styling\n- Update pricing tables to reflect current 2025 pricing\n\nLLM Model Updates (45 files):\n- Primary: Gemini 2.5 Flash/Pro (default)\n- Fallback: Claude 4.5 Sonnet/Haiku\n- Last Resort: GPT-5.1\n\nModel name migrations:\n- claude-3-5-sonnet → claude-sonnet-4-5-20250929\n- claude-3-5-haiku → claude-haiku-4-5-20251001\n- gpt-5 → gpt-5.1, gpt-4o → gpt-5.1\n- gemini-1.5-* → gemini-2.5-*\n\nPricing updates:\n- Gemini 2.5 Flash: $0.30/$2.50 per 1M tokens\n- Claude 4.5 Sonnet: $3/$15 per 1M tokens\n- GPT-5.1: $1.25/$10 per 1M tokens\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-authored-by: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-01T16:37:17-05:00",
+          "tree_id": "db43a71d6a22f5a32b8f5545fd13cb203ba053b9",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8e247c288535fcfbce6f763fe908feb916699c7d"
+        },
+        "date": 1764625421165,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 144.1946113227881,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007737229308212356",
+            "extra": "mean: 6.9350719200001265 msec\nrounds: 100"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 296.1473507312461,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00023459701881296685",
+            "extra": "mean: 3.376697436363362 msec\nrounds: 110"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44427.107999670945,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.508779999981243 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48005.975783912494,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.83073999997964 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44894.103787972344,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.27464000000623 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.21746023279863,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.148867660000036 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.401321475884867,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.54288078999997 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.975260873224356,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.24800481 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1345351.8096848596,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 743.2999998968626 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13148.63187171921,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 76.05353999991848 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2983.9753659699495,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.1234100000511 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2869.6103301602493,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 348.4793700000921 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 61320.48075811243,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019055278720847324",
+            "extra": "mean: 16.307765164866296 usec\nrounds: 12430"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17329.501502097813,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018131312703850894",
+            "extra": "mean: 57.705064388548365 usec\nrounds: 4302"
           }
         ]
       }
