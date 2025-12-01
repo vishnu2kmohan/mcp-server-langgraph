@@ -433,7 +433,7 @@ kubectl apply -f kubernetes/kong/kong-ingress.yaml
 
 ### DNS Configuration
 
-```
+```bash
 # A record for HTTP/SSE endpoint
 mcp.langgraph-agent.example.com -> LoadBalancer IP
 
@@ -483,7 +483,7 @@ curl https://mcp.langgraph-agent.example.com/health
 ### Monitoring
 
 **Prometheus metrics:**
-```
+```css
 # SSE connections
 mcp_sse_connections_active{server="langgraph-agent"}
 

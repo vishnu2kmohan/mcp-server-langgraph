@@ -105,7 +105,7 @@ Set environment variables in two ways:
 1. **langgraph.json** - For non-sensitive config
 2. **LangSmith Secrets** - For API keys and sensitive data
 
-```
+```bash
 ## Set secrets (recommended for API keys)
 langsmith secret set ANTHROPIC_API_KEY "your-key"
 langsmith secret set OPENAI_API_KEY "your-key"
@@ -200,7 +200,7 @@ langgraph dev
 
 ## Verify graph can be imported
 python -c "from langgraph.agent import graph; print(graph)"
-```
+```xml
 
 ### Next Steps
 

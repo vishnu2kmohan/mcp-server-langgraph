@@ -97,7 +97,7 @@ make deploy-rollback-production
 #### Manual Rollback
 
 **Kubernetes Deployment**:
-```
+```bash
 ## List rollout history
 kubectl rollout history deployment/mcp-server-langgraph -n mcp-server-langgraph
 
@@ -111,7 +111,7 @@ kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph --t
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 **Helm Rollback**:
-```
+```bash
 ## List release history
 helm history mcp-server-langgraph -n mcp-server-langgraph
 

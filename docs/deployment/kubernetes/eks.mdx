@@ -26,7 +26,7 @@ This guide covers deploying to EKS with production-ready configuration including
 
 ### Install Prerequisites
 
-```
+```bash
 ## Install eksctl
 brew install eksctl
 
@@ -106,7 +106,7 @@ addons:
 ```
 
 **Create cluster**:
-```
+```bash
 ## Create cluster
 eksctl create cluster -f cluster.yaml
 
@@ -118,7 +118,7 @@ kubectl get nodes
 ```
 #### Using AWS CLI
 
-```
+```bash
 ## Create cluster (control plane only)
 aws eks create-cluster \
   --name langgraph-cluster \
@@ -144,7 +144,7 @@ aws eks create-nodegroup \
 
 #### Create IAM Policy
 
-```
+```json
 ## Create policy for Secrets Manager access
 cat > secrets-policy.json << 'EOF'
 {
@@ -168,7 +168,7 @@ aws iam create-policy \
 ```
 #### Create Service Account with IRSA
 
-```
+```bash
 ## Create service account with IAM role
 eksctl create iamserviceaccount \
   --name mcp-server-langgraph \
@@ -187,7 +187,7 @@ kubectl describe sa mcp-server-langgraph -n mcp-server-langgraph
 
 #### Create RDS Instance
 
-```
+```bash
 ## Create DB subnet group
 aws rds create-db-subnet-group \
   --db-subnet-group-name langgraph-db-subnet \
@@ -259,7 +259,7 @@ RDS_ENDPOINT=$(aws rds describe-db-instances \
 **Three databases required**: Keycloak (identity), OpenFGA (authorization), and GDPR (compliance data storage per ADR-0041).
 </Info>
 
-```
+```properties
 ## Connect to RDS
 PGPASSWORD=your-master-password psql \
   -h $RDS_ENDPOINT \
@@ -316,7 +316,7 @@ PGPASSWORD=your-master-password psql \
 
 After creating the databases, initialize the GDPR schema:
 
-```
+```properties
 ## Apply GDPR schema (5 tables: user_profiles, user_preferences, consent_records, conversations, audit_logs)
 PGPASSWORD=secure-gdpr-password psql \
   -h $RDS_ENDPOINT \
@@ -336,7 +336,7 @@ See [ADR-0041: PostgreSQL GDPR Storage](/architecture/adr-0041-postgresql-gdpr-s
 
 #### Create Redis Cluster
 
-```
+```bash
 ## Create subnet group
 aws elasticache create-cache-subnet-group \
   --cache-subnet-group-name langgraph-redis-subnet \
@@ -390,7 +390,7 @@ REDIS_ENDPOINT=$(aws elasticache describe-replication-groups \
 
 #### Store Secrets
 
-```
+```bash
 ## Store Anthropic API key
 aws secretsmanager create-secret \
   --name langgraph/anthropic-api-key \
@@ -417,7 +417,7 @@ aws secretsmanager create-secret \
 ```
 #### Use External Secrets Operator
 
-```
+```bash
 ## Install External Secrets Operator
 helm repo add external-secrets https://charts.external-secrets.io
 helm repo update
@@ -480,7 +480,7 @@ EOF
 
 #### Install Load Balancer Controller
 
-```
+```bash
 ## Create IAM policy
 curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
 
@@ -547,7 +547,7 @@ spec:
 
 #### Create ECR Repository
 
-```
+```bash
 ## Create repository
 aws ecr create-repository \
   --repository-name langgraph/agent \
@@ -589,7 +589,7 @@ spec:
 
 #### Install EBS CSI Driver
 
-```
+```bash
 ## Create IAM policy
 eksctl create iamserviceaccount \
   --name ebs-csi-controller-sa \
@@ -629,7 +629,7 @@ allowVolumeExpansion: true
 
 #### Container Insights
 
-```
+```bash
 ## Install CloudWatch agent
 eksctl create iamserviceaccount \
   --cluster langgraph-cluster \
@@ -670,7 +670,7 @@ cloudwatch.put_metric_data(
 
 ### Complete Deployment
 
-```
+```yaml
 ## deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -740,7 +740,7 @@ spec:
             cpu: "1000m"
 ```
 **Deploy**:
-```
+```bash
 ## Create namespace
 kubectl create namespace mcp-server-langgraph
 
@@ -756,7 +756,7 @@ kubectl logs -f deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 #### Cluster Autoscaler
 
-```
+```bash
 ## Install Cluster Autoscaler
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml
 
@@ -773,7 +773,7 @@ kubectl -n kube-system edit deployment.apps/cluster-autoscaler
 ```
 #### Karpenter (Alternative)
 
-```
+```bash
 ## Install Karpenter
 helm repo add karpenter https://charts.karpenter.sh
 helm repo update

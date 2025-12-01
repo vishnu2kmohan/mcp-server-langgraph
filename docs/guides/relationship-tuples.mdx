@@ -27,7 +27,7 @@ A tuple has three parts:
 
 The **subject** of the relationship:
 
-```
+```bash
 ## Direct users
 "user:alice"
 "user:bob"
@@ -44,7 +44,7 @@ The **subject** of the relationship:
 
 The **type** of relationship:
 
-```
+```bash
 ## Common relations
 "owner"      # Resource ownership
 "admin"      # Administrative access
@@ -57,7 +57,7 @@ The **type** of relationship:
 
 The **resource** being accessed:
 
-```
+```bash
 ## Tools
 "tool:chat"
 "tool:search"
@@ -90,7 +90,7 @@ await client.write_tuples([{
 ```
 #### Multiple Tuples (Atomic)
 
-```
+```json
 ## Grant multiple permissions at once
 await client.write_tuples([
     {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
@@ -101,7 +101,7 @@ await client.write_tuples([
 
 #### Organization-Wide Access
 
-```
+```json
 ## Grant all organization members access to tool
 await client.write_tuples([
     # First, make alice an admin
@@ -115,7 +115,7 @@ await client.write_tuples([
 ```
 #### Resource Ownership
 
-```
+```json
 ## Alice owns a conversation
 await client.write_tuples([{
     "user": "user:alice",
@@ -135,7 +135,7 @@ await client.write_tuples([{
 
 #### List All Tuples
 
-```
+```bash
 ## Get all relationship tuples
 all_tuples = await client.read_tuples()
 
@@ -144,7 +144,7 @@ for tuple in all_tuples:
 ```
 #### Filter by User
 
-```
+```bash
 ## Get all tuples for alice
 alice_tuples = await client.read_tuples(user="user:alice")
 
@@ -155,7 +155,7 @@ for tuple in alice_tuples:
 
 #### Filter by Object
 
-```
+```bash
 ## Who can access tool:chat?
 chat_tuples = await client.read_tuples(object="tool:chat")
 
@@ -164,7 +164,7 @@ for tuple in chat_tuples:
 ```
 #### Filter by Relation
 
-```
+```bash
 ## All admin relationships
 admin_tuples = await client.read_tuples(relation="admin")
 
@@ -174,7 +174,7 @@ for tuple in admin_tuples:
 
 #### List User's Accessible Objects
 
-```
+```toml
 ## What tools can alice execute?
 tools = await client.list_objects(
     user="user:alice",
@@ -186,7 +186,7 @@ print(f"Alice can execute: {tools}")
 ```
 #### List Users with Access
 
-```
+```toml
 ## Who can execute tool:chat?
 users = await client.list_users(
     relation="executor",
@@ -200,7 +200,7 @@ print(f"Can execute chat: {users}")
 
 #### Replace Relation
 
-```
+```json
 ## Change bob from viewer to editor
 ## 1. Delete old relation
 await client.delete_tuples([{
@@ -218,7 +218,7 @@ await client.write_tuples([{
 ```
 #### Transfer Ownership
 
-```
+```json
 ## Transfer document from alice to bob
 await client.delete_tuples([{
     "user": "user:alice",
@@ -237,7 +237,7 @@ await client.write_tuples([{
 
 #### Delete Specific Tuple
 
-```
+```json
 ## Revoke bob's access to tool
 await client.delete_tuples([{
     "user": "user:bob",
@@ -247,7 +247,7 @@ await client.delete_tuples([{
 ```
 #### Delete All User Access to Object
 
-```
+```toml
 ## Remove all bob's permissions for conversation
 tuples = await client.read_tuples(
     user="user:bob",
@@ -258,14 +258,14 @@ await client.delete_tuples(tuples)
 
 #### Delete All Object Permissions
 
-```
+```bash
 ## Delete conversation and all access
 tuples = await client.read_tuples(object="conversation:thread_123")
 await client.delete_tuples(tuples)
 ```
 #### Bulk Delete
 
-```
+```bash
 ## Remove all viewer permissions
 viewer_tuples = await client.read_tuples(relation="viewer")
 await client.delete_tuples(viewer_tuples)
@@ -495,7 +495,7 @@ await debug_permission("user:alice", "executor", "tool:chat")
 
 #### Batch Operations
 
-```
+```json
 ## Bad: Multiple API calls
 for user_id in range(100):
     await client.write_tuples([{
@@ -515,7 +515,7 @@ await client.write_tuples(tuples)
 ```
 #### Use Group Relations
 
-```
+```json
 ## Bad: 1000 individual tuples
 for user_id in range(1000):
     await client.write_tuples([{
@@ -534,7 +534,7 @@ await client.write_tuples([{
 
 #### Cache Queries
 
-```
+```python
 ## Cache frequently accessed tuples
 from functools import lru_cache
 

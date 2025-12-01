@@ -486,7 +486,7 @@ health_check_duration_seconds{endpoint="/health"} 0.015
 ```
 **Example Alerts**:
 
-```
+```yaml
 ## Alert on unhealthy service
 - alert: ServiceUnhealthy
   expr: health_status == 0

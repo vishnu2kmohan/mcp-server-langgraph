@@ -473,7 +473,7 @@ Version 2.7.0 implements **Anthropic's complete agentic loop** with gather-actio
 
 #### Development (Speed Priority)
 
-```
+```properties
 ## Disable features for fast iteration
 ENABLE_CONTEXT_COMPACTION=false
 ENABLE_VERIFICATION=false
@@ -484,7 +484,7 @@ ENABLE_FILE_LOGGING=false
 ```
 #### Staging (Balanced)
 
-```
+```properties
 ## Enable with lenient thresholds
 ENABLE_CONTEXT_COMPACTION=true
 COMPACTION_THRESHOLD=10000
@@ -500,7 +500,7 @@ ENABLE_FILE_LOGGING=false
 
 #### Production (Quality Priority)
 
-```
+```properties
 ## Full quality assurance
 ENABLE_CONTEXT_COMPACTION=true
 COMPACTION_THRESHOLD=6000
@@ -533,7 +533,7 @@ ENABLE_FILE_LOGGING=true
 
 #### Running Tests
 
-```
+```bash
 ## Unit tests for agentic loop
 pytest tests/test_context_manager.py -v
 pytest tests/test_verifier.py -v

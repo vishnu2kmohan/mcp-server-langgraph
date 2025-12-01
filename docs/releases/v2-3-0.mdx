@@ -129,7 +129,7 @@ Created `docs/architecture/adr-0006-error-handling-strategy` (600+ lines):
 
 #### From v2.2.0
 
-```
+```bash
 ## 1. Update dependencies
 git pull origin main
 uv sync
@@ -148,7 +148,7 @@ pytest tests/test_storage.py -v
 #### For Custom Extensions
 
 If you've extended Pydantic models:
-```
+```python
 ## Before (v1.x)
 class MyModel(BaseModel):
     class Config:

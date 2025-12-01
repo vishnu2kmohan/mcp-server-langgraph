@@ -249,7 +249,7 @@ sequenceDiagram
 
 #### Session TTL
 
-```
+```properties
 ## Fixed TTL (no extension)
 SESSION_TTL_SECONDS=3600  # 1 hour
 SESSION_SLIDING_WINDOW=false
@@ -266,7 +266,7 @@ SESSION_REFRESH_THRESHOLD=3600  # Refresh if < 1hr left
 
 #### Concurrent Sessions
 
-```
+```properties
 ## Limit concurrent sessions per user
 SESSION_MAX_CONCURRENT=5
 
@@ -329,7 +329,7 @@ session = await session_mgr.create_session(
 
 #### Get Session
 
-```
+```yaml
 ## Get by session ID
 session = await session_mgr.get_session(session_id)
 
@@ -345,7 +345,7 @@ for s in sessions:
 ```
 #### Refresh Session
 
-```
+```bash
 ## Manual refresh
 session = await session_mgr.refresh_session(session_id)
 print(f"Extended until: {session.expires_at}")
@@ -356,7 +356,7 @@ print(f"Extended until: {session.expires_at}")
 
 #### Revoke Session
 
-```
+```bash
 ## Revoke single session
 await session_mgr.revoke_session(session_id)
 
@@ -371,7 +371,7 @@ await session_mgr.revoke_session(
 ```
 #### Session Analytics
 
-```
+```bash
 ## Count active sessions
 total = await session_mgr.count_active_sessions()
 print(f"Active sessions: {total}")
@@ -446,7 +446,7 @@ async def logout(session_id: str):
 
 Deploy Redis with replication:
 
-```
+```bash
 ## Kubernetes with Helm
 helm install redis-session bitnami/redis \
   --set architecture=replication \
@@ -478,7 +478,7 @@ save 60 10000    # Save after 60s if >= 10000 keys changed
 ## AOF (append-only file) for durability
 appendonly yes
 appendfsync everysec
-```
+```markdown
 Or use managed Redis with automatic backups (Memorystore, ElastiCache, Azure Cache).
 
 #### Security
@@ -488,7 +488,7 @@ Or use managed Redis with automatic backups (Memorystore, ElastiCache, Azure Cac
 ## Always use password
 REDIS_PASSWORD=strong-random-password
 requirepass strong-random-password
-```
+```markdown
 
 **Encryption**:
 ```
@@ -499,7 +499,7 @@ REDIS_URL=rediss://redis-session:6380/0
 ## Redis 6+ with ACL
 REDIS_USERNAME=sessions
 REDIS_PASSWORD=password
-```
+```markdown
 **Network isolation**:
 - Private VPC/subnet
 - Firewall rules (allow only app servers)
@@ -524,7 +524,7 @@ redis-cli INFO memory
 
 **Key metrics to track**:
 
-```
+```css
 ## Active sessions
 redis_db_keys{db="db0"}
 

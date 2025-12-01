@@ -143,7 +143,7 @@ docker compose -f docker-compose.yml -f docker/docker-compose.dev.yml up
 
 #### Hot Reload Example
 
-```
+```bash
 ## Start in dev mode
 docker compose -f docker-compose.yml -f docker/docker-compose.dev.yml up
 
@@ -158,7 +158,7 @@ docker compose logs -f agent
 
 #### Run Tests
 
-```
+```bash
 ## Install test dependencies
 uv sync
 
@@ -177,7 +177,7 @@ docker compose down
 
 #### Test Agent Endpoint
 
-```
+```bash
 ## Simple health check
 curl http://localhost:8000/health
 
@@ -208,7 +208,7 @@ curl -X POST http://localhost:8000/message \
 
 Configure via `.env` file:
 
-```
+```properties
 ## LLM Provider
 LLM_PROVIDER=google
 MODEL_NAME=gemini-2.5-flash-002
@@ -226,7 +226,7 @@ LANGSMITH_TRACING=false  # Enable for LangSmith
 
 Services communicate via Docker network:
 
-```
+```properties
 ## In docker-compose.yml, agent uses internal URLs:
 OPENFGA_API_URL=http://openfga:8080
 OTLP_ENDPOINT=http://otel-collector:4317
@@ -235,7 +235,7 @@ OTLP_ENDPOINT=http://otel-collector:4317
 
 Override settings with environment variables:
 
-```
+```properties
 ## Use different model
 MODEL_NAME=claude-3-5-sonnet-20241022 docker compose up
 
@@ -307,7 +307,7 @@ Create dashboards for:
 
 Set up authorization model:
 
-```
+```bash
 ## Start services
 docker compose up -d
 

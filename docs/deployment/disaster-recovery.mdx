@@ -361,7 +361,7 @@ sequenceDiagram
 
 #### Point-in-Time Recovery
 
-```
+```bash
 ## Restore to specific timestamp
 pg_restore -U keycloak -h postgres-keycloak \
   -d keycloak_recovery \
@@ -441,7 +441,7 @@ auto-aof-rewrite-min-size 64mb
 ```
 #### Redis Replication
 
-```
+```yaml
 ## Redis Sentinel for HA
 apiVersion: v1
 kind: ConfigMap
@@ -460,7 +460,7 @@ data:
 #### Velero
 
 **Install Velero**:
-```
+```bash
 ## Install CLI
 brew install velero
 
@@ -496,7 +496,7 @@ spec:
 ```
 
 **Manual Backup**:
-```
+```bash
 ## Backup entire namespace
 velero backup create langgraph-backup \
   --include-namespaces mcp-server-langgraph
@@ -540,7 +540,7 @@ aws s3 cp "${BACKUP_DIR}.tar.gz" s3://my-backups/k8s/
 
 #### Infisical Backup
 
-```
+```python
 ## backup-secrets.py
 from infisical import InfisicalClient
 import json
@@ -573,7 +573,7 @@ os.system(f"aws s3 cp {backup_file}.gpg s3://my-backups/secrets/")
 ```
 #### Kubernetes Secrets
 
-```
+```bash
 ## Export all secrets (base64 encoded)
 kubectl get secrets -n mcp-server-langgraph -o yaml > secrets-backup.yaml
 
@@ -673,7 +673,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
 #### Partial Restore
 
 **Restore Single Database**:
-```
+```bash
 ## Create new database
 createdb -U postgres keycloak_restored
 
@@ -686,7 +686,7 @@ pg_restore -U keycloak \
 psql -U keycloak -d keycloak_restored -c "\dt"
 ```
 **Restore Specific Kubernetes Resource**:
-```
+```bash
 ## Restore from backup file
 kubectl apply -f /backups/k8s/20251012/deployment.yaml
 
@@ -740,7 +740,7 @@ echo "RTO: ${RTO}s (Target: 3600s)"
 ```
 #### Automated Testing
 
-```
+```yaml
 ## .github/workflows/dr-test.yml
 name: DR Testing
 on:
@@ -773,7 +773,7 @@ jobs:
 
 #### Active-Passive Setup
 
-```
+```yaml
 ## Primary region (us-east-1)
 primary:
   region: us-east-1
@@ -813,7 +813,7 @@ watch -n 5 'kubectl top pods'
 
 #### Active-Active Setup
 
-```
+```yaml
 ## Global load balancer
 apiVersion: networking.gke.io/v1
 kind: MultiClusterIngress
@@ -833,7 +833,7 @@ spec:
               servicePort: 80
 ```
 **Database Synchronization**:
-```
+```yaml
 ## CockroachDB for multi-region
 cockroachdb:
   replicas: 9
@@ -980,7 +980,7 @@ groups:
 
 #### Backup Retention Policies
 
-```
+```yaml
 ## retention-policy.yaml
 policies:
   daily_backups:
@@ -1002,7 +1002,7 @@ policies:
 
 #### Audit Trail
 
-```
+```bash
 ## Log all backup/restore operations
 logger -t backup "Started PostgreSQL backup"
 

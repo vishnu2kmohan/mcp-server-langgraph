@@ -197,7 +197,7 @@ conditional_mappings:
 - Docker Compose verification
 
 **New Makefile Targets** (13 new):
-```
+```bash
 ## Deployment
 make deploy-dev
 make deploy-staging
@@ -217,7 +217,7 @@ make test-helm-deployment # E2E with kind
 
 #### From v2.0.0
 
-```
+```bash
 ## 1. Update code
 git pull origin main
 uv sync
@@ -243,7 +243,7 @@ make deploy-production  # Production with Helm
 ```
 #### Testing
 
-```
+```bash
 ## Unit tests
 make test-unit
 

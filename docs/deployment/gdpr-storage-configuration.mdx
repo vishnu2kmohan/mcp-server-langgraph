@@ -102,7 +102,7 @@ sequenceDiagram
 
 Set these environment variables in your production deployment:
 
-```
+```properties
 ## Required: Set environment to production
 ENVIRONMENT=production
 
@@ -408,7 +408,7 @@ pytest tests/integration/test_gdpr_endpoints.py -v
 
 Test with real database:
 
-```
+```properties
 ## Start PostgreSQL
 docker-compose up -d postgres
 
@@ -422,7 +422,7 @@ pytest tests/integration/test_gdpr_endpoints.py
 
 Verify production guard:
 
-```
+```properties
 ## Should fail
 ENVIRONMENT=production GDPR_STORAGE_BACKEND=memory python -c "import mcp_server_langgraph.api.gdpr"
 
@@ -496,7 +496,7 @@ export GDPR_POSTGRES_URL=postgresql://...
 
 **Solution:** Change backend or environment:
 
-```
+```bash
 ## Option 1: Use persistent backend
 export GDPR_STORAGE_BACKEND=postgres
 

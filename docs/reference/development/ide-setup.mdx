@@ -341,7 +341,7 @@ The project includes `.mcp/manifest.json` and `.mcp/registry.json` for MCP regis
 
 The project includes `.mcp.json.example` as a template. To set it up:
 
-```
+```bash
 ## Copy the example file
 cp .mcp.json.example .mcp.json
 
@@ -429,7 +429,7 @@ Add Make commands as external tools:
 **Preferred approach**: Use `uv run` to run commands without manual activation:
 </Note>
 
-```
+```bash
 ## Preferred: No activation needed
 uv run pytest -m unit -v
 uv run python -m mcp_server_langgraph.mcp.server_stdio

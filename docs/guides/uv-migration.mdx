@@ -53,14 +53,14 @@ uv sync  # That's it! Creates venv + installs everything
 #### For CI/CD
 
 **Before (pip)**:
-```
+```yaml
 - name: Install dependencies
   run: |
     pip install --upgrade pip
     pip install -r requirements.txt
 ```
 **After (uv)**:
-```
+```yaml
 - name: Install uv
   run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
@@ -99,13 +99,13 @@ uv --version
 ```
 #### Step 2: Remove Old Virtual Environment (Optional)
 
-```
+```bash
 ## Optional: Start fresh
 rm -rf .venv
 ```
 #### Step 3: Install Dependencies with uv
 
-```
+```bash
 ## Install all dependencies (development mode)
 uv sync
 
@@ -148,7 +148,7 @@ install:
 
 #### Development Workflow
 
-```
+```bash
 ## Initial setup
 uv sync
 
@@ -171,7 +171,7 @@ pip freeze > requirements.txt
 ```
 
 **After (uv)**:
-```
+```bash
 ## Add to pyproject.toml [project.dependencies]
 uv add new-package
 
@@ -180,7 +180,7 @@ uv sync
 ```
 #### Updating Dependencies
 
-```
+```bash
 ## Update all dependencies
 uv sync
 
@@ -191,7 +191,7 @@ uv sync
 
 #### Installing Optional Dependencies
 
-```
+```bash
 ## Install with secrets support
 uv sync --extra secrets
 
@@ -206,7 +206,7 @@ uv sync --all-extras
 #### GitHub Actions
 
 **Before**:
-```
+```yaml
 - name: Set up Python
   uses: actions/setup-python@v6
   with:
@@ -221,7 +221,7 @@ uv sync --all-extras
 ```
 
 **After**:
-```
+```yaml
 - name: Set up Python
   uses: actions/setup-python@v6
   with:
@@ -265,7 +265,7 @@ RUN uv sync --frozen --no-dev
 #### Issue: "uv: command not found"
 
 **Solution**:
-```
+```bash
 ## Add uv to PATH
 export PATH="$HOME/.cargo/bin:$PATH"
 
@@ -276,7 +276,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 #### Issue: Dependencies not found
 
 **Solution**:
-```
+```bash
 ## Regenerate lockfile
 uv lock
 
@@ -286,7 +286,7 @@ uv sync
 #### Issue: Version conflicts
 
 **Solution**:
-```
+```bash
 ## Check what's causing the conflict
 uv sync --verbose
 
@@ -299,7 +299,7 @@ uv sync
 #### Issue: "No module named X" when running code
 
 **Solution**:
-```
+```bash
 ## Always use 'uv run' or activate venv
 uv run python script.py
 
@@ -310,7 +310,7 @@ python script.py
 #### Issue: CI/CD cache issues
 
 **Solution**:
-```
+```yaml
 ## Update cache key to include uv.lock
 - uses: actions/cache@v4
   with:
@@ -394,7 +394,7 @@ uv sync
 
 If you need to revert to pip:
 
-```
+```bash
 ## Delete uv venv
 rm -rf .venv
 

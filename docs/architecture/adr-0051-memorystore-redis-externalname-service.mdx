@@ -98,7 +98,7 @@ We use **Kubernetes ExternalName Service + Google Cloud DNS** to reference Memor
 
 **File:** `deployments/overlays/staging-gke/redis-session-service-patch.yaml`
 
-```
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -207,7 +207,7 @@ We accept the **security scanner warning** and **DNS complexity** in exchange fo
 
 ### Alternative 1: Headless Service + Manual Endpoints
 
-```
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -232,7 +232,7 @@ subsets:
 
 ### Alternative 2: Direct Connection String in ConfigMap
 
-```
+```yaml
 apiVersion: v1
 kind: ConfigMap
 data:
@@ -308,7 +308,7 @@ Deploy a controller that automatically creates/updates Endpoints for external se
 
 Add to `.trivyignore`:
 
-```
+```bash
 # AVD-KSV-0108: ExternalName service for Memorystore Redis
 # Justification: See ADR-0051
 # - Private Cloud DNS zone (staging.internal) with VPC-only visibility

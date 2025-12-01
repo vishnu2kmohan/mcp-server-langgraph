@@ -23,7 +23,7 @@ contentType: "how-to"
 #### What Changed?
 
 **Before (v2.7.0 and earlier)**:
-```
+```json
 ## Tools accepted bare user_id without credentials
 result = await call_tool("agent_chat", {
     "message": "Hello!",
@@ -31,7 +31,7 @@ result = await call_tool("agent_chat", {
 })
 ```
 **After (v2.8.0+)**:
-```
+```json
 ## 1. First, obtain a token via login
 login_response = await client.post("/auth/login", json={
     "username": "alice",
@@ -203,7 +203,7 @@ stdio clients cannot use HTTP endpoints, so tokens must be obtained out-of-band:
 
 ##### Option 1: Use HTTP endpoint separately
 
-```
+```python
 ## 1. Get token via HTTP
 import requests
 response = requests.post("http://localhost:8000/auth/login", json={
@@ -468,7 +468,7 @@ arguments = {"message": "Hello!", "token": token, "user_id": "alice"}
 
 **Fix**: Ensure token was created correctly:
 
-```
+```json
 ## Token must include 'sub' claim
 payload = {
     "sub": "user:alice",  # ✅ Required

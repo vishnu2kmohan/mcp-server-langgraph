@@ -34,7 +34,7 @@ This automated script will:
 
 #### Manual Deployment
 
-```
+```bash
 ## Build and deploy
 gcloud run deploy mcp-server-langgraph \
   --source . \
@@ -77,14 +77,14 @@ gcloud run deploy mcp-server-langgraph \
 
 Store API keys securely:
 
-```
+```bash
 ## Run interactive setup
 cd cloudrun
 ./setup-secrets.sh
 ```
 Or manually:
 
-```
+```bash
 ## Create secrets
 echo -n "your-jwt-secret" | gcloud secrets create jwt-secret-key --data-file=-
 echo -n "sk-ant-..." | gcloud secrets create anthropic-api-key --data-file=-
@@ -113,7 +113,7 @@ spec:
 
 #### Initial Deployment
 
-```
+```bash
 ## Using script
 cd cloudrun
 ./deploy.sh --setup
@@ -128,7 +128,7 @@ gcloud run deploy mcp-server-langgraph \
 
 #### Update Deployment
 
-```
+```bash
 ## Rebuild and redeploy
 cd cloudrun
 ./deploy.sh
@@ -138,7 +138,7 @@ gcloud run deploy mcp-server-langgraph --source .
 ```
 #### Rollback
 
-```
+```bash
 ## List revisions
 gcloud run revisions list --service mcp-server-langgraph
 
@@ -151,7 +151,7 @@ gcloud run services update-traffic mcp-server-langgraph \
 
 #### View Logs
 
-```
+```bash
 ## Stream logs
 gcloud run services logs tail mcp-server-langgraph --follow
 
@@ -215,7 +215,7 @@ gcloud run services update mcp-server-langgraph \
 
 #### Network Security
 
-```
+```bash
 ## Restrict to internal traffic only
 gcloud run services update mcp-server-langgraph \
   --ingress internal
@@ -228,7 +228,7 @@ gcloud run services update mcp-server-langgraph \
 
 Connect to private resources:
 
-```
+```bash
 ## Create VPC connector
 gcloud compute networks vpc-access connectors create mcp-connector \
   --region us-central1 \
@@ -243,7 +243,7 @@ gcloud run services update mcp-server-langgraph \
 
 #### Authentication
 
-```
+```bash
 ## Require authentication
 gcloud run services update mcp-server-langgraph \
   --no-allow-unauthenticated

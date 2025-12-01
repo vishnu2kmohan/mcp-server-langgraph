@@ -176,7 +176,7 @@ console.log('Client Secret:', data.client_secret);
 
 **Response**:
 
-```
+```json
 {
   "service_id": "batch-etl-job",
   "name": "Batch ETL Job",
@@ -204,7 +204,7 @@ console.log('Client Secret:', data.client_secret);
 
 <ResponseField name="400" type="Bad Request">
   Invalid authentication mode or missing required fields
-  ```
+  ```json
   {
     "error": "validation_error",
     "message": "Invalid authentication_mode. Must be 'client_credentials' or 'service_account_user'"
@@ -218,7 +218,7 @@ console.log('Client Secret:', data.client_secret);
 
 <ResponseField name="409" type="Conflict">
   Service principal with this ID already exists
-  ```
+  ```json
   {
     "error": "conflict",
     "message": "Service principal with ID 'batch-etl-job' already exists"
@@ -422,7 +422,7 @@ console.log('New Client Secret:', data.client_secret);
 
 **Response**:
 
-```
+```json
 {
   "service_id": "batch-etl-job",
   "client_secret": "sp_secret_xyz789new...",
@@ -591,7 +591,7 @@ console.log('Associated with:', data.associated_user_id);
 
 **Response**:
 
-```
+```json
 {
   "service_id": "batch-etl-job",
   "name": "Batch ETL Job",

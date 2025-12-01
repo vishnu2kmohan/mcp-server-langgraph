@@ -201,7 +201,7 @@ Security is an **ongoing process**, not a one-time setup. Regularly review and u
 
 #### Principle of Least Privilege
 
-```
+```json
 ## Default deny, explicit allow
 DEFAULT_PERMISSIONS = {
     "user": ["viewer"],  # Minimal by default
@@ -264,7 +264,7 @@ async def audit_permissions():
 
 #### Resource Isolation
 
-```
+```python
 ## Enforce organization boundaries
 async def check_resource_access(
     user_id: str,
@@ -436,7 +436,7 @@ async def check_resource_access(
 
 #### Data Minimization
 
-```
+```python
 ## Only collect necessary data
 class MessageRequest(BaseModel):
     query: str  # Required
@@ -502,7 +502,7 @@ async def secure_delete_user(user_id: str):
 
 #### Network Policies
 
-```
+```yaml
 ## Deny all by default
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -624,7 +624,7 @@ async def send_message(user: User = Depends(get_current_user)):
 ```
 #### DDoS Protection
 
-```
+```yaml
 ## CloudFlare / AWS WAF rules
 waf_rules:
   - name: rate_limit_api
@@ -753,7 +753,7 @@ spec:
 
 #### Image Scanning
 
-```
+```yaml
 ## .github/workflows/security.yml
 name: Security Scan
 on: [push, pull_request]
@@ -810,7 +810,7 @@ git secrets --add 'xoxb-[0-9]{12}-[0-9]{12}-[a-zA-Z0-9]{24}'  # Slack tokens
 
 #### Use Secret Managers
 
-```
+```python
 ## Use Infisical, not environment variables
 from mcp_server_langgraph.core.config import settings
 
@@ -825,7 +825,7 @@ API_KEY = settings.anthropic_api_key  # Loaded from Infisical
 ```
 #### Rotate Secrets Regularly
 
-```
+```python
 ## Automated secret rotation
 async def rotate_jwt_secret():
     """Rotate JWT signing key monthly"""
@@ -873,7 +873,7 @@ rate(jwt_validation_failed_total[1m]) > 5
 ```
 #### Security Alerts
 
-```
+```yaml
 ## prometheus-alerts.yaml
 groups:
 - name: security_alerts
@@ -958,7 +958,7 @@ groups:
 
 #### Penetration Testing
 
-```
+```bash
 ## OWASP ZAP automated scan
 docker run -t owasp/zap2docker-stable zap-baseline.py \
   -t https://api.yourdomain.com \
@@ -976,7 +976,7 @@ docker run -t owasp/zap2docker-stable zap-baseline.py \
 ```
 #### Security Code Review
 
-```
+```yaml
 ## .github/workflows/security-review.yml
 name: Security Code Review
 on: [pull_request]
