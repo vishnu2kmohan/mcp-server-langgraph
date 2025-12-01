@@ -559,21 +559,28 @@ jobs:
             needs_actionlint: false
             needs_node: false
           - category: security
-            hooks: bandit gitleaks trivy-k8s-scan trivy-helm-scan trivy-helm-full-scan semgrep
+            # Fixed hook IDs: trivy-scan-k8s-manifests (not trivy-k8s-scan), semgrep-security-scan (not semgrep)
+            # Removed gitleaks (not in pre-push stage), added security-tools-check, checkov-terraform
+            hooks: bandit trivy-scan-k8s-manifests trivy-helm-scan trivy-helm-full-scan semgrep-security-scan security-tools-check checkov-terraform
             needs_helm: true
             needs_trivy: true
-            needs_terraform: false
+            needs_terraform: true  # checkov-terraform needs terraform
             needs_actionlint: false
             needs_node: false
           - category: deployment
-            hooks: helm-lint validate-cloud-overlays validate-gke-autopilot-compliance validate-no-placeholders check-helm-placeholders terraform-fmt terraform-validate
+            # Fixed hook IDs: terraform_validate (underscore, not hyphen)
+            # Removed terraform-fmt (not in pre-push stage)
+            hooks: helm-lint validate-cloud-overlays validate-gke-autopilot-compliance validate-no-placeholders check-helm-placeholders terraform_validate validate-dependency-injection
             needs_helm: true
             needs_trivy: false
             needs_terraform: true
             needs_actionlint: false
             needs_node: false
           - category: quality
-            hooks: validate-fast validate-docs validate-test-fixtures validate-test-collection detect-dead-test-code validate-test-isolation validate-workflow-test-deps actionlint-workflow-validation validate-github-workflows-comprehensive validate-adr-index check-internal-links check-mermaid-styling uv-lock-check uv-pip-check check-subprocess-timeout check-banned-imports check-test-memory-safety validate-pytest-config validate-pre-push-hook validate-test-ids check-test-env-isolation mintlify-broken-links
+            # Fixed hook IDs: check-test-environment-isolation (not check-test-env-isolation)
+            # mintlify-broken-links-check (not mintlify-broken-links)
+            # Removed validate-pre-push-hook (doesn't exist as pre-commit hook)
+            hooks: validate-fast validate-docs validate-test-fixtures validate-test-collection detect-dead-test-code validate-test-isolation validate-workflow-test-deps actionlint-workflow-validation validate-github-workflows-comprehensive validate-adr-index check-internal-links check-mermaid-styling uv-lock-check uv-pip-check check-subprocess-timeout check-banned-imports check-test-memory-safety validate-pytest-config validate-test-ids check-test-environment-isolation mintlify-broken-links-check
             needs_helm: false
             needs_trivy: false
             needs_terraform: false
