@@ -850,7 +850,7 @@ repos:
       \ Staging failure\n"
   - id: validate-dependency-injection
     name: Validate Dependency Injection Configuration
-    entry: python3 -u .githooks/pre-commit-dependency-validation
+    entry: uv run --frozen python -u scripts/validators/validate_dependency_injection.py
     language: system
     pass_filenames: false
     files: ^(src/mcp_server_langgraph/(core/dependencies|core/cache|auth/service_principal)\.py|tests/integration/test_(dependencies_wiring|cache_redis_config)\.py)$

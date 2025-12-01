@@ -334,3 +334,63 @@ class TestValidationLibraryExports:
         assert async_mocks is not None
         assert hasattr(async_mocks, "check_async_mock_configuration")
         assert hasattr(async_mocks, "check_async_mock_usage")
+
+
+@pytest.mark.meta
+@pytest.mark.xdist_group(name="validator_consistency")
+class TestValidatorLocation:
+    """Test that validators are in the canonical location."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def project_root(self) -> Path:
+        """Get the project root directory."""
+        return Path(__file__).parent.parent.parent
+
+    def test_all_validators_in_canonical_location(self, project_root: Path) -> None:
+        """Ensure no validators exist outside scripts/validators/.
+
+        All check_*.py and validate_*.py scripts should be in the canonical
+        location scripts/validators/ for discoverability and consistent
+        invocation patterns.
+
+        Reference: Codex Audit - Validator location fragmentation
+        """
+        legacy_locations = [
+            project_root / ".githooks",
+        ]
+        for loc in legacy_locations:
+            if loc.exists():
+                py_files = list(loc.glob("*.py"))
+                # Allow __init__.py and helper modules, but no validators
+                validators = [
+                    f for f in py_files if f.stem.startswith(("check_", "validate_")) or "validation" in f.stem.lower()
+                ]
+                assert not validators, (
+                    f"Found validators in legacy location {loc}: {[f.name for f in validators]}. "
+                    "Move to scripts/validators/ for consistency."
+                )
+
+    def test_pre_commit_hooks_location_allowed(self, project_root: Path) -> None:
+        """Allow check_*.py in .pre-commit-hooks/ as they are pre-commit entry points.
+
+        The .pre-commit-hooks/ directory is allowed to contain check_*.py scripts
+        because they serve as entry points for external pre-commit consumers.
+        """
+        pre_commit_hooks = project_root / ".pre-commit-hooks"
+        if pre_commit_hooks.exists():
+            py_files = list(pre_commit_hooks.glob("*.py"))
+            # These are intentionally here for external consumption
+            allowed_scripts = [
+                "check_subprocess_timeout.py",
+                "check_banned_imports.py",
+            ]
+            for f in py_files:
+                if f.stem.startswith("check_"):
+                    assert f.name in allowed_scripts, (
+                        f"Unexpected check script in .pre-commit-hooks/: {f.name}. "
+                        "Add to allowed_scripts if intentional, or move to scripts/validators/."
+                    )
