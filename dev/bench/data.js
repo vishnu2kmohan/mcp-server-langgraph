@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762792762153,
+  "lastUpdate": 1764618491104,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -39472,6 +39472,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001743879069884905",
             "extra": "mean: 57.9312699999918 usec\nrounds: 5300"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vishnu2kmohan@users.noreply.github.com",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e82666c57a63d50af685a43697b39230f2e44147",
+          "message": "fix(ci): resolve benchmark test failures caused by pytest-xdist conflicts (#133)\n\n* fix(ci): resolve benchmark test failures caused by pytest-xdist conflicts\n\nThe benchmark tests in CI were failing silently due to a conflict between\n-p no:xdist and pyproject.toml's addopts containing --dist loadgroup.\n\nChanges:\n- quality-tests.yaml: Override addopts to exclude --dist when running benchmarks\n- Makefile: Apply same fix to the benchmark target\n- Remove continue-on-error from benchmark step to surface failures\n\nThis fix will restore automatic benchmark publishing to GitHub Pages at\nhttps://vishnu2kmohan.github.io/mcp-server-langgraph/dev/bench/\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(tests): prevent mypy enforcement test timeout in pytest-xdist\n\nThe test_mypy_passes_on_current_codebase test was timing out (>60s) in\npytest-xdist workers due to OpenTelemetry background threads blocking\ntest completion.\n\nRoot cause: When running mypy via subprocess, OTEL SDK initializes\nbackground threads (OtelPeriodicExportingMetricReader,\nOtelBatchSpanRecordProcessor) that don't shut down cleanly in xdist\nworker isolation.\n\nFix: Pass OTEL_SDK_DISABLED=true to the subprocess environment.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(tests): add OTEL_SDK_DISABLED to agent type safety tests\n\nSimilar to the mypy enforcement test fix, these tests run mypy via\nsubprocess and can timeout in pytest-xdist workers due to OpenTelemetry\nbackground threads blocking test completion.\n\nFixed:\n- test_agent_module_passes_mypy\n- test_no_mypy_errors_in_codebase\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* feat(ci): add unified dashboard for CI reports on GitHub Pages\n\nCreates a new publish-reports.yaml workflow that:\n- Collects artifacts from quality-tests, security-scan, compliance-scan workflows\n- Publishes reports to gh-pages branch with a unified dashboard\n- Generates an index.html with links to all report sections\n\nReports now published to GitHub Pages:\n- /dev/bench/ - Performance benchmarks (existing)\n- /coverage/ - Code coverage reports\n- /security/ - Trivy, dependency, and license reports\n- /compliance/ - GCP compliance and CIS benchmark reports\n- /mutation/ - Mutation testing results (weekly)\n\nDashboard: https://vishnu2kmohan.github.io/mcp-server-langgraph/\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(ci): add OTEL_SDK_DISABLED to all pytest hooks and update gh-pages dashboard\n\nPre-commit hook fixes (OTEL_SDK_DISABLED):\n- run-pre-push-tests: Add OTEL_SDK_DISABLED before uv run to prevent pytest-xdist\n  workers from initializing OpenTelemetry background threads that cause timeouts\n- validate-test-collection: Add OTEL_SDK_DISABLED for pytest --collect-only\n- validate-minimum-coverage: Add OTEL_SDK_DISABLED for coverage test\n\ngh-pages dashboard updates:\n- Add Security & Compliance card linking to security-scan and compliance workflows\n- Add Quality Tests card linking to mutation, property, and contract tests\n- Consolidate all CI report links in unified dashboard\n\nRoot cause: OtelPeriodicExportingMetricReader and OtelBatchSpanRecordProcessor\nthreads in pytest-xdist workers block test completion, causing 60s+ timeouts.\n\nFixes: tests/meta/test_mypy_enforcement.py timeout in pre-push validation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(ci): guard workflow_run context access in publish-reports.yaml\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(validators): handle && guards in workflow_run context validation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(ci): add existence check for collected-reports artifact in publish-reports\n\nThe meta-test test_download_artifact_patterns validates that all workflows\nwith continue-on-error download steps have proper existence checks before\nfile operations.\n\nAdded guard: if [ ! -d new-reports ]; then exit 0; fi\n\nThis prevents unsafe file operations when the artifact download fails.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(helm): use pullPolicy: Always for mutable staging tag\n\nProblem: Only 1 of 3 staging pods updated during rolling deployment\nbecause mutable `:staging` tag + `IfNotPresent` policy caused\nKubernetes to skip pulling when image was already cached on nodes.\n\nChanges:\n- values-staging.yaml: Set pullPolicy: Always for mutable staging tag\n- values.yaml: Add documentation explaining pullPolicy best practices\n\nBest practices:\n- IfNotPresent: Use for immutable semver tags (e.g., \"2.8.0\")\n- Always: Use for mutable tags (e.g., \"staging\", \"develop\")\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-01T14:41:36-05:00",
+          "tree_id": "cd6bf2a57aba255aa48ec4b5d44cd990e569105f",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/e82666c57a63d50af685a43697b39230f2e44147"
+        },
+        "date": 1764618489823,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 143.1348794769181,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009940517717864394",
+            "extra": "mean: 6.986417312499012 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 299.05166019177136,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00022313536675837216",
+            "extra": "mean: 3.343903857142057 msec\nrounds: 105"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45215.25399904346,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.116429999954335 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46682.85628103687,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.421140000086325 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 42538.33022577466,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 23.50821000007386 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.40719278618676,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.143842599999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.44283948233167,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.432816739999936 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.971486074886194,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.28595462000013 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1301033.0202141106,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 768.6200000023291 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12973.914388258669,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 77.07773999996448 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2952.6754044205827,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 338.67589999999836 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2780.1640079918056,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 359.69100999992065 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 59407.017380011384,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002031080546916727",
+            "extra": "mean: 16.83302821960001 usec\nrounds: 11942"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17382.598011537528,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001740363551495338",
+            "extra": "mean: 57.528799741917744 usec\nrounds: 4649"
           }
         ]
       }
