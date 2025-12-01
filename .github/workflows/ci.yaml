@@ -537,7 +537,9 @@ jobs:
   push-validators:
     name: Push Validators (${{ matrix.category }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Timeout: 20 min to accommodate tests category (run-pre-push-tests + smoke tests)
+    # Other categories complete in 5-10 min; tests category needs ~15 min
+    timeout-minutes: 20
     permissions:
       contents: read
     strategy:
