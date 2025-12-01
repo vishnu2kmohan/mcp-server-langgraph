@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764625422821,
+  "lastUpdate": 1764626221397,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -39716,6 +39716,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018131312703850894",
             "extra": "mean: 57.705064388548365 usec\nrounds: 4302"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vishnu2kmohan@users.noreply.github.com",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8ef05b81608a971ea190f00d46567554a65b7bed",
+          "message": "fix(ci): consolidate gh-pages dashboard and eliminate duplicate coverage runs (#135)\n\n* fix(ci): consolidate gh-pages dashboard and eliminate duplicate coverage runs\n\n## Summary\n- Fix broken documentation link (404) -> point to Mintlify docs\n- Fix \"Invalid Date\" display -> add .last-updated file creation\n- Eliminate duplicate test runs (3x -> 1x) saving ~5-10 min per CI run\n- Consolidate dashboard into single workflow (gh-pages-telemetry.yaml)\n\n## Changes\n\n### ci.yaml\n- Generate coverage in all formats (XML, HTML, JSON)\n- Upload HTML and JSON coverage artifacts for downstream workflows\n\n### gh-pages-telemetry.yaml\n- Use workflow_run trigger instead of push (consume CI artifacts)\n- Download coverage from CI instead of running tests again\n- Add .last-updated file creation to fix \"Invalid Date\"\n- Add Documentation link to Mintlify in Quick Links\n\n### coverage-trend.yaml\n- Use workflow_run trigger for main branch (reuse CI coverage)\n- Keep test runs for PRs and develop branch (for PR comments)\n\n### publish-reports.yaml\n- Deprecated (renamed to .deprecated)\n- gh-pages-telemetry.yaml is now single source of truth\n\n## Tests\n- Added tests/meta/test_gh_pages_dashboard.py with 7 validation tests\n- All tests pass: documentation links, .last-updated, workflow_run triggers\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* feat(telemetry): add DORA metrics, dependency graph, and flakiness tracking\n\n- Add generate_dashboard_metrics.py script:\n  - DORA metrics: deployment frequency, lead time, change failure rate, MTTR\n  - Dependency graph from uv pip tree\n  - Test flakiness analysis from test trends\n  - All metrics are low-cost aggregation (~30 sec total)\n\n- Add generate-metrics job to gh-pages-telemetry.yaml:\n  - Runs after generate-trends\n  - Creates metrics/dora-metrics.json, dependency-graph.json, test-flakiness.json\n  - Deploy job copies metrics to gh-pages/metrics/\n\n- Add 22 TDD tests in test_dashboard_metrics.py:\n  - TestDORAMetrics: rating calculations, git mock handling\n  - TestDependencyGraph: uv output parsing, failure handling\n  - TestFlakinessAnalysis: trends file parsing, edge cases\n  - TestMetricsGeneration: file creation, JSON validity\n  - TestWorkflowIntegration: script existence, workflow compatibility\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(tests): improve Helm template fixture with xdist-safe dependency build\n\n- Use session scope with file locking to prevent xdist worker race conditions\n- Check if charts are already built before attempting rebuild\n- Verify charts directory has .tgz files after build\n- Increase timeout to 180s for network downloads\n- Skip gracefully when dependencies cannot be built (network issues)\n- Add .helm_dependency_build.lock to gitignore\n\nFixes pre-push test failures when charts/ directory is empty in fresh worktrees.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-01T16:50:14-05:00",
+          "tree_id": "e585abe723cddac25fb3240cf049854adb6881a3",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8ef05b81608a971ea190f00d46567554a65b7bed"
+        },
+        "date": 1764626219552,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 162.4926641897238,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008530709410324904",
+            "extra": "mean: 6.154123972220778 msec\nrounds: 108"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 332.5032750884618,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00018853390331178042",
+            "extra": "mean: 3.007489173554613 msec\nrounds: 121"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51829.63805248439,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.293980000156807 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46334.844312748835,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.58202999993364 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 51295.993269977145,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.494699999995646 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 195.6717510418825,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.110599740000055 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.647684361025888,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 50.89658310999994 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.965230247380292,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.34891068000007 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1345098.4615015655,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 743.439999837392 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 14721.992109266295,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 67.92559000018628 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2912.954567289867,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.29405999983464 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3105.804574824922,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 321.9777600000384 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 66564.11697807728,
+            "unit": "iter/sec",
+            "range": "stddev: 9.77147535475709e-7",
+            "extra": "mean: 15.023109227594015 usec\nrounds: 12387"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20664.263971849807,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002233864531518299",
+            "extra": "mean: 48.39272288440878 usec\nrounds: 5034"
           }
         ]
       }
