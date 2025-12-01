@@ -365,7 +365,11 @@ test-mcp:
 
 benchmark:
 	@echo "Running performance benchmarks..."
-	$(PYTEST) -m benchmark -v --benchmark-only --benchmark-autosave
+	@# IMPORTANT: Disable xdist AND override addopts to prevent conflicts
+	@# - -p no:xdist: Disables pytest-xdist plugin (benchmarks require single-threaded execution)
+	@# - -o addopts="...": Overrides pyproject.toml's addopts which includes --dist loadgroup
+	@# Without the override, pytest errors with "unrecognized arguments: --dist"
+	$(PYTEST) -m benchmark -v -p no:xdist -o "addopts=-v --strict-markers --tb=short --timeout=60" --benchmark-only --benchmark-autosave
 	@echo "✓ Benchmark results saved"
 
 # New test targets
