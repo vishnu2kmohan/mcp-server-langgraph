@@ -77,24 +77,37 @@ class TestChangeDetectionIntegration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_validator_script_change_triggers_meta_tests(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Verify that changes to validator scripts trigger meta tests."""
+    def _create_git_mock(self, monkeypatch: pytest.MonkeyPatch, changed_files: str) -> None:
+        """Create a fully-isolated git mock for testing should_run_meta_tests.
+
+        This helper ensures tests are isolated from real git state by mocking
+        ALL git subprocess calls. Without this, CI tests fail because real
+        git commands return the actual PR changed files.
+        """
         import subprocess
         from unittest.mock import MagicMock
 
-        # Mock subprocess.run to return validator script changes
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "scripts/validators/check_test_memory_safety.py\n"
+        # Clear any PRE_COMMIT env vars that might affect behavior
+        monkeypatch.delenv("PRE_COMMIT_FROM_REF", raising=False)
+        monkeypatch.delenv("PRE_COMMIT_TO_REF", raising=False)
 
-        original_run = subprocess.run
+        mock_diff_result = MagicMock()
+        mock_diff_result.returncode = 0
+        mock_diff_result.stdout = changed_files
 
         def mock_run(args, **kwargs):
-            if "diff" in args and "--name-only" in args:
-                return mock_result
-            return original_run(args, **kwargs)
+            if args[0] == "git":
+                if "merge-base" in args:
+                    raise subprocess.CalledProcessError(1, args)
+                if "diff" in args or "show" in args:
+                    return mock_diff_result
+            raise RuntimeError(f"Unexpected subprocess call: {args}")
 
         monkeypatch.setattr(subprocess, "run", mock_run)
+
+    def test_validator_script_change_triggers_meta_tests(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Verify that changes to validator scripts trigger meta tests."""
+        self._create_git_mock(monkeypatch, "scripts/validators/check_test_memory_safety.py\n")
 
         from scripts.run_pre_push_tests import should_run_meta_tests
 
@@ -102,21 +115,7 @@ class TestChangeDetectionIntegration:
 
     def test_makefile_change_triggers_meta_tests(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Verify that Makefile changes trigger meta tests."""
-        import subprocess
-        from unittest.mock import MagicMock
-
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "Makefile\n"
-
-        original_run = subprocess.run
-
-        def mock_run(args, **kwargs):
-            if "diff" in args and "--name-only" in args:
-                return mock_result
-            return original_run(args, **kwargs)
-
-        monkeypatch.setattr(subprocess, "run", mock_run)
+        self._create_git_mock(monkeypatch, "Makefile\n")
 
         from scripts.run_pre_push_tests import should_run_meta_tests
 
@@ -124,21 +123,7 @@ class TestChangeDetectionIntegration:
 
     def test_subdirectory_conftest_triggers_meta_tests(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Verify that subdirectory conftest.py changes trigger meta tests."""
-        import subprocess
-        from unittest.mock import MagicMock
-
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "tests/unit/conftest.py\n"
-
-        original_run = subprocess.run
-
-        def mock_run(args, **kwargs):
-            if "diff" in args and "--name-only" in args:
-                return mock_result
-            return original_run(args, **kwargs)
-
-        monkeypatch.setattr(subprocess, "run", mock_run)
+        self._create_git_mock(monkeypatch, "tests/unit/conftest.py\n")
 
         from scripts.run_pre_push_tests import should_run_meta_tests
 
@@ -146,21 +131,10 @@ class TestChangeDetectionIntegration:
 
     def test_source_code_only_skips_meta_tests(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Verify that only source code changes skip meta tests."""
-        import subprocess
-        from unittest.mock import MagicMock
-
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "src/mcp_server_langgraph/main.py\nsrc/mcp_server_langgraph/auth/keycloak.py\n"
-
-        original_run = subprocess.run
-
-        def mock_run(args, **kwargs):
-            if "diff" in args and "--name-only" in args:
-                return mock_result
-            return original_run(args, **kwargs)
-
-        monkeypatch.setattr(subprocess, "run", mock_run)
+        self._create_git_mock(
+            monkeypatch,
+            "src/mcp_server_langgraph/main.py\nsrc/mcp_server_langgraph/auth/keycloak.py\n",
+        )
 
         from scripts.run_pre_push_tests import should_run_meta_tests
 
