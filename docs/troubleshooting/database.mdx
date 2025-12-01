@@ -1,0 +1,313 @@
+---
+title: Database Issues
+description: 'Troubleshooting guide for PostgreSQL, Redis, and session storage problems'
+seoTitle: "Troubleshooting Database Issues - MCP Server with LangGraph"
+seoDescription: "Solutions for PostgreSQL connection errors, Redis out of memory, and session storage problems"
+keywords: ["database", "postgresql", "redis", "session", "troubleshooting", "MCP Server"]
+contentType: "reference"
+icon: 'database'
+---
+
+# Database Issues
+
+This guide covers common database and storage problems.
+
+## PostgreSQL Connection Failed
+
+**Symptom**: `psycopg2.OperationalError: could not connect to server`
+
+**Solutions**:
+
+### 1. Cloud SQL Proxy Not Running
+```bash
+# Check proxy status
+ps aux | grep cloud_sql_proxy
+
+# Start proxy manually
+cloud_sql_proxy \
+  -instances=PROJECT:REGION:INSTANCE=tcp:5432 \
+  -credential_file=credentials.json
+```
+
+### 2. Wrong Connection String
+```bash
+# Inside Kubernetes with Cloud SQL Proxy sidecar
+DATABASE_URL=postgresql://user:pass@localhost:5432/dbname
+
+# Direct connection (not recommended for production)
+DATABASE_URL=postgresql://user:pass@INSTANCE_IP:5432/dbname
+```
+
+### 3. SSL Mode Mismatch
+```bash
+# For Cloud SQL with proxy
+DATABASE_SSL_MODE=disable  # Proxy handles SSL
+
+# For direct connection
+DATABASE_SSL_MODE=require
+```
+
+### 4. Database Does Not Exist
+```bash
+# Connect and create database
+psql -h localhost -U postgres
+CREATE DATABASE mcp_server;
+```
+
+---
+
+## Redis Out of Memory
+
+**Symptom**: `OOM command not allowed when used memory > 'maxmemory'`
+
+**Solutions**:
+
+### 1. Increase Memory Limit
+```yaml
+# In Kubernetes
+resources:
+  limits:
+    memory: "4Gi"  # Increase from 2Gi
+```
+
+### 2. Configure Eviction Policy
+```bash
+# Redis config
+maxmemory-policy allkeys-lru  # Evict least recently used keys
+```
+
+### 3. Use Redis Persistence
+```yaml
+# Enable RDB snapshots
+appendonly: yes
+save: "900 1"  # Save after 900 seconds if at least 1 key changed
+```
+
+### 4. Clear Unnecessary Keys
+```bash
+# Find large keys
+redis-cli --bigkeys
+
+# Clear expired sessions
+redis-cli KEYS "session:*" | xargs redis-cli DEL
+```
+
+---
+
+## Redis Connection Errors
+
+**Symptom**: `redis.exceptions.ConnectionError: Error connecting to redis`
+
+**Diagnosis**:
+```bash
+# Test connectivity
+redis-cli -h redis -p 6379 ping
+
+# Check Redis status
+kubectl get pods -l app=redis -n mcp-server
+```
+
+**Solutions**:
+
+### 1. Wrong Redis URL
+```bash
+# Verify environment variable
+echo $REDIS_URL
+
+# Should be:
+# Local: redis://localhost:6379
+# Kubernetes: redis://redis-service:6379
+# Memorystore: redis://REDIS_IP:6379
+```
+
+### 2. Redis Not Ready
+```yaml
+# Add readiness check
+readinessProbe:
+  exec:
+    command: ["redis-cli", "ping"]
+  initialDelaySeconds: 5
+  periodSeconds: 5
+```
+
+### 3. Authentication Required
+```bash
+# If Redis requires auth
+REDIS_URL=redis://:password@redis:6379
+
+# Or with username (Redis 6+)
+REDIS_URL=redis://user:password@redis:6379
+```
+
+---
+
+## Session Storage Failures
+
+**Symptom**: Sessions lost between requests or not persisting
+
+**Diagnosis**:
+```python
+# Check session data
+import redis
+r = redis.from_url(os.getenv("REDIS_URL"))
+keys = r.keys("session:*")
+print(f"Active sessions: {len(keys)}")
+```
+
+**Solutions**:
+
+### 1. Session TTL Too Short
+```python
+# Increase session timeout
+SESSION_TIMEOUT_SECONDS=86400  # 24 hours instead of 1 hour
+```
+
+### 2. Session Serialization Error
+```python
+# Ensure all session data is serializable
+import json
+
+# Check if data is JSON serializable
+try:
+    json.dumps(session_data)
+except TypeError as e:
+    print(f"Not serializable: {e}")
+```
+
+### 3. Redis Eviction
+```bash
+# Check eviction stats
+redis-cli INFO stats | grep evicted
+
+# If keys being evicted, increase maxmemory or review eviction policy
+```
+
+---
+
+## Database Migration Failures
+
+**Symptom**: `alembic.util.exc.CommandError: Can't locate revision`
+
+**Solutions**:
+
+### 1. Run Pending Migrations
+```bash
+# Check current revision
+alembic current
+
+# Run all pending migrations
+alembic upgrade head
+```
+
+### 2. Reset Migration State (Development Only)
+```bash
+# Stamp database to specific revision
+alembic stamp head
+
+# Or recreate from scratch
+alembic downgrade base
+alembic upgrade head
+```
+
+### 3. Missing Migration Files
+```bash
+# Check migration directory
+ls alembic/versions/
+
+# Regenerate if needed (will lose data!)
+alembic revision --autogenerate -m "regenerate schema"
+```
+
+---
+
+## Connection Pool Exhaustion
+
+**Symptom**: `TimeoutError: QueuePool limit of X overflow Y reached`
+
+**Solutions**:
+
+### 1. Increase Pool Size
+```python
+# SQLAlchemy configuration
+engine = create_async_engine(
+    DATABASE_URL,
+    pool_size=20,      # Increase from 5
+    max_overflow=30,   # Increase from 10
+    pool_timeout=30,
+    pool_recycle=3600,
+)
+```
+
+### 2. Connection Leak
+```python
+# Ensure connections are returned to pool
+async with engine.begin() as conn:
+    result = await conn.execute(query)
+# Connection automatically returned here
+```
+
+### 3. Long-Running Transactions
+```python
+# Add transaction timeout
+async with engine.begin() as conn:
+    await conn.execute(
+        text("SET statement_timeout = '30s'")
+    )
+    # ... rest of transaction
+```
+
+---
+
+## Slow Database Queries
+
+**Symptom**: Queries taking seconds to complete
+
+**Diagnosis**:
+```sql
+-- Check slow queries (PostgreSQL)
+SELECT pid, now() - pg_stat_activity.query_start AS duration, query
+FROM pg_stat_activity
+WHERE state = 'active'
+ORDER BY duration DESC;
+```
+
+**Solutions**:
+
+### 1. Add Missing Indexes
+```sql
+-- Find missing indexes
+SELECT schemaname, tablename, attname, n_distinct, correlation
+FROM pg_stats
+WHERE tablename = 'your_table';
+
+-- Add index
+CREATE INDEX CONCURRENTLY idx_table_column ON your_table(column);
+```
+
+### 2. Optimize Query
+```python
+# Use select_from instead of join for complex queries
+# Use load_only for partial column loading
+from sqlalchemy.orm import load_only
+
+query = select(User).options(load_only(User.id, User.name))
+```
+
+### 3. Enable Query Caching
+```python
+# Cache frequent queries
+from cachetools import TTLCache
+
+query_cache = TTLCache(maxsize=100, ttl=300)
+```
+
+---
+
+## Still Having Issues?
+
+For advanced database troubleshooting:
+
+1. **Enable Query Logging**: Set `SQLALCHEMY_ECHO=True`
+2. **Check Connection Count**: `SELECT count(*) FROM pg_stat_activity;`
+3. **Review Documentation**: See [deployment guide](/deployment/overview)
+4. **Report Bug**: [Create an issue](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues/new)

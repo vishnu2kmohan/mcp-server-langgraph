@@ -1,0 +1,229 @@
+---
+title: Authentication Issues
+description: 'Troubleshooting guide for JWT, Keycloak, and OpenFGA authorization issues'
+seoTitle: "Troubleshooting Authentication Issues - MCP Server with LangGraph"
+seoDescription: "Solutions for JWT token validation, Keycloak connection, and OpenFGA authorization problems"
+keywords: ["authentication", "jwt", "keycloak", "openfga", "authorization", "troubleshooting", "MCP Server"]
+contentType: "reference"
+icon: 'shield'
+---
+
+# Authentication Issues
+
+This guide covers common authentication and authorization problems.
+
+## JWT Token Validation Fails
+
+**Symptom**: `401 Unauthorized` or `Invalid token`
+
+**Diagnosis**:
+```bash
+# Decode JWT to inspect claims
+echo "YOUR_JWT_TOKEN" | base64 -d | jq .
+
+# Check token expiration
+python3 <<EOF
+import jwt
+token = "YOUR_JWT_TOKEN"
+decoded = jwt.decode(token, options={"verify_signature": False})
+print(f"Expires: {decoded.get('exp')}")
+print(f"Issued: {decoded.get('iat')}")
+EOF
+```
+
+**Common Causes**:
+
+### 1. Token Expired
+```python
+# Solution: Implement token refresh
+from datetime import datetime, timedelta
+
+if token_exp < datetime.utcnow() + timedelta(minutes=5):
+    # Refresh token before it expires
+    new_token = refresh_jwt_token(refresh_token)
+```
+
+### 2. Wrong Public Key
+```bash
+# Verify Keycloak public key matches
+curl http://keycloak:8080/realms/mcp-server/protocol/openid-connect/certs
+
+# Check AUTH_PUBLIC_KEY_URL in config
+echo $AUTH_PUBLIC_KEY_URL
+```
+
+### 3. Missing Required Claims
+```json
+// Token must include:
+{
+  "sub": "user-id",
+  "preferred_username": "username",
+  "realm_access": {
+    "roles": ["user", "admin"]
+  }
+}
+```
+
+---
+
+## Keycloak Connection Refused
+
+**Symptom**: `ConnectionError: ('Connection aborted.', ConnectionRefusedError(111, 'Connection refused'))`
+
+**Solutions**:
+
+### 1. Keycloak Not Ready
+```bash
+# Wait for Keycloak to fully start
+docker-compose logs -f keycloak
+
+# Look for: "Keycloak 25.0.0 started in XXms"
+```
+
+### 2. Wrong Keycloak URL
+```bash
+# Check KEYCLOAK_URL environment variable
+echo $KEYCLOAK_URL
+
+# Should match Keycloak service name in docker-compose.yml
+# Inside container: http://keycloak:8080
+# From host: http://localhost:8080
+```
+
+### 3. Keycloak Admin Credentials Invalid
+```bash
+# Reset Keycloak admin password
+docker-compose exec keycloak \
+  /opt/keycloak/bin/kcadm.sh set-password \
+  --username admin \
+  --new-password admin \
+  --realm master
+```
+
+---
+
+## OpenFGA Authorization Denied
+
+**Symptom**: `403 Forbidden` or `OpenFGA authorization check failed`
+
+**Diagnosis**:
+```bash
+# Check OpenFGA connection
+curl http://openfga:8080/healthz
+
+# List stores
+curl http://openfga:8080/stores
+
+# Check user permissions
+curl -X POST http://openfga:8080/stores/YOUR_STORE_ID/check \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tuple_key": {
+      "user": "user:alice",
+      "relation": "read",
+      "object": "document:readme"
+    }
+  }'
+```
+
+**Common Issues**:
+
+### 1. Store ID Not Set
+```bash
+# Verify OPENFGA_STORE_ID environment variable
+echo $OPENFGA_STORE_ID
+
+# Create store if missing
+curl -X POST http://openfga:8080/stores \
+  -H "Content-Type: application/json" \
+  -d '{"name": "mcp-server"}'
+```
+
+### 2. Missing Relationship Tuples
+```bash
+# Write relationship tuple
+fga tuple write --store-id $OPENFGA_STORE_ID \
+  user:alice member organization:acme
+```
+
+### 3. Authorization Model Not Set
+```bash
+# Upload authorization model
+curl -X POST http://openfga:8080/stores/$OPENFGA_STORE_ID/authorization-models \
+  -H "Content-Type: application/json" \
+  -d @config/openfga-model.json
+```
+
+---
+
+## Service Principal Authentication Failed
+
+**Symptom**: `403 Forbidden` when using API key or service principal token
+
+**Diagnosis**:
+```bash
+# Check service principal exists
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:8000/api/v1/service-principals
+
+# Verify API key is valid
+curl -H "X-API-Key: $API_KEY" \
+  http://localhost:8000/api/v1/health
+```
+
+**Solutions**:
+
+### 1. API Key Not Active
+```python
+# Check API key status
+from mcp_server_langgraph.auth import api_key_service
+
+key_info = await api_key_service.get_key_info(api_key)
+if not key_info.is_active:
+    print("API key is inactive")
+```
+
+### 2. Service Principal Disabled
+```bash
+# Enable service principal
+curl -X PATCH -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:8000/api/v1/service-principals/$SP_ID \
+  -d '{"is_active": true}'
+```
+
+### 3. Incorrect Scopes
+```json
+// Verify API key has required scopes
+{
+  "scopes": ["read:agents", "write:agents", "execute:tools"]
+}
+```
+
+---
+
+## CORS Errors
+
+**Symptom**: `Access-Control-Allow-Origin` errors in browser console
+
+**Solution**:
+```python
+# Configure CORS in settings
+CORS_ORIGINS = [
+    "http://localhost:3000",
+    "https://your-frontend-domain.com"
+]
+
+# Or in environment variable
+export CORS_ORIGINS="http://localhost:3000,https://your-domain.com"
+```
+
+---
+
+## Still Having Issues?
+
+If you're still experiencing authentication problems:
+
+1. **Enable Debug Logging**: Set `LOG_LEVEL=DEBUG` to see detailed auth flow
+2. **Check Network**: Ensure services can communicate (DNS, firewall)
+3. **Review Configuration**: Verify all auth-related environment variables
+4. **Search Issues**: Check [GitHub Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)

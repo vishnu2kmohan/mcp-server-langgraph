@@ -1,0 +1,175 @@
+---
+title: Installation Issues
+description: 'Troubleshooting guide for installation and dependency issues with MCP Server with LangGraph'
+seoTitle: "Troubleshooting Installation Issues - MCP Server with LangGraph"
+seoDescription: "Solutions for Python version mismatches, uv lock file issues, missing dependencies, and package conflicts"
+keywords: ["installation", "dependencies", "python", "uv", "troubleshooting", "MCP Server"]
+contentType: "reference"
+icon: 'download'
+---
+
+# Installation Issues
+
+This guide covers common installation problems and their solutions.
+
+## Python Version Mismatch
+
+**Symptom**: `ERROR: This package requires Python >=3.10,<3.13`
+
+**Solution**:
+```bash
+# Check your Python version
+python --version
+
+# If using pyenv, install correct version
+pyenv install 3.12.7
+pyenv local 3.12.7
+
+# Recreate virtual environment
+rm -rf .venv
+python -m venv .venv
+source .venv/bin/activate
+```
+
+---
+
+## uv Lock File Out of Sync
+
+**Symptom**: `ERROR: uv.lock out of sync with pyproject.toml`
+
+**Solution**:
+```bash
+# Regenerate lock file
+uv lock
+
+# Install dependencies
+uv sync
+
+# For development extras
+uv sync --extra dev
+```
+
+---
+
+## Missing Optional Dependencies
+
+**Symptom**: `ModuleNotFoundError: No module named 'google.cloud'`
+
+**Solution**:
+```bash
+# Install specific extras
+uv sync --extra gcp          # For Google Cloud
+uv sync --extra aws          # For AWS
+uv sync --extra secrets      # For Infisical
+uv sync --extra code-execution  # For code execution
+
+# Install all extras
+uv sync --all-extras
+```
+
+---
+
+## Conflicting Dependencies
+
+**Symptom**: `ERROR: Cannot install X and Y because these package versions have conflicting dependencies`
+
+**Solution**:
+```bash
+# Clear uv cache
+uv cache clean
+
+# Remove lock file and regenerate
+rm uv.lock
+uv lock
+
+# If issue persists, check pyproject.toml for version constraints
+# Look for overly restrictive version pins like ==1.2.3
+# Consider changing to >=1.2.3,<2.0.0
+```
+
+---
+
+## Pre-commit Hook Failures
+
+**Symptom**: Pre-commit hooks fail during installation or first run
+
+**Solution**:
+```bash
+# Clean pre-commit cache
+pre-commit clean
+
+# Reinstall hooks
+pre-commit install --install-hooks
+
+# Run manually to check
+pre-commit run --all-files
+```
+
+---
+
+## Virtual Environment Issues
+
+**Symptom**: `Command 'python' not found` or wrong Python version in venv
+
+**Solution**:
+```bash
+# Remove existing venv
+rm -rf .venv
+
+# Create with specific Python version
+python3.12 -m venv .venv
+
+# Activate
+source .venv/bin/activate  # Linux/macOS
+.venv\Scripts\activate     # Windows
+
+# Verify version
+python --version
+```
+
+---
+
+## Docker Build Failures During Install
+
+**Symptom**: Docker build fails at dependency installation step
+
+**Common Causes & Solutions**:
+
+### 1. Base Image Issue
+```dockerfile
+# Use specific SHA instead of tag
+FROM python:3.12-slim@sha256:abc123...
+
+# Or use stable tag
+FROM python:3.12.7-slim
+```
+
+### 2. Missing System Dependencies
+```dockerfile
+# Add system dependencies before Python packages
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+```
+
+### 3. Cache Invalidation
+```dockerfile
+# Copy only requirements first for better caching
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen
+
+# Then copy source code
+COPY . .
+```
+
+---
+
+## Still Having Issues?
+
+If you're still experiencing installation problems:
+
+1. **Check Prerequisites**: Ensure you have Python 3.10-3.12, uv, and git installed
+2. **Review Documentation**: See our [installation guide](/getting-started/installation)
+3. **Search Issues**: Check [GitHub Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)
+4. **Ask Community**: Post in [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)

@@ -453,8 +453,14 @@ def check_index_up_to_date() -> bool:
 
         current_content = readme_path.read_text(encoding="utf-8")
 
-        # Compare
-        if current_content.strip() == expected_content.strip():
+        # Compare (ignore the date line since it changes daily)
+        def normalize_for_comparison(content: str) -> str:
+            """Remove date line to avoid false positives from daily date changes."""
+            lines = content.strip().splitlines()
+            # Filter out the "Last Updated" line for comparison
+            return "\n".join(line for line in lines if not line.startswith("**Last Updated**:"))
+
+        if normalize_for_comparison(current_content) == normalize_for_comparison(expected_content):
             print(f"{Colors.GREEN}✓ ADR index is up-to-date{Colors.RESET}")
             return True
         else:
