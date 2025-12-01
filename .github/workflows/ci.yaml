@@ -7,16 +7,20 @@ name: CI/CD Pipeline (Optimized)
 # WORKFLOW DEPENDENCY GRAPH:
 #
 #   test (3.11, 3.12, 3.13) ──> docker-build (base, full, test)
+#   push-validators (5 parallel) ──> (independent)
 #
 # Jobs:
 #   - test: Unit tests across Python versions with parallel execution
 #   - pre-commit: Code quality hooks (formatting, linting, security)
+#   - push-validators: 5 parallel validator categories (type-check, tests,
+#                      security, deployment, quality) - optimized from 25→10 min
 #   - docker-build: Multi-variant image builds (depends on tests passing)
 #   - docker-compose-smoke-test: Validate stack configurations
 #   - docker-multiplatform: amd64 + arm64 builds (main branch only)
 #
 # Key Features:
 #   - Parallel matrix builds for efficiency
+#   - Parallelized push validators (5 categories, ~10 min vs 25 min)
 #   - GitHub Actions cache for dependencies and Docker layers
 #   - Automated test dependency enforcement (docker-build waits for tests)
 #   - Multi-platform support for production deployments
@@ -514,16 +518,68 @@ jobs:
         echo "- Mintlify documentation validation" >> $GITHUB_STEP_SUMMARY
 
   # ============================================================================
-  # PUSH-STAGE VALIDATORS (Comprehensive pre-push hooks)
+  # PUSH-STAGE VALIDATORS (Parallelized for speed - 25 min → 10 min target)
+  # ============================================================================
+  #
+  # OPTIMIZATION (2025-12-01): Split into 5 parallel jobs instead of 1 sequential
+  # Before: 25+ min (39 hooks sequentially)
+  # After: ~10 min (5 parallel jobs, limited by slowest: tests)
+  #
+  # Categories:
+  #   - type-check: MyPy type checking (2-3 min)
+  #   - tests: Pre-push tests, smoke tests (5-8 min)
+  #   - security: Trivy, Bandit, Gitleaks (2-3 min)
+  #   - deployment: Helm, Terraform, Kustomize validators (2-3 min)
+  #   - quality: Fast validators, docs, test fixtures (2-3 min)
+  #
   # ============================================================================
 
-  push-stage-validators:
-    name: Push-Stage Validators
+  push-validators:
+    name: Push Validators (${{ matrix.category }})
     runs-on: ubuntu-latest
-    # Increased from 20 to 30 minutes (2025-11-30) to prevent timeouts in CI
-    timeout-minutes: 30
+    timeout-minutes: 15
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - category: type-check
+            hooks: mypy
+            needs_helm: false
+            needs_trivy: false
+            needs_terraform: false
+            needs_actionlint: false
+            needs_node: false
+          - category: tests
+            hooks: run-pre-push-tests python-version-smoke-test docker-build-smoke-test
+            needs_helm: false
+            needs_trivy: false
+            needs_terraform: false
+            needs_actionlint: false
+            needs_node: false
+          - category: security
+            hooks: bandit gitleaks trivy-k8s-scan trivy-helm-scan trivy-helm-full-scan semgrep
+            needs_helm: true
+            needs_trivy: true
+            needs_terraform: false
+            needs_actionlint: false
+            needs_node: false
+          - category: deployment
+            hooks: helm-lint validate-cloud-overlays validate-gke-autopilot-compliance validate-no-placeholders check-helm-placeholders terraform-fmt terraform-validate
+            needs_helm: true
+            needs_trivy: false
+            needs_terraform: true
+            needs_actionlint: false
+            needs_node: false
+          - category: quality
+            hooks: validate-fast validate-docs validate-test-fixtures validate-test-collection detect-dead-test-code validate-test-isolation validate-workflow-test-deps actionlint-workflow-validation validate-github-workflows-comprehensive validate-adr-index check-internal-links check-mermaid-styling uv-lock-check uv-pip-check check-subprocess-timeout check-banned-imports check-test-memory-safety validate-pytest-config validate-pre-push-hook validate-test-ids check-test-env-isolation mintlify-broken-links
+            needs_helm: false
+            needs_trivy: false
+            needs_terraform: false
+            needs_actionlint: true
+            needs_node: true
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -533,35 +589,41 @@ jobs:
       with:
         python-version: '3.12'
         extras: 'dev'
-        cache-key-prefix: 'push-validators'
+        cache-key-prefix: 'push-validators-${{ matrix.category }}'
 
-    # Tool versions match mise.toml for local dev parity
+    # Conditional tool installation based on category requirements
     - name: Install Terraform
+      if: matrix.needs_terraform
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: '1.6.6'
 
     - name: Install Helm
+      if: matrix.needs_helm
       uses: azure/setup-helm@v4
       with:
         version: 'v3.14.0'
 
     - name: Install kubectl
+      if: matrix.needs_helm
       uses: azure/setup-kubectl@v4
       with:
         version: 'v1.29.0'
 
     - name: Install actionlint
+      if: matrix.needs_actionlint
       run: |
         go install github.com/rhysd/actionlint/cmd/actionlint@v1.6.27
         echo "$HOME/go/bin" >> $GITHUB_PATH
 
     - name: Install Trivy
+      if: matrix.needs_trivy
       run: |
         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.50.0
         trivy --version
 
     - name: Setup Node.js
+      if: matrix.needs_node
       uses: actions/setup-node@v6
       with:
         node-version: '20'
@@ -570,8 +632,9 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pre-commit
-        key: push-validators-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+        key: push-validators-${{ matrix.category }}-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
         restore-keys: |
+          push-validators-${{ matrix.category }}-${{ runner.os }}-
           push-validators-${{ runner.os }}-
 
     - name: Install pre-commit
@@ -582,31 +645,48 @@ jobs:
     - name: Install git hooks
       run: |
         # Install hooks to match local development environment
-        # This ensures validate_pre_push_hook.py finds the expected .git/hooks/pre-push
         make git-hooks
         echo "✓ Git hooks installed"
 
-    - name: Run push-stage pre-commit hooks
+    - name: Run ${{ matrix.category }} validators
       run: |
-        pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure
-        echo "✓ All push-stage validators passed"
+        echo "🔍 Running ${{ matrix.category }} validators..."
+        echo "Hooks: ${{ matrix.hooks }}"
 
-    - name: Push-Stage Validators Summary
+        # Run each hook in the category
+        FAILED=0
+        for hook in ${{ matrix.hooks }}; do
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Running: $hook"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          if ! pre-commit run "$hook" --all-files --hook-stage pre-push --show-diff-on-failure; then
+            FAILED=1
+            echo "❌ $hook failed"
+          else
+            echo "✅ $hook passed"
+          fi
+        done
+
+        if [ $FAILED -eq 1 ]; then
+          echo ""
+          echo "❌ Some validators failed"
+          exit 1
+        fi
+        echo ""
+        echo "✅ All ${{ matrix.category }} validators passed"
+
+    - name: ${{ matrix.category }} Validators Summary
       if: always()
       run: |
-        echo "## Push-Stage Validators Results" >> $GITHUB_STEP_SUMMARY
+        echo "## Push Validators: ${{ matrix.category }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Validators Executed" >> $GITHUB_STEP_SUMMARY
-        echo "- actionlint (GitHub Actions validation)" >> $GITHUB_STEP_SUMMARY
-        echo "- check-test-memory-safety (OOM prevention)" >> $GITHUB_STEP_SUMMARY
-        echo "- validate-test-isolation (xdist isolation)" >> $GITHUB_STEP_SUMMARY
-        echo "- validate-pytest-config" >> $GITHUB_STEP_SUMMARY
-        echo "- validate-pre-push-hook" >> $GITHUB_STEP_SUMMARY
-        echo "- deployment validators" >> $GITHUB_STEP_SUMMARY
-        echo "- security scanners" >> $GITHUB_STEP_SUMMARY
-        echo "- and 40+ more comprehensive validators" >> $GITHUB_STEP_SUMMARY
+        echo "### Hooks Executed" >> $GITHUB_STEP_SUMMARY
+        for hook in ${{ matrix.hooks }}; do
+          echo "- $hook" >> $GITHUB_STEP_SUMMARY
+        done
 
   # ============================================================================
   # DOCKER BUILDS (Parallel by variant)
