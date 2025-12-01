@@ -477,6 +477,24 @@ jobs:
                       </div>
 
                       <div class="card">
+                          <h2>🔒 Security & Compliance</h2>
+                          <div class="links">
+                              <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml">🛡️ Security Scan Results</a>
+                              <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/gcp-compliance-scan.yaml">✅ Compliance Reports</a>
+                              <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph/security/dependabot">📦 Dependabot Alerts</a>
+                          </div>
+                      </div>
+
+                      <div class="card">
+                          <h2>🧪 Quality Tests</h2>
+                          <div class="links">
+                              <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/quality-tests.yaml">🧬 Mutation Tests (Weekly)</a>
+                              <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/quality-tests.yaml">🔬 Property Tests</a>
+                              <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/quality-tests.yaml">📋 Contract Tests</a>
+                          </div>
+                      </div>
+
+                      <div class="card">
                           <h2>🔗 Quick Links</h2>
                           <div class="links">
                               <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph">📦 GitHub Repository</a>
