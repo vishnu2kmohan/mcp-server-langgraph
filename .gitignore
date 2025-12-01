@@ -143,6 +143,7 @@ secrets.yaml
 
 # Helm
 deployments/**/charts/*.tgz
+deployments/**/tmpcharts/
 
 # Infisical
 .infisical.json
