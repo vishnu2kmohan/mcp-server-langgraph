@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764700395961,
+  "lastUpdate": 1764700729215,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -41790,6 +41790,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019761344003598806",
             "extra": "mean: 59.271368855994375 usec\nrounds: 4598"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d31ded8111324ae4d5c0049b814c3061a8cbf8e9",
+          "message": "fix(tests): update slash command tests to handle YAML frontmatter\n\nThe test_all_commands_have_heading and test_commands_have_consistent_format\ntests were failing because they expected markdown headings (#) at the start\nof files, but slash commands use YAML frontmatter (---...---) before the\nheading.\n\nUpdated both tests to skip YAML frontmatter when checking for headings.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-02T13:33:21-05:00",
+          "tree_id": "02d8eb5acf3999e2dcf8a2a2a74c6617cfe6bc51",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d31ded8111324ae4d5c0049b814c3061a8cbf8e9"
+        },
+        "date": 1764700727349,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 141.85134316431086,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013134674599141405",
+            "extra": "mean: 7.049633635415553 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 298.2637044479699,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00023165666441577802",
+            "extra": "mean: 3.352737812503242 msec\nrounds: 112"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45432.717098943445,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.010570000077223 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46860.99295618491,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.339710000063405 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 42506.687364279256,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 23.525710000171784 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.3776305355605,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.144624909999891 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.479705887834587,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.33547733 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.967234970619371,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.32872736999991 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1383221.5230150507,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 722.9499999539257 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13089.447261423233,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 76.39742000009164 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2932.327826390471,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.0259900002188 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2829.37256541318,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 353.4352500000182 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 58648.258544990815,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002012127927254824",
+            "extra": "mean: 17.050804658298087 usec\nrounds: 10433"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17397.61098177945,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002006407247611539",
+            "extra": "mean: 57.479156250090995 usec\nrounds: 4064"
           }
         ]
       }
