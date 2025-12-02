@@ -959,6 +959,9 @@ jobs:
       matrix:
         variant: [base, full]
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
     - name: Set up Docker Buildx
       uses: ./.github/actions/setup-docker-buildx
 
