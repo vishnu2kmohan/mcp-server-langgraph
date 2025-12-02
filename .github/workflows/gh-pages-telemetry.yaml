@@ -72,7 +72,8 @@ jobs:
   collect-coverage:
     name: Collect Coverage from CI
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Timeout: 10 min for workflow_run (artifact download), 20 min for manual/schedule (runs tests)
+    timeout-minutes: 20
 
     # Only run if CI workflow succeeded, or if scheduled/manual trigger
     if: >
