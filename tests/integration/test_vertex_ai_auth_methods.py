@@ -7,6 +7,11 @@ Tests both authentication approaches:
 
 These tests verify that LLMFactory correctly handles Vertex AI authentication
 for both Anthropic Claude and Google Gemini models.
+
+IMPORTANT: Region Configuration
+- Claude models (Opus, Sonnet, Haiku) are only available in us-east5 on Vertex AI
+- Gemini models are available in most regions including us-central1 and global
+- See: https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude
 """
 
 import gc
@@ -18,6 +23,12 @@ from langchain_core.messages import HumanMessage
 from mcp_server_langgraph.llm.factory import LLMFactory
 
 pytestmark = pytest.mark.integration
+
+# Region configuration for different model families on Vertex AI
+# Claude models are only available in us-east5
+# Gemini models work in most regions (us-central1, global, etc.)
+CLAUDE_REGION = os.getenv("VERTEX_LOCATION", "us-east5")
+GEMINI_REGION = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
 
 
 @pytest.mark.integration
@@ -38,11 +49,12 @@ class TestVertexAIWorkloadIdentity:
         """Test Claude via Vertex AI using Workload Identity (no explicit credentials)."""
         # When GOOGLE_APPLICATION_CREDENTIALS is NOT set, Vertex AI should use
         # Workload Identity (automatic on GKE)
+        # Note: Claude models only available in us-east5 on Vertex AI
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/claude-haiku-4-5@20251001",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="us-central1",
+            vertex_location=CLAUDE_REGION,
         )
 
         messages = [HumanMessage(content="Say 'Hello' and nothing else.")]
@@ -58,11 +70,12 @@ class TestVertexAIWorkloadIdentity:
     @pytest.mark.asyncio
     async def test_workload_identity_gemini(self):
         """Test Gemini via Vertex AI using Workload Identity."""
+        # Note: Gemini models available in most regions (global, us-central1, etc.)
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="us-central1",
+            vertex_location=GEMINI_REGION,
         )
 
         messages = [HumanMessage(content="Say 'Hello' and nothing else.")]
@@ -90,11 +103,12 @@ class TestVertexAIServiceAccountKey:
         """Test Claude via Vertex AI using service account key file."""
         # When GOOGLE_APPLICATION_CREDENTIALS is set, Vertex AI should use
         # the specified service account key file
+        # Note: Claude models only available in us-east5 on Vertex AI
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/claude-haiku-4-5@20251001",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="us-central1",
+            vertex_location=CLAUDE_REGION,
         )
 
         messages = [HumanMessage(content="Say 'Hello' and nothing else.")]
@@ -110,11 +124,12 @@ class TestVertexAIServiceAccountKey:
     @pytest.mark.asyncio
     async def test_service_account_key_gemini(self):
         """Test Gemini via Vertex AI using service account key file."""
+        # Note: Gemini models available in most regions (global, us-central1, etc.)
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="us-central1",
+            vertex_location=GEMINI_REGION,
         )
 
         messages = [HumanMessage(content="Say 'Hello' and nothing else.")]
@@ -142,11 +157,12 @@ class TestVertexAIAuthConfiguration:
         """Test that LLMFactory auto-detects the appropriate auth method."""
         # LiteLLM should automatically detect whether to use Workload Identity
         # or service account key based on environment
+        # Note: Using Gemini here as it's available in more regions
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="us-central1",
+            vertex_location=GEMINI_REGION,
         )
 
         # Verify factory was created successfully
@@ -167,7 +183,7 @@ class TestVertexAIAuthConfiguration:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=None,  # No project specified
-            vertex_location="us-central1",
+            vertex_location=GEMINI_REGION,
         )
 
         # Factory should be created
