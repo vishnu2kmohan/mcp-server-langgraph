@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764700729215,
+  "lastUpdate": 1764707359317,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -41912,6 +41912,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002006407247611539",
             "extra": "mean: 57.479156250090995 usec\nrounds: 4064"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "45814bbe57ae2e41d51d3ade194b4cdf2d00a8a8",
+          "message": "fix(cache): only pass ssl param to Redis when SSL is enabled\n\nThe redis-py library's AbstractConnection.__init__() doesn't accept\nan 'ssl' parameter - only the SSL connection class does. Passing\nssl=False caused a TypeError that was caught and logged as a warning,\nbut this was happening on every CacheService instantiation in tests.\n\nWhen running Hypothesis property tests that create 50+ CacheService\ninstances, this caused test timeouts due to accumulated connection\nfailures and exception handling overhead.\n\nFixed by:\n- Only passing ssl=True when SSL is actually enabled\n- Building connection kwargs conditionally\n- Also making password optional (don't pass if None)\n\nRoot cause analysis:\n- redis.from_url() accepts **kwargs\n- ssl=False was passed to AbstractConnection which doesn't accept it\n- ssl=True uses SSLConnection which does accept it\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-02T15:22:06-05:00",
+          "tree_id": "fcc91f2b2914e1443ea252f613153b7fad5d6db3",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/45814bbe57ae2e41d51d3ade194b4cdf2d00a8a8"
+        },
+        "date": 1764707357419,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 135.91313734579228,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00029597011451873586",
+            "extra": "mean: 7.357640471912474 msec\nrounds: 89"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 293.811296607125,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00023685112927846703",
+            "extra": "mean: 3.403545103771717 msec\nrounds: 106"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44290.31415082337,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.57830000019112 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 44549.263912531394,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.447059999990415 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 42654.09110332907,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 23.44440999991093 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.26745265671642,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.147542660000113 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.48857002403467,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.31212801999993 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.966847471602092,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.33262803000014 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1371986.7742821996,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 728.8699998753145 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12796.750239693569,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 78.14483999993627 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2930.436764600275,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.2460600003442 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2776.8967301540083,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 360.11422000001403 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 59134.138047744804,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019000167549188927",
+            "extra": "mean: 16.910705609551655 usec\nrounds: 11641"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17461.323045949433,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001847964473913969",
+            "extra": "mean: 57.2694289755995 usec\nrounds: 4597"
           }
         ]
       }
