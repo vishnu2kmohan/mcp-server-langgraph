@@ -52,9 +52,13 @@ class TestGitignoreValidation:
 
         Files matching *.local.* pattern should never be committed as they
         contain personal preferences and machine-specific configurations.
+
+        Exception: .example template files (e.g., CLAUDE.local.md.example)
+        are allowed since they're templates for local configs.
         """
         tracked = self.get_tracked_files()
-        local_files = [f for f in tracked if ".local." in f]
+        # Exclude .example template files - these are meant to be committed
+        local_files = [f for f in tracked if ".local." in f and not f.endswith(".example")]
 
         assert not local_files, (
             f"Found {len(local_files)} .local. files tracked in git:\n"

@@ -295,8 +295,20 @@ class TestSlashCommandQuality:
             # Each command should have a description (first heading or paragraph)
             assert len(content.strip()) > 0, f"Command {cmd_file.name} is empty"
 
-            # Should have at least a heading
-            assert content.startswith("#"), f"Command {cmd_file.name} should start with a markdown heading"
+            # Should have at least a heading (may be after YAML frontmatter)
+            # Commands can start with either:
+            # 1. A markdown heading (#)
+            # 2. YAML frontmatter (---) followed by a heading
+            if content.startswith("---"):
+                # Has YAML frontmatter - find end of frontmatter and check for heading
+                parts = content.split("---", 2)
+                if len(parts) >= 3:
+                    body = parts[2].strip()
+                    assert body.startswith("#"), f"Command {cmd_file.name} should have a markdown heading after frontmatter"
+            else:
+                assert content.startswith("#"), (
+                    f"Command {cmd_file.name} should start with a markdown heading or YAML frontmatter"
+                )
 
 
 # TDD Validation: Run this test file to verify RED phase

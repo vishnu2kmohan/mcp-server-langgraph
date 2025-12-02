@@ -351,11 +351,17 @@ jobs:
             > badges/coverage.svg
 
           # Tests badge - comprehensive breakdown: passed | failed | skipped | xfailed
+          # Set defaults to handle empty outputs gracefully
           PASSED="${{ needs.collect-coverage.outputs.tests_passed }}"
+          PASSED="${PASSED:-0}"
           FAILED="${{ needs.collect-coverage.outputs.tests_failed }}"
+          FAILED="${FAILED:-0}"
           SKIPPED="${{ needs.collect-coverage.outputs.tests_skipped }}"
+          SKIPPED="${SKIPPED:-0}"
           XFAILED="${{ needs.collect-coverage.outputs.tests_xfailed }}"
+          XFAILED="${XFAILED:-0}"
           TOTAL="${{ needs.collect-coverage.outputs.tests_total }}"
+          TOTAL="${TOTAL:-0}"
 
           # Build badge text: "4505 passed" or "4500 passed | 5 failed" etc.
           BADGE_TEXT="$PASSED passed"
@@ -423,14 +429,23 @@ jobs:
         run: |
           mkdir -p dashboard
 
+          # Set variables with defaults to handle empty outputs gracefully
           COVERAGE="${{ needs.collect-coverage.outputs.coverage_percent }}"
+          COVERAGE="${COVERAGE:-0}"
           PASSED="${{ needs.collect-coverage.outputs.tests_passed }}"
+          PASSED="${PASSED:-0}"
           FAILED="${{ needs.collect-coverage.outputs.tests_failed }}"
+          FAILED="${FAILED:-0}"
           SKIPPED="${{ needs.collect-coverage.outputs.tests_skipped }}"
+          SKIPPED="${SKIPPED:-0}"
           XFAILED="${{ needs.collect-coverage.outputs.tests_xfailed }}"
+          XFAILED="${XFAILED:-0}"
           TOTAL="${{ needs.collect-coverage.outputs.tests_total }}"
+          TOTAL="${TOTAL:-0}"
           COMMIT="${GITHUB_SHA:0:8}"
           DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
+
+          echo "📊 Dashboard values: Coverage=$COVERAGE%, Passed=$PASSED, Failed=$FAILED, Skipped=$SKIPPED, XFailed=$XFAILED, Total=$TOTAL"
 
           cat > dashboard/index.html << 'DASHBOARD_EOF'
           <!DOCTYPE html>
