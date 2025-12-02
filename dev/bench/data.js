@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764641959051,
+  "lastUpdate": 1764642215646,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -40570,6 +40570,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000028579265651160685",
             "extra": "mean: 59.864821413061414 usec\nrounds: 4614"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "0dd62774b614d433c0a0672ee3446d9ba407f6cf",
+          "message": "fix(tests): skip cloud extra deps in import check\n\nAdd google_cloud_aiplatform and boto3 to skip_import_check since\nthey're in the optional `cloud` extra, not installed by default.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-01T21:18:32-05:00",
+          "tree_id": "055377c2ba8b76ef58e64ac80939a530706de0fc",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/0dd62774b614d433c0a0672ee3446d9ba407f6cf"
+        },
+        "date": 1764642213820,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 144.51193519304277,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001037581410779573",
+            "extra": "mean: 6.919843670103609 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 302.7075857746146,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002451937523790783",
+            "extra": "mean: 3.3035181376147107 msec\nrounds: 109"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45419.03602633435,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.01720000002183 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47185.72537422074,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.192850000062435 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 43313.856535923886,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 23.087299999957622 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.10973315932975,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.15172518 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.4264801695353,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.47612903999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.97416397691109,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.25902946000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1333849.0882493337,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 749.7100000364298 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13207.609220643633,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 75.7139300000631 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2818.729056491436,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 354.7698199999161 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2714.95993967922,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 368.3295600001202 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 55525.19126603156,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021644587062386224",
+            "extra": "mean: 18.00984340979238 usec\nrounds: 9279"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17178.96232664172,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018323786147836564",
+            "extra": "mean: 58.21073362790755 usec\nrounds: 3619"
           }
         ]
       }
