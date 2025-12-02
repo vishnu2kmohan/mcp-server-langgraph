@@ -533,6 +533,8 @@ def test_dev_dependencies_are_importable():
             # Build and release tools
             "build",  # build tool, not imported in tests
             "twine",  # release tool, not imported in tests
+            "pybadges",  # badge generator, only in release-tools extra
+            "setuptools",  # required by pybadges, only in release-tools extra
             # CLI tools
             "langgraph_cli",  # CLI tool, not imported in tests
             "mutmut",  # CLI tool, not imported in tests

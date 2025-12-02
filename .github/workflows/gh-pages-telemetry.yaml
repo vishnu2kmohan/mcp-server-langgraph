@@ -176,7 +176,7 @@ jobs:
       - name: Upload coverage HTML artifact
         uses: actions/upload-artifact@v5
         with:
-          name: coverage-html-telemetry
+          name: coverage-html
           path: coverage-html/
           retention-days: 30
           if-no-files-found: warn
@@ -243,7 +243,7 @@ jobs:
           # Parse test durations from output
           durations = []
           try:
-              with open("test-output.txt") as f:
+              with open("test-durations.txt") as f:
                   content = f.read()
                   # Extract slowest durations section
                   if "slowest durations" in content.lower():
