@@ -1,3 +1,6 @@
+---
+description: Real-time GitHub Actions workflow status and recent runs
+---
 # CI/CD Status
 
 **Usage**: `/ci-status` or `/ci-status --workflow <name>`

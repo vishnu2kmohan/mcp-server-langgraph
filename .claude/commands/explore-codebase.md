@@ -1,3 +1,6 @@
+---
+description: Guided codebase exploration before making changes. Use this command when starting work on a new area
+---
 # Explore Codebase
 
 Guided codebase exploration before making changes. Use this command when starting work on a new area of the codebase.

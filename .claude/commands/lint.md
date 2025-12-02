@@ -1,3 +1,6 @@
+---
+description: Execute comprehensive code quality checks to ensure code passes all lint validations before commit/p
+---
 # Run Comprehensive Lint Checks
 
 Execute comprehensive code quality checks to ensure code passes all lint validations before commit/push.

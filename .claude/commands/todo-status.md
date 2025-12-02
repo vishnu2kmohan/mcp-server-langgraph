@@ -1,3 +1,6 @@
+---
+description: Generate comprehensive TODO status with git tracking and burndown analytics
+---
 # TODO Status Report (Enhanced)
 
 **Usage**: `/todo-status` or `/todo-status --burndown`

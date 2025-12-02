@@ -1,3 +1,6 @@
+---
+description: Execute performance benchmarks and analyze results
+---
 # Run Performance Benchmarks
 
 **Usage**: `/benchmark` or `/benchmark --quick`

@@ -1,3 +1,6 @@
+---
+description: You are tasked with deploying the mcp-server-langgraph application to various targets. This command
+---
 # Unified Deployment Command
 
 You are tasked with deploying the mcp-server-langgraph application to various targets. This command provides a unified interface for deploying to Kubernetes, GKE, Cloud Run, Helm, and Kustomize.

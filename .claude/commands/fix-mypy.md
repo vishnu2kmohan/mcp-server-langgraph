@@ -1,3 +1,6 @@
+---
+description: Systematic workflow for fixing MyPy type checking errors in the codebase.
+---
 # Fix MyPy Type Errors
 
 Systematic workflow for fixing MyPy type checking errors in the codebase.

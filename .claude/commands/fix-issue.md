@@ -1,3 +1,7 @@
+---
+description: Automated workflow for debugging and fixing GitHub issues.
+argument-hint: <issue-number>
+---
 # Fix Issue Workflow
 
 Automated workflow for debugging and fixing GitHub issues.

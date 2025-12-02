@@ -1,3 +1,7 @@
+---
+description: - `all` - Run all tests and generate complete summary (default)
+argument-hint: <scope>
+---
 # Generate Comprehensive Test Summary
 
 **Usage**: `/test-summary` or `/test-summary <scope>`

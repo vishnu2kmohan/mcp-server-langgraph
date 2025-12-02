@@ -1,3 +1,6 @@
+---
+description: You are tasked with creating a new Architecture Decision Record (ADR) for the mcp-server-langgraph p
+---
 # Create Architecture Decision Record
 
 You are tasked with creating a new Architecture Decision Record (ADR) for the mcp-server-langgraph project. This command automates ADR creation with intelligent auto-filling and dual format generation.

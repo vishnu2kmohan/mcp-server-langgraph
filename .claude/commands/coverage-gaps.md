@@ -1,3 +1,6 @@
+---
+description: You are tasked with generating a visual coverage gaps dashboard for the mcp-server-langgraph project
+---
 # Coverage Gaps Dashboard
 
 You are tasked with generating a visual coverage gaps dashboard for the mcp-server-langgraph project. This command provides an at-a-glance view of coverage health with ASCII heatmaps and prioritization.

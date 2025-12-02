@@ -1,3 +1,6 @@
+---
+description: You are tasked with searching the project knowledge base for relevant information. This command prov
+---
 # Project Knowledge Search
 
 You are tasked with searching the project knowledge base for relevant information. This command provides semantic search across code, documentation, ADRs, and context files.

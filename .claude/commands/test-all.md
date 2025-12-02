@@ -1,3 +1,6 @@
+---
+description: Execute the comprehensive test suite for the MCP Server LangGraph project.
+---
 # Run Complete Test Suite
 
 Execute the comprehensive test suite for the MCP Server LangGraph project.

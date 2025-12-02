@@ -1,3 +1,6 @@
+---
+description: Execute the complete development environment setup from scratch.
+---
 # Complete Environment Setup
 
 Execute the complete development environment setup from scratch.

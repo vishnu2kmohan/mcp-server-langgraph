@@ -1,3 +1,7 @@
+---
+description: Provides a **fast, lightweight status check** of tests without running comprehensive analysis.
+argument-hint: <args>
+---
 # Quick Test Status Check
 
 **Usage**: `/test-status` or `/test-status <marker>`

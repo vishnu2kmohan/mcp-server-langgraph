@@ -1,3 +1,6 @@
+---
+description: Manage PostgreSQL database operations for OpenFGA and application data
+---
 # Database Operations
 
 **Usage**: `/db-operations` or `/db-operations <action>`

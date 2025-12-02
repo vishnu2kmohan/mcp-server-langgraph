@@ -1,3 +1,6 @@
+---
+description: Conduct a thorough analysis of all documentation in this codebase to ensure everything is up to date
+---
 # Comprehensive Documentation Audit
 
 Conduct a thorough analysis of all documentation in this codebase to ensure everything is up to date, well-organized, and tidy.

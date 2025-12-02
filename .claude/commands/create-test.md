@@ -1,3 +1,6 @@
+---
+description: You are tasked with creating a new test file for the mcp-server-langgraph project. This command auto
+---
 # Create Test File
 
 You are tasked with creating a new test file for the mcp-server-langgraph project. This command automates test file generation using established testing patterns and common fixtures.

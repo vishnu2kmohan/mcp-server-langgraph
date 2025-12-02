@@ -1,3 +1,6 @@
+---
+description: Manually refresh Claude Code context files from current repository state
+---
 # Refresh Context Files
 
 **Usage**: `/refresh-context` or `/refresh-context --full`

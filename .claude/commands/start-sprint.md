@@ -1,3 +1,7 @@
+---
+description: - `technical-debt` - Address TODO items and tech debt
+argument-hint: <type>
+---
 # Start Sprint Workflow
 
 **Usage**: `/start-sprint <type>` or `/start-sprint $ARGUMENTS`

@@ -1,3 +1,6 @@
+---
+description: Manage and cleanup git worktrees created for Claude Code sessions.
+---
 # Cleanup Git Worktrees
 
 **Purpose**: Manage and cleanup git worktrees created for Claude Code sessions.

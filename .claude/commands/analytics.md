@@ -1,3 +1,7 @@
+---
+description: You are tasked with generating a comprehensive analytics dashboard for the Claude Code workflow opti
+argument-hint: <args>
+---
 # Workflow Analytics Dashboard
 
 You are tasked with generating a comprehensive analytics dashboard for the Claude Code workflow optimization. This command shows usage statistics, time savings, ROI, and recommendations.

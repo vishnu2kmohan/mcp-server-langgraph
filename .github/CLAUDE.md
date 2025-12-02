@@ -13,8 +13,8 @@
    ```bash
    # Read these FIRST in every session
    cat .claude/memory/python-environment-usage.md  # CRITICAL: Always use .venv
-   cat .claude/memory/pre-commit-hooks-catalog.md  # 78 hooks, 3-tier validation
-   cat .claude/memory/make-targets.md              # 122 Make targets reference
+   cat .claude/memory/pre-commit-hooks-catalog.md  # 69 hooks, 3-tier validation
+   cat .claude/memory/make-targets.md              # 133 Make targets reference
    ```
 
 2. **Load project context** (understand recent work):
@@ -43,7 +43,7 @@
 ├── QUICK_REFERENCE.md                 # 📄 1-page command cheat sheet
 ├── SETTINGS.md                        # ⚙️ Configuration architecture
 │
-├── commands/                          # 38 slash commands (organized)
+├── commands/                          # 39 slash commands (organized)
 │   └── README.md                      # Command discovery guide
 │
 ├── templates/                         # 6 professional templates
@@ -51,16 +51,18 @@
 │
 ├── context/                           # Living context files
 │   ├── recent-work.md                 # Last 15 commits (auto-updated)
-│   ├── testing-patterns.md            # 437+ test patterns
+│   ├── testing-patterns.md            # 5,475+ test patterns
 │   ├── code-patterns.md               # Design patterns library
-│   ├── pytest-markers.md              # 67 markers catalog (NEW)
+│   ├── pytest-markers.md              # 46 markers catalog (NEW)
 │   ├── xdist-safety-patterns.md       # Memory safety (NEW)
 │   └── test-constants-pattern.md      # Centralized constants (NEW)
 │
 └── memory/                            # Persistent guidance (MANDATORY)
     ├── python-environment-usage.md    # CRITICAL: Always use .venv
-    ├── pre-commit-hooks-catalog.md    # 78 hooks reference (NEW)
-    └── make-targets.md                # 122 Make targets (NEW)
+    ├── lint-workflow.md               # Linting enforcement workflow
+    ├── task-spawn-error-prevention-strategy.md  # Error patterns & solutions
+    ├── pre-commit-hooks-catalog.md    # 69 hooks reference
+    └── make-targets.md                # 133 Make targets reference
 ```
 
 **Total**: 62+ files, ~20,000 lines of documentation & automation
@@ -72,10 +74,11 @@
 ### Architecture
 
 **Technology Stack**:
-- **Framework**: LangGraph (conversation state management)
-- **LLM Support**: Multi-provider (OpenAI, Anthropic, Google, Azure)
+- **Framework**: LangGraph >=1.0.4 (conversation state management)
+- **LLM Support**: Multi-provider (OpenAI, Anthropic, Google Vertex AI, Azure)
+- **Vertex AI**: Claude + Gemini via Workload Identity Federation (keyless auth)
 - **Auth**: Keycloak SSO + OpenFGA authorization
-- **Storage**: PostgreSQL + Redis
+- **Storage**: PostgreSQL + Redis (langgraph-checkpoint-redis for distributed state)
 - **Observability**: OpenTelemetry + Prometheus + Grafana
 - **Deployment**: Kubernetes (Helm + Kustomize)
 
@@ -90,14 +93,14 @@ mcp-server-langgraph/
 │   ├── mcp/                      # MCP server implementations
 │   ├── observability/            # Telemetry & metrics
 │   └── secrets/                  # Secrets management
-├── tests/                        # 437+ comprehensive tests
+├── tests/                        # 5,475+ comprehensive tests
 ├── deployments/                  # Kubernetes, Helm, Kustomize
 ├── monitoring/                   # Grafana dashboards
 └── .claude/                      # Workflow automation
 ```
 
-**Test Suite**: 437+ tests, 67 pytest markers, 99.3% pass rate
-**Coverage**: 69% (targeting 80%+)
+**Test Suite**: 5,475+ tests, 46 pytest markers, 99.3% pass rate
+**Coverage**: 75% (targeting 80%+)
 
 ---
 
@@ -112,7 +115,7 @@ mcp-server-langgraph/
 
 ### Key Resources
 
-1. **Commands** (`.claude/commands/`): 38 slash commands
+1. **Commands** (`.claude/commands/`): 39 slash commands
    - `/start-sprint` - Sprint initialization
    - `/test-summary` - Detailed test analysis
    - `/quick-debug` - AI-assisted debugging
@@ -127,14 +130,16 @@ mcp-server-langgraph/
 
 3. **Context** (`.claude/context/`): Living documentation
    - Auto-updated from git history
-   - Test patterns from 437+ tests
+   - Test patterns from 5,475+ tests
    - Design patterns from codebase
    - **NEW**: pytest markers, xdist safety, test constants
 
-4. **Memory** (`.claude/memory/`): Persistent guidance
+4. **Memory** (`.claude/memory/`): Persistent guidance (5 files)
    - Python environment usage (MANDATORY)
-   - **NEW**: Pre-commit hooks catalog (78 hooks)
-   - **NEW**: Make targets guide (122 targets)
+   - Lint workflow enforcement
+   - Task spawn error prevention
+   - Pre-commit hooks catalog (69 hooks)
+   - Make targets guide (133 targets)
 
 ---
 
@@ -614,7 +619,7 @@ Please update the tests to properly mock the Redis client."
 **IMPORTANT**: Always use the project's virtual environment, never system Python.
 
 **Virtual Environment**: `/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv`
-**Python Version**: 3.13.7
+**Python Version**: 3.12
 **Package Manager**: uv
 
 **Approved Methods** (in order of preference):
@@ -1065,6 +1070,6 @@ For issues or questions about Claude Code integration:
 
 ---
 
-**Last Updated**: 2025-10-14
+**Last Updated**: 2025-12-02
 **Claude Code Version**: Sonnet 4.5 (claude-sonnet-4-5-20250929)
-**LangGraph Version**: 0.6.10 (upgraded from 0.2.28 - all 15 Dependabot PRs merged)
+**LangGraph Version**: >=1.0.4 (upgraded 2025-11-28, with langgraph-checkpoint-redis>=0.2.1 for distributed state)

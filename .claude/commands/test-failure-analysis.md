@@ -1,3 +1,7 @@
+---
+description: Comprehensive analysis of test failures with root cause identification
+argument-hint: <args>
+---
 # Test Failure Analysis
 
 **Usage**: `/test-failure-analysis` or `/test-failure-analysis --deep`

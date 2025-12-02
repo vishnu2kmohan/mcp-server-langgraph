@@ -1,3 +1,6 @@
+---
+description: Run security scans and generate comprehensive security report
+---
 # Security Scan Report
 
 **Usage**: `/security-scan-report` or `/security-scan-report --detailed`

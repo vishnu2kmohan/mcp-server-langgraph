@@ -542,6 +542,10 @@ validate-kustomize:
 validate-all: validate-deployments validate-docker-compose validate-docker-image validate-helm validate-kustomize
 	@echo "✓ All deployment validations passed"
 
+validate-docs:  ## Verify Claude Code documentation accuracy (prevents drift)
+	@echo "📚 Checking Claude Code documentation accuracy..."
+	@$(UV_RUN) python scripts/validators/check-claude-docs-accuracy.py
+
 # GitHub Actions workflow testing with act
 test-workflows:
 	@echo "🧪 Testing critical workflows locally with act..."

@@ -1,3 +1,6 @@
+---
+description: Track test coverage trends over time and identify patterns
+---
 # Coverage Trend Analysis
 
 **Usage**: `/coverage-trend` or `/coverage-trend --days 30`

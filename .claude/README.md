@@ -14,7 +14,7 @@ This directory contains optimized workflow resources for Claude Code sessions.
 .claude/
 ├── README.md                         # This file - complete guide
 ├── QUICK_REFERENCE.md                # Quick reference card (print this!)
-├── PROJECT.md                        # Comprehensive coding standards (authoritative)
+├── CLAUDE.md                         # Concise auto-loaded context (see below)
 ├── SETTINGS.md                       # Configuration architecture explained
 ├── settings.json                     # Shared project settings (git tracked)
 ├── settings.local.json               # Local settings, hooks, permissions
@@ -73,9 +73,8 @@ This directory contains optimized workflow resources for Claude Code sessions.
 │   ├── recent-work.md               # Last 15 commits + current state (auto)
 │   ├── coding-standards.md          # Quick coding standards cheat sheet
 │   ├── code-patterns.md             # Design patterns library (10 patterns)
-│   ├── testing-patterns.md          # Test patterns (437+ tests, async, meta)
-│   ├── tdd-workflow.md              # TDD workflow guide
-│   ├── pytest-markers.md            # 🆕 67 pytest markers catalog
+│   ├── testing-patterns.md          # Test patterns (5,475+ tests, async, meta)
+│   ├── pytest-markers.md            # 🆕 46 pytest markers catalog
 │   ├── xdist-safety-patterns.md     # 🆕 Memory safety (prevents 217GB→1.8GB OOM)
 │   └── test-constants-pattern.md    # 🆕 Centralized test constants
 │
@@ -83,8 +82,8 @@ This directory contains optimized workflow resources for Claude Code sessions.
 │   ├── python-environment-usage.md  # Virtual environment usage (CRITICAL!)
 │   ├── task-spawn-error-prevention-strategy.md  # Error patterns & solutions
 │   ├── lint-workflow.md             # Linting workflow
-│   ├── pre-commit-hooks-catalog.md  # 🆕 78 hooks, 3-tier validation
-│   └── make-targets.md              # 🆕 122 Make targets reference
+│   ├── pre-commit-hooks-catalog.md  # 🆕 69 hooks, 3-tier validation
+│   └── make-targets.md              # 🆕 133 Make targets reference
 │
 ├── handoff/                          # Session continuity
 │   ├── last-session.md              # What we were working on
@@ -684,7 +683,7 @@ Review and update templates when:
 - **Settings Guide**: `SETTINGS.md` - Configuration architecture explained
 - **Commands Guide**: `commands/README.md` - Complete command documentation (38 commands)
 - **Templates Guide**: `templates/README.md` - Template selection guide (6 templates)
-- **Coding Standards**: `PROJECT.md` - Authoritative coding standards (923 lines)
+- **Coding Standards**: See `.github/CLAUDE.md` for comprehensive coding standards
 
 ### Project Documentation
 

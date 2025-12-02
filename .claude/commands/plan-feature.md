@@ -1,3 +1,6 @@
+---
+description: Create a detailed implementation plan for a new feature using deep thinking and structured task brea
+---
 # Plan Feature Implementation
 
 Create a detailed implementation plan for a new feature using deep thinking and structured task breakdown.

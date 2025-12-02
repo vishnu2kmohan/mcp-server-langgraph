@@ -1,3 +1,6 @@
+---
+description: Run comprehensive test verification to ensure all tests pass before committing or merging.
+---
 # Verify All Tests Pass
 
 Run comprehensive test verification to ensure all tests pass before committing or merging.

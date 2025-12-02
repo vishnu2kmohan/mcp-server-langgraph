@@ -1,3 +1,6 @@
+---
+description: You are tasked with systematically improving test coverage for the mcp-server-langgraph project. Thi
+---
 # Improve Test Coverage
 
 You are tasked with systematically improving test coverage for the mcp-server-langgraph project. This command analyzes coverage gaps and generates targeted test stubs to increase coverage toward the 80% target.

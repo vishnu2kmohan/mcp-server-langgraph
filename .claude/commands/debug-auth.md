@@ -1,3 +1,6 @@
+---
+description: Comprehensive authentication and authorization debugging workflow.
+---
 # Debug Authentication Issues
 
 Comprehensive authentication and authorization debugging workflow.

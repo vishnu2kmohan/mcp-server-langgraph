@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "allowedTools": {
     "WebFetch": {
       "allowed_domains": [
@@ -189,6 +190,28 @@
           {
             "type": "command",
             "command": "echo '🧪 TDD Mode Active: Write tests FIRST, then implementation'",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '📊 Session complete. Remember: /clear before switching to unrelated tasks.'",
+            "timeout": 2
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '💡 Reminder: TDD workflow - write tests FIRST'",
             "timeout": 1
           }
         ]

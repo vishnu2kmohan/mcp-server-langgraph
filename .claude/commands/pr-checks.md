@@ -1,3 +1,7 @@
+---
+description: Comprehensive Pull Request validation summary
+argument-hint: <number>
+---
 # PR Checks Summary
 
 **Usage**: `/pr-checks` or `/pr-checks <pr-number>`

@@ -1,3 +1,7 @@
+---
+description: Fast debugging workflow for common issues
+argument-hint: <error>
+---
 # Quick Debug
 
 **Usage**: `/quick-debug` or `/quick-debug <error-message>`

@@ -1,3 +1,7 @@
+---
+description: Automated release readiness validation
+argument-hint: <version>
+---
 # Release Preparation Checklist
 
 **Usage**: `/release-prep <version>`

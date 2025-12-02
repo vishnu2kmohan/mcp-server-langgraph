@@ -1,0 +1,95 @@
+# Personal Claude Code Configuration Template
+
+**Purpose**: Copy this file to `CLAUDE.local.md` for personal settings
+**Note**: `CLAUDE.local.md` is gitignored - your personal config stays local
+
+---
+
+## Personal Preferences
+
+### Thinking Mode Default
+<!-- Uncomment your preferred default thinking depth -->
+<!-- "think" - Basic (default) -->
+<!-- "think hard" - Enhanced analysis -->
+<!-- "think harder" - Comprehensive analysis -->
+<!-- "ultrathink" - Maximum depth -->
+
+### Code Style Preferences
+<!-- Add your personal preferences here -->
+- Prefer explicit type hints over `Any`
+- Use async/await patterns consistently
+- Add docstrings to all public functions
+
+### Focus Areas
+<!-- Current areas you're working on -->
+- [ ] Authentication improvements
+- [ ] Performance optimization
+- [ ] Test coverage expansion
+
+---
+
+## Personal Reminders
+
+### Before Starting Work
+- [ ] Check `git status` for pending changes
+- [ ] Review `.claude/context/recent-work.md`
+- [ ] Run `/test-summary unit` to verify baseline
+
+### Before Committing
+- [ ] Run `uv run pytest -m unit -x` locally
+- [ ] Check for any `TODO` or `FIXME` comments
+- [ ] Update CHANGELOG if needed
+
+### Context Management
+- Use `/clear` after completing unrelated tasks
+- Keep sessions focused on single features
+- Spawn subagents for exploratory research
+
+---
+
+## Personal Shortcuts
+
+### Frequently Used Commands
+```bash
+# My common test patterns
+uv run pytest tests/test_session.py -v
+uv run pytest -m "unit and not slow" -x
+
+# My debugging workflow
+uv run pytest --lf --pdb
+uv run mypy src/ --show-error-codes
+```
+
+### Quick Fixes
+```bash
+# Auto-fix common issues
+uv run ruff check --fix src/
+uv run ruff format src/
+```
+
+---
+
+## Environment Notes
+
+### Local Setup
+<!-- Document your local environment specifics -->
+- Python version: 3.12
+- Docker: Running via Colima/Docker Desktop
+- IDE: VS Code / PyCharm / etc.
+
+### Known Local Issues
+<!-- Track any environment-specific quirks -->
+- None currently documented
+
+---
+
+## Session History
+
+### Recent Sessions
+<!-- Optional: Track your recent work sessions -->
+<!-- 2025-12-02: Worked on feature X -->
+<!-- 2025-12-01: Fixed bug in Y -->
+
+---
+
+**To use**: Copy this file to `.claude/CLAUDE.local.md` and customize

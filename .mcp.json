@@ -1,28 +1,34 @@
 {
   "mcpServers": {
     "langgraph-agent": {
-      "command": "python",
+      "command": "uv",
       "args": [
+        "run",
+        "--frozen",
+        "python",
         "-m",
         "mcp_server_langgraph.mcp.server_stdio"
       ],
       "env": {
-        "PYTHONPATH": "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/src"
+        "PYTHONPATH": "./src"
       },
-      "envFile": "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.env"
+      "envFile": "./.env"
     },
     "langgraph-agent-streamable": {
-      "command": "python",
+      "command": "uv",
       "args": [
+        "run",
+        "--frozen",
+        "python",
         "-m",
         "mcp_server_langgraph.mcp.server_streamable"
       ],
       "env": {
-        "PYTHONPATH": "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/src",
+        "PYTHONPATH": "./src",
         "HOST": "0.0.0.0",
         "PORT": "8000"
       },
-      "envFile": "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.env"
+      "envFile": "./.env"
     }
   }
 }

@@ -1,3 +1,6 @@
+---
+description: You are tasked with tracking the mypy strict type checking rollout progress for the mcp-server-langg
+---
 # Type Safety Status Tracker
 
 You are tasked with tracking the mypy strict type checking rollout progress for the mcp-server-langgraph project. This command helps manage the gradual migration to full type safety.

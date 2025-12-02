@@ -1,3 +1,6 @@
+---
+description: Execute tests with optimized speed for rapid development iteration
+---
 # Fast Test Iteration
 
 **Usage**: `/test-fast` or `/test-fast <mode>`

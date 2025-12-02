@@ -12,8 +12,8 @@
 This document establishes the mandatory requirement to **always use the project's uv-managed virtual environment** (`.venv`) instead of system Python when executing Python commands in this repository.
 
 **Environment Details**:
-- Virtual environment: `/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv`
-- Python version: 3.12.12
+- Virtual environment: `.venv` (project root)
+- Python version: 3.12
 - Package manager: uv (`/usr/bin/uv`)
 - Created with: `uv venv` (uv-managed virtual environment)
 
@@ -67,7 +67,7 @@ uv run --frozen python -m mypy src/
 
 ```bash
 # Use absolute path
-/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv/bin/python script.py
+.venv/bin/python script.py
 
 # Use relative path (from project root)
 .venv/bin/python script.py
@@ -324,7 +324,7 @@ which python
 
 # Check if venv is activated
 echo $VIRTUAL_ENV
-# Should show: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv
+# Should show: <project-root>/.venv
 # If empty, venv is not activated
 ```
 
@@ -347,7 +347,7 @@ uv run --frozen pytest
 ```bash
 # Check which pip is being used
 which pip
-# Should be: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv/bin/pip
+# Should be: <project-root>/.venv/bin/pip
 # NOT: /usr/bin/pip
 ```
 
@@ -387,7 +387,7 @@ uv run --frozen pytest  # Matches CI environment
 
 ### Virtual Environment Details
 
-**Location**: `/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv`
+**Location**: `.venv` (project root)
 
 **Configuration** (from `pyvenv.cfg`):
 ```
@@ -411,7 +411,7 @@ executable = /usr/bin/python3.12
 ```bash
 # Check Python executable
 uv run --frozen python -c "import sys; print(sys.executable)"
-# Expected: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv/bin/python
+# Expected: <project-root>/.venv/bin/python
 
 # Check Python version
 uv run --frozen python --version
@@ -419,7 +419,7 @@ uv run --frozen python --version
 
 # Check package location
 uv run --frozen python -c "import mcp_server_langgraph; print(mcp_server_langgraph.__file__)"
-# Expected: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv/lib/python3.12/site-packages/...
+# Expected: <project-root>/.venv/lib/python3.12/site-packages/...
 
 # Verify pytest is from venv
 uv run --frozen pytest --version

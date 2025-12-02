@@ -1,3 +1,7 @@
+---
+description: Generate comprehensive progress update for active sprint
+argument-hint: <type>
+---
 # Generate Sprint Progress Update
 
 **Usage**: `/progress-update` or `/progress-update <sprint-date>`

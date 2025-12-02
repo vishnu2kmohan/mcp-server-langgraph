@@ -1,3 +1,6 @@
+---
+description: Comprehensive PR review checklist to ensure code quality, testing, and best practices.
+---
 # Review Pull Request
 
 Comprehensive PR review checklist to ensure code quality, testing, and best practices.
