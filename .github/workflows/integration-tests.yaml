@@ -253,6 +253,7 @@ jobs:
       env:
         # Vertex AI configuration for Anthropic Claude models
         VERTEX_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+        VERTEX_LOCATION: us-east5
         CLOUD_ML_REGION: us-east5
         ANTHROPIC_VERTEX_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         # Vertex AI configuration for Google Gemini models
