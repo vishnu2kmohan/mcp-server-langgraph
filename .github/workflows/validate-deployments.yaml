@@ -46,11 +46,21 @@ jobs:
                 exit 1
               fi
 
+              # Check for raw pip install (not uv pip install)
+              # Pattern: 'pip install' not preceded by 'uv'
+              if grep -E '^[^#]*\bpip install' "$dockerfile" | grep -v 'uv pip install' | grep -q .; then
+                echo "❌ ERROR: Found 'pip install' without 'uv' in $dockerfile"
+                echo "This project uses uv for dependency management."
+                echo "Use: uv pip install (for system installs) or uv sync (preferred)"
+                echo "See: docs-internal/operations/DEPENDENCY_MANAGEMENT.md"
+                exit 1
+              fi
+
               echo "✓ $dockerfile OK"
             fi
           done
 
-          echo "✅ All Dockerfiles validated - no editable install found"
+          echo "✅ All Dockerfiles validated - no editable install or raw pip install found"
 
       - name: Check for import validation
         run: |

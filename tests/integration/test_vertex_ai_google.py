@@ -44,7 +44,7 @@ class TestVertexAIGeminiModels:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-3-pro-preview",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "global"),
+            vertex_location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
         )
 
         messages = [HumanMessage(content="Say 'Hello from Vertex AI Gemini 3.0 Pro' and nothing else.")]
@@ -67,7 +67,7 @@ class TestVertexAIGeminiModels:
             provider="vertex_ai",
             model_name="gemini-3-pro-preview",  # No prefix - LiteLLM should auto-route to Vertex AI
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "global"),
+            vertex_location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
         )
 
         messages = [HumanMessage(content="Say 'Hello from Gemini' and nothing else.")]
@@ -90,7 +90,7 @@ class TestVertexAIGeminiModels:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "global"),
+            vertex_location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
         )
 
         messages = [HumanMessage(content="Say 'Hello from Vertex AI Gemini 2.5 Flash' and nothing else.")]
@@ -113,7 +113,7 @@ class TestVertexAIGeminiModels:
             provider="vertex_ai",
             model_name="gemini-2.5-flash",  # No prefix
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "global"),
+            vertex_location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
         )
 
         messages = [HumanMessage(content="What is 5 + 3? Provide only the number.")]
@@ -136,7 +136,7 @@ class TestVertexAIGeminiModels:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "global"),
+            vertex_location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
         )
 
         # Multi-turn conversation
