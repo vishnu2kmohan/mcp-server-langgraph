@@ -89,6 +89,28 @@ gcloud iam service-accounts add-iam-policy-binding \
 - `.github/workflows/gcp-drift-detection.yaml` (3 jobs)
 - All jobs have repository check: `if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'`
 
+#### Vertex AI Integration Tests (CI)
+
+| Secret Name | Description | Setup Instructions |
+|-------------|-------------|-------------------|
+| `GCP_WIF_PROVIDER` | Workload Identity Pool Provider (same as production) | See above |
+| `GCP_VERTEX_AI_SA_EMAIL` | Vertex AI CI service account | `github-actions-vertex-ai@PROJECT_ID.iam.gserviceaccount.com` |
+
+**Used By**:
+- `.github/workflows/integration-tests.yaml` (vertex-ai-tests job)
+- Job has repository check: `if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'`
+
+**Required IAM Roles**:
+- `roles/aiplatform.user` - Access Vertex AI APIs (Claude + Gemini)
+- `roles/serviceusage.serviceUsageConsumer` - Consume GCP services
+
+**Setup Steps**:
+```bash
+# Service account is created by Terraform (terraform/environments/gcp-staging-wif-only)
+# After terraform apply, add the secret:
+gh secret set GCP_VERTEX_AI_SA_EMAIL --body "github-actions-vertex-ai@PROJECT_ID.iam.gserviceaccount.com"
+```
+
 ### Package Publishing
 
 #### PyPI
@@ -370,5 +392,5 @@ For questions or issues with secrets configuration:
 3. Check GCP audit logs for authentication issues
 4. Contact the engineering team
 
-**Last Review**: 2025-11-07
-**Next Review**: 2025-12-07 (monthly)
+**Last Review**: 2025-12-01
+**Next Review**: 2026-01-01 (monthly)
