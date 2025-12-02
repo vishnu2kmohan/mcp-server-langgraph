@@ -235,7 +235,6 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        cache-key-prefix: 'security-deps'
 
     - name: Install security scanning tools
       run: |
@@ -327,7 +326,6 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        cache-key-prefix: 'license-check'
 
     - name: Install license checking tool
       run: uv tool install pip-licenses

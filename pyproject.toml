@@ -178,6 +178,12 @@ code-execution = [
     "psutil>=6.1.0",  # Process and system monitoring
 ]
 
+cloud = [
+    # Cloud provider SDKs for LiteLLM multi-provider support
+    "google-cloud-aiplatform>=1.38.0",  # Vertex AI (Google Cloud)
+    "boto3>=1.35.0",  # AWS Bedrock
+]
+
 # ==============================================================================
 # CI/CD AND WORKFLOW TOOLS
 # ==============================================================================

@@ -73,7 +73,6 @@ jobs:
       with:
         python-version: '3.12'
         extras: 'dev'
-        cache-key-prefix: 'e2e-tests'
 
     - name: Start test infrastructure
       run: |

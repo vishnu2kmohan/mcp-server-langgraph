@@ -66,7 +66,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev monitoring'
-          cache-key-prefix: 'perf-benchmarks'
 
       - name: Start test server
         run: |
@@ -230,7 +229,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'monitoring'
-          cache-key-prefix: 'perf-baseline'
 
       - name: Check for improvements
         id: check

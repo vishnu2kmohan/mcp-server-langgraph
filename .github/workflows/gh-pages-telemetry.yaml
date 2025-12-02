@@ -128,7 +128,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'gh-pages-coverage-scheduled'
 
       - name: Run tests with coverage (scheduled/manual only)
         if: github.event_name != 'workflow_run'
@@ -678,7 +677,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev monitoring release-tools'
-          cache-key-prefix: 'weekly-reports'
 
       - name: Create reports directory
         run: mkdir -p reports

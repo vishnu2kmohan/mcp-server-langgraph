@@ -99,7 +99,6 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          cache-key-prefix: 'docs-specialized'
 
       # Consolidated validation: MDX extension, file naming, ADR sync
       # Replaces separate adr_sync_validator.py and mdx_extension_validator.py (2025-11-29)
@@ -149,7 +148,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'docs-version-check'
 
       - name: Check Version Consistency
         id: version-check
@@ -192,7 +190,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'docs-tests'
 
       - name: Run Documentation Meta-Tests
         run: |

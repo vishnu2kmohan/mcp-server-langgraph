@@ -96,7 +96,6 @@ jobs:
       with:
         python-version: '3.12'
         extras: 'dev'
-        cache-key-prefix: 'integration-tests'
 
     - name: Run Integration Tests via Script (${{ matrix.test-category }})
       run: |
@@ -155,7 +154,6 @@ jobs:
       with:
         python-version: '3.12'
         extras: 'dev'
-        cache-key-prefix: 'coverage-merge'
 
     - name: Download all coverage artifacts
       uses: actions/download-artifact@v6
@@ -249,8 +247,7 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        extras: 'dev'
-        cache-key-prefix: 'vertex-ai-tests'
+        extras: 'dev cloud'
 
     - name: Run Vertex AI Integration Tests
       env:

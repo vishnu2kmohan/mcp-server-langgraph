@@ -30,7 +30,6 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          cache-key-prefix: 'optional-minimal'
 
       - name: Verify import works
         run: |
@@ -66,7 +65,6 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          cache-key-prefix: 'optional-secrets'
 
       - name: Install with secrets extra
         run: |
@@ -101,7 +99,6 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          cache-key-prefix: 'optional-embeddings'
 
       - name: Install with embeddings extra
         run: |
@@ -135,7 +132,6 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          cache-key-prefix: 'optional-all-extras'
 
       - name: Install all extras
         run: |
@@ -171,7 +167,6 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          cache-key-prefix: 'optional-production'
 
       - name: Verify production config requirements
         run: |
@@ -221,7 +216,6 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          cache-key-prefix: 'optional-feature-flags'
 
       - name: Test with ${{ matrix.config.name }}
         run: |

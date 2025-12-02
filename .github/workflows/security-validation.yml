@@ -38,7 +38,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'security-terraform'
 
       - name: Run Terraform security tests
         run: |
@@ -59,7 +58,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'security-k8s'
 
       - name: Run Kubernetes security tests
         run: |

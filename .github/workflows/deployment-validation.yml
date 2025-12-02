@@ -86,7 +86,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'deployment-validation-helm'
 
       - name: Run Helm configuration tests
         run: |
@@ -110,7 +109,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'deployment-validation-kustomize'
 
       - name: Validate all overlays build successfully
         run: |
@@ -226,7 +224,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'deployment-validation-network'
 
       - name: Run NetworkPolicy tests
         run: |
@@ -250,7 +247,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'deployment-validation-serviceaccount'
 
       - name: Run ServiceAccount tests
         run: |

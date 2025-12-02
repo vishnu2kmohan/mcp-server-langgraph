@@ -84,7 +84,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'monitoring'
-          cache-key-prefix: 'dora-metrics'
 
       - name: Calculate DORA metrics
         id: calculate

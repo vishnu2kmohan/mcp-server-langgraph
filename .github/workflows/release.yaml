@@ -92,7 +92,6 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        cache-key-prefix: 'release'
 
     - name: Extract CHANGELOG section
       id: extract_changelog
@@ -339,7 +338,6 @@ jobs:
       with:
         python-version: '3.12'
         extras: 'release-tools'
-        cache-key-prefix: 'release-pypi'
 
     - name: Build package
       run: |

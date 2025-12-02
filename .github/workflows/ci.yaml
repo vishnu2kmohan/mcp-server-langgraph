@@ -120,7 +120,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'workflow-validation'
 
       - name: Run workflow validation tests
         run: |
@@ -153,7 +152,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'dependabot-validation'
 
       - name: Run GitHub Actions version validation tests (blocking)
         run: |
@@ -198,7 +196,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'parity-validation'
 
       - name: Install git hooks
         run: |
@@ -239,7 +236,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'meta-tests'
 
       - name: Run xdist enforcement meta-tests
         run: |
@@ -293,7 +289,6 @@ jobs:
         # doesn't support Python 3.13 (max 3.12). Tests skip gracefully when not installed.
         # See: https://github.com/Infisical/infisical-python/issues - PyO3 upgrade needed
         extras: 'dev'
-        cache-key-prefix: 'ci-test-py${{ matrix.python-version }}'
 
     - name: Validate lockfile is up-to-date
       run: |
@@ -429,7 +424,6 @@ jobs:
       with:
         python-version: '3.12'
         extras: 'dev'
-        cache-key-prefix: 'coverage-merge'
 
     - name: Download unit test coverage
       uses: actions/download-artifact@v6
@@ -501,7 +495,6 @@ jobs:
       with:
         python-version: '3.12'
         extras: 'dev'
-        cache-key-prefix: 'pre-commit'
 
     - name: Install Terraform for pre-commit hooks
       uses: hashicorp/setup-terraform@v3
@@ -615,7 +608,6 @@ jobs:
       with:
         python-version: '3.12'
         extras: 'dev'
-        cache-key-prefix: 'push-validators-${{ matrix.category }}'
 
     # Conditional tool installation based on category requirements
     - name: Install Terraform

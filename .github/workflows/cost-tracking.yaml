@@ -89,7 +89,6 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        cache-key-prefix: 'cost-tracking'
 
     - name: Install cost tracking dependencies
       run: |

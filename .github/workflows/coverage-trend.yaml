@@ -85,7 +85,6 @@ jobs:
       with:
         python-version: '3.12'
         extras: 'dev'
-        cache-key-prefix: 'coverage-trend'
 
     - name: Download previous coverage data
       uses: actions/download-artifact@v6

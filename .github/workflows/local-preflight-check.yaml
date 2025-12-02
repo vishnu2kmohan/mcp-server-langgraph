@@ -59,7 +59,6 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          cache-key-prefix: 'preflight-validate'
 
       - name: Validate workflow file references
         run: uv run --frozen python scripts/validators/validate_workflow_file_references.py
@@ -77,7 +76,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'preflight-hooks'
 
       - name: Run fast pre-commit hooks
         run: |
@@ -104,7 +102,6 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          cache-key-prefix: 'preflight-quality'
 
       - name: Run Ruff linter
         run: uv run --frozen ruff check src/ tests/
@@ -129,7 +126,6 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'preflight-tests'
 
       - name: Run fast unit tests
         run: |
