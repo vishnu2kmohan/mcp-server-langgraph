@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764637247142,
+  "lastUpdate": 1764638523807,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -40082,6 +40082,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000026383689014966723",
             "extra": "mean: 58.68881590055288 usec\nrounds: 4025"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b3011254e293ebb58a9d40a3bb3b31695dfb8f56",
+          "message": "fix(ci): increase collect-coverage timeout to 20 minutes\n\nFor workflow_run trigger, the job just downloads artifacts (~1 min).\nFor manual/schedule triggers, it runs the full test suite (~15 min).\nThe previous 10-minute timeout was insufficient for manual runs.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-01T20:15:28-05:00",
+          "tree_id": "c78f301fcf6a76d39876afe863dd089af0e58400",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b3011254e293ebb58a9d40a3bb3b31695dfb8f56"
+        },
+        "date": 1764638521972,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 161.1955727571175,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010529682443495789",
+            "extra": "mean: 6.203644324070591 msec\nrounds: 108"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 303.954403365725,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0007569250108786023",
+            "extra": "mean: 3.289967142857203 msec\nrounds: 119"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51936.55845474135,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.254260000138856 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53285.561051698496,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 18.766809999988254 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50250.29672865889,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.900379999739926 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 195.10066069336696,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.12555926999994 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.594600990642878,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.034466100000486 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.968261419481928,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.31839634999983 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1304835.7202845267,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 766.3800005275334 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 14756.505848296501,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 67.76672000000872 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2924.851155789719,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.89773999969475 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3078.448471818332,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 324.83896000030654 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 67717.19607310393,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013464801474116623",
+            "extra": "mean: 14.767297791250135 usec\nrounds: 12089"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20804.069552278896,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002283934732573104",
+            "extra": "mean: 48.06751859231595 usec\nrounds: 4975"
           }
         ]
       }
