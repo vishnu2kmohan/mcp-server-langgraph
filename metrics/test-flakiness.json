@@ -1,8 +1,8 @@
 {
-  "total_tests": 18020,
+  "total_tests": 22525,
   "flaky_tests": 0,
   "flakiness_rate": 0.0,
   "retries_last_week": 0,
   "most_flaky_tests": [],
-  "generated_at": "2025-12-02T14:17:19.739674+00:00"
+  "generated_at": "2025-12-02T18:02:57.214549+00:00"
 }
