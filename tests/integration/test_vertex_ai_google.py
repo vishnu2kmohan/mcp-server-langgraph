@@ -194,7 +194,7 @@ class TestVertexAIGeminiConfiguration:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="us-east4",  # Different region
+            vertex_location="global",  # Different region
         )
 
         messages = [HumanMessage(content="Hello")]
