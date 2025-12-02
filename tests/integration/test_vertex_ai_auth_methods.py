@@ -30,7 +30,7 @@ class TestVertexAIWorkloadIdentity:
         gc.collect()
 
     @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT") or os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
+        not os.getenv("VERTEX_PROJECT") or bool(os.getenv("GOOGLE_APPLICATION_CREDENTIALS")),
         reason="Requires VERTEX_PROJECT and NO GOOGLE_APPLICATION_CREDENTIALS (Workload Identity)",
     )
     @pytest.mark.asyncio
@@ -52,7 +52,7 @@ class TestVertexAIWorkloadIdentity:
         assert response.content
 
     @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT") or os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
+        not os.getenv("VERTEX_PROJECT") or bool(os.getenv("GOOGLE_APPLICATION_CREDENTIALS")),
         reason="Requires VERTEX_PROJECT and NO GOOGLE_APPLICATION_CREDENTIALS (Workload Identity)",
     )
     @pytest.mark.asyncio
