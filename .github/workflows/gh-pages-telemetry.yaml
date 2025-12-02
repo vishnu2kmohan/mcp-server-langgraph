@@ -85,6 +85,8 @@ jobs:
       coverage_percent: ${{ steps.coverage.outputs.percent }}
       tests_passed: ${{ steps.coverage.outputs.passed }}
       tests_failed: ${{ steps.coverage.outputs.failed }}
+      tests_skipped: ${{ steps.coverage.outputs.skipped }}
+      tests_xfailed: ${{ steps.coverage.outputs.xfailed }}
       tests_total: ${{ steps.coverage.outputs.total }}
 
     steps:
@@ -156,22 +158,37 @@ jobs:
           echo "percent=$COVERAGE" >> $GITHUB_OUTPUT
 
           # Extract test counts from durations file
+          # Pytest output format: "4505 passed, 3 failed, 12 skipped, 2 xfailed in 156.32s"
+          # Note: grep returns empty (not 0) when no match, so use ${VAR:-0} pattern
           if [ -f test-durations.txt ]; then
-            PASSED=$(grep -oP '\d+(?= passed)' test-durations.txt | tail -1 || echo "0")
-            FAILED=$(grep -oP '\d+(?= failed)' test-durations.txt | tail -1 || echo "0")
+            PASSED=$(grep -oP '\d+(?= passed)' test-durations.txt | tail -1)
+            PASSED="${PASSED:-0}"
+            FAILED=$(grep -oP '\d+(?= failed)' test-durations.txt | tail -1)
+            FAILED="${FAILED:-0}"
+            SKIPPED=$(grep -oP '\d+(?= skipped)' test-durations.txt | tail -1)
+            SKIPPED="${SKIPPED:-0}"
+            XFAILED=$(grep -oP '\d+(?= xfailed)' test-durations.txt | tail -1)
+            XFAILED="${XFAILED:-0}"
           else
             PASSED="0"
             FAILED="0"
+            SKIPPED="0"
+            XFAILED="0"
             echo "⚠️ No test-durations.txt found, using defaults"
           fi
-          TOTAL=$((PASSED + FAILED))
+          TOTAL=$((PASSED + FAILED + SKIPPED + XFAILED))
           echo "passed=$PASSED" >> $GITHUB_OUTPUT
           echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+          echo "xfailed=$XFAILED" >> $GITHUB_OUTPUT
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
 
           echo "📊 Coverage: $COVERAGE%"
           echo "✅ Passed: $PASSED"
           echo "❌ Failed: $FAILED"
+          echo "⏭️ Skipped: $SKIPPED"
+          echo "⚠️ XFailed: $XFAILED"
+          echo "📋 Total: $TOTAL"
 
       - name: Upload coverage HTML artifact
         uses: actions/upload-artifact@v5
@@ -333,22 +350,37 @@ jobs:
             --right-color="$COLOR" \
             > badges/coverage.svg
 
-          # Tests badge
+          # Tests badge - comprehensive breakdown: passed | failed | skipped | xfailed
           PASSED="${{ needs.collect-coverage.outputs.tests_passed }}"
           FAILED="${{ needs.collect-coverage.outputs.tests_failed }}"
-          if [ "$FAILED" = "0" ]; then
-            uv run --frozen python -m pybadges \
-              --left-text="tests" \
-              --right-text="$PASSED passed" \
-              --right-color="brightgreen" \
-              > badges/tests.svg
-          else
-            uv run --frozen python -m pybadges \
-              --left-text="tests" \
-              --right-text="$PASSED passed, $FAILED failed" \
-              --right-color="red" \
-              > badges/tests.svg
+          SKIPPED="${{ needs.collect-coverage.outputs.tests_skipped }}"
+          XFAILED="${{ needs.collect-coverage.outputs.tests_xfailed }}"
+          TOTAL="${{ needs.collect-coverage.outputs.tests_total }}"
+
+          # Build badge text: "4505 passed" or "4500 passed | 5 failed" etc.
+          BADGE_TEXT="$PASSED passed"
+          if [ "$FAILED" != "0" ]; then
+            BADGE_TEXT="$BADGE_TEXT | $FAILED failed"
           fi
+          if [ "$SKIPPED" != "0" ]; then
+            BADGE_TEXT="$BADGE_TEXT | $SKIPPED skipped"
+          fi
+          if [ "$XFAILED" != "0" ]; then
+            BADGE_TEXT="$BADGE_TEXT | $XFAILED xfailed"
+          fi
+
+          # Color: green if no failures, red if failures
+          if [ "$FAILED" = "0" ]; then
+            TESTS_COLOR="brightgreen"
+          else
+            TESTS_COLOR="red"
+          fi
+
+          uv run --frozen python -m pybadges \
+            --left-text="tests" \
+            --right-text="$BADGE_TEXT" \
+            --right-color="$TESTS_COLOR" \
+            > badges/tests.svg
 
           # Build status badge
           uv run --frozen python -m pybadges \
@@ -394,6 +426,8 @@ jobs:
           COVERAGE="${{ needs.collect-coverage.outputs.coverage_percent }}"
           PASSED="${{ needs.collect-coverage.outputs.tests_passed }}"
           FAILED="${{ needs.collect-coverage.outputs.tests_failed }}"
+          SKIPPED="${{ needs.collect-coverage.outputs.tests_skipped }}"
+          XFAILED="${{ needs.collect-coverage.outputs.tests_xfailed }}"
           TOTAL="${{ needs.collect-coverage.outputs.tests_total }}"
           COMMIT="${GITHUB_SHA:0:8}"
           DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
@@ -472,6 +506,22 @@ jobs:
                   .metric.red { color: var(--accent-red); }
                   .metric.blue { color: var(--accent-blue); }
                   .metric-label { color: var(--text-secondary); font-size: 0.9rem; }
+                  .test-breakdown {
+                      display: flex;
+                      flex-wrap: wrap;
+                      gap: 0.5rem;
+                      margin-top: 0.75rem;
+                      font-size: 0.85rem;
+                  }
+                  .test-breakdown span {
+                      padding: 0.25rem 0.5rem;
+                      background: var(--bg-tertiary);
+                      border-radius: 4px;
+                  }
+                  .test-breakdown .passed { color: var(--accent-green); }
+                  .test-breakdown .failed { color: var(--accent-red); }
+                  .test-breakdown .skipped { color: var(--accent-yellow); }
+                  .test-breakdown .xfailed { color: var(--text-secondary); }
                   .links {
                       display: flex;
                       flex-direction: column;
@@ -522,8 +572,14 @@ jobs:
 
                       <div class="card">
                           <h2>✅ Test Results</h2>
-                          <div class="metric TESTS_COLOR">PASSED_VALUE</div>
-                          <div class="metric-label">tests passing (FAILED_VALUE failed)</div>
+                          <div class="metric TESTS_COLOR">TOTAL_VALUE</div>
+                          <div class="metric-label">total tests</div>
+                          <div class="test-breakdown">
+                              <span class="passed">✅ PASSED_VALUE passed</span>
+                              <span class="failed">❌ FAILED_VALUE failed</span>
+                              <span class="skipped">⏭️ SKIPPED_VALUE skipped</span>
+                              <span class="xfailed">⚠️ XFAILED_VALUE xfailed</span>
+                          </div>
                       </div>
 
                       <div class="card">
@@ -559,7 +615,7 @@ jobs:
                               <a href="https://mcp-server-langgraph.mintlify.app/">📚 Documentation</a>
                               <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph">📦 GitHub Repository</a>
                               <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph/actions">🔄 CI/CD Workflows</a>
-                              <a href="https://codecov.io/gh/vishnu2kmohan/mcp-server-langgraph">📈 Codecov (Detailed)</a>
+                              <a href="coverage/">📈 Coverage Report (Detailed)</a>
                           </div>
                       </div>
                   </div>
@@ -592,6 +648,9 @@ jobs:
           sed -i "s/COVERAGE_COLOR/$COLOR_CLASS/g" dashboard/index.html
           sed -i "s/PASSED_VALUE/$PASSED/g" dashboard/index.html
           sed -i "s/FAILED_VALUE/$FAILED/g" dashboard/index.html
+          sed -i "s/SKIPPED_VALUE/$SKIPPED/g" dashboard/index.html
+          sed -i "s/XFAILED_VALUE/$XFAILED/g" dashboard/index.html
+          sed -i "s/TOTAL_VALUE/$TOTAL/g" dashboard/index.html
           sed -i "s/TESTS_COLOR/$TESTS_COLOR/g" dashboard/index.html
           sed -i "s/UPDATE_DATE/$DATE/g" dashboard/index.html
           sed -i "s/COMMIT_SHA/$COMMIT/g" dashboard/index.html
