@@ -56,7 +56,11 @@ class TestSlashCommands:
         return project_root / "Makefile"
 
     def test_all_commands_have_heading(self, command_files: list[Path]):
-        """Test that all slash commands start with a markdown heading."""
+        """Test that all slash commands start with a markdown heading.
+
+        Note: Commands may have YAML frontmatter (---...---) before the heading.
+        This test skips frontmatter when checking for headings.
+        """
         if not command_files:
             pytest.skip("No command files found")
 
@@ -65,6 +69,13 @@ class TestSlashCommands:
         for cmd_file in command_files:
             with open(cmd_file) as f:
                 content = f.read().strip()
+
+            # Skip YAML frontmatter if present (---...---)
+            if content.startswith("---"):
+                # Find the closing ---
+                end_frontmatter = content.find("---", 3)
+                if end_frontmatter != -1:
+                    content = content[end_frontmatter + 3 :].strip()
 
             if not content.startswith("#"):
                 commands_without_heading.append(cmd_file.name)
@@ -194,7 +205,11 @@ class TestSlashCommands:
         )
 
     def test_commands_have_consistent_format(self, command_files: list[Path]):
-        """Test that commands follow a consistent format."""
+        """Test that commands follow a consistent format.
+
+        Note: Commands may have YAML frontmatter (---...---) before the heading.
+        This test skips frontmatter when checking for format consistency.
+        """
         if not command_files:
             pytest.skip("No command files found")
 
@@ -207,14 +222,32 @@ class TestSlashCommands:
 
         for cmd_file in command_files:
             with open(cmd_file) as f:
-                lines = f.readlines()
+                content = f.read()
+                lines = content.split("\n")
 
-            if len(lines) < 3:  # Too short to have title + description
+            # Skip YAML frontmatter if present
+            start_line = 0
+            if lines and lines[0].strip() == "---":
+                for i, line in enumerate(lines[1:], 1):
+                    if line.strip() == "---":
+                        start_line = i + 1
+                        break
+
+            # Get content after frontmatter
+            content_lines = lines[start_line:]
+
+            if len(content_lines) < 3:  # Too short to have title + description
                 inconsistent_commands.append(f"{cmd_file.name} (too short)")
                 continue
 
-            # First line should be heading
-            if not lines[0].strip().startswith("#"):
+            # First non-empty line after frontmatter should be heading
+            first_content_line = ""
+            for line in content_lines:
+                if line.strip():
+                    first_content_line = line.strip()
+                    break
+
+            if not first_content_line.startswith("#"):
                 inconsistent_commands.append(f"{cmd_file.name} (no heading)")
 
         # This is informational, not a hard failure
