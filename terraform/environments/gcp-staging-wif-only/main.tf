@@ -110,5 +110,22 @@ module "github_actions_wif" {
         "roles/logging.viewer",
       ]
     }
+
+    # Vertex AI CI - access to Vertex AI for running integration tests with LLMs
+    # Used by: .github/workflows/integration-tests.yaml (vertex_ai job)
+    # Permissions: Vertex AI access for Claude (Anthropic) and Gemini (Google) models
+    vertex_ai_ci = {
+      account_id        = "github-actions-vertex-ai"
+      display_name      = "GitHub Actions - Vertex AI CI"
+      description       = "Service account for CI integration tests using Vertex AI (Claude + Gemini)"
+      repository_filter = "mcp-server-langgraph"
+
+      project_roles = [
+        # Vertex AI model invocation (required for Claude and Gemini API calls)
+        "roles/aiplatform.user",
+        # Service usage consumer (required for API access)
+        "roles/serviceusage.serviceUsageConsumer",
+      ]
+    }
   }
 }

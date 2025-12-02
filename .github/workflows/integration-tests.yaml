@@ -50,6 +50,7 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
+  id-token: write  # Required for Workload Identity Federation with Vertex AI
 
 env:
   # Prevent BlockingIOError when capturing large test output
@@ -218,3 +219,62 @@ jobs:
         MINIMUM_GREEN: 80
         MINIMUM_ORANGE: 70
       continue-on-error: true  # Don't fail PR if coverage comment fails
+
+  # ============================================================================
+  # Vertex AI Integration Tests (Claude + Gemini via Workload Identity Federation)
+  # ============================================================================
+  # These tests require GCP Workload Identity Federation to access Vertex AI APIs.
+  # They only run on the main repository (not forks) due to secret requirements.
+  # Uses keyless authentication via google-github-actions/auth@v3.
+
+  vertex-ai-tests:
+    name: Vertex AI Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Only run on main repository (forks don't have access to GCP secrets)
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Authenticate to Google Cloud (Workload Identity Federation)
+      uses: google-github-actions/auth@v3
+      with:
+        workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+        service_account: ${{ secrets.GCP_VERTEX_AI_SA_EMAIL }}
+        token_format: access_token
+
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
+      with:
+        python-version: '3.12'
+        extras: 'dev'
+        cache-key-prefix: 'vertex-ai-tests'
+
+    - name: Run Vertex AI Integration Tests
+      env:
+        # Vertex AI configuration for Anthropic Claude models
+        VERTEX_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+        CLOUD_ML_REGION: us-east5
+        ANTHROPIC_VERTEX_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+        # Vertex AI configuration for Google Gemini models
+        GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+        GOOGLE_CLOUD_LOCATION: us-central1
+        # Enable Vertex AI mode (uses WIF instead of API keys)
+        CLAUDE_CODE_USE_VERTEX: "1"
+      run: |
+        echo "🤖 Running Vertex AI integration tests..."
+        echo "   Project: $VERTEX_PROJECT"
+        echo "   Claude Region: $CLOUD_ML_REGION"
+        echo "   Gemini Region: $GOOGLE_CLOUD_LOCATION"
+
+        # Run tests with vertex_ai marker
+        uv run --frozen pytest tests/integration/test_vertex_ai_anthropic.py \
+          tests/integration/test_vertex_ai_google.py \
+          tests/integration/test_vertex_ai_auth_methods.py \
+          -v --tb=short \
+          -x \
+          --timeout=120
+
+        echo "✅ Vertex AI tests completed"
