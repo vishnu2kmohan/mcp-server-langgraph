@@ -258,7 +258,7 @@ jobs:
         ANTHROPIC_VERTEX_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         # Vertex AI configuration for Google Gemini models
         GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
-        GOOGLE_CLOUD_LOCATION: us-central1
+        GOOGLE_CLOUD_LOCATION: global
         # Enable Vertex AI mode (uses WIF instead of API keys)
         CLAUDE_CODE_USE_VERTEX: "1"
       run: |

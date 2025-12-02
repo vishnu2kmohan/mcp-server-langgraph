@@ -201,6 +201,9 @@ release-tools = [
     # PyPI package building and publishing
     "build>=1.0.0",  # PEP 517 build frontend
     "twine>=6.0.0",  # Secure PyPI uploads
+    # CI badge generation
+    "pybadges>=3.0.0",  # GitHub-style badges for telemetry dashboard
+    "setuptools>=75.0.0",  # Required by pybadges on Python 3.12+
 ]
 
 # ==============================================================================

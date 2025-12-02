@@ -219,6 +219,7 @@ jobs:
         with:
           name: test-output
           path: .
+        continue-on-error: true
 
       - name: Generate trend data
         run: |
@@ -262,9 +263,9 @@ jobs:
               "timestamp": datetime.now().isoformat(),
               "commit": os.environ.get("GITHUB_SHA", "unknown")[:8],
               "branch": os.environ.get("GITHUB_REF_NAME", "unknown"),
-              "coverage": float(os.environ.get("COVERAGE_PERCENT", "0")),
-              "tests_passed": int(os.environ.get("TESTS_PASSED", "0")),
-              "tests_failed": int(os.environ.get("TESTS_FAILED", "0")),
+              "coverage": float(os.environ.get("COVERAGE_PERCENT") or "0"),
+              "tests_passed": int(os.environ.get("TESTS_PASSED") or "0"),
+              "tests_failed": int(os.environ.get("TESTS_FAILED") or "0"),
               "slowest_tests": durations[:20]  # Keep top 20 slowest
           }
           trends["runs"].append(new_run)
@@ -306,13 +307,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-
-      - name: Install badge generator
-        run: pip install pybadges
+          extras: 'release-tools'
 
       - name: Generate badges
         run: |
@@ -328,7 +327,7 @@ jobs:
             COLOR="red"
           fi
 
-          python -m pybadges \
+          uv run --frozen python -m pybadges \
             --left-text="coverage" \
             --right-text="${COVERAGE}%" \
             --right-color="$COLOR" \
@@ -338,13 +337,13 @@ jobs:
           PASSED="${{ needs.collect-coverage.outputs.tests_passed }}"
           FAILED="${{ needs.collect-coverage.outputs.tests_failed }}"
           if [ "$FAILED" = "0" ]; then
-            python -m pybadges \
+            uv run --frozen python -m pybadges \
               --left-text="tests" \
               --right-text="$PASSED passed" \
               --right-color="brightgreen" \
               > badges/tests.svg
           else
-            python -m pybadges \
+            uv run --frozen python -m pybadges \
               --left-text="tests" \
               --right-text="$PASSED passed, $FAILED failed" \
               --right-color="red" \
@@ -352,14 +351,14 @@ jobs:
           fi
 
           # Build status badge
-          python -m pybadges \
+          uv run --frozen python -m pybadges \
             --left-text="build" \
             --right-text="passing" \
             --right-color="brightgreen" \
             > badges/build.svg
 
           # Python version badge
-          python -m pybadges \
+          uv run --frozen python -m pybadges \
             --left-text="python" \
             --right-text="3.11 | 3.12 | 3.13" \
             --right-color="blue" \

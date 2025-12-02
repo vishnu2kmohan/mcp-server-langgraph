@@ -44,7 +44,7 @@ class TestVertexAIGeminiModels:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-3-pro-preview",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "us-central1"),
+            vertex_location=os.getenv("VERTEX_LOCATION", "global"),
         )
 
         messages = [HumanMessage(content="Say 'Hello from Vertex AI Gemini 3.0 Pro' and nothing else.")]
@@ -67,7 +67,7 @@ class TestVertexAIGeminiModels:
             provider="vertex_ai",
             model_name="gemini-3-pro-preview",  # No prefix - LiteLLM should auto-route to Vertex AI
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "us-central1"),
+            vertex_location=os.getenv("VERTEX_LOCATION", "global"),
         )
 
         messages = [HumanMessage(content="Say 'Hello from Gemini' and nothing else.")]
@@ -90,7 +90,7 @@ class TestVertexAIGeminiModels:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "us-central1"),
+            vertex_location=os.getenv("VERTEX_LOCATION", "global"),
         )
 
         messages = [HumanMessage(content="Say 'Hello from Vertex AI Gemini 2.5 Flash' and nothing else.")]
@@ -113,7 +113,7 @@ class TestVertexAIGeminiModels:
             provider="vertex_ai",
             model_name="gemini-2.5-flash",  # No prefix
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "us-central1"),
+            vertex_location=os.getenv("VERTEX_LOCATION", "global"),
         )
 
         messages = [HumanMessage(content="What is 5 + 3? Provide only the number.")]
@@ -136,7 +136,7 @@ class TestVertexAIGeminiModels:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "us-central1"),
+            vertex_location=os.getenv("VERTEX_LOCATION", "global"),
         )
 
         # Multi-turn conversation
@@ -176,7 +176,7 @@ class TestVertexAIGeminiConfiguration:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=vertex_project,
-            vertex_location="us-central1",
+            vertex_location="global",
         )
 
         # Verify configuration is set correctly
@@ -216,14 +216,14 @@ class TestVertexAIGeminiConfiguration:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-3-pro-preview",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="us-central1",
+            vertex_location="global",
         )
 
         llm_without_prefix = LLMFactory(
             provider="vertex_ai",
             model_name="gemini-3-pro-preview",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="us-central1",
+            vertex_location="global",
         )
 
         messages = [HumanMessage(content="Say 'test' and nothing else.")]
@@ -255,7 +255,7 @@ class TestVertexAIGeminiErrorHandling:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=None,  # No project specified
-            vertex_location="us-central1",
+            vertex_location="global",
         )
 
         # The factory should be created, but invocation may fail without credentials
@@ -272,7 +272,7 @@ class TestVertexAIGeminiErrorHandling:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-invalid-version",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="us-central1",
+            vertex_location="global",
         )
 
         messages = [HumanMessage(content="Hello")]
@@ -292,7 +292,7 @@ class TestVertexAIGeminiErrorHandling:
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
             vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="us-central1",
+            vertex_location="global",
         )
 
         messages = [HumanMessage(content="")]

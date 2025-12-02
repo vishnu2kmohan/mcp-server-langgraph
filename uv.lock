@@ -3011,6 +3011,8 @@ playground = [
 ]
 release-tools = [
     { name = "build" },
+    { name = "pybadges" },
+    { name = "setuptools" },
     { name = "twine" },
 ]
 secrets = [
@@ -3104,6 +3106,7 @@ requires-dist = [
     { name = "prometheus-client", specifier = ">=0.20.0" },
     { name = "psutil", marker = "extra == 'code-execution'", specifier = ">=6.1.0" },
     { name = "psutil", marker = "extra == 'dev'", specifier = ">=6.1.0" },
+    { name = "pybadges", marker = "extra == 'release-tools'", specifier = ">=3.0.0" },
     { name = "pybreaker", specifier = ">=1.0.0" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pydantic-ai", specifier = ">=1.25.0" },
@@ -3132,6 +3135,7 @@ requires-dist = [
     { name = "sentence-transformers", marker = "extra == 'all-full'", specifier = ">=5.1.2" },
     { name = "sentence-transformers", marker = "extra == 'embeddings'", specifier = ">=5.1.2" },
     { name = "sentence-transformers", marker = "extra == 'embeddings-local'", specifier = ">=5.1.2" },
+    { name = "setuptools", marker = "extra == 'release-tools'", specifier = ">=75.0.0" },
     { name = "slowapi", specifier = ">=0.1.9" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.44" },
     { name = "starlette", specifier = ">=0.50.0" },
@@ -4395,6 +4399,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e9/e6/78ebbb10a8c8e4b61a59249394a4a594c1a7af95593dc933a349c8d00964/pyasn1_modules-0.4.2.tar.gz", hash = "sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6", size = 307892, upload-time = "2025-03-28T02:41:22.17Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/47/8d/d529b5d697919ba8c11ad626e835d4039be708a35b0d22de83a269a6682c/pyasn1_modules-0.4.2-py3-none-any.whl", hash = "sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a", size = 181259, upload-time = "2025-03-28T02:41:19.028Z" },
+]
+
+[[package]]
+name = "pybadges"
+version = "3.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "jinja2" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0e/6a/6296d49ba2b4b62e7ea97606c6c6b21c291784afd63c56b2390f658c8cb3/pybadges-3.0.1.tar.gz", hash = "sha256:a29962d3435a5a1b5b775f3f2b89e2d519f39d947d5118c279e36bf890158faa", size = 58600, upload-time = "2023-10-11T21:44:21.921Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dc/a4/78905bcfa9db1e6402721a2f4a66ac45c2251c7a842cd4aeaec77b37456c/pybadges-3.0.1-py3-none-any.whl", hash = "sha256:6e37f3eacd503143c3110438cf69bc3f2cd988ce4514de23dd5de8cbfa162a05", size = 57344, upload-time = "2023-10-11T21:44:19.758Z" },
 ]
 
 [[package]]
