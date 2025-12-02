@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764644727999,
+  "lastUpdate": 1764648122819,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -40814,6 +40814,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017692080115256717",
             "extra": "mean: 57.57759863678573 usec\nrounds: 4841"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "797cbcf897745299cb344851e63bf19586829b9e",
+          "message": "fix(tests): use global region for multi-region Vertex AI tests\n\nChange hardcoded us-east4 to global in multi-region test methods to\nalign with Claude model availability.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-01T22:55:35-05:00",
+          "tree_id": "cd4ee03eb4729a499046a6560360e956a129b6e5",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/797cbcf897745299cb344851e63bf19586829b9e"
+        },
+        "date": 1764648120966,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 138.36449871846787,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0004892007131637523",
+            "extra": "mean: 7.227287413043093 msec\nrounds: 92"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 292.8668230375135,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00022997188081060152",
+            "extra": "mean: 3.4145212818179456 msec\nrounds: 110"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44485.1137239607,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.479430000004186 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46508.16683411022,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.50159999999346 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 43794.74454324258,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.833789999907594 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.25457856245262,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.1478838099998825 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.41612531967383,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.50358186999995 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.966770982885127,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.33339802 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1260588.9471845038,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 793.2799999821327 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13204.900708396643,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 75.7294599999625 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2983.7874120700358,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.1445199999148 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2659.6073595060334,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 375.9953499999824 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 57798.770133711085,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020079067730646076",
+            "extra": "mean: 17.301406200972966 usec\nrounds: 9547"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17147.27239129389,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020681197634519885",
+            "extra": "mean: 58.31831309262491 usec\nrounds: 4957"
           }
         ]
       }
