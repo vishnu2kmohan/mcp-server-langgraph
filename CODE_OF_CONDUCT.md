@@ -72,7 +72,7 @@ impact on the safety, wellbeing, or inclusivity of community members.
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at:
 
-**security@example.com** (replace with your actual contact email)
+**[GitHub Security Advisories](https://github.com/vishnu2kmohan/mcp-server-langgraph/security/advisories)** or **[GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)**
 
 All complaints will be reviewed and investigated promptly and fairly.
 
@@ -136,7 +136,7 @@ community.
 ## Reporting Guidelines
 
 If you experience or witness unacceptable behavior, or have any other concerns,
-please report it by contacting the project team at **security@example.com**.
+please report it via [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions) or for sensitive matters, [GitHub Security Advisories](https://github.com/vishnu2kmohan/mcp-server-langgraph/security/advisories).
 
 When reporting, please include:
 
@@ -229,7 +229,6 @@ We celebrate contributors through:
 If you have questions about this Code of Conduct, please:
 1. Read the [Contributor Covenant FAQ](https://www.contributor-covenant.org/faq)
 2. Ask in [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)
-3. Contact maintainers at security@example.com
 
 ---
 

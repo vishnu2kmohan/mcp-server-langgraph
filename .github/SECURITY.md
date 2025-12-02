@@ -6,7 +6,8 @@ We release patches for security vulnerabilities in the following versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.x.x   | :white_check_mark: |
+| 2.x.x   | :white_check_mark: |
+| 1.x.x   | :x:                |
 | < 1.0   | :x:                |
 
 ## Reporting a Vulnerability
@@ -21,11 +22,11 @@ Instead, please report them via one of the following methods:
 2. Click "Report a vulnerability"
 3. Fill out the form with details
 
-### Alternative: Email
+### Alternative: GitHub Issue (Non-Sensitive)
 
-Send an email to: **security@example.com**
+For non-sensitive security questions or general security discussions, you may open a GitHub issue. **Do not include sensitive vulnerability details in public issues.**
 
-Include the following information:
+When reporting via Security Advisories, include the following information:
 - Type of vulnerability
 - Full paths of source file(s) related to the vulnerability
 - Location of the affected source code (tag/branch/commit or direct URL)
@@ -221,9 +222,9 @@ We recognize and thank security researchers who help improve our security:
 
 ## Contact
 
-- **Security Email**: security@example.com
+- **Security Advisories**: [GitHub Security Advisories](https://github.com/vishnu2kmohan/mcp-server-langgraph/security/advisories) (preferred)
 - **Security Team**: @vishnu2kmohan/security-team
-- **PGP Key**: [Link to PGP public key]
+- **GitHub Issues**: For non-sensitive security discussions only
 
 ## Additional Resources
 
