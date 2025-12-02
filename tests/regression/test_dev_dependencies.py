@@ -528,6 +528,8 @@ def test_dev_dependencies_are_importable():
             # Optional dependencies (not always installed)
             "torch",  # Only in embeddings-local extra
             "sentence_transformers",  # Only in embeddings-local extra
+            "google_cloud_aiplatform",  # Only in cloud extra (Vertex AI)
+            "boto3",  # Only in cloud extra (AWS Bedrock)
             # Build and release tools
             "build",  # build tool, not imported in tests
             "twine",  # release tool, not imported in tests
