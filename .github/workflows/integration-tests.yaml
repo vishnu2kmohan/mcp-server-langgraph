@@ -228,7 +228,7 @@ jobs:
   # Uses keyless authentication via google-github-actions/auth@v3.
 
   vertex-ai-tests:
-    name: Vertex AI Integration Tests
+    name: Integration Tests (Vertex AI)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Only run on main repository (forks don't have access to GCP secrets)
