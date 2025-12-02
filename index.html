@@ -71,6 +71,22 @@
         .metric.red { color: var(--accent-red); }
         .metric.blue { color: var(--accent-blue); }
         .metric-label { color: var(--text-secondary); font-size: 0.9rem; }
+        .test-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+        }
+        .test-breakdown span {
+            padding: 0.25rem 0.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+        .test-breakdown .passed { color: var(--accent-green); }
+        .test-breakdown .failed { color: var(--accent-red); }
+        .test-breakdown .skipped { color: var(--accent-yellow); }
+        .test-breakdown .xfailed { color: var(--text-secondary); }
         .links {
             display: flex;
             flex-direction: column;
@@ -121,8 +137,14 @@
 
             <div class="card">
                 <h2>✅ Test Results</h2>
-                <div class="metric red">4505</div>
-                <div class="metric-label">tests passing ( failed)</div>
+                <div class="metric green">4709</div>
+                <div class="metric-label">total tests</div>
+                <div class="test-breakdown">
+                    <span class="passed">✅ 4505 passed</span>
+                    <span class="failed">❌ 0 failed</span>
+                    <span class="skipped">⏭️ 195 skipped</span>
+                    <span class="xfailed">⚠️ X0 xfailed</span>
+                </div>
             </div>
 
             <div class="card">
@@ -158,14 +180,14 @@
                     <a href="https://mcp-server-langgraph.mintlify.app/">📚 Documentation</a>
                     <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph">📦 GitHub Repository</a>
                     <a href="https://github.com/vishnu2kmohan/mcp-server-langgraph/actions">🔄 CI/CD Workflows</a>
-                    <a href="https://codecov.io/gh/vishnu2kmohan/mcp-server-langgraph">📈 Codecov (Detailed)</a>
+                    <a href="coverage/">📈 Coverage Report (Detailed)</a>
                 </div>
             </div>
         </div>
 
         <footer>
             <p>Generated automatically by GitHub Actions</p>
-            <p class="update-info">Last updated: 2025-12-02 05:20 UTC | Commit: 35e5e28c</p>
+            <p class="update-info">Last updated: 2025-12-02 13:44 UTC | Commit: 806bfe3f</p>
         </footer>
     </div>
 </body>

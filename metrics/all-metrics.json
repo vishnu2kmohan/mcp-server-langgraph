@@ -10,8 +10,8 @@
     "mttr_rating": "unknown",
     "period_days": 30,
     "total_deployments": 14,
-    "total_commits": 849,
-    "calculated_at": "2025-12-02T05:20:12.663294+00:00"
+    "total_commits": 852,
+    "calculated_at": "2025-12-02T13:44:18.423893+00:00"
   },
   "dependencies": {
     "packages": [],
@@ -19,15 +19,15 @@
     "direct_dependencies": 0,
     "transitive_dependencies": 0,
     "vulnerable_packages": 0,
-    "generated_at": "2025-12-02T05:20:12.743557+00:00"
+    "generated_at": "2025-12-02T13:44:18.504225+00:00"
   },
   "flakiness": {
-    "total_tests": 9010,
+    "total_tests": 13515,
     "flaky_tests": 0,
     "flakiness_rate": 0.0,
     "retries_last_week": 0,
     "most_flaky_tests": [],
-    "generated_at": "2025-12-02T05:20:12.748954+00:00"
+    "generated_at": "2025-12-02T13:44:18.505068+00:00"
   },
-  "generated_at": "2025-12-02T05:20:12.749556+00:00"
+  "generated_at": "2025-12-02T13:44:18.505684+00:00"
 }
