@@ -62,11 +62,12 @@ echo ""
 
 cd "$PROJECT_ROOT"
 
-# Track results
-declare -A RESULTS
+# Track results (counters only - associative arrays not available in bash 3.x on macOS)
 PASSED=0
 FAILED=0
 SKIPPED=0
+# Store results as newline-separated "key:value" pairs for bash 3.x compatibility
+RESULTS_STR=""
 
 # Function to check if a Python version is available
 check_python_version() {
@@ -243,11 +244,11 @@ for python_cmd in "${PYTHON_VERSIONS[@]}"; do
     if [[ -z "$version" ]]; then
         if $CI_MODE; then
             echo -e "${RED}✗ $python_cmd not found (CI mode - failing)${NC}"
-            RESULTS[$python_cmd]="MISSING"
+            RESULTS_STR="${RESULTS_STR}${python_cmd}:MISSING\n"
             ((FAILED++))
         else
             echo -e "${YELLOW}⊘ $python_cmd not available (skipping)${NC}"
-            RESULTS[$python_cmd]="SKIPPED"
+            RESULTS_STR="${RESULTS_STR}${python_cmd}:SKIPPED\n"
             ((SKIPPED++))
         fi
         continue
@@ -255,11 +256,11 @@ for python_cmd in "${PYTHON_VERSIONS[@]}"; do
 
     if run_full_test "$python_cmd" "$version"; then
         echo -e "${GREEN}✓ $python_cmd ($version) - PASSED${NC}"
-        RESULTS[$python_cmd]="PASSED"
+        RESULTS_STR="${RESULTS_STR}${python_cmd}:PASSED\n"
         ((PASSED++))
     else
         echo -e "${RED}✗ $python_cmd ($version) - FAILED${NC}"
-        RESULTS[$python_cmd]="FAILED"
+        RESULTS_STR="${RESULTS_STR}${python_cmd}:FAILED\n"
         ((FAILED++))
     fi
     echo ""
@@ -271,8 +272,15 @@ echo -e "${BLUE}║                      Test Summary                          �
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
+# Helper function to get result for a python version (bash 3.x compatible)
+get_result() {
+    local key="$1"
+    echo -e "$RESULTS_STR" | grep "^${key}:" | cut -d: -f2 | head -1
+}
+
 for python_cmd in "${PYTHON_VERSIONS[@]}"; do
-    status="${RESULTS[$python_cmd]:-UNKNOWN}"
+    status=$(get_result "$python_cmd")
+    status="${status:-UNKNOWN}"
     case $status in
         PASSED)
             echo -e "  $python_cmd: ${GREEN}✓ PASSED${NC}"
