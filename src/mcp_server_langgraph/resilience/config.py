@@ -9,8 +9,20 @@ Centralized configuration for all resilience patterns:
 """
 
 import os
+from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class JitterStrategy(str, Enum):
+    """Jitter strategies for retry backoff.
+
+    See: https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+    """
+
+    SIMPLE = "simple"  # +/- 20% of base delay (current implicit behavior)
+    FULL = "full"  # random(0, delay) - high variance, good for many clients
+    DECORRELATED = "decorrelated"  # min(max, random(base, prev*3)) - best for overload
 
 
 class CircuitBreakerConfig(BaseModel):
@@ -24,6 +36,25 @@ class CircuitBreakerConfig(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
+class OverloadRetryConfig(BaseModel):
+    """Configuration specific to overload/529 error handling.
+
+    These settings provide more aggressive retry behavior for overload errors,
+    which typically require longer wait times and more attempts to recover.
+    """
+
+    max_attempts: int = Field(default=6, description="Max attempts for overload errors")
+    exponential_base: float = Field(default=2.0, description="Backoff base for overload")
+    exponential_max: float = Field(default=60.0, description="Max backoff for overload (seconds)")
+    initial_delay: float = Field(default=5.0, description="Initial delay for overload (seconds)")
+    jitter_strategy: JitterStrategy = Field(
+        default=JitterStrategy.DECORRELATED,
+        description="Jitter strategy for overload retries",
+    )
+    honor_retry_after: bool = Field(default=True, description="Honor Retry-After header")
+    retry_after_max: float = Field(default=120.0, description="Max Retry-After to honor (seconds)")
+
+
 class RetryConfig(BaseModel):
     """Retry configuration"""
 
@@ -31,6 +62,14 @@ class RetryConfig(BaseModel):
     exponential_base: float = Field(default=2.0, description="Exponential backoff base")
     exponential_max: float = Field(default=10.0, description="Maximum backoff in seconds")
     jitter: bool = Field(default=True, description="Add random jitter to backoff")
+    jitter_strategy: JitterStrategy = Field(
+        default=JitterStrategy.SIMPLE,
+        description="Jitter strategy for standard retries",
+    )
+    overload: OverloadRetryConfig = Field(
+        default_factory=OverloadRetryConfig,
+        description="Configuration for overload (529) error handling",
+    )
 
 
 class TimeoutConfig(BaseModel):
@@ -80,6 +119,22 @@ class ResilienceConfig(BaseModel):
     @classmethod
     def from_env(cls) -> "ResilienceConfig":
         """Load configuration from environment variables"""
+        # Parse jitter strategy from env
+        jitter_strategy_str = os.getenv("RETRY_JITTER_STRATEGY", "simple").lower()
+        jitter_strategy = (
+            JitterStrategy(jitter_strategy_str)
+            if jitter_strategy_str in [s.value for s in JitterStrategy]
+            else JitterStrategy.SIMPLE
+        )
+
+        # Parse overload jitter strategy from env
+        overload_jitter_str = os.getenv("RETRY_OVERLOAD_JITTER_STRATEGY", "decorrelated").lower()
+        overload_jitter_strategy = (
+            JitterStrategy(overload_jitter_str)
+            if overload_jitter_str in [s.value for s in JitterStrategy]
+            else JitterStrategy.DECORRELATED
+        )
+
         return cls(
             enabled=os.getenv("RESILIENCE_ENABLED", "true").lower() == "true",
             retry=RetryConfig(
@@ -87,6 +142,16 @@ class ResilienceConfig(BaseModel):
                 exponential_base=float(os.getenv("RETRY_EXPONENTIAL_BASE", "2.0")),
                 exponential_max=float(os.getenv("RETRY_EXPONENTIAL_MAX", "10.0")),
                 jitter=os.getenv("RETRY_JITTER", "true").lower() == "true",
+                jitter_strategy=jitter_strategy,
+                overload=OverloadRetryConfig(
+                    max_attempts=int(os.getenv("RETRY_OVERLOAD_MAX_ATTEMPTS", "6")),
+                    exponential_base=float(os.getenv("RETRY_OVERLOAD_EXPONENTIAL_BASE", "2.0")),
+                    exponential_max=float(os.getenv("RETRY_OVERLOAD_EXPONENTIAL_MAX", "60.0")),
+                    initial_delay=float(os.getenv("RETRY_OVERLOAD_INITIAL_DELAY", "5.0")),
+                    jitter_strategy=overload_jitter_strategy,
+                    honor_retry_after=os.getenv("RETRY_OVERLOAD_HONOR_RETRY_AFTER", "true").lower() == "true",
+                    retry_after_max=float(os.getenv("RETRY_OVERLOAD_RETRY_AFTER_MAX", "120.0")),
+                ),
             ),
             timeout=TimeoutConfig(
                 default=int(os.getenv("TIMEOUT_DEFAULT", "30")),

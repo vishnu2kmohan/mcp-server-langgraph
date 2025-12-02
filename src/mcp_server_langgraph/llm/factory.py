@@ -18,7 +18,14 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from litellm import acompletion, completion
 from litellm.utils import ModelResponse  # type: ignore[attr-defined]
 
-from mcp_server_langgraph.core.exceptions import LLMModelNotFoundError, LLMProviderError, LLMRateLimitError, LLMTimeoutError
+from mcp_server_langgraph.core.exceptions import (
+    LLMModelNotFoundError,
+    LLMOverloadError,
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMTimeoutError,
+)
+from mcp_server_langgraph.resilience.retry import extract_retry_after_from_exception, is_overload_error
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_timeout
 
@@ -402,7 +409,20 @@ class LLMFactory:
                 # Convert to custom exceptions for better error handling
                 error_msg = str(e).lower()
 
-                if "rate limit" in error_msg or "429" in error_msg:
+                # Check for overload errors (529 or equivalent) - handle first
+                if is_overload_error(e):
+                    retry_after = extract_retry_after_from_exception(e)
+                    raise LLMOverloadError(
+                        message=f"LLM provider overloaded: {e}",
+                        retry_after=retry_after,
+                        metadata={
+                            "model": self.model_name,
+                            "provider": self.provider,
+                            "retry_after": retry_after,
+                        },
+                        cause=e,
+                    )
+                elif "rate limit" in error_msg or "429" in error_msg:
                     raise LLMRateLimitError(
                         message=f"LLM provider rate limit exceeded: {e}",
                         metadata={"model": self.model_name, "provider": self.provider},

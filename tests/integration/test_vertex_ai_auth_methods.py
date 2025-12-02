@@ -22,7 +22,7 @@ from langchain_core.messages import HumanMessage
 
 from mcp_server_langgraph.llm.factory import LLMFactory
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
 # Region configuration for different model families on Vertex AI
 # Claude models are only available in us-east5

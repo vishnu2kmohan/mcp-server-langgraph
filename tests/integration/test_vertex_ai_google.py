@@ -21,7 +21,7 @@ from langchain_core.messages import HumanMessage
 
 from mcp_server_langgraph.llm.factory import LLMFactory
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
 
 @pytest.mark.integration

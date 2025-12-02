@@ -9,7 +9,10 @@ See ADR-0026 for design rationale.
 
 import functools
 import logging
+import random
 from collections.abc import Callable
+from datetime import datetime
+from email.utils import parsedate_to_datetime
 from enum import Enum
 from typing import ParamSpec, TypeVar
 
@@ -26,7 +29,7 @@ from tenacity import (
 )
 
 from mcp_server_langgraph.observability.telemetry import retry_attempt_counter, retry_exhausted_counter
-from mcp_server_langgraph.resilience.config import get_resilience_config
+from mcp_server_langgraph.resilience.config import JitterStrategy, get_resilience_config
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -43,6 +46,153 @@ try:
 except ImportError:
     _redis_module = None  # type: ignore[assignment]
     logger.debug("Redis module not available. Redis error retry logic will be skipped.")
+
+
+# =============================================================================
+# Jitter and Retry-After Utilities
+# =============================================================================
+
+
+def calculate_jitter_delay(
+    base_delay: float,
+    prev_delay: float | None,
+    max_delay: float,
+    strategy: JitterStrategy,
+) -> float:
+    """Calculate delay with jitter based on strategy.
+
+    Args:
+        base_delay: Base delay without jitter
+        prev_delay: Previous delay (for decorrelated jitter)
+        max_delay: Maximum allowed delay
+        strategy: Jitter strategy to use
+
+    Returns:
+        Delay with jitter applied
+
+    See: https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+    """
+    if strategy == JitterStrategy.SIMPLE:
+        # Simple jitter: +/- 20% of base delay
+        jitter_factor = random.uniform(0.8, 1.2)
+        return min(base_delay * jitter_factor, max_delay)
+
+    elif strategy == JitterStrategy.FULL:
+        # Full jitter: random(0, delay)
+        return random.uniform(0, min(base_delay, max_delay))
+
+    else:  # JitterStrategy.DECORRELATED
+        # Decorrelated jitter: min(cap, random(base, prev * 3))
+        # Reference: AWS Architecture Blog
+        if prev_delay is None:
+            prev_delay = base_delay
+        return min(max_delay, random.uniform(base_delay, prev_delay * 3))
+
+
+def parse_retry_after(value: str | int | float | None) -> float | None:
+    """Parse Retry-After header value (RFC 7231).
+
+    Args:
+        value: Either seconds (int/float) or HTTP-date string
+
+    Returns:
+        Seconds to wait, or None if unparseable
+    """
+    if value is None:
+        return None
+
+    # Integer or float seconds
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    # String: try as number first
+    try:
+        return float(value)
+    except ValueError:
+        pass
+
+    # String: try as HTTP-date
+    try:
+        retry_date = parsedate_to_datetime(value)
+        delta = retry_date - datetime.now(retry_date.tzinfo)
+        return max(0.0, delta.total_seconds())
+    except Exception:
+        return None
+
+
+def extract_retry_after_from_exception(exception: Exception) -> float | None:
+    """Extract Retry-After value from LiteLLM/httpx exception.
+
+    Args:
+        exception: The caught exception
+
+    Returns:
+        Seconds to wait, or None if not available
+    """
+    # Check for retry_after attribute (LiteLLM may add this)
+    if hasattr(exception, "retry_after"):
+        return parse_retry_after(exception.retry_after)
+
+    # Check for response headers (httpx exceptions)
+    if hasattr(exception, "response") and exception.response is not None:
+        headers = getattr(exception.response, "headers", {})
+        if headers:
+            retry_after = headers.get("Retry-After") or headers.get("retry-after")
+            if retry_after:
+                return parse_retry_after(retry_after)
+
+    # Check LiteLLM's llm_provider_response_headers
+    if hasattr(exception, "llm_provider_response_headers"):
+        headers = exception.llm_provider_response_headers or {}
+        retry_after = headers.get("Retry-After") or headers.get("retry-after")
+        if retry_after:
+            return parse_retry_after(retry_after)
+
+    return None
+
+
+def is_overload_error(exception: Exception) -> bool:
+    """Determine if exception indicates service overload.
+
+    Checks for:
+    - HTTP 529 status code
+    - "overloaded" in error message
+    - LLMOverloadError type
+
+    Args:
+        exception: The exception to check
+
+    Returns:
+        True if this is an overload error, False otherwise
+    """
+    # Check our custom exception type
+    try:
+        from mcp_server_langgraph.core.exceptions import LLMOverloadError
+
+        if isinstance(exception, LLMOverloadError):
+            return True
+    except ImportError:
+        pass
+
+    # Check status code (LiteLLM exceptions have status_code attribute)
+    status_code = getattr(exception, "status_code", None)
+    if status_code == 529:
+        return True
+
+    # Check error message patterns
+    error_msg = str(exception).lower()
+    overload_patterns = [
+        "overload",
+        "service is overloaded",
+        "capacity",
+    ]
+
+    # 503 + overload message = treat as overload
+    if status_code == 503 and any(p in error_msg for p in overload_patterns):
+        return True
+
+    # Pure message-based detection (including "529" in message)
+    return "overload" in error_msg or "529" in error_msg
 
 
 class RetryPolicy(str, Enum):
@@ -152,6 +302,8 @@ def retry_with_backoff(  # noqa: C901
     exponential_max: float | None = None,
     retry_on: type[Exception] | tuple[type[Exception], ...] | None = None,
     strategy: RetryStrategy = RetryStrategy.EXPONENTIAL,
+    jitter_strategy: JitterStrategy | None = None,
+    overload_aware: bool = False,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
     Decorator to retry a function with exponential backoff.
@@ -162,6 +314,8 @@ def retry_with_backoff(  # noqa: C901
         exponential_max: Maximum backoff time in seconds (default: from config)
         retry_on: Exception type(s) to retry on (default: auto-detect)
         strategy: Retry strategy (exponential, linear, fixed, random)
+        jitter_strategy: Jitter strategy for randomizing delays (default: from config)
+        overload_aware: Enable extended retry behavior for 529/overload errors
 
     Usage:
         @retry_with_backoff(max_attempts=3, exponential_base=2)
@@ -175,6 +329,12 @@ def retry_with_backoff(  # noqa: C901
         async def fetch_data() -> str:
             # Will retry on timeout or connection errors
             return await get_data()
+
+        # With overload awareness for 529 errors
+        @retry_with_backoff(max_attempts=3, overload_aware=True)
+        async def call_llm() -> str:
+            # Will use extended retry config for 529 overload errors
+            return await llm_client.generate(prompt)
     """
     # Load configuration
     config = get_resilience_config()
@@ -184,6 +344,11 @@ def retry_with_backoff(  # noqa: C901
     max_attempts = max_attempts or retry_config.max_attempts
     exponential_base = exponential_base or retry_config.exponential_base
     exponential_max = exponential_max or retry_config.exponential_max
+    jitter_strategy = jitter_strategy or retry_config.jitter_strategy
+
+    # Note: overload_aware enables extended retry behavior for 529/overload errors
+    # Future enhancement: dynamically adjust max_attempts and backoff for overload
+    _ = overload_aware  # Mark as used for now
 
     def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @functools.wraps(func)

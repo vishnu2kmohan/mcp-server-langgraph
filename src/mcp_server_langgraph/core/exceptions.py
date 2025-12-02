@@ -376,6 +376,43 @@ class LLMModelNotFoundError(LLMProviderError):
     default_retry_policy = RetryPolicy.NEVER
 
 
+class LLMOverloadError(LLMProviderError):
+    """LLM provider is overloaded (529 status).
+
+    This error indicates the LLM provider is experiencing high load and
+    temporarily cannot process requests. The retry_after attribute may
+    contain the server's suggested wait time before retrying.
+    """
+
+    default_message = "LLM provider is overloaded"
+    default_error_code = "external.llm.overloaded"
+    default_status_code = 529  # Non-standard but commonly used for overload
+    default_retry_policy = RetryPolicy.ALWAYS
+
+    def __init__(
+        self,
+        message: str | None = None,
+        retry_after: float | None = None,
+        **kwargs: Any,
+    ):
+        """Initialize LLMOverloadError.
+
+        Args:
+            message: Human-readable error message
+            retry_after: Seconds to wait before retrying (from Retry-After header)
+            **kwargs: Additional arguments passed to parent
+        """
+        # Set retry_after BEFORE calling super().__init__ because
+        # _generate_user_message() is called during parent initialization
+        self.retry_after = retry_after
+        super().__init__(message=message, **kwargs)
+
+    def _generate_user_message(self) -> str:
+        if self.retry_after:
+            return f"The AI service is temporarily overloaded. Please wait {int(self.retry_after)} seconds and try again."
+        return "The AI service is temporarily overloaded. Please try again later."
+
+
 class OpenFGAError(ExternalServiceError):
     """OpenFGA service error"""
 
