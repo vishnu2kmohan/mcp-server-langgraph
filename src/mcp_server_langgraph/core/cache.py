@@ -161,15 +161,25 @@ class CacheService:
             # This prevents malformed URLs from simple string concatenation
             redis_url_with_db = _build_redis_url_with_db(redis_url, redis_db)
 
+            # Build connection kwargs
+            # NOTE: Only pass ssl=True when SSL is enabled. Passing ssl=False causes
+            # "AbstractConnection.__init__() got an unexpected keyword argument 'ssl'"
+            # because the non-SSL connection class doesn't accept the ssl parameter.
+            connection_kwargs: dict[str, Any] = {
+                "decode_responses": False,  # Keep binary for pickle
+                "socket_connect_timeout": 2,
+                "socket_timeout": 2,
+            }
+            if redis_password:
+                connection_kwargs["password"] = redis_password
+            if redis_ssl:
+                connection_kwargs["ssl"] = True
+
             # Create Redis client using from_url() with full configuration
             # This matches the pattern in dependencies.py:215-220 (API key manager)
             self.redis = redis.from_url(  # type: ignore[no-untyped-call]
                 redis_url_with_db,
-                password=redis_password,
-                ssl=redis_ssl,
-                decode_responses=False,  # Keep binary for pickle
-                socket_connect_timeout=2,
-                socket_timeout=2,
+                **connection_kwargs,
             )
             # Test connection
             self.redis.ping()
