@@ -72,6 +72,22 @@ def helm_dependencies_built():
             if tmpcharts_path.exists():
                 shutil.rmtree(tmpcharts_path, ignore_errors=True)
 
+            # Add Helm repositories required for dependency download
+            # These repos contain the subchart dependencies defined in Chart.yaml
+            repos = [
+                ("openfga", "https://openfga.github.io/helm-charts"),
+                ("bitnami", "https://charts.bitnami.com/bitnami"),
+                ("jaegertracing", "https://jaegertracing.github.io/helm-charts"),
+                ("prometheus-community", "https://prometheus-community.github.io/helm-charts"),
+            ]
+            for repo_name, repo_url in repos:
+                subprocess.run(
+                    ["helm", "repo", "add", repo_name, repo_url],
+                    capture_output=True,
+                    timeout=30,
+                )
+            subprocess.run(["helm", "repo", "update"], capture_output=True, timeout=60)
+
             # Build dependencies (downloads redis, kube-prometheus-stack charts)
             result = subprocess.run(
                 ["helm", "dependency", "build", str(CHART_PATH)],
