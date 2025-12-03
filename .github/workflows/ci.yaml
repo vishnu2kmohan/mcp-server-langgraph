@@ -314,18 +314,26 @@ jobs:
 
     - name: Build Helm chart dependencies
       run: |
+        set -euo pipefail
         # Build Helm chart dependencies for tests in tests/deployment/test_helm_templates.py
         if command -v helm &> /dev/null; then
           echo "🔨 Adding Helm repositories..."
-          helm repo add openfga https://openfga.github.io/helm-charts
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add openfga https://openfga.github.io/helm-charts || true
+          helm repo add bitnami https://charts.bitnami.com/bitnami || true
+          helm repo add jaegertracing https://jaegertracing.github.io/helm-charts || true
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
           helm repo update
 
           echo "🔨 Building Helm chart dependencies..."
           helm dependency build deployments/helm/mcp-server-langgraph
+
+          # Verify dependencies were downloaded
+          if [ ! -d "deployments/helm/mcp-server-langgraph/charts" ] || [ -z "$(ls -A deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null)" ]; then
+            echo "❌ Helm dependency build failed - charts directory is empty"
+            exit 1
+          fi
           echo "✓ Helm dependencies built successfully"
+          ls -la deployments/helm/mcp-server-langgraph/charts/
         else
           echo "⚠️ Helm not installed, skipping dependency build (Helm tests may be skipped)"
         fi
