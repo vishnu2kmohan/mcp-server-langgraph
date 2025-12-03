@@ -659,12 +659,14 @@ jobs:
             TESTS_COLOR="red"
           fi
 
+          # IMPORTANT: Replace XFAILED_VALUE before FAILED_VALUE to avoid substring match
+          # (FAILED_VALUE is a substring of XFAILED_VALUE)
+          sed -i "s/XFAILED_VALUE/$XFAILED/g" dashboard/index.html
           sed -i "s/COVERAGE_VALUE/$COVERAGE/g" dashboard/index.html
           sed -i "s/COVERAGE_COLOR/$COLOR_CLASS/g" dashboard/index.html
           sed -i "s/PASSED_VALUE/$PASSED/g" dashboard/index.html
           sed -i "s/FAILED_VALUE/$FAILED/g" dashboard/index.html
           sed -i "s/SKIPPED_VALUE/$SKIPPED/g" dashboard/index.html
-          sed -i "s/XFAILED_VALUE/$XFAILED/g" dashboard/index.html
           sed -i "s/TOTAL_VALUE/$TOTAL/g" dashboard/index.html
           sed -i "s/TESTS_COLOR/$TESTS_COLOR/g" dashboard/index.html
           sed -i "s/UPDATE_DATE/$DATE/g" dashboard/index.html
