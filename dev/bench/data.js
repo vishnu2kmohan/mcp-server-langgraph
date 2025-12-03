@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764717681593,
+  "lastUpdate": 1764721525529,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -42156,6 +42156,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017961772628189874",
             "extra": "mean: 57.32868461730104 usec\nrounds: 4011"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "1d3f782d5b2592c06d537387944e508b9b509855",
+          "message": "fix(ci): fix xfailed display by reordering sed replacements\n\nThe sed pattern `FAILED_VALUE` is a substring of `XFAILED_VALUE`.\nWhen `sed -i \"s/FAILED_VALUE/0/g\"` runs first, it replaces the\n`FAILED_VALUE` portion inside `XFAILED_VALUE`, leaving `X0` instead\nof the full placeholder.\n\nFix: Process XFAILED_VALUE before FAILED_VALUE to ensure correct\nsubstring handling.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-02T19:17:55-05:00",
+          "tree_id": "efd33b158889aa39fab45546ab6f5d53abc05b34",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/1d3f782d5b2592c06d537387944e508b9b509855"
+        },
+        "date": 1764721523141,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 127.70362551284589,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0024615041804804056",
+            "extra": "mean: 7.830631244681528 msec\nrounds: 94"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 271.1101807757006,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0010660379418767905",
+            "extra": "mean: 3.6885372476193976 msec\nrounds: 105"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45171.99462799841,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.137610000072527 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47792.16906197432,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.923929999980828 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44784.28752219293,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.32926000004909 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.6773627746491,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.217100160000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.293614748776115,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.83061925000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.960571764943987,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.39584308999991 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1362824.8632512926,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 733.7700000675795 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12836.869955176226,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 77.90061000008563 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2928.910795186973,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.4238500002398 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2614.3419032143324,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 382.5054400002159 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 58924.070974559276,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002381314876532809",
+            "extra": "mean: 16.970993067192428 usec\nrounds: 10241"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16435.28900445534,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004353602158008846",
+            "extra": "mean: 60.8446860732973 usec\nrounds: 4294"
           }
         ]
       }
