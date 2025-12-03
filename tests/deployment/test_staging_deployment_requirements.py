@@ -205,25 +205,28 @@ class TestStagingDeploymentRequirements:
         security_context = keycloak.get("securityContext", {})
         readonly_fs = security_context.get("readOnlyRootFilesystem")
 
-        # Staging exception: false is allowed for Quarkus JIT compilation
-        # This is documented in keycloak-patch.yaml comments
-        assert readonly_fs is False, (
-            "Staging Keycloak must use readOnlyRootFilesystem: false for Quarkus JIT compilation.\n"
-            "See: https://github.com/keycloak/keycloak/issues/10150\n"
+        # With optimized Keycloak image (kc.sh build pre-compilation), we CAN use
+        # readOnlyRootFilesystem: true for better security. The pre-compiled image
+        # doesn't need runtime Quarkus augmentation.
+        # See: docker/Dockerfile.keycloak and https://www.keycloak.org/server/containers
+        assert readonly_fs is True, (
+            "Staging Keycloak should use readOnlyRootFilesystem: true with optimized image.\n"
+            "The custom Keycloak image pre-compiles Quarkus at build time via 'kc.sh build'.\n"
+            "See: docker/Dockerfile.keycloak\n"
             f"Current value: {readonly_fs}"
         )
 
-        # Verify required volume mounts exist (needed even with readOnlyRootFilesystem: false)
+        # Verify required volume mounts exist (needed for readOnlyRootFilesystem: true)
         volume_mounts = keycloak.get("volumeMounts", [])
         mount_paths = {vm["mountPath"] for vm in volume_mounts}
 
-        required_mounts = {"/tmp"}  # Minimum requirement
+        required_mounts = {"/tmp"}  # Minimum requirement for tmpfs
 
         missing_mounts = required_mounts - mount_paths
 
         assert not missing_mounts, (
             f"Keycloak missing required volume mounts: {missing_mounts}\n"
-            f"Volume mounts isolate write access even with readOnlyRootFilesystem: false.\n"
+            f"With readOnlyRootFilesystem: true, /tmp must be mounted as emptyDir/tmpfs.\n"
             f"Current mounts: {mount_paths}"
         )
 

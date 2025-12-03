@@ -752,6 +752,7 @@ markers = [
     "validation: Validation tests for deployments and configurations",
     "cli: CLI tool tests",
     "skip_isolation_check: Skip enforce_worker_isolation check (for tests using worker-scoped schemas)",
+    "docker: Docker image and Dockerfile tests",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

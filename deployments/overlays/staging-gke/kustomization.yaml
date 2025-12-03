@@ -13,6 +13,8 @@ resources:
   - serviceaccount-external-secrets.yaml
   - serviceaccount-keycloak.yaml
   - serviceaccount-openfga.yaml
+  - pod-disruption-budget.yaml  # NEW: Staging-production parity
+  - resource-quotas.yaml  # NEW: LimitRange + ResourceQuota (Trivy KSV039/KSV040)
   # redis-session-endpoints.yaml removed - using redis-session-service-patch.yaml instead
 
 # GCP-specific annotations
@@ -218,13 +220,54 @@ patches:
       kind: ServiceAccount
       name: otel-collector
 
+  # ===========================================================================
+  # Staging-Production Parity Patches (NEW)
+  # ===========================================================================
+  # These patches ensure staging mirrors production configuration for:
+  # - Autoscaling (HPA)
+  # - Liveness probe differentiation (kube-score compliance)
+  # See: https://12factor.net/dev-prod-parity
+
+  # HPA - Enable autoscaling with staging-appropriate limits
+  - path: hpa-patch.yaml
+    target:
+      kind: HorizontalPodAutoscaler
+      name: mcp-server-langgraph
+
+  # OpenFGA - Different liveness probe type (gRPC instead of HTTP)
+  - path: openfga-liveness-probe-patch.yaml
+    target:
+      kind: Deployment
+      name: openfga
+
+  # OTEL Collector - Different liveness probe type (TCP instead of HTTP)
+  - path: otel-collector-liveness-probe-patch.yaml
+    target:
+      kind: Deployment
+      name: otel-collector
+
+  # Qdrant - Different liveness probe type (TCP instead of HTTP)
+  - path: qdrant-liveness-probe-patch.yaml
+    target:
+      kind: Deployment
+      name: qdrant
+
 # Image configuration
 # Codex Finding #6 (P1): Use full registry path for image name matching
 # For staging, use 'latest' tag with imagePullPolicy: Always to ensure newest image is always pulled
 images:
+  # Main application image
   - name: ghcr.io/vishnu2kmohan/mcp-server-langgraph
     newName: us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent
     newTag: staging-latest
+
+  # Keycloak optimized image (pre-built with kc.sh build)
+  # This image eliminates runtime Quarkus augmentation that causes ReadOnlyFileSystemException
+  # Built by: .github/workflows/build-keycloak-image.yaml
+  # See: docker/Dockerfile.keycloak
+  - name: quay.io/keycloak/keycloak
+    newName: us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/keycloak
+    newTag: "26.4.2"
 
 # Patch OpenTelemetry Collector ConfigMap with GCP-specific configuration
 # Cannot use configMapGenerator because base has static ConfigMap (not generated)

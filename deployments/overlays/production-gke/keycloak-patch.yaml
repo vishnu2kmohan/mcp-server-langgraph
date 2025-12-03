@@ -39,6 +39,18 @@ spec:
       containers:
       - name: keycloak
         imagePullPolicy: Always
+        # Use optimized start command - skips runtime Quarkus augmentation
+        # The custom image (docker/Dockerfile.keycloak) pre-builds Quarkus artifacts
+        # This eliminates the ReadOnlyFileSystemException issue (GitHub #10150)
+        args:
+        - start
+        - --optimized
+        - --http-enabled=true
+        - --http-port=8080
+        - --hostname-strict=false
+        - --health-enabled=true
+        - --metrics-enabled=true
+        - --log-level=INFO
         resources:
           requests:
             cpu: 500m
@@ -48,13 +60,11 @@ spec:
             cpu: 2000m
             memory: 2Gi
             ephemeral-storage: 2Gi
-        # NOTE: readOnlyRootFilesystem: false required for Quarkus JIT compilation
-        # See deployments/base/keycloak-deployment.yaml for full security justification
-        # and deployments/base/.trivyignore for Trivy exception (AVD-KSV-0014)
-        # Compensating controls: runAsNonRoot, no privilege escalation, capabilities dropped
+        # With --optimized flag, Keycloak no longer needs to modify JAR files
+        # We can now use readOnlyRootFilesystem: true for better security
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false  # Required for Quarkus JIT compilation (issue #10150)
+          readOnlyRootFilesystem: true  # Now possible with optimized image!
           runAsNonRoot: true
           runAsUser: 10000
           capabilities:
