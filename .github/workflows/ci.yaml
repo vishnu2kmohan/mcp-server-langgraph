@@ -307,10 +307,14 @@ jobs:
         }
         echo "✓ Lockfile is current and valid"
 
+    - name: Install Helm
+      uses: azure/setup-helm@v4.3.1
+      with:
+        version: 'v3.14.0'
+
     - name: Build Helm chart dependencies
       run: |
-        # Build Helm chart dependencies if helm is available
-        # Required for tests in tests/deployment/test_helm_templates.py
+        # Build Helm chart dependencies for tests in tests/deployment/test_helm_templates.py
         if command -v helm &> /dev/null; then
           echo "🔨 Adding Helm repositories..."
           helm repo add openfga https://openfga.github.io/helm-charts
@@ -774,10 +778,10 @@ jobs:
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
         # Registry-based caching (GHCR) - eliminates GHA cache bloat
         # Previous GHA cache was consuming 200+ GB; registry caching has no limit
+        # Note: cache-to disabled for PRs (no GHCR write access from forks)
         cache-from: |
           type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.variant }}
-        cache-to: |
-          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.variant }},mode=max
+        cache-to: ${{ github.event_name != 'pull_request' && format('type=registry,ref={0}/{1}:cache-{2},mode=max', env.REGISTRY, env.IMAGE_NAME, matrix.variant) || '' }}
         labels: |
           org.opencontainers.image.variant=${{ matrix.variant }}
           org.opencontainers.image.revision=${{ github.sha }}
@@ -800,10 +804,10 @@ jobs:
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
         # Registry-based caching (GHCR) - eliminates GHA cache bloat
+        # Note: cache-to disabled for PRs (no GHCR write access from forks)
         cache-from: |
           type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.variant }}
-        cache-to: |
-          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.variant }},mode=max
+        cache-to: ${{ github.event_name != 'pull_request' && format('type=registry,ref={0}/{1}:cache-{2},mode=max', env.REGISTRY, env.IMAGE_NAME, matrix.variant) || '' }}
         labels: |
           org.opencontainers.image.variant=${{ matrix.variant }}
           org.opencontainers.image.revision=${{ github.sha }}
