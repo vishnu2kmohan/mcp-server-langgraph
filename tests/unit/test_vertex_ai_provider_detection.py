@@ -48,7 +48,7 @@ class TestVertexAIProviderDetection:
 
     def test_detect_vertex_ai_claude_opus_with_prefix(self, llm_factory):
         """Test detection of Vertex AI Claude Opus with vertex_ai/ prefix."""
-        model_name = "vertex_ai/claude-opus-4-1@20250805"
+        model_name = "vertex_ai/claude-opus-4-5@20251101"
         provider = llm_factory._get_provider_from_model(model_name)
         assert provider == "vertex_ai"
 
@@ -170,9 +170,9 @@ class TestVertexAIModelNamingConventions:
             assert provider == "vertex_ai", f"Failed for model: {model_name}"
 
     def test_claude_4_family_models_via_vertex_ai(self, llm_factory):
-        """Test latest Claude 4 family models via Vertex AI."""
+        """Test latest Claude 4.5 family models via Vertex AI."""
         latest_models = [
-            "vertex_ai/claude-opus-4-1@20250805",
+            "vertex_ai/claude-opus-4-5@20251101",
             "vertex_ai/claude-sonnet-4-5@20250929",
             "vertex_ai/claude-haiku-4-5@20251001",
         ]

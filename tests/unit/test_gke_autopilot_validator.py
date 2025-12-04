@@ -177,12 +177,14 @@ class TestGKEAutopilotConstants:
 
     def test_cpu_limits_validation_with_constants_matches_expected_values(self):
         """Ensure CPU limit constants are correctly defined"""
-        assert GKEAutopilotValidator.MIN_CPU_REQUEST == "50m"
+        # Updated 2025-12-04: Aligned with staging-mcp-staging-limits LimitRange
+        assert GKEAutopilotValidator.MIN_CPU_REQUEST == "100m"
         assert GKEAutopilotValidator.MAX_CPU_LIMIT == "4"
 
     def test_memory_limits_validation_with_constants_matches_expected_values(self):
         """Ensure memory limit constants are correctly defined"""
-        assert GKEAutopilotValidator.MIN_MEMORY_REQUEST == "64Mi"
+        # Updated 2025-12-04: Aligned with staging-mcp-staging-limits LimitRange
+        assert GKEAutopilotValidator.MIN_MEMORY_REQUEST == "128Mi"
         assert GKEAutopilotValidator.MAX_MEMORY_LIMIT == "8Gi"
 
 

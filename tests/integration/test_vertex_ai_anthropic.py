@@ -85,16 +85,16 @@ class TestVertexAIAnthropicModels:
         reason="VERTEX_PROJECT not set - requires Vertex AI access",
     )
     @pytest.mark.asyncio
-    async def test_claude_opus_4_1_via_vertex_ai(self):
-        """Test Claude Opus 4.1 via Vertex AI."""
+    async def test_claude_opus_4_5_via_vertex_ai(self):
+        """Test Claude Opus 4.5 via Vertex AI."""
         llm = LLMFactory(
             provider="vertex_ai",
-            model_name="vertex_ai/claude-opus-4-1@20250805",
+            model_name="vertex_ai/claude-opus-4-5@20251101",
             vertex_project=os.getenv("VERTEX_PROJECT"),
             vertex_location=os.getenv("VERTEX_LOCATION", "us-central1"),
         )
 
-        messages = [HumanMessage(content="Say 'Hello from Vertex AI Claude Opus 4.1' and nothing else.")]
+        messages = [HumanMessage(content="Say 'Hello from Vertex AI Claude Opus 4.5' and nothing else.")]
 
         response = await llm.ainvoke(messages)
 

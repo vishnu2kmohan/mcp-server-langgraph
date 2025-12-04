@@ -124,7 +124,7 @@ class TestPydanticModelNameFormatting:
         test_cases = [
             ("gemini-2.5-flash", "google", "google-gla:gemini-2.5-flash"),
             ("gemini-2.5-pro", "google", "google-gla:gemini-2.5-pro"),
-            ("claude-opus-4-1-20250805", "anthropic", "anthropic:claude-opus-4-1-20250805"),
+            ("claude-opus-4-5-20251101", "anthropic", "anthropic:claude-opus-4-5-20251101"),
             ("gpt-5", "openai", "openai:gpt-5"),
         ]
 

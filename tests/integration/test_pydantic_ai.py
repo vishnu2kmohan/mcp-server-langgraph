@@ -360,10 +360,10 @@ def test_create_pydantic_agent_custom_params(mock_settings, mock_pydantic_agent_
     pytest.importorskip("pydantic_ai", reason="pydantic-ai is an optional dependency")
     from mcp_server_langgraph.llm.pydantic_agent import create_pydantic_agent
 
-    agent = create_pydantic_agent(provider="anthropic", model_name="claude-opus-4-1-20250805")
+    agent = create_pydantic_agent(provider="anthropic", model_name="claude-opus-4-5-20251101")
 
     assert agent.provider == "anthropic"
-    assert agent.model_name == "claude-opus-4-1-20250805"
+    assert agent.model_name == "claude-opus-4-5-20251101"
 
 
 @pytest.mark.unit
