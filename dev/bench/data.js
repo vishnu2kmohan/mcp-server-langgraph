@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764867426777,
+  "lastUpdate": 1764871292647,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -42400,6 +42400,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000026493860676513876",
             "extra": "mean: 58.848119626635025 usec\nrounds: 4606"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b405207c553398f302137aa6317ba5ca911043a8",
+          "message": "feat(resilience): implement overload-aware retry + fallback backoff + CI fixes\n\n## Summary\nComprehensive LLM provider resilience improvements addressing CI/CD failures\nand timeout issues. All changes follow TDD methodology.\n\n## P0: CI/CD Fix\n- Add `security-events: write` permission for CodeQL SARIF upload\n- Upgrade github/codeql-action/upload-sarif from @v3 to @v4\n\n## P1: Overload-Aware Retry (529 errors)\n- Implement dynamic config switching: 3→6 attempts for overload errors\n- Add `retry_after` parameter to `LLMRateLimitError` (matching `LLMOverloadError`)\n- Extract Retry-After header for 429 rate limit errors in factory.py\n- Honor Retry-After header with configurable max (120s default)\n- Use decorrelated jitter strategy for overload scenarios\n\n## P2: Fallback Resilience\n- Add exponential backoff between fallback attempts (1s, 2s, 4s, 8s cap)\n- Prevent thundering herd on provider cascading failures\n- New test file: tests/unit/llm/test_fallback_resilience.py\n\n## P3: Bulkhead Tuning\n- Increase LLM concurrency limit from 10 to 25\n- Update all references in config, bulkhead, and documentation\n\n## Technical Details\n- Replace tenacity-based async retry with custom loop for dynamic config\n- Add `_calculate_retry_delay()` helper with overload awareness\n- Fix mypy type errors in sync_wrapper (use computed values)\n- All 1607 unit tests pass\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-04T12:50:51-05:00",
+          "tree_id": "b35e8f0bf5f69ca2daacb543123e8f03c6cc713b",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b405207c553398f302137aa6317ba5ca911043a8"
+        },
+        "date": 1764871291076,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 143.69857950533626,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009463842660501355",
+            "extra": "mean: 6.9590110315799265 msec\nrounds: 95"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 303.36410313304737,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001828690196498803",
+            "extra": "mean: 3.296368916665881 msec\nrounds: 108"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45792.955394919925,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.83741999999711 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47381.35117399337,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.105349999999135 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44283.80249089942,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.581619999897384 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.28080744082865,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.147188819999968 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.444150595798753,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.429348640000114 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.976443787535493,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.2361183299999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1327474.7447047334,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 753.3100000500781 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12936.033255956292,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 77.30344999998806 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2959.1744305802995,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.9320899998106 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2879.9028942840046,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 347.2339299997884 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 58914.46143692329,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000018689812006681963",
+            "extra": "mean: 16.97376120582294 usec\nrounds: 11378"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17318.59165419077,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017227024477534098",
+            "extra": "mean: 57.741415697506724 usec\nrounds: 4816"
           }
         ]
       }
