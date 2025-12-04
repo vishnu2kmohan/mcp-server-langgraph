@@ -530,3 +530,74 @@ class TestOverloadRetryBehavior:
 
         # Should use standard config (3 attempts)
         assert call_count == 3
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_overload_aware_uses_extended_attempts_for_overload_errors(self):
+        """When overload_aware=True and 529 error occurs, should use 6 attempts.
+
+        This tests the dynamic config switching: when an overload error is
+        detected, the retry logic should switch from standard config (3 attempts)
+        to overload config (6 attempts, as defined in OverloadRetryConfig).
+        """
+        from mcp_server_langgraph.core.exceptions import LLMOverloadError
+        from mcp_server_langgraph.resilience.retry import retry_with_backoff
+
+        call_count = 0
+
+        @retry_with_backoff(max_attempts=3, overload_aware=True)
+        async def overload_func():
+            nonlocal call_count
+            call_count += 1
+            if call_count < 6:  # Fail 5 times (would exhaust standard 3-attempt config)
+                raise LLMOverloadError("Overloaded", retry_after=0.01)  # Tiny delay for test
+            return "success"
+
+        result = await overload_func()
+        assert result == "success"
+        # Should have used extended config (6 attempts from OverloadRetryConfig)
+        assert call_count == 6
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_overload_aware_non_overload_exhausts_at_standard_attempts(self):
+        """Non-overload errors should use standard config even with overload_aware=True."""
+        from mcp_server_langgraph.core.exceptions import RetryExhaustedError
+        from mcp_server_langgraph.resilience.retry import retry_with_backoff
+
+        call_count = 0
+
+        # Use minimal delay for faster test execution
+        @retry_with_backoff(max_attempts=3, overload_aware=True, exponential_base=0.01, exponential_max=0.1)
+        async def non_overload_func():
+            nonlocal call_count
+            call_count += 1
+            # IMPORTANT: Don't use "overload" in the message - it triggers false positive detection!
+            raise ValueError("Regular connection error")  # NOT an overload-related error
+
+        with pytest.raises(RetryExhaustedError):
+            await non_overload_func()
+
+        # Should exhaust at 3 attempts (standard config), NOT 6 (overload config)
+        assert call_count == 3
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_overload_aware_disabled_uses_standard_attempts(self):
+        """When overload_aware=False, overload errors should use standard config."""
+        from mcp_server_langgraph.core.exceptions import LLMOverloadError, RetryExhaustedError
+        from mcp_server_langgraph.resilience.retry import retry_with_backoff
+
+        call_count = 0
+
+        @retry_with_backoff(max_attempts=3, overload_aware=False)  # Disabled
+        async def overload_func():
+            nonlocal call_count
+            call_count += 1
+            raise LLMOverloadError("Overloaded")  # Overload error, but feature disabled
+
+        with pytest.raises(RetryExhaustedError):
+            await overload_func()
+
+        # Should exhaust at 3 attempts (standard config) because overload_aware=False
+        assert call_count == 3

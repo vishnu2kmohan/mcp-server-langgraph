@@ -352,11 +352,39 @@ class LLMProviderError(ExternalServiceError):
 
 
 class LLMRateLimitError(LLMProviderError):
-    """LLM provider rate limit exceeded"""
+    """LLM provider rate limit exceeded.
+
+    This error indicates the LLM provider has rate-limited the request (429 status).
+    The retry_after attribute may contain the server's suggested wait time before
+    retrying, extracted from the Retry-After header.
+    """
 
     default_message = "LLM provider rate limit exceeded"
     default_error_code = "external.llm.rate_limit"
     default_status_code = 429
+
+    def __init__(
+        self,
+        message: str | None = None,
+        retry_after: float | None = None,
+        **kwargs: Any,
+    ):
+        """Initialize LLMRateLimitError.
+
+        Args:
+            message: Human-readable error message
+            retry_after: Seconds to wait before retrying (from Retry-After header)
+            **kwargs: Additional arguments passed to parent
+        """
+        # Set retry_after BEFORE calling super().__init__ because
+        # _generate_user_message() is called during parent initialization
+        self.retry_after = retry_after
+        super().__init__(message=message, **kwargs)
+
+    def _generate_user_message(self) -> str:
+        if self.retry_after:
+            return f"Rate limit exceeded. Please wait {int(self.retry_after)} seconds and try again."
+        return "Rate limit exceeded. Please try again later."
 
 
 class LLMTimeoutError(LLMProviderError):

@@ -8,10 +8,17 @@ Enhanced with resilience patterns (ADR-0026):
 - Circuit breaker for provider failures
 - Retry logic with exponential backoff
 - Timeout enforcement
-- Bulkhead isolation (10 concurrent LLM calls max)
+- Bulkhead isolation (25 concurrent LLM calls max)
+- Exponential backoff between fallback attempts
 """
 
+import asyncio
 import os
+
+# Fallback resilience constants
+FALLBACK_BASE_DELAY_SECONDS = 1.0  # Initial delay between fallback attempts
+FALLBACK_DELAY_MULTIPLIER = 2.0  # Exponential multiplier
+FALLBACK_MAX_DELAY_SECONDS = 8.0  # Cap for fallback delays
 from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -423,9 +430,16 @@ class LLMFactory:
                         cause=e,
                     )
                 elif "rate limit" in error_msg or "429" in error_msg:
+                    # Extract Retry-After header for rate limit errors (same pattern as overload)
+                    retry_after = extract_retry_after_from_exception(e)
                     raise LLMRateLimitError(
                         message=f"LLM provider rate limit exceeded: {e}",
-                        metadata={"model": self.model_name, "provider": self.provider},
+                        retry_after=retry_after,
+                        metadata={
+                            "model": self.model_name,
+                            "provider": self.provider,
+                            "retry_after": retry_after,
+                        },
                         cause=e,
                     )
                 elif "timeout" in error_msg or "timed out" in error_msg:
@@ -497,11 +511,31 @@ class LLMFactory:
         raise RuntimeError(msg)
 
     async def _try_fallback_async(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
-        """Try fallback models asynchronously"""
+        """Try fallback models asynchronously with exponential backoff.
+
+        Implements resilience patterns:
+        - Exponential backoff between attempts (1s, 2s, 4s, 8s cap)
+        - Skips primary model if accidentally in fallback list
+        - Logs each attempt for observability
+        """
+        attempt = 0
+        current_delay = FALLBACK_BASE_DELAY_SECONDS
+
         for fallback_model in self.fallback_models:
             if fallback_model == self.model_name:
                 continue
 
+            # Apply exponential backoff delay before attempt (except first)
+            if attempt > 0:
+                delay = min(current_delay, FALLBACK_MAX_DELAY_SECONDS)
+                logger.info(
+                    f"Waiting {delay:.1f}s before fallback attempt {attempt + 1}",
+                    extra={"delay_seconds": delay, "fallback_model": fallback_model},
+                )
+                await asyncio.sleep(delay)
+                current_delay *= FALLBACK_DELAY_MULTIPLIER
+
+            attempt += 1
             logger.warning(f"Trying fallback model: {fallback_model}", extra={"primary_model": self.model_name})
 
             try:

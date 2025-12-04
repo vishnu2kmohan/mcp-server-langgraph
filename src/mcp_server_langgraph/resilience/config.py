@@ -85,7 +85,7 @@ class TimeoutConfig(BaseModel):
 class BulkheadConfig(BaseModel):
     """Bulkhead configuration per resource type"""
 
-    llm_limit: int = Field(default=10, description="Max concurrent LLM calls")
+    llm_limit: int = Field(default=25, description="Max concurrent LLM calls")
     openfga_limit: int = Field(default=50, description="Max concurrent OpenFGA checks")
     redis_limit: int = Field(default=100, description="Max concurrent Redis operations")
     db_limit: int = Field(default=20, description="Max concurrent DB queries")
@@ -161,7 +161,7 @@ class ResilienceConfig(BaseModel):
                 http=int(os.getenv("TIMEOUT_HTTP", "15")),
             ),
             bulkhead=BulkheadConfig(
-                llm_limit=int(os.getenv("BULKHEAD_LLM_LIMIT", "10")),
+                llm_limit=int(os.getenv("BULKHEAD_LLM_LIMIT", "25")),
                 openfga_limit=int(os.getenv("BULKHEAD_OPENFGA_LIMIT", "50")),
                 redis_limit=int(os.getenv("BULKHEAD_REDIS_LIMIT", "100")),
                 db_limit=int(os.getenv("BULKHEAD_DB_LIMIT", "20")),

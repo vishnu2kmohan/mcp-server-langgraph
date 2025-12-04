@@ -28,6 +28,7 @@ from mcp_server_langgraph.core.exceptions import (  # Configuration errors; Auth
     InvalidCredentialsError,
     KeycloakError,
     LLMModelNotFoundError,
+    LLMOverloadError,
     LLMProviderError,
     LLMRateLimitError,
     LLMTimeoutError,
@@ -295,6 +296,36 @@ class TestExternalServiceExceptions:
         """Test LLMRateLimitError"""
         exc = LLMRateLimitError()
         assert exc.status_code == 429
+
+    @pytest.mark.unit
+    def test_llm_rate_limit_error_with_retry_after(self):
+        """Test LLMRateLimitError with retry_after parameter.
+
+        Similar to LLMOverloadError, LLMRateLimitError should accept and store
+        the Retry-After header value from the LLM provider.
+        """
+        exc = LLMRateLimitError(message="Rate limit exceeded", retry_after=60)
+        assert exc.retry_after == 60
+        assert exc.status_code == 429
+        # User message should include retry_after timing
+        assert "60" in exc.user_message
+
+    @pytest.mark.unit
+    def test_llm_rate_limit_error_without_retry_after(self):
+        """Test LLMRateLimitError without retry_after still works."""
+        exc = LLMRateLimitError(message="Rate limit exceeded")
+        assert exc.retry_after is None
+        assert exc.status_code == 429
+        # User message should still be meaningful
+        assert "rate limit" in exc.user_message.lower() or "try again" in exc.user_message.lower()
+
+    @pytest.mark.unit
+    def test_llm_overload_error_with_retry_after(self):
+        """Test LLMOverloadError with retry_after - existing pattern to match."""
+        exc = LLMOverloadError(message="Overloaded", retry_after=30)
+        assert exc.retry_after == 30
+        assert exc.status_code == 529
+        assert "30" in exc.user_message
 
     @pytest.mark.unit
     def test_llm_timeout_error(self):

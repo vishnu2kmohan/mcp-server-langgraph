@@ -30,7 +30,7 @@ class BulkheadConfig:
 
     def __init__(
         self,
-        llm_limit: int = 10,
+        llm_limit: int = 25,
         openfga_limit: int = 50,
         redis_limit: int = 100,
         db_limit: int = 20,
@@ -101,8 +101,8 @@ def with_bulkhead(
         wait: If True, wait for slot. If False, reject immediately if no slots available.
 
     Usage:
-        # Limit to 10 concurrent LLM calls
-        @with_bulkhead(resource_type="llm", limit=10)
+        # Limit to 25 concurrent LLM calls (default)
+        @with_bulkhead(resource_type="llm", limit=25)
         async def call_llm(prompt: str) -> str:
             async with httpx.AsyncClient() as client:
                 response = await client.post(...)
@@ -139,7 +139,7 @@ def with_bulkhead(
                 f"bulkhead.{resource_type}",
                 attributes={
                     "bulkhead.resource_type": resource_type,
-                    "bulkhead.limit": limit or 10,
+                    "bulkhead.limit": limit or 25,
                     "bulkhead.available": semaphore._value if hasattr(semaphore, "_value") else 0,
                 },
             ) as span:

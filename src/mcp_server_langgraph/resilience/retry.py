@@ -18,18 +18,16 @@ from typing import ParamSpec, TypeVar
 
 from opentelemetry import trace
 from tenacity import (
-    AsyncRetrying,
     RetryCallState,
     RetryError,
     Retrying,
     retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    wait_random,
 )
 
 from mcp_server_langgraph.observability.telemetry import retry_attempt_counter, retry_exhausted_counter
-from mcp_server_langgraph.resilience.config import JitterStrategy, get_resilience_config
+from mcp_server_langgraph.resilience.config import JitterStrategy, OverloadRetryConfig, get_resilience_config
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -296,6 +294,97 @@ def log_retry_attempt(retry_state: RetryCallState) -> None:
     )
 
 
+def _calculate_retry_delay(
+    attempt: int,
+    exception: Exception,
+    overload_aware: bool,
+    overload_config: OverloadRetryConfig,
+    exp_base: float,
+    exp_max: float,
+    jitter_strategy: JitterStrategy,
+    prev_delay: float | None,
+    strategy: RetryStrategy,
+) -> float:
+    """Calculate retry delay with overload awareness.
+
+    When overload_aware=True and the exception is an overload error,
+    honors the Retry-After header if present and configured.
+    Otherwise uses exponential backoff with jitter.
+
+    Args:
+        attempt: Current attempt number (1-indexed)
+        exception: The exception that caused the retry
+        overload_aware: Whether overload-aware behavior is enabled
+        overload_config: Configuration for overload-specific retry behavior
+        exp_base: Exponential backoff base
+        exp_max: Maximum delay
+        jitter_strategy: Jitter strategy to use
+        prev_delay: Previous delay (for decorrelated jitter)
+        strategy: Overall retry strategy
+
+    Returns:
+        Delay in seconds before next attempt
+    """
+    # Check for Retry-After header (overload errors)
+    if overload_aware and is_overload_error(exception) and overload_config.honor_retry_after:
+        retry_after = extract_retry_after_from_exception(exception)
+        if retry_after is not None:
+            # Honor Retry-After but cap at configured max
+            return min(retry_after, overload_config.retry_after_max)
+
+    # Calculate base delay based on strategy
+    if strategy == RetryStrategy.EXPONENTIAL:
+        base_delay = exp_base**attempt
+    elif strategy == RetryStrategy.LINEAR:
+        base_delay = exp_base * attempt
+    elif strategy == RetryStrategy.FIXED:
+        base_delay = exp_base
+    else:  # RANDOM - handled by jitter
+        base_delay = exp_base**attempt
+
+    # Apply jitter
+    return calculate_jitter_delay(
+        base_delay=base_delay,
+        prev_delay=prev_delay,
+        max_delay=exp_max,
+        strategy=jitter_strategy,
+    )
+
+
+def log_retry_attempt_manual(
+    attempt_number: int,
+    exception: Exception,
+    delay: float,
+    func_name: str,
+) -> None:
+    """Log retry attempt for observability (manual retry loop version).
+
+    Args:
+        attempt_number: Current attempt number
+        exception: The exception that caused the retry
+        delay: Delay before next attempt
+        func_name: Name of the function being retried
+    """
+    logger.warning(
+        f"Retrying after failure (attempt {attempt_number})",
+        extra={
+            "attempt_number": attempt_number,
+            "exception_type": type(exception).__name__,
+            "delay_seconds": delay,
+            "function": func_name,
+        },
+    )
+
+    # Emit metric
+    retry_attempt_counter.add(
+        1,
+        attributes={
+            "attempt_number": attempt_number,
+            "exception_type": type(exception).__name__,
+        },
+    )
+
+
 def retry_with_backoff(  # noqa: C901
     max_attempts: int | None = None,
     exponential_base: float | None = None,
@@ -339,101 +428,150 @@ def retry_with_backoff(  # noqa: C901
     # Load configuration
     config = get_resilience_config()
     retry_config = config.retry
+    overload_config = retry_config.overload
 
     # Use config defaults if not specified
-    max_attempts = max_attempts or retry_config.max_attempts
-    exponential_base = exponential_base or retry_config.exponential_base
-    exponential_max = exponential_max or retry_config.exponential_max
-    jitter_strategy = jitter_strategy or retry_config.jitter_strategy
-
-    # Note: overload_aware enables extended retry behavior for 529/overload errors
-    # Future enhancement: dynamically adjust max_attempts and backoff for overload
-    _ = overload_aware  # Mark as used for now
+    standard_max_attempts = max_attempts or retry_config.max_attempts
+    standard_exponential_base = exponential_base or retry_config.exponential_base
+    standard_exponential_max = exponential_max or retry_config.exponential_max
+    standard_jitter_strategy = jitter_strategy or retry_config.jitter_strategy
 
     def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @functools.wraps(func)
         async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            """Async wrapper with retry logic"""
+            """Async wrapper with retry logic.
+
+            When overload_aware=True and an overload error (529) is detected,
+            the retry logic dynamically switches from standard config to the
+            more aggressive overload config (more attempts, longer backoff).
+            """
+            import asyncio as aio
+
+            # Initialize with standard config
+            current_max_attempts = standard_max_attempts
+            current_exp_base = standard_exponential_base
+            current_exp_max = standard_exponential_max
+            current_jitter = standard_jitter_strategy
+            switched_to_overload_config = False
+
             with tracer.start_as_current_span(
                 f"retry.{func.__name__}",
                 attributes={
-                    "retry.max_attempts": max_attempts,
+                    "retry.max_attempts": current_max_attempts,
                     "retry.strategy": strategy.value,
+                    "retry.overload_aware": overload_aware,
                 },
             ) as span:
-                # Configure retry behavior
-                retry_kwargs = {
-                    "stop": stop_after_attempt(max_attempts),
-                    "reraise": False,  # Raise RetryError instead of original exception
-                    "before_sleep": log_retry_attempt,
-                }
+                attempt_number = 0
+                last_exception: Exception | None = None
+                prev_delay: float | None = None
 
-                # Configure wait strategy
-                if strategy == RetryStrategy.EXPONENTIAL:
-                    retry_kwargs["wait"] = wait_exponential(
-                        multiplier=exponential_base,
-                        max=exponential_max,
-                    )
-                elif strategy == RetryStrategy.RANDOM:
-                    retry_kwargs["wait"] = wait_random(min=0, max=exponential_max)
-                # Add other strategies as needed
+                while attempt_number < current_max_attempts:
+                    attempt_number += 1
 
-                # Configure retry condition
-                if retry_on:
-                    retry_kwargs["retry"] = retry_if_exception_type(retry_on)
-                # Otherwise, retry all exceptions (tenacity default behavior)
+                    try:
+                        result: T = await func(*args, **kwargs)  # type: ignore[misc]
+                        span.set_attribute("retry.success", True)
+                        span.set_attribute("retry.attempts", attempt_number)
+                        span.set_attribute("retry.switched_to_overload", switched_to_overload_config)
+                        return result
 
-                try:
-                    # Execute with retry
-                    async for attempt in AsyncRetrying(**retry_kwargs):  # type: ignore[arg-type]
-                        with attempt:
-                            result: T = await func(*args, **kwargs)  # type: ignore[misc]
-                            span.set_attribute("retry.success", True)
-                            span.set_attribute("retry.attempts", attempt.retry_state.attempt_number)
-                            return result
+                    except Exception as e:
+                        last_exception = e
 
-                except RetryError as e:
-                    # Retry exhausted
-                    span.set_attribute("retry.success", False)
-                    span.set_attribute("retry.exhausted", True)
+                        # Check if we should filter this exception type
+                        if retry_on and not isinstance(e, retry_on):
+                            raise
 
-                    logger.error(
-                        f"Retry exhausted after {max_attempts} attempts",
-                        exc_info=True,
-                        extra={"max_attempts": max_attempts, "function": func.__name__},
-                    )
+                        # Check if we should switch to overload config
+                        if overload_aware and not switched_to_overload_config and is_overload_error(e):
+                            # Switch to overload config for extended retry
+                            current_max_attempts = overload_config.max_attempts
+                            current_exp_base = overload_config.exponential_base
+                            current_exp_max = overload_config.exponential_max
+                            current_jitter = overload_config.jitter_strategy
+                            switched_to_overload_config = True
+                            logger.info(
+                                f"Overload detected, switching to extended retry config "
+                                f"(max_attempts={current_max_attempts}, "
+                                f"exponential_max={current_exp_max}s)",
+                                extra={
+                                    "function": func.__name__,
+                                    "attempt": attempt_number,
+                                    "overload_max_attempts": current_max_attempts,
+                                },
+                            )
+                            span.set_attribute("retry.overload_detected", True)
+                            span.set_attribute("retry.new_max_attempts", current_max_attempts)
 
-                    # Emit metric
-                    retry_exhausted_counter.add(1, attributes={"function": func.__name__})
+                        # Check if we've exhausted attempts
+                        if attempt_number >= current_max_attempts:
+                            break
 
-                    # Wrap in our custom exception
-                    from mcp_server_langgraph.core.exceptions import RetryExhaustedError
+                        # Calculate delay with overload awareness
+                        delay = _calculate_retry_delay(
+                            attempt=attempt_number,
+                            exception=e,
+                            overload_aware=overload_aware and switched_to_overload_config,
+                            overload_config=overload_config,
+                            exp_base=current_exp_base,
+                            exp_max=current_exp_max,
+                            jitter_strategy=current_jitter,
+                            prev_delay=prev_delay,
+                            strategy=strategy,
+                        )
+                        prev_delay = delay
 
-                    raise RetryExhaustedError(
-                        message=f"Retry exhausted after {max_attempts} attempts",
-                        metadata={
-                            "max_attempts": max_attempts,
-                            "function": func.__name__,
-                        },
-                    ) from e.last_attempt.exception()
-                # This should never be reached, but mypy needs an explicit return path
-                msg = "Unreachable code"
-                raise RuntimeError(msg)  # pragma: no cover
+                        # Log retry attempt
+                        log_retry_attempt_manual(attempt_number, e, delay, func.__name__)
+
+                        # Wait before next attempt
+                        await aio.sleep(delay)
+
+                # Retry exhausted
+                span.set_attribute("retry.success", False)
+                span.set_attribute("retry.exhausted", True)
+                span.set_attribute("retry.final_attempts", attempt_number)
+
+                logger.error(
+                    f"Retry exhausted after {attempt_number} attempts",
+                    exc_info=last_exception,
+                    extra={
+                        "max_attempts": current_max_attempts,
+                        "function": func.__name__,
+                        "switched_to_overload": switched_to_overload_config,
+                    },
+                )
+
+                # Emit metric
+                retry_exhausted_counter.add(1, attributes={"function": func.__name__})
+
+                # Wrap in our custom exception
+                from mcp_server_langgraph.core.exceptions import RetryExhaustedError
+
+                raise RetryExhaustedError(
+                    message=f"Retry exhausted after {attempt_number} attempts",
+                    metadata={
+                        "max_attempts": current_max_attempts,
+                        "function": func.__name__,
+                        "switched_to_overload": switched_to_overload_config,
+                    },
+                ) from last_exception
 
         @functools.wraps(func)
         def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             """Sync wrapper with retry logic"""
-            # Similar to async_wrapper but for sync functions
+            # Use computed values from decorator (guaranteed non-None)
             retry_kwargs = {
-                "stop": stop_after_attempt(max_attempts),
+                "stop": stop_after_attempt(standard_max_attempts),
                 "reraise": False,  # Raise RetryError instead of original exception
                 "before_sleep": log_retry_attempt,
             }
 
             if strategy == RetryStrategy.EXPONENTIAL:
                 retry_kwargs["wait"] = wait_exponential(
-                    multiplier=exponential_base,
-                    max=exponential_max,
+                    multiplier=standard_exponential_base,
+                    max=standard_exponential_max,
                 )
 
             if retry_on:
@@ -447,8 +585,8 @@ def retry_with_backoff(  # noqa: C901
                 from mcp_server_langgraph.core.exceptions import RetryExhaustedError
 
                 raise RetryExhaustedError(
-                    message=f"Retry exhausted after {max_attempts} attempts",
-                    metadata={"max_attempts": max_attempts},
+                    message=f"Retry exhausted after {standard_max_attempts} attempts",
+                    metadata={"max_attempts": standard_max_attempts},
                 ) from e.last_attempt.exception()
             # This should never be reached, but mypy needs an explicit return path
             msg = "Unreachable code"
