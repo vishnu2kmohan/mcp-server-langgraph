@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764872316306,
+  "lastUpdate": 1764874674516,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -42644,6 +42644,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016755672845406677",
             "extra": "mean: 57.75359333319111 usec\nrounds: 4800"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ba157ae311be0ef03f377fc0b0e1007469e323f5",
+          "message": "feat(resilience): add provider-aware bulkhead, token bucket, and adaptive concurrency\n\nImplements comprehensive LLM provider resilience based on actual GCP quotas:\n\n**Provider-Aware Bulkhead** (config.py, bulkhead.py):\n- Different concurrency limits per provider based on upstream rate limits\n- Anthropic/Bedrock: 8 concurrent (50 RPM tier)\n- OpenAI/Vertex AI/Azure: 15 concurrent (higher tiers)\n- Ollama: 50 concurrent (local, no limits)\n- Environment variable override: BULKHEAD_<PROVIDER>_LIMIT\n\n**Token Bucket Rate Limiter** (rate_limit.py):\n- Pre-emptive rate limiting with burst capacity\n- Provider-specific RPM limits from GCP quotas:\n  - Anthropic direct: 50 RPM\n  - Vertex AI Anthropic: 1000 RPM (Opus 4.5: 1,200 RPM)\n  - Vertex AI Gemini: 600 RPM\n  - OpenAI/Azure: 500 RPM\n- @rate_limited decorator for async functions\n- Environment override: RATE_LIMIT_<PROVIDER>_RPM\n\n**Adaptive Bulkhead** (adaptive.py):\n- AIMD algorithm (TCP congestion control inspired)\n- Multiplicative decrease on 429/529 errors (0.75x)\n- Additive increase on success streaks (+1)\n- Sliding window error rate tracking\n- Self-healing without manual intervention\n\n**Test Coverage** (54 new tests):\n- test_provider_aware_bulkhead.py: 17 tests\n- test_token_bucket.py: 18 tests\n- test_adaptive_bulkhead.py: 14 tests\n- All tests pass with pytest-xdist memory safety patterns\n\nReverts bulkhead from 25 to 10 (conservative default).\n\nReferences: ADR-0026, GCP vishnu-sandbox-20250310 quotas\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-04T13:50:26-05:00",
+          "tree_id": "65d602366dac7cfaaf409fb3eb81cdf64da56541",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ba157ae311be0ef03f377fc0b0e1007469e323f5"
+        },
+        "date": 1764874672498,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 143.1388511924816,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0005304217877030338",
+            "extra": "mean: 6.986223458334735 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 306.17305643214604,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001891823019256556",
+            "extra": "mean: 3.2661267181804408 msec\nrounds: 110"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45665.29077122606,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.898470000110137 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46394.390361501624,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.55432999998652 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44311.66699604721,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.567420000001448 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.30632416876026,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.1465128800001025 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.428281444040923,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.471356480000026 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.973023446293686,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.27049524000006 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1384351.2928255335,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 722.3600000827446 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13100.789086737152,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 76.33127999994826 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2910.7050696942883,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.55937000000836 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2616.3474674784597,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 382.21223000007853 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 60772.751419103035,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002291024705763072",
+            "extra": "mean: 16.45474290120201 usec\nrounds: 12326"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17435.13732006609,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019623215855021237",
+            "extra": "mean: 57.35544157998116 usec\nrounds: 4228"
           }
         ]
       }
