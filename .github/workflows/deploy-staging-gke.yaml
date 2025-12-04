@@ -271,6 +271,45 @@ jobs:
           kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
           echo "✓ Namespace created/verified: ${{ env.NAMESPACE }}"
 
+      # Pre-deployment cleanup: Scale down stale replica sets to unblock rollouts
+      # This prevents orphaned replica sets from previous failed deployments from blocking new rollouts
+      - name: Pre-deployment cleanup
+        run: |
+          echo "=== Pre-deployment cleanup ==="
+          NAMESPACE="${{ env.NAMESPACE }}"
+
+          cleanup_stale_replicasets() {
+            local deployment_name=$1
+            local app_label=$2
+
+            echo "Checking deployment: $deployment_name"
+
+            if ! kubectl get deployment "$deployment_name" -n "$NAMESPACE" &>/dev/null; then
+              echo "  Deployment not found, skipping"
+              return 0
+            fi
+
+            # Scale down replica sets with 0 ready replicas but non-zero desired
+            # These are stale replica sets from failed rollouts that block progress
+            kubectl get replicasets -n "$NAMESPACE" -l "app=$app_label" -o json | \
+              jq -r '.items[] | select(.status.readyReplicas == 0 or .status.readyReplicas == null) | select(.spec.replicas > 0) | .metadata.name' | \
+              while read -r rs; do
+                if [ -n "$rs" ]; then
+                  echo "  Scaling down stale replica set: $rs"
+                  kubectl scale replicaset "$rs" --replicas=0 -n "$NAMESPACE" || true
+                fi
+              done
+
+            echo "  Cleanup complete for $deployment_name"
+          }
+
+          cleanup_stale_replicasets "${{ env.DEPLOYMENT_NAME }}" "mcp-server-langgraph"
+          cleanup_stale_replicasets "staging-keycloak" "keycloak"
+          cleanup_stale_replicasets "staging-openfga" "openfga"
+
+          sleep 5
+          echo "=== Pre-deployment cleanup complete ==="
+
       # Update image tag in Kustomization
       - name: Update image tag
         working-directory: deployments/overlays/staging-gke
@@ -308,6 +347,13 @@ jobs:
         id: rollout
         run: |
           echo "Waiting for deployment rollouts..."
+
+          # Pre-check: Show current replica set state for debugging
+          echo ""
+          echo "=== Current Replica Set State ==="
+          kubectl get replicasets -n ${{ env.NAMESPACE }} \
+            -o custom-columns="NAME:.metadata.name,DESIRED:.spec.replicas,CURRENT:.status.replicas,READY:.status.readyReplicas" 2>/dev/null || true
+          echo ""
 
           # Track overall success
           ROLLOUT_SUCCESS=true
@@ -378,6 +424,14 @@ jobs:
             echo "#### Logs from $pod" >> $GITHUB_STEP_SUMMARY
             kubectl logs $pod -n ${{ env.NAMESPACE }} --tail=50 >> $GITHUB_STEP_SUMMARY || echo "Could not retrieve logs" >> $GITHUB_STEP_SUMMARY
           done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Replica Set Status" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          kubectl get replicasets -n ${{ env.NAMESPACE }} \
+            -o custom-columns="NAME:.metadata.name,DEPLOYMENT:.metadata.ownerReferences[0].name,DESIRED:.spec.replicas,CURRENT:.status.replicas,READY:.status.readyReplicas" \
+            >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "Could not retrieve replica sets" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       # Verify deployment
       - name: Verify deployment
