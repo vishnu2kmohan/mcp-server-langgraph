@@ -2,13 +2,14 @@
 """
 Validate repository root path calculations in test files.
 
-This script prevents hardcoded .parents[N] path calculations that break
+This script prevents hardcoded path calculations that break
 when files are moved between directories.
 
 Validates:
 1. No hardcoded .parents[N] without marker file validation
-2. Use of project_root fixture or get_repo_root() function
-3. Marker file validation (.git, pyproject.toml) when using .parents[N]
+2. No hardcoded Path(__file__).parent.parent... chains for REPO_ROOT
+3. Use of project_root fixture or get_repo_root() function
+4. Marker file validation (.git, pyproject.toml) when using .parents[N]
 
 Exit codes:
 - 0: All checks passed
@@ -16,16 +17,23 @@ Exit codes:
 - 2: Script error
 
 Usage:
-    python scripts/validate_repo_root_calculations.py
-    python scripts/validate_repo_root_calculations.py --fix  # Auto-fix violations (not implemented)
+    python scripts/validators/validate_repo_root_calculations.py
+    python scripts/validators/validate_repo_root_calculations.py --fix  # Auto-fix violations (not implemented)
 
 References:
-- tests/test_path_validation.py: Meta-tests for path calculations
+- tests/helpers/path_helpers.py: get_repo_root() implementation
+- tests/meta/test_path_helpers.py: Meta-tests for path calculations
 - INTEGRATION_TEST_FINDINGS.md: Path calculation errors
+
+Bug Fixed (2025-12-04):
+- test_helm_templates.py moved from tests/deployment/ to tests/integration/deployment/
+- Path(__file__).parent.parent.parent was wrong after move (resolved to tests/)
+- Now recommends using get_repo_root() from tests.helpers.path_helpers
 """
 
 import argparse
 import ast
+import re
 import sys
 from pathlib import Path
 from typing import NamedTuple
@@ -94,6 +102,17 @@ class PathCalculationVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
+# Pattern to detect REPO_ROOT = Path(__file__).parent.parent... assignments
+# This fragile pattern breaks when files are moved between directories
+REPO_ROOT_PATTERN = re.compile(
+    r"^(?P<varname>\w*ROOT\w*)\s*=\s*Path\(__file__\)(?:\.parent)+\s*$",
+    re.MULTILINE,
+)
+
+# Pattern to detect get_repo_root() import (correct usage)
+GET_REPO_ROOT_IMPORT = re.compile(r"from\s+tests\.helpers\.path_helpers\s+import.*get_repo_root")
+
+
 def validate_file(file_path: Path) -> list[Violation]:
     """
     Validate a single Python file for path calculation issues.
@@ -124,8 +143,27 @@ def validate_file(file_path: Path) -> list[Violation]:
     visitor = PathCalculationVisitor(file_path)
     visitor.visit(tree)
 
-    # Filter violations based on context
+    # Also check for regex pattern violations
     real_violations = []
+
+    # Check for REPO_ROOT = Path(__file__).parent.parent... pattern
+    # But only if file doesn't import get_repo_root()
+    if not GET_REPO_ROOT_IMPORT.search(content):
+        for line_num, line in enumerate(content.split("\n"), 1):
+            match = REPO_ROOT_PATTERN.match(line.strip())
+            if match:
+                var_name = match.group("varname")
+                real_violations.append(
+                    Violation(
+                        file_path=file_path,
+                        line_number=line_num,
+                        code=line.strip(),
+                        message=f"Fragile {var_name} calculation using .parent chain. Use get_repo_root() instead.",
+                        severity="warning",  # Warning for now, as many files use this pattern
+                    )
+                )
+
+    # Filter AST violations based on context
     for violation in visitor.violations:
         # If file has marker validation or proper fixtures, downgrade to info
         if visitor.has_marker_validation or visitor.has_get_repo_root or visitor.has_project_root_fixture:
@@ -202,21 +240,20 @@ def main(argv: list[str] | None = None) -> int:
             print()
 
         print("\nRecommendations:")
-        print("1. Use project_root fixture from tests/conftest.py:")
+        print("1. Use get_repo_root() from tests/helpers/path_helpers.py (PREFERRED):")
+        print("   from tests.helpers.path_helpers import get_repo_root")
+        print()
+        print("   # ❌ OLD (fragile - breaks when file moves):")
+        print("   REPO_ROOT = Path(__file__).parent.parent.parent")
+        print()
+        print("   # ✅ NEW (robust - works from any file location):")
+        print("   REPO_ROOT = get_repo_root()")
+        print()
+        print("2. For test functions, use the project_root fixture:")
         print("   def test_something(project_root):")
         print('       config_path = project_root / "config.yaml"')
         print()
-        print("2. Create get_repo_root() function with marker validation:")
-        print("   def get_repo_root() -> Path:")
-        print("       current = Path(__file__).parent")
-        print('       markers = [".git", "pyproject.toml"]')
-        print("       while current != current.parent:")
-        print("           if any((current / m).exists() for m in markers):")
-        print("               return current")
-        print("           current = current.parent")
-        print('       raise RuntimeError("Cannot find repo root")')
-        print()
-        print("3. See tests/test_path_validation.py for examples")
+        print("3. See tests/meta/test_path_helpers.py for usage examples")
         print()
 
         return 1

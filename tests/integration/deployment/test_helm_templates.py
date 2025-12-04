@@ -18,20 +18,21 @@ Regression Prevention:
 import gc
 import shutil
 import subprocess
-from pathlib import Path
 
 import pytest
 import yaml
 
 from tests.fixtures.tool_fixtures import requires_tool
+from tests.helpers.path_helpers import get_repo_root
 
 # Mark as integration/deployment test - requires Helm CLI and network access for chart dependencies
 # NOT a unit test: has external dependencies, network I/O, and non-deterministic behavior
 # These tests run in a dedicated CI step after helm dependency build, not in main test matrix
 # Must include 'integration' for marker enforcement (required markers: unit, e2e, meta, integration)
 pytestmark = [pytest.mark.integration, pytest.mark.deployment, pytest.mark.requires_helm]
-# File is at tests/integration/deployment/test_helm_templates.py (4 levels deep from repo root)
-REPO_ROOT = Path(__file__).parent.parent.parent.parent
+# Use get_repo_root() for robust path resolution that works regardless of file location
+# This replaces fragile Path(__file__).parent chains that break when files are moved
+REPO_ROOT = get_repo_root()
 CHART_PATH = REPO_ROOT / "deployments" / "helm" / "mcp-server-langgraph"
 
 

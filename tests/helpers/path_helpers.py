@@ -16,9 +16,79 @@ or reorganized.
 - Prevents directory traversal attacks
 - Clear error messages for debugging
 - Single source of truth for integration test paths
+
+**REPO_ROOT Pattern Standardization (2025-12-04):**
+- Added get_repo_root() to eliminate fragile Path(__file__).parent chains
+- Detects repo root by looking for marker files (.git, pyproject.toml)
+- Works regardless of how deep the calling file is in the directory tree
+- Prevents breakage when test files are moved between directories
 """
 
+from functools import lru_cache
 from pathlib import Path
+
+
+@lru_cache(maxsize=1)
+def get_repo_root() -> Path:
+    """
+    Get the repository root directory reliably regardless of call site location.
+
+    This function finds the repository root by searching upward for marker files
+    (.git directory or pyproject.toml). This eliminates the fragile pattern of
+    chaining .parent calls which breaks when files are moved.
+
+    **Returns:**
+        Path: Absolute path to the repository root
+
+    **Raises:**
+        RuntimeError: If repository root cannot be found
+
+    **Why This Exists:**
+        The pattern `Path(__file__).parent.parent.parent` is fragile:
+        - It must be updated every time a file is moved to a different depth
+        - CI failures occur silently when the path calculation is wrong
+        - Each test file duplicates the calculation, causing maintenance burden
+
+    **Usage:**
+        ```python
+        # ❌ OLD (fragile - breaks when file moves):
+        REPO_ROOT = Path(__file__).parent.parent.parent
+
+        # ✅ NEW (robust - works regardless of file location):
+        from tests.helpers.path_helpers import get_repo_root
+        REPO_ROOT = get_repo_root()
+        ```
+
+    **Marker Files Checked (in order):**
+        1. .git directory - definitive repository marker
+        2. pyproject.toml - project configuration file
+
+    **Performance:**
+        - Result is cached using @lru_cache
+        - Subsequent calls return immediately without filesystem traversal
+        - Safe to call from module level (will be evaluated once at import)
+
+    **Security:**
+        - Returns resolved (absolute) path
+        - Cannot escape beyond filesystem root
+    """
+    # Start from this file's directory and walk upward
+    current = Path(__file__).resolve().parent
+
+    while current != current.parent:  # Stop at filesystem root
+        # Check for repository markers
+        if (current / ".git").is_dir():
+            return current
+        if (current / "pyproject.toml").is_file():
+            return current
+        current = current.parent
+
+    # If we reach the filesystem root, raise an error
+    raise RuntimeError(
+        "Cannot find repository root. No .git directory or pyproject.toml found.\n"
+        f"Started search from: {Path(__file__).resolve().parent}\n"
+        "This should not happen in normal usage."
+    )
 
 
 def get_integration_test_file(relative_path: str | Path) -> Path:
@@ -83,8 +153,8 @@ def get_integration_test_file(relative_path: str | Path) -> Path:
         )
 
     # Construct absolute path to integration test file
-    # Base: tests/integration/ (where this helper lives in tests/helpers/)
-    base_dir = Path(__file__).parent.parent / "integration"
+    # Use get_repo_root() to avoid fragile .parent chain
+    base_dir = get_repo_root() / "tests" / "integration"
     full_path = (base_dir / relative_path).resolve()
 
     # Validate: Path must exist (fail-fast on broken references)

@@ -12,15 +12,113 @@ regressions (e.g., broken paths after file migrations).
 
 **Solution:**
 - `get_integration_test_file()` helper with existence validation
-- Meta-test ensures helper works correctly
+- `get_repo_root()` helper for robust repository root detection
+- Meta-test ensures helpers work correctly
 - Prevents future file migration regressions
+
+**REPO_ROOT Pattern Fix (2025-12-04):**
+- Added get_repo_root() to replace fragile Path(__file__).parent.parent.parent patterns
+- Tests validate the function works from any file depth in the repository
 """
 
 from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.meta
+
+
+@pytest.mark.xdist_group(name="test_get_repo_root")
+class TestGetRepoRoot:
+    """Tests for get_repo_root() function."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
+
+    def test_get_repo_root_returns_path(self):
+        """get_repo_root() returns a Path object."""
+        from tests.helpers.path_helpers import get_repo_root
+
+        result = get_repo_root()
+
+        assert isinstance(result, Path), f"Expected Path, got {type(result)}"
+
+    def test_get_repo_root_returns_absolute_path(self):
+        """get_repo_root() returns an absolute path."""
+        from tests.helpers.path_helpers import get_repo_root
+
+        result = get_repo_root()
+
+        assert result.is_absolute(), f"Expected absolute path, got: {result}"
+
+    def test_get_repo_root_contains_expected_markers(self):
+        """get_repo_root() returns a directory with expected marker files."""
+        from tests.helpers.path_helpers import get_repo_root
+
+        result = get_repo_root()
+
+        # Must have at least one of the marker files
+        has_git = (result / ".git").is_dir()
+        has_pyproject = (result / "pyproject.toml").is_file()
+
+        assert has_git or has_pyproject, f"Repo root {result} must have .git or pyproject.toml"
+
+    def test_get_repo_root_contains_expected_structure(self):
+        """get_repo_root() returns a directory with expected project structure."""
+        from tests.helpers.path_helpers import get_repo_root
+
+        result = get_repo_root()
+
+        # Verify expected directories exist
+        assert (result / "src").is_dir(), f"Expected 'src' directory at {result}"
+        assert (result / "tests").is_dir(), f"Expected 'tests' directory at {result}"
+        assert (result / "pyproject.toml").is_file(), f"Expected 'pyproject.toml' at {result}"
+
+    def test_get_repo_root_is_cached(self):
+        """get_repo_root() returns the same cached object on repeated calls."""
+        from tests.helpers.path_helpers import get_repo_root
+
+        first_call = get_repo_root()
+        second_call = get_repo_root()
+
+        # Should be the exact same object (cached)
+        assert first_call is second_call, "Results should be cached (same object identity)"
+
+    def test_get_repo_root_does_not_return_tests_directory(self):
+        """get_repo_root() must NOT return the tests/ directory.
+
+        This test guards against the bug where Path(__file__).parent.parent.parent
+        was incorrect after moving test files to deeper directories.
+        """
+        from tests.helpers.path_helpers import get_repo_root
+
+        result = get_repo_root()
+
+        # The repo root should NOT be tests/ or end with /tests
+        assert result.name != "tests", f"Repo root should not be 'tests' directory, got: {result}"
+        assert not str(result).endswith("/tests"), f"Repo root should not be tests/, got: {result}"
+
+    def test_get_repo_root_deployments_path_is_valid(self):
+        """get_repo_root() allows access to deployments/helm without 'tests/' prefix.
+
+        This test specifically validates the bug fix for test_helm_templates.py
+        where the path was incorrectly resolving to tests/deployments/ instead
+        of deployments/.
+        """
+        from tests.helpers.path_helpers import get_repo_root
+
+        result = get_repo_root()
+
+        # The helm chart path should exist
+        helm_chart = result / "deployments" / "helm" / "mcp-server-langgraph"
+        assert helm_chart.is_dir(), f"Helm chart directory should exist at {helm_chart}"
+
+        # Chart.yaml should exist (validates path is correct)
+        chart_yaml = helm_chart / "Chart.yaml"
+        assert chart_yaml.is_file(), f"Chart.yaml should exist at {chart_yaml}"
 
 
 def test_get_integration_test_file_returns_valid_path():
