@@ -286,6 +286,7 @@
               "deployment/vertex-ai-workload-identity",
               "deployment/log-aggregation",
               "deployment/scaling",
+              "deployment/llm-provider-resilience",
               "deployment/cost-optimization",
               "deployment/disaster-recovery",
               "deployment/gitops-argocd",
