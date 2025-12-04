@@ -18,12 +18,12 @@ spec:
         imagePullPolicy: Always
         resources:
           requests:
-            cpu: 50m
-            memory: 64Mi
+            cpu: 100m  # GKE Autopilot minimum
+            memory: 128Mi  # GKE Autopilot LimitRange minimum
             ephemeral-storage: 500Mi
           limits:
-            cpu: 100m
-            memory: 128Mi
+            cpu: 200m
+            memory: 256Mi
             ephemeral-storage: 1Gi
         securityContext:
           runAsUser: 10000
@@ -33,12 +33,12 @@ spec:
         imagePullPolicy: Always
         resources:
           requests:
-            cpu: 50m
-            memory: 64Mi
+            cpu: 100m  # GKE Autopilot minimum
+            memory: 128Mi  # GKE Autopilot LimitRange minimum
             ephemeral-storage: 500Mi
           limits:
-            cpu: 100m
-            memory: 128Mi
+            cpu: 200m
+            memory: 256Mi
             ephemeral-storage: 1Gi
         securityContext:
           runAsUser: 10000

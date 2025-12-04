@@ -9,23 +9,28 @@ metadata:
 spec:
   limits:
     # Container-level limits
+    # Updated 2025-12-04: Aligned with GKE Autopilot LimitRange requirements
     - type: Container
       # Default limits (applied if not specified)
       default:
         cpu: 500m
         memory: 512Mi
+        ephemeral-storage: 500Mi
       # Default requests (applied if not specified)
       defaultRequest:
         cpu: 250m
         memory: 256Mi
-      # Minimum allowed
+        ephemeral-storage: 200Mi
+      # Minimum allowed (GKE Autopilot requires 128Mi memory, 100Mi ephemeral-storage)
       min:
-        cpu: 50m
-        memory: 64Mi
+        cpu: 100m
+        memory: 128Mi
+        ephemeral-storage: 100Mi
       # Maximum allowed
       max:
         cpu: 4000m
         memory: 8Gi
+        ephemeral-storage: 10Gi
       # Maximum ratio between limit and request (prevents unrealistic ratios)
       maxLimitRequestRatio:
         cpu: 4
@@ -37,10 +42,12 @@ spec:
       max:
         cpu: 8000m
         memory: 16Gi
-      # Minimum resources for a single pod
+        ephemeral-storage: 20Gi
+      # Minimum resources for a single pod (GKE Autopilot requirements)
       min:
-        cpu: 50m
-        memory: 64Mi
+        cpu: 100m
+        memory: 128Mi
+        ephemeral-storage: 100Mi
 
     # PersistentVolumeClaim limits
     - type: PersistentVolumeClaim

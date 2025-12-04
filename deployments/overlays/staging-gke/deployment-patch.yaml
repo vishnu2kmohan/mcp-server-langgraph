@@ -295,12 +295,12 @@ spec:
         resources:
           requests:
             cpu: 100m     # Reduced from 500m - netcat only needs minimal CPU
-            memory: 64Mi  # Reduced from 128Mi - busybox/netcat needs minimal memory
-            ephemeral-storage: 50Mi  # Security: kube-score compliance
+            memory: 128Mi  # GKE Autopilot LimitRange minimum
+            ephemeral-storage: 100Mi  # GKE Autopilot LimitRange minimum
           limits:
             cpu: 200m     # Added limit to prevent resource abuse
-            memory: 128Mi
-            ephemeral-storage: 100Mi  # Security: kube-score compliance
+            memory: 256Mi  # 2x request for headroom
+            ephemeral-storage: 200Mi  # 2x request for headroom
       - name: wait-for-keycloak
         imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         securityContext:
@@ -314,12 +314,12 @@ spec:
         resources:
           requests:
             cpu: 100m     # Reduced from 500m - netcat only needs minimal CPU
-            memory: 64Mi  # Reduced from 128Mi - busybox/netcat needs minimal memory
-            ephemeral-storage: 50Mi  # Security: kube-score compliance
+            memory: 128Mi  # GKE Autopilot LimitRange minimum
+            ephemeral-storage: 100Mi  # GKE Autopilot LimitRange minimum
           limits:
             cpu: 200m     # Added limit to prevent resource abuse
-            memory: 128Mi
-            ephemeral-storage: 100Mi  # Security: kube-score compliance
+            memory: 256Mi  # 2x request for headroom
+            ephemeral-storage: 200Mi  # 2x request for headroom
 
       # Node affinity for GKE
       affinity:

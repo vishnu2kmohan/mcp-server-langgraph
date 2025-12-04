@@ -31,12 +31,14 @@ class GKEAutopilotValidator:
     """Validator for GKE Autopilot compliance"""
 
     # GKE Autopilot LimitRange constraints
+    # Updated 2025-12-04: Aligned with staging-mcp-staging-limits LimitRange
     MAX_CPU_RATIO = 4.0
     MAX_MEMORY_RATIO = 4.0
-    MIN_CPU_REQUEST = "50m"
+    MIN_CPU_REQUEST = "100m"  # GKE Autopilot minimum for init containers
     MAX_CPU_LIMIT = "4"
-    MIN_MEMORY_REQUEST = "64Mi"
+    MIN_MEMORY_REQUEST = "128Mi"  # GKE Autopilot LimitRange minimum
     MAX_MEMORY_LIMIT = "8Gi"
+    MIN_EPHEMERAL_STORAGE_REQUEST = "100Mi"  # GKE Autopilot LimitRange minimum
 
     def __init__(self, overlay_path: str):
         self.overlay_path = Path(overlay_path)
