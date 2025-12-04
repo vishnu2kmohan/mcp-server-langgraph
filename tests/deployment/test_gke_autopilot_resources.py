@@ -37,7 +37,7 @@ GKE_AUTOPILOT_MIN_CPU_M = 100  # millicores
 
 # Overlays that deploy to GKE Autopilot
 GKE_AUTOPILOT_OVERLAYS = [
-    REPO_ROOT / "deployments" / "overlays" / "staging-gke",
+    REPO_ROOT / "deployments" / "overlays" / "preview-gke",
     REPO_ROOT / "deployments" / "overlays" / "production-gke",
 ]
 

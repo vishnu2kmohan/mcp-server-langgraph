@@ -44,7 +44,7 @@ flowchart TD
 
     subgraph Deploy["Deployment (5)"]
         DV["deployment-validation.yml"]
-        DS["deploy-staging-gke.yaml"]
+        DS["deploy-preview-gke.yaml"]
         DP["deploy-production-gke.yaml"]
         VD["validate-deployments.yaml"]
         VK["validate-kubernetes.yaml"]
@@ -344,9 +344,9 @@ This document provides a comprehensive reference for all GitHub Actions workflow
 
 ---
 
-### deploy-staging-gke.yaml - Staging Deployment
+### deploy-preview-gke.yaml - Staging Deployment
 
-**Location**: `.github/workflows/deploy-staging-gke.yaml`
+**Location**: `.github/workflows/deploy-preview-gke.yaml`
 
 **Purpose**: Deploy to GKE staging environment
 

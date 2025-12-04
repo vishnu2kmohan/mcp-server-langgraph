@@ -22,18 +22,18 @@ pytestmark = pytest.mark.unit
 
 def test_trivyignore_exists_for_staging():
     """
-    Verify that .trivyignore file exists in the staging-gke overlay directory.
+    Verify that .trivyignore file exists in the preview-gke overlay directory.
 
     This file should contain documented suppressions for false positive findings.
     Per user requirement: Suppress with .trivyignore (recommended approach).
     """
     repo_root = Path(__file__).parent.parent.parent
-    trivyignore_file = repo_root / "deployments/overlays/staging-gke/.trivyignore"
+    trivyignore_file = repo_root / "deployments/overlays/preview-gke/.trivyignore"
 
     assert trivyignore_file.exists(), (
         f".trivyignore file not found: {trivyignore_file}\n"
         "\n"
-        "Expected file: deployments/overlays/staging-gke/.trivyignore\n"
+        "Expected file: deployments/overlays/preview-gke/.trivyignore\n"
         "This file should suppress false positive Trivy findings with clear documentation.\n"
         "\n"
         "Required suppressions:\n"
@@ -63,7 +63,7 @@ def test_trivyignore_documents_configmap_false_positive():
     This prevents confusion and ensures future maintainers understand the decision.
     """
     repo_root = Path(__file__).parent.parent.parent
-    trivyignore_file = repo_root / "deployments/overlays/staging-gke/.trivyignore"
+    trivyignore_file = repo_root / "deployments/overlays/preview-gke/.trivyignore"
 
     with open(trivyignore_file) as f:
         content = f.read()
@@ -104,12 +104,12 @@ def test_trivyignore_documents_configmap_false_positive():
 
 def test_trivyignore_workflow_integration():
     """
-    Verify that the deploy-staging-gke workflow is configured to use .trivyignore.
+    Verify that the deploy-preview-gke workflow is configured to use .trivyignore.
 
     The Trivy action should reference the trivyignores file so suppressions are applied.
     """
     repo_root = Path(__file__).parent.parent.parent
-    workflow_file = repo_root / ".github/workflows/deploy-staging-gke.yaml"
+    workflow_file = repo_root / ".github/workflows/deploy-preview-gke.yaml"
 
     assert workflow_file.exists(), f"Workflow file not found: {workflow_file}"
 

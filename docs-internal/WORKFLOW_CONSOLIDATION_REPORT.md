@@ -181,7 +181,7 @@ Focused on patterns with:
 |----------|--------------|---------------|
 | ci.yaml | 3 | ~8 |
 | release.yaml | 2 | ~6 |
-| deploy-staging-gke.yaml | 1 | ~2 |
+| deploy-preview-gke.yaml | 1 | ~2 |
 | deploy-production-gke.yaml | 1 | ~2 |
 
 **Total Impact**: ~18 lines removed, +159 lines added (composite action + docs)
@@ -434,7 +434,7 @@ Focused on patterns with:
 8. `.github/workflows/security-validation.yaml` - 2 jobs
 9. `.github/workflows/dora-metrics.yaml` - 2 jobs
 10. `.github/workflows/validate-k8s-configs.yaml` - 2 jobs
-11. `.github/workflows/deploy-staging-gke.yaml` - 1 job
+11. `.github/workflows/deploy-preview-gke.yaml` - 1 job
 12. `.github/workflows/deploy-production-gke.yaml` - 1 job
 
 ### Appendix B: Pattern Analysis Details
@@ -573,7 +573,7 @@ Following the success of setup-python-deps and setup-docker-buildx, we proceeded
 - **Total instances found**: 13 across 5 workflows
 - **Workflows affected**:
   1. deploy-production-gke.yaml (4 instances)
-  2. deploy-staging-gke.yaml (4 instances)
+  2. deploy-preview-gke.yaml (4 instances)
   3. gcp-drift-detection.yaml (3 instances)
   4. gcp-compliance-scan.yaml (1 instance - special case)
   5. ci.yaml (1 instance)

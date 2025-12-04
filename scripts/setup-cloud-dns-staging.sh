@@ -218,7 +218,7 @@ main() {
     echo ""
     log_info "Cloud DNS setup complete!"
     log_info "Next steps:"
-    echo "  1. Deploy to staging: kubectl apply -k deployments/overlays/staging-gke"
+    echo "  1. Deploy to staging: kubectl apply -k deployments/overlays/preview-gke"
     echo "  2. Verify DNS from pods (see command above)"
     echo "  3. Check pod logs: kubectl logs -n staging-mcp-server-langgraph -l app=staging-mcp-server-langgraph"
 }

@@ -414,7 +414,7 @@ value: "https://otel-collector.${DOMAIN}:4317"
 **Validation Status:** ⚠️ **NEEDS VALIDATION**
 
 **Finding:** Not validated in this session (out of scope)
-**File:** `deployments/overlays/staging-gke/keycloak-patch.yaml:23`
+**File:** `deployments/overlays/preview-gke/keycloak-patch.yaml:23`
 **Tests:** `tests/deployment/test_staging_deployment_requirements.py`, `tests/test_kubernetes_security.py`
 
 **Recommendation:** Re-enable read-only filesystem or document security exception

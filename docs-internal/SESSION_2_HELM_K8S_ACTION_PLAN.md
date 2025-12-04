@@ -32,7 +32,7 @@ Comprehensive analysis of Codex findings and historical remediation documents id
 **Status**: ⚠️ PARTIAL - Temporarily Disabled
 **Severity**: CRITICAL (Security hardening incomplete)
 **Files Affected**:
-- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/staging-gke/keycloak-patch.yaml`
+- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/preview-gke/keycloak-patch.yaml`
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/base/keycloak-deployment.yaml` (lines 62-85)
 
 **Test Files**:
@@ -120,7 +120,7 @@ Current volume mounts only cover `/tmp` and `/opt/keycloak/data/tmp`.
 **Status**: ✅ PARTIALLY FIXED, Needs Validation
 **Severity**: CRITICAL (Blocks pod creation)
 **Files Affected**:
-- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/staging-gke/otel-collector-patch.yaml`
+- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/preview-gke/otel-collector-patch.yaml`
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/base/otel-collector-deployment.yaml`
 
 **Test Files**:
@@ -170,10 +170,10 @@ cpu max limit to request ratio per Container is 4, but provided ratio is 5.00000
    ```
 
 **Validation**:
-- [ ] Kustomize build succeeds for staging-gke overlay
+- [ ] Kustomize build succeeds for preview-gke overlay
 - [ ] Deploy OTEL collector pod, verify it reaches Running state
 - [ ] No GKE policy violation errors in events
-- [ ] Validation script confirms compliance: `python scripts/validate_gke_autopilot_compliance.py deployments/overlays/staging-gke`
+- [ ] Validation script confirms compliance: `python scripts/validate_gke_autopilot_compliance.py deployments/overlays/preview-gke`
 
 **Priority**: P0
 **Effort**: 1-2 hours (config update + testing)
@@ -186,7 +186,7 @@ cpu max limit to request ratio per Container is 4, but provided ratio is 5.00000
 **Status**: ✅ FIXED (Verified in previous session)
 **Severity**: CRITICAL (Cluster formation failure)
 **Files Affected**:
-- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/staging-gke/network-policy.yaml`
+- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/preview-gke/network-policy.yaml`
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/base/keycloak-networkpolicy.yaml`
 
 **Test Files**:
@@ -203,7 +203,7 @@ Cluster health: DOWN (1/2 pods in CrashLoopBackOff)
 ```
 
 **Fix Status**: ✅ ALREADY FIXED
-Current staging-gke/network-policy.yaml includes:
+Current preview-gke/network-policy.yaml includes:
 ```yaml
 egress:
 - to:
@@ -234,7 +234,7 @@ egress:
 **Status**: ⚠️ NEEDS HARDENING
 **Severity**: CRITICAL (Pod health checks may fail)
 **Files Affected**:
-- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/staging-gke/cloud-sql-proxy-patch.yaml` (if exists)
+- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/preview-gke/cloud-sql-proxy-patch.yaml` (if exists)
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/base/deployment.yaml` (cloud-sql-proxy sidecar, if added)
 
 **Test Files**:
@@ -533,7 +533,7 @@ MCP Server may take 10-15 seconds to fully initialize. Without startupProbe:
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/base/deployment.yaml` (MCP Server)
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/base/keycloak-deployment.yaml` (Keycloak, line 146)
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/base/openfga-deployment.yaml` (OpenFGA)
-- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/staging-gke/otel-collector-patch.yaml` (OTEL, already fixed per P0-2)
+- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/preview-gke/otel-collector-patch.yaml` (OTEL, already fixed per P0-2)
 
 **Test Files**:
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/tests/regression/test_pod_deployment_regression.py:test_cpu_limit_request_ratio`
@@ -615,7 +615,7 @@ Inconsistent ratios lead to:
 **Severity**: HIGH (Security: allows unnecessary external traffic)
 **Files Affected**:
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/base/networkpolicy.yaml` (MCP Server egress)
-- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/staging-gke/network-policy.yaml` (staging overlay)
+- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/preview-gke/network-policy.yaml` (staging overlay)
 
 **Test Files**:
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/tests/deployment/test_network_policies.py`
@@ -778,7 +778,7 @@ ArgoCD Application manifest uses values like `postgresql.externalHost` but Helm 
 **Status**: ✅ FIXED, Needs Hardening
 **Severity**: MEDIUM (Config validation, not runtime)
 **Files Affected**:
-- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/staging-gke/otel-collector-configmap-patch.yaml`
+- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/preview-gke/otel-collector-configmap-patch.yaml`
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/base/otel-collector-configmap.yaml`
 
 **Test Files**:

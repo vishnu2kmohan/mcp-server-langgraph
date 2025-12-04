@@ -15,7 +15,7 @@ deployments/
 ├── overlays/                    # Environment-specific Kustomize overlays
 │   ├── production/             # Production environment (non-GKE)
 │   ├── production-gke/         # Production on GKE (Helm recommended)
-│   ├── staging-gke/            # Staging on GKE
+│   ├── preview-gke/            # Staging on GKE
 │   └── ...
 ├── helm/                        # Helm charts (recommended for production)
 │   ├── mcp-server-langgraph/   # Main Helm chart

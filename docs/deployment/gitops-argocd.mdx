@@ -74,7 +74,7 @@ flowchart TB
     subgraph "Git Repository"
         A[GitHub: main branch]
         B[deployments/overlays/production-gke/]
-        C[deployments/overlays/staging-gke/]
+        C[deployments/overlays/preview-gke/]
         D[deployments/overlays/dev-gke/]
     end
 
@@ -209,7 +209,7 @@ flowchart TB
         # Get cluster contexts
         gcloud container clusters get-credentials mcp-dev-gke \
           --region us-central1 --project YOUR_PROJECT_ID
-        gcloud container clusters get-credentials mcp-staging-gke \
+        gcloud container clusters get-credentials mcp-preview-gke \
           --region us-central1 --project YOUR_PROJECT_ID
         gcloud container clusters get-credentials production-mcp-server-langgraph-gke \
           --region us-central1 --project YOUR_PROJECT_ID
@@ -223,7 +223,7 @@ flowchart TB
 
         # Add clusters
         argocd cluster add gke_YOUR_PROJECT_ID_us-central1_mcp-dev-gke --name gcp-dev
-        argocd cluster add gke_YOUR_PROJECT_ID_us-central1_mcp-staging-gke --name gcp-staging
+        argocd cluster add gke_YOUR_PROJECT_ID_us-central1_mcp-preview-gke --name gcp-staging
         argocd cluster add gke_YOUR_PROJECT_ID_us-central1_production-mcp-server-langgraph-gke --name gcp-production
         ```
       </Tab>
@@ -297,7 +297,7 @@ spec:
           - cluster: gcp-staging
             url: https://GCP_STAGING_ENDPOINT
             namespace: staging-mcp-server-langgraph
-            overlay: staging-gke
+            overlay: preview-gke
             replicas: "2"
 
           - cluster: gcp-production
@@ -341,7 +341,7 @@ spec:
 
 2. mcp-server-gcp-staging
    - Cluster: gcp-staging
-   - Path: deployments/overlays/staging-gke
+   - Path: deployments/overlays/preview-gke
    - Namespace: mcp-staging
 
 3. mcp-server-gcp-production

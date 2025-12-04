@@ -26,7 +26,7 @@ This runbook provides step-by-step procedures for deploying mcp-server-langgraph
 **Always run pre-deployment validation before applying changes:**
 
 ```bash
-./scripts/validate-deployment.sh staging-gke
+./scripts/validate-deployment.sh preview-gke
 ```
 
 This script validates:
@@ -59,7 +59,7 @@ Before deployment, verify:
 
 Check with:
 ```bash
-kubectl kustomize deployments/overlays/staging-gke/ | \
+kubectl kustomize deployments/overlays/preview-gke/ | \
   grep -A 15 "name: cloud-sql-proxy"
 ```
 
@@ -71,7 +71,7 @@ kubectl kustomize deployments/overlays/staging-gke/ | \
 
 Check with:
 ```bash
-kubectl kustomize deployments/overlays/staging-gke/ | \
+kubectl kustomize deployments/overlays/preview-gke/ | \
   grep -E "kind: Service|name:" | grep -A 1 "kind: Service"
 ```
 
@@ -110,17 +110,17 @@ gcloud container clusters get-credentials staging-mcp-server-langgraph-gke \
 
 **Step 2: Run pre-deployment validation**
 ```bash
-./scripts/validate-deployment.sh staging-gke
+./scripts/validate-deployment.sh preview-gke
 ```
 
 **Step 3: Review generated manifests**
 ```bash
-less /tmp/staging-gke-manifests.yaml
+less /tmp/preview-gke-manifests.yaml
 ```
 
 **Step 4: Apply configuration**
 ```bash
-kubectl apply -k deployments/overlays/staging-gke/
+kubectl apply -k deployments/overlays/preview-gke/
 ```
 
 **Step 5: Monitor deployment**
@@ -460,19 +460,19 @@ kubectl port-forward -n staging-mcp-server-langgraph \
 
 ```bash
 # Check Cloud SQL Proxy configuration
-kubectl kustomize deployments/overlays/staging-gke/ | \
+kubectl kustomize deployments/overlays/preview-gke/ | \
   grep -A 30 "name: cloud-sql-proxy" | grep -E "args:|--"
 
 # List all services
-kubectl kustomize deployments/overlays/staging-gke/ | \
+kubectl kustomize deployments/overlays/preview-gke/ | \
   grep -A 3 "kind: Service" | grep "name:"
 
 # Check Workload Identity annotations
-kubectl kustomize deployments/overlays/staging-gke/ | \
+kubectl kustomize deployments/overlays/preview-gke/ | \
   grep -B 3 "iam.gke.io/gcp-service-account"
 
 # Verify init container service references
-kubectl kustomize deployments/overlays/staging-gke/ | \
+kubectl kustomize deployments/overlays/preview-gke/ | \
   grep -A 10 "initContainers:" | grep "nc -z"
 ```
 

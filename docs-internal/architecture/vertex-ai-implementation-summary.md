@@ -1,7 +1,7 @@
 # Vertex AI with Workload Identity - Implementation Summary
 
 **Date**: 2025-10-21
-**Environment**: GKE Staging (staging-gke)
+**Environment**: GKE Staging (preview-gke)
 **Status**: ✅ Complete
 
 ## Overview
@@ -55,7 +55,7 @@ elif config.llm_provider in ["vertex_ai", "google"]:
 
 ### 2. Infrastructure Scripts
 
-#### `scripts/gcp/setup-vertex-ai-staging.sh` (NEW)
+#### `scripts/gcp/setup-vertex-ai-preview.sh` (NEW)
 - **Purpose**: Automated setup for Vertex AI Workload Identity
 - **Permissions**: Executable (`chmod +x`)
 - **Size**: 12,001 bytes
@@ -74,12 +74,12 @@ elif config.llm_provider in ["vertex_ai", "google"]:
 
 **Usage**:
 ```bash
-./scripts/gcp/setup-vertex-ai-staging.sh
+./scripts/gcp/setup-vertex-ai-preview.sh
 ```
 
 ### 3. Kubernetes Manifests
 
-#### `deployments/overlays/staging-gke/serviceaccount-patch.yaml`
+#### `deployments/overlays/preview-gke/serviceaccount-patch.yaml`
 - **Changed**: Workload Identity annotation
 - **Old SA**: `mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com`
 - **New SA**: `vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com`
@@ -91,7 +91,7 @@ annotations:
   iam.gke.io/gcp-service-account: vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
 ```
 
-#### `deployments/overlays/staging-gke/deployment-patch.yaml`
+#### `deployments/overlays/preview-gke/deployment-patch.yaml`
 - **Added**: Vertex AI environment variables
 - **Added**: LLM provider configuration
 - **Updated**: Comments for clarity
@@ -146,16 +146,16 @@ GOOGLE_API_KEY=your-key-here
 
 ### 5. GitHub Configuration
 
-#### `.github/workflows/deploy-staging-gke.yaml`
+#### `.github/workflows/deploy-preview-gke.yaml`
 - **Changed**: GitHub environment name
 - **Old**: `staging`
-- **New**: `staging-gke`
+- **New**: `preview-gke`
 - **Why**: Better reflects that this is specifically for GKE staging deployment
 
 **Action Required**: Update GitHub environment settings:
 1. Go to GitHub repository Settings → Environments
-2. Rename environment from `staging` to `staging-gke`
-3. Or create new `staging-gke` environment with same protection rules
+2. Rename environment from `staging` to `preview-gke`
+3. Or create new `preview-gke` environment with same protection rules
 
 ## How It Works
 
@@ -208,10 +208,10 @@ When `VERTEX_PROJECT` is set, LiteLLM automatically:
 
 ```bash
 # 1. Run Vertex AI setup (creates SA, grants permissions, binds to K8s SA)
-./scripts/gcp/setup-vertex-ai-staging.sh
+./scripts/gcp/setup-vertex-ai-preview.sh
 
 # 2. Deploy updated manifests
-kubectl apply -k deployments/overlays/staging-gke
+kubectl apply -k deployments/overlays/preview-gke
 
 # 3. Verify deployment
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-staging
@@ -373,17 +373,17 @@ curl http://localhost:8080/health
 ## Next Steps
 
 1. **Update GitHub Environment**:
-   - Rename `staging` environment to `staging-gke` in GitHub settings
-   - Or create new `staging-gke` environment with protection rules
+   - Rename `staging` environment to `preview-gke` in GitHub settings
+   - Or create new `preview-gke` environment with protection rules
 
 2. **Run Setup Script**:
    ```bash
-   ./scripts/gcp/setup-vertex-ai-staging.sh
+   ./scripts/gcp/setup-vertex-ai-preview.sh
    ```
 
 3. **Deploy to Staging**:
    ```bash
-   kubectl apply -k deployments/overlays/staging-gke
+   kubectl apply -k deployments/overlays/preview-gke
    ```
 
 4. **Verify and Test** (see verification checklist above)
@@ -402,20 +402,20 @@ curl http://localhost:8080/health
 ### Modified
 - `src/mcp_server_langgraph/core/config.py` - Added Vertex AI config fields
 - `src/mcp_server_langgraph/llm/factory.py` - Added Vertex AI provider support
-- `deployments/overlays/staging-gke/serviceaccount-patch.yaml` - Updated WI annotation
-- `deployments/overlays/staging-gke/deployment-patch.yaml` - Added Vertex AI env vars
+- `deployments/overlays/preview-gke/serviceaccount-patch.yaml` - Updated WI annotation
+- `deployments/overlays/preview-gke/deployment-patch.yaml` - Added Vertex AI env vars
 - `.env.example` - Added Vertex AI configuration examples
-- `.github/workflows/deploy-staging-gke.yaml` - Updated environment name
+- `.github/workflows/deploy-preview-gke.yaml` - Updated environment name
 
 ### Created
-- `scripts/gcp/setup-vertex-ai-staging.sh` - Automated setup script
+- `scripts/gcp/setup-vertex-ai-preview.sh` - Automated setup script
 - `docs/deployment/vertex-ai-workload-identity.mdx` - Comprehensive documentation
 - `VERTEX_AI_IMPLEMENTATION_SUMMARY.md` - This file
 
 ## Resources
 
 - **Documentation**: `docs/deployment/vertex-ai-workload-identity.mdx`
-- **Setup Script**: `scripts/gcp/setup-vertex-ai-staging.sh`
+- **Setup Script**: `scripts/gcp/setup-vertex-ai-preview.sh`
 - **GCP Console**: https://console.cloud.google.com/vertex-ai
 - **Vertex AI Docs**: https://cloud.google.com/vertex-ai/docs
 - **Workload Identity**: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity

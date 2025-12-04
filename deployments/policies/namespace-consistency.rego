@@ -54,7 +54,7 @@ namespace_is_project(ns) {
 
 namespace_is_project(ns) {
     # Allow overlay-specific namespaces
-    project_namespaces := {"staging-mcp-server-langgraph", "production-mcp-server-langgraph", "dev-mcp-server-langgraph"}
+    project_namespaces := {"staging-mcp-server-langgraph", "production-mcp-server-langgraph", "dev-mcp-server-langgraph", "preview-mcp-server-langgraph"}
     project_namespaces[ns]
 }
 

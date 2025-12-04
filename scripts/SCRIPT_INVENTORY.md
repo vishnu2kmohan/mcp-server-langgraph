@@ -53,7 +53,7 @@ These scripts are used across multiple systems and are essential for the project
 
 | Script | Hook IDs | Workflows |
 |--------|----------|----------|
-| `staging-smoke-tests.sh` | shellcheck | deploy-staging-gke |
+| `preview-smoke-tests.sh` | shellcheck | deploy-preview-gke |
 | `validate_gke_autopilot_compliance.py` | validate-workflow-file-references, validate-gke-autopilot-compliance | validate-k8s-configs |
 | `validate_workflow_file_references.py` | validate-workflow-file-references | local-preflight-check |
 
@@ -116,7 +116,7 @@ These scripts are used across multiple systems and are essential for the project
 
 | Script | Workflows |
 |--------|----------|
-| `setup-staging-infrastructure.sh` | deploy-staging-gke, validate-deployments |
+| `setup-preview-infrastructure.sh` | deploy-preview-gke, validate-deployments |
 | `check-links.py` | docs-validation, link-checker |
 | `dora_metrics.py` | dora-metrics |
 | `extract-changelog.py` | release |
@@ -127,8 +127,8 @@ These scripts are used across multiple systems and are essential for the project
 | `bump-versions.sh` | bump-deployment-versions |
 | `publish_to_registry.sh` | release |
 | `check-links.py` | docs-validation, link-checker |
-| `setup-staging-infrastructure.sh` | deploy-staging-gke, validate-deployments |
-| `health-check.sh` | ci, deploy-staging-gke |
+| `setup-preview-infrastructure.sh` | deploy-preview-gke, validate-deployments |
+| `health-check.sh` | ci, deploy-preview-gke |
 | `smoke-test-compose.sh` | ci |
 | `validate_docs.py` | docs-validation |
 | `validate_pre_push_hook.py` | ci |
@@ -178,10 +178,10 @@ These scripts are not referenced in .pre-commit-config.yaml, Makefile, or GitHub
   - `sync-adrs.py`
 
 **gcp/**: 4 scripts
-  - `setup-vertex-ai-staging.sh`
+  - `setup-vertex-ai-preview.sh`
   - `setup-workload-identity.sh`
-  - `teardown-staging-infrastructure.sh`
-  - `validate-staging-deployment.sh`
+  - `teardown-preview-infrastructure.sh`
+  - `validate-preview-deployment.sh`
 
 **profiling/**: 1 scripts
   - `profile_hooks.py`

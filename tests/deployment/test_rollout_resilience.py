@@ -29,8 +29,8 @@ pytestmark = [
 ]
 
 REPO_ROOT = get_repo_root()
-STAGING_GKE_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "staging-gke"
-DEPLOY_WORKFLOW_PATH = REPO_ROOT / ".github" / "workflows" / "deploy-staging-gke.yaml"
+STAGING_GKE_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "preview-gke"
+DEPLOY_WORKFLOW_PATH = REPO_ROOT / ".github" / "workflows" / "deploy-preview-gke.yaml"
 
 
 def _render_kustomize_manifests() -> list[dict[str, Any]]:
@@ -55,7 +55,7 @@ def _find_deployments(manifests: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _load_workflow() -> dict[str, Any]:
-    """Load the deploy-staging-gke workflow."""
+    """Load the deploy-preview-gke workflow."""
     if not DEPLOY_WORKFLOW_PATH.exists():
         pytest.skip(f"Workflow not found: {DEPLOY_WORKFLOW_PATH}")
 
@@ -200,7 +200,7 @@ class TestCIWorkflowDeployment:
         """
         workflow = _load_workflow()
 
-        deploy_job = workflow.get("jobs", {}).get("deploy-staging", {})
+        deploy_job = workflow.get("jobs", {}).get("deploy-preview", {})
         steps = deploy_job.get("steps", [])
 
         cleanup_step_found = False
@@ -213,7 +213,7 @@ class TestCIWorkflowDeployment:
                 break
 
         assert cleanup_step_found, (
-            "Missing pre-deployment cleanup step in deploy-staging-gke.yaml.\n"
+            "Missing pre-deployment cleanup step in deploy-preview-gke.yaml.\n"
             "Expected: Step with 'cleanup' in name or replicaset cleanup logic in run script."
         )
 
@@ -223,7 +223,7 @@ class TestCIWorkflowDeployment:
         """
         workflow = _load_workflow()
 
-        deploy_job = workflow.get("jobs", {}).get("deploy-staging", {})
+        deploy_job = workflow.get("jobs", {}).get("deploy-preview", {})
         steps = deploy_job.get("steps", [])
 
         rollout_step_found = False
@@ -241,7 +241,7 @@ class TestCIWorkflowDeployment:
         """
         workflow = _load_workflow()
 
-        deploy_job = workflow.get("jobs", {}).get("deploy-staging", {})
+        deploy_job = workflow.get("jobs", {}).get("deploy-preview", {})
         steps = deploy_job.get("steps", [])
 
         failure_capture_found = False
@@ -262,7 +262,7 @@ class TestCIWorkflowDeployment:
         """
         workflow = _load_workflow()
 
-        deploy_job = workflow.get("jobs", {}).get("deploy-staging", {})
+        deploy_job = workflow.get("jobs", {}).get("deploy-preview", {})
         steps = deploy_job.get("steps", [])
 
         rollout_step = None

@@ -180,7 +180,7 @@ class TestNetworkPolicy:
             [f"  - Port {port} ({required_egress_ports[port]})" for port in sorted(missing_ports)]
         )
 
-    @pytest.mark.parametrize("overlay", ["staging-gke", "production-gke"])
+    @pytest.mark.parametrize("overlay", ["preview-gke", "production-gke"])
     def test_gke_overlay_network_policy_has_cloud_sql_proxy_port(self, project_root: Path, overlay: str) -> None:
         """
         Test that GKE overlay NetworkPolicies include port 3307 for Cloud SQL Proxy.

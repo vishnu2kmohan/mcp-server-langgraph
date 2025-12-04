@@ -413,7 +413,7 @@ external-secrets-controller
 
 ### Infrastructure Script Updates
 
-The infrastructure script (`scripts/gcp/setup-staging-infrastructure.sh`) is **already correct**:
+The infrastructure script (`scripts/gcp/setup-preview-infrastructure.sh`) is **already correct**:
 
 - ✅ **Line 301-306:** Grants `roles/container.admin`
 ```bash
@@ -520,11 +520,11 @@ pytest tests/infrastructure/test_external_secrets_rbac.py -v -m integration
 
 ### C. Related Documentation
 
-- Infrastructure Script: `scripts/gcp/setup-staging-infrastructure.sh`
+- Infrastructure Script: `scripts/gcp/setup-preview-infrastructure.sh`
 - Test Suite: `tests/infrastructure/test_external_secrets_rbac.py`
 - Test Documentation: `tests/infrastructure/README_ESO_RBAC_TESTS.md`
 - ESO Configuration: `deployments/security/external-secrets/values.yaml`
-- Deployment Manifests: `deployments/overlays/staging-gke/external-secrets.yaml`
+- Deployment Manifests: `deployments/overlays/preview-gke/external-secrets.yaml`
 
 ---
 

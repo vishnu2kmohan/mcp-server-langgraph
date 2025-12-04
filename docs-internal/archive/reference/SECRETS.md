@@ -177,7 +177,7 @@ gh run list --workflow=gcp-drift-detection.yaml --limit=1
 ### Deployment Workflows
 
 **Required for**:
-- `deploy-staging-gke.yaml`
+- `deploy-preview-gke.yaml`
 - `deploy-production-gke.yaml`
 
 **Secrets/Variables**:

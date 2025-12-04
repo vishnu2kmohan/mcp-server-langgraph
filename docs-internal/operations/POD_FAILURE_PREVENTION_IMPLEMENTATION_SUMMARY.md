@@ -97,9 +97,9 @@ metadata:
 
 **Test Results**:
 ```bash
-$ python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/staging-gke
+$ python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/preview-gke
 
-Validating deployments/overlays/staging-gke...
+Validating deployments/overlays/preview-gke...
 ✅ All validations passed!
 ```
 
@@ -236,7 +236,7 @@ Total: 14/14 containers running successfully
 ## Code Metrics
 
 ### Files Created: 10
-1. `deployments/overlays/staging-gke/serviceaccount-otel-collector-patch.yaml`
+1. `deployments/overlays/preview-gke/serviceaccount-otel-collector-patch.yaml`
 2. `docs-internal/operations/STAGING_POD_CRASH_REMEDIATION.md`
 3. `scripts/validate_gke_autopilot_compliance.py`
 4. `tests/regression/test_pod_deployment_regression.py`
@@ -248,10 +248,10 @@ Total: 14/14 containers running successfully
 10. `docs/architecture/adr-0054-pod-failure-prevention-framework.mdx`
 
 ### Files Modified: 6
-1. `deployments/overlays/staging-gke/keycloak-patch.yaml`
-2. `deployments/overlays/staging-gke/otel-collector-patch.yaml`
-3. `deployments/overlays/staging-gke/otel-collector-configmap-patch.yaml`
-4. `deployments/overlays/staging-gke/kustomization.yaml`
+1. `deployments/overlays/preview-gke/keycloak-patch.yaml`
+2. `deployments/overlays/preview-gke/otel-collector-patch.yaml`
+3. `deployments/overlays/preview-gke/otel-collector-configmap-patch.yaml`
+4. `deployments/overlays/preview-gke/kustomization.yaml`
 5. `adr/README.md` (auto-generated)
 6. `docs/docs.json`
 

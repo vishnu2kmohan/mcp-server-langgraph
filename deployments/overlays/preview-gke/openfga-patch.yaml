@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openfga
+spec:
+  template:
+    spec:
+      # Remove init container - OpenFGA will wait for database connection internally
+      # The Cloud SQL Proxy sidecar starts simultaneously with the main container
+      initContainers: []
+
+      containers:
+      # Main OpenFGA container - add security context
+      - name: openfga
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true  # Codex Security Fix
+          capabilities:
+            drop:
+              - ALL
+
+        # Volume mounts for writable directories (required with readOnlyRootFilesystem)
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /var/tmp
+
+      # Cloud SQL Proxy sidecar
+      - name: cloud-sql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
+        args:
+          - "--structured-logs"
+          - "--port=5432"
+          - "--http-port=9801"
+          - "--http-address=0.0.0.0"
+          - "--health-check"
+          - "--private-ip"
+          - "vishnu-sandbox-20250310:us-central1:preview-mcp-slg-postgres"
+
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65532
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+        # Volume mount for /tmp required by Cloud SQL proxy for credential caching
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 9801
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 9801
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+
+      # Volumes for writable directories (required with readOnlyRootFilesystem)
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}

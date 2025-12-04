@@ -344,17 +344,17 @@ def test_otel_drops_all_capabilities(repo_root: Path):
 
 @pytest.mark.requires_kubectl
 @requires_tool("kustomize")
-def test_rendered_staging_manifest_has_otel_security_context(repo_root: Path):
+def test_rendered_preview_manifest_has_otel_security_context(repo_root: Path):
     """
-    Verify that the rendered staging manifest includes OTel security contexts.
+    Verify that the rendered preview manifest includes OTel security contexts.
 
     This is an integration test that renders the complete Kustomize overlay
     and validates that the security contexts are present in the final output
     that will be deployed to GKE.
     """
-    # Render the staging overlay
+    # Render the preview overlay
     result = subprocess.run(
-        ["kubectl", "kustomize", "deployments/overlays/staging-gke"],
+        ["kubectl", "kustomize", "deployments/overlays/preview-gke"],
         capture_output=True,
         text=True,
         cwd=str(repo_root),
@@ -371,13 +371,13 @@ def test_rendered_staging_manifest_has_otel_security_context(repo_root: Path):
     for doc in rendered_docs:
         if doc is None:
             continue
-        if doc.get("kind") == "Deployment" and doc.get("metadata", {}).get("name") == "staging-otel-collector":
+        if doc.get("kind") == "Deployment" and doc.get("metadata", {}).get("name") == "preview-otel-collector":
             otel_deployment = doc
             break
 
     assert otel_deployment is not None, (
-        "OTel collector deployment not found in rendered staging manifests.\n"
-        "Expected 'staging-otel-collector' (with namePrefix from kustomization.yaml)"
+        "OTel collector deployment not found in rendered preview manifests.\n"
+        "Expected 'preview-otel-collector' (with namePrefix from kustomization.yaml)"
     )
 
     # Validate pod-level security context

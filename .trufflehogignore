@@ -52,7 +52,7 @@ deployments/base/**/*.yaml
 
 # Kubernetes overlays that patch with non-production credentials
 deployments/overlays/development/**
-deployments/overlays/staging-gke/**
+deployments/overlays/preview-gke/**
 
 # ============================================================================
 # Example & Documentation Files

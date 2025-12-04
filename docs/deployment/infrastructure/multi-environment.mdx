@@ -213,7 +213,7 @@ terraform/environments/
     services_cidr = "10.12.0.0/16"
 
     # GKE
-    cluster_name     = "mcp-staging-gke"
+    cluster_name     = "mcp-preview-gke"
     regional_cluster = true  # 3 zones for HA
 
     # Cloud SQL
@@ -601,7 +601,7 @@ variable "enable_binary_authorization" {
 | Variable | Dev | Staging | Prod |
 |----------|-----|---------|------|
 | `project_id` | mcp-dev | mcp-staging | mcp-prod |
-| `cluster_name` | mcp-dev-gke | mcp-staging-gke | production-mcp-server-langgraph-gke |
+| `cluster_name` | mcp-dev-gke | mcp-preview-gke | production-mcp-server-langgraph-gke |
 | `regional_cluster` | false | true | true |
 | `cloudsql_tier` | db-custom-1-3840 | db-custom-2-7680 | db-custom-4-15360 |
 | `redis_tier` | BASIC | STANDARD_HA | STANDARD_HA |

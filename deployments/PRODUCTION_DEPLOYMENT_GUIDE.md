@@ -332,7 +332,7 @@ jobs:
             -n production \
             --timeout=300s
 
-          ./scripts/gcp/staging-smoke-tests.sh
+          ./scripts/gcp/preview-smoke-tests.sh
 ```
 
 ## Security Checklist

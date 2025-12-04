@@ -9,7 +9,7 @@ You are tasked with deploying the mcp-server-langgraph application to various ta
 
 **Available Targets**:
 - **Kubernetes** (kubectl + Kustomize): GCP, Azure, AWS overlays
-- **GKE Staging**: Google Kubernetes Engine (staging-gke overlay)
+- **GKE Staging**: Google Kubernetes Engine (preview-gke overlay)
 - **Cloud Run**: Google Cloud Run serverless
 - **Helm**: Kubernetes package manager with dependencies
 - **Kustomize Overlays**: dev, staging, production
@@ -165,7 +165,7 @@ gcloud config set project <project-id>
 gcloud container clusters get-credentials <cluster-name> --region=us-central1
 
 # 3. Apply staging overlay
-kubectl apply -k deployments/overlays/staging-gke/
+kubectl apply -k deployments/overlays/preview-gke/
 
 # 4. Wait for rollout
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph

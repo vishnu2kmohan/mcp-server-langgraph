@@ -429,7 +429,7 @@ kubectl scale deployment <deployment> --replicas=<count> -n <namespace>
 python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays
 
 # Validate specific overlay
-python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/staging-gke
+python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/preview-gke
 ```
 
 **Checks**:

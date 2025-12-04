@@ -15,7 +15,7 @@
 - ✅ Created package structure (`scripts/__init__.py`, `scripts/ci/__init__.py`)
 
 ### Issue #1: Hardcoded GCP Configuration
-- ✅ Fixed `deploy-staging-gke.yaml` (4 locations)
+- ✅ Fixed `deploy-preview-gke.yaml` (4 locations)
 - ✅ Fixed `deploy-production-gke.yaml` (3 locations)
 - ✅ Fixed `gcp-drift-detection.yaml` (3 locations)
 - ✅ Fixed `gcp-compliance-scan.yaml` (1 location + env section added)
@@ -23,7 +23,7 @@
 - ✅ Workload Identity Federation providers use `${{ secrets.GCP_WIF_PROVIDER }}`
 
 ### Issue #2: Environment Variable Validation
-- ✅ Added validation to `deploy-staging-gke.yaml`
+- ✅ Added validation to `deploy-preview-gke.yaml`
 - ✅ Added validation to `deploy-production-gke.yaml`
 - ✅ Validates all required vars before deployment
 - ✅ Provides helpful error messages with configuration instructions
@@ -141,7 +141,7 @@ retention-days: 7
 ### Issue #8: Missing Failure Notifications
 **Workflows Needing Notifications**:
 - `deploy-production-gke.yaml`
-- `deploy-staging-gke.yaml`
+- `deploy-preview-gke.yaml`
 - Critical security scans
 
 **Recommended Implementation**:
@@ -222,7 +222,7 @@ publish-pypi:
 ```
 
 ### Issue #15: Duplicate Health Check Logic
-**Files**: `ci.yaml` vs `deploy-staging-gke.yaml`
+**Files**: `ci.yaml` vs `deploy-preview-gke.yaml`
 
 **Action**: Extract to reusable script `scripts/k8s/health-check.sh`
 

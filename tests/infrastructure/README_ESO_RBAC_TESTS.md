@@ -26,7 +26,7 @@ The GCP service account had `roles/container.developer`, which lacks permissions
 Upgraded the service account IAM role from `roles/container.developer` to `roles/container.admin` in the infrastructure setup script.
 
 **Fixed in commit:** `669f6cb` (Nov 2, 2025)
-**File:** `scripts/gcp/setup-staging-infrastructure.sh` (lines 301-306)
+**File:** `scripts/gcp/setup-preview-infrastructure.sh` (lines 301-306)
 
 ## Prerequisites
 
@@ -62,7 +62,7 @@ Run the infrastructure script to:
 - Install External Secrets Operator with RBAC permissions
 
 ```bash
-./scripts/gcp/setup-staging-infrastructure.sh
+./scripts/gcp/setup-preview-infrastructure.sh
 ```
 
 This script will:
@@ -211,7 +211,7 @@ tests/infrastructure/test_external_secrets_rbac.py::TestExternalSecretSync::test
 
 **Fix:**
 ```bash
-./scripts/gcp/setup-staging-infrastructure.sh
+./scripts/gcp/setup-preview-infrastructure.sh
 ```
 
 #### "Namespace external-secrets-system not found"
@@ -219,7 +219,7 @@ tests/infrastructure/test_external_secrets_rbac.py::TestExternalSecretSync::test
 
 **Fix:**
 ```bash
-./scripts/gcp/setup-staging-infrastructure.sh
+./scripts/gcp/setup-preview-infrastructure.sh
 ```
 
 #### "ESO controller deployment not found"
@@ -349,9 +349,9 @@ pytest tests/infrastructure/test_external_secrets_rbac.py -v -m integration
 
 ## Related Documentation
 
-- **Infrastructure Setup:** `scripts/gcp/setup-staging-infrastructure.sh`
+- **Infrastructure Setup:** `scripts/gcp/setup-preview-infrastructure.sh`
 - **ESO Configuration:** `deployments/security/external-secrets/values.yaml`
-- **ExternalSecret Manifests:** `deployments/overlays/staging-gke/external-secrets.yaml`
+- **ExternalSecret Manifests:** `deployments/overlays/preview-gke/external-secrets.yaml`
 - **IAM Requirements:** `docs/deployment/iam-rbac-requirements.md`
 - **Deployment Issues:** `docs/deployment/deployment-issues-prevention.md`
 

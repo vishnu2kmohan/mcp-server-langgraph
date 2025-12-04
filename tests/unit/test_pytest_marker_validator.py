@@ -2,7 +2,7 @@
 Unit tests for pytest marker validator.
 
 TDD Context:
-- RED (2025-11-12): E2E tests failed - missing 'staging' marker
+- RED (2025-11-12): E2E tests failed - missing 'preview' marker
 - GREEN: Added marker, created validator
 - REFACTOR: These tests ensure validator catches unregistered markers
 
@@ -58,7 +58,7 @@ class TestMarkerRegistration:
         registered = get_registered_markers()
 
         # The marker that caused the original E2E test failure
-        assert "staging" in registered, "staging marker must be registered"
+        assert "preview" in registered, "preview marker must be registered"
 
         # Other deployment-related markers
         assert "deployment" in registered, "deployment marker must be registered"
@@ -117,34 +117,34 @@ class TestRegressionPrevention:
     """
     Regression tests for the specific failure we encountered.
 
-    Ensures the 'staging' marker incident cannot recur.
+    Ensures the 'preview' marker incident cannot recur.
     """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_prevent_staging_marker_regression(self):
+    def test_prevent_preview_marker_regression(self):
         """
-        Prevent regression of missing 'staging' marker.
+        Prevent regression of missing 'preview' marker.
 
         Original failure (Run #19310965242):
-        ERROR collecting tests/deployment/test_staging_deployment_requirements.py
-        'staging' not found in `markers` configuration option
+        ERROR collecting tests/deployment/test_preview_deployment_requirements.py
+        'preview' not found in `markers` configuration option
         """
         registered = get_registered_markers()
 
-        assert "staging" in registered, (
-            "REGRESSION: staging marker is missing! "
+        assert "preview" in registered, (
+            "REGRESSION: preview marker is missing! "
             "This was the root cause of E2E test failure (Run #19310965242). "
-            "Add to pyproject.toml: 'staging: Staging environment deployment tests'"
+            "Add to pyproject.toml: 'preview: Preview environment deployment tests'"
         )
 
     def test_deployment_marker_exists(self):
-        """Ensure deployment marker exists (used as alternative to staging)"""
+        """Ensure deployment marker exists (used as alternative to preview)"""
         registered = get_registered_markers()
 
-        assert "deployment" in registered, "deployment marker should exist as it's related to staging tests"
+        assert "deployment" in registered, "deployment marker should exist as it's related to preview tests"
 
 
 @pytest.mark.xdist_group(name="testmarkervalidatorbehavior")
@@ -225,7 +225,7 @@ class TestSpecificMarkerCategories:
         registered = get_registered_markers()
 
         env_markers = [
-            "staging",  # The one that caused the failure
+            "preview",  # The one that caused the failure
             "deployment",
             "infrastructure",
             "ci",
@@ -260,10 +260,10 @@ class TestMarkerCount:
         """
         Regression test: Ensure we have exactly the expected markers.
 
-        After adding 'staging' marker, we should have 39+ markers.
+        After adding 'preview' marker, we should have 39+ markers.
         """
         registered = get_registered_markers()
 
         # After the fix, we have 39 markers
         # This will fail if someone removes markers
-        assert len(registered) >= 39, f"Expected 39+ markers after adding 'staging', but found {len(registered)}"
+        assert len(registered) >= 39, f"Expected 39+ markers after adding 'preview', but found {len(registered)}"

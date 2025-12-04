@@ -65,16 +65,16 @@ Successfully validated and resolved **3 out of 5 critical Codex findings** using
 **Validation**:
 ```bash
 # Before: FAILED
-$ kubectl kustomize deployments/overlays/staging-gke
+$ kubectl kustomize deployments/overlays/preview-gke
 Error: replace operation does not apply...
 
 # After: SUCCEEDS
-$ kubectl kustomize deployments/overlays/staging-gke
+$ kubectl kustomize deployments/overlays/preview-gke
 ✅ SUCCESS - all 6 overlays validated
 ```
 
 **Files Modified**:
-- `deployments/overlays/staging-gke/openfga-json-patch.yaml:8`
+- `deployments/overlays/preview-gke/openfga-json-patch.yaml:8`
 
 **Prevention**: Pre-commit hook now validates all Kustomize builds
 
@@ -207,7 +207,7 @@ $ kubectl kustomize deployments/overlays/staging-gke
 
 2. **Trigger Staging Deployment**: Verify Kustomize patch fix
    ```bash
-   gh workflow run deploy-staging-gke.yaml --ref main
+   gh workflow run deploy-preview-gke.yaml --ref main
    ```
 
 ### Medium Priority
@@ -225,7 +225,7 @@ $ kubectl kustomize deployments/overlays/staging-gke
 
 **Commit 1: Critical Codex Findings**
 - `.github/workflows/ci.yaml` (2 fixes)
-- `deployments/overlays/staging-gke/openfga-json-patch.yaml` (1 fix)
+- `deployments/overlays/preview-gke/openfga-json-patch.yaml` (1 fix)
 - `deployments/argocd/base/kustomization.yaml` (1 fix)
 - `tests/meta/test_github_actions_validation.py` (new test)
 

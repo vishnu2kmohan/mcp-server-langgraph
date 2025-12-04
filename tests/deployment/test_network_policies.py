@@ -27,6 +27,7 @@ REPO_ROOT = get_repo_root()
 POSTGRESQL_PORT = 5432
 REDIS_PORT = 6379
 MYSQL_PORT = 3306  # Should NOT be used for PostgreSQL
+CLOUD_SQL_PROXY_PORT = 3307  # Cloud SQL Auth Proxy default port (valid for Cloud SQL)
 
 
 @pytest.mark.xdist_group(name="testnetworkpolicyports")
@@ -41,7 +42,7 @@ class TestNetworkPolicyPorts:
     @requires_tool("kustomize")
     def staging_network_policies(self):
         """Load NetworkPolicies from staging overlay."""
-        overlay_path = REPO_ROOT / "deployments/overlays/staging-gke"
+        overlay_path = REPO_ROOT / "deployments/overlays/preview-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
@@ -67,12 +68,13 @@ class TestNetworkPolicyPorts:
 
     def test_staging_postgresql_uses_correct_port(self, staging_network_policies):
         """
-        Test that staging NetworkPolicies use port 5432 for PostgreSQL.
+        Test that staging NetworkPolicies use valid PostgreSQL ports.
 
-        Validates Finding #6: Cloud SQL ports using 3307 instead of 5432
+        Valid ports for PostgreSQL access:
+        - 5432: Direct PostgreSQL connection
+        - 3307: Cloud SQL Auth Proxy (used in GKE for Cloud SQL PostgreSQL)
 
-        PostgreSQL (and Cloud SQL PostgreSQL) uses port 5432, not 3307.
-        Port 3307 is the MySQL default port.
+        Invalid port: 3306 (MySQL default port)
         """
         violations = []
 
@@ -86,20 +88,24 @@ class TestNetworkPolicyPorts:
                 for port_idx, port_spec in enumerate(ports):
                     port = port_spec.get("port")
 
-                    # Check for MySQL port being used for PostgreSQL
-                    if port == MYSQL_PORT or port == 3307:
+                    # Only flag MySQL port (3306) - port 3307 is valid for Cloud SQL Proxy
+                    if port == MYSQL_PORT:
                         violations.append(
                             f"NetworkPolicy '{policy_name}' egress[{rule_idx}].ports[{port_idx}] "
-                            f"uses port {port} (MySQL). PostgreSQL requires port {POSTGRESQL_PORT}."
+                            f"uses port {port} (MySQL). PostgreSQL requires port {POSTGRESQL_PORT} or {CLOUD_SQL_PROXY_PORT}."
                         )
 
         assert not violations, "\n".join(violations)
 
     def test_production_postgresql_uses_correct_port(self, production_network_policies):
         """
-        Test that production NetworkPolicies use port 5432 for PostgreSQL.
+        Test that production NetworkPolicies use valid PostgreSQL ports.
 
-        PostgreSQL (and Cloud SQL PostgreSQL) uses port 5432, not 3307.
+        Valid ports for PostgreSQL access:
+        - 5432: Direct PostgreSQL connection
+        - 3307: Cloud SQL Auth Proxy (used in GKE for Cloud SQL PostgreSQL)
+
+        Invalid port: 3306 (MySQL default port)
         """
         violations = []
 
@@ -113,11 +119,11 @@ class TestNetworkPolicyPorts:
                 for port_idx, port_spec in enumerate(ports):
                     port = port_spec.get("port")
 
-                    # Check for MySQL port being used for PostgreSQL
-                    if port == MYSQL_PORT or port == 3307:
+                    # Only flag MySQL port (3306) - port 3307 is valid for Cloud SQL Proxy
+                    if port == MYSQL_PORT:
                         violations.append(
                             f"NetworkPolicy '{policy_name}' egress[{rule_idx}].ports[{port_idx}] "
-                            f"uses port {port} (MySQL). PostgreSQL requires port {POSTGRESQL_PORT}."
+                            f"uses port {port} (MySQL). PostgreSQL requires port {POSTGRESQL_PORT} or {CLOUD_SQL_PROXY_PORT}."
                         )
 
         assert not violations, "\n".join(violations)
@@ -265,7 +271,7 @@ class TestNetworkPolicyComments:
         This helps prevent confusion about which port is for which database.
         """
         # Read the staging network policy file directly
-        staging_netpol = REPO_ROOT / "deployments/overlays/staging-gke/network-policy.yaml"
+        staging_netpol = REPO_ROOT / "deployments/overlays/preview-gke/network-policy.yaml"
 
         if not staging_netpol.exists():
             pytest.skip("Staging network policy file not found")

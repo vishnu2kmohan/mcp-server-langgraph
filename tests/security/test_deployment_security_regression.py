@@ -64,11 +64,11 @@ class TestQdrantSecurityContext:
         This prevents the container from writing to its root filesystem,
         which is a security best practice. Previously flagged by Trivy.
 
-        File: deployments/overlays/staging-gke/qdrant-patch.yaml:12
+        File: deployments/overlays/preview-gke/qdrant-patch.yaml:12
         Finding: Trivy flagged missing securityContext.readOnlyRootFilesystem
         """
         qdrant_patch_path = (
-            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "staging-gke" / "qdrant-patch.yaml"
+            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "qdrant-patch.yaml"
         )
 
         assert qdrant_patch_path.exists(), f"Qdrant patch file not found: {qdrant_patch_path}"
@@ -100,7 +100,7 @@ class TestQdrantSecurityContext:
         This prevents privilege escalation attacks.
         """
         qdrant_patch_path = (
-            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "staging-gke" / "qdrant-patch.yaml"
+            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "qdrant-patch.yaml"
         )
 
         if not qdrant_patch_path.exists():
@@ -128,7 +128,7 @@ class TestQdrantSecurityContext:
         This follows the principle of least privilege.
         """
         qdrant_patch_path = (
-            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "staging-gke" / "qdrant-patch.yaml"
+            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "qdrant-patch.yaml"
         )
 
         if not qdrant_patch_path.exists():
@@ -169,11 +169,11 @@ class TestOpenFGAWorkloadIdentity:
         This enables secure authentication to GCP services without
         using service account keys.
 
-        File: deployments/overlays/staging-gke/serviceaccount-openfga.yaml:6
+        File: deployments/overlays/preview-gke/serviceaccount-openfga.yaml:6
         Finding: Missing iam.gke.io/gcp-service-account annotation
         """
         sa_path = (
-            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "staging-gke" / "serviceaccount-openfga.yaml"
+            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "serviceaccount-openfga.yaml"
         )
 
         assert sa_path.exists(), f"OpenFGA ServiceAccount file not found: {sa_path}"
@@ -205,7 +205,7 @@ class TestOpenFGAWorkloadIdentity:
         This ensures the principle of least privilege is documented.
         """
         sa_path = (
-            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "staging-gke" / "serviceaccount-openfga.yaml"
+            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "serviceaccount-openfga.yaml"
         )
 
         if not sa_path.exists():

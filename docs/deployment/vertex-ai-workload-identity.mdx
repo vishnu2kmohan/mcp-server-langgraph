@@ -199,7 +199,7 @@ kubectl annotate serviceaccount mcp-server-langgraph \
 
 #### Environment Variables
 
-The deployment is configured with the following environment variables in `deployments/overlays/staging-gke/deployment-patch.yaml`:
+The deployment is configured with the following environment variables in `deployments/overlays/preview-gke/deployment-patch.yaml`:
 
 ```yaml
 env:
@@ -223,7 +223,7 @@ env:
 The Kubernetes service account is annotated to use Workload Identity:
 
 ```yaml
-## deployments/overlays/staging-gke/serviceaccount-patch.yaml
+## deployments/overlays/preview-gke/serviceaccount-patch.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -239,7 +239,7 @@ After running the setup script, deploy the updated configuration:
 
 ```bash
 ## Apply the updated manifests
-kubectl apply -k deployments/overlays/staging-gke
+kubectl apply -k deployments/overlays/preview-gke
 
 ## Wait for rollout
 kubectl rollout status deployment/mcp-server-langgraph -n staging-mcp-server-langgraph
@@ -543,7 +543,7 @@ If you're currently using Google AI Studio API keys, here's how to migrate:
 
   <Step title="Deploy Updated Configuration">
     ```bash
-    kubectl apply -k deployments/overlays/staging-gke
+    kubectl apply -k deployments/overlays/preview-gke
     ```
   </Step>
 

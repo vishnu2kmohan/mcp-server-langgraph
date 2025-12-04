@@ -327,7 +327,7 @@ replicaCount: 2
             [
                 "helm",
                 "template",
-                "staging-release",
+                "preview-release",
                 str(CHART_PATH),
                 "-f",
                 str(staging_values),

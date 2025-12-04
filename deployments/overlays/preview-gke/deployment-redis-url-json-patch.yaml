@@ -1,0 +1,273 @@
+- op: replace
+  path: /spec/template/spec/containers/0/env
+  value:
+  # This JSON 6902 patch replaces the entire env array to fix the REDIS_URL and CHECKPOINT_REDIS_URL
+  # strategic merge issue where both configMapKeyRef and secretKeyRef were being merged.
+  #
+  # Context: The base deployment uses configMapKeyRef for these URLs, but staging needs to use
+  # secretKeyRef to point to Memorystore Redis (cloud-managed) instead of in-cluster Redis.
+  # Strategic merge patches don't properly replace valueFrom objects, causing both keys to exist.
+  #
+  # This patch is applied AFTER deployment-patch.yaml to ensure the final env array is correct.
+  #
+  # NOTE: This must be kept in sync with deployment-patch.yaml env vars.
+  # If you add new env vars to deployment-patch.yaml, they must be added here too.
+
+  # Observability
+  - name: ENABLE_TRACING
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: enable_tracing
+  - name: ENABLE_METRICS
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: enable_metrics
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://preview-otel-collector:4317"
+  - name: OTEL_SERVICE_NAME
+    value: "mcp-server-langgraph"
+  - name: OTEL_RESOURCE_ATTRIBUTES
+    value: "service.name=mcp-server-langgraph,service.version=1.0.0,deployment.environment=staging"
+
+  # Vertex AI Configuration (Workload Identity - no credentials needed)
+  - name: VERTEX_PROJECT
+    value: "vishnu-sandbox-20250310"
+  - name: VERTEX_LOCATION
+    value: "us-central1"
+
+  # API Keys
+  - name: ANTHROPIC_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: anthropic-api-key
+  - name: GOOGLE_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: google-api-key
+
+  # Authentication & Secrets
+  - name: JWT_SECRET_KEY
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: jwt-secret
+
+  # Redis Configuration - FIXED: Use secretKeyRef only (not configMapKeyRef)
+  - name: REDIS_HOST
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: redis-host
+  - name: REDIS_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: redis-password
+  - name: REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: redis-url
+  - name: CHECKPOINT_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: checkpoint-redis-url
+
+  # PostgreSQL Configuration
+  - name: POSTGRES_USER
+    value: "keycloak"
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: keycloak-db-password
+
+  # GDPR Configuration
+  - name: GDPR_STORAGE_BACKEND
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: gdpr_storage_backend
+  - name: GDPR_POSTGRES_URL
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: gdpr-postgres-url
+  - name: GDPR_RETENTION_DAYS
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: gdpr_retention_days
+
+  # OpenFGA Configuration
+  - name: OPENFGA_API_URL
+    value: "http://preview-openfga:8080"
+  - name: OPENFGA_STORE_ID
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: openfga-store-id
+  - name: OPENFGA_MODEL_ID
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: openfga-model-id
+
+  # Infisical Configuration
+  - name: INFISICAL_PROJECT_ID
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: infisical-project-id
+  - name: INFISICAL_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: infisical-client-id
+  - name: INFISICAL_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: infisical-client-secret
+
+  # Keycloak Configuration
+  - name: KEYCLOAK_SERVER_URL
+    value: "http://preview-keycloak:8080"
+  - name: KEYCLOAK_REALM
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: keycloak_realm
+  - name: KEYCLOAK_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: keycloak-client-id
+  - name: KEYCLOAK_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: keycloak-client-secret
+
+  # Qdrant Configuration
+  - name: QDRANT_HOST
+    value: "preview-qdrant"
+  - name: QDRANT_PORT
+    value: "6333"
+  - name: QDRANT_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: preview-mcp-server-langgraph-secrets
+        key: qdrant-api-key
+
+  # Session Configuration
+  - name: SESSION_BACKEND
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: session_backend
+  - name: REDIS_SSL
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: redis_ssl
+  - name: SESSION_COOKIE_SECURE
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: session_cookie_secure
+  - name: SESSION_COOKIE_SAMESITE
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: session_cookie_samesite
+  - name: SESSION_MAX_AGE_SECONDS
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: session_max_age_seconds
+
+  # Checkpoint Configuration
+  - name: CHECKPOINT_BACKEND
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: checkpoint_backend
+  - name: CHECKPOINT_REDIS_TTL
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: checkpoint_redis_ttl
+
+  # Rate Limiting
+  - name: RATE_LIMIT_PER_MINUTE
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: rate_limit_per_minute
+  - name: RATE_LIMIT_BURST
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: rate_limit_burst
+
+  # Circuit Breaker Configuration
+  - name: CIRCUIT_BREAKER_FAILURE_THRESHOLD
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: circuit_breaker_failure_threshold
+  - name: CIRCUIT_BREAKER_RECOVERY_TIMEOUT
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: circuit_breaker_recovery_timeout
+  - name: CIRCUIT_BREAKER_EXPECTED_EXCEPTION_RATE
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: circuit_breaker_expected_exception_rate
+  - name: CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: circuit_breaker_half_open_max_calls
+
+  # Retry Configuration
+  - name: RETRY_MAX_ATTEMPTS
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: retry_max_attempts
+  - name: RETRY_BASE_DELAY_SECONDS
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: retry_base_delay_seconds
+  - name: RETRY_MAX_DELAY_SECONDS
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: retry_max_delay_seconds
+
+  # Timeout Configuration
+  - name: DEFAULT_TIMEOUT_SECONDS
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: default_timeout_seconds
+  - name: LLM_TIMEOUT_SECONDS
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: llm_timeout_seconds
+  - name: DATABASE_TIMEOUT_SECONDS
+    valueFrom:
+      configMapKeyRef:
+        name: mcp-server-langgraph-config
+        key: database_timeout_seconds

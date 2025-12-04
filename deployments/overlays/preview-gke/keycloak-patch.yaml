@@ -1,0 +1,153 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+spec:
+  template:
+    spec:
+      initContainers: []
+      containers:
+      - name: keycloak
+        imagePullPolicy: Always
+        # Use optimized start command - skips runtime Quarkus augmentation
+        # The custom image (docker/Dockerfile.keycloak) pre-builds Quarkus artifacts
+        # This eliminates the ReadOnlyFileSystemException issue (GitHub #10150)
+        # Build-time options (--health-enabled, --metrics-enabled) are baked
+        # into the image via ENV variables in docker/Dockerfile.keycloak
+        # They CANNOT be passed at runtime with --optimized
+        args:
+        - start
+        - --optimized
+        - --http-enabled=true
+        - --http-port=8080
+        - --hostname-strict=false
+        - --log-level=INFO
+        ports:
+        - name: management
+          containerPort: 9000
+          protocol: TCP
+        # With --optimized flag, Keycloak no longer needs to modify JAR files
+        # We can now use readOnlyRootFilesystem: true for better security
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 10000
+          readOnlyRootFilesystem: true  # Now possible with optimized image!
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 250m
+            ephemeral-storage: 1Gi
+          limits:
+            memory: 1Gi
+            cpu: 1000m
+            ephemeral-storage: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: var-tmp
+          mountPath: /var/tmp
+        - name: cache
+          mountPath: /opt/keycloak/data/tmp
+        - name: work-dir
+          mountPath: /opt/keycloak/data
+        - name: providers
+          mountPath: /opt/keycloak/providers
+        - name: themes
+          mountPath: /opt/keycloak/themes
+        env:
+        - name: KC_DB_URL
+          value: jdbc:postgresql://127.0.0.1:5432/keycloak
+        - name: KC_DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: preview-mcp-server-langgraph-secrets
+              key: postgres-username
+        - name: KC_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: preview-mcp-server-langgraph-secrets
+              key: keycloak-db-password
+        startupProbe:
+          httpGet:
+            path: /health
+            port: management
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 60
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: management
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: management
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      - name: cloud-sql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
+        imagePullPolicy: Always
+        args:
+        - --structured-logs
+        - --port=5432
+        - --http-port=9801
+        - --http-address=0.0.0.0
+        - --health-check
+        - --private-ip
+        - vishnu-sandbox-20250310:us-central1:preview-mcp-slg-postgres
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65532
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 100m
+          limits:
+            memory: 256Mi
+            cpu: 200m
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 9801
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 9801
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: var-tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
+      - name: work-dir
+        emptyDir: {}
+      - name: providers
+        emptyDir: {}
+      - name: themes
+        emptyDir: {}

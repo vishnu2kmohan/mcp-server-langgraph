@@ -75,7 +75,7 @@ mcp-server-langgraph=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID
 ```
 
 **Files Modified**:
-- `.github/workflows/deploy-staging-gke.yaml:212`
+- `.github/workflows/deploy-preview-gke.yaml:212`
 
 ---
 
@@ -172,26 +172,26 @@ release-tools = [
 **Impact**: Errors caught late, reduced confidence in staging
 **Solution**: Added pre-deployment validation job
 
-**New Pre-Deployment Checks** (`deploy-staging-gke.yaml:49-81`):
+**New Pre-Deployment Checks** (`deploy-preview-gke.yaml:49-81`):
 ```yaml
 pre-deployment-checks:
   name: Pre-Deployment Validation
   runs-on: ubuntu-latest
   steps:
     - name: Validate Kustomize configuration
-      run: kubectl kustomize deployments/overlays/staging-gke > /tmp/manifests.yaml
+      run: kubectl kustomize deployments/overlays/preview-gke > /tmp/manifests.yaml
 
     - name: Validate manifests with kubeval
       run: |
         wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
         tar xf kubeval-linux-amd64.tar.gz
-        kubectl kustomize deployments/overlays/staging-gke | ./kubeval --strict
+        kubectl kustomize deployments/overlays/preview-gke | ./kubeval --strict
 
     - name: Security scan manifests
       uses: aquasecurity/trivy-action@0.33.1
       with:
         scan-type: 'config'
-        scan-ref: 'deployments/overlays/staging-gke'
+        scan-ref: 'deployments/overlays/preview-gke'
         severity: 'CRITICAL,HIGH'
         exit-code: '1'
 ```
@@ -288,7 +288,7 @@ pre-deployment-checks:
 6. `.github/workflows/coverage-trend.yaml` - removed install-test
 7. `.github/workflows/quality-tests.yaml` - removed install-test (5 occurrences)
 8. `.github/workflows/bump-deployment-versions.yaml` - fork guard
-9. `.github/workflows/deploy-staging-gke.yaml` - hard-coded paths, pre-deployment validation
+9. `.github/workflows/deploy-preview-gke.yaml` - hard-coded paths, pre-deployment validation
 10. `.github/workflows/deploy-production-gke.yaml` - docker action versions
 11. `.github/workflows/validate-kubernetes.yaml` - actions v4→v5, python v5→v6, helm v4→v4.3.1
 12. `.github/workflows/smoke-tests.yml` - actions v4→v5, python v5→v6

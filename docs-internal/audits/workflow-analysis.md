@@ -26,7 +26,7 @@ These workflows are essential for code quality, security, and deployment.
    - **Recommendation**: **KEEP ENABLED** - Security is non-negotiable
    - **Priority**: P0 (Critical)
 
-3. **deploy-staging-gke.yaml** - GKE Staging Deployment
+3. **deploy-preview-gke.yaml** - GKE Staging Deployment
    - **Triggers**: push (main), workflow_dispatch
    - **Purpose**: Deploy to staging environment for validation
    - **Status**: ✅ ENABLED
@@ -289,7 +289,7 @@ These workflows are intentionally disabled pending additional configuration.
 - `cost-tracking.yaml` - Daily
 
 **⏸️ On-Demand (Manual or event-triggered)**:
-- `deploy-staging-gke.yaml` - push to main
+- `deploy-preview-gke.yaml` - push to main
 - `deploy-production-gke.yaml` - release creation
 - `release.yaml` - tag push
 - `dependabot-automerge.yaml` - Dependabot PRs
@@ -409,7 +409,7 @@ These workflows are intentionally disabled pending additional configuration.
 ## Summary & Final Recommendations
 
 ### ✅ Enable (18 workflows)
-**Critical (8)**: ci, security-scan, deploy-staging-gke, deploy-production-gke, terraform-validate, build-hygiene, validate-deployments, dependabot-automerge
+**Critical (8)**: ci, security-scan, deploy-preview-gke, deploy-production-gke, terraform-validate, build-hygiene, validate-deployments, dependabot-automerge
 
 **Important (7)**: e2e-tests, quality-tests, coverage-trend, gcp-compliance-scan, link-checker, performance-regression, track-skipped-tests
 

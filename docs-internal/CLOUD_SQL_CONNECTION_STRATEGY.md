@@ -146,16 +146,16 @@ readinessProbe:
 
 ---
 
-### Staging (staging-gke)
+### Staging (preview-gke)
 
 **Method:** Hybrid (both methods configured)
 
 **Current state:** Both Cloud SQL Proxy and direct IP connection are configured, allowing flexibility for testing.
 
 **Configuration files:**
-- `deployments/overlays/staging-gke/deployment-patch.yaml` - Proxy sidecar (commented/optional)
-- `deployments/overlays/staging-gke/configmap-patch.yaml` - Direct IP connection strings
-- `deployments/overlays/staging-gke/network-policy.yaml` - Network rules for both methods
+- `deployments/overlays/preview-gke/deployment-patch.yaml` - Proxy sidecar (commented/optional)
+- `deployments/overlays/preview-gke/configmap-patch.yaml` - Direct IP connection strings
+- `deployments/overlays/preview-gke/network-policy.yaml` - Network rules for both methods
 
 **Recommendation:** Choose one method for staging to avoid confusion:
 
@@ -281,7 +281,7 @@ port: 5432  # PostgreSQL port
 ```
 
 **Files to check:**
-- `deployments/overlays/staging-gke/network-policy.yaml`
+- `deployments/overlays/preview-gke/network-policy.yaml`
 - `deployments/overlays/production-gke/network-policy.yaml`
 
 ### Issue: Proxy health checks failing

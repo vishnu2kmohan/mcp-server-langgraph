@@ -6,7 +6,7 @@ On 2025-11-06, the GKE staging cluster experienced a complete deployment failure
 
 ## Incident Timeline
 
-- **T+0h**: Initial deployment to staging-gke
+- **T+0h**: Initial deployment to preview-gke
 - **T+1h**: First signs of pod failures (CrashLoopBackOff)
 - **T+16h**: Analysis began - all services completely down
 - **T+17h**: Root causes identified via TDD analysis
@@ -194,7 +194,7 @@ done
 
 **Usage:**
 ```bash
-./scripts/validate-deployment.sh staging-gke
+./scripts/validate-deployment.sh preview-gke
 ```
 
 **Enforcement:**
@@ -380,7 +380,7 @@ The key learning: **Invest in prevention through automated testing, not detectio
 
 ## References
 
-- Fix Summary: `deployments/overlays/staging-gke/FIX_SUMMARY.md`
+- Fix Summary: `deployments/overlays/preview-gke/FIX_SUMMARY.md`
 - Deployment Runbook: `docs/DEPLOYMENT_RUNBOOK.md`
 - Test Suite: `tests/deployment/`
 - Validation Script: `scripts/validate-deployment.sh`

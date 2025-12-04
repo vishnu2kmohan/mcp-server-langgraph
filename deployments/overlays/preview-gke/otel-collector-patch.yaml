@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+spec:
+  template:
+    spec:
+      containers:
+      - name: otel-collector
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+            ephemeral-storage: 500Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+            ephemeral-storage: 1Gi
+        env:
+        - name: AWS_REGION
+          valueFrom:
+            secretKeyRef:
+              name: preview-otel-collector-secrets
+              key: aws-region
+              optional: true
+        - name: GCP_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: preview-otel-collector-secrets
+              key: gcp-project-id
+              optional: true
+        - name: AZURE_MONITOR_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: preview-otel-collector-secrets
+              key: azure-connection-string
+              optional: true
+        - name: DATADOG_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: preview-otel-collector-secrets
+              key: datadog-api-key
+              optional: true
+        - name: DATADOG_SITE
+          valueFrom:
+            secretKeyRef:
+              name: preview-otel-collector-secrets
+              key: datadog-site
+              optional: true
+        securityContext:
+          readOnlyRootFilesystem: true

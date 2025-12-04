@@ -146,12 +146,12 @@ terraform output -raw verification_command | bash
 After creating DNS records, deploy to GKE:
 
 ```bash
-kubectl apply -k ../../deployments/overlays/staging-gke
+kubectl apply -k ../../deployments/overlays/preview-gke
 ```
 
 The deployment will use DNS names configured in:
-- `deployments/overlays/staging-gke/configmap-patch.yaml`
-- `deployments/overlays/staging-gke/redis-session-service-patch.yaml`
+- `deployments/overlays/preview-gke/configmap-patch.yaml`
+- `deployments/overlays/preview-gke/redis-session-service-patch.yaml`
 
 ## Failover Handling
 

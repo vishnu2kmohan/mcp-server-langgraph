@@ -69,13 +69,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Documentation: 165-line README with comprehensive examples
     - **BREAKING**: Removed legacy `install-dev` and `install-test` inputs (use `extras` parameter instead)
   - **Created `setup-docker-buildx` composite action** (`.github/actions/setup-docker-buildx/`) - Consolidated 4 Docker setup patterns:
-    - Migrated 4 workflows (6 jobs total): `ci.yaml`, `release.yaml`, `deploy-staging-gke.yaml`, `deploy-production-gke.yaml`
+    - Migrated 4 workflows (6 jobs total): `ci.yaml`, `release.yaml`, `deploy-preview-gke.yaml`, `deploy-production-gke.yaml`
     - Removed ~18 lines of duplicate QEMU+Buildx setup code
     - Unified Docker configuration: Buildx 3.11.1, QEMU 3.7.0, multiplatform support
     - Features: Optional QEMU (single vs multiplatform), custom driver options, inline config
     - Documentation: 120-line README with usage examples
   - **Created `setup-gcp-auth` composite action** (`.github/actions/setup-gcp-auth/`) - Consolidated GCP Workload Identity Federation authentication:
-    - Migrated 4 workflows (12 jobs, 12 instances): `deploy-production-gke.yaml`, `deploy-staging-gke.yaml`, `gcp-drift-detection.yaml`, `ci.yaml`
+    - Migrated 4 workflows (12 jobs, 12 instances): `deploy-production-gke.yaml`, `deploy-preview-gke.yaml`, `gcp-drift-detection.yaml`, `ci.yaml`
     - Removed ~48 lines of duplicate auth code (92% consolidation - 12 of 13 instances)
     - Not migrated: `gcp-compliance-scan.yaml` (1 instance with workflow-specific conditional defaults)
     - Unified GCP auth: Workload Identity Federation, auth@v3, flexible token formats

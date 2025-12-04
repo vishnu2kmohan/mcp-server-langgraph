@@ -71,6 +71,6 @@ output "dns_setup_complete" {
     redis_dns         = module.cloud_dns.redis_dns_name
     redis_session_dns = module.cloud_dns.redis_session_dns_name
     verification_cmd  = module.cloud_dns.verification_command
-    next_steps        = "Run: kubectl apply -k ../../../deployments/overlays/staging-gke"
+    next_steps        = "Run: kubectl apply -k ../../../deployments/overlays/preview-gke"
   }
 }

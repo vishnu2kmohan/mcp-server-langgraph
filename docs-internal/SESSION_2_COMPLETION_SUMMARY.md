@@ -34,15 +34,15 @@ Successfully completed comprehensive Helm/Kubernetes configuration hardening acr
 
 #### P0-3: Network Policy JGroups Egress for Keycloak Clustering
 - **Problem**: Missing egress rules preventing Keycloak cluster formation (TCP/7800)
-- **Fix**: Validated existing configuration in staging-gke overlay
-- **Files**: `deployments/overlays/staging-gke/network-policy.yaml`
+- **Fix**: Validated existing configuration in preview-gke overlay
+- **Files**: `deployments/overlays/preview-gke/network-policy.yaml`
 - **Validation**: ✅ Network policy tests passing (7/7)
 - **Impact**: Keycloak clustering functional
 
 #### P0-4: Cloud SQL Proxy Health Probe Configuration
 - **Problem**: Health probes must use correct port (9801) and endpoints
 - **Fix**: Validated existing proxy configuration in staging/production overlays
-- **Files**: `deployments/overlays/staging-gke/keycloak-patch.yaml` (lines 101-150)
+- **Files**: `deployments/overlays/preview-gke/keycloak-patch.yaml` (lines 101-150)
 - **Validation**: ✅ Cloud SQL proxy tests passing (11/11)
 - **Impact**: Reliable proxy health monitoring
 
@@ -173,7 +173,7 @@ python scripts/audit_resource_ratios.py: All ratios ≤ 4.0 ✅
 - `deployments/base/qdrant-deployment.yaml` - /tmp and /var/tmp mounts
 - `deployments/base/otel-collector-deployment.yaml` - CPU ratio fix
 - `deployments/overlays/production-gke/deployment-containers-patch.yaml` - Cloud SQL proxy /tmp
-- `deployments/overlays/staging-gke/otel-collector-config.yaml` - Deprecated key removal
+- `deployments/overlays/preview-gke/otel-collector-config.yaml` - Deprecated key removal
 - `deployments/overlays/production-gke/otel-collector-config.yaml` - Deprecated key removal
 - `deployments/kubernetes/overlays/gcp/otel-collector-config*.yaml` - Deprecated key removal (2 files)
 

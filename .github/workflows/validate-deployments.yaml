@@ -124,7 +124,7 @@ jobs:
           echo "🔍 Checking for GDPR database configuration..."
 
           # Check GCP infrastructure script
-          if ! grep -q 'create gdpr' scripts/gcp/setup-staging-infrastructure.sh; then
+          if ! grep -q 'create gdpr' scripts/gcp/setup-preview-infrastructure.sh; then
             echo "❌ ERROR: GDPR database not found in GCP infrastructure script"
             exit 1
           fi

@@ -334,12 +334,12 @@ cat .claude/context/testing-patterns.md | grep -A 30 "Property"
 ```bash
 grep -r "gke\|GKE" docs/ deployments/ -l
 cat docs/deployment/kubernetes.mdx
-ls deployments/overlays/staging-gke/
+ls deployments/overlays/preview-gke/
 ```
 
 **Results**:
 - docs/deployment/gke-staging-implementation-summary.mdx
-- deployments/overlays/staging-gke/ (complete config)
+- deployments/overlays/preview-gke/ (complete config)
 - ADR-0013: Multi-Deployment Target Strategy
 
 ## Integration with Existing Commands

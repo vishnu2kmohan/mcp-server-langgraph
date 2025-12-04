@@ -289,7 +289,7 @@ def test_kustomize_overlay_builds_successfully(self, kustomize_overlays):
     """
     Validates that all Kustomize overlays build successfully.
 
-    FINDING #1: Kustomize ConfigMap collision in staging-gke overlay
+    FINDING #1: Kustomize ConfigMap collision in preview-gke overlay
     Root Cause: configMapGenerator with behavior:create conflicted with base ConfigMap
     Fix: Changed to strategic merge patch approach
     Prevention: This test validates all overlays build successfully

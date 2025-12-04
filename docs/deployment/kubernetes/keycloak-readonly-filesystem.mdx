@@ -29,7 +29,7 @@ This document outlines the plan to enable `readOnlyRootFilesystem: true` for Key
 
 **Date**: 2025-11-12
 **Status**: `readOnlyRootFilesystem: false` (temporarily disabled)
-**File**: `deployments/overlays/staging-gke/keycloak-patch.yaml:30`
+**File**: `deployments/overlays/preview-gke/keycloak-patch.yaml:30`
 **Issue**: Keycloak Quarkus runtime attempts to build JAR artifacts at startup
 
 ## Problem Analysis
@@ -111,7 +111,7 @@ docker push us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/keycl
 #### Phase 3: Update Kubernetes Configuration
 
 ```yaml
-# deployments/overlays/staging-gke/keycloak-patch.yaml
+# deployments/overlays/preview-gke/keycloak-patch.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -154,7 +154,7 @@ spec:
 
 3. **Kubernetes test**:
    ```bash
-   kubectl apply -k deployments/overlays/staging-gke
+   kubectl apply -k deployments/overlays/preview-gke
    kubectl get pods -n staging-mcp-server-langgraph -w
    kubectl logs staging-keycloak-xxx -c keycloak
    ```
@@ -234,7 +234,7 @@ kubectl set image deployment/staging-keycloak \
 
 # Or revert entire configuration
 git revert <commit-sha>
-kubectl apply -k deployments/overlays/staging-gke
+kubectl apply -k deployments/overlays/preview-gke
 ```
 
 ## Success Criteria
@@ -280,7 +280,7 @@ kubectl apply -k deployments/overlays/staging-gke
 
 ## Related Files
 
-- `deployments/overlays/staging-gke/keycloak-patch.yaml` - Current configuration
+- `deployments/overlays/preview-gke/keycloak-patch.yaml` - Current configuration
 - `deployments/base/keycloak-deployment.yaml` - Base deployment
 - `tests/deployment/test_configmap_secret_validation.py` - Validation tests
 
