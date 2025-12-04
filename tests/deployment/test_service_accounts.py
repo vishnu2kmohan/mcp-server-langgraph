@@ -14,10 +14,10 @@ import gc
 import re
 import subprocess
 from collections import defaultdict
-from pathlib import Path
 
 import pytest
 import yaml
+from tests.helpers.path_helpers import get_repo_root
 
 
 def validate_gcp_service_account_email(email: str) -> bool:
@@ -49,7 +49,7 @@ from tests.fixtures.tool_fixtures import requires_tool
 # Mark as unit test to ensure it runs in CI
 pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
-REPO_ROOT = Path(__file__).parent.parent.parent
+REPO_ROOT = get_repo_root()
 
 
 @pytest.mark.xdist_group(name="testserviceaccountseparation")

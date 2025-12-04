@@ -15,11 +15,12 @@ from pathlib import Path
 
 import pytest
 import yaml
+from tests.helpers.path_helpers import get_repo_root
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 # Define project root relative to test file
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = get_repo_root()
 DEPLOYMENTS_DIR = PROJECT_ROOT / "deployments"
 
 

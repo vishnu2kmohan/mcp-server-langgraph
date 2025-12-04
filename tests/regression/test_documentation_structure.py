@@ -15,16 +15,16 @@ Related: GitHub Issues #75-80
 
 import gc
 import json
-from pathlib import Path
 
 import pytest
+from tests.helpers.path_helpers import get_repo_root
 
 # Mark as unit+meta test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
 
 # Project root is 3 levels up from this file
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = get_repo_root()
 DOCS_DIR = PROJECT_ROOT / "docs"
 DOCS_JSON = DOCS_DIR / "docs.json"
 ADR_DIR = PROJECT_ROOT / "adr"

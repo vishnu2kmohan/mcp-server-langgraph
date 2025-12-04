@@ -28,11 +28,11 @@ import os
 import socket
 import subprocess
 import time
-from pathlib import Path
 from typing import Literal
+from tests.helpers.path_helpers import get_repo_root
 
 # Project root
-PROJECT_ROOT = Path(__file__).parent.parent
+PROJECT_ROOT = get_repo_root()
 
 
 def is_service_available(host: str, port: int, timeout: float = 2.0) -> bool:

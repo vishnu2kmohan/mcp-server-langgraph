@@ -9,15 +9,15 @@ Purpose: Prevent regression of Codex Finding #4 (DNS failover tests against real
 
 import ast
 import gc
-from pathlib import Path
 
 import pytest
+from tests.helpers.path_helpers import get_repo_root
 
 # Mark as unit+meta test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
 
-REPO_ROOT = Path(__file__).parent.parent.parent
+REPO_ROOT = get_repo_root()
 
 
 def _is_marker_node(node, marker_name: str) -> bool:

@@ -17,12 +17,13 @@ from pathlib import Path
 
 import pytest
 import yaml
+from tests.helpers.path_helpers import get_repo_root
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = pytest.mark.unit
 
 # Repository root - absolute path for reliable subprocess invocation
-_REPO_ROOT = Path(__file__).parent.parent.parent
+_REPO_ROOT = get_repo_root()
 
 
 def _run_validation_script(compose_file_path: Path) -> subprocess.CompletedProcess:
