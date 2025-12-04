@@ -23,10 +23,15 @@ resources:
   - serviceaccounts.yaml  # Component-specific ServiceAccounts (postgres, redis, etc.)
   - serviceaccount-roles.yaml  # RBAC for component ServiceAccounts
   - hpa.yaml
-  - pdb.yaml
+  # NOTE: PDB moved to overlays - environment-specific availability requirements
+  # Staging: minAvailable=1 (tolerate disruption for cost/flexibility)
+  # Production: minAvailable=2 (strict HA requirements)
+  # See: deployments/overlays/*/pod-disruption-budget.yaml
   - networkpolicy.yaml
-  - limitrange.yaml
-  - resourcequota.yaml
+  # NOTE: LimitRange and ResourceQuota moved to overlays - environment-specific
+  # Staging: Lower quotas for cost optimization
+  # Production: Higher quotas for scale and performance
+  # See: deployments/overlays/*/resource-quotas.yaml
   # PostgreSQL database (for OpenFGA, Keycloak, and GDPR compliance)
   - postgres-statefulset.yaml
   - postgres-service.yaml
