@@ -12,14 +12,15 @@ spec:
         # Use optimized start command - skips runtime Quarkus augmentation
         # The custom image (docker/Dockerfile.keycloak) pre-builds Quarkus artifacts
         # This eliminates the ReadOnlyFileSystemException issue (GitHub #10150)
+        # Build-time options (--health-enabled, --metrics-enabled) are baked
+        # into the image via ENV variables in docker/Dockerfile.keycloak
+        # They CANNOT be passed at runtime with --optimized
         args:
         - start
         - --optimized
         - --http-enabled=true
         - --http-port=8080
         - --hostname-strict=false
-        - --health-enabled=true
-        - --metrics-enabled=true
         - --log-level=INFO
         ports:
         - name: management
