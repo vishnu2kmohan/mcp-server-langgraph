@@ -376,6 +376,19 @@ jobs:
         mypy src/mcp_server_langgraph --no-error-summary
         echo "✓ All type checks passed!"
 
+    - name: Run Helm deployment tests
+      if: matrix.python-version == '3.12'
+      run: |
+        source .venv/bin/activate
+        echo "=== Running Helm deployment tests ==="
+        echo "Charts directory contents:"
+        ls -la deployments/helm/mcp-server-langgraph/charts/ || echo "Charts directory not found"
+
+        # Run deployment tests WITHOUT xdist parallelism to avoid race conditions
+        # These tests require Helm CLI and pre-built chart dependencies
+        OTEL_SDK_DISABLED=true pytest tests/integration/deployment/test_helm_templates.py -v --tb=short
+        echo "✓ Helm deployment tests passed!"
+
     - name: Upload coverage artifact (XML)
       if: matrix.python-version == '3.12'
       uses: actions/upload-artifact@v5
