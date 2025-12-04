@@ -30,7 +30,8 @@ from tests.fixtures.tool_fixtures import requires_tool
 # These tests run in a dedicated CI step after helm dependency build, not in main test matrix
 # Must include 'integration' for marker enforcement (required markers: unit, e2e, meta, integration)
 pytestmark = [pytest.mark.integration, pytest.mark.deployment, pytest.mark.requires_helm]
-REPO_ROOT = Path(__file__).parent.parent.parent
+# File is at tests/integration/deployment/test_helm_templates.py (4 levels deep from repo root)
+REPO_ROOT = Path(__file__).parent.parent.parent.parent
 CHART_PATH = REPO_ROOT / "deployments" / "helm" / "mcp-server-langgraph"
 
 
