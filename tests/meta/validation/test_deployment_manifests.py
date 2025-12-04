@@ -180,6 +180,59 @@ class TestNetworkPolicy:
             [f"  - Port {port} ({required_egress_ports[port]})" for port in sorted(missing_ports)]
         )
 
+    @pytest.mark.parametrize("overlay", ["staging-gke", "production-gke"])
+    def test_gke_overlay_network_policy_has_cloud_sql_proxy_port(self, project_root: Path, overlay: str) -> None:
+        """
+        Test that GKE overlay NetworkPolicies include port 3307 for Cloud SQL Proxy.
+
+        REGRESSION FIX: Commit b418a471 incorrectly changed port 3307 to 5432.
+        Cloud SQL Proxy with --private-ip uses port 3307 to connect to Cloud SQL
+        Admin API before establishing the tunnel on port 5432.
+
+        This test prevents the regression from happening again.
+        """
+        overlay_dir = project_root / "deployments" / "overlays" / overlay
+        netpol_file = overlay_dir / "network-policy.yaml"
+
+        if not netpol_file.exists():
+            pytest.skip(f"NetworkPolicy file not found for overlay: {overlay}")
+
+        documents = load_yaml_documents(netpol_file)
+
+        # NetworkPolicies that need Cloud SQL Proxy port 3307
+        policies_needing_port_3307 = ["keycloak-network-policy", "openfga-network-policy"]
+        policies_missing_port = []
+
+        for doc in documents:
+            if doc.get("kind") != "NetworkPolicy":
+                continue
+
+            policy_name = doc.get("metadata", {}).get("name", "")
+            if policy_name not in policies_needing_port_3307:
+                continue
+
+            # Check egress rules for port 3307
+            egress_rules = doc.get("spec", {}).get("egress", [])
+            found_port_3307 = False
+
+            for egress in egress_rules:
+                ports = egress.get("ports", [])
+                for port_spec in ports:
+                    if port_spec.get("port") == 3307:
+                        found_port_3307 = True
+                        break
+                if found_port_3307:
+                    break
+
+            if not found_port_3307:
+                policies_missing_port.append(policy_name)
+
+        assert not policies_missing_port, (
+            f"GKE overlay '{overlay}' NetworkPolicies missing Cloud SQL Proxy port 3307:\n"
+            + "\n".join([f"  - {policy}" for policy in policies_missing_port])
+            + "\n\nCloud SQL Proxy with --private-ip requires port 3307 for Admin API connection."
+        )
+
 
 @pytest.mark.requires_kustomize
 @pytest.mark.xdist_group(name="testkustomizeoverlays")

@@ -251,10 +251,14 @@ spec:
     - protocol: TCP
       port: 988
   # Allow Cloud SQL database connection (private IP)
+  # Port 3307: Cloud SQL Proxy Admin API for private IP connections
+  # Port 5432: PostgreSQL database port (after tunnel is established)
   - to:
     - ipBlock:
         cidr: 10.0.0.0/8
     ports:
+    - protocol: TCP
+      port: 3307  # Cloud SQL Proxy Admin API (private IP mode)
     - protocol: TCP
       port: 5432  # Database port (PostgreSQL)
   # Allow Cloud SQL Auth Proxy API access (sqladmin.googleapis.com)
@@ -321,10 +325,14 @@ spec:
     - protocol: TCP
       port: 988
   # Allow Cloud SQL database connection (private IP)
+  # Port 3307: Cloud SQL Proxy Admin API for private IP connections
+  # Port 5432: PostgreSQL database port (after tunnel is established)
   - to:
     - ipBlock:
         cidr: 10.0.0.0/8
     ports:
+    - protocol: TCP
+      port: 3307  # Cloud SQL Proxy Admin API (private IP mode)
     - protocol: TCP
       port: 5432  # Database port (PostgreSQL)
   # Allow Cloud SQL Auth Proxy API access (sqladmin.googleapis.com)
