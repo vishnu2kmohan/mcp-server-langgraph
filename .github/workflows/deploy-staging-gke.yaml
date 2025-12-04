@@ -276,8 +276,11 @@ jobs:
         working-directory: deployments/overlays/staging-gke
         run: |
           # Update image tag in kustomization.yaml
+          # IMPORTANT: Image name must match exactly what's in kustomization.yaml
+          # The kustomization.yaml uses ghcr.io/vishnu2kmohan/mcp-server-langgraph as the base name
+          # which gets transformed to the GCP Artifact Registry path via newName
           kustomize edit set image \
-            mcp-server-langgraph=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/agent:${{ needs.build-and-push.outputs.image_tag }}
+            ghcr.io/vishnu2kmohan/mcp-server-langgraph=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/agent:${{ needs.build-and-push.outputs.image_tag }}
           echo "✓ Updated image tag to: ${{ needs.build-and-push.outputs.image_tag }}"
           cat kustomization.yaml | grep -A 3 "images:"
 
@@ -304,11 +307,47 @@ jobs:
       - name: Wait for rollout
         id: rollout
         run: |
-          echo "Waiting for deployment rollout..."
-          # Timeout increased to 15m to match Helm deployment progressDeadlineSeconds (900s)
-          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
+          echo "Waiting for deployment rollouts..."
+
+          # Track overall success
+          ROLLOUT_SUCCESS=true
+
+          # Main application deployment (required - blocks on failure)
+          echo "=== Main Application Rollout ==="
+          if ! kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
             -n ${{ env.NAMESPACE }} \
-            --timeout=15m
+            --timeout=15m; then
+            echo "::error::Main application rollout failed"
+            ROLLOUT_SUCCESS=false
+          fi
+
+          # Keycloak deployment (required - blocks on failure)
+          echo ""
+          echo "=== Keycloak Rollout ==="
+          if ! kubectl rollout status deployment/staging-keycloak \
+            -n ${{ env.NAMESPACE }} \
+            --timeout=10m; then
+            echo "::error::Keycloak rollout failed"
+            ROLLOUT_SUCCESS=false
+          fi
+
+          # OpenFGA deployment (required - blocks on failure)
+          echo ""
+          echo "=== OpenFGA Rollout ==="
+          if ! kubectl rollout status deployment/staging-openfga \
+            -n ${{ env.NAMESPACE }} \
+            --timeout=10m; then
+            echo "::error::OpenFGA rollout failed"
+            ROLLOUT_SUCCESS=false
+          fi
+
+          # Fail if any rollout failed
+          if [ "$ROLLOUT_SUCCESS" = "false" ]; then
+            echo "::error::One or more deployments failed to rollout"
+            exit 1
+          fi
+
+          echo "✓ All deployments rolled out successfully"
 
       # Capture deployment failure details
       - name: Capture deployment failure details

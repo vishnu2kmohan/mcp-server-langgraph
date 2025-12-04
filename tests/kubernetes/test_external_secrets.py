@@ -16,11 +16,12 @@ from pathlib import Path
 
 import pytest
 import yaml
+from tests.helpers.path_helpers import get_repo_root
 
 pytestmark = pytest.mark.deployment
 
 # Define project root relative to test file
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = get_repo_root()
 DEPLOYMENTS_DIR = PROJECT_ROOT / "deployments"
 
 

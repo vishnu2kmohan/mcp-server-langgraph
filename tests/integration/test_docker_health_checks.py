@@ -25,10 +25,11 @@ import pytest
 import yaml
 
 from tests.fixtures.tool_fixtures import requires_tool
+from tests.helpers.path_helpers import get_repo_root
 
 pytestmark = pytest.mark.integration
 
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = get_repo_root()
 
 
 def is_port_in_use(port: int, host: str = "127.0.0.1") -> bool:

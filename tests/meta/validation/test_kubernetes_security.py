@@ -57,23 +57,24 @@ class TestSecurityContexts:
         - base: readOnlyRootFilesystem: true ❌ (not deployed, needs fix)
         - production-gke: readOnlyRootFilesystem: true ❌ (not deployed, needs fix)
 
-        This is documented in:
-        - deployments/overlays/staging-gke/.trivyignore (comprehensive AVD-KSV-0014 documentation)
-        - .trivyignore (root - staging-gke exception only)
+        With the custom optimized Keycloak image (docker/Dockerfile.keycloak), we can now
+        use readOnlyRootFilesystem: true because Quarkus is pre-compiled at build time.
 
-        Security mitigations for Keycloak:
-        - emptyDir volumes (ephemeral, isolated per pod)
-        - runAsNonRoot: true, runAsUser: 10000
-        - allowPrivilegeEscalation: false
-        - capabilities.drop: ALL
+        Previous exception (no longer needed):
+        - Keycloak required writable filesystem for Quarkus JIT compilation
+        - See: https://github.com/keycloak/keycloak/issues/10150
 
-        See: https://github.com/keycloak/keycloak/issues/10150 (upstream tracking)
+        Current approach:
+        - Custom image runs 'kc.sh build' during Docker build (pre-compilation)
+        - Runtime uses '--optimized' flag to skip augmentation
+        - readOnlyRootFilesystem: true can now be used safely
+        - See: docker/Dockerfile.keycloak and https://www.keycloak.org/server/containers
         """
         # Documented exceptions (see .trivyignore for detailed justification)
-        # Note: This exception should apply to ALL environments when they are deployed,
-        # but currently only staging-gke is configured correctly
-        READONLY_FILESYSTEM_EXCEPTIONS = {
-            "keycloak": "Quarkus JIT compilation requires writable filesystem (AVD-KSV-0014)",
+        # NOTE: Keycloak exception REMOVED - custom optimized image supports readOnlyRootFilesystem: true
+        # See: docker/Dockerfile.keycloak for the pre-compilation approach
+        READONLY_FILESYSTEM_EXCEPTIONS: dict[str, str] = {
+            # No exceptions currently - all containers should use readOnlyRootFilesystem: true
         }
 
         for patch_file in deployment_patch_files:

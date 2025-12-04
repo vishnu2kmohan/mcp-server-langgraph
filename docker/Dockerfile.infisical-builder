@@ -50,6 +50,9 @@ RUN --mount=type=cache,target=/root/.cargo/registry \
 # Add Rust to PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
 
+# Install uv for dependency management (project standard)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 # Set PyO3 compatibility flags
 ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
@@ -58,12 +61,12 @@ ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 COPY requirements-infisical.txt .
 
 # Build wheels with caching
-RUN --mount=type=cache,target=/root/.cache/pip \
+RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/root/.cargo/git \
     --mount=type=cache,target=/root/.cache/cargo-build \
     mkdir -p /wheels && \
-    pip wheel --no-cache-dir --wheel-dir=/wheels -r requirements-infisical.txt
+    uv pip wheel --no-cache --wheel-dir=/wheels -r requirements-infisical.txt
 
 # Export stage for extracting wheels
 FROM scratch AS wheels-export
@@ -72,9 +75,12 @@ COPY --from=builder /wheels /
 # Test stage - verify wheels are installable
 FROM python:${PYTHON_VERSION}-slim AS test
 
+# Install uv for dependency management (project standard)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 COPY --from=builder /wheels /wheels
 
-RUN pip install --no-cache-dir --no-index --find-links=/wheels infisical-python && \
+RUN uv pip install --system --no-cache --no-index --find-links=/wheels infisical-python && \
     python -c "from infisical_client import InfisicalClient; print('✓ Infisical wheel installed successfully')"
 
 # Final stage - metadata

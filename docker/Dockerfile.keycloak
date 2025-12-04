@@ -1,0 +1,89 @@
+# ==============================================================================
+# Keycloak Optimized Docker Image
+# ==============================================================================
+#
+# This Dockerfile builds an optimized Keycloak image that pre-compiles Quarkus
+# during the Docker build process, eliminating runtime JIT compilation.
+#
+# PROBLEM:
+# Keycloak 26.4+ uses Quarkus which performs JIT compilation at startup when
+# running `kc.sh start` (non-optimized mode). This requires write access to
+# JAR files (ZipFS), which fails in read-only container environments even with
+# readOnlyRootFilesystem: false because container image layers are immutable.
+#
+# SOLUTION:
+# Run `kc.sh build` during Docker image build to pre-compile Quarkus artifacts,
+# then use `start --optimized` at runtime to skip runtime augmentation.
+#
+# Reference: https://www.keycloak.org/server/containers
+# Issue: GitHub #10150 (Keycloak ReadOnlyFileSystemException)
+# ==============================================================================
+
+# Build argument for Keycloak version - should match deployments/base/keycloak-deployment.yaml
+ARG KEYCLOAK_VERSION=26.4.2
+
+# ==============================================================================
+# Stage 1: Builder - Pre-compile Quarkus artifacts
+# ==============================================================================
+FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS builder
+
+# Build-time configuration
+# These settings are baked into the optimized image
+ENV KC_DB=postgres
+ENV KC_HTTP_ENABLED=true
+ENV KC_HEALTH_ENABLED=true
+ENV KC_METRICS_ENABLED=true
+ENV KC_FEATURES=token-exchange,admin-fine-grained-authz
+
+# Set working directory
+WORKDIR /opt/keycloak
+
+# Run the build command to pre-compile Quarkus
+# This creates optimized artifacts in /opt/keycloak/lib/quarkus/
+RUN /opt/keycloak/bin/kc.sh build
+
+# ==============================================================================
+# Stage 2: Runtime - Minimal production image
+# ==============================================================================
+FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}
+
+# Re-declare ARG after FROM to use in LABELs
+ARG KEYCLOAK_VERSION
+
+# OCI Image Labels for traceability
+LABEL org.opencontainers.image.title="Keycloak Optimized"
+LABEL org.opencontainers.image.description="Pre-built Keycloak image with Quarkus optimization for Kubernetes"
+LABEL org.opencontainers.image.version="${KEYCLOAK_VERSION}"
+LABEL org.opencontainers.image.vendor="MCP Server LangGraph"
+LABEL org.opencontainers.image.source="https://github.com/vishnu2kmohan/mcp-server-langgraph"
+LABEL org.opencontainers.image.documentation="https://www.keycloak.org/server/containers"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+
+# Copy pre-built Quarkus artifacts from builder stage
+# This is the critical step that eliminates runtime augmentation
+COPY --from=builder /opt/keycloak/lib/quarkus/ /opt/keycloak/lib/quarkus/
+
+# Set working directory
+WORKDIR /opt/keycloak
+
+# Run as non-root user (Keycloak default UID)
+# Explicit USER instruction required for Trivy DS002 compliance
+USER 1000
+
+# Health check for container orchestration
+# Uses Keycloak's built-in health endpoint (enabled via KC_HEALTH_ENABLED=true)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl --fail --silent http://localhost:8080/health/ready || exit 1
+
+# Expose ports
+# 8080 - HTTP
+# 8443 - HTTPS
+# 9000 - Management (health/metrics when KC_HTTP_MANAGEMENT_PORT is set)
+EXPOSE 8080 8443 9000
+
+# Set entrypoint to kc.sh
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+
+# Default command - use --optimized to skip runtime augmentation
+# Additional flags can be passed at runtime (e.g., --hostname, --db-url)
+CMD ["start", "--optimized"]

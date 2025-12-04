@@ -1,0 +1,37 @@
+# ==============================================================================
+# JSON6902 Patch: OTEL Collector Liveness Probe Type Change
+# ==============================================================================
+#
+# ISSUE: kube-score CRITICAL - Container has same readiness/liveness probe
+# SOLUTION: Change liveness from httpGet to tcpSocket (different probe type)
+#
+# OTEL Collector exposes:
+# - HTTP endpoint on port 13133 (/) - used for readiness
+# - TCP port 13133 - used for liveness (checks service is listening)
+#
+# This provides proper differentiation while maintaining health monitoring.
+# ==============================================================================
+
+- op: remove
+  path: /spec/template/spec/containers/0/livenessProbe/httpGet
+
+- op: add
+  path: /spec/template/spec/containers/0/livenessProbe/tcpSocket
+  value:
+    port: 13133
+
+- op: replace
+  path: /spec/template/spec/containers/0/livenessProbe/initialDelaySeconds
+  value: 15
+
+- op: replace
+  path: /spec/template/spec/containers/0/livenessProbe/periodSeconds
+  value: 30
+
+- op: replace
+  path: /spec/template/spec/containers/0/livenessProbe/timeoutSeconds
+  value: 10
+
+- op: replace
+  path: /spec/template/spec/containers/0/livenessProbe/failureThreshold
+  value: 5

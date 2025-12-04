@@ -226,9 +226,18 @@ patches:
 # UPDATE THIS: Replace vishnu-production-project with your actual GCP project ID
 # For production, use Artifact Registry in your GCP project
 images:
+  # Main application image
   - name: mcp-server-langgraph
     newName: us-central1-docker.pkg.dev/vishnu-production-project/mcp-production/mcp-server-langgraph
     newTag: 2.8.0  # Updated via CI/CD
+
+  # Keycloak optimized image (pre-built with kc.sh build)
+  # This image eliminates runtime Quarkus augmentation that causes ReadOnlyFileSystemException
+  # Built by: .github/workflows/build-keycloak-image.yaml
+  # See: docker/Dockerfile.keycloak
+  - name: quay.io/keycloak/keycloak
+    newName: us-central1-docker.pkg.dev/vishnu-production-project/mcp-production/keycloak
+    newTag: "26.4.2"
 
 # Variable replacements for environment-specific values
 # Set GCP_PROJECT_ID environment variable before running kustomize build

@@ -19,14 +19,14 @@ Prevention: These tests validate Terraform and workflow consistency before merge
 
 import gc
 import re
-from pathlib import Path
 
 import pytest
+from tests.helpers.path_helpers import get_repo_root
 
 # Mark as unit+meta test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
-REPO_ROOT = Path(__file__).parent.parent.parent.parent
+REPO_ROOT = get_repo_root()
 TERRAFORM_WIF_DIR = REPO_ROOT / "terraform" / "environments" / "gcp-staging-wif-only"
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 

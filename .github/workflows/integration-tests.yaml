@@ -84,7 +84,9 @@ jobs:
             markers: "integration and (database or gdpr)"
             label: "database"
           - test-category: infrastructure
-            markers: "integration and not auth and not api and not database and not gdpr"
+            # Exclude deployment tests - they require Helm CLI and dependencies
+            # Helm template tests run in ci.yaml which has proper Helm setup
+            markers: "integration and not auth and not api and not database and not gdpr and not deployment"
             label: "infra"
 
     steps:

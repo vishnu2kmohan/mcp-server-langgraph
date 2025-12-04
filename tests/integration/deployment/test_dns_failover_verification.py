@@ -17,12 +17,12 @@ Usage:
 import gc
 import subprocess
 import time
-from pathlib import Path
 
 import pytest
 import yaml
 
 from tests.fixtures.tool_fixtures import requires_tool
+from tests.helpers.path_helpers import get_repo_root
 
 pytestmark = pytest.mark.integration
 
@@ -35,7 +35,7 @@ def skip_if_no_cluster(kubectl_connected):
     return True
 
 
-REPO_ROOT = Path(__file__).parent.parent.parent
+REPO_ROOT = get_repo_root()
 
 
 @pytest.mark.deployment

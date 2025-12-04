@@ -20,10 +20,10 @@ TDD Phase: RED - Test written first, implementation follows
 import os
 import socket
 import subprocess
-from pathlib import Path
 
 import asyncpg
 import pytest
+from tests.helpers.path_helpers import get_repo_root
 
 # Module-level pytest marker (required by pre-commit hook)
 pytestmark = pytest.mark.meta
@@ -52,7 +52,7 @@ skip_without_postgres = pytest.mark.skipif(not is_postgres_available(), reason=S
 
 
 # Test configuration
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = get_repo_root()
 SQL_SCHEMA_FILE = PROJECT_ROOT / "migrations" / "001_gdpr_schema.sql"
 ALEMBIC_INI = PROJECT_ROOT / "alembic.ini"
 

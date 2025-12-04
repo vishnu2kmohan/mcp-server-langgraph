@@ -20,15 +20,15 @@ Regression Prevention:
 
 import gc
 import subprocess
-from pathlib import Path
 
 import pytest
 import yaml
+from tests.helpers.path_helpers import get_repo_root
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
-REPO_ROOT = Path(__file__).parent.parent.parent
+REPO_ROOT = get_repo_root()
 BASE_SA_PATH = REPO_ROOT / "deployments" / "base" / "serviceaccounts.yaml"
 STAGING_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "staging-gke"
 PRODUCTION_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "production-gke"

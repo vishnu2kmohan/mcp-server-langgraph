@@ -1,0 +1,38 @@
+# ==============================================================================
+# JSON6902 Patch: OpenFGA Liveness Probe Type Change
+# ==============================================================================
+#
+# ISSUE: kube-score CRITICAL - Container has same readiness/liveness probe
+# SOLUTION: Change liveness from httpGet to grpc (different probe type)
+#
+# OpenFGA exposes:
+# - HTTP API on port 8080 (/healthz) - used for readiness
+# - gRPC API on port 8081 - used for liveness
+#
+# This provides proper differentiation while maintaining health monitoring.
+# ==============================================================================
+
+- op: remove
+  path: /spec/template/spec/containers/0/livenessProbe/httpGet
+
+- op: add
+  path: /spec/template/spec/containers/0/livenessProbe/grpc
+  value:
+    port: 8081
+    service: ""  # Empty string uses default gRPC health service
+
+- op: replace
+  path: /spec/template/spec/containers/0/livenessProbe/initialDelaySeconds
+  value: 30
+
+- op: replace
+  path: /spec/template/spec/containers/0/livenessProbe/periodSeconds
+  value: 30
+
+- op: replace
+  path: /spec/template/spec/containers/0/livenessProbe/timeoutSeconds
+  value: 10
+
+- op: replace
+  path: /spec/template/spec/containers/0/livenessProbe/failureThreshold
+  value: 5

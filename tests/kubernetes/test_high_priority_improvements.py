@@ -19,10 +19,11 @@ from typing import Any
 
 import pytest
 import yaml
+from tests.helpers.path_helpers import get_repo_root
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = get_repo_root()
 DEPLOYMENTS_BASE = PROJECT_ROOT / "deployments" / "base"
 
 

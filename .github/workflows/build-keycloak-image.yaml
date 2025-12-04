@@ -1,0 +1,241 @@
+name: Build Keycloak Optimized Image
+
+# ==============================================================================
+# Keycloak Optimized Image Build Workflow
+# ==============================================================================
+#
+# This workflow builds and pushes the optimized Keycloak image that pre-compiles
+# Quarkus during Docker build, eliminating runtime JIT compilation issues.
+#
+# Triggers:
+# - Push to main (when Dockerfile.keycloak changes)
+# - Manual dispatch (for ad-hoc builds)
+# - Weekly schedule (to get security updates)
+#
+# The image is pushed to:
+# - Staging: us-central1-docker.pkg.dev/PROJECT/mcp-staging/keycloak
+# - Production: us-central1-docker.pkg.dev/PROJECT/mcp-production/keycloak
+# ==============================================================================
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker/Dockerfile.keycloak'
+      - '.github/workflows/build-keycloak-image.yaml'
+
+  # Weekly rebuild to pick up base image security updates
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 6 AM UTC
+
+  workflow_dispatch:
+    inputs:
+      keycloak_version:
+        description: 'Keycloak version to build (e.g., 26.4.2)'
+        required: false
+        default: '26.4.2'
+      push_to_production:
+        description: 'Also push to production registry'
+        type: boolean
+        default: false
+
+concurrency:
+  group: build-keycloak-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
+  KEYCLOAK_VERSION: ${{ github.event.inputs.keycloak_version || '26.4.2' }}
+
+permissions:
+  contents: read
+  id-token: write  # Required for Workload Identity Federation
+
+jobs:
+  build-and-push:
+    name: Build Keycloak Image
+    runs-on: ubuntu-latest
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    timeout-minutes: 30
+
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Validate Dockerfile exists
+        run: |
+          if [ ! -f docker/Dockerfile.keycloak ]; then
+            echo "::error::Dockerfile.keycloak not found"
+            exit 1
+          fi
+          echo "✅ Dockerfile.keycloak found"
+
+      # Authenticate to Google Cloud using Workload Identity Federation
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: ./.github/actions/setup-gcp-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
+          token-format: access_token
+
+      # Configure Docker to use gcloud credentials
+      - name: Configure Docker for Artifact Registry
+        run: |
+          echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Set up Docker Buildx
+        uses: ./.github/actions/setup-docker-buildx
+
+      # Generate image metadata (tags, labels)
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak
+          tags: |
+            type=raw,value=${{ env.KEYCLOAK_VERSION }}
+            type=raw,value=${{ env.KEYCLOAK_VERSION }}-{{sha}}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.title=Keycloak Optimized
+            org.opencontainers.image.description=Pre-built Keycloak with Quarkus optimization
+            org.opencontainers.image.version=${{ env.KEYCLOAK_VERSION }}
+
+      # Build and push to staging registry
+      - name: Build and push Keycloak image
+        id: build
+        uses: docker/build-push-action@v6.18.0
+        with:
+          context: .
+          file: docker/Dockerfile.keycloak
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            KEYCLOAK_VERSION=${{ env.KEYCLOAK_VERSION }}
+          cache-from: |
+            type=registry,ref=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:latest
+          cache-to: |
+            type=inline
+          provenance: true
+          sbom: true
+
+      - name: Output image info
+        run: |
+          echo "## Keycloak Image Built Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ env.KEYCLOAK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Digest:** ${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.meta.outputs.tags }}' | tr ',' '\n' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+
+  # Push to production registry (manual trigger only)
+  push-to-production:
+    name: Push to Production
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event.inputs.push_to_production == 'true'
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: ./.github/actions/setup-gcp-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL }}
+          token-format: access_token
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Copy image to production registry
+        run: |
+          # Pull from staging
+          docker pull ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:${{ env.KEYCLOAK_VERSION }}
+
+          # Tag for production
+          docker tag \
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:${{ env.KEYCLOAK_VERSION }} \
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}
+
+          docker tag \
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:${{ env.KEYCLOAK_VERSION }} \
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:latest
+
+          # Push to production
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:latest
+
+          echo "✅ Pushed to production registry"
+
+      - name: Output production info
+        run: |
+          echo "## Production Push Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+
+  # Verify the built image works
+  verify-image:
+    name: Verify Image
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: ./.github/actions/setup-gcp-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
+          token-format: access_token
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Pull and verify image
+        run: |
+          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:${{ env.KEYCLOAK_VERSION }}"
+
+          echo "Pulling image: $IMAGE"
+          docker pull "$IMAGE"
+
+          echo ""
+          echo "Verifying optimized build..."
+          # The --optimized flag should work without error if the image is properly built
+          docker run --rm "$IMAGE" start --optimized --help | head -20
+
+          echo ""
+          echo "✅ Image verification passed"
+
+      - name: Security scan with Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: '${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:${{ env.KEYCLOAK_VERSION }}'
+          format: 'sarif'
+          output: 'trivy-keycloak-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-keycloak-results.sarif'

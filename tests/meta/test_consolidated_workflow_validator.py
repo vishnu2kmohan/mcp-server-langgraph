@@ -11,15 +11,15 @@ Following TDD principles - this test defines expected behavior before implementa
 import gc
 import subprocess
 import sys
-from pathlib import Path
 
 import pytest
+from tests.helpers.path_helpers import get_repo_root
 
 # Mark as unit+meta test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
 # Project root directory
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = get_repo_root()
 
 
 @pytest.mark.xdist_group(name="testconsolidatedworkflowvalidator")

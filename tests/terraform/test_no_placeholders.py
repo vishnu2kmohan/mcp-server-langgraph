@@ -15,11 +15,12 @@ import re
 from pathlib import Path
 
 import pytest
+from tests.helpers.path_helpers import get_repo_root
 
 # Mark as unit test to ensure it runs in CI (infrastructure validation)
 pytestmark = pytest.mark.unit
 # Define project root relative to test file
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = get_repo_root()
 TERRAFORM_DIR = PROJECT_ROOT / "terraform"
 
 
