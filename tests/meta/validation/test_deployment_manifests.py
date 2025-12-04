@@ -280,11 +280,12 @@ class TestBaseKustomization:
         resources = kustomization.get("resources", [])
 
         # Required manifest files that should be in resources
+        # NOTE: pdb.yaml, limitrange.yaml, resourcequota.yaml are intentionally
+        # NOT in base - they're defined in overlays because they have
+        # environment-specific values (staging vs production)
         required_manifests = [
             "ingress-http.yaml",
             "otel-collector-deployment.yaml",
-            "limitrange.yaml",
-            "resourcequota.yaml",
             "postgres-networkpolicy.yaml",
             "redis-networkpolicy.yaml",
         ]
