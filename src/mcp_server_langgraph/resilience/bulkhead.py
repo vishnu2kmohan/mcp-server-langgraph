@@ -16,7 +16,7 @@ from typing import Any, ParamSpec, TypeVar
 from opentelemetry import trace
 
 from mcp_server_langgraph.observability.telemetry import bulkhead_active_operations_gauge, bulkhead_rejected_counter
-from mcp_server_langgraph.resilience.config import get_resilience_config
+from mcp_server_langgraph.resilience.config import get_provider_limit, get_resilience_config
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -25,12 +25,76 @@ P = ParamSpec("P")
 T = TypeVar("T")
 
 
+# Provider-specific bulkhead semaphores (separate from resource-type bulkheads)
+_provider_bulkhead_semaphores: dict[str, asyncio.Semaphore] = {}
+
+
+def get_provider_bulkhead(provider: str) -> asyncio.Semaphore:
+    """
+    Get or create a bulkhead semaphore for a specific LLM provider.
+
+    Provider bulkheads are separate from resource-type bulkheads and use
+    provider-specific limits based on upstream rate limits.
+
+    Args:
+        provider: LLM provider name (e.g., "anthropic", "openai", "vertex_ai")
+
+    Returns:
+        asyncio.Semaphore configured for the provider's concurrency limit
+
+    Example:
+        >>> semaphore = get_provider_bulkhead("anthropic")
+        >>> async with semaphore:
+        ...     await call_anthropic_api()
+    """
+    if provider in _provider_bulkhead_semaphores:
+        return _provider_bulkhead_semaphores[provider]
+
+    # Get provider-specific limit from config
+    limit = get_provider_limit(provider)
+
+    # Create semaphore with provider limit
+    semaphore = asyncio.Semaphore(limit)
+    _provider_bulkhead_semaphores[provider] = semaphore
+
+    logger.info(
+        f"Created provider bulkhead for {provider}",
+        extra={"provider": provider, "limit": limit},
+    )
+
+    return semaphore
+
+
+def reset_provider_bulkhead(provider: str) -> None:
+    """
+    Reset a provider bulkhead (for testing).
+
+    Args:
+        provider: Provider name to reset
+
+    Warning: Only use this for testing! In production, bulkheads should not be reset.
+    """
+    if provider in _provider_bulkhead_semaphores:
+        del _provider_bulkhead_semaphores[provider]
+        logger.warning(f"Provider bulkhead reset for {provider} (testing only)")
+
+
+def reset_all_provider_bulkheads() -> None:
+    """
+    Reset all provider bulkheads (for testing).
+
+    Warning: Only use this for testing! In production, bulkheads should not be reset.
+    """
+    _provider_bulkhead_semaphores.clear()
+    logger.warning("All provider bulkheads reset (testing only)")
+
+
 class BulkheadConfig:
     """Bulkhead configuration for different resource types"""
 
     def __init__(
         self,
-        llm_limit: int = 25,
+        llm_limit: int = 10,
         openfga_limit: int = 50,
         redis_limit: int = 100,
         db_limit: int = 20,
@@ -101,8 +165,8 @@ def with_bulkhead(
         wait: If True, wait for slot. If False, reject immediately if no slots available.
 
     Usage:
-        # Limit to 25 concurrent LLM calls (default)
-        @with_bulkhead(resource_type="llm", limit=25)
+        # Limit to 10 concurrent LLM calls (default)
+        @with_bulkhead(resource_type="llm", limit=10)
         async def call_llm(prompt: str) -> str:
             async with httpx.AsyncClient() as client:
                 response = await client.post(...)
@@ -139,7 +203,7 @@ def with_bulkhead(
                 f"bulkhead.{resource_type}",
                 attributes={
                     "bulkhead.resource_type": resource_type,
-                    "bulkhead.limit": limit or 25,
+                    "bulkhead.limit": limit or 10,
                     "bulkhead.available": semaphore._value if hasattr(semaphore, "_value") else 0,
                 },
             ) as span:

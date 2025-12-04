@@ -8,7 +8,7 @@ Enhanced with resilience patterns (ADR-0026):
 - Circuit breaker for provider failures
 - Retry logic with exponential backoff
 - Timeout enforcement
-- Bulkhead isolation (25 concurrent LLM calls max)
+- Bulkhead isolation (10 concurrent LLM calls max, provider-aware)
 - Exponential backoff between fallback attempts
 """
 

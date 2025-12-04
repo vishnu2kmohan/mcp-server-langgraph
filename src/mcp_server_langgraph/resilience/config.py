@@ -6,12 +6,93 @@ Centralized configuration for all resilience patterns:
 - Retry policies and backoff strategies
 - Timeout values per operation type
 - Bulkhead concurrency limits
+- Provider-aware concurrency limits
+
+Provider rate limit references:
+- Anthropic: https://docs.anthropic.com/en/api/rate-limits (Tier 1: 50 RPM → ~8 concurrent)
+- OpenAI: https://platform.openai.com/docs/guides/rate-limits (~500 RPM → ~15 concurrent)
+- Google Vertex AI: https://cloud.google.com/vertex-ai/generative-ai/docs/quotas (DSQ, ~5000 RPM)
+- AWS Bedrock: https://docs.aws.amazon.com/bedrock/latest/userguide/quotas.html (Claude Opus: 50 RPM)
 """
 
 import os
 from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+# =============================================================================
+# Provider-Specific Concurrency Limits
+# =============================================================================
+# These limits are based on typical rate limits and assume ~5-10s average LLM latency.
+# Formula: concurrent_limit ≈ (requests_per_minute / 60) * avg_latency_seconds
+#
+# Example: Anthropic Tier 1 = 50 RPM, 10s latency → (50/60) * 10 ≈ 8 concurrent
+
+PROVIDER_CONCURRENCY_LIMITS: dict[str, int] = {
+    # Anthropic Claude (direct API): Conservative Tier 1 (50 RPM)
+    # Higher tiers (Tier 4: 4000 RPM) can override via env var
+    "anthropic": 8,
+    # OpenAI GPT-4: Moderate tier (~500 RPM typical)
+    "openai": 15,
+    # Google Gemini via AI Studio or direct API
+    # Gemini 2.5 Flash: 5000 RPM per region (very generous)
+    "google": 15,
+    # Google Vertex AI (Gemini models): Higher limits for vishnu-sandbox-20250310
+    # Gemini 2.5 Flash/Pro: 3.4M TPM → ~1400 RPM (2500 tokens/req)
+    # Conservative: 15 concurrent (assumes 1s avg latency)
+    "vertex_ai": 15,
+    # Anthropic Claude via Vertex AI (MaaS) - vishnu-sandbox-20250310:
+    # Claude Opus 4.5: 12M TPM, Sonnet 4.5: 3M TPM, Haiku 4.5: 10M TPM
+    # Lowest is Sonnet 4.5: 3M TPM → ~1200 RPM (2500 tokens/req)
+    # With ~3s avg latency: 20 req/sec * 3s = 60 concurrent possible
+    # Conservative: 15 concurrent (balanced across all 4.5 models)
+    "vertex_ai_anthropic": 15,
+    # AWS Bedrock: Claude Opus is most restrictive (50 RPM)
+    # Sonnet has higher limits (500 RPM) but we use conservative default
+    "bedrock": 8,
+    # Ollama: Local model, no upstream rate limits
+    # Limited only by local hardware resources
+    "ollama": 50,
+    # Azure OpenAI: Similar to OpenAI, but deployment-specific
+    "azure": 15,
+}
+
+# Default limit for unknown providers
+DEFAULT_PROVIDER_LIMIT = 10
+
+
+def get_provider_limit(provider: str) -> int:
+    """
+    Get the concurrency limit for a specific provider.
+
+    Checks environment variables first (e.g., BULKHEAD_ANTHROPIC_LIMIT=5),
+    then falls back to the default for that provider.
+
+    Args:
+        provider: Provider name (e.g., "anthropic", "openai", "vertex_ai")
+
+    Returns:
+        Concurrency limit for the provider
+    """
+    # Check for environment variable override
+    env_var = f"BULKHEAD_{provider.upper()}_LIMIT"
+    env_value = os.getenv(env_var)
+
+    if env_value is not None:
+        try:
+            return int(env_value)
+        except ValueError:
+            # Invalid value, log and use default
+            import logging
+
+            logging.warning(
+                f"Invalid {env_var}={env_value}, using default for {provider}",
+                extra={"env_var": env_var, "invalid_value": env_value},
+            )
+
+    # Use provider-specific limit or default
+    return PROVIDER_CONCURRENCY_LIMITS.get(provider, DEFAULT_PROVIDER_LIMIT)
 
 
 class JitterStrategy(str, Enum):
@@ -85,7 +166,7 @@ class TimeoutConfig(BaseModel):
 class BulkheadConfig(BaseModel):
     """Bulkhead configuration per resource type"""
 
-    llm_limit: int = Field(default=25, description="Max concurrent LLM calls")
+    llm_limit: int = Field(default=10, description="Max concurrent LLM calls")
     openfga_limit: int = Field(default=50, description="Max concurrent OpenFGA checks")
     redis_limit: int = Field(default=100, description="Max concurrent Redis operations")
     db_limit: int = Field(default=20, description="Max concurrent DB queries")
@@ -161,7 +242,7 @@ class ResilienceConfig(BaseModel):
                 http=int(os.getenv("TIMEOUT_HTTP", "15")),
             ),
             bulkhead=BulkheadConfig(
-                llm_limit=int(os.getenv("BULKHEAD_LLM_LIMIT", "25")),
+                llm_limit=int(os.getenv("BULKHEAD_LLM_LIMIT", "10")),
                 openfga_limit=int(os.getenv("BULKHEAD_OPENFGA_LIMIT", "50")),
                 redis_limit=int(os.getenv("BULKHEAD_REDIS_LIMIT", "100")),
                 db_limit=int(os.getenv("BULKHEAD_DB_LIMIT", "20")),

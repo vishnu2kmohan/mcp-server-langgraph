@@ -90,7 +90,7 @@ class Settings(BaseSettings):
     llm_provider: str = "google"  # google, anthropic, openai, ollama, azure, bedrock, vertex_ai
 
     # Anthropic (Direct API)
-    # Latest models: claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001, claude-opus-4-1-20250805
+    # Latest models: claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001, claude-opus-4-5-20251101
     anthropic_api_key: str | None = None
 
     # OpenAI
