@@ -1,0 +1,927 @@
+---
+title: LLM Provider Resilience Best Practices
+description: Comprehensive guide to rate limiting, concurrency management, and resilience patterns for LLM API providers including Anthropic, OpenAI, Google, Azure, and AWS Bedrock
+icon: 'shield-check'
+contentType: guide
+seoTitle: LLM Provider Resilience - Rate Limits & Best Practices | MCP Server LangGraph
+seoDescription: Production-ready resilience patterns for LLM APIs. Learn rate limiting strategies, concurrency sizing, and quota management for Anthropic Claude, OpenAI GPT, Google Gemini, Azure OpenAI, and AWS Bedrock.
+keywords:
+  - LLM resilience
+  - rate limiting
+  - concurrency
+  - token bucket
+  - AIMD
+  - circuit breaker
+  - Anthropic Claude
+  - OpenAI GPT
+  - Google Gemini
+  - Azure OpenAI
+  - AWS Bedrock
+  - Vertex AI
+---
+
+# LLM Provider Resilience Best Practices
+
+This guide provides production-ready strategies for managing rate limits, concurrency, and resilience across multiple LLM providers. These patterns ensure optimal throughput while preventing rate limit errors and cascading failures.
+
+## Overview
+
+When integrating with LLM APIs, you must balance three competing concerns:
+
+1. **Latency** - Minimize response time for individual requests
+2. **Throughput** - Maximize total requests per unit time
+3. **Reliability** - Prevent rate limit errors and service degradation
+
+This guide covers the mathematical foundations, provider-specific configurations, and implementation patterns to achieve this balance.
+
+---
+
+## Provider Rate Limits Reference
+
+### Anthropic Claude (Direct API)
+
+Anthropic uses a tiered system based on usage history. Rate limits are measured in:
+- **RPM** (Requests Per Minute)
+- **ITPM** (Input Tokens Per Minute)
+- **OTPM** (Output Tokens Per Minute)
+
+| Tier | Eligibility | Claude 3.5 Sonnet RPM | Claude 3 Opus RPM | Claude 3 Haiku RPM |
+|------|------------|----------------------|-------------------|-------------------|
+| **Free** | New accounts | 50 | 5 | 50 |
+| **Build** | Pay-as-you-go | 50 | 50 | 50 |
+| **Scale** | High volume | 1,000+ | 2,000+ | 4,000+ |
+
+<Note>
+Anthropic uses the **token bucket algorithm** for rate limiting. Capacity continuously replenishes up to your maximum limit, rather than resetting at fixed intervals.
+</Note>
+
+**Token Limits (Build Tier)**:
+- Claude 3.5 Sonnet: 40,000 TPM
+- Claude 3 Opus: 20,000 TPM
+- Claude 3 Haiku: 50,000 TPM
+
+For Scale Tier or higher limits, [contact Anthropic sales](https://www.anthropic.com/contact-sales).
+
+### OpenAI (Direct API)
+
+OpenAI organizes customers into usage tiers that unlock automatically based on spend:
+
+| Tier | GPT-4o RPM | GPT-4o TPM | GPT-3.5 Turbo RPM | GPT-3.5 Turbo TPM |
+|------|------------|------------|-------------------|-------------------|
+| **Tier 1** | 500 | 30,000 | 3,500 | 200,000 |
+| **Tier 2** | 5,000 | 300,000 | 3,500 | 2,000,000 |
+| **Tier 3** | 5,000+ | 450,000 | 3,500 | 4,000,000 |
+| **Tier 4** | 10,000 | 800,000 | 10,000 | 10,000,000 |
+
+<Tip>
+As of September 2025, OpenAI increased GPT-5 Tier 1 limits to 500,000 TPM and 1,000 RPM.
+</Tip>
+
+**Shared Limits**: Some model families share rate limits. Check your organization's limits page in the [OpenAI Dashboard](https://platform.openai.com/settings/organization/limits).
+
+### Google Vertex AI (Gemini)
+
+Gemini models on Vertex AI use **Dynamic Shared Quota (DSQ)** - no hard per-user limits. Quotas are shared across the platform based on capacity.
+
+| Model | Recommended RPM | Notes |
+|-------|-----------------|-------|
+| Gemini 2.5 Flash | 60+ | High throughput model |
+| Gemini 2.5 Pro | 60+ | Complex reasoning |
+| Gemini 3.0 Preview | 60+ | Latest capabilities |
+
+<Info>
+With DSQ, focus on monitoring actual throughput rather than pre-defined limits. Use adaptive concurrency (see below) to maximize utilization.
+</Info>
+
+### Google Vertex AI (Anthropic Claude via MaaS)
+
+Anthropic Claude models accessed through Vertex AI have different limits than the direct API:
+
+| Model | RPM | Input TPM | Output TPM | Region |
+|-------|-----|-----------|------------|--------|
+| Claude Opus 4.5 | 1,200 | 12,000,000 | 1,200,000 | us-east5 |
+| Claude Sonnet 4.5 | 3,000 | 3,000,000 | 300,000 | us-east5 |
+| Claude Haiku 4.5 | 10,000 | 10,000,000 | 1,000,000 | us-east5 |
+
+<Warning>
+Claude models are only available in the `us-east5` region on Vertex AI. Ensure your application accounts for this geographic constraint.
+</Warning>
+
+### Azure OpenAI Service
+
+Azure quotas are **per-region, per-subscription**. The TPM/RPM conversion is:
+
+```
+RPM = TPM ÷ 1000 × 6
+```
+
+| Model | Default TPM | Default RPM | Limit Per Region |
+|-------|-------------|-------------|------------------|
+| GPT-4.1 Global Standard | 1,000,000 | 6,000 | Per subscription |
+| GPT-4o | 240,000 | 1,440 | Per subscription |
+| GPT-4o Realtime | 100,000 | 1,000 | Per subscription |
+
+<Tip>
+Azure allows creating deployments across multiple regions. Your effective limit is `quota × number_of_regions`.
+</Tip>
+
+### AWS Bedrock (Anthropic Claude)
+
+AWS Bedrock quotas are **region-specific** and vary by account age:
+
+| Account Type | Claude 3.5 Sonnet RPM | Claude 3 Opus RPM |
+|--------------|----------------------|-------------------|
+| **New accounts** (2024+) | 2-50 | 2-50 |
+| **Established accounts** | 200-250 | 200-250 |
+
+<Warning>
+New AWS accounts created since 2024 receive significantly lower default quotas. Use established accounts or request quota increases.
+</Warning>
+
+**Multi-Region Strategy**:
+```
+Total effective RPM = Quota × Number of regions
+Example: 250 RPM × 3 regions = 750 RPM
+```
+
+---
+
+## Concurrency Sizing with Little's Law
+
+Little's Law provides the mathematical foundation for sizing concurrent request pools:
+
+<Card title="Little's Law">
+```
+Concurrency = Throughput × Average Latency
+```
+
+Where:
+- **Concurrency** = Number of parallel requests in flight
+- **Throughput** = Requests per second (RPM ÷ 60)
+- **Average Latency** = Mean response time in seconds
+</Card>
+
+### Practical Application
+
+**Example: Claude Sonnet 4.5 on Vertex AI**
+
+Given:
+- RPM limit: 3,000
+- Average latency: 1.2 seconds
+
+Calculate:
+```python
+throughput = 3000 / 60  # = 50 requests/second
+concurrency = 50 × 1.2  # = 60 concurrent requests
+```
+
+**Recommended: Apply 60% Headroom**
+
+```python
+safe_concurrency = 60 × 0.6  # = 36 concurrent requests
+```
+
+### Per-Provider Recommendations
+
+| Provider | Effective RPM | Avg Latency | Calculated Concurrency | Recommended |
+|----------|---------------|-------------|------------------------|-------------|
+| Anthropic (Scale) | 1,000 | 1.5s | 25 | **15** |
+| OpenAI (Tier 2) | 5,000 | 0.8s | 67 | **40** |
+| Vertex AI Gemini | 60 | 0.5s | 0.5 | **10** (floor) |
+| Vertex AI Claude Sonnet | 3,000 | 1.2s | 60 | **36** |
+| Azure OpenAI GPT-4 | 1,440 | 1.0s | 24 | **15** |
+| AWS Bedrock Claude | 250 | 1.5s | 6 | **5** |
+
+---
+
+## Adaptive Concurrency with AIMD
+
+The **AIMD (Additive Increase, Multiplicative Decrease)** algorithm, inspired by TCP congestion control, automatically tunes concurrency limits based on observed error rates.
+
+### How AIMD Works
+
+```
+On Success Streak: limit = min(max_limit, limit + 1)
+On Rate Limit Error: limit = max(min_limit, limit × 0.75)
+```
+
+<Accordion title="AIMD Algorithm Details">
+
+**Parameters**:
+- `min_limit`: Floor value (e.g., 2)
+- `max_limit`: Ceiling value (e.g., 50)
+- `initial_limit`: Starting point (e.g., 10)
+- `success_streak_threshold`: Successes before increase (e.g., 10)
+- `decrease_factor`: Multiplicative factor on error (e.g., 0.75)
+
+**Benefits**:
+- **Self-healing**: Automatically recovers from rate limit errors
+- **Adaptive**: Finds optimal concurrency for current conditions
+- **Conservative**: Fast decrease, slow recovery prevents oscillation
+
+</Accordion>
+
+### Implementation
+
+```python
+from mcp_server_langgraph.resilience.adaptive import AdaptiveBulkhead
+
+# Create provider-specific adaptive bulkhead
+bulkhead = AdaptiveBulkhead(
+    min_limit=5,
+    max_limit=50,
+    initial_limit=25,
+    error_threshold=0.1,  # 10% error rate triggers decrease
+    decrease_factor=0.75,
+    success_streak_threshold=10,
+)
+
+async def call_llm(prompt: str) -> str:
+    async with bulkhead.get_semaphore():
+        try:
+            result = await llm.invoke(prompt)
+            bulkhead.record_success()
+            return result
+        except RateLimitError:
+            bulkhead.record_error()
+            raise
+```
+
+---
+
+## Token Bucket Rate Limiting
+
+The **token bucket algorithm** provides pre-emptive rate limiting with burst capacity, preventing rate limit errors before they occur.
+
+### How Token Bucket Works
+
+<Steps>
+  <Step title="Bucket Capacity">
+    Bucket holds tokens up to a maximum (burst) capacity
+  </Step>
+  <Step title="Token Consumption">
+    Each request consumes one token from the bucket
+  </Step>
+  <Step title="Refill Rate">
+    Tokens are added at a constant rate (RPM ÷ 60)
+  </Step>
+  <Step title="Request Gating">
+    Requests wait if bucket is empty (no 429 errors)
+  </Step>
+</Steps>
+
+### Implementation
+
+```python
+from mcp_server_langgraph.resilience.rate_limit import TokenBucketRateLimiter
+
+# Configure for provider limits
+rate_limiter = TokenBucketRateLimiter(
+    rpm=50,             # Requests per minute
+    burst_seconds=10,   # Burst capacity (10 seconds worth)
+)
+
+async def call_llm(prompt: str) -> str:
+    await rate_limiter.acquire()  # Blocks if bucket empty
+    return await llm.invoke(prompt)
+```
+
+### Per-Provider Defaults
+
+| Provider | Default RPM | Burst Seconds | Tokens/Second |
+|----------|-------------|---------------|---------------|
+| Anthropic (Direct) | 50 | 10 | 0.83 |
+| OpenAI | 60 | 10 | 1.0 |
+| Google Vertex AI (Gemini) | 60 | 10 | 1.0 |
+| Vertex AI (Anthropic) | 1,000 | 10 | 16.67 |
+| Azure OpenAI | 60 | 10 | 1.0 |
+| AWS Bedrock | 50 | 10 | 0.83 |
+
+---
+
+## Fallback Strategies
+
+When the primary model fails (rate limit, timeout, circuit open), fallbacks maintain service availability.
+
+### Fallback Chain Pattern
+
+```python
+FALLBACK_MODELS = [
+    "claude-sonnet-4-5",   # Primary
+    "claude-haiku-4-5",    # Fast fallback
+    "gpt-4o",              # Cross-provider fallback
+]
+
+async def invoke_with_fallback(prompt: str) -> str:
+    delay = 1.0  # Exponential backoff between attempts
+
+    for i, model in enumerate(FALLBACK_MODELS):
+        try:
+            return await invoke_model(model, prompt)
+        except (RateLimitError, TimeoutError):
+            if i < len(FALLBACK_MODELS) - 1:
+                await asyncio.sleep(delay)
+                delay *= 2  # Exponential backoff
+
+    raise AllFallbacksExhaustedError()
+```
+
+### Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Protect Fallbacks" icon="shield">
+    Each fallback model should have its own circuit breaker to prevent cascade failures
+  </Card>
+  <Card title="Exponential Backoff" icon="clock">
+    Wait 1s, 2s, 4s between fallback attempts to let rate limits recover
+  </Card>
+  <Card title="Cross-Provider" icon="arrows-rotate">
+    Include models from different providers in fallback chain
+  </Card>
+  <Card title="Graceful Degradation" icon="stairs">
+    Fallbacks may have different capabilities - handle appropriately
+  </Card>
+</CardGroup>
+
+---
+
+## Retry with Backoff Strategies
+
+### Standard vs Overload-Aware Retry
+
+| Configuration | Standard Retry | Overload-Aware Retry |
+|--------------|----------------|---------------------|
+| Max Attempts | 3 | 6 |
+| Exponential Max | 10s | 60s |
+| Jitter | Full | Decorrelated |
+| Retry-After Honor | No | Yes |
+
+### Retry-After Header
+
+When receiving a 429 response, use the `Retry-After` header:
+
+```python
+try:
+    response = await llm.invoke(prompt)
+except RateLimitError as e:
+    if e.retry_after:
+        await asyncio.sleep(e.retry_after)
+        response = await llm.invoke(prompt)
+```
+
+### Error Classification
+
+| Error Type | Should Retry? | Strategy |
+|------------|---------------|----------|
+| 429 Rate Limit | Yes | Use Retry-After or exponential backoff |
+| 529 Overload | Yes | Extended retry with decorrelated jitter |
+| 500 Server Error | Yes | Standard exponential backoff |
+| 400 Bad Request | No | Fix request and retry |
+| 401/403 Auth | No | Fix credentials |
+| Timeout | Yes | With increased timeout |
+
+---
+
+## Quota Management by Provider
+
+This section provides detailed step-by-step instructions for requesting and managing quota increases for each LLM provider.
+
+### Google Cloud Platform (Vertex AI)
+
+GCP Vertex AI quotas control access to Gemini models and Anthropic Claude models (via Model as a Service).
+
+<Tabs>
+  <Tab title="Console (Recommended)">
+    **Step-by-Step: GCP Console**
+
+    1. **Navigate to Quotas**
+       - Go to [IAM & Admin → Quotas & System Limits](https://console.cloud.google.com/iam-admin/quotas)
+       - Select your project from the dropdown
+
+    2. **Find the Quota**
+       - In the **Filter** box, enter: `aiplatform.googleapis.com`
+       - For Gemini models, search for metrics like:
+         - `GenerateContentRequestsPerMinutePerProjectPerRegion`
+         - `TokensPerMinutePerProjectPerRegion`
+       - For Claude models (MaaS), search for:
+         - `anthropic_claude_requests_per_minute`
+         - `anthropic_claude_tokens_per_minute`
+
+    3. **Request Increase**
+       - Select the checkbox next to the quota
+       - Click **Edit Quotas** button at the top
+       - Enter your desired new limit
+       - Provide a justification (e.g., "Production workload requires 3,000 RPM for Claude Sonnet 4.5")
+       - Click **Submit Request**
+
+    4. **Track Status**
+       - Check your email for approval (typically 24-48 hours)
+       - View pending requests at [Quota Increase Requests](https://console.cloud.google.com/iam-admin/quotas/requests)
+
+    <Tip>
+    **Common Quota Metrics for Vertex AI:**
+    - `generate_content_requests_per_minute_per_project_per_region`
+    - `online_prediction_requests_per_minute_per_project_per_region`
+    - `anthropic/claude-3-5-sonnet/requests_per_minute`
+    </Tip>
+  </Tab>
+  <Tab title="gcloud CLI">
+    **Step-by-Step: gcloud CLI**
+
+    ```bash
+    # 1. List all quotas for Vertex AI
+    gcloud alpha services quota list \
+      --service=aiplatform.googleapis.com \
+      --consumer=projects/YOUR_PROJECT_ID \
+      --filter="metric:anthropic OR metric:generate_content"
+
+    # 2. View current quota value for a specific metric
+    gcloud alpha services quota describe \
+      --service=aiplatform.googleapis.com \
+      --consumer=projects/YOUR_PROJECT_ID \
+      --metric=aiplatform.googleapis.com/generate_content_requests_per_minute
+
+    # 3. Request quota increase (opens support case)
+    gcloud alpha services quota update \
+      --service=aiplatform.googleapis.com \
+      --consumer=projects/YOUR_PROJECT_ID \
+      --metric=aiplatform.googleapis.com/generate_content_requests_per_minute \
+      --value=10000 \
+      --unit="1/min/{project}/{region}"
+
+    # 4. Check request status
+    gcloud alpha services quota requests list \
+      --consumer=projects/YOUR_PROJECT_ID
+    ```
+
+    <Warning>
+    The `gcloud alpha services quota` commands are in alpha and may change. Use the Console for production quota management.
+    </Warning>
+  </Tab>
+  <Tab title="Terraform">
+    **Infrastructure as Code: Terraform**
+
+    ```hcl
+    # Note: Quota management via Terraform requires google-beta provider
+    # and is limited to certain quota types
+
+    resource "google_project_service" "vertex_ai" {
+      service = "aiplatform.googleapis.com"
+      project = var.project_id
+    }
+
+    # For quota increases, use google_service_usage_consumer_quota_override
+    # (Limited availability - check Terraform docs)
+    ```
+
+    <Info>
+    For most quota increases, manual Console requests are still required. Terraform can help track desired quotas as code documentation.
+    </Info>
+  </Tab>
+</Tabs>
+
+### AWS Bedrock
+
+AWS Bedrock quotas are managed through Service Quotas and vary by region and account age.
+
+<Tabs>
+  <Tab title="Console">
+    **Step-by-Step: AWS Console**
+
+    1. **Navigate to Service Quotas**
+       - Go to [Service Quotas → Amazon Bedrock](https://console.aws.amazon.com/servicequotas/home/services/bedrock/quotas)
+       - Ensure you're in the correct region (e.g., `us-east-1`)
+
+    2. **Find the Model Quota**
+       - Search for the model name (e.g., "Claude 3.5 Sonnet")
+       - Look for quotas like:
+         - `Anthropic Claude 3.5 Sonnet Invocations per minute`
+         - `Anthropic Claude 3.5 Sonnet Tokens per minute`
+
+    3. **Request Increase**
+       - Click on the quota name
+       - Click **Request quota increase**
+       - Enter desired value (e.g., 500 for RPM)
+       - Click **Request**
+
+    4. **Check Status**
+       - Go to **Quota request history**
+       - Status will show: Pending → Approved/Denied
+
+    <Warning>
+    **Account Age Matters**: New AWS accounts (created after 2024) receive significantly lower default quotas (2-50 RPM). Consider using established accounts or requesting increases immediately.
+    </Warning>
+  </Tab>
+  <Tab title="AWS CLI">
+    **Step-by-Step: AWS CLI**
+
+    ```bash
+    # 1. List Bedrock quotas
+    aws service-quotas list-service-quotas \
+      --service-code bedrock \
+      --query 'Quotas[?contains(QuotaName, `Claude`)].[QuotaName,Value]' \
+      --output table
+
+    # 2. Get specific quota details
+    aws service-quotas get-service-quota \
+      --service-code bedrock \
+      --quota-code L-XXXXXXXX  # Get code from list-service-quotas
+
+    # 3. Request increase
+    aws service-quotas request-service-quota-increase \
+      --service-code bedrock \
+      --quota-code L-XXXXXXXX \
+      --desired-value 500
+
+    # 4. Check request history
+    aws service-quotas list-requested-service-quota-change-history \
+      --service-code bedrock
+    ```
+  </Tab>
+  <Tab title="Multi-Region Strategy">
+    **Scaling Across Regions**
+
+    AWS Bedrock quotas are region-specific. Use multi-region deployment for higher effective limits:
+
+    ```python
+    # Example: Multi-region Bedrock client
+    BEDROCK_REGIONS = ["us-east-1", "us-east-2", "us-west-2"]
+
+    async def invoke_with_region_fallback(prompt: str) -> str:
+        for region in BEDROCK_REGIONS:
+            try:
+                client = get_bedrock_client(region)
+                return await client.invoke(prompt)
+            except ThrottlingException:
+                continue
+        raise AllRegionsThrottled()
+    ```
+
+    **Effective Limits**:
+    | Per-Region RPM | Regions | Effective RPM |
+    |----------------|---------|---------------|
+    | 250 | 3 | 750 |
+    | 250 | 5 | 1,250 |
+  </Tab>
+</Tabs>
+
+### Azure OpenAI Service
+
+Azure OpenAI quotas are managed per-subscription, per-region, and can be allocated across deployments.
+
+<Tabs>
+  <Tab title="Azure Portal">
+    **Step-by-Step: Azure Portal**
+
+    1. **Access Azure OpenAI Studio**
+       - Go to [Azure OpenAI Studio](https://oai.azure.com/)
+       - Select your resource
+
+    2. **View Current Quotas**
+       - Click **Quotas** in the left sidebar
+       - View available TPM by model and region
+
+    3. **Adjust Deployment Quota**
+       - Go to **Deployments**
+       - Select your deployment → **Edit**
+       - Adjust **Tokens per Minute Rate Limit**
+       - Click **Save**
+
+    4. **Request Additional Quota**
+       - If you need more than your subscription limit:
+       - Go to **Help + support** → **New support request**
+       - Select: Issue type = Service and subscription limits (quotas)
+       - Service = Azure OpenAI Service
+       - Provide justification and desired limits
+
+    <Tip>
+    **TPM to RPM Conversion**: `RPM = TPM ÷ 1000 × 6`
+
+    Example: 240,000 TPM = 1,440 RPM
+    </Tip>
+  </Tab>
+  <Tab title="Azure CLI">
+    **Step-by-Step: Azure CLI**
+
+    ```bash
+    # 1. List Azure OpenAI resources
+    az cognitiveservices account list \
+      --resource-group YOUR_RG \
+      --query '[?kind==`OpenAI`].[name,location]' \
+      --output table
+
+    # 2. View deployments and current settings
+    az cognitiveservices account deployment list \
+      --name YOUR_RESOURCE_NAME \
+      --resource-group YOUR_RG \
+      --query '[].{name:name, model:properties.model.name, capacity:sku.capacity}'
+
+    # 3. Update deployment capacity (TPM)
+    az cognitiveservices account deployment update \
+      --name YOUR_RESOURCE_NAME \
+      --resource-group YOUR_RG \
+      --deployment-name YOUR_DEPLOYMENT \
+      --sku-capacity 50  # In thousands of TPM
+
+    # 4. List all subscription quotas
+    az cognitiveservices usage list \
+      --location eastus
+    ```
+  </Tab>
+  <Tab title="Multi-Region Deployment">
+    **Scaling with Regional Deployments**
+
+    Create deployments in multiple regions to increase effective quota:
+
+    ```bash
+    # Create deployment in additional region
+    az cognitiveservices account create \
+      --name myopenai-westus \
+      --resource-group mygroup \
+      --kind OpenAI \
+      --sku S0 \
+      --location westus
+
+    # Deploy model in new region
+    az cognitiveservices account deployment create \
+      --name myopenai-westus \
+      --resource-group mygroup \
+      --deployment-name gpt-4o-deployment \
+      --model-name gpt-4o \
+      --model-version "2024-05-13" \
+      --model-format OpenAI \
+      --sku-capacity 50 \
+      --sku-name Standard
+    ```
+
+    **Load Balancing**:
+    - Use Azure API Management or application-level routing
+    - Route by latency, availability, or round-robin
+  </Tab>
+</Tabs>
+
+### Anthropic (Direct API)
+
+Anthropic uses a tier-based system that advances automatically based on usage and spend.
+
+<Tabs>
+  <Tab title="Tier System">
+    **Understanding Anthropic Tiers**
+
+    | Tier | Requirements | Claude 3.5 Sonnet | Claude 3 Opus | Claude 3 Haiku |
+    |------|--------------|-------------------|---------------|----------------|
+    | **Free** | New account | 50 RPM, 40K TPM | 5 RPM, 10K TPM | 50 RPM, 25K TPM |
+    | **Build** | Credit card added | 50 RPM, 40K TPM | 50 RPM, 20K TPM | 50 RPM, 50K TPM |
+    | **Scale** | $100+ monthly spend | 1,000+ RPM | 2,000+ RPM | 4,000+ RPM |
+    | **Enterprise** | Custom agreement | Custom | Custom | Custom |
+
+    <Info>
+    Tiers advance automatically based on successful API usage and payment history. There's no manual upgrade process for Free → Build → Scale.
+    </Info>
+  </Tab>
+  <Tab title="Requesting Higher Limits">
+    **Step-by-Step: Enterprise/Custom Limits**
+
+    1. **Check Current Tier**
+       - Log in to [Claude Console](https://console.anthropic.com/)
+       - Go to **Settings** → **Rate Limits**
+       - View your current tier and limits
+
+    2. **Qualify for Scale Tier**
+       - Add payment method (exits Free tier)
+       - Maintain consistent usage above $100/month
+       - Avoid rate limit violations
+
+    3. **Request Enterprise/Custom Limits**
+       - Contact [Anthropic Sales](https://www.anthropic.com/contact-sales)
+       - Provide:
+         - Company name and use case
+         - Expected monthly usage (tokens, requests)
+         - Desired RPM/TPM limits
+         - Business justification
+
+    4. **Priority Tier**
+       - For enhanced SLAs and higher limits
+       - Available through sales negotiation
+       - Includes dedicated support
+  </Tab>
+  <Tab title="API Headers">
+    **Monitoring Your Limits**
+
+    Anthropic includes rate limit headers in every response:
+
+    ```http
+    anthropic-ratelimit-requests-limit: 50
+    anthropic-ratelimit-requests-remaining: 45
+    anthropic-ratelimit-requests-reset: 2024-01-15T12:00:00Z
+    anthropic-ratelimit-tokens-limit: 40000
+    anthropic-ratelimit-tokens-remaining: 35000
+    anthropic-ratelimit-tokens-reset: 2024-01-15T12:00:00Z
+    ```
+
+    **Implementation**:
+    ```python
+    response = await client.messages.create(...)
+
+    # Access rate limit headers
+    remaining = response.headers.get("anthropic-ratelimit-requests-remaining")
+    reset_time = response.headers.get("anthropic-ratelimit-requests-reset")
+
+    if int(remaining) < 5:
+        logger.warning(f"Approaching rate limit, resets at {reset_time}")
+    ```
+  </Tab>
+</Tabs>
+
+### OpenAI (Direct API)
+
+OpenAI uses automatic tier advancement based on account spend and history.
+
+<Tabs>
+  <Tab title="Tier System">
+    **Understanding OpenAI Tiers**
+
+    | Tier | Requirements | GPT-4o RPM | GPT-4o TPM | GPT-3.5 Turbo TPM |
+    |------|--------------|------------|------------|-------------------|
+    | **Free** | New account | 3 | 200 | 40,000 |
+    | **Tier 1** | $5+ paid | 500 | 30,000 | 200,000 |
+    | **Tier 2** | $50+ paid, 7+ days | 5,000 | 300,000 | 2,000,000 |
+    | **Tier 3** | $100+ paid, 7+ days | 5,000 | 450,000 | 4,000,000 |
+    | **Tier 4** | $250+ paid, 14+ days | 10,000 | 800,000 | 10,000,000 |
+    | **Tier 5** | $1,000+ paid, 30+ days | 10,000 | 10,000,000 | 50,000,000 |
+  </Tab>
+  <Tab title="Checking & Requesting Limits">
+    **Step-by-Step: Manage OpenAI Limits**
+
+    1. **Check Current Tier**
+       - Go to [Organization Settings → Limits](https://platform.openai.com/settings/organization/limits)
+       - View your usage tier and rate limits
+       - See limits per model
+
+    2. **Automatic Tier Advancement**
+       - Add payment method and make purchases
+       - Tiers advance automatically based on:
+         - Total spend
+         - Account age
+         - Payment history
+
+    3. **Request Manual Increase**
+       - For limits beyond Tier 5 or special cases:
+       - Go to [Help Center](https://help.openai.com/)
+       - Submit request with:
+         - Organization name
+         - Use case description
+         - Current tier and desired limits
+         - Business justification
+
+    <Tip>
+    **Shared Rate Limits**: Some model families share limits. Check your organization's limits page for the "shared limit" indicator.
+    </Tip>
+  </Tab>
+  <Tab title="API Headers">
+    **Monitoring with Headers**
+
+    OpenAI includes rate limit info in response headers:
+
+    ```http
+    x-ratelimit-limit-requests: 10000
+    x-ratelimit-limit-tokens: 10000000
+    x-ratelimit-remaining-requests: 9995
+    x-ratelimit-remaining-tokens: 9990000
+    x-ratelimit-reset-requests: 6ms
+    x-ratelimit-reset-tokens: 100ms
+    ```
+
+    **Proactive Monitoring**:
+    ```python
+    from openai import OpenAI
+
+    client = OpenAI()
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": "Hello"}],
+    )
+
+    # Check remaining capacity
+    remaining = int(response.headers.get("x-ratelimit-remaining-requests", 0))
+    if remaining < 100:
+        logger.warning(f"Only {remaining} requests remaining until reset")
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Configuration Reference
+
+### Environment Variables
+
+```bash
+# Token Bucket Rate Limiting
+RATE_LIMIT_RPM=50                    # Requests per minute
+RATE_LIMIT_BURST_SECONDS=10          # Burst capacity
+
+# Adaptive Bulkhead (AIMD)
+BULKHEAD_MIN_LIMIT=5                 # Floor
+BULKHEAD_MAX_LIMIT=50                # Ceiling
+BULKHEAD_INITIAL_LIMIT=25            # Starting point
+BULKHEAD_ERROR_THRESHOLD=0.1         # 10% triggers decrease
+BULKHEAD_DECREASE_FACTOR=0.75        # Reduce by 25%
+BULKHEAD_SUCCESS_STREAK=10           # Successes to increase
+
+# Retry Configuration
+RETRY_MAX_ATTEMPTS=3                 # Standard retry
+RETRY_OVERLOAD_MAX_ATTEMPTS=6        # Extended for 529
+RETRY_EXPONENTIAL_MAX=10.0           # Max backoff seconds
+RETRY_OVERLOAD_EXPONENTIAL_MAX=60.0  # Extended max
+RETRY_HONOR_RETRY_AFTER=true         # Use Retry-After header
+
+# Timeout Configuration
+LLM_TIMEOUT_SECONDS=60               # LLM call timeout
+FALLBACK_TIMEOUT_SECONDS=30          # Per-fallback timeout
+
+# Fallback Configuration
+FALLBACK_DELAY_SECONDS=1.0           # Initial delay
+FALLBACK_BACKOFF_MULTIPLIER=2.0      # Exponential factor
+```
+
+### Provider-Specific Configuration
+
+```yaml
+# config/resilience.yaml
+providers:
+  anthropic:
+    rpm: 50
+    burst_seconds: 10
+    bulkhead_limit: 10
+
+  vertex_ai_anthropic:
+    rpm: 1000
+    burst_seconds: 10
+    bulkhead_limit: 25
+
+  openai:
+    rpm: 60
+    burst_seconds: 10
+    bulkhead_limit: 20
+
+  azure:
+    rpm: 60
+    burst_seconds: 10
+    bulkhead_limit: 15
+
+  bedrock:
+    rpm: 50
+    burst_seconds: 10
+    bulkhead_limit: 10
+
+  google:
+    rpm: 60
+    burst_seconds: 10
+    bulkhead_limit: 20
+```
+
+---
+
+## Monitoring and Observability
+
+### Key Metrics
+
+| Metric | Description | Alert Threshold |
+|--------|-------------|-----------------|
+| `llm_rate_limit_errors_total` | Count of 429/529 errors | > 10/minute |
+| `llm_circuit_breaker_state` | Circuit state (0=closed, 1=open) | == 1 |
+| `llm_bulkhead_concurrency` | Current concurrent requests | > 80% of limit |
+| `llm_retry_attempts_total` | Retry attempts by outcome | > 100/minute |
+| `llm_token_bucket_wait_seconds` | Time waiting for tokens | > 5s P95 |
+
+### Grafana Dashboard
+
+See `monitoring/grafana/dashboards/llm-resilience.json` for a pre-built dashboard.
+
+---
+
+## Summary
+
+<Card title="Quick Start Checklist" icon="check">
+1. **Identify your provider tier** and corresponding limits
+2. **Calculate concurrency** using Little's Law with 60% headroom
+3. **Configure token bucket** for pre-emptive rate limiting
+4. **Enable adaptive bulkhead** for self-tuning concurrency
+5. **Set up fallback chain** with exponential backoff
+6. **Monitor metrics** and adjust based on observed behavior
+</Card>
+
+## References
+
+- [Anthropic Rate Limits Documentation](https://docs.claude.com/en/api/rate-limits)
+- [OpenAI Rate Limits Guide](https://platform.openai.com/docs/guides/rate-limits)
+- [Azure OpenAI Quotas](https://learn.microsoft.com/en-us/azure/ai-services/openai/quotas-limits)
+- [AWS Bedrock Quotas](https://docs.aws.amazon.com/bedrock/latest/userguide/quotas.html)
+- [Google Vertex AI Quotas](https://cloud.google.com/vertex-ai/docs/quotas)
+- [ADR-0030: Resilience Patterns](./architecture/adr-0030-resilience-patterns)
+- [ADR-0027: Rate Limiting Strategy](./architecture/adr-0027-rate-limiting-strategy)
+
+---
+
+**Last Updated**: December 2025
