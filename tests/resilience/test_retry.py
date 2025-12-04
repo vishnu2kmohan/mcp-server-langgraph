@@ -119,10 +119,10 @@ class TestExponentialBackoff:
         assert len(sleep_durations) == 3
 
         # Validate exponential growth
-        # Allow some variance due to jitter (if enabled)
-        assert 1.5 <= sleep_durations[0] <= 3.0  # ~2s (base^1)
-        assert 3.0 <= sleep_durations[1] <= 5.0  # ~4s (base^2)
-        assert 7.0 <= sleep_durations[2] <= 10.0  # ~8s (base^3, capped at max=10)
+        # Allow variance for jitter (SIMPLE jitter applies 0.8-1.2 factor)
+        assert 1.5 <= sleep_durations[0] <= 3.0  # ~2s (base^1), with jitter: 1.6-2.4
+        assert 3.0 <= sleep_durations[1] <= 5.0  # ~4s (base^2), with jitter: 3.2-4.8
+        assert 6.0 <= sleep_durations[2] <= 10.0  # ~8s (base^3), with jitter: 6.4-9.6
 
     @pytest.mark.unit
     @pytest.mark.asyncio
