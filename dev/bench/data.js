@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764880926741,
+  "lastUpdate": 1764887994314,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -42888,6 +42888,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017861269709168516",
             "extra": "mean: 57.46503896409271 usec\nrounds: 5056"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "c67d82baf675b970251fdcbbda72a4c8c9d66534",
+          "message": "fix(deploy): remove build-time Keycloak args incompatible with --optimized\n\nRemove --health-enabled=true and --metrics-enabled=true from Keycloak\ndeployment args. These are build-time options that are already baked\ninto the Docker image via ENV variables in docker/Dockerfile.keycloak.\n\nWhen using `start --optimized`, Keycloak rejects build-time options\npassed as CLI args, causing CrashLoopBackOff.\n\nError: \"Build time option: '--health-enabled' not usable with\npre-built image and --optimized\"\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-04T17:31:38-05:00",
+          "tree_id": "7d3076161c74c3d45daa3f1ae7c8db6036952fbd",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/c67d82baf675b970251fdcbbda72a4c8c9d66534"
+        },
+        "date": 1764887991151,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 162.33200305678895,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011959093319154024",
+            "extra": "mean: 6.160214752294826 msec\nrounds: 109"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 329.74321495833533,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002129734404391737",
+            "extra": "mean: 3.032662855932774 msec\nrounds: 118"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52698.00617143224,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 18.976049999821498 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54151.49747814838,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 18.46671000009792 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 52270.936993518335,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.131089999859796 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 195.8986605493811,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.104680129999792 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.668828259877845,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 50.8418695200001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.965263532814177,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.34857549999998 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1374400.418253312,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 727.5899997694069 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 14904.071434636977,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 67.09575999991557 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2899.8180712146814,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 344.8492199999009 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3059.4750320225717,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 326.8534599999384 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 66783.048498363,
+            "unit": "iter/sec",
+            "range": "stddev: 9.78989497865172e-7",
+            "extra": "mean: 14.973859721670422 usec\nrounds: 11855"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20662.34895673451,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000022509020847613774",
+            "extra": "mean: 48.39720798898174 usec\nrounds: 4957"
           }
         ]
       }
