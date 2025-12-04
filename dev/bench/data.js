@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764721525529,
+  "lastUpdate": 1764867426777,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -42278,6 +42278,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00004353602158008846",
             "extra": "mean: 60.8446860732973 usec\nrounds: 4294"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vishnu2kmohan@users.noreply.github.com",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "56867534e30eb5f71764374a798911f7ba360e56",
+          "message": "fix(deploy): resolve Keycloak CrashLoopBackOff + CD pipeline bugs (#139)\n\n* fix(deploy): resolve Keycloak CrashLoopBackOff + CD pipeline bugs\n\n## Issues Fixed\n\n1. **CRITICAL: Application pods not updating on deploy**\n   - Fixed kustomize image name mismatch in deploy-staging-gke.yaml\n   - Changed from `mcp-server-langgraph=...` to `ghcr.io/vishnu2kmohan/mcp-server-langgraph=...`\n\n2. **Keycloak CrashLoopBackOff (permanent fix)**\n   - Created custom optimized Keycloak image with `kc.sh build` pre-compilation\n   - Added docker/Dockerfile.keycloak with multi-stage build\n   - Added .github/workflows/build-keycloak-image.yaml for CI/CD\n   - Updated staging/production kustomizations to use custom image\n   - Enabled `readOnlyRootFilesystem: true` (now possible with optimized image)\n\n3. **CD pipeline gaps**\n   - Added rollout monitoring for Keycloak and OpenFGA deployments\n   - Pipeline now blocks on all deployment rollouts, not just main app\n\n4. **Deployment reliability**\n   - Added terminationGracePeriodSeconds: 120 for graceful shutdown\n   - Added preStop hook with sleep 15 for connection draining\n   - Added startupProbe for slow-starting containers\n\n5. **Staging-production parity (12 Factor App)**\n   - Added HPA patch for autoscaling\n   - Added PodDisruptionBudget for availability\n   - Added differentiated liveness probes (OpenFGA, OTEL, Qdrant)\n\n## Files Changed\n\n- docker/Dockerfile.keycloak (NEW)\n- .github/workflows/build-keycloak-image.yaml (NEW)\n- .github/workflows/deploy-staging-gke.yaml\n- deployments/overlays/staging-gke/*.yaml (7 files)\n- deployments/overlays/production-gke/*.yaml (2 files)\n- tests/docker/test_keycloak_dockerfile.py (NEW - 15 tests)\n- tests/ci/test_staging_deployment_workflow.py (NEW - 11 tests)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(ci): add Helm setup + disable cache-to for PR builds\n\nPre-existing CI issues unrelated to this PR's changes:\n\n1. Helm template tests failing:\n   - Root cause: CI test job didn't install Helm before building deps\n   - Fix: Add azure/setup-helm@v4.3.1 step before helm dependency build\n\n2. Docker cache push failing for PRs:\n   - Root cause: cache-to tried to write to GHCR, but PRs from forks\n     have read-only GITHUB_TOKEN (intentional security restriction)\n   - Fix: Make cache-to conditional on non-PR events\n   - Security: This is the correct behavior - PRs should NOT have\n     write access to GHCR to prevent cache poisoning attacks\n\nReferences:\n- https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions\n- https://blog.gitguardian.com/github-actions-security-cheat-sheet/\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(tests): update Keycloak tests for optimized image + fix Helm deps\n\nTwo test fixes for CI failures:\n\n1. Keycloak readOnlyRootFilesystem tests:\n   - Changed all assertions from expecting `false` to expecting `true`\n   - Updated docstrings to reflect optimized image architecture\n   - Tests now validate the security improvement from custom image\n\n2. Helm template tests:\n   - Added Helm repo setup in test fixture before dependency build\n   - Repos: openfga, bitnami, jaegertracing, prometheus-community\n   - This ensures tests can build deps even without prior CI setup\n\nRoot cause: These tests were asserting old behavior (readOnlyRootFilesystem: false)\nbut our deployments now use the optimized Keycloak image with true.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(ci): add strict error handling for Helm dependency build\n\n- Add set -euo pipefail for proper error propagation\n- Add verification step to check charts were actually downloaded\n- Use || true for repo add to handle already-exists case\n- Print chart directory contents for debugging\n\nThis fixes silent failures where helm dependency build failed but\ntests still ran expecting charts to be present.\n\n* fix(tests): use module-scoped fixture for Helm deps + improve error handling\n\n- Change fixture from session to module scope for better xdist compatibility\n- Add quick check before acquiring lock to reduce contention\n- Add OSError handling for read-only filesystem edge cases\n- Improve skip messages to guide CI debugging\n\nThe session scope was problematic because pytest-xdist workers don't\nreliably share session fixtures across workers.\n\n* fix(tests): recategorize Helm tests as deployment (not unit)\n\nROOT CAUSE: Helm template tests were marked as 'unit' but have external\ndependencies (Helm CLI, network access for chart downloads). This caused\nintermittent failures with pytest-xdist parallelism.\n\nSOLUTION:\n1. Changed markers from [unit, validation] to [deployment, requires_helm]\n2. Added dedicated 'Run Helm deployment tests' CI step that:\n   - Runs only on Python 3.12 (no need for matrix)\n   - Runs WITHOUT xdist parallelism\n   - Runs AFTER main unit tests complete\n   - Prints chart directory for debugging\n3. Removed from main pytest command (which uses -n auto)\n\nThis is the correct categorization:\n- Unit tests: Fast, isolated, no external dependencies\n- Deployment tests: Require tools, network, external state\n\nThe main test run now excludes these tests entirely, and they run\nin a controlled, sequential step with guaranteed Helm deps available.\n\n* fix(tests): correct REPO_ROOT path calculation after file relocation\n\nAfter moving test_helm_templates.py from tests/deployment/ to\ntests/integration/deployment/, the path calculation for REPO_ROOT\nwas incorrect - it resolved to tests/ instead of repo root.\n\nRoot cause: Path(__file__).parent.parent.parent (3 parents) was wrong\nfor the new 4-level-deep location.\n\nFix: Changed to .parent.parent.parent.parent (4 parents) with comment\nexplaining the file location.\n\nVerified: All 12 Helm tests pass with xdist (-n 8)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* feat(tests): add get_repo_root() for robust path resolution\n\nProblem: Test files using `Path(__file__).parent.parent.parent` to find\nthe repository root break when moved between directories (e.g., moving\ntest_helm_templates.py from tests/deployment/ to tests/integration/deployment/\ncaused the path to resolve to tests/ instead of the repo root).\n\nSolution: Created get_repo_root() in tests/helpers/path_helpers.py that:\n- Searches upward for marker files (.git, pyproject.toml)\n- Works regardless of how deep the calling file is in the directory tree\n- Uses @lru_cache for performance\n- Has comprehensive meta-tests in tests/meta/test_path_helpers.py\n\nChanges:\n- Added get_repo_root() function with marker-based detection\n- Updated get_integration_test_file() to use get_repo_root() internally\n- Updated test_helm_templates.py to use get_repo_root()\n- Enhanced validate_repo_root_calculations.py to detect fragile patterns\n- Added 7 meta-tests validating the new function\n- Exported get_repo_root from tests/helpers/__init__.py\n\nMigration path for 30 files using fragile patterns:\n  # OLD (fragile):\n  REPO_ROOT = Path(__file__).parent.parent.parent\n\n  # NEW (robust):\n  from tests.helpers.path_helpers import get_repo_root\n  REPO_ROOT = get_repo_root()\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* refactor(tests): migrate 30 files to use get_repo_root()\n\nMigrated all test files using fragile Path(__file__).parent.parent.parent\npatterns to use the robust get_repo_root() function from\ntests/helpers/path_helpers.py.\n\nFiles migrated (30 total):\n- tests/deployment/*.py (9 files)\n- tests/kubernetes/*.py (7 files)\n- tests/meta/*.py (8 files)\n- tests/integration/*.py (2 files)\n- tests/regression/*.py (1 file)\n- tests/terraform/*.py (1 file)\n- tests/infrastructure_helpers.py (1 file)\n- tests/meta/infrastructure/*.py (1 file)\n\nThis ensures test files won't break when moved between directories,\nas get_repo_root() detects the repository root by searching for\nmarker files (.git, pyproject.toml) rather than hardcoding path depth.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(ci): exclude deployment tests from integration-tests.yaml\n\nThe Helm template tests were failing in the integration-tests workflow\nbecause:\n1. They're marked with `pytest.mark.deployment` AND `pytest.mark.integration`\n2. The integration-tests.yaml `infrastructure` category picked them up\n3. But that workflow doesn't install Helm or build chart dependencies\n\nThe fix excludes `deployment` tests from the infrastructure category.\nThese tests run properly in ci.yaml which has:\n- Helm CLI installation (v3.14.0)\n- helm repo add for all required repositories\n- helm dependency build before tests\n\nThis ensures Helm tests only run in the proper environment.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-04T11:55:32-05:00",
+          "tree_id": "d94d0db4189db68156f42c2a04157fdb61d01e24",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/56867534e30eb5f71764374a798911f7ba360e56"
+        },
+        "date": 1764867425302,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 141.43510833810558,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014750031267897178",
+            "extra": "mean: 7.070380273683285 msec\nrounds: 95"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 297.93417317075057,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00023439378021439573",
+            "extra": "mean: 3.35644612149572 msec\nrounds: 107"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44797.30786089646,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.32277000004501 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46850.652301651186,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.34441999999126 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 43606.197661638646,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.93252000001189 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 193.61172161296776,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.164976540000055 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.357595067612138,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.65930977000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.964999421327997,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.35123513000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1398327.6002239233,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 715.139999982739 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13012.446404989712,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 76.84949999998025 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2961.061741987311,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.71669999993037 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2754.75301642038,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 363.0089499999656 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 59581.97503148772,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021364135321814437",
+            "extra": "mean: 16.783599393466275 usec\nrounds: 11872"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16992.896397447403,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026493860676513876",
+            "extra": "mean: 58.848119626635025 usec\nrounds: 4606"
           }
         ]
       }
