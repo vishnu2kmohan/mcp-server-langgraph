@@ -75,11 +75,13 @@ resource "google_sql_database_instance" "main" {
     }
 
     # Database flags (PostgreSQL configuration)
+    # Only apply default flags when enable_default_database_flags is true
+    # This prevents invalidFlagName errors on instance creation
     dynamic "database_flags" {
-      for_each = merge(
+      for_each = var.enable_default_database_flags ? merge(
         var.database_flags,
         {
-          # Performance and monitoring defaults
+          # Performance and monitoring defaults (only when enabled)
           "log_connections"            = var.enable_query_insights ? "on" : "off"
           "log_disconnections"         = var.enable_query_insights ? "on" : "off"
           "log_duration"               = var.enable_slow_query_log ? "on" : "off"
@@ -90,7 +92,7 @@ resource "google_sql_database_instance" "main" {
           "track_activity_query_size"  = "4096"
           "track_io_timing"            = "on"
         }
-      )
+      ) : var.database_flags
       content {
         name  = database_flags.key
         value = database_flags.value

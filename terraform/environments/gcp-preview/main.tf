@@ -171,8 +171,10 @@ module "gke" {
 
   # Security
   enable_binary_authorization = var.enable_binary_authorization
-  enable_security_posture     = true
-  security_posture_mode       = "BASIC"
+  # Security posture is managed automatically by GKE Autopilot (v1.27+)
+  # Explicit configuration causes API conflicts
+  # Reference: https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-security
+  enable_security_posture = false
 
   # Networking
   enable_dataplane_v2   = true
@@ -351,7 +353,8 @@ module "workload_identity" {
 
   service_accounts = {
     # Keycloak service account
-    "preview-keycloak" = {
+    # K8s SA: keycloak-sa (overlay resource, namePrefix not applied)
+    "keycloak-sa" = {
       gcp_sa_name  = "preview-keycloak"
       display_name = "Keycloak Preview SA"
       roles = [
@@ -361,7 +364,8 @@ module "workload_identity" {
     }
 
     # OpenFGA service account
-    "preview-openfga" = {
+    # K8s SA: openfga-sa (overlay resource, namePrefix not applied)
+    "openfga-sa" = {
       gcp_sa_name  = "preview-openfga"
       display_name = "OpenFGA Preview SA"
       roles = [
@@ -412,14 +416,8 @@ module "github_actions_wif" {
         "roles/logging.logWriter",
         "roles/monitoring.metricWriter",
       ]
-
-      artifact_registry_repositories = [
-        {
-          location   = var.region
-          repository = "mcp-preview"
-          role       = "roles/artifactregistry.writer"
-        }
-      ]
+      # Note: artifact_registry_repositories removed - repository mcp-preview doesn't exist
+      # Project-level roles/artifactregistry.writer grants access to all repos in project
     }
 
     terraform = {

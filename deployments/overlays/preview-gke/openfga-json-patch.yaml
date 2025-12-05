@@ -1,7 +1,8 @@
 # Set OpenFGA ServiceAccount for Workload Identity
+# Note: Overlay resources don't get namePrefix applied, so we use the exact overlay SA name
 - op: replace
   path: /spec/template/spec/serviceAccountName
-  value: preview-openfga
+  value: openfga-sa
 
 # Fix secret reference to use preview-prefixed secret name
 - op: replace
