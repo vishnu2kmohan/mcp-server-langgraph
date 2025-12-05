@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Staging GKE Deployment Validation Script
+# Preview GKE Deployment Validation Script
 #
-# This script performs comprehensive validation of the staging GKE deployment,
+# This script performs comprehensive validation of the preview GKE deployment,
 # verifying infrastructure, application health, integration tests, and costs.
 #
 # Features:
@@ -30,11 +30,11 @@ set -euo pipefail
 # Configuration
 readonly PROJECT_ID="${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
 readonly REGION="us-central1"
-readonly CLUSTER_NAME="staging-mcp-server-langgraph-gke"
-readonly NAMESPACE="staging-mcp-server-langgraph"
-readonly CLOUD_SQL_INSTANCE="mcp-staging-postgres"
-readonly REDIS_INSTANCE="mcp-staging-redis"
-readonly VPC_NAME="staging-vpc"
+readonly CLUSTER_NAME="preview-mcp-server-langgraph-gke"
+readonly NAMESPACE="preview-mcp-server-langgraph"
+readonly CLOUD_SQL_INSTANCE="mcp-preview-postgres"
+readonly REDIS_INSTANCE="mcp-preview-redis"
+readonly VPC_NAME="preview-vpc"
 readonly EXPECTED_MIN_COST=200
 readonly EXPECTED_MAX_COST=400
 
@@ -486,7 +486,7 @@ generate_report() {
 ###############################################################################
 
 main() {
-    log_info "Starting staging GKE deployment validation..."
+    log_info "Starting preview GKE deployment validation..."
 
     # Parse command-line arguments
     while [[ $# -gt 0 ]]; do

@@ -57,7 +57,7 @@
               "security/aws-security-hardening",
               "security/remediation-guide",
               "security/audit-checklist",
-              "security/gke-staging-checklist",
+              "security/gke-preview-checklist",
               "security/compliance",
               "security/try-except-pass-analysis"
             ]
@@ -235,7 +235,7 @@
             "pages": [
               "deployment/kubernetes/gke",
               "deployment/kubernetes/gke-production",
-              "deployment/kubernetes/gke-staging",
+              "deployment/kubernetes/gke-preview",
               "deployment/gke-autopilot-resource-constraints",
               "deployment/kubernetes/configmap-best-practices",
               "deployment/kubernetes/keycloak-readonly-filesystem",
@@ -320,7 +320,7 @@
               "deployment/version-pinning",
               "deployment/version-compatibility",
               "deployment/release-process",
-              "deployment/gke-staging-implementation-summary"
+              "deployment/gke-preview-implementation-summary"
             ]
           }
         ]

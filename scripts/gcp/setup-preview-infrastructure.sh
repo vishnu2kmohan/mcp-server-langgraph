@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# GCP Staging Infrastructure Setup Script
+# GCP Preview Infrastructure Setup Script
 #
-# This script creates a production-grade staging environment on GKE with:
+# This script creates a production-grade preview environment on GKE with:
 # - Separate VPC for network isolation
 # - GKE Autopilot cluster with security hardening
 # - Workload Identity Federation for GitHub Actions (keyless)
@@ -26,10 +26,10 @@ REGION="us-central1"
 # ZONE is reserved for future zonal resource deployments
 # shellcheck disable=SC2034
 ZONE="us-central1-a"
-CLUSTER_NAME="staging-mcp-server-langgraph-gke"
-VPC_NAME="staging-mcp-slg-vpc"
-SUBNET_NAME="staging-mcp-slg-nodes-us-central1"
-SERVICE_ACCOUNT_NAME="staging-mcp-slg-sa"
+CLUSTER_NAME="preview-mcp-server-langgraph-gke"
+VPC_NAME="preview-mcp-slg-vpc"
+SUBNET_NAME="preview-mcp-slg-nodes-us-central1"
+SERVICE_ACCOUNT_NAME="preview-mcp-slg-sa"
 
 # GitHub configuration (update these)
 GITHUB_ORG="vishnu2kmohan"
@@ -114,7 +114,7 @@ enable_apis() {
 }
 
 create_vpc_network() {
-    log_info "Creating staging VPC network..."
+    log_info "Creating preview VPC network..."
 
     # Check if VPC already exists
     if gcloud compute networks describe "$VPC_NAME" &> /dev/null; then
@@ -145,7 +145,7 @@ create_vpc_network() {
             --network="$VPC_NAME" \
             --allow=tcp,udp,icmp \
             --source-ranges=10.1.0.0/20,10.2.0.0/16,10.3.0.0/16 \
-            --description="Allow internal communication within staging VPC"
+            --description="Allow internal communication within preview VPC"
 
         # Allow SSH from IAP (for debugging)
         gcloud compute firewall-rules create "$VPC_NAME-allow-iap-ssh" \
@@ -265,7 +265,7 @@ setup_workload_identity() {
     else
         gcloud iam service-accounts create "$SERVICE_ACCOUNT_NAME" \
             --display-name="MCP Staging Service Account" \
-            --description="Service account for MCP Server LangGraph staging environment"
+            --description="Service account for MCP Server LangGraph preview environment"
     fi
 
     # Grant necessary permissions (least privilege)
@@ -366,9 +366,9 @@ setup_github_workload_identity() {
 }
 
 create_cloud_sql() {
-    log_info "Creating Cloud SQL PostgreSQL instance for staging..."
+    log_info "Creating Cloud SQL PostgreSQL instance for preview..."
 
-    INSTANCE_NAME="staging-mcp-slg-postgres"
+    INSTANCE_NAME="preview-mcp-slg-postgres"
 
     # Check if instance already exists
     if gcloud sql instances describe "$INSTANCE_NAME" &> /dev/null; then
@@ -376,7 +376,7 @@ create_cloud_sql() {
         return 0
     fi
 
-    # Create instance (smaller tier for staging)
+    # Create instance (smaller tier for preview)
     # Note: shared_buffers is in 8KB pages, 65536 = 512MB (good default for 4GB RAM)
     # Cloud SQL requires shared_buffers between 52428-314572 for 4GB RAM instances
     gcloud sql instances create "$INSTANCE_NAME" \
@@ -419,15 +419,15 @@ create_cloud_sql() {
         --password="$GDPR_PASSWORD"
 
     # Store passwords in Secret Manager
-    echo -n "$KEYCLOAK_PASSWORD" | gcloud secrets create staging-keycloak-db-password \
+    echo -n "$KEYCLOAK_PASSWORD" | gcloud secrets create preview-keycloak-db-password \
         --data-file=- \
         --replication-policy=automatic || true
 
-    echo -n "$OPENFGA_PASSWORD" | gcloud secrets create staging-openfga-db-password \
+    echo -n "$OPENFGA_PASSWORD" | gcloud secrets create preview-openfga-db-password \
         --data-file=- \
         --replication-policy=automatic || true
 
-    echo -n "$GDPR_PASSWORD" | gcloud secrets create staging-gdpr-db-password \
+    echo -n "$GDPR_PASSWORD" | gcloud secrets create preview-gdpr-db-password \
         --data-file=- \
         --replication-policy=automatic || true
 
@@ -438,9 +438,9 @@ create_cloud_sql() {
 }
 
 create_memorystore_redis() {
-    log_info "Creating Memorystore Redis instance for staging..."
+    log_info "Creating Memorystore Redis instance for preview..."
 
-    INSTANCE_NAME="staging-mcp-slg-redis"
+    INSTANCE_NAME="preview-mcp-slg-redis"
 
     # Check if instance already exists
     if gcloud redis instances describe "$INSTANCE_NAME" --region="$REGION" &> /dev/null; then
@@ -473,11 +473,11 @@ create_memorystore_redis() {
         --region="$REGION")
 
     # Store in Secret Manager
-    echo -n "$REDIS_HOST" | gcloud secrets create staging-redis-host \
+    echo -n "$REDIS_HOST" | gcloud secrets create preview-redis-host \
         --data-file=- \
         --replication-policy=automatic || true
 
-    echo -n "$REDIS_AUTH" | gcloud secrets create staging-redis-password \
+    echo -n "$REDIS_AUTH" | gcloud secrets create preview-redis-password \
         --data-file=- \
         --replication-policy=automatic || true
 
@@ -489,28 +489,28 @@ create_secrets() {
 
     # JWT secret
     JWT_SECRET=$(openssl rand -base64 64)
-    echo -n "$JWT_SECRET" | gcloud secrets create staging-jwt-secret \
+    echo -n "$JWT_SECRET" | gcloud secrets create preview-jwt-secret \
         --data-file=- \
-        --replication-policy=automatic || log_warn "staging-jwt-secret already exists"
+        --replication-policy=automatic || log_warn "preview-jwt-secret already exists"
 
     # Placeholder for API keys (user should update these)
-    echo -n "sk-ant-REPLACE_WITH_ACTUAL_KEY" | gcloud secrets create staging-anthropic-api-key \
+    echo -n "sk-ant-REPLACE_WITH_ACTUAL_KEY" | gcloud secrets create preview-anthropic-api-key \
         --data-file=- \
-        --replication-policy=automatic || log_warn "staging-anthropic-api-key already exists"
+        --replication-policy=automatic || log_warn "preview-anthropic-api-key already exists"
 
-    echo -n "REPLACE_WITH_ACTUAL_KEY" | gcloud secrets create staging-google-api-key \
+    echo -n "REPLACE_WITH_ACTUAL_KEY" | gcloud secrets create preview-google-api-key \
         --data-file=- \
-        --replication-policy=automatic || log_warn "staging-google-api-key already exists"
+        --replication-policy=automatic || log_warn "preview-google-api-key already exists"
 
     log_warn "⚠️  Update these secrets with actual API keys:"
-    log_warn "   gcloud secrets versions add staging-anthropic-api-key --data-file=<(echo -n 'sk-ant-...')"
-    log_warn "   gcloud secrets versions add staging-google-api-key --data-file=<(echo -n 'your-key')"
+    log_warn "   gcloud secrets versions add preview-anthropic-api-key --data-file=<(echo -n 'sk-ant-...')"
+    log_warn "   gcloud secrets versions add preview-google-api-key --data-file=<(echo -n 'your-key')"
 }
 
 setup_artifact_registry() {
     log_info "Setting up Artifact Registry for Docker images..."
 
-    REPO_NAME="mcp-staging"
+    REPO_NAME="mcp-preview"
 
     # Check if repository already exists
     if gcloud artifacts repositories describe "$REPO_NAME" \
@@ -523,7 +523,7 @@ setup_artifact_registry() {
     gcloud artifacts repositories create "$REPO_NAME" \
         --repository-format=docker \
         --location="$REGION" \
-        --description="Docker images for MCP Server LangGraph staging environment"
+        --description="Docker images for MCP Server LangGraph preview environment"
 
     log_info "Artifact Registry repository created: ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}"
     log_info "Configure Docker authentication:"
@@ -551,9 +551,9 @@ print_summary() {
     echo "  ✓ Audit logging"
     echo ""
     echo "☁️ Managed Services:"
-    echo "  • Cloud SQL PostgreSQL: mcp-staging-postgres"
-    echo "  • Memorystore Redis: mcp-staging-redis"
-    echo "  • Artifact Registry: ${REGION}-docker.pkg.dev/${PROJECT_ID}/mcp-staging"
+    echo "  • Cloud SQL PostgreSQL: mcp-preview-postgres"
+    echo "  • Memorystore Redis: mcp-preview-redis"
+    echo "  • Artifact Registry: ${REGION}-docker.pkg.dev/${PROJECT_ID}/mcp-preview"
     echo ""
     echo "📝 Next Steps:"
     echo "  1. Update API keys in Secret Manager (see warnings above)"

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Staging GKE Infrastructure Teardown Script
+# Preview GKE Infrastructure Teardown Script
 #
-# This script performs a complete teardown of the staging GKE environment,
+# This script performs a complete teardown of the preview GKE environment,
 # ensuring all resources are cleanly deleted and no orphaned resources remain.
 #
 # Features:
@@ -37,34 +37,34 @@ set -euo pipefail
 # Configuration
 readonly PROJECT_ID="${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
 readonly REGION="us-central1"
-readonly CLUSTER_NAME="staging-mcp-server-langgraph-gke"
-readonly NAMESPACE="staging-mcp-server-langgraph"
-readonly VPC_NAME="staging-vpc"
-readonly CLOUD_SQL_INSTANCE="mcp-staging-postgres"
-readonly REDIS_INSTANCE="mcp-staging-redis"
+readonly CLUSTER_NAME="preview-mcp-server-langgraph-gke"
+readonly NAMESPACE="preview-mcp-server-langgraph"
+readonly VPC_NAME="preview-vpc"
+readonly CLOUD_SQL_INSTANCE="mcp-preview-postgres"
+readonly REDIS_INSTANCE="mcp-preview-redis"
 # TERRAFORM_DIR reserved for future Terraform state cleanup
 # shellcheck disable=SC2034
-readonly TERRAFORM_DIR="terraform/environments/gcp-staging"
-readonly ARTIFACT_REGISTRY_REPO="mcp-staging"
+readonly TERRAFORM_DIR="terraform/environments/gcp-preview"
+readonly ARTIFACT_REGISTRY_REPO="mcp-preview"
 readonly WORKLOAD_IDENTITY_POOL="github-actions-pool"
 readonly WORKLOAD_IDENTITY_PROVIDER="github-provider"
 
 # Service accounts to delete
 readonly SERVICE_ACCOUNTS=(
-    "mcp-staging-sa"
-    "mcp-staging-keycloak-sa"
-    "mcp-staging-openfga-sa"
-    "mcp-staging-external-secrets-sa"
+    "mcp-preview-sa"
+    "mcp-preview-keycloak-sa"
+    "mcp-preview-openfga-sa"
+    "mcp-preview-external-secrets-sa"
 )
 
 # Secrets to delete from Secret Manager
 readonly SECRETS=(
-    "staging-keycloak-db-password"
-    "staging-openfga-db-password"
-    "staging-redis-password"
-    "staging-anthropic-api-key"
-    "staging-google-api-key"
-    "staging-jwt-secret"
+    "preview-keycloak-db-password"
+    "preview-openfga-db-password"
+    "preview-redis-password"
+    "preview-anthropic-api-key"
+    "preview-google-api-key"
+    "preview-jwt-secret"
 )
 
 # Flags
@@ -134,7 +134,7 @@ confirm_teardown() {
     fi
 
     log_warn "============================================"
-    log_warn "WARNING: This will DELETE all staging resources"
+    log_warn "WARNING: This will DELETE all preview resources"
     log_warn "============================================"
     log_warn "Project: $PROJECT_ID"
     log_warn "Region: $REGION"
@@ -648,7 +648,7 @@ verify_cleanup() {
 ###############################################################################
 
 main() {
-    log_info "Starting staging GKE infrastructure teardown..."
+    log_info "Starting preview GKE infrastructure teardown..."
 
     # Parse command-line arguments
     while [[ $# -gt 0 ]]; do
