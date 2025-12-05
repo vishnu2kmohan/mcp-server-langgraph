@@ -77,7 +77,8 @@
               "testing/overview",
               "testing/hypothesis-profiles",
               "advanced/testing",
-              "development/integration-testing"
+              "development/integration-testing",
+              "development/test-infrastructure"
             ]
           },
           {
@@ -329,6 +330,13 @@
             ]
           },
           {
+            "group": "Developer Tools",
+            "pages": [
+              "guides/visual-workflow-builder",
+              "guides/interactive-playground"
+            ]
+          },
+          {
             "group": "LLM Providers",
             "pages": [
               "guides/multi-llm-setup",
@@ -563,7 +571,8 @@
               "architecture/adr-0061-fastapi-web-framework",
               "architecture/adr-0062-uv-package-management",
               "architecture/adr-0063-mintlify-documentation-platform",
-              "architecture/adr-0065-ruff-code-quality"
+              "architecture/adr-0065-ruff-code-quality",
+              "architecture/adr-0067-interactive-playground"
             ]
           },
           {

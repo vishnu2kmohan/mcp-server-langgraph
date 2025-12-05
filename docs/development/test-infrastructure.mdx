@@ -1,0 +1,576 @@
+---
+title: Test Infrastructure
+description: 'Docker-based test environment for integration testing'
+icon: 'docker'
+seoTitle: "Test Infrastructure - MCP Server LangGraph"
+seoDescription: "Complete guide to the Docker-based test infrastructure for MCP Server LangGraph integration testing"
+keywords: ["testing", "docker", "integration", "infrastructure", "MCP Server", "docker-compose"]
+contentType: "reference"
+---
+
+<Note>
+The test infrastructure provides a complete, isolated Docker environment for integration testing with all services including the Visual Workflow Builder and Interactive Playground.
+</Note>
+
+## Overview
+
+The test infrastructure (`docker-compose.test.yml`) provides:
+
+- **14 Services** - Complete stack for integration testing
+- **Isolated Ports** - Offset from development to avoid conflicts
+- **Health Checks** - All services with proper startup dependencies
+- **Observability** - Jaeger, Prometheus, Grafana, AlertManager
+
+## Service Catalog
+
+### Core Services
+
+| Service | Dev Port | Test Port | Offset | Description |
+|---------|----------|-----------|--------|-------------|
+| PostgreSQL | 5432 | 9432 | +4000 | Database storage |
+| Redis | 6379 | 9379 | +3000 | Session & cache |
+| OpenFGA | 8080 | 9080 | +1000 | Authorization |
+| Keycloak | 8082 | 9082 | +1002 | Identity & SSO |
+| Qdrant | 6333 | 9333 | +3000 | Vector search |
+| MCP Server | 8000 | 8000 | — | Main application |
+
+### Builder & Playground
+
+| Service | Dev Port | Test Port | Offset | Description |
+|---------|----------|-----------|--------|-------------|
+| Builder API | 8001 | 9001 | +1000 | Visual builder backend |
+| Builder Frontend | 3000 | 13000 | +10000 | React UI |
+| Playground API | 8002 | 9002 | +1000 | Chat interface |
+
+### Observability
+
+| Service | Dev Port | Test Port | Offset | Description |
+|---------|----------|-----------|--------|-------------|
+| Jaeger UI | 16686 | 19686 | +3000 | Distributed tracing |
+| Prometheus | 9090 | 19090 | +10000 | Metrics collection |
+| AlertManager | 9093 | 19093 | +10000 | Alert routing |
+| Grafana | 3001 | 13001 | +10000 | Dashboards |
+
+## Quick Start
+
+### Start All Services
+
+```bash
+# Full test infrastructure (all 14 services)
+make test-infra-full-up
+```
+
+Output:
+```
+✓ Full test infrastructure started (including builder & playground)
+
+All Test Services:
+  PostgreSQL:       localhost:9432
+  Redis:            localhost:9379
+  OpenFGA:          http://localhost:9080
+  Keycloak:         http://localhost:9082
+  Qdrant:           http://localhost:9333
+  MCP Server:       http://localhost:8000
+  Builder API:      http://localhost:9001
+  Builder Frontend: http://localhost:13000
+  Playground:       http://localhost:9002
+
+Observability:
+  Jaeger UI:        http://localhost:19686
+  Prometheus:       http://localhost:19090
+  AlertManager:     http://localhost:19093
+  Grafana:          http://localhost:13001
+```
+
+### Selective Startup
+
+```bash
+# Core infrastructure only (faster startup)
+make test-infra-up
+
+# Add builder services
+make test-builder-up
+
+# Add playground
+make test-playground-up
+```
+
+### Stop Services
+
+```bash
+# Stop all test services
+make test-infra-down
+
+# Stop only builder
+make test-builder-down
+
+# Stop only playground
+make test-playground-down
+```
+
+## Service Dependencies
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#087056'}}}%%
+flowchart TB
+    subgraph Database["Database Layer"]
+        PG[PostgreSQL]
+    end
+
+    subgraph Cache["Cache Layer"]
+        Redis[Redis]
+    end
+
+    subgraph Auth["Auth Layer"]
+        KC[Keycloak]
+        FGA[OpenFGA]
+    end
+
+    subgraph Core["Core Services"]
+        MCP[MCP Server]
+    end
+
+    subgraph UI["UI Services"]
+        BA[Builder API]
+        BF[Builder Frontend]
+        PL[Playground]
+    end
+
+    subgraph Observability["Observability"]
+        Jaeger[Jaeger]
+        Prom[Prometheus]
+        Graf[Grafana]
+        Alert[AlertManager]
+    end
+
+    PG --> KC
+    PG --> FGA
+    Redis --> MCP
+    KC --> MCP
+    FGA --> MCP
+    MCP --> BA
+    MCP --> PL
+    BA --> BF
+    Redis --> PL
+
+    MCP --> Jaeger
+    MCP --> Prom
+    Prom --> Graf
+    Prom --> Alert
+```
+
+## Makefile Targets
+
+### Test Infrastructure
+
+| Target | Description |
+|--------|-------------|
+| `test-infra-up` | Start core infrastructure (11 services) |
+| `test-infra-down` | Stop all test services |
+| `test-infra-logs` | View service logs |
+| `test-infra-full-up` | Start all 14 services |
+
+### Builder Services
+
+| Target | Description |
+|--------|-------------|
+| `test-builder-up` | Start builder API + frontend |
+| `test-builder-down` | Stop builder services |
+
+### Playground Services
+
+| Target | Description |
+|--------|-------------|
+| `test-playground-up` | Start playground API |
+| `test-playground-down` | Stop playground service |
+
+## Test Constants
+
+All test configuration is centralized in `tests/constants.py`:
+
+```python
+# Core infrastructure ports
+TEST_POSTGRES_PORT = 9432
+TEST_REDIS_PORT = 9379
+TEST_OPENFGA_HTTP_PORT = 9080
+TEST_OPENFGA_GRPC_PORT = 9081
+TEST_KEYCLOAK_PORT = 9082
+TEST_QDRANT_PORT = 9333
+TEST_MCP_SERVER_PORT = 8000
+
+# Observability ports
+TEST_JAEGER_UI_PORT = 19686
+TEST_PROMETHEUS_PORT = 19090
+TEST_ALERTMANAGER_PORT = 19093
+TEST_GRAFANA_PORT = 13001
+
+# Builder service ports
+TEST_BUILDER_API_PORT = 9001
+TEST_BUILDER_FRONTEND_PORT = 13000
+
+# Playground service ports
+TEST_PLAYGROUND_API_PORT = 9002
+TEST_PLAYGROUND_REDIS_DB = 2
+
+# Session configuration
+TEST_SESSION_TIMEOUT_SECONDS = 60
+TEST_MAX_MESSAGES_PER_SESSION = 50
+```
+
+## Docker Compose Configuration
+
+### Core Service Example
+
+```yaml
+mcp-server-test:
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.test
+  ports:
+    - "8000:8000"
+  environment:
+    - ENVIRONMENT=test
+    - TESTING=true
+    - DATABASE_URL=postgresql://postgres:postgres@postgres-test:5432/langgraph_test
+    - REDIS_URL=redis://redis-test:6379/0
+    - OPENFGA_API_URL=http://openfga-test:8080
+    - JWT_SECRET_KEY=test-secret-key-for-integration-tests
+  depends_on:
+    postgres-test:
+      condition: service_healthy
+    redis-test:
+      condition: service_healthy
+    openfga-test:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    interval: 5s
+    timeout: 3s
+    retries: 10
+  networks:
+    mcp-test-network:
+      aliases:
+        - mcp-server
+```
+
+### Builder Services
+
+```yaml
+builder-api-test:
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.builder-api
+  ports:
+    - "9001:8001"
+  environment:
+    - ENVIRONMENT=test
+    - TESTING=true
+    - MCP_SERVER_URL=http://mcp-server-test:8000
+  depends_on:
+    mcp-server-test:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8001/"]
+    interval: 5s
+    timeout: 3s
+    retries: 10
+  networks:
+    mcp-test-network:
+      aliases:
+        - builder-api
+
+builder-frontend-test:
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.builder-frontend
+  ports:
+    - "13000:80"
+  depends_on:
+    builder-api-test:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/"]
+    interval: 5s
+    timeout: 3s
+    retries: 10
+  networks:
+    mcp-test-network:
+      aliases:
+        - builder-frontend
+```
+
+### Playground Service
+
+```yaml
+playground-test:
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.playground
+  ports:
+    - "9002:8002"
+  environment:
+    - ENVIRONMENT=test
+    - TESTING=true
+    - MCP_SERVER_URL=http://mcp-server-test:8000
+    - REDIS_URL=redis://redis-test:6379/2
+    - JWT_SECRET_KEY=test-secret-key-for-integration-tests
+  depends_on:
+    mcp-server-test:
+      condition: service_healthy
+    redis-test:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8002/api/playground/health"]
+    interval: 5s
+    timeout: 3s
+    retries: 10
+  networks:
+    mcp-test-network:
+      aliases:
+        - playground
+```
+
+## Running Integration Tests
+
+### Full Suite
+
+```bash
+# Start infrastructure and run tests
+make test-integration
+```
+
+### Specific Test Categories
+
+```bash
+# Start infrastructure first
+make test-infra-full-up
+
+# Run specific test suites
+uv run pytest tests/integration/ -v
+uv run pytest tests/playground/ -v
+uv run pytest tests/builder/ -v
+uv run pytest tests/e2e/ -v
+```
+
+### With Coverage
+
+```bash
+# Run with coverage report
+uv run pytest tests/integration/ \
+  --cov=src/mcp_server_langgraph \
+  --cov-report=term-missing \
+  --cov-report=xml
+```
+
+## Health Checks
+
+### Check All Services
+
+```bash
+# Quick health check
+make health-check-fast
+```
+
+Output:
+```
+⚡ Fast health check (parallel port scanning)...
+
+  ✓ OpenFGA (9080): OK
+  ✓ PostgreSQL (9432): OK
+  ✓ Keycloak (9082): OK
+  ✓ Jaeger (19686): OK
+  ✓ Prometheus (19090): OK
+  ✓ Grafana (13001): OK
+  ✓ Redis (9379): OK
+
+✓ Fast health check complete
+```
+
+### Individual Service Health
+
+```bash
+# MCP Server
+curl http://localhost:8000/health
+
+# Playground
+curl http://localhost:9002/api/playground/health
+
+# Builder API
+curl http://localhost:9001/
+
+# OpenFGA
+curl http://localhost:9080/healthz
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Services not starting">
+    ```bash
+    # Check Docker status
+    docker compose -f docker-compose.test.yml ps
+
+    # View logs
+    docker compose -f docker-compose.test.yml logs --tail=50
+
+    # Check specific service
+    docker compose -f docker-compose.test.yml logs mcp-server-test
+    ```
+  </Accordion>
+
+  <Accordion title="Port conflicts">
+    Test ports use offsets (+1000 to +10000) to avoid conflicts.
+    If you still have conflicts:
+
+    ```bash
+    # Find what's using a port
+    lsof -i :9002
+
+    # Kill if needed
+    kill -9 <PID>
+
+    # Or stop all containers
+    docker compose -f docker-compose.test.yml down -v
+    ```
+  </Accordion>
+
+  <Accordion title="Database connection issues">
+    ```bash
+    # Check PostgreSQL
+    docker exec postgres-test pg_isready
+
+    # View PostgreSQL logs
+    docker logs postgres-test --tail=20
+
+    # Connect manually
+    docker exec -it postgres-test psql -U postgres
+    ```
+  </Accordion>
+
+  <Accordion title="Redis issues">
+    ```bash
+    # Check Redis
+    docker exec redis-test redis-cli ping
+
+    # View keys
+    docker exec redis-test redis-cli keys '*'
+
+    # Check memory
+    docker exec redis-test redis-cli info memory
+    ```
+  </Accordion>
+
+  <Accordion title="Container OOM killed">
+    Increase Docker memory limits:
+
+    ```bash
+    # Docker Desktop: Settings → Resources → Memory: 8GB+
+
+    # Or in docker-compose.test.yml:
+    services:
+      mcp-server-test:
+        deploy:
+          resources:
+            limits:
+              memory: 2G
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+### 1. Use Test Constants
+
+Always import ports from `tests/constants.py`:
+
+```python
+from tests.constants import (
+    TEST_PLAYGROUND_API_PORT,
+    TEST_BUILDER_API_PORT,
+    TEST_REDIS_PORT,
+)
+
+async def test_playground_health():
+    async with aiohttp.ClientSession() as session:
+        url = f"http://localhost:{TEST_PLAYGROUND_API_PORT}/api/playground/health"
+        async with session.get(url) as resp:
+            assert resp.status == 200
+```
+
+### 2. Wait for Services
+
+Use health checks before running tests:
+
+```python
+import asyncio
+import aiohttp
+
+async def wait_for_service(url: str, timeout: int = 60):
+    """Wait for service to be healthy."""
+    start = asyncio.get_event_loop().time()
+    while asyncio.get_event_loop().time() - start < timeout:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
+                    if resp.status == 200:
+                        return True
+        except:
+            pass
+        await asyncio.sleep(1)
+    raise TimeoutError(f"Service at {url} not healthy after {timeout}s")
+```
+
+### 3. Clean State Between Tests
+
+```python
+@pytest.fixture
+async def clean_redis():
+    """Clean Redis before each test."""
+    import redis.asyncio as redis
+
+    r = redis.from_url(f"redis://localhost:{TEST_REDIS_PORT}/2")
+    await r.flushdb()
+    yield r
+    await r.close()
+```
+
+### 4. Use xdist Safely
+
+For parallel tests, use the memory safety pattern:
+
+```python
+import gc
+import pytest
+
+@pytest.mark.xdist_group(name="playground")
+class TestPlayground:
+    def teardown_method(self):
+        gc.collect()
+
+    async def test_create_session(self):
+        # Test code here
+        pass
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Integration Testing" icon="flask" href="/development/integration-testing">
+    Writing integration tests
+  </Card>
+  <Card title="Interactive Playground" icon="comments" href="/guides/interactive-playground">
+    Playground usage guide
+  </Card>
+  <Card title="Visual Builder" icon="diagram-project" href="/guides/visual-workflow-builder">
+    Builder usage guide
+  </Card>
+  <Card title="CI/CD" icon="circle-check" href="/ci-cd/overview">
+    Continuous integration
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Test Infrastructure** provides a complete Docker environment for reliable integration testing!
+</Check>
