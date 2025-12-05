@@ -45,6 +45,7 @@ def mock_redis() -> AsyncMock:
     return redis
 
 
+@pytest.mark.xdist_group(name="playground_session")
 class TestSessionCreation:
     """Tests for session creation functionality."""
 
@@ -94,6 +95,7 @@ class TestSessionCreation:
         mock_redis.set.assert_called()
 
 
+@pytest.mark.xdist_group(name="playground_session")
 class TestSessionRetrieval:
     """Tests for session retrieval functionality."""
 
@@ -182,6 +184,7 @@ class TestSessionRetrieval:
         assert all(s.user_id == "user-123" for s in sessions)
 
 
+@pytest.mark.xdist_group(name="playground_session")
 class TestSessionDeletion:
     """Tests for session deletion functionality."""
 
@@ -225,6 +228,7 @@ class TestSessionDeletion:
         assert result is False
 
 
+@pytest.mark.xdist_group(name="playground_session")
 class TestSessionExpiration:
     """Tests for session expiration functionality."""
 
@@ -276,6 +280,7 @@ class TestSessionExpiration:
         mock_redis.set.assert_called()
 
 
+@pytest.mark.xdist_group(name="playground_session")
 class TestSessionMessages:
     """Tests for message history within sessions."""
 
