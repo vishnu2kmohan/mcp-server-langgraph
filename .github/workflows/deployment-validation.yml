@@ -118,9 +118,6 @@ jobs:
           echo "Building dev overlay..."
           kustomize build deployments/overlays/dev
 
-          echo "Building staging overlay..."
-          kustomize build deployments/overlays/staging
-
           echo "Building production overlay..."
           kustomize build deployments/overlays/production
 

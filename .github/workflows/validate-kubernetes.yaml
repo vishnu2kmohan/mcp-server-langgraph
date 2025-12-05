@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        overlay: [dev, staging, production, production-gke, preview-gke]
+        overlay: [dev, production, production-gke, preview-gke]
     steps:
       - uses: actions/checkout@v6
 

@@ -4,7 +4,7 @@ metadata:
   name: mcp-server-langgraph-config
 data:
   # Environment
-  environment: "staging"
+  environment: "preview"
   log_level: "INFO"
 
   # LLM Provider Configuration (overrides base)

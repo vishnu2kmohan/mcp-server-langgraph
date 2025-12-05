@@ -21,12 +21,12 @@ resources:
 commonAnnotations:
   platform: gcp
   cloud-provider: google
-  environment: staging
+  environment: preview
   managed-by: kustomize
 
 labels:
   - pairs:
-      environment: staging
+      environment: preview
       platform: gke
       cloud: gcp
 
