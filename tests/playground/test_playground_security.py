@@ -82,6 +82,7 @@ class TestJWTAuthentication:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
+@pytest.mark.xdist_group(name="playground_security")
 class TestUserIsolation:
     """Tests for user session isolation."""
 
