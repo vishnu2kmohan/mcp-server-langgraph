@@ -25,7 +25,7 @@ The Interactive Playground enables:
 ## Architecture
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#087056','secondaryColor':'#07C983'}}}%%
+%%{init: {'theme':'base'}}%%
 flowchart LR
     subgraph Client
         UI[Chat UI]
@@ -51,6 +51,17 @@ flowchart LR
     REST --> SM
     SM --> Redis
     WS -->|Stream| Agent
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef apiStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef storageStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef agentStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+
+    class UI clientStyle
+    class WS,REST,SM apiStyle
+    class Redis storageStyle
+    class Agent agentStyle
 ```
 
 ## Quick Start

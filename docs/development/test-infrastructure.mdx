@@ -111,7 +111,7 @@ make test-playground-down
 ## Service Dependencies
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#087056'}}}%%
+%%{init: {'theme':'base'}}%%
 flowchart TB
     subgraph Database["Database Layer"]
         PG[PostgreSQL]
@@ -157,6 +157,21 @@ flowchart TB
     MCP --> Prom
     Prom --> Graf
     Prom --> Alert
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef dbStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef cacheStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef coreStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef uiStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef obsStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
+
+    class PG dbStyle
+    class Redis cacheStyle
+    class KC,FGA authStyle
+    class MCP coreStyle
+    class BA,BF,PL uiStyle
+    class Jaeger,Prom,Graf,Alert obsStyle
 ```
 
 ## Makefile Targets

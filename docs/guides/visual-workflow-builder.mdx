@@ -37,7 +37,7 @@ The Visual Workflow Builder provides:
 ## Architecture
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#087056','secondaryColor':'#07C983'}}}%%
+%%{init: {'theme':'base'}}%%
 flowchart TB
     subgraph Frontend["React Frontend (3000)"]
         Canvas[React Flow Canvas]
@@ -56,6 +56,13 @@ flowchart TB
     Gen -->|Python Code| Monaco
     Monaco -->|Import| Imp
     Imp -->|Workflow JSON| Canvas
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef frontendStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef backendStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class Canvas,Monaco,Zustand frontendStyle
+    class API,Gen,Imp backendStyle
 ```
 
 ## Quick Start
