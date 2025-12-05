@@ -17,7 +17,7 @@ Usage:
         python scripts/validators/k8s_config_validator.py
 
         # Validate specific overlay
-        python scripts/validators/k8s_config_validator.py --overlay deployments/overlays/staging-gke
+        python scripts/validators/k8s_config_validator.py --overlay deployments/overlays/preview-gke
 
 Exit codes:
     0 - All validations passed
@@ -193,7 +193,7 @@ def main():
 
     # Default overlays to validate
     default_overlays = [
-        "deployments/overlays/staging-gke",
+        "deployments/overlays/preview-gke",
         "deployments/overlays/production-gke",
     ]
 

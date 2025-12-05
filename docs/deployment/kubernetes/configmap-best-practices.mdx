@@ -124,7 +124,7 @@ When using ExternalSecrets with Kustomize `namePrefix`, **always use the prefixe
 
 **❌ WRONG:**
 ```yaml
-# In deployments/overlays/staging-gke/deployment-patch.yaml
+# In deployments/overlays/preview-gke/deployment-patch.yaml
 env:
   - name: API_KEY
     valueFrom:
@@ -135,7 +135,7 @@ env:
 
 **✅ CORRECT:**
 ```yaml
-# In deployments/overlays/staging-gke/deployment-patch.yaml
+# In deployments/overlays/preview-gke/deployment-patch.yaml
 env:
   - name: API_KEY
     valueFrom:
@@ -208,7 +208,7 @@ Before applying changes:
 
 ```bash
 # Build and inspect manifests
-kustomize build deployments/overlays/staging-gke > /tmp/staging.yaml
+kustomize build deployments/overlays/preview-gke > /tmp/staging.yaml
 
 # Search for your new keys
 grep -A5 "configMapKeyRef" /tmp/staging.yaml
@@ -271,7 +271,7 @@ Error: couldn't find key session_cookie_secure in ConfigMap staging-mcp-server-l
 
 3. If missing, add to `configmap-patch.yaml` and reapply:
    ```bash
-   kubectl apply -k deployments/overlays/staging-gke
+   kubectl apply -k deployments/overlays/preview-gke
    ```
 
 ### Secret Name Mismatch

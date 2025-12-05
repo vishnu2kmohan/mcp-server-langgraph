@@ -18,19 +18,19 @@
 - **Test**: `tests/regression/test_pod_deployment_regression.py`
 
 ### 2. GKE Autopilot CPU Ratios ⚠️ [1-2h]
-- **File**: `deployments/overlays/staging-gke/otel-collector-patch.yaml`
+- **File**: `deployments/overlays/preview-gke/otel-collector-patch.yaml`
 - **Issue**: OTEL CPU ratio 5.0 > GKE max 4.0
 - **Fix**: Increase CPU request 200m → 250m
 - **Test**: `scripts/validate_gke_autopilot_compliance.py`
 
 ### 3. Network Policy JGroups Egress ✅ [1h]
-- **File**: `deployments/overlays/staging-gke/network-policy.yaml`
+- **File**: `deployments/overlays/preview-gke/network-policy.yaml`
 - **Issue**: Verify TCP/7800 egress exists for Keycloak clustering
 - **Status**: Already fixed, needs cross-environment validation
 - **Test**: `tests/deployment/test_network_policies.py`
 
 ### 4. Cloud SQL Proxy Health Probes ⚠️ [2-3h]
-- **File**: `deployments/overlays/staging-gke/cloud-sql-proxy-patch.yaml`
+- **File**: `deployments/overlays/preview-gke/cloud-sql-proxy-patch.yaml`
 - **Issue**: Probes may use wrong port (5432 instead of 9801)
 - **Fix**: Ensure `/liveness` and `/readiness` on port 9801
 - **Test**: `tests/deployment/test_cloud_sql_proxy_config.py`
@@ -79,7 +79,7 @@
 - **Test**: NEW test for ArgoCD values validation
 
 ### 11. OTEL Config Hardening ⚠️ [2h]
-- **File**: `deployments/overlays/staging-gke/otel-collector-configmap-patch.yaml`
+- **File**: `deployments/overlays/preview-gke/otel-collector-configmap-patch.yaml`
 - **Add**: Validation script to detect bash syntax and deprecated keys
 - **Add**: Pre-commit hook for validation
 - **Test**: `tests/regression/test_pod_deployment_regression.py:test_otel_collector_config_syntax`
@@ -99,7 +99,7 @@
 pytest tests/deployment/test_network_policies.py -v
 
 # 2. Fix OTEL CPU ratio
-# Edit: deployments/overlays/staging-gke/otel-collector-patch.yaml
+# Edit: deployments/overlays/preview-gke/otel-collector-patch.yaml
 # Change: cpu: 200m -> 250m
 
 # 3. Fix/validate Cloud SQL probes
@@ -108,7 +108,7 @@ pytest tests/deployment/test_cloud_sql_proxy_config.py -v
 # 4. Fix Keycloak readOnlyFilesystem
 # Edit: deployments/base/keycloak-deployment.yaml
 # Add: lib and providers volume mounts
-# Edit: deployments/overlays/staging-gke/keycloak-patch.yaml
+# Edit: deployments/overlays/preview-gke/keycloak-patch.yaml
 # Change: readOnlyRootFilesystem: false -> true
 ```
 
@@ -156,7 +156,7 @@ pytest tests/deployment/test_helm_configuration.py -v
 
 ```bash
 # Validate all Kubernetes manifests
-python scripts/validate_gke_autopilot_compliance.py deployments/overlays/staging-gke
+python scripts/validate_gke_autopilot_compliance.py deployments/overlays/preview-gke
 
 # Run deployment tests
 pytest tests/deployment/ -v
@@ -169,7 +169,7 @@ helm lint deployments/helm/mcp-server-langgraph/
 helm template test-release deployments/helm/mcp-server-langgraph/ | kubectl apply --dry-run=client -f -
 
 # Validate kustomize builds
-kustomize build deployments/overlays/staging-gke/ | kubectl apply --dry-run=client -f -
+kustomize build deployments/overlays/preview-gke/ | kubectl apply --dry-run=client -f -
 kustomize build deployments/overlays/production-gke/ | kubectl apply --dry-run=client -f -
 ```
 
@@ -204,9 +204,9 @@ kustomize build deployments/overlays/production-gke/ | kubectl apply --dry-run=c
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/base/networkpolicy.yaml` (1 issue)
 
 **Overlay Files**:
-- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/staging-gke/keycloak-patch.yaml` (1 issue)
-- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/staging-gke/otel-collector-patch.yaml` (1 issue)
-- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/staging-gke/network-policy.yaml` (1 issue)
+- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/preview-gke/keycloak-patch.yaml` (1 issue)
+- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/preview-gke/otel-collector-patch.yaml` (1 issue)
+- `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/deployments/overlays/preview-gke/network-policy.yaml` (1 issue)
 
 **Test Files**:
 - `/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251116-105811/tests/deployment/test_network_policies.py`

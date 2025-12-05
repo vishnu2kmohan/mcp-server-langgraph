@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.validation, pytest.mark.usefixtures(
 REPO_ROOT = get_repo_root()
 OVERLAYS = [
     "deployments/base",
-    "deployments/overlays/staging-gke",
+    "deployments/overlays/preview-gke",
     "deployments/overlays/production-gke",
     "deployments/argocd/base",
 ]
@@ -129,7 +129,7 @@ class TestKustomizeBuilds:
 
 @pytest.mark.xdist_group(name="teststaginggkeoverlay")
 class TestStagingGKEOverlay:
-    """Specific tests for staging-gke overlay configuration."""
+    """Specific tests for preview-gke overlay configuration."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -138,7 +138,7 @@ class TestStagingGKEOverlay:
     @requires_tool("kustomize")
     def _build_overlay(self):
         """Helper to build staging overlay."""
-        overlay_path = REPO_ROOT / "deployments/overlays/staging-gke"
+        overlay_path = REPO_ROOT / "deployments/overlays/preview-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
@@ -150,13 +150,13 @@ class TestStagingGKEOverlay:
         """
         Test that all resources use the correct namespace.
 
-        Expected: staging-mcp-server-langgraph
+        Expected: preview-mcp-server-langgraph
         Common mistake: mcp-staging (hardcoded)
 
         Validates Finding #4: Service Account namespace mismatches
         """
         documents = self._build_overlay()
-        expected_namespace = "staging-mcp-server-langgraph"
+        expected_namespace = "preview-mcp-server-langgraph"
 
         for doc in documents:
             if doc is None or not isinstance(doc, dict):
@@ -200,11 +200,13 @@ class TestStagingGKEOverlay:
 
     def test_network_policy_postgres_port(self):
         """
-        Test that NetworkPolicy allows PostgreSQL on correct port 5432.
+        Test that NetworkPolicy allows PostgreSQL on valid ports.
 
-        Validates Finding #6: Cloud SQL ports using 3307 instead of 5432
+        Valid ports for PostgreSQL access:
+        - 5432: Direct PostgreSQL connection
+        - 3307: Cloud SQL Auth Proxy (used in GKE for Cloud SQL PostgreSQL)
 
-        Common mistake: Port 3307 (MySQL) instead of 5432 (PostgreSQL)
+        Invalid port: 3306 (MySQL default port)
         """
         documents = self._build_overlay()
 
@@ -222,10 +224,12 @@ class TestStagingGKEOverlay:
                     for port_spec in ports:
                         port = port_spec.get("port")
 
-                        # If port 3307 is found, fail (that's MySQL, not Postgres)
-                        if port == 3307:
+                        # If MySQL port 3306 is found, fail
+                        # Note: 3307 is valid (Cloud SQL Auth Proxy)
+                        if port == 3306:
                             pytest.fail(
-                                f"NetworkPolicy '{doc['metadata']['name']}' uses port 3307 (MySQL). PostgreSQL uses port 5432."
+                                f"NetworkPolicy '{doc['metadata']['name']}' uses port 3306 (MySQL). "
+                                f"PostgreSQL uses port 5432 or 3307 (Cloud SQL Proxy)."
                             )
 
 

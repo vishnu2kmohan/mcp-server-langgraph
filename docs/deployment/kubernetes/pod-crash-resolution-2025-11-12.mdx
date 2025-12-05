@@ -39,7 +39,7 @@ Successfully resolved pod crashes in staging environment affecting Keycloak and 
 **Root Cause**: Keycloak Quarkus runtime requires writable filesystem for build artifacts at startup, incompatible with `readOnlyRootFilesystem: true`
 
 **Solution**:
-- Temporarily disabled `readOnlyRootFilesystem` for Keycloak (deployments/overlays/staging-gke/keycloak-patch.yaml:30)
+- Temporarily disabled `readOnlyRootFilesystem` for Keycloak (deployments/overlays/preview-gke/keycloak-patch.yaml:30)
 - Created comprehensive implementation plan for permanent fix with pre-built image
 - Documented in: `docs/kubernetes/KEYCLOAK_READONLY_FILESYSTEM.md`
 
@@ -59,7 +59,7 @@ Successfully resolved pod crashes in staging environment affecting Keycloak and 
 **Solutions Implemented**:
 
 #### ConfigMap Keys Added
-**File**: `deployments/overlays/staging-gke/configmap-patch.yaml`
+**File**: `deployments/overlays/preview-gke/configmap-patch.yaml`
 
 Added 23 lines of configuration:
 - Session management: `session_cookie_secure`, `session_cookie_samesite`, `session_max_age_seconds`
@@ -70,7 +70,7 @@ Added 23 lines of configuration:
 - GDPR: `gdpr_storage_backend`, `gdpr_retention_days`
 
 #### Secret Keys Added
-**File**: `deployments/overlays/staging-gke/external-secrets.yaml`
+**File**: `deployments/overlays/preview-gke/external-secrets.yaml`
 
 Added to ExternalSecret template:
 - `keycloak-client-id`
@@ -158,15 +158,15 @@ staging-infisical-client-secret
 python scripts/validators/k8s_config_validator.py
 
 # Validate specific overlay
-python scripts/validators/k8s_config_validator.py --overlay deployments/overlays/staging-gke
+python scripts/validators/k8s_config_validator.py --overlay deployments/overlays/preview-gke
 ```
 
 **Output Example**:
 ```text
 === Kubernetes Configuration Validation ===
 
-Validating ConfigMap keys for deployments/overlays/staging-gke...
-✓ All ConfigMap keys exist for deployments/overlays/staging-gke
+Validating ConfigMap keys for deployments/overlays/preview-gke...
+✓ All ConfigMap keys exist for deployments/overlays/preview-gke
 
 === Validation Summary ===
 ✓ All validations passed!
@@ -214,7 +214,7 @@ $ python scripts/validators/k8s_config_validator.py
 ```
 
 === Kubernetes Configuration Validation ===
-✓ All ConfigMap keys exist for deployments/overlays/staging-gke
+✓ All ConfigMap keys exist for deployments/overlays/preview-gke
 ✓ All ConfigMap keys exist for deployments/overlays/production-gke
 === Validation Summary ===
 ✓ All validations passed!
@@ -269,10 +269,10 @@ Qdrant:            1/1 Running ✅
 ## Files Modified
 
 ### Configuration Files
-1. `deployments/overlays/staging-gke/configmap-patch.yaml` (+23 lines)
-2. `deployments/overlays/staging-gke/external-secrets.yaml` (+40 lines)
-3. `deployments/overlays/staging-gke/keycloak-patch.yaml` (modified security context)
-4. `deployments/overlays/staging-gke/kustomization.yaml` (+18 lines - ServiceAccount delete patches)
+1. `deployments/overlays/preview-gke/configmap-patch.yaml` (+23 lines)
+2. `deployments/overlays/preview-gke/external-secrets.yaml` (+40 lines)
+3. `deployments/overlays/preview-gke/keycloak-patch.yaml` (modified security context)
+4. `deployments/overlays/preview-gke/kustomization.yaml` (+18 lines - ServiceAccount delete patches)
 
 ### Test Files (NEW)
 5. `tests/deployment/test_configmap_secret_validation.py` (495 lines)

@@ -204,7 +204,7 @@ data:
 
 **Files Fixed**:
 - `deployments/overlays/production/kustomization.yaml:42`
-- `deployments/overlays/staging-gke/kustomization.yaml:181`
+- `deployments/overlays/preview-gke/kustomization.yaml:181`
 
 **Solution**:
 ```yaml
@@ -227,10 +227,10 @@ images:
 
 ### Finding #7: Deleted Secret References (P1 High)
 
-**Issue**: staging-gke referenced deleted `mcp-server-langgraph-secrets`
+**Issue**: preview-gke referenced deleted `mcp-server-langgraph-secrets`
 
 **File Fixed**:
-- `deployments/overlays/staging-gke/deployment-patch.yaml:82,87`
+- `deployments/overlays/preview-gke/deployment-patch.yaml:82,87`
 
 **Solution**:
 ```yaml
@@ -268,7 +268,7 @@ Added `$patch: delete` for:
 **Test**: Manual verification (no StatefulSet/Deployment for postgres/redis)
 
 **Prevention**:
-- Follows staging-gke pattern
+- Follows preview-gke pattern
 - Documented in SECRET_MANAGEMENT_GUIDE.md
 - CI/CD validates build succeeds
 
@@ -332,7 +332,7 @@ helm install my-release ./deployments/helm/mcp-server-langgraph \
 - `test_aws_overlay_container_patches_apply()` - Container patch validation
 
 **Coverage**:
-- All 6 standard overlays (dev, staging, production, staging-gke, production-gke, base)
+- All 6 standard overlays (dev, staging, production, preview-gke, production-gke, base)
 - All 3 cloud overlays (AWS, GCP, Azure)
 - Placeholder detection
 - Resource validation
@@ -451,7 +451,7 @@ on:
 d43d7d5 - fix(kustomize): eliminate placeholder leakage in production-gke (P0 #3)
 07ad098 - fix(aws): correct container name in deployment patch (P1 #4)
 11e957a - fix(aws): create missing aws-config ConfigMap (P1 #5)
-ecdc8b1 - fix(staging-gke): update secret references to External Secrets (P1 #7)
+ecdc8b1 - fix(preview-gke): update secret references to External Secrets (P1 #7)
 bdb1a0b - fix(production-gke): remove in-cluster databases (P1 #8)
 d91693f - fix(kustomize): standardize image retagging (P1 #6)
 c1c3522 - test(helm): add unit tests and values schema
@@ -494,8 +494,8 @@ c540891 - chore(pre-commit): add deployment validation hooks
 - `deployments/overlays/production-gke/ingress-patch.yaml` (created)
 
 **Staging GKE Overlay**:
-- `deployments/overlays/staging-gke/deployment-patch.yaml`
-- `deployments/overlays/staging-gke/kustomization.yaml`
+- `deployments/overlays/preview-gke/deployment-patch.yaml`
+- `deployments/overlays/preview-gke/kustomization.yaml`
 
 **Production Overlay**:
 - `deployments/overlays/production/kustomization.yaml`
@@ -543,7 +543,7 @@ kubectl kustomize deployments/overlays/staging
 → PASS
 kubectl kustomize deployments/overlays/production
 → PASS
-kubectl kustomize deployments/overlays/staging-gke
+kubectl kustomize deployments/overlays/preview-gke
 → PASS
 kubectl kustomize deployments/overlays/production-gke
 → PASS
@@ -600,7 +600,7 @@ kubectl kustomize deployments/overlays/production | grep PLACEHOLDER
 | Kustomize build failures | 3/9 overlays (33%) |
 | Placeholder instances | 16 in production-gke |
 | Container patch failures | 1 (AWS overlay) |
-| Secret reference errors | 2 (staging-gke) |
+| Secret reference errors | 2 (preview-gke) |
 | Resource conflicts | 4 resources (production-gke) |
 
 ### After Remediation
@@ -760,7 +760,7 @@ Use this checklist to verify all fixes are working:
 
 - [ ] AWS env vars present: `kubectl kustomize deployments/kubernetes/overlays/aws | grep AWS_REGION`
 - [ ] AWS ConfigMap exists: `kubectl kustomize deployments/kubernetes/overlays/aws | grep "name: aws-config"`
-- [ ] Staging secrets correct: `kubectl kustomize deployments/overlays/staging-gke | grep staging-mcp-server-langgraph-secrets`
+- [ ] Staging secrets correct: `kubectl kustomize deployments/overlays/preview-gke | grep staging-mcp-server-langgraph-secrets`
 - [ ] Production DB resources deleted: `kubectl kustomize deployments/overlays/production-gke | grep "kind: StatefulSet"`
 - [ ] Image tags applied: `kubectl kustomize deployments/overlays/production | grep "image:.*2.8.0"`
 

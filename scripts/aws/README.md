@@ -4,7 +4,7 @@ AWS-specific automation scripts for EKS infrastructure and application deploymen
 
 ## Scripts
 
-### setup-staging-infrastructure.sh
+### setup-preview-infrastructure.sh
 
 One-time setup script for AWS EKS staging environment.
 
@@ -18,7 +18,7 @@ One-time setup script for AWS EKS staging environment.
 **Usage**:
 ```bash
 export AWS_REGION=us-east-1
-./scripts/aws/setup-staging-infrastructure.sh
+./scripts/aws/setup-preview-infrastructure.sh
 ```
 
 **Cost**: ~$324/month for staging environment

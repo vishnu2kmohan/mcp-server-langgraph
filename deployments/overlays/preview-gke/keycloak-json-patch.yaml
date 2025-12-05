@@ -1,0 +1,17 @@
+# Set Keycloak ServiceAccount for Workload Identity
+- op: replace
+  path: /spec/template/spec/serviceAccountName
+  value: preview-keycloak
+
+# Fix secret references to use preview-prefixed secret name (KEYCLOAK_ADMIN and KEYCLOAK_ADMIN_PASSWORD)
+- op: replace
+  path: /spec/template/spec/containers/0/env/3/valueFrom/secretKeyRef/name
+  value: preview-mcp-server-langgraph-secrets
+
+- op: replace
+  path: /spec/template/spec/containers/0/env/4/valueFrom/secretKeyRef/name
+  value: preview-mcp-server-langgraph-secrets
+
+# Remove init container - Keycloak will wait for DB internally
+- op: remove
+  path: /spec/template/spec/initContainers/0

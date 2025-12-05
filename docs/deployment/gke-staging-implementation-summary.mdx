@@ -41,7 +41,7 @@ This document summarizes the complete GKE staging environment implementation for
 - Least privilege IAM roles
 
 #### 2. Kubernetes Manifests
-**Directory**: `deployments/overlays/staging-gke/`
+**Directory**: `deployments/overlays/preview-gke/`
 
 **Files Created**:
 1. **kustomization.yaml** - Main overlay configuration
@@ -63,7 +63,7 @@ This document summarizes the complete GKE staging environment implementation for
 8. **otel-collector-config.yaml** - GCP Cloud Logging/Monitoring
 
 #### 3. GitHub Actions Workflow
-**File**: `.github/workflows/deploy-staging-gke.yaml`
+**File**: `.github/workflows/deploy-preview-gke.yaml`
 
 **Features**:
 - ✅ Workload Identity Federation (no keys!)
@@ -198,7 +198,7 @@ This document summarizes the complete GKE staging environment implementation for
 4. **Deploy application**:
    ```bash
    gcloud container clusters get-credentials staging-mcp-server-langgraph-gke --region=us-central1
-   kubectl apply -k deployments/overlays/staging-gke
+   kubectl apply -k deployments/overlays/preview-gke
    ```
 5. **Run smoke tests**:
    ```bash
@@ -216,7 +216,7 @@ This document summarizes the complete GKE staging environment implementation for
 
 2. **Update workflow**:
    - Get project number: `gcloud projects describe vishnu-sandbox-20250310 --format="value(projectNumber)"`
-   - Replace `PROJECT_NUMBER` in `.github/workflows/deploy-staging-gke.yaml`
+   - Replace `PROJECT_NUMBER` in `.github/workflows/deploy-preview-gke.yaml`
 
 3. **Trigger deployment**:
    - Push to `main` branch
@@ -347,17 +347,17 @@ GitHub Actions automatically rolls back on:
 - `scripts/gcp/staging-smoke-tests.sh` (deployment validation)
 
 #### Kubernetes Manifests
-- `deployments/overlays/staging-gke/kustomization.yaml`
-- `deployments/overlays/staging-gke/namespace.yaml`
-- `deployments/overlays/staging-gke/deployment-patch.yaml`
-- `deployments/overlays/staging-gke/configmap-patch.yaml`
-- `deployments/overlays/staging-gke/serviceaccount-patch.yaml`
-- `deployments/overlays/staging-gke/network-policy.yaml`
-- `deployments/overlays/staging-gke/external-secrets.yaml`
-- `deployments/overlays/staging-gke/otel-collector-config.yaml`
+- `deployments/overlays/preview-gke/kustomization.yaml`
+- `deployments/overlays/preview-gke/namespace.yaml`
+- `deployments/overlays/preview-gke/deployment-patch.yaml`
+- `deployments/overlays/preview-gke/configmap-patch.yaml`
+- `deployments/overlays/preview-gke/serviceaccount-patch.yaml`
+- `deployments/overlays/preview-gke/network-policy.yaml`
+- `deployments/overlays/preview-gke/external-secrets.yaml`
+- `deployments/overlays/preview-gke/otel-collector-config.yaml`
 
 #### CI/CD
-- `.github/workflows/deploy-staging-gke.yaml` (deployment workflow)
+- `.github/workflows/deploy-preview-gke.yaml` (deployment workflow)
 
 #### Documentation
 - `docs/deployment/kubernetes/gke-staging.mdx` (deployment guide)

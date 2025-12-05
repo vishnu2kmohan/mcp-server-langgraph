@@ -24,7 +24,7 @@ This guide explains how to configure Google Cloud Platform (GCP) settings for CI
 
 ## Overview
 
-The deployment workflows (`deploy-staging-gke.yaml`, `deploy-production-gke.yaml`) require GCP configuration for:
+The deployment workflows (`deploy-preview-gke.yaml`, `deploy-production-gke.yaml`) require GCP configuration for:
 
 - **Authentication**: Workload Identity Federation (keyless authentication)
 - **Resource Access**: GKE clusters, Artifact Registry, Cloud Logging
@@ -221,7 +221,7 @@ echo "GKE_PRODUCTION_CLUSTER: production-mcp-server-langgraph-gke"
 
 Once secrets are configured, update the workflow files to use them:
 
-### deploy-staging-gke.yaml
+### deploy-preview-gke.yaml
 
 ```yaml
 env:
@@ -275,7 +275,7 @@ Trigger a manual workflow run to test:
 # Via GitHub UI: Actions → Deploy Staging GKE → Run workflow
 
 # Or via gh CLI:
-gh workflow run deploy-staging-gke.yaml
+gh workflow run deploy-preview-gke.yaml
 ```
 ---
 

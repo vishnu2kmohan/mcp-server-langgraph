@@ -123,7 +123,7 @@ GitHub Actions Workflow Duplication Audit
     • uses:docker/build-push-action
   Found in:
     - deploy-production-gke.yaml → build-and-push
-    - deploy-staging-gke.yaml → build-and-push
+    - deploy-preview-gke.yaml → build-and-push
 
   Sequence #10 (4 steps, found in 3 locations):
     • uses:actions/checkout

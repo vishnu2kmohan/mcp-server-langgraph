@@ -118,7 +118,7 @@ gcloud compute networks create staging-vpc \
   --project=vishnu-sandbox-20250310
 
 ## Create subnet
-gcloud compute networks subnets create staging-gke-subnet \
+gcloud compute networks subnets create preview-gke-subnet \
   --network=staging-vpc \
   --range=10.1.0.0/20 \
   --region=us-central1 \
@@ -132,7 +132,7 @@ gcloud compute networks subnets create staging-gke-subnet \
 gcloud container clusters create-auto staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --network=staging-vpc \
-  --subnetwork=staging-gke-subnet \
+  --subnetwork=preview-gke-subnet \
   --enable-private-nodes \
   --workload-pool=vishnu-sandbox-20250310.svc.id.goog \
   --enable-shielded-nodes \
@@ -219,7 +219,7 @@ kubectl get pods -n external-secrets-system
 
 #### 4.2 Update GitHub Workflow
 
-Edit `.github/workflows/deploy-staging-gke.yaml` and replace `PROJECT_NUMBER` with your actual project number:
+Edit `.github/workflows/deploy-preview-gke.yaml` and replace `PROJECT_NUMBER` with your actual project number:
 
 ```yaml
 ## Get your project number:
@@ -243,7 +243,7 @@ gcloud container clusters get-credentials staging-mcp-server-langgraph-gke \
 kubectl cluster-info
 
 ## Deploy application
-kubectl apply -k deployments/overlays/staging-gke
+kubectl apply -k deployments/overlays/preview-gke
 
 ## Watch deployment
 kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph

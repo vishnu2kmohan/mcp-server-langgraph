@@ -300,7 +300,7 @@ All present and serve specific purposes (naming conventions, quick reference, im
 | `archive/` | ✅ | Good | Archive documentation |
 | `config/` | ✅ | Good | Configuration docs |
 | `deployments/` | ✅ | Good | Deployment guides |
-| `deployments/overlays/staging-gke/` | ✅ | Good | GKE staging setup |
+| `deployments/overlays/preview-gke/` | ✅ | Good | GKE staging setup |
 | `deployments/overlays/production-gke/` | ✅ | Good | GKE production setup |
 | `deployments/kubernetes/overlays/aws/` | ✅ | Good | AWS EKS setup |
 | `deployments/argocd/` | ✅ | Good | GitOps docs |

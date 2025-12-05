@@ -1,0 +1,35 @@
+# Pod Disruption Budgets for staging environment
+# Ensures availability during node drains, upgrades, and voluntary disruptions
+# Mirrors production configuration to ensure preview-production parity
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mcp-server-langgraph-pdb
+spec:
+  minAvailable: 1  # Lower than production (2) - staging can tolerate more disruption
+  selector:
+    matchLabels:
+      app: mcp-server-langgraph
+  unhealthyPodEvictionPolicy: IfHealthyBudget
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: keycloak-pdb
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  unhealthyPodEvictionPolicy: IfHealthyBudget
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: openfga-pdb
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: openfga
+  unhealthyPodEvictionPolicy: IfHealthyBudget

@@ -218,7 +218,7 @@ projects/123456789/locations/global/workloadIdentityPools/github-actions-pool/pr
 
 This composite action is used in:
 - `.github/workflows/deploy-production-gke.yaml` - Production GKE deployments (4 jobs)
-- `.github/workflows/deploy-staging-gke.yaml` - Staging GKE deployments (4 jobs)
+- `.github/workflows/deploy-preview-gke.yaml` - Staging GKE deployments (4 jobs)
 - `.github/workflows/gcp-drift-detection.yaml` - Terraform drift detection (3 jobs)
 - `.github/workflows/gcp-compliance-scan.yaml` - Compliance scanning (1 job)
 - `.github/workflows/ci.yaml` - CI/CD pipeline (1 job)

@@ -122,7 +122,7 @@ flowchart TD
 | Workflow | Trigger | Purpose | Key Features |
 |----------|---------|---------|--------------|
 | **deploy-production-gke.yaml** | Release, manual | Production deploy | **Canary deployment**, manual approval, ESO verification |
-| **deploy-staging-gke.yaml** | Push to main | Staging deploy | Automated with smoke tests |
+| **deploy-preview-gke.yaml** | Push to main | Staging deploy | Automated with smoke tests |
 | **validate-deployments.yaml** | PR (deployment files) | Deploy validation | Prevents 8 critical deployment issues |
 
 ### Infrastructure (2 workflows)

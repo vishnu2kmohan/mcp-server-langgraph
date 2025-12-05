@@ -12,7 +12,7 @@ TDD Approach:
 4. Test validation script catches naming errors
 
 Regression Prevention:
-- Run #19311976718: ServiceAccount 'staging-openfga-sa' missing annotation
+- Run #19311976718: ServiceAccount 'preview-openfga-sa' missing annotation
   Root cause: ServiceAccount was named 'openfga' instead of 'openfga-sa'
 - Run #19311976718: 5 deployment validation failures
   Root cause: Naming inconsistencies between base and overlays
@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 REPO_ROOT = get_repo_root()
 BASE_SA_PATH = REPO_ROOT / "deployments" / "base" / "serviceaccounts.yaml"
-STAGING_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "staging-gke"
+STAGING_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "preview-gke"
 PRODUCTION_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "production-gke"
 
 
@@ -86,7 +86,7 @@ class TestOverlayServiceAccountNaming:
         Regression test for Run #19311976718.
 
         The overlay ServiceAccount for OpenFGA must be named 'openfga-sa',
-        not 'openfga'. After kustomization patches, it becomes 'staging-openfga-sa'.
+        not 'openfga'. After kustomization patches, it becomes 'preview-openfga-sa'.
         """
         sa_file = STAGING_OVERLAY / "serviceaccount-openfga.yaml"
         assert sa_file.exists(), f"ServiceAccount file not found: {sa_file}"
@@ -105,7 +105,7 @@ class TestOverlayServiceAccountNaming:
         Regression test for Run #19311976718.
 
         The overlay ServiceAccount for Keycloak must be named 'keycloak-sa',
-        not 'keycloak'. After kustomization patches, it becomes 'staging-keycloak-sa'.
+        not 'keycloak'. After kustomization patches, it becomes 'preview-keycloak-sa'.
         """
         sa_file = STAGING_OVERLAY / "serviceaccount-keycloak.yaml"
         assert sa_file.exists(), f"ServiceAccount file not found: {sa_file}"
@@ -152,7 +152,7 @@ class TestOverlayServiceAccountNaming:
 
                         # Remove environment prefix
                         clean_name = sa_name
-                        for prefix in ["staging-", "production-", "dev-", "test-"]:
+                        for prefix in ["preview-", "production-", "dev-", "test-"]:
                             if clean_name.startswith(prefix):
                                 clean_name = clean_name[len(prefix) :]
                                 break

@@ -124,8 +124,8 @@ jobs:
           echo "Building production overlay..."
           kustomize build deployments/overlays/production
 
-          echo "Building staging-gke overlay..."
-          kustomize build deployments/overlays/staging-gke
+          echo "Building preview-gke overlay..."
+          kustomize build deployments/overlays/preview-gke
 
           echo "Building production-gke overlay..."
           kustomize build deployments/overlays/production-gke
@@ -188,7 +188,7 @@ jobs:
 
           validate_overlay "base"
           validate_overlay "overlays/production-gke"
-          validate_overlay "overlays/staging-gke"
+          validate_overlay "overlays/preview-gke"
           validate_overlay "kubernetes/overlays/aws"
           validate_overlay "kubernetes/overlays/gcp"
           validate_overlay "kubernetes/overlays/azure"
@@ -291,11 +291,11 @@ jobs:
           fi
 
           echo ""
-          echo "🔍 Validating staging-gke with OPA policies..."
-          if kustomize build deployments/overlays/staging-gke | conftest test -p deployments/policies - --output tap | tee /tmp/staging-opa.txt; then
-            echo "✅ Staging-GKE passed all OPA policy checks"
+          echo "🔍 Validating preview-gke with OPA policies..."
+          if kustomize build deployments/overlays/preview-gke | conftest test -p deployments/policies - --output tap | tee /tmp/staging-opa.txt; then
+            echo "✅ Preview-GKE passed all OPA policy checks"
           else
-            echo "❌ Staging-GKE failed OPA policy validation"
+            echo "❌ Preview-GKE failed OPA policy validation"
             cat /tmp/staging-opa.txt
             exit 1
           fi
@@ -317,7 +317,7 @@ jobs:
         run: |
           # Warnings are expected for base/overlay YAML files before Kustomize patching
           conftest test deployments/base/*.yaml -p deployments/policies || true
-          conftest test deployments/overlays/staging-gke/*.yaml -p deployments/policies || true
+          conftest test deployments/overlays/preview-gke/*.yaml -p deployments/policies || true
           conftest test deployments/overlays/production-gke/*.yaml -p deployments/policies || true
 
   summary:

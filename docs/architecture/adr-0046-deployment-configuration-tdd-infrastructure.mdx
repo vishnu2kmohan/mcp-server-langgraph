@@ -164,7 +164,7 @@ Automated validation script that checks:
 **6 Parallel Jobs**:
 
 1. **validate-helm**: Lint + template rendering
-2. **validate-kustomize**: Matrix build across 5 overlays (dev, staging, production, staging-gke, production-gke)
+2. **validate-kustomize**: Matrix build across 5 overlays (dev, staging, production, preview-gke, production-gke)
 3. **validate-yaml-syntax**: yamllint on all YAML files
 4. **validate-security**: Gitleaks + placeholder checks + CORS validation
 5. **pytest-deployment-tests**: Run all 11 deployment tests

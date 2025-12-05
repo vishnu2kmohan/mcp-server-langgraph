@@ -24,7 +24,7 @@ This checklist helps verify that your GKE staging environment follows security b
 gcloud compute networks list
 
 ## Check subnet configuration
-gcloud compute networks subnets describe staging-gke-subnet \
+gcloud compute networks subnets describe preview-gke-subnet \
   --region=us-central1 \
   --format=yaml
 ```
@@ -385,7 +385,7 @@ gcloud sql backups list --instance=mcp-staging-postgres
 - [ ] Secrets are GitHub Secrets (not hardcoded)
 
 **Verification:**
-- Review `.github/workflows/deploy-staging-gke.yaml`
+- Review `.github/workflows/deploy-preview-gke.yaml`
 - Check GitHub repository settings → Environments → staging
 
 #### Deployment Validation

@@ -32,7 +32,7 @@ class TestExternalSecretsRedisURLEncoding:
     @pytest.fixture
     def staging_external_secrets_path(self) -> Path:
         """Path to staging External Secrets manifest."""
-        return Path("deployments/overlays/staging-gke/external-secrets.yaml")
+        return Path("deployments/overlays/preview-gke/external-secrets.yaml")
 
     @pytest.fixture
     def staging_external_secrets(self, staging_external_secrets_path: Path) -> dict:
@@ -182,7 +182,7 @@ class TestExternalSecretsRegressionPrevention:
     @pytest.fixture
     def template_content(self) -> str:
         """Load External Secrets template content."""
-        path = Path("deployments/overlays/staging-gke/external-secrets.yaml")
+        path = Path("deployments/overlays/preview-gke/external-secrets.yaml")
         if not path.exists():
             pytest.skip(f"External Secrets manifest not found: {path}")
 
@@ -268,7 +268,7 @@ class TestExternalSecretsMultiEnvironmentConsistency:
     @pytest.mark.parametrize(
         "overlay_path",
         [
-            "deployments/overlays/staging-gke/external-secrets.yaml",
+            "deployments/overlays/preview-gke/external-secrets.yaml",
             # Add more environments as they adopt the fix
             # "deployments/overlays/production-gke/external-secrets.yaml",
         ],

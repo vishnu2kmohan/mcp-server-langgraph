@@ -118,7 +118,7 @@ CHECKPOINT_REDIS_TTL=604800  # 7 days
 
 1. **Production (Kubernetes External Secrets)**: Use `| urlquery` filter in template:
    ```yaml
-   # deployments/overlays/staging-gke/external-secrets.yaml
+   # deployments/overlays/preview-gke/external-secrets.yaml
    checkpoint-redis-url: "redis://:{{ .redisPassword | urlquery }}@{{ .redisHost }}:6379/1"
    ```
 

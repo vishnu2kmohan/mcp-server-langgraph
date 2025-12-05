@@ -6,7 +6,8 @@ deny[msg] {
     egress := input.spec.egress[_]
     port := egress.ports[_].port
 
-    # MySQL port (3306 or 3307) used instead of PostgreSQL (5432)
+    # MySQL port (3306) used instead of PostgreSQL (5432)
+    # Note: Port 3307 is valid for Cloud SQL Auth Proxy
     port == 3306
     msg := sprintf(
         "NetworkPolicy '%s' uses port 3306 (MySQL). PostgreSQL uses port 5432.",
@@ -14,18 +15,8 @@ deny[msg] {
     )
 }
 
-deny[msg] {
-    input.kind == "NetworkPolicy"
-    egress := input.spec.egress[_]
-    port := egress.ports[_].port
-
-    # MySQL proxy port used instead of PostgreSQL
-    port == 3307
-    msg := sprintf(
-        "NetworkPolicy '%s' uses port 3307 (MySQL). PostgreSQL uses port 5432.",
-        [input.metadata.name]
-    )
-}
+# Note: Port 3307 is valid for Cloud SQL Auth Proxy (PostgreSQL via Cloud SQL)
+# Only port 3306 (MySQL default) should be flagged as incorrect for PostgreSQL
 
 # Service port validation for databases
 deny[msg] {
@@ -70,16 +61,7 @@ warn[msg] {
     )
 }
 
-warn[msg] {
-    {"Deployment", "StatefulSet"}[input.kind]
-    container := input.spec.template.spec.containers[_]
-    env := container.env[_]
-
-    contains(env.value, ":3307")
-    msg := sprintf(
-        "%s '%s' container '%s' has env var with port 3307. For PostgreSQL, use 5432.",
-        [input.kind, input.metadata.name, container.name]
-    )
-}
+# Note: Port 3307 is valid for Cloud SQL Auth Proxy connections to PostgreSQL
+# No warning needed for :3307 in env vars when using Cloud SQL
 
 # Note: Using Rego's built-in lower() function directly

@@ -85,8 +85,8 @@ def base_manifest(deployments_dir: Path) -> list[dict]:
 
 @pytest.fixture(scope="module")
 def staging_manifest(deployments_dir: Path) -> list[dict]:
-    """Render staging-gke Kustomize manifest"""
-    staging_dir = deployments_dir / "overlays" / "staging-gke"
+    """Render preview-gke Kustomize manifest"""
+    staging_dir = deployments_dir / "overlays" / "preview-gke"
     if not staging_dir.exists():
         pytest.skip("Staging overlay not found")
 
@@ -201,7 +201,7 @@ class TestKeycloakReadOnlyFilesystemConfiguration:
 
     def test_staging_keycloak_has_readonly_filesystem_true(self, staging_manifest: list[dict]) -> None:
         """
-        GIVEN staging-gke Kustomize deployment with optimized Keycloak image
+        GIVEN preview-gke Kustomize deployment with optimized Keycloak image
         WHEN Keycloak deployment is rendered
         THEN Keycloak container securityContext.readOnlyRootFilesystem should be true
         """
@@ -238,7 +238,7 @@ class TestKeycloakReadOnlyFilesystemConfiguration:
 
     def test_staging_keycloak_uses_optimized_flag(self, staging_manifest: list[dict]) -> None:
         """
-        GIVEN staging-gke Kustomize deployment
+        GIVEN preview-gke Kustomize deployment
         WHEN Keycloak deployment is rendered
         THEN Keycloak should use --optimized flag
         """
@@ -296,7 +296,7 @@ class TestKeycloakReadOnlyFilesystemConfiguration:
 
     def test_staging_keycloak_has_security_mitigations(self, staging_manifest: list[dict]) -> None:
         """
-        GIVEN staging-gke deployment with readOnlyRootFilesystem: true
+        GIVEN preview-gke deployment with readOnlyRootFilesystem: true
         WHEN validating security mitigations
         THEN Keycloak must have proper security controls
         """
@@ -367,11 +367,11 @@ class TestKeycloakOptimizedImageDocumentation:
 
     def test_staging_overlay_has_inline_comments(self, deployments_dir: Path) -> None:
         """
-        GIVEN overlays/staging-gke/keycloak-patch.yaml
+        GIVEN overlays/preview-gke/keycloak-patch.yaml
         WHEN reading file contents
         THEN inline comments should explain the optimized image approach
         """
-        keycloak_patch = deployments_dir / "overlays" / "staging-gke" / "keycloak-patch.yaml"
+        keycloak_patch = deployments_dir / "overlays" / "preview-gke" / "keycloak-patch.yaml"
         if not keycloak_patch.exists():
             pytest.skip("Staging Keycloak patch not found")
 

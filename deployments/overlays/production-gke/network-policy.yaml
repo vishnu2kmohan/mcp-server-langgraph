@@ -51,7 +51,11 @@ spec:
 
   # Allow Cloud SQL Proxy to reach Cloud SQL (Google-managed service, external to cluster)
   # No namespace selector needed - external egress via Cloud SQL Proxy sidecar
+  # Port 3307: Cloud SQL Proxy Admin API for private IP connections
+  # Port 5432: PostgreSQL database port (after tunnel is established)
   - ports:
+    - protocol: TCP
+      port: 3307  # Cloud SQL Proxy Admin API (private IP mode)
     - protocol: TCP
       port: 5432  # Cloud SQL database (PostgreSQL)
     - protocol: TCP

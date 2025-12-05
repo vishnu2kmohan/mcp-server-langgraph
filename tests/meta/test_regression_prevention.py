@@ -273,7 +273,7 @@ class TestWorkflowToolMaintenance:
         to avoid false positive validation failures.
         """
         deployment_workflows = [
-            Path(".github/workflows/deploy-staging-gke.yaml"),
+            Path(".github/workflows/deploy-preview-gke.yaml"),
             Path(".github/workflows/deploy-production-gke.yaml"),
         ]
 

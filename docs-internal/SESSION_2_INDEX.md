@@ -47,9 +47,9 @@ This package contains a comprehensive analysis of Kubernetes/Helm configuration 
 | Issue | File | Status | Priority |
 |-------|------|--------|----------|
 | P0-1: Keycloak readOnlyFilesystem | `deployments/base/keycloak-deployment.yaml` | ⚠️ Partial | CRITICAL |
-| P0-2: GKE CPU Ratio (OTEL) | `deployments/overlays/staging-gke/otel-collector-patch.yaml` | ⚠️ Partial | CRITICAL |
-| P0-3: Network Policy JGroups | `deployments/overlays/staging-gke/network-policy.yaml` | ✅ Fixed | CRITICAL |
-| P0-4: Cloud SQL Proxy Probes | `deployments/overlays/staging-gke/cloud-sql-proxy-patch.yaml` | ⚠️ Check | CRITICAL |
+| P0-2: GKE CPU Ratio (OTEL) | `deployments/overlays/preview-gke/otel-collector-patch.yaml` | ⚠️ Partial | CRITICAL |
+| P0-3: Network Policy JGroups | `deployments/overlays/preview-gke/network-policy.yaml` | ✅ Fixed | CRITICAL |
+| P0-4: Cloud SQL Proxy Probes | `deployments/overlays/preview-gke/cloud-sql-proxy-patch.yaml` | ⚠️ Check | CRITICAL |
 
 ### P1: High (12-16 hours)
 | Issue | File | Status | Priority |
@@ -64,7 +64,7 @@ This package contains a comprehensive analysis of Kubernetes/Helm configuration 
 | Issue | File | Status | Priority |
 |-------|------|--------|----------|
 | P2-1: Helm Values Schema | `deployments/argocd/applications/mcp-server-app.yaml` | ⚠️ Review | MEDIUM |
-| P2-2: OTEL Config Validation | `deployments/overlays/staging-gke/otel-collector-configmap-patch.yaml` | ✅ Fixed | MEDIUM |
+| P2-2: OTEL Config Validation | `deployments/overlays/preview-gke/otel-collector-configmap-patch.yaml` | ✅ Fixed | MEDIUM |
 | P2-3: Deployment Docs | `docs-internal/DEPLOYMENT*.md` | ❌ Missing | MEDIUM |
 
 ---
@@ -99,7 +99,7 @@ This package contains a comprehensive analysis of Kubernetes/Helm configuration 
 
 ```bash
 # Validate all Kubernetes manifests
-python scripts/validate_gke_autopilot_compliance.py deployments/overlays/staging-gke
+python scripts/validate_gke_autopilot_compliance.py deployments/overlays/preview-gke
 
 # Run deployment tests
 pytest tests/deployment/ -v
@@ -112,7 +112,7 @@ helm template test-release deployments/helm/mcp-server-langgraph/ | \
   kubectl apply --dry-run=client -f -
 
 # Validate kustomize builds
-kustomize build deployments/overlays/staging-gke/ | \
+kustomize build deployments/overlays/preview-gke/ | \
   kubectl apply --dry-run=client -f -
 ```
 
@@ -126,14 +126,14 @@ kustomize build deployments/overlays/staging-gke/ | \
 - `deployments/base/networkpolicy.yaml` - Affects 1 issue (P1-5)
 
 **Staging Overlays** (GKE-specific changes):
-- `deployments/overlays/staging-gke/keycloak-patch.yaml` - Keycloak hardening
-- `deployments/overlays/staging-gke/otel-collector-patch.yaml` - OTEL CPU fix
-- `deployments/overlays/staging-gke/network-policy.yaml` - JGroups validation
-- `deployments/overlays/staging-gke/cloud-sql-proxy-patch.yaml` - Health probes
+- `deployments/overlays/preview-gke/keycloak-patch.yaml` - Keycloak hardening
+- `deployments/overlays/preview-gke/otel-collector-patch.yaml` - OTEL CPU fix
+- `deployments/overlays/preview-gke/network-policy.yaml` - JGroups validation
+- `deployments/overlays/preview-gke/cloud-sql-proxy-patch.yaml` - Health probes
 
 **Configuration Files**:
 - `deployments/argocd/applications/mcp-server-app.yaml` - Helm values schema (P2-1)
-- `deployments/overlays/staging-gke/otel-collector-configmap-patch.yaml` - OTEL config (P2-2)
+- `deployments/overlays/preview-gke/otel-collector-configmap-patch.yaml` - OTEL config (P2-2)
 
 **Test Files** (validate fixes):
 - `tests/deployment/test_*.py` - Deployment validation tests
@@ -186,14 +186,14 @@ For each issue, follow this proven pattern:
 # 2. Test already exists, run and verify failure:
 pytest tests/regression/test_pod_deployment_regression.py::test_cpu_limit_request_ratio -v
 
-# 3. Fix: Edit deployments/overlays/staging-gke/otel-collector-patch.yaml
+# 3. Fix: Edit deployments/overlays/preview-gke/otel-collector-patch.yaml
 # Change: cpu: 200m -> 250m
 
 # 4. Run test again, verify PASS:
 pytest tests/regression/test_pod_deployment_regression.py::test_cpu_limit_request_ratio -v
 
 # 5. Commit:
-git add deployments/overlays/staging-gke/otel-collector-patch.yaml
+git add deployments/overlays/preview-gke/otel-collector-patch.yaml
 git commit -m "fix(k8s): adjust OTEL CPU request for GKE Autopilot compliance
 
 GKE Autopilot enforces max CPU ratio of 4.0
@@ -272,9 +272,9 @@ Critical Deployment Files:
   deployments/base/keycloak-deployment.yaml
   deployments/base/networkpolicy.yaml
   deployments/base/otel-collector-deployment.yaml
-  deployments/overlays/staging-gke/keycloak-patch.yaml
-  deployments/overlays/staging-gke/otel-collector-patch.yaml
-  deployments/overlays/staging-gke/network-policy.yaml
+  deployments/overlays/preview-gke/keycloak-patch.yaml
+  deployments/overlays/preview-gke/otel-collector-patch.yaml
+  deployments/overlays/preview-gke/network-policy.yaml
   deployments/argocd/applications/mcp-server-app.yaml
 
 Test Files:

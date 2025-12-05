@@ -10,7 +10,7 @@ This directory contains **experimental** deployment optimizations that were test
 
 **For active deployments, use**:
 - **Production**: `deployments/helm/mcp-server-langgraph/` (Helm chart - recommended)
-- **Staging**: `deployments/overlays/staging-gke/` (Kustomize)
+- **Staging**: `deployments/overlays/preview-gke/` (Kustomize)
 - **Development**: `deployments/overlays/dev/` (Kustomize)
 
 ---

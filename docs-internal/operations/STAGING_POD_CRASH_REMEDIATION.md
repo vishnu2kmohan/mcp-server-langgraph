@@ -25,7 +25,7 @@ at io.quarkus.deployment.pkg.steps.JarResultBuildStep.buildThinJar
 ```
 
 **Solution Implemented**:
-- Temporarily reverted `readOnlyRootFilesystem: false` in `deployments/overlays/staging-gke/keycloak-patch.yaml`
+- Temporarily reverted `readOnlyRootFilesystem: false` in `deployments/overlays/preview-gke/keycloak-patch.yaml`
 - Added explicit resource limits to ensure consistency:
   ```yaml
   resources:
@@ -63,7 +63,7 @@ cpu max limit to request ratio per Container is 4, but provided ratio is 5.00000
 ```
 
 **Solution Implemented**:
-- Updated `deployments/overlays/staging-gke/otel-collector-patch.yaml` to override CPU request:
+- Updated `deployments/overlays/preview-gke/otel-collector-patch.yaml` to override CPU request:
   ```yaml
   resources:
     requests:
@@ -94,7 +94,7 @@ Error: failed to get config: cannot unmarshal the configuration: decoding failed
 ```
 
 **Solution Implemented**:
-- Fixed environment variable syntax in `deployments/overlays/staging-gke/otel-collector-configmap-patch.yaml`:
+- Fixed environment variable syntax in `deployments/overlays/preview-gke/otel-collector-configmap-patch.yaml`:
   - Changed `value: ${SERVICE_VERSION:-unknown}` to `value: unknown`
 - Removed deprecated configuration keys:
   - Removed `use_insecure: false`
@@ -165,7 +165,7 @@ The Deployment "staging-mcp-server-langgraph" is invalid:
 
 ## Files Modified
 
-### 1. `deployments/overlays/staging-gke/keycloak-patch.yaml`
+### 1. `deployments/overlays/preview-gke/keycloak-patch.yaml`
 **Changes**:
 - Reverted `readOnlyRootFilesystem: true` → `readOnlyRootFilesystem: false`
 - Added explicit resource requests and limits
@@ -173,12 +173,12 @@ The Deployment "staging-mcp-server-langgraph" is invalid:
 - Removed unnecessary volume mounts (`/var/tmp`, `/opt/keycloak/lib/lib/deployment`, `/opt/keycloak/providers`)
 - Removed `keycloak-work` volume definition
 
-### 2. `deployments/overlays/staging-gke/otel-collector-patch.yaml`
+### 2. `deployments/overlays/preview-gke/otel-collector-patch.yaml`
 **Changes**:
 - Added resource specification with CPU request increased to 250m
 - Added comments explaining GKE Autopilot ratio requirement
 
-### 3. `deployments/overlays/staging-gke/otel-collector-configmap-patch.yaml`
+### 3. `deployments/overlays/preview-gke/otel-collector-configmap-patch.yaml`
 **Changes**:
 - Fixed `service.version` value from `${SERVICE_VERSION:-unknown}` to `unknown`
 - Removed `use_insecure: false` from googlecloud exporter
@@ -294,7 +294,7 @@ python scripts/validate_gke_autopilot_compliance.py || exit 1
 @pytest.mark.integration
 def test_keycloak_pods_start_successfully():
     """Verify Keycloak pods start without CrashLoopBackOff"""
-    kubectl.apply_kustomize('deployments/overlays/staging-gke')
+    kubectl.apply_kustomize('deployments/overlays/preview-gke')
     pods = kubectl.get_pods(label='app=keycloak', namespace='staging-mcp-server-langgraph')
 
     # Wait up to 5 minutes for pods to be ready

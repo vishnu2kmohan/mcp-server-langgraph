@@ -60,7 +60,7 @@ class TestCriticalIssues:
         """
         overlays_to_check = [
             ("deployments/overlays/production/configmap-patch.yaml", "production"),
-            ("deployments/overlays/staging-gke/configmap-patch.yaml", "staging-gke"),
+            ("deployments/overlays/preview-gke/configmap-patch.yaml", "preview-gke"),
         ]
 
         for config_path, overlay_name in overlays_to_check:
@@ -117,7 +117,7 @@ class TestCriticalIssues:
         """
         Test that environment variables use correct casing (uppercase).
 
-        Issue #3 (Critical): staging-gke deployment-patch.yaml uses lowercase
+        Issue #3 (Critical): preview-gke deployment-patch.yaml uses lowercase
         redis_url/checkpoint_redis_url but application expects uppercase.
 
         Expected: REDIS_URL, CHECKPOINT_REDIS_URL (uppercase)
@@ -126,12 +126,12 @@ class TestCriticalIssues:
         Impact: Application may fail to read configuration even with
         case_sensitive=False due to direct env lookups in code.
 
-        Validates: deployments/overlays/staging-gke/deployment-patch.yaml:78,83
+        Validates: deployments/overlays/preview-gke/deployment-patch.yaml:78,83
         """
-        deployment_patch = REPO_ROOT / "deployments/overlays/staging-gke/deployment-patch.yaml"
+        deployment_patch = REPO_ROOT / "deployments/overlays/preview-gke/deployment-patch.yaml"
 
         if not deployment_patch.exists():
-            pytest.skip("staging-gke deployment-patch.yaml not found")
+            pytest.skip("preview-gke deployment-patch.yaml not found")
 
         with open(deployment_patch) as f:
             try:
@@ -167,7 +167,7 @@ class TestCriticalIssues:
                     if env_name.upper() in required_uppercase and env_name != env_name.upper():
                         pytest.fail(
                             f"Environment variable '{env_name}' should be uppercase '{env_name.upper()}'\n"
-                            f"Location: staging-gke/deployment-patch.yaml, container '{container.get('name')}'\n"
+                            f"Location: preview-gke/deployment-patch.yaml, container '{container.get('name')}'\n"
                             f"Reason: Application code uses direct uppercase lookups"
                         )
 
@@ -175,7 +175,7 @@ class TestCriticalIssues:
         """
         Test that no hard-coded internal IPs exist in deployment configs.
 
-        Issue #4 (Critical): staging-gke overlay hard-codes internal IPs:
+        Issue #4 (Critical): preview-gke overlay hard-codes internal IPs:
         - 10.138.129.37 (Memorystore Redis)
         - 10.110.0.3 (Cloud SQL)
         - 10.110.1.4 (Memorystore Redis)
@@ -184,13 +184,13 @@ class TestCriticalIssues:
         Solution: Use Cloud DNS names instead.
 
         Validates:
-        - deployments/overlays/staging-gke/redis-session-endpoints.yaml:10
-        - deployments/overlays/staging-gke/configmap-patch.yaml:24,33
+        - deployments/overlays/preview-gke/redis-session-endpoints.yaml:10
+        - deployments/overlays/preview-gke/configmap-patch.yaml:24,33
         """
         files_to_check = [
-            "deployments/overlays/staging-gke/redis-session-endpoints.yaml",
-            "deployments/overlays/staging-gke/configmap-patch.yaml",
-            "deployments/overlays/staging-gke/deployment-patch.yaml",
+            "deployments/overlays/preview-gke/redis-session-endpoints.yaml",
+            "deployments/overlays/preview-gke/configmap-patch.yaml",
+            "deployments/overlays/preview-gke/deployment-patch.yaml",
             "deployments/overlays/production-gke/configmap-patch.yaml",
         ]
 
@@ -230,7 +230,7 @@ class TestCriticalIssues:
                 error_msg += f"    Line: {issue['content']}\n\n"
 
             error_msg += "Fix: Replace with Cloud DNS names (e.g., redis.staging.internal)\n"
-            error_msg += "See: deployments/overlays/staging-gke/README.md for DNS setup"
+            error_msg += "See: deployments/overlays/preview-gke/README.md for DNS setup"
 
             pytest.fail(error_msg)
 
@@ -683,7 +683,7 @@ class TestRedisSSLConsistency:
         configs_to_check = [
             ("deployments/base/configmap.yaml", "base"),
             ("deployments/overlays/production/configmap-patch.yaml", "production"),
-            ("deployments/overlays/staging-gke/configmap-patch.yaml", "staging-gke"),
+            ("deployments/overlays/preview-gke/configmap-patch.yaml", "preview-gke"),
         ]
 
         redis_configs = {}

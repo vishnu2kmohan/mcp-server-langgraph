@@ -146,7 +146,7 @@ act pull_request -W .github/workflows/ci.yaml
 act schedule -W .github/workflows/quality-tests.yaml
 
 # Test workflow_dispatch (manual trigger)
-act workflow_dispatch -W .github/workflows/deploy-staging-gke.yaml
+act workflow_dispatch -W .github/workflows/deploy-preview-gke.yaml
 ```
 ---
 
@@ -285,7 +285,7 @@ GCP_PROJECT_ID=your-project-id
 EOF
 
 # Test with secrets
-act push -W .github/workflows/deploy-staging-gke.yaml --secret-file .secrets
+act push -W .github/workflows/deploy-preview-gke.yaml --secret-file .secrets
 ```
 ---
 

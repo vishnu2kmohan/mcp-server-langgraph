@@ -28,7 +28,7 @@ spec:
 
           - cluster: gcp-staging
             url: https://GCP_STAGING_CLUSTER_ENDPOINT  # TEMPLATE: Replace with actual cluster endpoint
-            overlay: staging-gke
+            overlay: preview-gke
             namespace: mcp-staging
             replicas: "2"
             project: ${GCP_PROJECT_ID}  # TEMPLATE: Replace with your GCP project ID

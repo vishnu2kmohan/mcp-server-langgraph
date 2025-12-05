@@ -160,7 +160,7 @@ OpenAI Codex provided completely inaccurate information about GitHub Actions ver
 ```
 ✓ ci.yaml
 ✓ bump-deployment-versions.yaml
-✓ deploy-staging-gke.yaml
+✓ deploy-preview-gke.yaml
 ✓ observability-alerts.yaml
 ✓ security-scan.yaml
 ✓ validate-deployments.yaml

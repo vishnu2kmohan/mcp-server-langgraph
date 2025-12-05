@@ -131,7 +131,7 @@ uv run --frozen pytest tests/integration/test_app_startup_validation.py -v
 ### 8. Deployment Workflow kubeval Limitations ✅
 
 **Files Changed:**
-- `.github/workflows/deploy-staging-gke.yaml:64-69`
+- `.github/workflows/deploy-preview-gke.yaml:64-69`
 - `.github/workflows/deploy-production-gke.yaml:86-91`
 
 **Issues Identified:**
@@ -153,7 +153,7 @@ Replaced kubeval with kubeconform (actively maintained fork that supports modern
   run: |
     wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
     tar xf kubeval-linux-amd64.tar.gz
-    kubectl kustomize deployments/overlays/staging-gke | ./kubeval --strict
+    kubectl kustomize deployments/overlays/preview-gke | ./kubeval --strict
     echo "✅ Manifest validation passed"
 
 # After (FIXED):
@@ -161,7 +161,7 @@ Replaced kubeval with kubeconform (actively maintained fork that supports modern
   run: |
     wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
     tar xf kubeconform-linux-amd64.tar.gz
-    kubectl kustomize deployments/overlays/staging-gke | ./kubeconform -strict -summary -ignore-missing-schemas
+    kubectl kustomize deployments/overlays/preview-gke | ./kubeconform -strict -summary -ignore-missing-schemas
     echo "✅ Manifest validation passed"
 ```
 
@@ -174,7 +174,7 @@ Replaced kubeval with kubeconform (actively maintained fork that supports modern
 
 **Validation:**
 ```bash
-kubectl kustomize deployments/overlays/staging-gke | kubeconform -strict -summary -ignore-missing-schemas
+kubectl kustomize deployments/overlays/preview-gke | kubeconform -strict -summary -ignore-missing-schemas
 # Result: ✅ Summary: 37 resources found - Valid: 34, Invalid: 0, Errors: 0, Skipped: 3
 ```
 

@@ -32,7 +32,7 @@
 # incompatible with Keycloak's runtime requirements.
 #
 # Note: The base deployment attempts to work around this with emptyDir volumes, but
-# this is NOT sufficient for Quarkus JIT. Only staging-gke (with readOnlyRootFilesystem: false)
+# this is NOT sufficient for Quarkus JIT. Only preview-gke (with readOnlyRootFilesystem: false)
 # is confirmed working.
 #
 # Alternative Considered: Native Image (GraalVM)

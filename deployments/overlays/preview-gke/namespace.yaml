@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: preview-mcp-server-langgraph
+  labels:
+    environment: staging
+    platform: gke
+    istio-injection: disabled
+  annotations:
+    description: "MCP Server LangGraph - Staging Environment on GKE"

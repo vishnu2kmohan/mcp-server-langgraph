@@ -124,7 +124,7 @@ terraform apply tfplan
 
 ```bash
 # Update kubeconfig for the new cluster
-gcloud container clusters get-credentials mcp-staging-gke \
+gcloud container clusters get-credentials mcp-preview-gke \
   --region=us-central1 \
   --project=your-gcp-project-id
 
@@ -339,7 +339,7 @@ gsutil cat gs://mcp-langgraph-tfstate/env/prod/default.tflock
 
 ```bash
 # Update kubeconfig
-gcloud container clusters get-credentials mcp-staging-gke \
+gcloud container clusters get-credentials mcp-preview-gke \
   --region=us-central1 \
   --project=your-gcp-project-id
 

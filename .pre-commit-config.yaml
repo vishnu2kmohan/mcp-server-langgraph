@@ -910,7 +910,7 @@ repos:
 
       Prevents runtime errors like undefined functions, integer comparison issues,
 
-      and improper variable handling. See staging-smoke-tests.sh fixes as examples.
+      and improper variable handling. See preview-smoke-tests.sh fixes as examples.
 
       '
   - id: validate-pytest-markers

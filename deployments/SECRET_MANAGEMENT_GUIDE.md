@@ -152,7 +152,7 @@ gcloud secrets list --project=$GCP_PROJECT_ID
 #### External Secrets Configuration
 
 ```yaml
-# deployments/overlays/staging-gke/external-secrets.yaml
+# deployments/overlays/preview-gke/external-secrets.yaml
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
@@ -482,7 +482,7 @@ spec:
       auth:
         workloadIdentity:
           clusterLocation: us-central1
-          clusterName: staging-gke-cluster
+          clusterName: preview-gke-cluster
           serviceAccountRef:
             name: external-secrets-sa
 EOF
@@ -491,7 +491,7 @@ EOF
 #### Step 4: Create ExternalSecret
 
 ```bash
-kubectl apply -f deployments/overlays/staging-gke/external-secrets.yaml
+kubectl apply -f deployments/overlays/preview-gke/external-secrets.yaml
 ```
 
 #### Step 5: Verify and Delete Static Secret

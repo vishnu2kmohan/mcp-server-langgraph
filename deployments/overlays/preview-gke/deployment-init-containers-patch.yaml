@@ -1,0 +1,60 @@
+---
+# Fix init container service name references for staging environment
+# The base deployment uses unprefixed names, but Kustomize applies preview- prefix
+# Redis session service points to Memorystore Redis (port 6378, not 6379)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server-langgraph
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: wait-for-openfga
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop: ["ALL"]
+          readOnlyRootFilesystem: true
+        args:
+        - |
+          until nc -z preview-openfga 8080; do
+            echo "Waiting for OpenFGA..."
+            sleep 2
+          done
+          echo "OpenFGA is ready!"
+      - name: wait-for-keycloak
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop: ["ALL"]
+          readOnlyRootFilesystem: true
+        args:
+        - |
+          until nc -z preview-keycloak 8080; do
+            echo "Waiting for Keycloak..."
+            sleep 2
+          done
+          echo "Keycloak is ready!"
+      - name: wait-for-redis
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop: ["ALL"]
+          readOnlyRootFilesystem: true
+        args:
+        - |
+          until nc -z preview-redis-session 6378; do
+            echo "Waiting for Redis session store (Memorystore)..."
+            sleep 2
+          done
+          echo "Redis is ready!"

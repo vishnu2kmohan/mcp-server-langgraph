@@ -115,7 +115,7 @@ class TestKubernetesSecurityHardening:
         """
         deployment_files = [
             Path("deployments/base/keycloak-deployment.yaml"),
-            Path("deployments/overlays/staging-gke/keycloak-patch.yaml"),
+            Path("deployments/overlays/preview-gke/keycloak-patch.yaml"),
             Path("deployments/overlays/production-gke/keycloak-patch.yaml"),
             # Add other deployment files as needed
         ]
@@ -165,7 +165,7 @@ class TestKubernetesSecurityHardening:
             "\n\nSecurity violation: Containers without readOnlyRootFilesystem:\n"
             + "\n".join(f"  - {v}" for v in violations)
             + "\n\nFix: Set readOnlyRootFilesystem: true and add volume mounts for writable directories."
-            + "\nSee: deployments/overlays/staging-gke/keycloak-patch.yaml for reference implementation"
+            + "\nSee: deployments/overlays/preview-gke/keycloak-patch.yaml for reference implementation"
         )
 
     def test_containers_with_readonly_fs_have_volume_mounts(self):
@@ -176,7 +176,7 @@ class TestKubernetesSecurityHardening:
         Common directories needing mounts: /tmp, /var/cache, /opt/*/data
         """
         deployment_files = [
-            Path("deployments/overlays/staging-gke/keycloak-patch.yaml"),
+            Path("deployments/overlays/preview-gke/keycloak-patch.yaml"),
             Path("deployments/overlays/production-gke/keycloak-patch.yaml"),
         ]
 
@@ -232,7 +232,7 @@ class TestKubernetesSecurityHardening:
         """
         deployment_files = [
             Path("deployments/base/keycloak-deployment.yaml"),
-            Path("deployments/overlays/staging-gke/keycloak-patch.yaml"),
+            Path("deployments/overlays/preview-gke/keycloak-patch.yaml"),
             Path("deployments/overlays/production-gke/keycloak-patch.yaml"),
         ]
 

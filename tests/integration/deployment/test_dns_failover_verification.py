@@ -7,7 +7,7 @@ environment.
 
 Prerequisites:
 - kubectl configured with staging cluster context
-- Cloud DNS zone 'staging-internal' created
+- Cloud DNS zone 'preview-internal' created
 - DNS records configured per DNS_SETUP.md
 
 Usage:
@@ -50,7 +50,7 @@ class TestDNSConfiguration:
 
     def test_dns_zone_exists(self):
         """
-        Test that the staging-internal DNS zone exists in GCP.
+        Test that the preview-internal DNS zone exists in GCP.
 
         This verifies the Cloud DNS zone was created successfully.
         """
@@ -60,7 +60,7 @@ class TestDNSConfiguration:
                 "dns",
                 "managed-zones",
                 "describe",
-                "staging-internal",
+                "preview-internal",
                 "--project=vishnu-sandbox-20250310",
                 "--format=get(name)",
             ],
@@ -72,13 +72,13 @@ class TestDNSConfiguration:
         if result.returncode != 0:
             pytest.skip("Cloud DNS zone not found. Run: scripts/setup-cloud-dns-staging.sh")
 
-        assert result.stdout.strip() == "staging-internal"
+        assert result.stdout.strip() == "preview-internal"
 
     def test_dns_zone_attached_to_correct_vpc(self):
         """
         Test that DNS zone is attached to the correct VPC network.
 
-        The staging GKE cluster uses 'staging-mcp-slg-vpc', so the DNS zone
+        The staging GKE cluster uses 'preview-mcp-slg-vpc', so the DNS zone
         must be attached to this network for pods to resolve DNS names.
         """
         result = subprocess.run(
@@ -87,7 +87,7 @@ class TestDNSConfiguration:
                 "dns",
                 "managed-zones",
                 "describe",
-                "staging-internal",
+                "preview-internal",
                 "--project=vishnu-sandbox-20250310",
                 "--format=get(privateVisibilityConfig.networks[0])",
             ],
@@ -101,12 +101,12 @@ class TestDNSConfiguration:
 
         network_url = result.stdout.strip()
 
-        # Should be attached to staging-mcp-slg-vpc (the GKE cluster's VPC)
-        assert "staging-mcp-slg-vpc" in network_url or "default" in network_url, (
+        # Should be attached to preview-mcp-slg-vpc (the GKE cluster's VPC)
+        assert "preview-mcp-slg-vpc" in network_url or "default" in network_url, (
             f"DNS zone attached to wrong network: {network_url}\n"
-            f"Expected: staging-mcp-slg-vpc\n"
-            f"Fix: gcloud dns managed-zones update staging-internal "
-            f"--networks=staging-mcp-slg-vpc --project=vishnu-sandbox-20250310"
+            f"Expected: preview-mcp-slg-vpc\n"
+            f"Fix: gcloud dns managed-zones update preview-internal "
+            f"--networks=preview-mcp-slg-vpc --project=vishnu-sandbox-20250310"
         )
 
     def test_dns_records_exist(self):
@@ -130,7 +130,7 @@ class TestDNSConfiguration:
                 "dns",
                 "record-sets",
                 "list",
-                "--zone=staging-internal",
+                "--zone=preview-internal",
                 "--project=vishnu-sandbox-20250310",
                 "--format=get(name)",
             ],
@@ -189,7 +189,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: dns-test-{int(time.time())}
-  namespace: staging-mcp-server-langgraph
+  namespace: preview-mcp-server-langgraph
   labels:
     app: dns-test
     purpose: validation
@@ -320,9 +320,9 @@ class TestServiceConfiguration:
                 "kubectl",
                 "get",
                 "service",
-                "staging-redis-session",
+                "preview-redis-session",
                 "-n",
-                "staging-mcp-server-langgraph",
+                "preview-mcp-server-langgraph",
                 "-o",
                 "yaml",
             ],
@@ -356,9 +356,9 @@ class TestServiceConfiguration:
                 "kubectl",
                 "get",
                 "configmap",
-                "staging-mcp-server-langgraph-config",
+                "preview-mcp-server-langgraph-config",
                 "-n",
-                "staging-mcp-server-langgraph",
+                "preview-mcp-server-langgraph",
                 "-o",
                 "yaml",
             ],
@@ -410,7 +410,7 @@ class TestDNSFailoverSimulation:
                 "record-sets",
                 "describe",
                 "cloudsql-staging.staging.internal.",
-                "--zone=staging-internal",
+                "--zone=preview-internal",
                 "--type=A",
                 "--project=vishnu-sandbox-20250310",
                 "--format=get(rrdatas[0])",
@@ -436,7 +436,7 @@ class TestDNSFailoverSimulation:
                 "record-sets",
                 "describe",
                 "cloudsql-staging.staging.internal.",
-                "--zone=staging-internal",
+                "--zone=preview-internal",
                 "--type=A",
                 "--project=vishnu-sandbox-20250310",
                 "--format=get(ttl)",
@@ -466,9 +466,9 @@ class TestDNSFailoverSimulation:
                 "kubectl",
                 "get",
                 "deployment",
-                "staging-mcp-server-langgraph",
+                "preview-mcp-server-langgraph",
                 "-n",
-                "staging-mcp-server-langgraph",
+                "preview-mcp-server-langgraph",
                 "-o",
                 "jsonpath={.status.availableReplicas}",
             ],

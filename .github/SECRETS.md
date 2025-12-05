@@ -73,7 +73,7 @@ gcloud iam service-accounts add-iam-policy-binding \
 | `GCP_STAGING_SA_EMAIL` | Staging service account | `staging-deployer@PROJECT_ID.iam.gserviceaccount.com` |
 
 **Used By**:
-- `.github/workflows/deploy-staging-gke.yaml` (4 jobs)
+- `.github/workflows/deploy-preview-gke.yaml` (4 jobs)
 - All jobs have repository check: `if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'`
 
 #### Compliance & Drift Detection
@@ -168,7 +168,7 @@ gh secret set GCP_VERTEX_AI_SA_EMAIL --body "github-actions-vertex-ai@PROJECT_ID
 |---------------|-------------|---------------|---------|
 | `GCP_PROJECT_ID` | Google Cloud project ID | `vishnu-sandbox-20250310` | GCP workflows |
 | `GCP_REGION` | Primary GCP region | `us-central1` | GCP workflows |
-| `ENABLE_STAGING_AUTODEPLOY` | Enable automatic staging deployments | `true` | `deploy-staging-gke.yaml` |
+| `ENABLE_STAGING_AUTODEPLOY` | Enable automatic staging deployments | `true` | `deploy-preview-gke.yaml` |
 
 **Setup**:
 ```bash
@@ -206,7 +206,7 @@ if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
 
 **Affected Workflows**:
 - GCP Deployments (4 workflows, 12 jobs)
-  - `deploy-staging-gke.yaml` - Gracefully skips
+  - `deploy-preview-gke.yaml` - Gracefully skips
   - `deploy-production-gke.yaml` - Gracefully skips
   - `gcp-compliance-scan.yaml` - Gracefully skips
   - `gcp-drift-detection.yaml` - Gracefully skips

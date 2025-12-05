@@ -512,7 +512,7 @@ kubectl port-forward svc/kiali -n istio-system 20001:20001
 
     # Staging cluster
     gcloud container fleet memberships register mcp-staging-membership \
-      --gke-cluster=us-central1/mcp-staging-gke \
+      --gke-cluster=us-central1/mcp-preview-gke \
       --project=PROJECT_ID
 
     # Prod cluster (already registered)
