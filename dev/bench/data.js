@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764889200741,
+  "lastUpdate": 1764952034551,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -43132,6 +43132,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018495485934544605",
             "extra": "mean: 57.087308198942985 usec\nrounds: 4403"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vishnu2kmohan@users.noreply.github.com",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4ea3cbc1cfd5dbcb108e2204fc613d6a126a2359",
+          "message": "refactor: rename staging-gke environment to preview-gke (#140)\n\n* fix(network): restore Cloud SQL Proxy port 3307 in GKE NetworkPolicies\n\nREGRESSION FIX: Commit b418a471 incorrectly changed port 3307 to 5432\nin the Keycloak and OpenFGA NetworkPolicy egress rules.\n\nCloud SQL Proxy with --private-ip mode requires port 3307 to connect\nto Cloud SQL Admin API for establishing the secure tunnel. The proxy\nthen exposes port 5432 locally for application database connections.\n\nThis caused CrashLoopBackOff for Keycloak and OpenFGA pods with error:\n  dial tcp 10.178.0.3:3307: i/o timeout\n\nChanges:\n- Add port 3307 to Keycloak and OpenFGA egress rules (staging + production)\n- Add regression test to prevent this from happening again\n- Test validates both staging-gke and production-gke overlays\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* refactor: rename staging-gke environment to preview-gke\n\nFollowing GitHub deployment environment naming best practices:\n- \"staging\" implies pre-production validation with manual promotion\n- \"preview\" better describes auto-deployed environments from main branch\n\nChanges:\n- Renamed deployments/overlays/staging-gke → preview-gke\n- Updated workflow deploy-staging-gke.yaml → deploy-preview-gke.yaml\n- Updated 141 files with staging-gke → preview-gke references\n- Updated workflow names and comments for consistency\n\nThe preview-gke environment auto-deploys on every main branch commit,\nwhich aligns with the \"preview\" naming convention (vs \"staging\" which\nimplies a promotion step before production).\n\nSee: GitHub Docs - Managing environments for deployment\nhttps://docs.github.com/en/actions/deployment/targeting-different-environments\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-05T11:24:32-05:00",
+          "tree_id": "7e30af0f6138a763b35a5ef72843866aa557e6eb",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/4ea3cbc1cfd5dbcb108e2204fc613d6a126a2359"
+        },
+        "date": 1764952033003,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 143.68933477035733,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013473317633453722",
+            "extra": "mean: 6.95945876288027 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 297.8326268823877,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00033922398172210675",
+            "extra": "mean: 3.3575905046658776 msec\nrounds: 107"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45409.91988775279,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.02162000003227 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47943.579995914006,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.857849999629252 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44764.54075462193,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.339109999620632 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.55730908502755,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.139873719999741 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.443801706894554,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.430271460000085 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.966832130850875,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.33278246000009 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1185297.568962069,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 843.669999994745 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12942.299862135986,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 77.26602000047933 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2872.9320814435387,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 348.07645000000775 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2851.962715035525,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 350.63572000012755 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 60351.01845289333,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000018767589384436226",
+            "extra": "mean: 16.56972865802662 usec\nrounds: 10039"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17221.180501354884,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000027409912483777897",
+            "extra": "mean: 58.06802849092283 usec\nrounds: 4879"
           }
         ]
       }
