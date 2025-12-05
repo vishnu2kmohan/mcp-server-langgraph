@@ -13,7 +13,8 @@ Test Coverage:
 """
 
 import gc
-from datetime import datetime, UTC
+import json
+from datetime import datetime, timedelta, UTC
 from unittest.mock import AsyncMock
 
 import pytest
@@ -21,9 +22,27 @@ import pytest
 # Mark all tests in this module for xdist memory safety
 pytestmark = [
     pytest.mark.unit,
-    pytest.mark.playground,
     pytest.mark.xdist_group(name="playground_session"),
 ]
+
+
+@pytest.fixture
+def mock_redis() -> AsyncMock:
+    """Create a mock Redis client for unit testing."""
+    redis = AsyncMock()
+    redis.get = AsyncMock(return_value=None)
+    redis.set = AsyncMock()
+    redis.delete = AsyncMock()
+    redis.expire = AsyncMock()
+    redis.sadd = AsyncMock()
+    redis.srem = AsyncMock()
+    redis.smembers = AsyncMock(return_value=set())
+    redis.rpush = AsyncMock()
+    redis.ltrim = AsyncMock()
+    redis.lrange = AsyncMock(return_value=[])
+    redis.llen = AsyncMock(return_value=0)
+    redis.close = AsyncMock()
+    return redis
 
 
 class TestSessionCreation:
@@ -34,11 +53,11 @@ class TestSessionCreation:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_create_session_returns_session_object(self) -> None:
+    async def test_create_session_returns_session_object(self, mock_redis: AsyncMock) -> None:
         """Creating a session should return a Session object with ID."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
-        manager = SessionManager(redis_url="redis://localhost:6379/2")
+        manager = SessionManager(redis_client=mock_redis)
 
         session = await manager.create_session(
             user_id="user-123",
@@ -51,11 +70,11 @@ class TestSessionCreation:
         assert session.created_at is not None
 
     @pytest.mark.asyncio
-    async def test_create_session_generates_unique_ids(self) -> None:
+    async def test_create_session_generates_unique_ids(self, mock_redis: AsyncMock) -> None:
         """Each session should have a unique ID."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
-        manager = SessionManager(redis_url="redis://localhost:6379/2")
+        manager = SessionManager(redis_client=mock_redis)
 
         session1 = await manager.create_session(user_id="user-123", name="Session 1")
         session2 = await manager.create_session(user_id="user-123", name="Session 2")
@@ -63,11 +82,10 @@ class TestSessionCreation:
         assert session1.id != session2.id
 
     @pytest.mark.asyncio
-    async def test_create_session_stores_in_redis(self) -> None:
+    async def test_create_session_stores_in_redis(self, mock_redis: AsyncMock) -> None:
         """Created session should be stored in Redis."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
-        mock_redis = AsyncMock()
         manager = SessionManager(redis_client=mock_redis)
 
         await manager.create_session(user_id="user-123", name="Test")
@@ -84,49 +102,83 @@ class TestSessionRetrieval:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_get_session_by_id(self) -> None:
+    async def test_get_session_by_id(self, mock_redis: AsyncMock) -> None:
         """Should retrieve session by ID."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
-        manager = SessionManager(redis_url="redis://localhost:6379/2")
+        # Set up mock to return session data
+        session_data = {
+            "id": "session-123",
+            "user_id": "user-123",
+            "name": "Test Session",
+            "created_at": datetime.now(UTC).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+            "message_count": 0,
+            "metadata": {},
+        }
+        mock_redis.get = AsyncMock(return_value=json.dumps(session_data))
 
-        # Create a session
-        created = await manager.create_session(user_id="user-123", name="Test")
+        manager = SessionManager(redis_client=mock_redis)
 
-        # Retrieve it
-        retrieved = await manager.get_session(created.id)
+        retrieved = await manager.get_session("session-123")
 
         assert retrieved is not None
-        assert retrieved.id == created.id
-        assert retrieved.name == created.name
+        assert retrieved.id == "session-123"
+        assert retrieved.name == "Test Session"
 
     @pytest.mark.asyncio
-    async def test_get_nonexistent_session_returns_none(self) -> None:
+    async def test_get_nonexistent_session_returns_none(self, mock_redis: AsyncMock) -> None:
         """Getting non-existent session should return None."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
-        manager = SessionManager(redis_url="redis://localhost:6379/2")
+        mock_redis.get = AsyncMock(return_value=None)
+        manager = SessionManager(redis_client=mock_redis)
 
         result = await manager.get_session("nonexistent-id-999")
 
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_list_sessions_for_user(self) -> None:
+    async def test_list_sessions_for_user(self, mock_redis: AsyncMock) -> None:
         """Should list all sessions for a specific user."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
-        manager = SessionManager(redis_url="redis://localhost:6379/2")
+        # Mock session IDs in user's set
+        mock_redis.smembers = AsyncMock(return_value={"session-1", "session-2"})
 
-        # Create sessions for different users
-        await manager.create_session(user_id="user-123", name="Session 1")
-        await manager.create_session(user_id="user-123", name="Session 2")
-        await manager.create_session(user_id="user-456", name="Other User Session")
+        # Mock session data for each
+        session1 = {
+            "id": "session-1",
+            "user_id": "user-123",
+            "name": "Session 1",
+            "created_at": datetime.now(UTC).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+            "message_count": 0,
+            "metadata": {},
+        }
+        session2 = {
+            "id": "session-2",
+            "user_id": "user-123",
+            "name": "Session 2",
+            "created_at": (datetime.now(UTC) - timedelta(hours=1)).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+            "message_count": 0,
+            "metadata": {},
+        }
 
-        # List sessions for user-123
+        async def get_session_data(key: str) -> str | None:
+            if "session-1" in key:
+                return json.dumps(session1)
+            elif "session-2" in key:
+                return json.dumps(session2)
+            return None
+
+        mock_redis.get = AsyncMock(side_effect=get_session_data)
+
+        manager = SessionManager(redis_client=mock_redis)
         sessions = await manager.list_sessions(user_id="user-123")
 
-        assert len(sessions) >= 2
+        assert len(sessions) == 2
         assert all(s.user_id == "user-123" for s in sessions)
 
 
@@ -138,29 +190,39 @@ class TestSessionDeletion:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_delete_session(self) -> None:
+    async def test_delete_session(self, mock_redis: AsyncMock) -> None:
         """Should delete session by ID."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
-        manager = SessionManager(redis_url="redis://localhost:6379/2")
+        # Set up mock to return session data for deletion
+        session_data = {
+            "id": "session-123",
+            "user_id": "user-123",
+            "name": "Test Session",
+            "created_at": datetime.now(UTC).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+            "message_count": 0,
+            "metadata": {},
+        }
+        mock_redis.get = AsyncMock(return_value=json.dumps(session_data))
 
-        # Create and then delete
-        session = await manager.create_session(user_id="user-123", name="Test")
-        await manager.delete_session(session.id)
+        manager = SessionManager(redis_client=mock_redis)
+        result = await manager.delete_session("session-123")
 
-        # Verify it's gone
-        result = await manager.get_session(session.id)
-        assert result is None
+        assert result is True
+        mock_redis.delete.assert_called()
 
     @pytest.mark.asyncio
-    async def test_delete_nonexistent_session_is_noop(self) -> None:
-        """Deleting non-existent session should not raise."""
+    async def test_delete_nonexistent_session_returns_false(self, mock_redis: AsyncMock) -> None:
+        """Deleting non-existent session should return False."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
-        manager = SessionManager(redis_url="redis://localhost:6379/2")
+        mock_redis.get = AsyncMock(return_value=None)
+        manager = SessionManager(redis_client=mock_redis)
 
-        # Should not raise
-        await manager.delete_session("nonexistent-id-999")
+        result = await manager.delete_session("nonexistent-id-999")
+
+        assert result is False
 
 
 class TestSessionExpiration:
@@ -171,12 +233,12 @@ class TestSessionExpiration:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_session_has_expiration(self) -> None:
+    async def test_session_has_expiration(self, mock_redis: AsyncMock) -> None:
         """Sessions should have an expiration time."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
         manager = SessionManager(
-            redis_url="redis://localhost:6379/2",
+            redis_client=mock_redis,
             session_ttl_seconds=3600,  # 1 hour
         )
 
@@ -186,23 +248,32 @@ class TestSessionExpiration:
         assert session.expires_at > datetime.now(UTC)
 
     @pytest.mark.asyncio
-    async def test_session_refresh_extends_expiration(self) -> None:
+    async def test_session_refresh_extends_expiration(self, mock_redis: AsyncMock) -> None:
         """Refreshing session should extend expiration time."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
+        # Set up mock to return session data
+        original_expiry = datetime.now(UTC) + timedelta(hours=1)
+        session_data = {
+            "id": "session-123",
+            "user_id": "user-123",
+            "name": "Test Session",
+            "created_at": datetime.now(UTC).isoformat(),
+            "expires_at": original_expiry.isoformat(),
+            "message_count": 0,
+            "metadata": {},
+        }
+        mock_redis.get = AsyncMock(return_value=json.dumps(session_data))
+
         manager = SessionManager(
-            redis_url="redis://localhost:6379/2",
+            redis_client=mock_redis,
             session_ttl_seconds=3600,
         )
 
-        session = await manager.create_session(user_id="user-123", name="Test")
-        original_expiry = session.expires_at
+        result = await manager.refresh_session("session-123")
 
-        # Refresh the session
-        await manager.refresh_session(session.id)
-        refreshed = await manager.get_session(session.id)
-
-        assert refreshed.expires_at >= original_expiry
+        assert result is True
+        mock_redis.set.assert_called()
 
 
 class TestSessionMessages:
@@ -213,62 +284,83 @@ class TestSessionMessages:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_add_message_to_session(self) -> None:
+    async def test_add_message_to_session(self, mock_redis: AsyncMock) -> None:
         """Should add messages to session history."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
-        manager = SessionManager(redis_url="redis://localhost:6379/2")
+        # Mock session exists
+        session_data = {
+            "id": "session-123",
+            "user_id": "user-123",
+            "name": "Test Session",
+            "created_at": datetime.now(UTC).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+            "message_count": 0,
+            "metadata": {},
+        }
+        mock_redis.get = AsyncMock(return_value=json.dumps(session_data))
+        mock_redis.llen = AsyncMock(return_value=1)
 
-        session = await manager.create_session(user_id="user-123", name="Test")
+        manager = SessionManager(redis_client=mock_redis)
 
-        await manager.add_message(
-            session_id=session.id,
+        message = await manager.add_message(
+            session_id="session-123",
             role="user",
             content="Hello!",
         )
 
-        messages = await manager.get_messages(session.id)
-        assert len(messages) == 1
-        assert messages[0]["role"] == "user"
-        assert messages[0]["content"] == "Hello!"
+        assert message["role"] == "user"
+        assert message["content"] == "Hello!"
+        mock_redis.rpush.assert_called()
 
     @pytest.mark.asyncio
-    async def test_get_messages_returns_ordered_history(self) -> None:
+    async def test_get_messages_returns_ordered_history(self, mock_redis: AsyncMock) -> None:
         """Messages should be returned in chronological order."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
-        manager = SessionManager(redis_url="redis://localhost:6379/2")
+        # Mock messages in Redis
+        messages = [
+            json.dumps({"id": "1", "role": "user", "content": "First", "timestamp": "2024-01-01T00:00:00Z", "metadata": {}}),
+            json.dumps(
+                {"id": "2", "role": "assistant", "content": "Second", "timestamp": "2024-01-01T00:00:01Z", "metadata": {}}
+            ),
+            json.dumps({"id": "3", "role": "user", "content": "Third", "timestamp": "2024-01-01T00:00:02Z", "metadata": {}}),
+        ]
+        mock_redis.lrange = AsyncMock(return_value=messages)
 
-        session = await manager.create_session(user_id="user-123", name="Test")
+        manager = SessionManager(redis_client=mock_redis)
+        result = await manager.get_messages("session-123")
 
-        await manager.add_message(session.id, "user", "First")
-        await manager.add_message(session.id, "assistant", "Second")
-        await manager.add_message(session.id, "user", "Third")
-
-        messages = await manager.get_messages(session.id)
-
-        assert len(messages) == 3
-        assert messages[0]["content"] == "First"
-        assert messages[1]["content"] == "Second"
-        assert messages[2]["content"] == "Third"
+        assert len(result) == 3
+        assert result[0]["content"] == "First"
+        assert result[1]["content"] == "Second"
+        assert result[2]["content"] == "Third"
 
     @pytest.mark.asyncio
-    async def test_message_limit_per_session(self) -> None:
+    async def test_message_limit_per_session(self, mock_redis: AsyncMock) -> None:
         """Sessions should enforce maximum message limit."""
         from mcp_server_langgraph.playground.session.manager import SessionManager
 
+        # Mock session exists
+        session_data = {
+            "id": "session-123",
+            "user_id": "user-123",
+            "name": "Test Session",
+            "created_at": datetime.now(UTC).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+            "message_count": 0,
+            "metadata": {},
+        }
+        mock_redis.get = AsyncMock(return_value=json.dumps(session_data))
+        mock_redis.llen = AsyncMock(return_value=5)
+
         manager = SessionManager(
-            redis_url="redis://localhost:6379/2",
+            redis_client=mock_redis,
             max_messages_per_session=5,
         )
 
-        session = await manager.create_session(user_id="user-123", name="Test")
+        # Add a message
+        await manager.add_message("session-123", "user", "Test message")
 
-        # Add more than limit
-        for i in range(10):
-            await manager.add_message(session.id, "user", f"Message {i}")
-
-        messages = await manager.get_messages(session.id)
-
-        # Should only keep last N messages
-        assert len(messages) <= 5
+        # Verify ltrim was called to enforce limit
+        mock_redis.ltrim.assert_called()
