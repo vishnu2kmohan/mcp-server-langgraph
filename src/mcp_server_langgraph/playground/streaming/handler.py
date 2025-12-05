@@ -62,7 +62,7 @@ class StreamingHandler:
         """Send connection acknowledgment."""
         await self.send_message(
             {
-                "type": "connection_ack",
+                "type": "connected",
                 "session_id": self._session_id,
                 "timestamp": datetime.now(UTC).isoformat(),
             }

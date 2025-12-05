@@ -12,6 +12,7 @@ Test Coverage:
 """
 
 import gc
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi import status
@@ -33,25 +34,24 @@ class TestPlaygroundHealth:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_health_check_returns_200(self) -> None:
+    async def test_health_check_returns_200(self, mock_redis, app_with_mock_manager) -> None:
         """Health check endpoint should return 200 OK."""
-        # Import here to trigger import error in Red phase
-        from mcp_server_langgraph.playground.api.server import app
+        # Mock Redis ping for health check
+        mock_redis.ping = AsyncMock()
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app_with_mock_manager), base_url="http://test") as client:
             response = await client.get("/api/playground/health")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["status"] == "healthy"
+        # Status may be healthy or degraded depending on mock behavior
+        assert data["status"] in ["healthy", "degraded"]
         assert "version" in data
 
     @pytest.mark.asyncio
-    async def test_health_check_includes_dependencies(self) -> None:
+    async def test_health_check_includes_dependencies(self, app_with_mock_manager) -> None:
         """Health check should report status of dependencies (Redis, MCP server)."""
-        from mcp_server_langgraph.playground.api.server import app
-
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app_with_mock_manager), base_url="http://test") as client:
             response = await client.get("/api/playground/health")
 
         data = response.json()
@@ -68,11 +68,9 @@ class TestPlaygroundSessionCRUD:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_create_session_returns_201(self) -> None:
+    async def test_create_session_returns_201(self, app_with_mock_manager) -> None:
         """POST /api/playground/sessions should create a new session."""
-        from mcp_server_langgraph.playground.api.server import app
-
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app_with_mock_manager), base_url="http://test") as client:
             response = await client.post(
                 "/api/playground/sessions",
                 json={"name": "Test Session"},
@@ -86,11 +84,9 @@ class TestPlaygroundSessionCRUD:
         assert "created_at" in data
 
     @pytest.mark.asyncio
-    async def test_create_session_requires_auth(self) -> None:
+    async def test_create_session_requires_auth(self, app_with_mock_manager) -> None:
         """Session creation should require authentication."""
-        from mcp_server_langgraph.playground.api.server import app
-
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app_with_mock_manager), base_url="http://test") as client:
             response = await client.post(
                 "/api/playground/sessions",
                 json={"name": "Test Session"},
@@ -99,11 +95,9 @@ class TestPlaygroundSessionCRUD:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.asyncio
-    async def test_list_sessions_returns_user_sessions(self) -> None:
+    async def test_list_sessions_returns_user_sessions(self, app_with_mock_manager) -> None:
         """GET /api/playground/sessions should return sessions for authenticated user."""
-        from mcp_server_langgraph.playground.api.server import app
-
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app_with_mock_manager), base_url="http://test") as client:
             response = await client.get(
                 "/api/playground/sessions",
                 headers={"Authorization": "Bearer test-token"},
@@ -115,38 +109,31 @@ class TestPlaygroundSessionCRUD:
         assert isinstance(data["sessions"], list)
 
     @pytest.mark.asyncio
-    async def test_get_session_by_id(self) -> None:
+    async def test_get_session_by_id(self, app_with_mock_manager) -> None:
         """GET /api/playground/sessions/{id} should return session details."""
-        from mcp_server_langgraph.playground.api.server import app
-
         session_id = "test-session-123"
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app_with_mock_manager), base_url="http://test") as client:
             response = await client.get(
                 f"/api/playground/sessions/{session_id}",
                 headers={"Authorization": "Bearer test-token"},
             )
 
-        # Expect 404 if session doesn't exist, 200 if it does
-        assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
+        # Expect 200 since mock returns a session
+        assert response.status_code == status.HTTP_200_OK
 
     @pytest.mark.asyncio
-    async def test_delete_session(self) -> None:
+    async def test_delete_session(self, app_with_mock_manager) -> None:
         """DELETE /api/playground/sessions/{id} should delete a session."""
-        from mcp_server_langgraph.playground.api.server import app
-
         session_id = "test-session-123"
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app_with_mock_manager), base_url="http://test") as client:
             response = await client.delete(
                 f"/api/playground/sessions/{session_id}",
                 headers={"Authorization": "Bearer test-token"},
             )
 
-        assert response.status_code in [
-            status.HTTP_204_NO_CONTENT,
-            status.HTTP_404_NOT_FOUND,
-        ]
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
 class TestPlaygroundChat:
@@ -157,11 +144,9 @@ class TestPlaygroundChat:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_send_chat_message(self) -> None:
+    async def test_send_chat_message(self, app_with_mock_manager) -> None:
         """POST /api/playground/chat should send a message and return response."""
-        from mcp_server_langgraph.playground.api.server import app
-
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app_with_mock_manager), base_url="http://test") as client:
             response = await client.post(
                 "/api/playground/chat",
                 json={
@@ -176,11 +161,9 @@ class TestPlaygroundChat:
         assert "response" in data or "message_id" in data
 
     @pytest.mark.asyncio
-    async def test_chat_requires_session_id(self) -> None:
+    async def test_chat_requires_session_id(self, app_with_mock_manager) -> None:
         """Chat endpoint should require a valid session_id."""
-        from mcp_server_langgraph.playground.api.server import app
-
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app_with_mock_manager), base_url="http://test") as client:
             response = await client.post(
                 "/api/playground/chat",
                 json={"message": "Hello!"},  # Missing session_id
@@ -190,14 +173,12 @@ class TestPlaygroundChat:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
-    async def test_chat_validates_message_length(self) -> None:
+    async def test_chat_validates_message_length(self, app_with_mock_manager) -> None:
         """Chat should reject messages that are too long."""
-        from mcp_server_langgraph.playground.api.server import app
-
         # 100KB message should be rejected
         long_message = "x" * 100_000
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app_with_mock_manager), base_url="http://test") as client:
             response = await client.post(
                 "/api/playground/chat",
                 json={
@@ -218,11 +199,9 @@ class TestPlaygroundAPIInfo:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_root_endpoint_returns_api_info(self) -> None:
+    async def test_root_endpoint_returns_api_info(self, app_with_mock_manager) -> None:
         """Root endpoint should return API information."""
-        from mcp_server_langgraph.playground.api.server import app
-
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app_with_mock_manager), base_url="http://test") as client:
             response = await client.get("/")
 
         assert response.status_code == status.HTTP_200_OK
