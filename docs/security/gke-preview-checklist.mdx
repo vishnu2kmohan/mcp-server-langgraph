@@ -1,19 +1,19 @@
 ---
-title: GKE Staging Security Checklist
-description: 'Comprehensive security checklist to verify that your GKE staging environment follows security best practices'
+title: GKE Preview Security Checklist
+description: 'Comprehensive security checklist to verify that your GKE preview environment follows security best practices'
 icon: 'clipboard-check'
-seoTitle: "GKE Staging Security Checklist - Security Guide"
-seoDescription: "Security best practices: Comprehensive security checklist to verify that your GKE staging environment follows security best practices"
+seoTitle: "GKE Preview Security Checklist - Security Guide"
+seoDescription: "Security best practices: Comprehensive security checklist to verify that your GKE preview environment follows security best practices"
 keywords: ["security", "enterprise security", "compliance", "best practices"]
 contentType: "explanation"
 ---
 
-This checklist helps verify that your GKE staging environment follows security best practices.
+This checklist helps verify that your GKE preview environment follows security best practices.
 
 ### Network Security
 
 #### VPC Isolation
-- [ ] Staging uses a separate VPC from production
+- [ ] Preview uses a separate VPC from production
 - [ ] VPC has custom subnets (not default VPC)
 - [ ] VPC flow logs are enabled
 - [ ] Private Google Access is enabled for GKE subnet
@@ -40,22 +40,22 @@ gcloud compute networks subnets describe preview-gke-subnet \
 **Verification:**
 ```bash
 ## Check cluster configuration
-gcloud container clusters describe staging-mcp-server-langgraph-gke \
+gcloud container clusters describe preview-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format=yaml
 
 ## Verify private nodes
-gcloud container clusters describe staging-mcp-server-langgraph-gke \
+gcloud container clusters describe preview-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(privateClusterConfig.enablePrivateNodes)'
 
 ## Verify Workload Identity
-gcloud container clusters describe staging-mcp-server-langgraph-gke \
+gcloud container clusters describe preview-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(workloadIdentityConfig.workloadPool)'
 
 ## Verify Binary Authorization
-gcloud container clusters describe staging-mcp-server-langgraph-gke \
+gcloud container clusters describe preview-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(binaryAuthorization.evaluationMode)'
 ```
@@ -289,7 +289,7 @@ gcloud redis instances describe mcp-staging-redis \
 ## Check recent logs
 gcloud logging read \
   "resource.type=k8s_container
-   resource.labels.cluster_name=staging-mcp-server-langgraph-gke" \
+   resource.labels.cluster_name=preview-mcp-server-langgraph-gke" \
   --limit=10 \
   --format=json
 
@@ -334,7 +334,7 @@ kubectl logs -n staging-mcp-server-langgraph -l app=otel-collector
 **Verification:**
 ```bash
 ## Check GKE cluster labels
-gcloud container clusters describe staging-mcp-server-langgraph-gke \
+gcloud container clusters describe preview-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(resourceLabels)'
 
@@ -397,7 +397,7 @@ gcloud sql backups list --instance=mcp-staging-postgres
 **Verification:**
 ```bash
 ## Check recent deployments in Cloud Console
-gcloud container clusters get-credentials staging-mcp-server-langgraph-gke --region=us-central1
+gcloud container clusters get-credentials preview-mcp-server-langgraph-gke --region=us-central1
 kubectl rollout history deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
 ```
 
