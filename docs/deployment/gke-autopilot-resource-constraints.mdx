@@ -292,7 +292,7 @@ Test coverage ensures validator correctness:
 
 ```bash
 # Run validator unit tests
-uv run pytest tests/unit/test_gke_autopilot_validator.py -v
+uv run pytest tests/unit/execution/test_gke_autopilot_validator.py -v
 ```
 
 ## Environment Variable Conflicts
@@ -399,7 +399,7 @@ resources:
 - [GKE Autopilot Documentation](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
 - [LimitRange Policies](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-resource-requests#resource-limits)
 - Validation Script: `scripts/validate_gke_autopilot_compliance.py`
-- Unit Tests: `tests/unit/test_gke_autopilot_validator.py`
+- Unit Tests: `tests/unit/execution/test_gke_autopilot_validator.py`
 
 ## Troubleshooting
 

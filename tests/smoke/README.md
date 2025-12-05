@@ -60,7 +60,7 @@ cache = CacheService(redis_password="secret", redis_ssl=True)
 ### Bug #5: Missing Test Coverage
 ```python
 # Test validates all critical tests exist
-assert Path("tests/unit/test_dependencies_wiring.py").exists()
+assert Path("tests/unit/core/test_dependencies_wiring.py").exists()
 ```
 
 ## Running Smoke Tests

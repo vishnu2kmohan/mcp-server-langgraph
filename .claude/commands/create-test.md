@@ -63,7 +63,9 @@ Ask the user using the AskUserQuestion tool:
 ### Step 3: Generate Test File
 
 **File Location**:
-- Unit tests: `tests/unit/test_<module_name>.py`
+- Unit tests: `tests/unit/<category>/test_<module_name>.py`
+  - Categories: `auth/`, `core/`, `llm/`, `mcp/`, `observability/`, `tools/`, etc.
+  - Example: `tests/unit/auth/test_auth_middleware.py`
 - Integration tests: `tests/integration/test_<module_name>.py`
 - Property tests: `tests/property/test_<module_name>.py`
 - Contract tests: `tests/contract/test_<module_name>.py`

@@ -128,7 +128,7 @@ async def lifespan(app: FastAPI):
 
 2. **Production Proven**: Zero issues reported in production with current pattern. The concern is theoretical, not practical.
 
-3. **Test Coverage Validates Safety**: We have comprehensive test coverage (`tests/unit/test_dependencies_wiring.py`) that validates:
+3. **Test Coverage Validates Safety**: We have comprehensive test coverage (`tests/unit/core/test_dependencies_wiring.py`) that validates:
    - Dependency overrides work correctly
    - Test isolation is maintained
    - No state leakage between tests
@@ -226,7 +226,7 @@ def test_client(mock_keycloak_client):
 
 ### Test Coverage
 
-- ✅ `tests/unit/test_dependencies_wiring.py` - Validates dependency injection
+- ✅ `tests/unit/core/test_dependencies_wiring.py` - Validates dependency injection
 - ✅ All API tests use `app.dependency_overrides` correctly
 - ✅ Zero test failures due to state leakage
 

@@ -128,7 +128,7 @@ pytest -m security
 #### Writing Unit Tests
 
 ```python
-## tests/unit/test_auth.py
+## tests/unit/auth/test_auth.py
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from src.auth.middleware import AuthMiddleware
@@ -196,7 +196,7 @@ async def test_multiple_users(auth_middleware, user_id, expires_in):
 #### Mocking Dependencies
 
 ```python
-## tests/unit/test_agent.py
+## tests/unit/core/test_agent.py
 import pytest
 from unittest.mock import AsyncMock, patch
 from src.agent.langgraph_agent import LangGraphAgent
@@ -252,7 +252,7 @@ async def test_agent_with_authorization(mock_openfga_class, mock_llm):
 #### Testing Async Code
 
 ```python
-## tests/unit/test_session.py
+## tests/unit/session/test_session.py
 import pytest
 from src.session.redis_session import RedisSessionStore
 from unittest.mock import AsyncMock

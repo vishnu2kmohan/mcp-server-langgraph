@@ -138,7 +138,7 @@ CHECKPOINT_REDIS_TTL=604800  # 7 days
    checkpointer_ctx = RedisSaver.from_conn_string(redis_url=encoded_redis_url)
    ```
 
-**Testing**: Comprehensive test suite in `tests/unit/test_redis_url_encoding.py` validates encoding for all RFC 3986 special characters.
+**Testing**: Comprehensive test suite in `tests/unit/core/test_redis_url_encoding.py` validates encoding for all RFC 3986 special characters.
 
 ### Docker Compose
 
