@@ -469,6 +469,120 @@ services:
         aliases:
           - grafana
 
+  # ==============================================================================
+  # VISUAL WORKFLOW BUILDER SERVICES (Test)
+  # ==============================================================================
+
+  builder-api-test:
+    # Visual Workflow Builder FastAPI Backend
+    # Port: 9001 (offset +1000 from dev port 8001)
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.builder-api
+    depends_on:
+      mcp-server-test:
+        condition: service_healthy
+    ports:
+      - "9001:8001"
+    environment:
+      - ENVIRONMENT=test
+      - TESTING=true
+      - BUILDER_OUTPUT_DIR=/tmp/mcp-server-workflows
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      mcp-test-network:
+        aliases:
+          - builder-api
+
+  builder-frontend-test:
+    # Visual Workflow Builder React Frontend (served via nginx)
+    # Port: 13000 (offset +10000 from dev port 3000)
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.builder-frontend
+      args:
+        - VITE_API_URL=http://builder-api-test:8001
+    depends_on:
+      builder-api-test:
+        condition: service_healthy
+    ports:
+      - "13000:80"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    networks:
+      mcp-test-network:
+        aliases:
+          - builder-frontend
+
+  # ==============================================================================
+  # INTERACTIVE PLAYGROUND SERVICES (Test)
+  # ==============================================================================
+
+  playground-test:
+    # Interactive Playground FastAPI + WebSocket Backend
+    # Port: 9002 (offset +1000 from dev port 8002)
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.playground
+    depends_on:
+      mcp-server-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    ports:
+      - "9002:8002"
+    environment:
+      - ENVIRONMENT=test
+      - TESTING=true
+      - MCP_SERVER_URL=http://mcp-server-test:8000
+      - REDIS_URL=redis://redis-test:6379/2
+      - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
+      - SESSION_TTL_SECONDS=3600
+      - MAX_MESSAGES_PER_SESSION=100
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/api/playground/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      mcp-test-network:
+        aliases:
+          - playground
+
 networks:
   mcp-test-network:
     driver: bridge
