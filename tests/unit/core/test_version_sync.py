@@ -20,7 +20,8 @@ pytestmark = pytest.mark.unit
 def test_version_matches_pyproject():
     """Test that __version__ in __init__.py matches pyproject.toml."""
     # Read version from pyproject.toml
-    project_root = Path(__file__).parent.parent.parent
+    # Path: tests/unit/core/test_*.py -> parent^4 = project root
+    project_root = Path(__file__).parent.parent.parent.parent
     pyproject_path = project_root / "pyproject.toml"
 
     with open(pyproject_path, "rb") as f:

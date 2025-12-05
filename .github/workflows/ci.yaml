@@ -268,13 +268,27 @@ jobs:
   # ============================================================================
 
   test:
-    name: Test on Python ${{ matrix.python-version }}
+    name: Test Py${{ matrix.python-version }} (${{ matrix.test-category }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15  # Reduced from 30 - split tests run faster
     strategy:
-      matrix:
-        python-version: ['3.11', '3.12', '3.13']
       fail-fast: false
+      matrix:
+        # PRs: Only test on 3.12 for fast feedback (~14 min savings)
+        # Push to main/develop: Full matrix for compatibility validation
+        python-version: ${{ github.event_name == 'pull_request' && fromJSON('["3.12"]') || fromJSON('["3.11", "3.12", "3.13"]') }}
+        # Test category split for parallelism (replaces monolithic test run)
+        test-category: [auth, core, infra]
+        include:
+          - test-category: auth
+            test-paths: "tests/unit/auth/"
+            label: "auth"
+          - test-category: core
+            test-paths: "tests/unit/core/ tests/unit/llm/ tests/unit/mcp/ tests/unit/resilience/ tests/unit/session/ tests/unit/storage/"
+            label: "core"
+          - test-category: infra
+            test-paths: "tests/unit/observability/ tests/unit/config/ tests/unit/health/ tests/unit/database/ tests/unit/execution/ tests/unit/documentation/ tests/unit/validators/ tests/unit/utils/ tests/unit/tools/ tests/unit/secrets_obfuscation/"
+            label: "infra"
 
     steps:
     - name: Checkout code
@@ -308,11 +322,13 @@ jobs:
         echo "✓ Lockfile is current and valid"
 
     - name: Install Helm
+      if: matrix.python-version == '3.12'
       uses: azure/setup-helm@v4.3.1
       with:
         version: 'v3.14.0'
 
     - name: Build Helm chart dependencies
+      if: matrix.python-version == '3.12'
       run: |
         set -euo pipefail
         # Build Helm chart dependencies for tests in tests/deployment/test_helm_templates.py
@@ -338,38 +354,27 @@ jobs:
           echo "⚠️ Helm not installed, skipping dependency build (Helm tests may be skipped)"
         fi
 
-    - name: Run unit tests
+    - name: Run unit tests (${{ matrix.test-category }})
       run: |
         source .venv/bin/activate
         # Match local development environment: parallel execution with OTEL disabled
         # Use CI Hypothesis profile for consistent property test behavior (100 examples)
         # Exclude expensive LLM tests (marked with @pytest.mark.llm) - these run in scheduled workflow
-        # Run all fast tests: unit, api, property, validation (matches local pre-push via scripts/run_pre_push_tests.py)
-        # --durations=50: Capture slowest 50 tests for performance monitoring (replaces deleted meta-tests)
-        # Generate coverage in multiple formats:
-        #   - XML: For Codecov upload
-        #   - HTML: For gh-pages browsable coverage report
-        #   - JSON: For coverage trend analysis
-        # This allows downstream workflows (gh-pages-telemetry, coverage-trend) to reuse artifacts
-        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "(unit or api or property or validation) and not llm" \
-          --cov=src/mcp_server_langgraph \
-          --cov-report=xml:coverage-unit.xml \
-          --cov-report=html:coverage-html \
-          --cov-report=json:coverage.json \
-          --cov-report=term-missing \
-          --durations=50 | tee test-durations.txt
+        # Run category-specific tests (auth, core, or infra) for parallel execution
+        # --durations=20: Capture slowest 20 tests per category for performance monitoring
+        # Generate coverage for this category (will be merged by coverage-merge job)
+        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "(unit or api or property or validation) and not llm" ${{ matrix.test-paths }} --cov=src/mcp_server_langgraph --cov-report=xml:coverage-${{ matrix.label }}.xml --cov-report=term-missing --durations=20 | tee test-durations-${{ matrix.label }}.txt
 
-    - name: Run new test suites
-      run: |
-        source .venv/bin/activate
-        echo "=== Running API endpoint tests (unit) ==="
-        OTEL_SDK_DISABLED=true pytest -n auto -m "api and unit and not llm" -v --tb=short || echo "Some API tests may be skipped (integration-only)"
+        # Rename .coverage to include category for combining
+        if [ -f .coverage ]; then
+          mv .coverage .coverage.${{ matrix.label }}
+        fi
 
-        echo ""
-        echo "=== Running MCP server unit tests ==="
-        OTEL_SDK_DISABLED=true pytest tests/unit/test_mcp_stdio_server.py -m "not llm" -v --tb=short
+    # Note: "Run new test suites" step removed - API and MCP tests now run as part of
+    # category-based test splitting (api tests in auth/core, mcp tests in core category)
 
     - name: Run mypy type checking
+      if: matrix.python-version == '3.12'
       run: |
         source .venv/bin/activate
         echo "=== Running mypy type checking ==="
@@ -389,45 +394,23 @@ jobs:
         OTEL_SDK_DISABLED=true pytest tests/integration/deployment/test_helm_templates.py -v --tb=short
         echo "✓ Helm deployment tests passed!"
 
-    - name: Upload coverage artifact (XML)
+    - name: Upload coverage artifact (${{ matrix.label }})
       if: matrix.python-version == '3.12'
       uses: actions/upload-artifact@v5
       with:
-        name: coverage-unit-py${{ matrix.python-version }}
-        path: coverage-unit.xml
+        name: coverage-${{ matrix.label }}-py3.12
+        path: |
+          coverage-${{ matrix.label }}.xml
+          .coverage.${{ matrix.label }}
         retention-days: 1
 
-    - name: Upload coverage artifact (HTML)
+    - name: Upload test durations artifact (${{ matrix.label }})
       if: matrix.python-version == '3.12'
       uses: actions/upload-artifact@v5
       with:
-        name: coverage-html
-        path: coverage-html/
-        retention-days: 7  # Used by gh-pages-telemetry workflow
-
-    - name: Upload coverage artifact (JSON)
-      if: matrix.python-version == '3.12'
-      uses: actions/upload-artifact@v5
-      with:
-        name: coverage-json
-        path: coverage.json
-        retention-days: 7  # Used by coverage-trend workflow
-
-    - name: Upload test durations artifact
-      if: matrix.python-version == '3.12'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-durations-py${{ matrix.python-version }}
-        path: test-durations.txt
+        name: test-durations-${{ matrix.label }}-py3.12
+        path: test-durations-${{ matrix.label }}.txt
         retention-days: 7  # Keep longer for performance trend analysis
-
-    - name: Upload coverage to Codecov (legacy)
-      if: matrix.python-version == '3.12'
-      uses: codecov/codecov-action@v5.5.1
-      with:
-        files: ./coverage-unit.xml
-        flags: unit
-        fail_ci_if_error: false
 
   # ============================================================================
   # COVERAGE MERGE AND UPLOAD
@@ -450,55 +433,89 @@ jobs:
         python-version: '3.12'
         extras: 'dev'
 
-    - name: Download unit test coverage
-      uses: actions/download-artifact@v6
+    - name: Download all coverage artifacts
+      uses: actions/download-artifact@v4.1.8
       with:
-        name: coverage-unit-py3.12
+        pattern: coverage-*-py3.12
         path: coverage-artifacts/
+        merge-multiple: true
       continue-on-error: true
-
-    # Note: E2E and quality test coverage will be downloaded when those workflows
-    # are configured to run as part of the main CI pipeline
-    # For now, we merge only unit test coverage
 
     - name: List coverage files
       run: |
         echo "=== Coverage artifacts downloaded ==="
         if [ -d coverage-artifacts/ ]; then
-          find coverage-artifacts/ -name "*.xml" -type f
+          echo "XML files:"
+          find coverage-artifacts/ -name "*.xml" -type f 2>/dev/null || echo "  (none)"
+          echo "Coverage data files:"
+          find coverage-artifacts/ -name ".coverage.*" -type f 2>/dev/null || echo "  (none)"
         else
           echo "⚠️  No coverage-artifacts directory found (download may have failed)"
         fi
 
     - name: Merge coverage reports
       run: |
-        # For now, just copy the unit coverage (no merging needed with single source)
-        # In the future, this will use: coverage combine coverage-artifacts/**/*.xml
+        source .venv/bin/activate
 
-        # Check if coverage artifact exists before copying (handles continue-on-error download)
-        if [ -f coverage-artifacts/coverage-unit.xml ]; then
-          cp coverage-artifacts/coverage-unit.xml coverage-merged.xml
-          echo "✅ Coverage artifact merged successfully"
+        # Find and copy .coverage.* files to current directory for combining
+        find coverage-artifacts/ -name ".coverage.*" -exec cp {} . \; 2>/dev/null || true
+
+        # Check if we have coverage data files to combine
+        if ls .coverage.* 1>/dev/null 2>&1; then
+          echo "📊 Combining coverage data from categories..."
+          coverage combine
+
+          # Generate merged reports in multiple formats
+          coverage xml -o coverage-merged.xml
+          coverage html -d coverage-html
+          coverage json -o coverage.json
+          coverage report --format=markdown | tee coverage-summary.md
+
+          echo "✅ Coverage merged successfully from $(ls .coverage.* 2>/dev/null | wc -l) categories"
         else
-          echo "⚠️  No coverage artifacts found (tests may have been skipped or failed)"
-          echo "Creating empty coverage file for downstream steps"
-          # Create minimal valid XML coverage file
-          cat > coverage-merged.xml << 'COVERAGE_EOF'
-        <?xml version="1.0" encoding="UTF-8"?>
-        <coverage version="7.0" timestamp="0" lines-valid="0" lines-covered="0" line-rate="0" branches-covered="0" branches-valid="0" branch-rate="0" complexity="0">
-          <packages/>
-        </coverage>
-        COVERAGE_EOF
+          echo "⚠️  No .coverage files found, falling back to XML merge"
+          # Fallback: try to find any XML files
+          FIRST_XML=$(find coverage-artifacts/ -name "coverage-*.xml" -type f 2>/dev/null | head -1)
+          if [ -f "$FIRST_XML" ]; then
+            # Just use the first XML file as the merged output
+            cp "$FIRST_XML" coverage-merged.xml
+            echo "⚠️  Using fallback: copied $FIRST_XML as coverage-merged.xml"
+          else
+            echo "⚠️  No coverage artifacts found (tests may have been skipped or failed)"
+            echo "Creating empty coverage file for downstream steps"
+            echo '<?xml version="1.0" encoding="UTF-8"?>' > coverage-merged.xml
+            echo '<coverage version="7.0" timestamp="0" lines-valid="0" lines-covered="0" line-rate="0" branches-covered="0" branches-valid="0" branch-rate="0" complexity="0"><packages/></coverage>' >> coverage-merged.xml
+          fi
         fi
 
-        echo "=== Coverage Summary ==="
-        coverage report --data-file=.coverage 2>/dev/null || echo "Using XML report directly"
+    - name: Upload merged coverage (XML)
+      uses: actions/upload-artifact@v5
+      with:
+        name: coverage-merged
+        path: coverage-merged.xml
+        retention-days: 7
+
+    - name: Upload merged coverage (HTML)
+      uses: actions/upload-artifact@v5
+      with:
+        name: coverage-html
+        path: coverage-html/
+        retention-days: 7  # Used by gh-pages-telemetry workflow
+      if: hashFiles('coverage-html/') != ''
+
+    - name: Upload merged coverage (JSON)
+      uses: actions/upload-artifact@v5
+      with:
+        name: coverage-json
+        path: coverage.json
+        retention-days: 7  # Used by coverage-trend workflow
+      if: hashFiles('coverage.json') != ''
 
     - name: Upload merged coverage to Codecov
       uses: codecov/codecov-action@v5.5.1
       with:
         files: ./coverage-merged.xml
-        flags: merged
+        flags: unit
         fail_ci_if_error: false
         verbose: true
 

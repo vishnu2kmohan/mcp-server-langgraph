@@ -264,8 +264,8 @@ class TestProductionReadinessChecks:
         from pathlib import Path
 
         required_tests = [
-            "tests/unit/test_dependencies_wiring.py",
-            "tests/unit/test_cache_redis_config.py",
+            "tests/unit/core/test_dependencies_wiring.py",
+            "tests/unit/core/test_cache_redis_config.py",
             "tests/integration/test_app_startup_validation.py",
             "tests/smoke/test_ci_startup_smoke.py",
         ]

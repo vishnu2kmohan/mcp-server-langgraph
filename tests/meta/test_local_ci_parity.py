@@ -1076,7 +1076,7 @@ class TestApiMcpTestSuiteParity:
     def test_mcp_server_tests_run_locally(self, shared_run_pre_push_tests_content: str):
         """Test that MCP server tests run in pre-push hook like in CI.
 
-        MCP server tests are unit tests in tests/unit/test_mcp_stdio_server.py, covered by
+        MCP server tests are unit tests in tests/unit/mcp/test_mcp_stdio_server.py, covered by
         the consolidated marker expression: (unit or api or property) and not llm
         """
         # Check that consolidated script includes 'unit' marker (MCP tests are unit tests)
@@ -1088,7 +1088,7 @@ class TestApiMcpTestSuiteParity:
             "run_pre_push_tests.py must include 'unit' marker to run MCP server tests\n"
             "\n"
             "CI runs (ci.yaml:253):\n"
-            "  OTEL_SDK_DISABLED=true pytest tests/unit/test_mcp_stdio_server.py -m 'not llm'\n"
+            "  OTEL_SDK_DISABLED=true pytest tests/unit/mcp/test_mcp_stdio_server.py -m 'not llm'\n"
             "\n"
             "Consolidated script uses:\n"
             "  marker_expression = '(unit or api or property) and not llm'\n"
@@ -1102,18 +1102,28 @@ class TestApiMcpTestSuiteParity:
         )
 
     def test_ci_runs_api_tests(self, ci_workflow_content: str):
-        """Verify that CI runs API tests (this is the baseline)."""
-        assert "api and unit" in ci_workflow_content, (
+        """Verify that CI runs API tests (this is the baseline).
+
+        API tests are run via the marker expression which includes 'api':
+        -m "(unit or api or property or validation) and not llm"
+        """
+        # Check that the marker expression includes 'api'
+        assert "or api or" in ci_workflow_content, (
             "CI workflow must run API endpoint tests\n"
-            "Expected: pytest -m 'api and unit'\n"
+            "Expected: marker expression including 'api' (e.g., '-m \"(unit or api or ...)')\n"
             "If CI doesn't run API tests, this test needs updating"
         )
 
     def test_ci_runs_mcp_tests(self, ci_workflow_content: str):
-        """Verify that CI runs MCP tests (this is the baseline)."""
-        assert "test_mcp_stdio_server.py" in ci_workflow_content, (
+        """Verify that CI runs MCP tests (this is the baseline).
+
+        MCP tests are in tests/unit/mcp/ and run as part of the 'core' test category
+        which includes 'tests/unit/mcp/' in its test-paths.
+        """
+        # Check that MCP tests are included via category test paths
+        assert "tests/unit/mcp/" in ci_workflow_content, (
             "CI workflow must run MCP server tests\n"
-            "Expected: pytest tests/unit/test_mcp_stdio_server.py\n"
+            "Expected: 'tests/unit/mcp/' in test category paths\n"
             "If CI doesn't run MCP tests, this test needs updating"
         )
 
@@ -1217,7 +1227,7 @@ class TestMakefilePrePushParity:
             "Makefile validate-pre-push sub-targets must run API/MCP tests to match pre-push hook\n"
             "Pre-push hook should run:\n"
             "  - API tests: pytest -m 'api and unit'\n"
-            "  - MCP tests: pytest tests/unit/test_mcp_stdio_server.py\n"
+            "  - MCP tests: pytest tests/unit/mcp/test_mcp_stdio_server.py\n"
             "Fix: Add API/MCP test phases to validate-pre-push-full/quick targets"
         )
 

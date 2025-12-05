@@ -16,7 +16,8 @@ from pathlib import Path
 import pytest
 
 # Add scripts directory to path for importing validator
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts" / "validators"))
+# Path: tests/unit/execution/test_*.py -> parent^4 = project root
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / "validators"))
 
 
 from validate_gke_autopilot_compliance import GKEAutopilotValidator  # noqa: E402

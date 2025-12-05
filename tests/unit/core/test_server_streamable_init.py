@@ -26,7 +26,10 @@ def test_module_level_logger_uses_standard_logging():
     # Read the source file to verify it uses standard logging
     import pathlib
 
-    source_file = pathlib.Path(__file__).parent.parent.parent / "src" / "mcp_server_langgraph" / "mcp" / "server_streamable.py"
+    # Path: tests/unit/core/test_*.py -> parent^4 = project root
+    source_file = (
+        pathlib.Path(__file__).parent.parent.parent.parent / "src" / "mcp_server_langgraph" / "mcp" / "server_streamable.py"
+    )
     source_code = source_file.read_text()
 
     # Verify module-level logger is defined with standard logging
@@ -55,7 +58,10 @@ def test_rate_limiting_logs_use_standard_logger():
     """
     import pathlib
 
-    source_file = pathlib.Path(__file__).parent.parent.parent / "src" / "mcp_server_langgraph" / "mcp" / "server_streamable.py"
+    # Path: tests/unit/core/test_*.py -> parent^4 = project root
+    source_file = (
+        pathlib.Path(__file__).parent.parent.parent.parent / "src" / "mcp_server_langgraph" / "mcp" / "server_streamable.py"
+    )
 
     with open(source_file) as f:
         lines = f.readlines()
@@ -89,7 +95,10 @@ def test_observability_logger_not_used_at_module_level():
     """
     import pathlib
 
-    source_file = pathlib.Path(__file__).parent.parent.parent / "src" / "mcp_server_langgraph" / "mcp" / "server_streamable.py"
+    # Path: tests/unit/core/test_*.py -> parent^4 = project root
+    source_file = (
+        pathlib.Path(__file__).parent.parent.parent.parent / "src" / "mcp_server_langgraph" / "mcp" / "server_streamable.py"
+    )
     source_code = source_file.read_text()
 
     # Split into module level (before any function definitions) and function level

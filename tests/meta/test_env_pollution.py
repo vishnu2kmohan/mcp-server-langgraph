@@ -204,7 +204,7 @@ class TestEnvironmentIsolationMigration:
             "tests/integration/api/test_api_keys_endpoints.py",
             "tests/unit/auth/test_auth.py",
             "tests/unit/auth/test_auth_factory.py",
-            "tests/unit/test_mcp_stdio_server.py",
+            "tests/unit/mcp/test_mcp_stdio_server.py",
             "tests/core/test_exceptions.py",
             "tests/integration/core/test_container.py",
             "tests/builder/test_builder_security.py",

@@ -62,13 +62,16 @@ jobs:
   # ============================================================================
 
   integration-tests:
-    name: Integration Tests (${{ matrix.test-category }})
+    name: Integration Py${{ matrix.python-version }} (${{ matrix.test-category }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     strategy:
       fail-fast: false
       matrix:
+        # PRs: Only test on 3.12 for fast feedback (~10 min savings)
+        # Push to main/develop: Full matrix for compatibility validation
+        python-version: ${{ github.event_name == 'pull_request' && fromJSON('["3.12"]') || fromJSON('["3.11", "3.12", "3.13"]') }}
         # Matrix strategy with test categories for parallel execution
         # Each category runs its tests with pytest-xdist for intra-job parallelism
         # This replaces pytest-split (2025-11-28) to enable pytest 9.x upgrade
@@ -96,7 +99,7 @@ jobs:
     - name: Set up Python and dependencies
       uses: ./.github/actions/setup-python-deps
       with:
-        python-version: '3.12'
+        python-version: ${{ matrix.python-version }}
         extras: 'dev'
 
     - name: Run Integration Tests via Script (${{ matrix.test-category }})
@@ -121,10 +124,10 @@ jobs:
         fi
 
     - name: Upload integration coverage artifact
-      if: always()
+      if: always() && matrix.python-version == '3.12'
       uses: actions/upload-artifact@v5
       with:
-        name: coverage-integration-${{ matrix.label }}
+        name: coverage-integration-${{ matrix.label }}-py${{ matrix.python-version }}
         path: |
           coverage-integration-${{ matrix.label }}.xml
           .coverage.${{ matrix.label }}
@@ -160,7 +163,7 @@ jobs:
     - name: Download all coverage artifacts
       uses: actions/download-artifact@v6
       with:
-        pattern: coverage-integration-*
+        pattern: coverage-integration-*-py3.12
         path: coverage-reports/
         merge-multiple: true
 
