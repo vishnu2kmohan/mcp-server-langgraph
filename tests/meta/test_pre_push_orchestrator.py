@@ -63,7 +63,7 @@ class TestPrePushOrchestrator:
         1. unit and not llm (from run-unit-tests)
         2. tests/smoke/ (from run-smoke-tests)
         3. api and unit and not llm (from run-api-tests)
-        4. tests/unit/test_mcp_stdio_server.py -m "not llm" (from run-mcp-server-tests)
+        4. tests/unit/mcp/test_mcp_stdio_server.py -m "not llm" (from run-mcp-server-tests)
         5. property (from run-property-tests)
 
         Strategy: Run single pytest session with combined marker logic
@@ -92,7 +92,7 @@ class TestPrePushOrchestrator:
                 "  - run-unit-tests: -m 'unit and not llm'\n"
                 "  - run-smoke-tests: tests/smoke/\n"
                 "  - run-api-tests: -m 'api and unit and not llm'\n"
-                "  - run-mcp-server-tests: tests/unit/test_mcp_stdio_server.py\n"
+                "  - run-mcp-server-tests: tests/unit/mcp/test_mcp_stdio_server.py\n"
                 "  - run-property-tests: -m property\n"
                 "\n"
                 "All markers must be present in the orchestrator logic.\n"

@@ -298,7 +298,7 @@ async def main():
 
 ### Test Coverage
 
-- `tests/unit/test_observability_lazy_init.py` (13 tests)
+- `tests/unit/observability/test_observability_lazy_init.py` (13 tests)
   - Import without filesystem ops
   - Lazy accessors raise before init
   - Init with defaults

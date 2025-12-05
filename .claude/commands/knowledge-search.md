@@ -130,7 +130,7 @@ grep -r "def.*<query>" src/ -n
 
   🧪 Tests & Examples (4 results)
   ──────────────────────────────────────────────────────────────────
-  1. tests/unit/test_auth_middleware.py:89
+  1. tests/unit/auth/test_auth_middleware.py:89
      Test: test_jwt_authentication_success
      Coverage: Shows successful JWT flow
      Relevance: ★★★★☆ (example)
@@ -286,7 +286,7 @@ grep -r "@app\.(get|post|put|delete)" src/ -n
     "authentication": {
       "adrs": ["ADR-0007", "ADR-0031"],
       "code": ["src/mcp_server_langgraph/auth/middleware.py"],
-      "tests": ["tests/unit/test_auth_middleware.py"],
+      "tests": ["tests/unit/auth/test_auth_middleware.py"],
       "keywords": ["jwt", "keycloak", "token", "login"]
     },
     "caching": {

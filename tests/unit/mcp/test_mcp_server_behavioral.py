@@ -12,7 +12,7 @@ Benefits over @patch decorators:
 - ✅ Composable (mocks can be combined easily)
 - ✅ Fewer lines (no @patch decorator boilerplate)
 
-This sample will be used to refactor tests/unit/test_mcp_stdio_server.py (50 @patch → <10)
+This sample will be used to refactor tests/unit/mcp/test_mcp_stdio_server.py (50 @patch → <10)
 """
 
 import pytest
@@ -300,7 +300,7 @@ Benefits:
 
 NEXT STEPS (Phase 2.8 - Refactoring):
 1. Adapt MCPAgentServer to accept dependencies via constructor
-2. Refactor tests/unit/test_mcp_stdio_server.py (50 @patch → <10)
+2. Refactor tests/unit/mcp/test_mcp_stdio_server.py (50 @patch → <10)
 3. Apply pattern to other unit test files
 4. Validate all tests pass
 """

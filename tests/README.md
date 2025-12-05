@@ -1227,8 +1227,8 @@ pytest tests/e2e/ -k "journey" -v       # Run specific journey
 **Run**:
 ```bash
 make test-mcp-server                    # Run MCP server tests
-pytest tests/unit/test_mcp_stdio_server.py -v
-pytest tests/unit/test_mcp_stdio_server.py -k "auth" -v  # Auth tests only
+pytest tests/unit/mcp/test_mcp_stdio_server.py -v
+pytest tests/unit/mcp/test_mcp_stdio_server.py -k "auth" -v  # Auth tests only
 ```
 
 **Key Features**:
@@ -1317,7 +1317,7 @@ make test-quick-new         # Quick parallel check
 - ✅ **Completed**:
   - docker-compose.test.yml (isolated infrastructure)
   - tests/api/ (33+ tests for all API endpoints)
-  - tests/unit/test_mcp_stdio_server.py (20+ tests)
+  - tests/unit/mcp/test_mcp_stdio_server.py (20+ tests)
   - tests/e2e/test_full_user_journey.py:
     - ✅ Infrastructure tests (3/3): login, init, list_tools
     - ✅ Standard user journey (3/3): chat, continue, retrieve conversation

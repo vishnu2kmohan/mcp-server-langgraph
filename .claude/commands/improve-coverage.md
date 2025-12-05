@@ -143,7 +143,7 @@ For each uncovered section, provide:
 
 # Recommended Test 1: test_validate_role_success
 """Test successful role validation"""
-# Location: tests/unit/test_auth_rbac.py
+# Location: tests/unit/auth/test_auth_rbac.py
 # Test should cover:
 # - Lines 45-52: Role format validation
 # - Lines 53-60: Permission lookup
@@ -171,7 +171,7 @@ async def test_validate_role_success(self, mock_openfga):
 
 # Recommended Test 2: test_validate_role_invalid_format
 """Test role validation with invalid format"""
-# Location: tests/unit/test_auth_rbac.py
+# Location: tests/unit/auth/test_auth_rbac.py
 # Test should cover:
 # - Lines 45-48: Format validation failure
 # - Lines 89-92: Error handling
@@ -356,7 +356,7 @@ After analysis, provide:
    /create-test <priority-file>
 
    # Run tests and check coverage
-   uv run --frozen pytest tests/unit/test_<module>.py --cov=src/mcp_server_langgraph/<module> --cov-report=term
+   uv run --frozen pytest tests/unit/<category>/test_<module>.py --cov=src/mcp_server_langgraph/<module> --cov-report=term
 
    # Run full coverage to see improvement
    make test-coverage-combined

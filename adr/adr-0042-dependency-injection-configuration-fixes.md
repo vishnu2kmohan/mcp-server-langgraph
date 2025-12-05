@@ -261,7 +261,7 @@ def get_cache() -> CacheService:
 
 ### 5. Add Comprehensive Test Coverage
 
-**Created**: `tests/unit/test_dependencies_wiring.py`
+**Created**: `tests/unit/core/test_dependencies_wiring.py`
 
 Tests added (following TDD):
 1. **Keycloak admin credential wiring**
@@ -283,7 +283,7 @@ Tests added (following TDD):
    - Tests OpenFGA client factory with incomplete config
    - Tests service principal manager with disabled OpenFGA
 
-**Created**: `tests/unit/test_cache_redis_config.py`
+**Created**: `tests/unit/core/test_cache_redis_config.py`
 
 Tests added:
 1. **Cache Redis configuration**
@@ -386,7 +386,7 @@ REDIS_SSL=true
 
 ### Pre-Deployment Checklist
 
-- [x] All tests pass (`pytest tests/unit/test_dependencies_wiring.py tests/unit/test_cache_redis_config.py`)
+- [x] All tests pass (`pytest tests/unit/core/test_dependencies_wiring.py tests/unit/core/test_cache_redis_config.py`)
 - [x] Keycloak admin credentials wired in dependencies.py
 - [x] OpenFGA client validates config and returns None when incomplete
 - [x] Service principal manager guards all OpenFGA operations

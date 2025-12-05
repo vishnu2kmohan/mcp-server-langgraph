@@ -56,7 +56,7 @@ Benefits:
 
 References:
     - Backlog: TESTING_INFRASTRUCTURE_IMPROVEMENTS_BACKLOG.md (Phase 2)
-    - Problem: tests/unit/test_mcp_stdio_server.py has 50 @patch decorators
+    - Problem: tests/unit/mcp/test_mcp_stdio_server.py has 50 @patch decorators
     - Root cause analysis: Circuit breaker state pollution (pytest-xdist)
     - Root cause analysis: Missing OpenFGA dependency overrides
     - Root cause analysis: Invalid LLM provider configurations
@@ -140,7 +140,7 @@ def create_mock_llm_environment(
         - OpenAI: API key validation errors
 
     References:
-        - tests/unit/test_llm_fallback_kwargs.py (fixed: 2 tests)
+        - tests/unit/llm/test_llm_fallback_kwargs.py (fixed: 2 tests)
         - Root cause: Missing environment variable mocking
     """
     from unittest.mock import patch
@@ -197,7 +197,7 @@ def validate_ollama_model_name(model_name: str) -> None:
         - Test failures due to incorrect model routing
 
     References:
-        - tests/unit/test_llm_fallback_kwargs.py (fixed: 2 tests)
+        - tests/unit/llm/test_llm_fallback_kwargs.py (fixed: 2 tests)
         - Root cause: Invalid model names missing "ollama/" prefix
     """
     if not model_name.startswith("ollama/"):
@@ -285,7 +285,7 @@ def create_isolated_circuit_breaker(
 #
 # References:
 #   - Backlog: TESTING_INFRASTRUCTURE_IMPROVEMENTS_BACKLOG.md (Phase 2)
-#   - Problem: tests/unit/test_mcp_stdio_server.py has 50 @patch decorators
+#   - Problem: tests/unit/mcp/test_mcp_stdio_server.py has 50 @patch decorators
 
 
 def create_behavioral_auth_middleware(
