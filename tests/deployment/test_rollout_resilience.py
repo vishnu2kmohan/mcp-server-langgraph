@@ -29,17 +29,17 @@ pytestmark = [
 ]
 
 REPO_ROOT = get_repo_root()
-STAGING_GKE_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "preview-gke"
+PREVIEW_GKE_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "preview-gke"
 DEPLOY_WORKFLOW_PATH = REPO_ROOT / ".github" / "workflows" / "deploy-preview-gke.yaml"
 
 
 def _render_kustomize_manifests() -> list[dict[str, Any]]:
     """Render Kustomize manifests and return parsed YAML documents."""
-    if not STAGING_GKE_OVERLAY.exists():
-        pytest.skip(f"Staging GKE overlay not found: {STAGING_GKE_OVERLAY}")
+    if not PREVIEW_GKE_OVERLAY.exists():
+        pytest.skip(f"Preview GKE overlay not found: {PREVIEW_GKE_OVERLAY}")
 
     result = subprocess.run(
-        ["kubectl", "kustomize", str(STAGING_GKE_OVERLAY)],
+        ["kubectl", "kustomize", str(PREVIEW_GKE_OVERLAY)],
         capture_output=True,
         text=True,
         check=True,

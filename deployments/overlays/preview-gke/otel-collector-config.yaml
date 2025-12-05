@@ -42,7 +42,7 @@ processors:
   attributes:
     actions:
       - key: deployment.environment
-        value: staging
+        value: preview
         action: insert
       - key: service.version
         value: latest
@@ -81,9 +81,9 @@ exporters:
   # Prometheus (for local metrics scraping)
   prometheus:
     endpoint: "0.0.0.0:8889"
-    namespace: mcp_staging
+    namespace: mcp_preview
     const_labels:
-      environment: staging
+      environment: preview
       platform: gke
 
   # Debug exporter (disabled in production, useful for troubleshooting)
