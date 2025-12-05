@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764952034551,
+  "lastUpdate": 1764964294531,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -43254,6 +43254,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000027409912483777897",
             "extra": "mean: 58.06802849092283 usec\nrounds: 4879"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vishnu2kmohan@users.noreply.github.com",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a96423ac3606a29cc5340dbae2ac8029d388fd63",
+          "message": "ci: parallelize CI test matrix for faster PR feedback (#141)\n\n* ci: parallelize CI test matrix for faster PR feedback\n\nOptimize CI workflow to reduce PR check time from ~72 minutes to ~20 minutes:\n\n**Test Organization (37 files moved):**\n- Redistribute root-level unit tests into category subdirectories\n- AUTH (6 files): security_headers, security_logging, scim_filters, etc.\n- CORE (14 files): app_factory, conversation_store, time_provider, etc.\n- INFRA (17 files): gke_autopilot_validator, health_endpoints, tools, etc.\n- Fix import paths for moved validator test files\n\n**ci.yaml Optimizations:**\n- Add 3-category test matrix (auth: 431, core: 667, infra: 528 tests)\n- PRs run only Python 3.12 (vs full 3.11/3.12/3.13 matrix)\n- mypy and Helm steps run only on Python 3.12\n- Update coverage merge to combine split category artifacts\n- Reduce test job timeout from 30m to 15m\n\n**integration-tests.yaml Optimizations:**\n- Add Python version matrix with PR reduction\n- Coverage artifacts include Python version in name\n\nExpected savings: ~52 minutes per PR (72m -> 20m wall time)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* docs: update test file path references in comments\n\nUpdate documentation references to reflect the new test file locations\nafter redistributing root-level tests to subdirectories:\n\n- tests/unit/test_mcp_stdio_server.py → tests/unit/mcp/\n- tests/unit/test_llm_fallback_kwargs.py → tests/unit/llm/\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* docs: update test paths in documentation for new subdirectory structure\n\nUpdate documentation references to reflect the reorganization of unit tests\nfrom flat `tests/unit/test_*.py` structure to category-based subdirectories\nlike `tests/unit/auth/`, `tests/unit/core/`, `tests/unit/mcp/`, etc.\n\nFiles updated:\n- .claude/commands/ (4 files): create-test, coverage-gaps, improve-coverage, knowledge-search\n- docs/advanced/ (3 files): contributing, development-setup, testing\n- docs/architecture/ (4 files): ADR-0022, ADR-0026, ADR-0042, ADR-0050\n- docs/deployment/ (1 file): gke-autopilot-resource-constraints\n- docs/releases/ (1 file): v2-8-0\n- adr/ (4 files): ADR-0022, ADR-0026, ADR-0042, ADR-0050\n- tests/ (2 files): README, smoke/README\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-05T14:50:01-05:00",
+          "tree_id": "2abf49c80e83461103577cdc44ce15404effd180",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a96423ac3606a29cc5340dbae2ac8029d388fd63"
+        },
+        "date": 1764964292978,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 142.89981265702147,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008751067902482215",
+            "extra": "mean: 6.997909804123626 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 261.9121088972599,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0009350212810793367",
+            "extra": "mean: 3.81807471296514 msec\nrounds: 108"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 42069.517352174356,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 23.770180000610708 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47140.8597177817,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.213019999777316 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 43608.66975084145,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.931220000828034 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.79023200613435,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.133727650000992 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.532497165203548,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.196730840000555 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.976464545436704,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.23590977000026 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1304070.0009735352,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 766.8300008845108 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13263.11486643854,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 75.3970699997808 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2946.5870109966286,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 339.375689999315 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2779.1644264252323,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 359.8203800004285 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 59303.50098912628,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020643143465351525",
+            "extra": "mean: 16.86241087492216 usec\nrounds: 11899"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17024.871952943657,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001927716636537041",
+            "extra": "mean: 58.737593020609864 usec\nrounds: 4241"
           }
         ]
       }
