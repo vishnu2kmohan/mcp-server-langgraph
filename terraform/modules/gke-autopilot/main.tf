@@ -62,6 +62,12 @@ resource "google_container_cluster" "autopilot" {
       node_pool,
       # Ignore initial node count
       initial_node_count,
+      # Ignore monitoring_config - Autopilot automatically enables many components
+      # (STORAGE, HPA, POD, DAEMONSET, DEPLOYMENT, STATEFULSET, JOBSET, CADVISOR, KUBELET, DCGM)
+      # Trying to change these causes "badRequest" errors
+      monitoring_config,
+      # Ignore logging_config - Autopilot may adjust these automatically
+      logging_config,
     ]
   }
 
@@ -154,10 +160,17 @@ resource "google_container_cluster" "autopilot" {
   }
 
   # DNS configuration
-  dns_config {
-    cluster_dns        = var.cluster_dns_provider
-    cluster_dns_scope  = var.cluster_dns_scope
-    cluster_dns_domain = var.cluster_dns_domain
+  # NOTE: For GKE Autopilot clusters (v1.25.9-gke.400+), Cloud DNS is pre-configured
+  # automatically. Explicit dns_config causes "badRequest" errors.
+  # Only enable for Autopilot clusters on older versions or Standard clusters.
+  # Reference: https://cloud.google.com/kubernetes-engine/docs/how-to/cloud-dns
+  dynamic "dns_config" {
+    for_each = var.enable_explicit_dns_config ? [1] : []
+    content {
+      cluster_dns        = var.cluster_dns_provider
+      cluster_dns_scope  = var.cluster_dns_scope
+      cluster_dns_domain = var.cluster_dns_domain
+    }
   }
 
   # Monitoring and logging configuration (Cloud Operations)
@@ -318,10 +331,13 @@ resource "google_gke_backup_backup_plan" "cluster" {
     include_volume_data = var.backup_include_volume_data
     include_secrets     = var.backup_include_secrets
 
-    selected_applications {
-      namespaced_names {
-        namespace = var.backup_namespace
-        name      = "*"
+    # Use all_namespaces when backup_namespace is "*", otherwise use selected_namespaces
+    all_namespaces = var.backup_namespace == "*" ? true : null
+
+    dynamic "selected_namespaces" {
+      for_each = var.backup_namespace != "*" ? [1] : []
+      content {
+        namespaces = [var.backup_namespace]
       }
     }
 

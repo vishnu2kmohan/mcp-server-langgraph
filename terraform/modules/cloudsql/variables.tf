@@ -284,6 +284,12 @@ variable "database_flags" {
   default     = {}
 }
 
+variable "enable_default_database_flags" {
+  description = "Enable default database flags for logging and performance monitoring. Set to false for minimal configuration."
+  type        = bool
+  default     = false
+}
+
 variable "enable_query_insights" {
   description = "Enable Query Insights (Performance Insights)"
   type        = bool

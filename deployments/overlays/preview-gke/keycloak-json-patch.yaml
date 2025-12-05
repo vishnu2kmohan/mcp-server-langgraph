@@ -1,7 +1,8 @@
 # Set Keycloak ServiceAccount for Workload Identity
+# Note: Overlay resources don't get namePrefix applied, so we use the exact overlay SA name
 - op: replace
   path: /spec/template/spec/serviceAccountName
-  value: preview-keycloak
+  value: keycloak-sa
 
 # Fix secret references to use preview-prefixed secret name (KEYCLOAK_ADMIN and KEYCLOAK_ADMIN_PASSWORD)
 - op: replace
