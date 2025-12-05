@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Staging Smoke Tests for GKE Deployment
+# Preview Smoke Tests for GKE Deployment
 #
-# This script performs smoke tests on the staging environment to verify:
+# This script performs smoke tests on the preview environment to verify:
 # - Health endpoints are responding
 # - Authentication is working
 # - Basic agent functionality
@@ -16,8 +16,8 @@
 set -euo pipefail
 
 # Configuration
-NAMESPACE="${NAMESPACE:-staging-mcp-server-langgraph}"
-SERVICE_NAME="${SERVICE_NAME:-staging-mcp-server-langgraph}"
+NAMESPACE="${NAMESPACE:-preview-mcp-server-langgraph}"
+SERVICE_NAME="${SERVICE_NAME:-preview-mcp-server-langgraph}"
 # shellcheck disable=SC2034  # TIMEOUT reserved for future timeout implementation
 TIMEOUT=30
 
@@ -63,7 +63,7 @@ test_fail() {
 
 # Setup port-forward
 setup_port_forward() {
-    log_info "Setting up port-forward to staging service..."
+    log_info "Setting up port-forward to preview service..."
 
     # Kill any existing port-forwards
     pkill -f "port-forward.*${SERVICE_NAME}" || true
@@ -294,7 +294,7 @@ test_external_secrets() {
     test_start "External Secrets are synced"
 
     # Check if ExternalSecret resource exists and is synced
-    SYNC_STATUS=$(kubectl get externalsecret mcp-staging-secrets \
+    SYNC_STATUS=$(kubectl get externalsecret mcp-preview-secrets \
         -n "$NAMESPACE" \
         -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
 
@@ -331,7 +331,7 @@ print_summary() {
 
 # Main execution
 main() {
-    log_info "Starting staging smoke tests..."
+    log_info "Starting preview smoke tests..."
     log_info "Namespace: $NAMESPACE"
     log_info "Service: $SERVICE_NAME"
     echo ""

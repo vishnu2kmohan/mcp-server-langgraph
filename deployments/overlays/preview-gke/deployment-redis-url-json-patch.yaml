@@ -29,7 +29,7 @@
   - name: OTEL_SERVICE_NAME
     value: "mcp-server-langgraph"
   - name: OTEL_RESOURCE_ATTRIBUTES
-    value: "service.name=mcp-server-langgraph,service.version=1.0.0,deployment.environment=staging"
+    value: "service.name=mcp-server-langgraph,service.version=1.0.0,deployment.environment=preview"
 
   # Vertex AI Configuration (Workload Identity - no credentials needed)
   - name: VERTEX_PROJECT

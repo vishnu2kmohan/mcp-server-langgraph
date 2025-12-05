@@ -127,8 +127,8 @@ class TestKustomizeBuilds:
             pytest.fail(f"Invalid YAML in {overlay_path}: {e}")
 
 
-@pytest.mark.xdist_group(name="teststaginggkeoverlay")
-class TestStagingGKEOverlay:
+@pytest.mark.xdist_group(name="testpreviewgkeoverlay")
+class TestPreviewGKEOverlay:
     """Specific tests for preview-gke overlay configuration."""
 
     def teardown_method(self) -> None:
@@ -137,7 +137,7 @@ class TestStagingGKEOverlay:
 
     @requires_tool("kustomize")
     def _build_overlay(self):
-        """Helper to build staging overlay."""
+        """Helper to build preview-gke overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/preview-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
@@ -146,12 +146,12 @@ class TestStagingGKEOverlay:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
 
-    def test_namespace_consistency_for_staging_matches_expected_namespace(self):
+    def test_namespace_consistency_for_preview_gke_matches_expected_namespace(self):
         """
         Test that all resources use the correct namespace.
 
         Expected: preview-mcp-server-langgraph
-        Common mistake: mcp-staging (hardcoded)
+        Common mistake: mcp-preview (hardcoded)
 
         Validates Finding #4: Service Account namespace mismatches
         """
@@ -179,9 +179,9 @@ class TestStagingGKEOverlay:
         """
         Test that Redis StatefulSet is properly deleted (not Deployment).
 
-        Validates Finding #3: Staging Redis deletion using wrong kind
+        Validates Finding #3: Preview GKE Redis deletion using wrong kind
 
-        After fix: Redis StatefulSet should NOT appear in staging overlay
+        After fix: Redis StatefulSet should NOT appear in preview-gke overlay
         (because it's deleted and replaced with cloud-managed Redis)
         """
         documents = self._build_overlay()
@@ -194,7 +194,7 @@ class TestStagingGKEOverlay:
             if doc.get("kind") == "StatefulSet":
                 name = doc.get("metadata", {}).get("name", "")
                 assert "redis" not in name.lower(), (
-                    f"Redis StatefulSet '{name}' still exists in staging overlay. "
+                    f"Redis StatefulSet '{name}' still exists in preview-gke overlay. "
                     f"It should be deleted (using cloud-managed Redis)."
                 )
 

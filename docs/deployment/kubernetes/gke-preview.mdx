@@ -1,16 +1,16 @@
 ---
-title: GKE Staging Deployment
-description: 'Deploy to GKE staging environment with security best practices'
+title: GKE Preview Deployment
+description: 'Deploy to GKE preview environment with security best practices'
 icon: 'google'
-seoTitle: "GKE Staging Deployment - GKE Deployment"
-seoDescription: "Deploy MCP Server on GKE: Deploy to GKE staging environment with security best practices"
+seoTitle: "GKE Preview Deployment - GKE Deployment"
+seoDescription: "Deploy MCP Server on GKE: Deploy to GKE preview environment with security best practices"
 keywords: ["GKE", "Kubernetes", "deployment", "MCP Server", "cloud deployment"]
 contentType: "how-to"
 ---
 
 ### Overview
 
-This guide covers deploying the MCP Server to a production-grade staging environment on Google Kubernetes Engine (GKE) with:
+This guide covers deploying the MCP Server to a production-grade preview environment on Google Kubernetes Engine (GKE) with:
 
 - **🔒 Security Hardening**: Private nodes, Binary Authorization, Network Policies
 - **🔑 Keyless Authentication**: Workload Identity Federation for GitHub Actions
@@ -19,7 +19,7 @@ This guide covers deploying the MCP Server to a production-grade staging environ
 - **🤖 Automated Deployments**: GitHub Actions with approval gates
 
 <Info>
-This is a production-ready staging environment suitable for pre-production testing and validation.
+This is a production-ready preview environment suitable for pre-production testing and validation.
 </Info>
 
 ### Architecture
@@ -33,11 +33,11 @@ flowchart TB
     GHA --> GCP
 
     subgraph GCP["GCP Project (vishnu-sandbox-20250310)"]
-        subgraph VPC["Staging VPC (10.1.0.0/20)"]
+        subgraph VPC["Preview VPC (10.1.0.0/20)"]
             subgraph GKE["GKE Autopilot Cluster"]
                 GKE_Features["Security Features:<br/>- Private nodes<br/>- Shielded nodes<br/>- Binary Authorization<br/>- Workload Identity"]
 
-                subgraph NS["Namespace: mcp-staging"]
+                subgraph NS["Namespace: mcp-preview"]
                     Pods["MCP Server Pods<br/>(2 replicas)<br/>+ Cloud SQL Proxy"]
                     NetPol["Network Policies<br/>(restricted)"]
                     ExtSec["External Secrets<br/>(synced)"]
@@ -96,7 +96,7 @@ export GCP_PROJECT_ID=vishnu-sandbox-20250310
 ```
 
 This script will create:
-- ✅ Staging VPC network (10.1.0.0/20)
+- ✅ Preview VPC network (10.1.0.0/20)
 - ✅ GKE Autopilot cluster with security hardening
 - ✅ Cloud SQL PostgreSQL instance
 - ✅ Memorystore Redis instance
@@ -129,7 +129,7 @@ gcloud compute networks subnets create preview-gke-subnet \
 #### 1.2 Create GKE Cluster
 
 ```bash
-gcloud container clusters create-auto staging-mcp-server-langgraph-gke \
+gcloud container clusters create-auto preview-mcp-server-langgraph-gke \
   --region=us-central1 \
   --network=staging-vpc \
   --subnetwork=preview-gke-subnet \
@@ -157,7 +157,7 @@ Staging Infrastructure Setup Complete!
 
 GitHub Actions Configuration:
   workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/...'
-  service_account: 'mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
+  service_account: 'mcp-preview-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
 
 Security Features Enabled:
   ✓ Private GKE nodes
@@ -236,7 +236,7 @@ For the first deployment, deploy manually to verify everything works:
 
 ```bash
 ## Get GKE credentials
-gcloud container clusters get-credentials staging-mcp-server-langgraph-gke \
+gcloud container clusters get-credentials preview-mcp-server-langgraph-gke \
   --region=us-central1
 
 ## Verify connection
@@ -246,10 +246,10 @@ kubectl cluster-info
 kubectl apply -k deployments/overlays/preview-gke
 
 ## Watch deployment
-kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
+kubectl rollout status deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph
 
 ## Verify pods
-kubectl get pods -n staging-mcp-server-langgraph
+kubectl get pods -n preview-mcp-server-langgraph
 ```
 
 #### Automated Deployments (GitHub Actions)
@@ -293,7 +293,7 @@ Failed:       0
 
 ```bash
 ## Port-forward to service
-kubectl port-forward -n staging-mcp-server-langgraph svc/staging-mcp-server-langgraph 8080:80
+kubectl port-forward -n preview-mcp-server-langgraph svc/preview-mcp-server-langgraph 8080:80
 
 ## Test endpoints
 curl http://localhost:8080/health
@@ -308,15 +308,15 @@ curl http://localhost:8080/health/live
 ```bash
 gcloud logging read \
   "resource.type=k8s_container
-   resource.labels.cluster_name=staging-mcp-server-langgraph-gke
-   resource.labels.namespace_name=mcp-staging" \
+   resource.labels.cluster_name=preview-mcp-server-langgraph-gke
+   resource.labels.namespace_name=mcp-preview" \
   --limit=50 \
   --format=json
 ```
 **Kubectl logs**:
 
 ```bash
-kubectl logs -n staging-mcp-server-langgraph -l app=mcp-server-langgraph --tail=100
+kubectl logs -n preview-mcp-server-langgraph -l app=mcp-server-langgraph --tail=100
 ```
 
 ### Security Features
@@ -330,7 +330,7 @@ kubectl logs -n staging-mcp-server-langgraph -l app=mcp-server-langgraph --tail=
 Verify network policies:
 
 ```bash
-kubectl get networkpolicies -n staging-mcp-server-langgraph
+kubectl get networkpolicies -n preview-mcp-server-langgraph
 ```
 #### Workload Identity
 
@@ -338,13 +338,13 @@ Pods authenticate as GCP service accounts without keys:
 
 ```bash
 ## Verify Workload Identity annotation
-kubectl describe sa mcp-server-langgraph -n staging-mcp-server-langgraph | grep iam.gke.io
+kubectl describe sa mcp-server-langgraph -n preview-mcp-server-langgraph | grep iam.gke.io
 
 ## Test from pod
 kubectl run -it --rm test \
   --image=google/cloud-sdk:slim \
   --serviceaccount=mcp-server-langgraph \
-  --namespace=mcp-staging \
+  --namespace=mcp-preview \
   -- gcloud auth list
 ```
 
@@ -354,7 +354,7 @@ Only signed/approved images can be deployed:
 
 ```bash
 ## Check Binary Authorization status
-gcloud container clusters describe staging-mcp-server-langgraph-gke \
+gcloud container clusters describe preview-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(binaryAuthorization)'
 ```
@@ -367,7 +367,7 @@ Secrets are stored in GCP Secret Manager and synced via External Secrets:
 gcloud secrets list --filter="name:staging-*"
 
 ## View External Secrets sync status
-kubectl get externalsecrets -n staging-mcp-server-langgraph
+kubectl get externalsecrets -n preview-mcp-server-langgraph
 ```
 
 ### Monitoring & Observability
@@ -386,7 +386,7 @@ Monitor these metrics in Cloud Monitoring:
 - `kubernetes.io/container/cpu/core_usage_time` - CPU usage
 - `kubernetes.io/container/memory/used_bytes` - Memory usage
 - `kubernetes.io/pod/network/received_bytes_count` - Network traffic
-- Custom metrics: `custom.googleapis.com/mcp-staging/*`
+- Custom metrics: `custom.googleapis.com/mcp-preview/*`
 
 #### Set Up Alerts
 
@@ -405,7 +405,7 @@ Create alert policies for:
   <Accordion title="Pods not starting" icon="circle-exclamation">
     **Check pod status:**
     ```bash
-    kubectl describe pod <pod-name> -n staging-mcp-server-langgraph
+    kubectl describe pod <pod-name> -n preview-mcp-server-langgraph
     ```
     **Common issues:**
     - Image pull errors: Check Artifact Registry permissions
@@ -416,7 +416,7 @@ Create alert policies for:
   <Accordion title="External Secrets not syncing" icon="shield-exclamation">
     **Check ExternalSecret status:**
     ```bash
-    kubectl describe externalsecret mcp-staging-secrets -n staging-mcp-server-langgraph
+    kubectl describe externalsecret mcp-preview-secrets -n preview-mcp-server-langgraph
     ```
     **Common fixes:**
     - Verify Workload Identity binding
@@ -427,12 +427,12 @@ Create alert policies for:
   <Accordion title="Cloud SQL connection fails" icon="database">
     **Check Cloud SQL proxy logs:**
     ```bash
-    kubectl logs -n staging-mcp-server-langgraph <pod-name> -c cloud-sql-proxy
+    kubectl logs -n preview-mcp-server-langgraph <pod-name> -c cloud-sql-proxy
     ```
     **Verify connection:**
     ```bash
     # From inside pod
-    kubectl exec -it <pod-name> -n staging-mcp-server-langgraph -- \
+    kubectl exec -it <pod-name> -n preview-mcp-server-langgraph -- \
       nc -zv 127.0.0.1 5432
     ```
   </Accordion>
@@ -440,11 +440,11 @@ Create alert policies for:
   <Accordion title="Network policies blocking traffic" icon="network-wired">
     **List network policies:**
     ```bash
-    kubectl get networkpolicies -n staging-mcp-server-langgraph
+    kubectl get networkpolicies -n preview-mcp-server-langgraph
     ```
     **Temporarily disable for testing:**
     ```bash
-    kubectl delete networkpolicy <policy-name> -n staging-mcp-server-langgraph
+    kubectl delete networkpolicy <policy-name> -n preview-mcp-server-langgraph
     # Re-apply when done testing
     ```
   </Accordion>
@@ -460,14 +460,14 @@ GitHub Actions automatically rolls back on deployment failure.
 
 ```bash
 ## Rollback to previous version
-kubectl rollout undo deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
+kubectl rollout undo deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph
 
 ## Rollback to specific revision
-kubectl rollout history deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
-kubectl rollout undo deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph --to-revision=3
+kubectl rollout history deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph
+kubectl rollout undo deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph --to-revision=3
 
 ## Verify rollback
-kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
+kubectl rollout status deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph
 ```
 
 ### Cost Optimization
@@ -492,7 +492,7 @@ kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-se
   <Card title="Rightsize Resources" icon="gauge">
     Review resource requests/limits:
     ```bash
-    kubectl top pods -n staging-mcp-server-langgraph
+    kubectl top pods -n preview-mcp-server-langgraph
     ```
     Adjust in `deployment-patch.yaml` if needed.
   </Card>
@@ -532,5 +532,5 @@ kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-se
 ---
 
 <Check>
-**Staging Deployment Complete!** Your production-grade staging environment is ready for testing.
+**Staging Deployment Complete!** Your production-grade preview environment is ready for testing.
 </Check>

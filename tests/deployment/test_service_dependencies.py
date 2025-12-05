@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 REPO_ROOT = get_repo_root()
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
-STAGING_GKE_DIR = OVERLAYS_DIR / "preview-gke"
+PREVIEW_GKE_DIR = OVERLAYS_DIR / "preview-gke"
 
 
 def load_yaml_documents(file_path: Path) -> list[dict[str, Any]]:
@@ -101,10 +101,10 @@ def extract_init_container_service_refs(manifests: list[dict[str, Any]]) -> dict
     return service_refs
 
 
-def test_staging_gke_overlay_builds():
+def test_preview_gke_overlay_builds():
     """Test that preview-gke overlay builds without errors."""
     try:
-        output = build_kustomize_manifests(STAGING_GKE_DIR)
+        output = build_kustomize_manifests(PREVIEW_GKE_DIR)
         assert output, "Kustomize build produced empty output"
         assert len(output) > 0, "Kustomize build produced no manifests"
     except subprocess.CalledProcessError as e:
@@ -121,7 +121,7 @@ def test_all_init_container_services_exist():
     """
     # Build manifests
     try:
-        kustomize_output = build_kustomize_manifests(STAGING_GKE_DIR)
+        kustomize_output = build_kustomize_manifests(PREVIEW_GKE_DIR)
     except subprocess.CalledProcessError as e:
         pytest.fail(f"Kustomize build failed: {e.stderr}")
 
@@ -147,7 +147,7 @@ def test_all_init_container_services_exist():
 
 def test_staging_services_have_prefix():
     """Test that staging services have the 'preview-' prefix applied by Kustomize."""
-    kustomize_output = build_kustomize_manifests(STAGING_GKE_DIR)
+    kustomize_output = build_kustomize_manifests(PREVIEW_GKE_DIR)
     manifests = parse_kustomize_output(kustomize_output)
 
     services = extract_services(manifests)
@@ -169,7 +169,7 @@ def test_init_container_refs_match_staging_prefix():
     This catches the bug where base manifests reference unprefixed service
     names but Kustomize applies a prefix, causing name mismatches.
     """
-    kustomize_output = build_kustomize_manifests(STAGING_GKE_DIR)
+    kustomize_output = build_kustomize_manifests(PREVIEW_GKE_DIR)
     manifests = parse_kustomize_output(kustomize_output)
 
     service_refs = extract_init_container_service_refs(manifests)
@@ -190,7 +190,7 @@ def test_init_container_refs_match_staging_prefix():
 
 def test_required_services_exist_in_staging():
     """Test that all required services exist in staging deployment."""
-    kustomize_output = build_kustomize_manifests(STAGING_GKE_DIR)
+    kustomize_output = build_kustomize_manifests(PREVIEW_GKE_DIR)
     manifests = parse_kustomize_output(kustomize_output)
 
     services = extract_services(manifests)
@@ -211,7 +211,7 @@ def test_required_services_exist_in_staging():
 
 def test_external_name_services_have_endpoints():
     """Test that ExternalName services have valid external endpoints."""
-    kustomize_output = build_kustomize_manifests(STAGING_GKE_DIR)
+    kustomize_output = build_kustomize_manifests(PREVIEW_GKE_DIR)
     manifests = parse_kustomize_output(kustomize_output)
 
     for manifest in manifests:
@@ -241,7 +241,7 @@ def test_external_name_services_use_dns_not_ip():
     """
     import re
 
-    kustomize_output = build_kustomize_manifests(STAGING_GKE_DIR)
+    kustomize_output = build_kustomize_manifests(PREVIEW_GKE_DIR)
     manifests = parse_kustomize_output(kustomize_output)
 
     # IPv4 pattern - matches standard dotted decimal notation
@@ -277,7 +277,7 @@ def test_external_name_services_use_dns_not_ip():
 
 def test_deployment_init_containers_timeout():
     """Test that init containers have reasonable timeouts implied by their logic."""
-    kustomize_output = build_kustomize_manifests(STAGING_GKE_DIR)
+    kustomize_output = build_kustomize_manifests(PREVIEW_GKE_DIR)
     manifests = parse_kustomize_output(kustomize_output)
 
     for manifest in manifests:
