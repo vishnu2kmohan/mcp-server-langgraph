@@ -148,6 +148,10 @@ class SessionManager:
         Returns:
             Created session
         """
+        # Sanitize user inputs at entry point for safe logging (CodeQL)
+        safe_user_id = _sanitize_log_value(user_id, max_length=64)
+        safe_name = _sanitize_log_value(name, max_length=128)
+
         session_id = str(uuid.uuid4())
         now = datetime.now(UTC)
         expires_at = now + timedelta(seconds=self._session_ttl)
@@ -180,9 +184,9 @@ class SessionManager:
         logger.info(
             "Created session",
             extra={
-                "session_id": _sanitize_log_value(session_id),
-                "user_id": _sanitize_log_value(user_id),
-                "session_name": _sanitize_log_value(name),
+                "session_id": session_id,  # UUID is safe
+                "user_id": safe_user_id,
+                "session_name": safe_name,
             },
         )
 
@@ -246,6 +250,9 @@ class SessionManager:
         Returns:
             True if deleted, False if not found
         """
+        # Sanitize at entry point for safe logging (CodeQL)
+        safe_session_id = _sanitize_log_value(session_id, max_length=64)
+
         r = await self._get_redis()
 
         # Get session to find user_id
@@ -268,8 +275,8 @@ class SessionManager:
         logger.info(
             "Deleted session",
             extra={
-                "session_id": _sanitize_log_value(session_id),
-                "user_id": _sanitize_log_value(session.user_id),
+                "session_id": safe_session_id,
+                "user_id": _sanitize_log_value(session.user_id, max_length=64),
             },
         )
 

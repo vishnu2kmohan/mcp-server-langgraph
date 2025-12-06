@@ -476,11 +476,15 @@ async def websocket_endpoint(
     - cancel: Cancel current streaming
     - ping: Heartbeat
     """
+    # Sanitize session_id at entry point to prevent log injection (CodeQL)
+    # This breaks the taint chain from user-provided path parameter
+    safe_session_id = _sanitize_log_value(session_id, max_length=64)
+
     await websocket.accept()
 
     manager = get_session_manager()
 
-    # Verify session exists
+    # Verify session exists (use original for lookup, safe for logging)
     session = await manager.get_session(session_id)
     if not session:
         await websocket.close(code=4004, reason="Session not found")
@@ -547,7 +551,7 @@ async def websocket_endpoint(
             except WebSocketDisconnect:
                 logger.info(
                     "WebSocket disconnected",
-                    extra={"session_id": _sanitize_log_value(session_id)},
+                    extra={"session_id": safe_session_id},
                 )
                 break
 
@@ -555,7 +559,7 @@ async def websocket_endpoint(
         logger.error(
             "WebSocket error",
             extra={
-                "session_id": _sanitize_log_value(session_id),
+                "session_id": safe_session_id,
                 "error": _sanitize_log_value(str(e)),
             },
             exc_info=True,

@@ -68,6 +68,8 @@ class StreamingHandler:
         """
         self._websocket = websocket
         self._session_id = session_id
+        # Sanitize for safe logging (CodeQL log injection prevention)
+        self._safe_session_id = _sanitize_log_value(session_id, max_length=64)
         self._mcp_server_url = mcp_server_url or "http://localhost:8000"
         self._cancelled = False
         self._current_message_id: str | None = None
@@ -79,7 +81,7 @@ class StreamingHandler:
         except WebSocketDisconnect:
             logger.warning(
                 "WebSocket disconnected while sending",
-                extra={"session_id": _sanitize_log_value(self._session_id)},
+                extra={"session_id": self._safe_session_id},
             )
             raise
 
