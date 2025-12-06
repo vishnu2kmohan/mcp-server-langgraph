@@ -186,7 +186,10 @@ module "gke" {
   enable_managed_prometheus     = true
 
   # Monitoring alerts
-  enable_monitoring_alerts         = true
+  # DISABLED: GCP metrics don't exist until cluster has running workloads
+  # Enable after cluster is operational for ~30 min to allow metric population
+  # Issue: GCP API returns 404 for metrics like kubernetes.io/pod/phase
+  enable_monitoring_alerts         = false
   monitoring_notification_channels = var.monitoring_notification_channels
 
   # Backup (weekly for preview)
@@ -228,8 +231,8 @@ module "cloudsql" {
   name_prefix = local.short_prefix
   region      = var.region
 
-  # PostgreSQL version
-  postgres_major_version = 15
+  # PostgreSQL version (matches docker-compose.yml for local/cloud parity)
+  postgres_major_version = 16
 
   # Medium instance with HA
   tier              = "db-custom-2-7680" # 2 vCPU, 7.5 GB RAM
@@ -244,7 +247,7 @@ module "cloudsql" {
   # Network
   vpc_network_self_link                 = module.vpc.network_self_link
   enable_public_ip                      = false
-  require_ssl                           = true
+  ssl_mode                              = "ENCRYPTED_ONLY"
   private_service_connection_dependency = module.vpc.private_service_connection_status
 
   # Backups
@@ -300,7 +303,8 @@ module "memorystore" {
   # Standard HA for preview
   tier           = "STANDARD_HA"
   memory_size_gb = 5 # Minimum 5GB for read replicas
-  redis_version  = "REDIS_7_0"
+  # Redis 7.2 to match docker-compose.yml for local/cloud parity
+  redis_version = "REDIS_7_2"
 
   # Read replica
   replica_count      = 1
@@ -330,7 +334,10 @@ module "memorystore" {
   create_cross_region_replica = false
 
   # Monitoring
-  enable_monitoring_alerts         = true
+  # DISABLED: GCP metrics don't exist until Redis has active connections
+  # Enable after Redis is actively used for ~30 min to allow metric population
+  # Issue: GCP API returns 404 for metrics like redis.googleapis.com/stats/uptime
+  enable_monitoring_alerts         = false
   monitoring_notification_channels = var.monitoring_notification_channels
 
   # Moderate deletion protection

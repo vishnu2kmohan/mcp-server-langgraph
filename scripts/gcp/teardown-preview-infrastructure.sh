@@ -39,32 +39,70 @@ readonly PROJECT_ID="${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
 readonly REGION="us-central1"
 readonly CLUSTER_NAME="preview-mcp-server-langgraph-gke"
 readonly NAMESPACE="preview-mcp-server-langgraph"
-readonly VPC_NAME="preview-vpc"
-readonly CLOUD_SQL_INSTANCE="mcp-preview-postgres"
-readonly REDIS_INSTANCE="mcp-preview-redis"
+# VPC and resource names match Terraform naming convention (short_prefix = "preview-mcp-slg")
+readonly VPC_NAME="preview-mcp-slg-vpc"
+readonly CLOUD_SQL_INSTANCE="preview-mcp-slg-postgres"
+readonly REDIS_INSTANCE="preview-mcp-slg-redis"
+readonly PRIVATE_SERVICES_ADDRESS="preview-mcp-slg-private-services"
 # TERRAFORM_DIR reserved for future Terraform state cleanup
 # shellcheck disable=SC2034
 readonly TERRAFORM_DIR="terraform/environments/gcp-preview"
 readonly ARTIFACT_REGISTRY_REPO="mcp-preview"
 readonly WORKLOAD_IDENTITY_POOL="github-actions-pool"
-readonly WORKLOAD_IDENTITY_PROVIDER="github-provider"
+readonly WORKLOAD_IDENTITY_PROVIDER="github-actions-provider"
 
-# Service accounts to delete
+# Runtime-created databases to delete before Cloud SQL destruction
+# These are created by Keycloak/OpenFGA during deployment and own objects
+# that prevent the postgres user from being dropped
+readonly RUNTIME_DATABASES=(
+    "keycloak"
+    "openfga"
+)
+
+# Service accounts to delete (matches Terraform workload_identity module + runtime-created)
 readonly SERVICE_ACCOUNTS=(
-    "mcp-preview-sa"
-    "mcp-preview-keycloak-sa"
-    "mcp-preview-openfga-sa"
-    "mcp-preview-external-secrets-sa"
+    # Core application service accounts
+    "preview-mcp-slg-sa"
+    "preview-keycloak"
+    "preview-openfga"
+    # GitHub Actions service accounts
+    "github-actions-preview"
+    "github-actions-production"
+    "github-actions-terraform"
+    # Runtime-created service accounts
+    "external-secrets-preview"
+    "preview-otel-collector"
 )
 
 # Secrets to delete from Secret Manager
+# Includes all secrets created by Terraform, External Secrets, and runtime deployments
 readonly SECRETS=(
+    # Database passwords (Terraform-managed)
     "preview-keycloak-db-password"
     "preview-openfga-db-password"
+    "preview-gdpr-db-password"
+    "preview-postgres-username"
+    "preview-gdpr-postgres-url"
+    # Redis configuration
     "preview-redis-password"
+    "preview-redis-host"
+    # API keys
     "preview-anthropic-api-key"
     "preview-google-api-key"
     "preview-jwt-secret"
+    "preview-qdrant-api-key"
+    # Keycloak configuration
+    "preview-keycloak-admin-password"
+    "preview-keycloak-admin-username"
+    "preview-keycloak-client-id"
+    "preview-keycloak-client-secret"
+    # OpenFGA configuration
+    "preview-openfga-model-id"
+    "preview-openfga-store-id"
+    # Infisical (secrets management)
+    "preview-infisical-client-id"
+    "preview-infisical-client-secret"
+    "preview-infisical-project-id"
 )
 
 # Flags
@@ -377,6 +415,45 @@ cleanup_iam() {
 }
 
 ###############################################################################
+# Cloud SQL Runtime Database Cleanup
+# CRITICAL: Must run BEFORE Cloud SQL deletion
+# Keycloak/OpenFGA create database objects owned by the postgres role.
+# These must be deleted first or the postgres user cannot be dropped.
+###############################################################################
+
+cleanup_runtime_databases() {
+    log_info "=========================================="
+    log_info "Step 3.5: Cleaning up runtime-created databases"
+    log_info "=========================================="
+    log_info "Keycloak/OpenFGA create database objects that block postgres user deletion."
+    log_info "Deleting these databases before Cloud SQL destruction..."
+
+    if ! resource_exists "cloud-sql" "$CLOUD_SQL_INSTANCE"; then
+        log_warn "Cloud SQL instance $CLOUD_SQL_INSTANCE not found, skipping database cleanup"
+        return 0
+    fi
+
+    for db_name in "${RUNTIME_DATABASES[@]}"; do
+        log_info "Checking for database: $db_name"
+        if gcloud sql databases describe "$db_name" \
+            --instance="$CLOUD_SQL_INSTANCE" \
+            --project="$PROJECT_ID" &> /dev/null; then
+
+            log_info "Deleting database: $db_name (this removes objects blocking postgres user deletion)"
+            gcloud sql databases delete "$db_name" \
+                --instance="$CLOUD_SQL_INSTANCE" \
+                --project="$PROJECT_ID" \
+                --quiet || log_warn "Failed to delete database: $db_name"
+            log_success "Database $db_name deleted"
+        else
+            log_warn "Database $db_name not found on instance $CLOUD_SQL_INSTANCE"
+        fi
+    done
+
+    log_success "Runtime database cleanup complete"
+}
+
+###############################################################################
 # Cloud SQL Deletion
 ###############################################################################
 
@@ -389,6 +466,10 @@ delete_cloud_sql() {
         log_warn "Cloud SQL instance $CLOUD_SQL_INSTANCE not found, skipping"
         return 0
     fi
+
+    # CRITICAL: Clean up runtime-created databases first
+    # Keycloak/OpenFGA create objects owned by postgres role that prevent user deletion
+    cleanup_runtime_databases
 
     # Disable deletion protection if enabled
     log_info "Disabling deletion protection..."
@@ -435,20 +516,111 @@ delete_redis() {
 }
 
 delete_artifact_registry() {
-    log_info "Checking for Artifact Registry repositories..."
+    log_info "==========================================="
+    log_info "Step 6.5: Deleting Artifact Registry"
+    log_info "==========================================="
 
     if gcloud artifacts repositories describe "$ARTIFACT_REGISTRY_REPO" \
-        --location="$REGION" &> /dev/null; then
+        --location="$REGION" --project="$PROJECT_ID" &> /dev/null; then
 
-        log_warn "Deleting Artifact Registry repository: $ARTIFACT_REGISTRY_REPO..."
+        log_info "Deleting Artifact Registry repository: $ARTIFACT_REGISTRY_REPO..."
         gcloud artifacts repositories delete "$ARTIFACT_REGISTRY_REPO" \
             --location="$REGION" \
-            --quiet
+            --project="$PROJECT_ID" \
+            --quiet || log_warn "Failed to delete Artifact Registry repository"
 
-        log_info "Artifact Registry repository deleted"
+        log_success "Artifact Registry repository deleted"
     else
-        log_warn "Artifact Registry repository not found, skipping"
+        log_warn "Artifact Registry repository $ARTIFACT_REGISTRY_REPO not found, skipping"
     fi
+}
+
+###############################################################################
+# DNS Zone Cleanup
+# Deletes internal DNS zones and their resource records
+###############################################################################
+
+cleanup_dns_zones() {
+    log_info "==========================================="
+    log_info "Step 6.6: Cleaning up DNS zones"
+    log_info "==========================================="
+
+    local dns_zone="preview-internal"
+
+    # Check if DNS zone exists
+    if ! gcloud dns managed-zones describe "$dns_zone" --project="$PROJECT_ID" &> /dev/null; then
+        log_warn "DNS zone $dns_zone not found, skipping"
+        return 0
+    fi
+
+    log_info "Found DNS zone: $dns_zone"
+
+    # Get all A records (skip NS and SOA which are auto-managed)
+    log_info "Deleting A records from DNS zone..."
+    local a_records
+    a_records=$(gcloud dns record-sets list --zone="$dns_zone" --project="$PROJECT_ID" \
+        --filter="type=A" --format="value(name)" 2>/dev/null || echo "")
+
+    if [ -n "$a_records" ]; then
+        while IFS= read -r record_name; do
+            if [ -n "$record_name" ]; then
+                log_info "Deleting A record: $record_name"
+                gcloud dns record-sets delete "$record_name" \
+                    --type=A \
+                    --zone="$dns_zone" \
+                    --project="$PROJECT_ID" \
+                    --quiet || log_warn "Failed to delete A record: $record_name"
+            fi
+        done <<< "$a_records"
+    fi
+
+    # Delete DNS zone (NS and SOA records are deleted automatically with zone)
+    log_info "Deleting DNS zone: $dns_zone..."
+    gcloud dns managed-zones delete "$dns_zone" \
+        --project="$PROJECT_ID" \
+        --quiet || log_warn "Failed to delete DNS zone: $dns_zone"
+
+    log_success "DNS zone cleanup complete"
+}
+
+###############################################################################
+# Monitoring Alert Policies Cleanup
+# Deletes all monitoring alert policies for this environment
+###############################################################################
+
+cleanup_monitoring_alerts() {
+    log_info "==========================================="
+    log_info "Step 6.7: Cleaning up monitoring alert policies"
+    log_info "==========================================="
+
+    # Find all alert policies containing "preview" in the display name
+    log_info "Searching for preview monitoring alert policies..."
+    local alert_policies
+    alert_policies=$(gcloud alpha monitoring policies list \
+        --project="$PROJECT_ID" \
+        --filter="displayName~preview" \
+        --format="value(name)" 2>/dev/null || echo "")
+
+    if [ -z "$alert_policies" ]; then
+        log_warn "No preview monitoring alert policies found"
+        return 0
+    fi
+
+    local count=0
+    while IFS= read -r policy_name; do
+        if [ -n "$policy_name" ]; then
+            local display_name
+            display_name=$(gcloud alpha monitoring policies describe "$policy_name" \
+                --project="$PROJECT_ID" --format="value(displayName)" 2>/dev/null || echo "unknown")
+            log_info "Deleting alert policy: $display_name"
+            gcloud alpha monitoring policies delete "$policy_name" \
+                --project="$PROJECT_ID" \
+                --quiet || log_warn "Failed to delete policy: $display_name"
+            count=$((count + 1))
+        fi
+    done <<< "$alert_policies"
+
+    log_success "Deleted $count monitoring alert policies"
 }
 
 ###############################################################################
@@ -490,9 +662,11 @@ delete_vpc_network() {
     fi
 
     # Delete Cloud NAT
+    # Resource names match Terraform naming: ${short_prefix}-router-${region} / ${short_prefix}-nat-${region}
     log_info "Deleting Cloud NAT..."
-    local nat_router="${VPC_NAME}-router"
-    local nat_config="${VPC_NAME}-nat"
+    local short_prefix="preview-mcp-slg"
+    local nat_router="${short_prefix}-router-${REGION}"
+    local nat_config="${short_prefix}-nat-${REGION}"
 
     if gcloud compute routers nats describe "$nat_config" --router="$nat_router" --region="$REGION" --project="$PROJECT_ID" &> /dev/null; then
         gcloud compute routers nats delete "$nat_config" \
@@ -548,15 +722,42 @@ delete_vpc_network() {
             --quiet || log_warn "Failed to delete Cloud Router"
     fi
 
-    # Delete Google-managed IP address for private service connection (Cloud SQL/Redis peering)
-    log_info "Deleting Google-managed IP address for private service connection..."
-    local managed_ip="google-managed-services-${VPC_NAME}"
-    if gcloud compute addresses describe "$managed_ip" --global --project="$PROJECT_ID" &> /dev/null; then
-        gcloud compute addresses delete "$managed_ip" \
-            --global \
-            --project="$PROJECT_ID" \
-            --quiet || log_warn "Failed to delete Google-managed IP address"
-        log_success "Google-managed IP address deleted"
+    # Wait for Service Networking Connection to propagate deletion of Cloud SQL/Memorystore
+    # This is a known GCP timing issue - the connection may still report producer services
+    # are using it even after they've been deleted
+    log_info "Waiting 60 seconds for Service Networking Connection to propagate..."
+    log_info "This wait helps avoid 'Producer services still using connection' errors."
+    sleep 60
+
+    # Delete private services IP address (used for Cloud SQL/Redis VPC peering)
+    # The address name is: ${name_prefix}-private-services (e.g., preview-mcp-slg-private-services)
+    log_info "Deleting private services IP address: $PRIVATE_SERVICES_ADDRESS"
+    if gcloud compute addresses describe "$PRIVATE_SERVICES_ADDRESS" --global --project="$PROJECT_ID" &> /dev/null; then
+        # Try to delete, with retry logic for timing issues
+        local max_retries=3
+        local retry_count=0
+        local delete_success=false
+
+        while [ $retry_count -lt $max_retries ] && [ "$delete_success" = false ]; do
+            if gcloud compute addresses delete "$PRIVATE_SERVICES_ADDRESS" \
+                --global \
+                --project="$PROJECT_ID" \
+                --quiet 2>/dev/null; then
+                delete_success=true
+                log_success "Private services IP address deleted"
+            else
+                retry_count=$((retry_count + 1))
+                if [ $retry_count -lt $max_retries ]; then
+                    log_warn "Failed to delete private services address (attempt $retry_count/$max_retries), waiting 30 seconds..."
+                    sleep 30
+                else
+                    log_warn "Failed to delete private services address after $max_retries attempts"
+                    log_warn "You may need to manually delete: gcloud compute addresses delete $PRIVATE_SERVICES_ADDRESS --global"
+                fi
+            fi
+        done
+    else
+        log_warn "Private services IP address $PRIVATE_SERVICES_ADDRESS not found"
     fi
 
     # Delete VPC network
@@ -565,6 +766,9 @@ delete_vpc_network() {
         --project="$PROJECT_ID" \
         --quiet || {
             log_error "Failed to delete VPC network"
+            log_error "If the network deletion fails due to Service Networking Connection:"
+            log_error "  1. Wait a few minutes for GCP propagation"
+            log_error "  2. Try: gcloud compute networks delete $VPC_NAME --project=$PROJECT_ID"
             return 1
         }
 
@@ -605,7 +809,7 @@ cleanup_gke_auto_resources() {
 
 verify_cleanup() {
     log_info "=========================================="
-    log_info "Step 9: Verifying complete cleanup"
+    log_info "Step 10: Verifying complete cleanup"
     log_info "=========================================="
 
     local failed_checks=()
@@ -628,6 +832,28 @@ verify_cleanup() {
     # Check VPC
     if resource_exists "vpc" "$VPC_NAME"; then
         failed_checks+=("VPC $VPC_NAME still exists")
+    fi
+
+    # Check Artifact Registry
+    if gcloud artifacts repositories describe "$ARTIFACT_REGISTRY_REPO" \
+        --location="$REGION" --project="$PROJECT_ID" &> /dev/null; then
+        failed_checks+=("Artifact Registry $ARTIFACT_REGISTRY_REPO still exists")
+    fi
+
+    # Check DNS zone
+    if gcloud dns managed-zones describe "preview-internal" \
+        --project="$PROJECT_ID" &> /dev/null; then
+        failed_checks+=("DNS zone preview-internal still exists")
+    fi
+
+    # Check for remaining monitoring alert policies
+    local remaining_policies
+    remaining_policies=$(gcloud alpha monitoring policies list \
+        --project="$PROJECT_ID" \
+        --filter="displayName~preview" \
+        --format="value(name)" 2>/dev/null | wc -l)
+    if [ "$remaining_policies" -gt 0 ]; then
+        failed_checks+=("$remaining_policies preview monitoring alert policies still exist")
     fi
 
     if [ ${#failed_checks[@]} -gt 0 ]; then
@@ -696,12 +922,15 @@ main() {
     delete_cloud_sql
     delete_redis
     delete_vpc_network
+    delete_artifact_registry
+    cleanup_dns_zones
+    cleanup_monitoring_alerts
     cleanup_iam
     cleanup_secrets
     verify_cleanup
 
     log_success "=========================================="
-    log_success "Staging infrastructure teardown complete!"
+    log_success "Preview infrastructure teardown complete!"
     log_success "=========================================="
 }
 

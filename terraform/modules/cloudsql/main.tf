@@ -40,7 +40,7 @@ resource "google_sql_database_instance" "main" {
       ipv4_enabled                                  = var.enable_public_ip
       private_network                               = var.vpc_network_self_link
       enable_private_path_for_google_cloud_services = true
-      require_ssl                                   = var.require_ssl
+      ssl_mode                                      = var.ssl_mode
 
       # Authorized networks (if public IP is enabled)
       dynamic "authorized_networks" {
@@ -270,7 +270,7 @@ resource "google_sql_database_instance" "read_replicas" {
     ip_configuration {
       ipv4_enabled    = var.enable_public_ip
       private_network = var.vpc_network_self_link
-      require_ssl     = var.require_ssl
+      ssl_mode        = var.ssl_mode
     }
 
     # Insights configuration

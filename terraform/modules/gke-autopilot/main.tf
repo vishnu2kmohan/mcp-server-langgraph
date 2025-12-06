@@ -145,7 +145,11 @@ resource "google_container_cluster" "autopilot" {
   # Autopilot automatically manages VPA
 
   # Dataplane V2 (eBPF-based networking)
-  datapath_provider = var.enable_dataplane_v2 ? "ADVANCED_DATAPATH" : "DATAPATH_PROVIDER_UNSPECIFIED"
+  # NOTE: For GKE Autopilot clusters, Dataplane V2 is enabled by default and managed automatically.
+  # Explicitly setting datapath_provider causes "Error 400: badRequest" on cluster creation.
+  # Only set for Standard clusters where explicit configuration is needed.
+  # Reference: https://cloud.google.com/kubernetes-engine/docs/concepts/dataplane-v2
+  # datapath_provider is omitted - Autopilot uses ADVANCED_DATAPATH by default
 
   # Network Policy (not configurable in Autopilot)
   # Autopilot enables network policy by default
@@ -174,28 +178,36 @@ resource "google_container_cluster" "autopilot" {
   }
 
   # Monitoring and logging configuration (Cloud Operations)
-  monitoring_config {
-    enable_components = var.monitoring_enabled_components
-
-    dynamic "managed_prometheus" {
-      for_each = var.enable_managed_prometheus ? [1] : []
-      content {
-        enabled = true
-      }
-    }
-
-    dynamic "advanced_datapath_observability_config" {
-      for_each = var.enable_dataplane_v2 && var.enable_advanced_datapath_observability ? [1] : []
-      content {
-        enable_metrics = true
-        relay_mode     = var.datapath_observability_relay_mode
-      }
-    }
-  }
-
-  logging_config {
-    enable_components = var.logging_enabled_components
-  }
+  # NOTE: For GKE Autopilot clusters, monitoring_config and logging_config are managed automatically.
+  # Explicitly setting these causes "Error 400: badRequest" on cluster creation.
+  # Autopilot automatically enables SYSTEM_COMPONENTS, WORKLOADS, and additional components
+  # (STORAGE, HPA, POD, DAEMONSET, DEPLOYMENT, STATEFULSET, JOBSET, CADVISOR, KUBELET, DCGM).
+  # These blocks are omitted for Autopilot - the lifecycle ignore_changes block ensures
+  # Terraform doesn't try to modify the auto-configured values after creation.
+  # Reference: https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview
+  #
+  # monitoring_config {
+  #   enable_components = var.monitoring_enabled_components
+  #
+  #   dynamic "managed_prometheus" {
+  #     for_each = var.enable_managed_prometheus ? [1] : []
+  #     content {
+  #       enabled = true
+  #     }
+  #   }
+  #
+  #   dynamic "advanced_datapath_observability_config" {
+  #     for_each = var.enable_dataplane_v2 && var.enable_advanced_datapath_observability ? [1] : []
+  #     content {
+  #       enable_metrics = true
+  #       relay_mode     = var.datapath_observability_relay_mode
+  #     }
+  #   }
+  # }
+  #
+  # logging_config {
+  #   enable_components = var.logging_enabled_components
+  # }
 
   # Gateway API (for Ingress)
   dynamic "gateway_api_config" {
