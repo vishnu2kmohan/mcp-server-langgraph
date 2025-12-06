@@ -571,7 +571,6 @@ exclude = [
     "tests/",
     "test_.*\\.py$",
     "conftest\\.py$",
-    "playground/",  # Incomplete module - api/server.py missing
 ]
 
 # Per-module overrides for third-party libraries without type stubs
@@ -753,6 +752,9 @@ markers = [
     "cli: CLI tool tests",
     "skip_isolation_check: Skip enforce_worker_isolation check (for tests using worker-scoped schemas)",
     "docker: Docker image and Dockerfile tests",
+    "playground: Interactive playground tests (API, WebSocket, sessions)",
+    "websocket: WebSocket endpoint tests (streaming, real-time)",
+    "builder: Visual workflow builder tests",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

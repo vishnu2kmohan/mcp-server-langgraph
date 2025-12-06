@@ -481,16 +481,27 @@ test-builder-down:
 	@echo "✓ Builder stopped"
 
 test-playground-up:
-	@echo "Starting playground service..."
-	@echo "⚠️  Playground not yet implemented. Run 'make test-builder-up' instead."
+	@echo "Starting playground service (with in-context observability)..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d playground-test
+	@echo "✓ Playground started"
 	@echo ""
-	@echo "TODO: Implement playground backend (Phase 1 of plan)"
+	@echo "Playground Service:"
+	@echo "  API + WebSocket: http://localhost:9002"
+	@echo "  Health:          http://localhost:9002/api/playground/health"
+	@echo "  API Docs:        http://localhost:9002/docs"
+	@echo ""
+	@echo "In-Context Observability:"
+	@echo "  Traces:    http://localhost:9002/api/playground/observability/traces"
+	@echo "  Logs:      http://localhost:9002/api/playground/observability/logs"
+	@echo "  Metrics:   http://localhost:9002/api/playground/observability/metrics"
+	@echo "  Alerts:    http://localhost:9002/api/playground/observability/alerts"
 
 test-playground-down:
 	@echo "Stopping playground service..."
-	@echo "⚠️  Playground not yet implemented."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml stop playground-test
+	@echo "✓ Playground stopped"
 
-test-infra-full-up: test-infra-up test-builder-up
+test-infra-full-up: test-infra-up test-builder-up test-playground-up
 	@echo ""
 	@echo "═══════════════════════════════════════════════════════════════"
 	@echo "✓ Full test infrastructure started!"
@@ -506,6 +517,7 @@ test-infra-full-up: test-infra-up test-builder-up
 	@echo "Application Services:"
 	@echo "  MCP Server:   http://localhost:8000"
 	@echo "  Builder:      http://localhost:9001"
+	@echo "  Playground:   http://localhost:9002"
 	@echo ""
 	@echo "Observability:"
 	@echo "  Jaeger:       http://localhost:19686"

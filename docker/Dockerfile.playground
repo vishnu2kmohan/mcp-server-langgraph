@@ -1,0 +1,107 @@
+# Playground Dockerfile
+# =====================
+# Interactive testing environment for LangGraph agents
+# with in-context observability (traces, logs, metrics, alerts)
+#
+# ARCHITECTURE:
+#   - FastAPI serves API endpoints at /api/playground/*
+#   - WebSocket at /ws/playground/{session_id} for real-time streaming
+#   - Health endpoint at /api/playground/health (unauthenticated for K8s probes)
+#   - In-context observability panels for developer UX
+#
+# AUTH INTEGRATION:
+#   - Keycloak for authentication (federated OIDC/OAuth2/SAML, LDAP/AD)
+#   - OpenFGA for fine-grained authorization (ReBAC)
+#
+# OBSERVABILITY:
+#   - OpenTelemetry tracing with Jaeger export
+#   - Prometheus metrics endpoint
+#   - Structured JSON logging with trace correlation
+#   - Real-time WebSocket observability events
+#
+# USAGE:
+#   docker build -f docker/Dockerfile.playground -t playground .
+#   docker run -p 8002:8002 \
+#     -e ENVIRONMENT=production \
+#     -e KEYCLOAK_SERVER_URL=http://keycloak:8080 \
+#     -e OPENFGA_API_URL=http://openfga:8080 \
+#     -e REDIS_URL=redis://redis:6379/2 \
+#     -e OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318 \
+#     playground
+#
+# PORTS:
+#   8002 - FastAPI (API + WebSocket)
+#
+# REFERENCES:
+#   - https://docs.astral.sh/uv/guides/integration/docker/
+#   - https://hynek.me/articles/docker-uv/
+#   - 12-factor app: https://12factor.net/
+
+# ==============================================================================
+# Python Runtime with FastAPI + WebSocket
+# ==============================================================================
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+# Install minimal system dependencies
+# curl: health checks
+# ca-certificates: HTTPS for auth providers
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv - Fast Python package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# UV environment variables for optimal Docker builds
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install Python dependencies with playground extras
+# --frozen: Use lockfile exactly, fail if out of sync
+# --no-dev: Skip development dependencies
+# --extra playground: Include WebSocket and other playground deps
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --extra playground
+
+# Copy source code
+COPY src/ ./src/
+
+# Create non-root user for security (DS002 compliance)
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Add venv to PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Environment configuration (12-factor: config via env vars)
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    # Default observability settings
+    OTEL_SERVICE_NAME=mcp-playground \
+    LOG_FORMAT=json
+
+# Expose API port
+EXPOSE 8002
+
+# Health check for Kubernetes probes
+# Matches /api/playground/health endpoint (no auth required)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl --fail http://localhost:8002/api/playground/health || exit 1
+
+# Run the playground server
+# --host 0.0.0.0: Bind to all interfaces (required for container networking)
+# --port 8002: Playground API port
+CMD ["uvicorn", "mcp_server_langgraph.playground.api.server:app", "--host", "0.0.0.0", "--port", "8002"]

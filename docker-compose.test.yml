@@ -32,6 +32,7 @@
 #   9081  - OpenFGA gRPC (test, offset +1000 from standard 8081)
 #   9082  - Keycloak (test, offset +1002 from standard 8080)
 #   9001  - Builder API (test, offset +1000 from dev port 8001)
+#   9002  - Playground API (test, offset +1000 from dev port 8002)
 #
 # IMPORTANT - Container Naming:
 #   Container names are NOT hard-coded (no container_name: directives) to allow
@@ -534,6 +535,76 @@ services:
       mcp-test-network:
         aliases:
           - builder
+
+  # ==============================================================================
+  # INTERACTIVE PLAYGROUND
+  # ==============================================================================
+  # Interactive testing environment with in-context observability
+  # Auth: Keycloak + OpenFGA (same as mcp-server-test)
+
+  playground-test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.playground
+    depends_on:
+      mcp-server-test:
+        condition: service_healthy
+      keycloak-test:
+        condition: service_healthy
+      openfga-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      jaeger-test:
+        condition: service_healthy
+    ports:
+      - "9002:8002"  # Test port (offset +1000 from dev port 8002)
+    environment:
+      # Application settings
+      - ENVIRONMENT=test
+      - TESTING=true
+      - LOG_LEVEL=INFO
+      - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
+
+      # Authentication (Keycloak)
+      - AUTH_PROVIDER=keycloak
+      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080
+      - KEYCLOAK_REALM=master
+      - KEYCLOAK_CLIENT_ID=mcp-server
+      - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+
+      # Authorization (OpenFGA)
+      - OPENFGA_API_URL=http://openfga-test:8080
+
+      # MCP Server integration
+      - MCP_SERVER_URL=http://mcp-server-test:8000
+
+      # Session storage (Redis DB 2 for playground sessions)
+      - REDIS_URL=redis://redis-test:6379/2
+
+      # Observability (OpenTelemetry)
+      - OTEL_SDK_DISABLED=false
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-test:4318
+      - OTEL_SERVICE_NAME=mcp-playground-test
+      - LOG_FORMAT=json
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/api/playground/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      mcp-test-network:
+        aliases:
+          - playground
 
 networks:
   mcp-test-network:
