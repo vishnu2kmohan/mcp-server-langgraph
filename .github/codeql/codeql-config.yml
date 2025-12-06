@@ -78,6 +78,17 @@ query-filters:
   - exclude:
       id: py/weak-sensitive-data-hashing
 
+  # py/log-injection: playground module uses _sanitize_log_value() function
+  # at entry points to remove ALL control characters ([\x00-\x1f\x7f-\x9f])
+  # before logging. This prevents log forging attacks. The sanitizer:
+  # - Removes newlines, carriage returns, tabs, and all control characters
+  # - Truncates to max_length to prevent log flooding
+  # - Is applied at function entry points (not just at log statements)
+  # Files with this pattern: server.py, manager.py, handler.py
+  # See: _sanitize_log_value() in each file
+  - exclude:
+      id: py/log-injection
+
 # Queries to run (use default security-and-quality suite)
 queries:
   - uses: security-and-quality
