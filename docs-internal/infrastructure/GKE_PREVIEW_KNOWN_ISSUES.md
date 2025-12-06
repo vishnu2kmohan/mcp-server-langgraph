@@ -8,6 +8,8 @@
 
 ## Issue #1: Workload Identity Federation Pool Soft-Delete Recovery
 
+**Status: ✅ RESOLVED (Automated)**
+
 ### Symptom
 ```
 Error 409: Requested entity already exists
@@ -18,8 +20,14 @@ When running `terraform apply` to create a WIF pool, Terraform fails because GCP
 ### Root Cause
 GCP Workload Identity Pools are not immediately deleted - they enter a "DELETED" state for 30 days before permanent removal. Terraform cannot create a new pool with the same ID during this period.
 
-### Solution (Implemented)
-The `gke-preview-up.sh` script now includes automatic WIF pool recovery:
+### Solution (Automated in scripts/gcp/lib/common.sh)
+The `gke-preview-up.sh` script now includes **fully automatic** WIF pool recovery via the `recover_soft_deleted_wif()` function. When a soft-deleted pool is detected, the script will:
+
+1. Display a transparent warning banner explaining that a previously deleted pool was found
+2. Automatically undelete the pool and provider
+3. Import both resources into Terraform state
+
+The user sees a clear warning message:
 
 ```bash
 # Check if pool exists in DELETED state

@@ -235,6 +235,12 @@ deploy_infrastructure() {
     local tf_dir
     tf_dir=$(get_terraform_dir)
 
+    # Check for and recover soft-deleted WIF pool (30-day retention period)
+    # This prevents "Error 409: already exists" when redeploying within 30 days
+    recover_soft_deleted_wif "$PROJECT_ID" || {
+        log_warn "WIF recovery check completed with warnings (continuing anyway)"
+    }
+
     # Initialize Terraform
     terraform_init_if_needed
 
