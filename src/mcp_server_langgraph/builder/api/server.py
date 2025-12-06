@@ -217,6 +217,20 @@ def root() -> dict[str, Any]:
     }
 
 
+@app.get("/api/builder/health")
+def health_check() -> dict[str, str]:
+    """
+    Health check endpoint for Kubernetes probes.
+
+    This endpoint is publicly accessible (no authentication required)
+    to support liveness and readiness probes.
+
+    Returns:
+        Health status
+    """
+    return {"status": "healthy"}
+
+
 @app.post("/api/builder/generate")
 async def generate_code(
     request: GenerateCodeRequest,
@@ -548,6 +562,22 @@ async def list_node_types() -> dict[str, Any]:
     ]
 
     return {"node_types": node_types}
+
+
+# ==============================================================================
+# SPA Static Files Mount (React Frontend)
+# ==============================================================================
+# Mount AFTER all API routes - SPAStaticFiles is a catch-all for client-side routing
+
+from mcp_server_langgraph.utils.spa_static_files import create_spa_static_files
+
+# Calculate frontend dist path relative to this module
+_frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+
+# Only mount if frontend is built (graceful degradation for API-only mode)
+_spa_handler = create_spa_static_files(str(_frontend_dist), caching=True)
+if _spa_handler is not None:
+    app.mount("/", _spa_handler, name="spa")
 
 
 # ==============================================================================
