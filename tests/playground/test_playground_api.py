@@ -26,6 +26,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.xdist_group(name="playground_api")
 class TestPlaygroundHealth:
     """Tests for playground health check endpoint."""
 
@@ -60,6 +61,7 @@ class TestPlaygroundHealth:
         assert "mcp_server" in data["dependencies"]
 
 
+@pytest.mark.xdist_group(name="playground_api")
 class TestPlaygroundSessionCRUD:
     """Tests for session management endpoints."""
 
@@ -136,6 +138,7 @@ class TestPlaygroundSessionCRUD:
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
+@pytest.mark.xdist_group(name="playground_api")
 class TestPlaygroundChat:
     """Tests for chat/message endpoints."""
 
@@ -191,6 +194,7 @@ class TestPlaygroundChat:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
+@pytest.mark.xdist_group(name="playground_api")
 class TestPlaygroundAPIInfo:
     """Tests for API info/root endpoint."""
 

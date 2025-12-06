@@ -32,6 +32,7 @@ pytestmark = [
 # - app_with_mock_manager
 
 
+@pytest.mark.xdist_group(name="playground_security")
 class TestJWTAuthentication:
     """Tests for JWT token authentication."""
 
@@ -149,6 +150,7 @@ class TestUserIsolation:
         ]
 
 
+@pytest.mark.xdist_group(name="playground_security")
 class TestInputValidation:
     """Tests for input validation and sanitization."""
 
@@ -212,6 +214,7 @@ class TestInputValidation:
         ]
 
 
+@pytest.mark.xdist_group(name="playground_security")
 class TestRateLimiting:
     """Tests for rate limiting functionality."""
 
@@ -241,6 +244,7 @@ class TestRateLimiting:
         assert status.HTTP_429_TOO_MANY_REQUESTS in responses
 
 
+@pytest.mark.xdist_group(name="playground_security")
 class TestCORS:
     """Tests for CORS configuration."""
 

@@ -27,6 +27,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.xdist_group(name="playground_websocket")
 class TestWebSocketConnection:
     """Tests for WebSocket connection handling."""
 
@@ -72,6 +73,7 @@ class TestWebSocketConnection:
         assert exc_info.value.code in [1008, 4004]  # Policy violation or custom error
 
 
+@pytest.mark.xdist_group(name="playground_websocket")
 class TestWebSocketMessaging:
     """Tests for WebSocket message handling."""
 
@@ -132,6 +134,7 @@ class TestWebSocketMessaging:
             assert data.get("type") is not None
 
 
+@pytest.mark.xdist_group(name="playground_websocket")
 class TestWebSocketCancellation:
     """Tests for message cancellation via WebSocket."""
 
@@ -177,6 +180,7 @@ class TestWebSocketCancellation:
             assert len(responses) >= 0  # May be empty if cancel was immediate
 
 
+@pytest.mark.xdist_group(name="playground_websocket")
 class TestWebSocketErrors:
     """Tests for WebSocket error handling."""
 
@@ -213,6 +217,7 @@ class TestWebSocketErrors:
             assert data.get("type") == "error"
 
 
+@pytest.mark.xdist_group(name="playground_websocket")
 class TestWebSocketHeartbeat:
     """Tests for WebSocket heartbeat/ping handling."""
 
