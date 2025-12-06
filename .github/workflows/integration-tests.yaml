@@ -234,14 +234,34 @@ jobs:
     name: Integration Tests (Vertex AI)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Only run on main repository (forks don't have access to GCP secrets)
-    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    # Only run on main repository when WIF is configured
+    # Requires: GCP_WIF_PROVIDER and GCP_VERTEX_AI_SA_EMAIL secrets
+    if: |
+      github.repository == 'vishnu2kmohan/mcp-server-langgraph' &&
+      github.event.repository.fork == false
+    # Non-blocking: WIF may not be configured yet
+    continue-on-error: true
 
     steps:
+    - name: Check WIF Configuration
+      id: check-wif
+      run: |
+        if [ -z "${{ secrets.GCP_WIF_PROVIDER }}" ] || [ -z "${{ secrets.GCP_VERTEX_AI_SA_EMAIL }}" ]; then
+          echo "⚠️ GCP Workload Identity Federation not configured"
+          echo "   Set GCP_WIF_PROVIDER and GCP_VERTEX_AI_SA_EMAIL secrets"
+          echo "   See: terraform/environments/gcp-staging-wif-only/"
+          echo "configured=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "✅ WIF secrets configured"
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Checkout code
+      if: steps.check-wif.outputs.configured == 'true'
       uses: actions/checkout@v6
 
     - name: Authenticate to Google Cloud (Workload Identity Federation)
+      if: steps.check-wif.outputs.configured == 'true'
       uses: google-github-actions/auth@v3
       with:
         workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
@@ -249,12 +269,14 @@ jobs:
         token_format: access_token
 
     - name: Set up Python and dependencies
+      if: steps.check-wif.outputs.configured == 'true'
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
         extras: 'dev cloud'
 
     - name: Run Vertex AI Integration Tests
+      if: steps.check-wif.outputs.configured == 'true'
       env:
         # Vertex AI configuration for Anthropic Claude models
         VERTEX_PROJECT: ${{ vars.GCP_PROJECT_ID }}

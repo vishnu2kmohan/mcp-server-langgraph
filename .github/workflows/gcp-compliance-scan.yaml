@@ -150,6 +150,8 @@ jobs:
     runs-on: ubuntu-latest
     # Only run in main repository (not forks) to avoid secret availability issues
     if: github.event_name == 'schedule' && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    # Non-blocking: WIF infrastructure may not be deployed yet
+    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
