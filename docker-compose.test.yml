@@ -487,6 +487,8 @@ services:
         condition: service_healthy
       openfga-test:
         condition: service_healthy
+      jaeger-test:
+        condition: service_healthy
     ports:
       - "9001:8001"  # Test port (offset +1000 from dev port 8001)
     environment:
@@ -509,6 +511,12 @@ services:
 
       # MCP Server integration
       - MCP_SERVER_URL=http://mcp-server-test:8000
+
+      # Observability (OpenTelemetry)
+      - OTEL_SDK_DISABLED=false
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-test:4318
+      - OTEL_SERVICE_NAME=mcp-builder-test
+      - LOG_FORMAT=json
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/api/builder/health"]
       interval: 5s

@@ -15,12 +15,21 @@ Example:
 
 import os
 import tempfile
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, AsyncIterator, Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
+
+from mcp_server_langgraph.observability.telemetry import (
+    init_observability,
+    is_initialized,
+    logger,
+    shutdown_observability,
+    tracer,
+)
 
 from ..codegen import CodeGenerator, WorkflowDefinition
 from ..workflow import WorkflowBuilder
@@ -180,10 +189,42 @@ def verify_builder_auth(authorization: str = Header(None)) -> None:
 # FastAPI Application
 # ==============================================================================
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """
+    Builder service lifecycle with observability.
+
+    Initializes OpenTelemetry tracing and metrics on startup,
+    gracefully shuts down exporters on termination.
+    """
+    # STARTUP
+    if not is_initialized():
+        try:
+            from mcp_server_langgraph.core.config import Settings
+
+            settings = Settings()
+            init_observability(
+                settings=settings,
+                enable_file_logging=False,
+            )
+            logger.info("Builder service started with observability")
+        except Exception as e:
+            # Don't fail startup if observability init fails
+            print(f"WARNING: Observability initialization failed: {e}")
+
+    yield  # Application runs here
+
+    # SHUTDOWN
+    logger.info("Builder service shutting down")
+    shutdown_observability()
+
+
 app = FastAPI(
     title="MCP Server Visual Workflow Builder",
     description="Visual editor for LangGraph agent workflows with code export",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # CORS for frontend
@@ -257,26 +298,43 @@ async def generate_code(
             }
         }
     """
-    try:
-        # Parse workflow
-        workflow = WorkflowDefinition(**request.workflow)
+    with tracer.start_as_current_span(
+        "builder.generate_code",
+        attributes={
+            "workflow.name": request.workflow.get("name", "unknown"),
+            "workflow.node_count": len(request.workflow.get("nodes", [])),
+        },
+    ):
+        try:
+            # Parse workflow
+            workflow = WorkflowDefinition(**request.workflow)
 
-        # Generate code
-        generator = CodeGenerator()
-        code = generator.generate(workflow)
+            # Generate code
+            generator = CodeGenerator()
+            code = generator.generate(workflow)
 
-        # Check for warnings
-        warnings = []
-        if not workflow.description:
-            warnings.append("Workflow description is empty - consider adding one")
+            # Check for warnings
+            warnings = []
+            if not workflow.description:
+                warnings.append("Workflow description is empty - consider adding one")
 
-        if len(workflow.nodes) < 2:
-            warnings.append("Workflow has only one node - consider adding more steps")
+            if len(workflow.nodes) < 2:
+                warnings.append("Workflow has only one node - consider adding more steps")
 
-        return GenerateCodeResponse(code=code, formatted=True, warnings=warnings)
+            logger.info(
+                "Code generated successfully",
+                extra={
+                    "workflow_name": workflow.name,
+                    "node_count": len(workflow.nodes),
+                    "code_length": len(code),
+                },
+            )
 
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Code generation failed: {e!s}")
+            return GenerateCodeResponse(code=code, formatted=True, warnings=warnings)
+
+        except Exception as e:
+            logger.warning(f"Code generation failed: {e!s}")
+            raise HTTPException(status_code=400, detail=f"Code generation failed: {e!s}")
 
 
 @app.post("/api/builder/validate")
@@ -297,54 +355,74 @@ async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflo
     Returns:
         Validation results
     """
-    try:
-        workflow = WorkflowDefinition(**request.workflow)
+    with tracer.start_as_current_span(
+        "builder.validate_workflow",
+        attributes={
+            "workflow.name": request.workflow.get("name", "unknown"),
+            "workflow.node_count": len(request.workflow.get("nodes", [])),
+            "workflow.edge_count": len(request.workflow.get("edges", [])),
+        },
+    ):
+        try:
+            workflow = WorkflowDefinition(**request.workflow)
 
-        errors = []
-        warnings = []
+            errors = []
+            warnings = []
 
-        # Validate nodes
-        if not workflow.nodes:
-            errors.append("Workflow must have at least one node")
+            # Validate nodes
+            if not workflow.nodes:
+                errors.append("Workflow must have at least one node")
 
-        # Validate entry point
-        node_ids = {n.id for n in workflow.nodes}
-        if workflow.entry_point not in node_ids:
-            errors.append(f"Entry point '{workflow.entry_point}' not found in nodes")
+            # Validate entry point
+            node_ids = {n.id for n in workflow.nodes}
+            if workflow.entry_point not in node_ids:
+                errors.append(f"Entry point '{workflow.entry_point}' not found in nodes")
 
-        # Validate edges
-        for edge in workflow.edges:
-            if edge.from_node not in node_ids:
-                errors.append(f"Edge source '{edge.from_node}' not found")
-            if edge.to_node not in node_ids:
-                errors.append(f"Edge target '{edge.to_node}' not found")
-
-        # Check for unreachable nodes
-        reachable = {workflow.entry_point}
-        queue = [workflow.entry_point]
-
-        while queue:
-            current = queue.pop(0)
+            # Validate edges
             for edge in workflow.edges:
-                if edge.from_node == current and edge.to_node not in reachable:
-                    reachable.add(edge.to_node)
-                    queue.append(edge.to_node)
+                if edge.from_node not in node_ids:
+                    errors.append(f"Edge source '{edge.from_node}' not found")
+                if edge.to_node not in node_ids:
+                    errors.append(f"Edge target '{edge.to_node}' not found")
 
-        unreachable = node_ids - reachable
-        if unreachable:
-            warnings.append(f"Unreachable nodes: {', '.join(unreachable)}")
+            # Check for unreachable nodes
+            reachable = {workflow.entry_point}
+            queue = [workflow.entry_point]
 
-        # Check for nodes with no outgoing edges (potential dead ends)
-        nodes_with_outgoing = {e.from_node for e in workflow.edges}
-        terminal_nodes = node_ids - nodes_with_outgoing
+            while queue:
+                current = queue.pop(0)
+                for edge in workflow.edges:
+                    if edge.from_node == current and edge.to_node not in reachable:
+                        reachable.add(edge.to_node)
+                        queue.append(edge.to_node)
 
-        if len(terminal_nodes) > 3:
-            warnings.append(f"Many terminal nodes ({len(terminal_nodes)}): {', '.join(list(terminal_nodes)[:3])}...")
+            unreachable = node_ids - reachable
+            if unreachable:
+                warnings.append(f"Unreachable nodes: {', '.join(unreachable)}")
 
-        return ValidateWorkflowResponse(valid=len(errors) == 0, errors=errors, warnings=warnings)
+            # Check for nodes with no outgoing edges (potential dead ends)
+            nodes_with_outgoing = {e.from_node for e in workflow.edges}
+            terminal_nodes = node_ids - nodes_with_outgoing
 
-    except Exception as e:
-        return ValidateWorkflowResponse(valid=False, errors=[f"Validation error: {e!s}"])
+            if len(terminal_nodes) > 3:
+                warnings.append(f"Many terminal nodes ({len(terminal_nodes)}): {', '.join(list(terminal_nodes)[:3])}...")
+
+            is_valid = len(errors) == 0
+            logger.info(
+                "Workflow validation complete",
+                extra={
+                    "workflow_name": workflow.name,
+                    "valid": is_valid,
+                    "error_count": len(errors),
+                    "warning_count": len(warnings),
+                },
+            )
+
+            return ValidateWorkflowResponse(valid=is_valid, errors=errors, warnings=warnings)
+
+        except Exception as e:
+            logger.warning(f"Workflow validation failed: {e!s}")
+            return ValidateWorkflowResponse(valid=False, errors=[f"Validation error: {e!s}"])
 
 
 @app.post("/api/builder/save")
