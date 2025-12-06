@@ -78,37 +78,41 @@ terraform import 'module.github_actions_wif.google_iam_workload_identity_pool_pr
 
 ## Issue #3: Service Networking Connection Deletion Timing
 
+**Status: ✅ RESOLVED (Automated)**
+
 ### Symptom
 ```
 Error code 9: Failed to delete connection; Producer services (e.g. CloudSQL, Cloud Memstore, etc.) are still using this connection.
 ```
 
 ### Root Cause
-GCP Service Networking Connections have eventual consistency. After deleting CloudSQL or Memorystore instances, the connection metadata can take 5-15 minutes to fully release.
+GCP Service Networking Connections have eventual consistency. After deleting CloudSQL or Memorystore instances, the connection metadata can take 2-5 minutes to fully release.
 
-### Solution Options
+### Solution (Automated in gke-preview-down.sh)
+The `gke-preview-down.sh` script now includes **automatic retry logic** with a multi-stage fallback:
 
-#### Option A: Retry with Delay (Recommended for Scripts)
+1. **Initial terraform destroy** - Attempts full destruction
+2. **Error detection** - Checks for "Error code 9" / "Producer services still using"
+3. **Wait and retry** - Waits 2 minutes and retries (up to 3 times)
+4. **Fallback cleanup** - If retries fail:
+   - Removes service networking resources from Terraform state
+   - Attempts gcloud direct deletion of VPC peering
+   - Runs final terraform destroy for remaining resources
+
 ```bash
-# In gke-preview-down.sh
-delete_service_networking_connection() {
-    local max_retries=3
-    local retry_delay=120  # 2 minutes
+# Configuration in gke-preview-down.sh
+SERVICE_NETWORKING_MAX_RETRIES=3
+SERVICE_NETWORKING_RETRY_DELAY=120  # 2 minutes
 
-    for ((i=1; i<=max_retries; i++)); do
-        if terraform destroy -target='module.vpc.google_service_networking_connection.private_services[0]' -auto-approve; then
-            return 0
-        fi
-        log_warn "Retry $i/$max_retries: Service Networking Connection not ready, waiting ${retry_delay}s..."
-        sleep $retry_delay
-    done
-
-    log_warn "Service Networking Connection deletion deferred - will be cleaned up on next destroy"
-    return 1
-}
+# Key functions added:
+# - cleanup_service_networking_with_gcloud() - Direct gcloud VPC peering delete
+# - remove_service_networking_from_state() - Remove problematic resources from state
+# - terraform_destroy() - Enhanced with retry logic for service networking errors
 ```
 
-#### Option B: gcloud Direct Delete
+### Manual Cleanup (if needed)
+
+#### Option A: gcloud Direct Delete
 ```bash
 gcloud services vpc-peerings delete \
     --network=preview-mcp-slg-vpc \
@@ -117,7 +121,7 @@ gcloud services vpc-peerings delete \
     --quiet
 ```
 
-#### Option C: Force VPC Peering Delete
+#### Option B: Force VPC Peering Delete
 ```bash
 gcloud compute networks peerings delete servicenetworking-googleapis-com \
     --network=preview-mcp-slg-vpc \
@@ -126,9 +130,8 @@ gcloud compute networks peerings delete servicenetworking-googleapis-com \
 ```
 
 ### Prevention
-- Run CloudSQL/Redis destruction first, then wait before VPC cleanup
-- Add retry logic with exponential backoff to teardown scripts
-- Accept partial teardown as success if only VPC networking remains
+- Always use `gke-preview-down.sh` for teardown (handles retries automatically)
+- The script now waits for GCP eventual consistency before VPC cleanup
 
 ---
 

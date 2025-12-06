@@ -316,6 +316,68 @@ confirm_teardown() {
 # Terraform Destroy
 ###############################################################################
 
+# Retry logic for Service Networking Connection deletion
+# GCP Service Networking has eventual consistency - after CloudSQL/Redis deletion,
+# the connection can take 2-5 minutes to fully release (Issue #3 in known issues doc)
+SERVICE_NETWORKING_MAX_RETRIES=3
+SERVICE_NETWORKING_RETRY_DELAY=120  # 2 minutes
+
+cleanup_service_networking_with_gcloud() {
+    log_warn "Attempting direct gcloud cleanup of service networking resources..."
+
+    # Try to delete the VPC peering directly
+    if gcloud compute networks peerings list \
+        --network="$VPC_NAME" \
+        --project="$PROJECT_ID" 2>/dev/null | grep -q "servicenetworking-googleapis-com"; then
+
+        log_substep "Deleting VPC peering: servicenetworking-googleapis-com"
+        if gcloud compute networks peerings delete servicenetworking-googleapis-com \
+            --network="$VPC_NAME" \
+            --project="$PROJECT_ID" \
+            --quiet 2>/dev/null; then
+            log_success "VPC peering deleted via gcloud"
+            return 0
+        else
+            log_warn "Failed to delete VPC peering via gcloud"
+        fi
+    fi
+
+    # Try the vpc-peerings delete command
+    log_substep "Attempting service networking connection delete..."
+    if gcloud services vpc-peerings delete \
+        --network="$VPC_NAME" \
+        --service=servicenetworking.googleapis.com \
+        --project="$PROJECT_ID" \
+        --quiet 2>/dev/null; then
+        log_success "Service networking connection deleted via gcloud"
+        return 0
+    else
+        log_warn "Failed to delete service networking connection via gcloud"
+    fi
+
+    return 1
+}
+
+remove_service_networking_from_state() {
+    local tf_dir="$1"
+
+    log_warn "Removing service networking resources from Terraform state..."
+
+    # Remove service networking connection from state
+    terraform -chdir="$tf_dir" state rm \
+        'module.vpc.google_service_networking_connection.private_services[0]' 2>/dev/null || true
+
+    # Remove peering routes config from state
+    terraform -chdir="$tf_dir" state rm \
+        'module.vpc.google_compute_network_peering_routes_config.private_services_dns[0]' 2>/dev/null || true
+
+    # Remove global address from state
+    terraform -chdir="$tf_dir" state rm \
+        'module.vpc.google_compute_global_address.private_services[0]' 2>/dev/null || true
+
+    log_info "Service networking resources removed from Terraform state"
+}
+
 terraform_destroy() {
     if [ "$ORPHANS_ONLY" = true ]; then
         log_warn "Skipping Terraform destroy (--orphans-only)"
@@ -347,21 +409,86 @@ terraform_destroy() {
     # Initialize if needed
     terraform_init_if_needed
 
-    # Run Terraform destroy
+    # Run Terraform destroy with retry logic for service networking issues
     log_substep "Running terraform destroy..."
 
-    if [ "$AUTO_APPROVE" = true ]; then
-        terraform -chdir="$tf_dir" destroy \
-            -auto-approve \
-            -var="project_id=$PROJECT_ID" \
-            -var="region=$REGION" \
-            -no-color
-    else
-        terraform -chdir="$tf_dir" destroy \
-            -var="project_id=$PROJECT_ID" \
-            -var="region=$REGION" \
-            -no-color
-    fi
+    local destroy_output
+    local retry_count=0
+
+    while [ $retry_count -lt $SERVICE_NETWORKING_MAX_RETRIES ]; do
+        # Capture output for error detection
+        destroy_output=$(mktemp)
+
+        if [ "$AUTO_APPROVE" = true ]; then
+            if terraform -chdir="$tf_dir" destroy \
+                -auto-approve \
+                -var="project_id=$PROJECT_ID" \
+                -var="region=$REGION" \
+                -no-color 2>&1 | tee "$destroy_output"; then
+                rm -f "$destroy_output"
+                log_success "Terraform destroy complete"
+                return 0
+            fi
+        else
+            if terraform -chdir="$tf_dir" destroy \
+                -var="project_id=$PROJECT_ID" \
+                -var="region=$REGION" \
+                -no-color 2>&1 | tee "$destroy_output"; then
+                rm -f "$destroy_output"
+                log_success "Terraform destroy complete"
+                return 0
+            fi
+        fi
+
+        # Check if the failure was due to service networking connection
+        if grep -q "Failed to delete connection\|Producer services.*still using this connection\|Error code 9" "$destroy_output" 2>/dev/null; then
+            retry_count=$((retry_count + 1))
+
+            if [ $retry_count -lt $SERVICE_NETWORKING_MAX_RETRIES ]; then
+                log_warn "Service Networking Connection not ready for deletion (retry $retry_count/$SERVICE_NETWORKING_MAX_RETRIES)"
+                log_info "GCP eventual consistency: waiting ${SERVICE_NETWORKING_RETRY_DELAY}s for connection to release..."
+                sleep $SERVICE_NETWORKING_RETRY_DELAY
+            else
+                log_warn "Service Networking Connection deletion failed after $SERVICE_NETWORKING_MAX_RETRIES retries"
+
+                # Fallback: Try gcloud direct cleanup
+                log_info "Attempting fallback cleanup with gcloud..."
+
+                # Remove problematic resources from state first
+                remove_service_networking_from_state "$tf_dir"
+
+                # Try gcloud cleanup
+                cleanup_service_networking_with_gcloud || true
+
+                # Try one more terraform destroy to clean up remaining resources
+                log_substep "Running final terraform destroy for remaining resources..."
+                if [ "$AUTO_APPROVE" = true ]; then
+                    terraform -chdir="$tf_dir" destroy \
+                        -auto-approve \
+                        -var="project_id=$PROJECT_ID" \
+                        -var="region=$REGION" \
+                        -no-color || true
+                else
+                    terraform -chdir="$tf_dir" destroy \
+                        -var="project_id=$PROJECT_ID" \
+                        -var="region=$REGION" \
+                        -no-color || true
+                fi
+
+                log_warn "Terraform destroy completed with warnings (service networking cleanup deferred)"
+                rm -f "$destroy_output"
+                return 0
+            fi
+        else
+            # Different error - not retryable
+            log_error "Terraform destroy failed with non-retryable error"
+            cat "$destroy_output"
+            rm -f "$destroy_output"
+            return 1
+        fi
+
+        rm -f "$destroy_output"
+    done
 
     log_success "Terraform destroy complete"
 }
