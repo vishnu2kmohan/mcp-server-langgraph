@@ -54,8 +54,14 @@ ENV PYTHONUNBUFFERED=1 \
 # Add venv to PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
+# Create non-root user for security (DS002)
+RUN useradd --create-home --shell /bin/bash --uid 1000 appuser
+
 # Create output directory with secure permissions
-RUN mkdir -p /tmp/mcp-server-workflows && chmod 700 /tmp/mcp-server-workflows
+RUN mkdir -p /tmp/mcp-server-workflows && chown appuser:appuser /tmp/mcp-server-workflows && chmod 700 /tmp/mcp-server-workflows
+
+# Switch to non-root user
+USER appuser
 
 # Expose port
 EXPOSE 8001

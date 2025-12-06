@@ -7,6 +7,7 @@ Handles session CRUD, message history, and expiration.
 
 import json
 import logging
+import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, UTC
@@ -15,6 +16,30 @@ from typing import Any
 import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
+
+
+def _sanitize_log_value(value: str, max_length: int = 256) -> str:
+    """
+    Sanitize a value for safe logging to prevent log injection attacks.
+
+    Removes newlines, carriage returns, and other control characters that
+    could be used for log forging or injection attacks.
+
+    Args:
+        value: The value to sanitize
+        max_length: Maximum length of the output (truncates if longer)
+
+    Returns:
+        Sanitized string safe for logging
+    """
+    if not isinstance(value, str):
+        value = str(value)
+    # Remove control characters (including newlines, carriage returns, tabs)
+    sanitized = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", value)
+    # Truncate to max length
+    if len(sanitized) > max_length:
+        sanitized = sanitized[:max_length] + "..."
+    return sanitized
 
 
 @dataclass
@@ -154,7 +179,11 @@ class SessionManager:
 
         logger.info(
             "Created session",
-            extra={"session_id": session_id, "user_id": user_id, "session_name": name},
+            extra={
+                "session_id": _sanitize_log_value(session_id),
+                "user_id": _sanitize_log_value(user_id),
+                "session_name": _sanitize_log_value(name),
+            },
         )
 
         return session
@@ -238,7 +267,10 @@ class SessionManager:
 
         logger.info(
             "Deleted session",
-            extra={"session_id": session_id, "user_id": session.user_id},
+            extra={
+                "session_id": _sanitize_log_value(session_id),
+                "user_id": _sanitize_log_value(session.user_id),
+            },
         )
 
         return True

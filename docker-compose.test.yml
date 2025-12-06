@@ -519,9 +519,9 @@ services:
       builder-api-test:
         condition: service_healthy
     ports:
-      - "13000:80"
+      - "13000:8080"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/"]
       interval: 5s
       timeout: 3s
       retries: 10

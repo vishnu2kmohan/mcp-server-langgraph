@@ -62,6 +62,12 @@ ENV PYTHONUNBUFFERED=1 \
 # Add venv to PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
+# Create non-root user for security (DS002)
+RUN useradd --create-home --shell /bin/bash --uid 1000 appuser
+
+# Switch to non-root user
+USER appuser
+
 # Expose port
 EXPOSE 8002
 

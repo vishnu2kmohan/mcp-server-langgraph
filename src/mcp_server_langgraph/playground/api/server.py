@@ -18,6 +18,7 @@ Example:
 
 import logging
 import os
+import re
 import time
 from contextlib import asynccontextmanager
 from typing import Annotated, Any
@@ -28,6 +29,32 @@ from pydantic import ValidationError
 from starlette.websockets import WebSocketDisconnect
 
 from ..session.manager import SessionManager
+
+
+def _sanitize_log_value(value: str, max_length: int = 256) -> str:
+    """
+    Sanitize a value for safe logging to prevent log injection attacks.
+
+    Removes newlines, carriage returns, and other control characters that
+    could be used for log forging or injection attacks.
+
+    Args:
+        value: The value to sanitize
+        max_length: Maximum length of the output (truncates if longer)
+
+    Returns:
+        Sanitized string safe for logging
+    """
+    if not isinstance(value, str):
+        value = str(value)
+    # Remove control characters (including newlines, carriage returns, tabs)
+    sanitized = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", value)
+    # Truncate to max length
+    if len(sanitized) > max_length:
+        sanitized = sanitized[:max_length] + "..."
+    return sanitized
+
+
 from ..streaming.handler import StreamingHandler
 from .models import (
     APIInfoResponse,
@@ -520,17 +547,21 @@ async def websocket_endpoint(
             except WebSocketDisconnect:
                 logger.info(
                     "WebSocket disconnected",
-                    extra={"session_id": session_id},
+                    extra={"session_id": _sanitize_log_value(session_id)},
                 )
                 break
 
     except Exception as e:
         logger.error(
             "WebSocket error",
-            extra={"session_id": session_id, "error": str(e)},
+            extra={
+                "session_id": _sanitize_log_value(session_id),
+                "error": _sanitize_log_value(str(e)),
+            },
             exc_info=True,
         )
         try:
             await websocket.close(code=1011, reason="Internal error")
         except Exception:
+            # WebSocket already closed, nothing to do
             pass

@@ -7,6 +7,7 @@ Connects to MCP server for agent interactions.
 
 import asyncio
 import logging
+import re
 import uuid
 from datetime import datetime, UTC
 from typing import Any, AsyncGenerator
@@ -14,6 +15,30 @@ from typing import Any, AsyncGenerator
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
+
+
+def _sanitize_log_value(value: str, max_length: int = 256) -> str:
+    """
+    Sanitize a value for safe logging to prevent log injection attacks.
+
+    Removes newlines, carriage returns, and other control characters that
+    could be used for log forging or injection attacks.
+
+    Args:
+        value: The value to sanitize
+        max_length: Maximum length of the output (truncates if longer)
+
+    Returns:
+        Sanitized string safe for logging
+    """
+    if not isinstance(value, str):
+        value = str(value)
+    # Remove control characters (including newlines, carriage returns, tabs)
+    sanitized = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", value)
+    # Truncate to max length
+    if len(sanitized) > max_length:
+        sanitized = sanitized[:max_length] + "..."
+    return sanitized
 
 
 class StreamingHandler:
@@ -54,7 +79,7 @@ class StreamingHandler:
         except WebSocketDisconnect:
             logger.warning(
                 "WebSocket disconnected while sending",
-                extra={"session_id": self._session_id},
+                extra={"session_id": _sanitize_log_value(self._session_id)},
             )
             raise
 

@@ -473,7 +473,7 @@ builder-frontend-test:
     context: .
     dockerfile: docker/Dockerfile.builder-frontend
   ports:
-    - "13000:80"
+    - "13000:8080"
   depends_on:
     builder-api-test:
       condition: service_healthy
