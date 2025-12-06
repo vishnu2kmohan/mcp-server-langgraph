@@ -91,6 +91,41 @@ TEST_RUN_ID = "test-run-123"
 
 
 # ==============================================================================
+# Test Infrastructure Ports (docker-compose.test.yml)
+# ==============================================================================
+# Port offsets are applied to avoid conflicts with development environment:
+#   - Core services: +1000 to +4000 offset
+#   - Frontend services: +10000 offset
+
+# Core infrastructure ports
+TEST_POSTGRES_PORT = 9432  # offset +4000 from 5432
+TEST_REDIS_PORT = 9379  # offset +3000 from 6379
+TEST_OPENFGA_HTTP_PORT = 9080  # offset +1000 from 8080
+TEST_OPENFGA_GRPC_PORT = 9081  # offset +1000 from 8081
+TEST_KEYCLOAK_PORT = 9082  # offset +1002 from 8080
+TEST_QDRANT_PORT = 9333  # offset +3000 from 6333
+TEST_MCP_SERVER_PORT = 8000  # no offset (primary service)
+
+# Observability ports
+TEST_JAEGER_UI_PORT = 19686  # offset +3000 from 16686
+TEST_PROMETHEUS_PORT = 19090  # offset +10000 from 9090
+TEST_ALERTMANAGER_PORT = 19093  # offset +10000 from 9093
+TEST_GRAFANA_PORT = 13001  # offset +10000 from 3001
+
+# Builder service ports
+TEST_BUILDER_API_PORT = 9001  # offset +1000 from dev port 8001
+TEST_BUILDER_FRONTEND_PORT = 13000  # offset +10000 from dev port 3000
+
+# Playground service ports
+TEST_PLAYGROUND_API_PORT = 9002  # offset +1000 from dev port 8002
+TEST_PLAYGROUND_REDIS_DB = 2  # Redis database index for playground sessions
+
+# Session configuration for playground tests
+TEST_SESSION_TIMEOUT_SECONDS = 60  # Shorter than production for fast tests
+TEST_MAX_MESSAGES_PER_SESSION = 50  # Lower limit for test isolation
+
+
+# ==============================================================================
 # Validation Functions
 # ==============================================================================
 

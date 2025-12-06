@@ -1,0 +1,74 @@
+# Builder API Dockerfile
+# ======================
+# FastAPI server for the Visual Workflow Builder
+#
+# USAGE:
+#   docker build -f docker/Dockerfile.builder-api -t builder-api .
+#   docker run -p 8001:8001 builder-api
+#
+# PORTS:
+#   8001 - FastAPI HTTP API
+#
+# REFERENCES:
+#   - https://docs.astral.sh/uv/guides/integration/docker/
+
+FROM python:3.12-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv - Fast Python package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# UV environment variables for optimal Docker builds
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Copy source code (builder module and dependencies)
+COPY src/ ./src/
+
+# Install Python dependencies with uv sync --frozen
+# --no-dev: Skip dev dependencies for smaller image
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    ENVIRONMENT=production \
+    BUILDER_OUTPUT_DIR=/tmp/mcp-server-workflows
+
+# Add venv to PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Create non-root user for security (DS002)
+RUN useradd --create-home --shell /bin/bash --uid 1000 appuser
+
+# Create output directory with secure permissions
+RUN mkdir -p /tmp/mcp-server-workflows && chown appuser:appuser /tmp/mcp-server-workflows && chmod 700 /tmp/mcp-server-workflows
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8001/ || exit 1
+
+# Run the builder API server
+CMD ["uvicorn", "mcp_server_langgraph.builder.api.server:app", "--host", "0.0.0.0", "--port", "8001"]

@@ -12,7 +12,7 @@ import ReactFlow, {
   Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Download, Play, Save, Code2, FileJson } from 'lucide-react';
+import { Download, Save, Code2, FileJson } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
 
@@ -70,11 +70,11 @@ const nodeTypes = [
 function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
+  const [_selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
   const [generatedCode, setGeneratedCode] = useState<string>('');
   const [showCodePanel, setShowCodePanel] = useState(false);
   const [workflowName, setWorkflowName] = useState('my_agent');
-  const [workflowDescription, setWorkflowDescription] = useState('My custom agent workflow');
+  const [workflowDescription, _setWorkflowDescription] = useState('My custom agent workflow');
 
   // ==============================================================================
   // Node and Edge Handlers

@@ -444,15 +444,68 @@ test-all-quality-ci: test-property-ci test-contract-ci test-regression-ci test-p
 
 test-infra-up:
 	@echo "Starting test infrastructure (docker-compose.test.yml)..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d
-	@echo "✓ Test infrastructure started"
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d postgres-test redis-test openfga-migrate-test openfga-test keycloak-test qdrant-test mcp-server-test jaeger-test prometheus-test alertmanager-test grafana-test
+	@echo "✓ Test infrastructure started (core services)"
 	@echo ""
-	@echo "Test Services (offset ports by 1000):"
-	@echo "  PostgreSQL: localhost:9432"
-	@echo "  Redis:      localhost:9379"
-	@echo "  OpenFGA:    http://localhost:9080"
-	@echo "  Keycloak:   http://localhost:9082"
-	@echo "  Qdrant:     http://localhost:9333"
+	@echo "Test Services (offset ports):"
+	@echo "  PostgreSQL:   localhost:9432"
+	@echo "  Redis:        localhost:9379"
+	@echo "  OpenFGA:      http://localhost:9080"
+	@echo "  Keycloak:     http://localhost:9082"
+	@echo "  Qdrant:       http://localhost:9333"
+	@echo "  MCP Server:   http://localhost:8000"
+	@echo ""
+	@echo "Observability:"
+	@echo "  Jaeger UI:    http://localhost:19686"
+	@echo "  Prometheus:   http://localhost:19090"
+	@echo "  AlertManager: http://localhost:19093"
+	@echo "  Grafana:      http://localhost:13001"
+	@echo ""
+	@echo "To start builder & playground: make test-infra-full-up"
+	@echo ""
+
+test-builder-up:
+	@echo "Starting builder test services..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d builder-api-test builder-frontend-test
+	@echo "✓ Builder services started"
+	@echo "  Builder API:      http://localhost:9001"
+	@echo "  Builder Frontend: http://localhost:13000"
+
+test-builder-down:
+	@echo "Stopping builder test services..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml stop builder-api-test builder-frontend-test
+
+test-playground-up:
+	@echo "Starting playground test services..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d playground-test
+	@echo "✓ Playground service started"
+	@echo "  Playground API: http://localhost:9002"
+	@echo "  Swagger UI:     http://localhost:9002/docs"
+
+test-playground-down:
+	@echo "Stopping playground test services..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml stop playground-test
+
+test-infra-full-up: test-infra-up test-builder-up test-playground-up
+	@echo ""
+	@echo "✓ Full test infrastructure started (including builder & playground)"
+	@echo ""
+	@echo "All Test Services:"
+	@echo "  PostgreSQL:       localhost:9432"
+	@echo "  Redis:            localhost:9379"
+	@echo "  OpenFGA:          http://localhost:9080"
+	@echo "  Keycloak:         http://localhost:9082"
+	@echo "  Qdrant:           http://localhost:9333"
+	@echo "  MCP Server:       http://localhost:8000"
+	@echo "  Builder API:      http://localhost:9001"
+	@echo "  Builder Frontend: http://localhost:13000"
+	@echo "  Playground:       http://localhost:9002"
+	@echo ""
+	@echo "Observability:"
+	@echo "  Jaeger UI:        http://localhost:19686"
+	@echo "  Prometheus:       http://localhost:19090"
+	@echo "  AlertManager:     http://localhost:19093"
+	@echo "  Grafana:          http://localhost:13001"
 	@echo ""
 
 test-infra-down:

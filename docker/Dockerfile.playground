@@ -1,0 +1,79 @@
+# Playground API Dockerfile
+# =========================
+# FastAPI server for the Interactive Playground with WebSocket support
+#
+# USAGE:
+#   docker build -f docker/Dockerfile.playground -t playground .
+#   docker run -p 8002:8002 playground
+#
+# PORTS:
+#   8002 - FastAPI HTTP + WebSocket API
+#
+# ENVIRONMENT VARIABLES:
+#   REDIS_URL - Redis connection URL (default: redis://localhost:6379/2)
+#   MCP_SERVER_URL - MCP server URL (default: http://localhost:8000)
+#   JWT_SECRET_KEY - JWT secret key for token validation
+#   SESSION_TTL_SECONDS - Session expiration time (default: 3600)
+#
+# REFERENCES:
+#   - https://docs.astral.sh/uv/guides/integration/docker/
+
+FROM python:3.12-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv - Fast Python package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# UV environment variables for optimal Docker builds
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Copy source code (playground module and dependencies)
+COPY src/ ./src/
+
+# Install Python dependencies with uv sync --frozen
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    ENVIRONMENT=production \
+    REDIS_URL=redis://localhost:6379/2 \
+    MCP_SERVER_URL=http://localhost:8000 \
+    SESSION_TTL_SECONDS=3600 \
+    MAX_MESSAGES_PER_SESSION=100
+
+# Add venv to PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Create non-root user for security (DS002)
+RUN useradd --create-home --shell /bin/bash --uid 1000 appuser
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8002
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8002/api/playground/health || exit 1
+
+# Run the playground API server
+CMD ["uvicorn", "mcp_server_langgraph.playground.api.server:app", "--host", "0.0.0.0", "--port", "8002"]

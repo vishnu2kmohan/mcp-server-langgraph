@@ -716,6 +716,8 @@ markers = [
     "openfga: OpenFGA integration tests",
     "infisical: Infisical integration tests",
     "mcp: MCP protocol tests",
+    "playground: Interactive Playground API tests",
+    "websocket: WebSocket streaming tests",
     "llm: LLM API tests (expensive, requires API keys, skipped in CI)",
     "observability: OpenTelemetry/metrics/logging tests",
     "benchmark: Performance benchmark tests",
