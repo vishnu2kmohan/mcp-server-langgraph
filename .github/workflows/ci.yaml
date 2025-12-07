@@ -1021,6 +1021,16 @@ jobs:
             --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-linux-amd64 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-linux-arm64
+
+          # Create environment-specific tags for base variant (used by Kustomize/K8s deployments)
+          # Naming convention: :preview for preview/staging, :latest reserved for production releases
+          if [ "${{ matrix.variant }}" = "base" ]; then
+            docker buildx imagetools create \
+              --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:preview \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:base-linux-amd64 \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:base-linux-arm64
+            echo "✅ Created :preview tag for preview/staging deployments"
+          fi
         fi
 
   # ============================================================================

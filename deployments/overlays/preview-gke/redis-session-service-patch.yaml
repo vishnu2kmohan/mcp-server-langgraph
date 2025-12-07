@@ -5,7 +5,7 @@
 # deployment) with an ExternalName service that uses Cloud DNS for robust failover.
 #
 # IMPORTANT: Configure Cloud DNS record before deploying:
-#   redis-session-staging.internal -> Your Memorystore Redis IP
+#   redis-session-preview.internal -> Your Memorystore Redis IP
 #
 # See: DNS_SETUP.md for Cloud DNS configuration instructions
 #
@@ -22,7 +22,7 @@ metadata:
     description: "ExternalName service for Memorystore Redis via Cloud DNS"
 spec:
   type: ExternalName
-  externalName: redis-session-staging.staging.internal
+  externalName: redis-session-preview.preview.internal
   # Remove selector for ExternalName service
   selector: null
   # ExternalName services don't support ports, but we keep metadata for reference

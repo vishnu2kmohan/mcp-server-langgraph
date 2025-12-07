@@ -242,13 +242,18 @@ patches:
       name: qdrant
 
 # Image configuration
-# For preview/non-production: Use GHCR (GitHub Container Registry) directly
-# For production: Images are promoted from GHCR to cloud-specific registries (GCP, AWS, Azure)
-# This follows the pattern: GHCR (dev/preview) → Cloud Registry (production)
+# For preview-gke: Use GCR (Google Container Registry) for the main app (TEMPORARY)
+# GHCR image was broken - use GCR until CI/CD change is merged to main
+# Once merged: CI creates ghcr.io/vishnu2kmohan/mcp-server-langgraph:preview on main pushes
+# Then update this to use GHCR: newName: ghcr.io/vishnu2kmohan/mcp-server-langgraph, newTag: preview
+# Other dependencies (Keycloak, OpenFGA, etc.) continue to use GHCR mirrors
 images:
-  # Main application image - use GHCR directly for preview
+  # Main application image - use GCR for preview-gke (TEMPORARY - switch to GHCR :preview after CI merge)
+  # Built locally and pushed to: gcr.io/vishnu-sandbox-20250310/mcp-server-langgraph:latest
+  # FIXED: CI now creates :preview tag on main branch pushes (see .github/workflows/ci.yaml:1025-1033)
   - name: ghcr.io/vishnu2kmohan/mcp-server-langgraph
-    newTag: preview-latest
+    newName: gcr.io/vishnu-sandbox-20250310/mcp-server-langgraph
+    newTag: latest
 
   # Keycloak optimized image (pre-built with kc.sh build)
   # This image eliminates runtime Quarkus augmentation that causes ReadOnlyFileSystemException
