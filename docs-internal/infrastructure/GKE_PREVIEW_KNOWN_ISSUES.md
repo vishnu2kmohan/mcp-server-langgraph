@@ -1,7 +1,7 @@
 # GKE Preview Environment - Known Issues and Solutions
 
 **Created**: 2025-12-06
-**Last Updated**: 2025-12-06
+**Last Updated**: 2025-12-07
 **Purpose**: Document all issues encountered during gke-preview-up/down testing for permanent resolution
 
 ---
@@ -427,6 +427,214 @@ The `import_wif_to_terraform()` function checks if the resource is already in Te
 ### Prevention
 - Always use `gke-preview-down.sh` for teardown (handles state properly)
 - Script now auto-imports active WIF pools into Terraform state during `gke-preview-up.sh`
+
+---
+
+## Issue #9: GKE BackupPlan Deletion with Locked Backups
+
+**Status: ⚠️ DOCUMENTED (Manual Workaround Required for Preview)**
+
+### Symptom
+```
+Error: Error when reading or editing BackupPlan: googleapi: Error 400: Resource '"projects/PROJECT/locations/REGION/backupPlans/BACKUP_PLAN_NAME"' has nested resources. If the API supports cascading delete, set 'force' to true to delete it and its nested resources.
+```
+
+When running `terraform destroy`, the BackupPlan cannot be deleted because it has scheduled backups that are locked for deletion.
+
+### Root Cause
+GKE Backup Plans with `backup_delete_lock_days > 0` create backups that cannot be deleted until the lock expires. In the preview environment configuration:
+
+```hcl
+# terraform/modules/gke-autopilot/main.tf
+retention_policy {
+  backup_delete_lock_days = 7  # Prevents backup deletion for 7 days
+  backup_retain_days      = 14
+}
+```
+
+When a scheduled backup is created (e.g., via the weekly cron schedule), it inherits the delete lock. If you try to delete the BackupPlan before the lock expires, you get Error 400 because:
+
+1. The BackupPlan has nested backup resources
+2. The backups are locked and cannot be deleted
+3. Terraform cannot cascade-delete without `force = true`
+
+### Checking for Locked Backups
+```bash
+# List backups under the backup plan
+gcloud beta container backup-restore backups list \
+    --backup-plan=preview-mcp-server-langgraph-gke-backup-plan \
+    --location=us-central1 \
+    --project=PROJECT_ID
+
+# Check a specific backup's delete lock time
+gcloud beta container backup-restore backups describe BACKUP_NAME \
+    --backup-plan=preview-mcp-server-langgraph-gke-backup-plan \
+    --location=us-central1 \
+    --project=PROJECT_ID \
+    --format="yaml(deleteLockExpireTime)"
+```
+
+### Immediate Workaround (Manual)
+Remove the BackupPlan from Terraform state and let it expire naturally:
+
+```bash
+# Remove from Terraform state (backup plan remains in GCP but orphaned)
+terraform state rm 'module.gke.google_gke_backup_backup_plan.cluster[0]'
+
+# Continue with terraform destroy for remaining resources
+terraform destroy -auto-approve
+```
+
+The orphaned BackupPlan will remain in GCP until the backup locks expire, then can be manually deleted:
+
+```bash
+# After lock expires (check deleteLockExpireTime), delete backups
+gcloud beta container backup-restore backups delete BACKUP_NAME \
+    --backup-plan=preview-mcp-server-langgraph-gke-backup-plan \
+    --location=us-central1 \
+    --project=PROJECT_ID \
+    --quiet
+
+# Then delete the backup plan
+gcloud beta container backup-restore backup-plans delete \
+    preview-mcp-server-langgraph-gke-backup-plan \
+    --location=us-central1 \
+    --project=PROJECT_ID \
+    --quiet
+```
+
+### Long-term Solution for Preview Environments
+Set `backup_delete_lock_days = 0` for preview environments to allow immediate cleanup:
+
+```hcl
+# For preview environment: disable delete lock
+retention_policy {
+  backup_delete_lock_days = 0   # Allows immediate deletion
+  backup_retain_days      = 7   # Shorter retention for preview
+}
+```
+
+### Prevention
+- For ephemeral/preview environments, use `backup_delete_lock_days = 0`
+- For production environments, keep the 7-day lock for data protection
+- Consider disabling backup plans entirely for preview: `enable_backup_plan = false`
+- If you need backups in preview, use shorter cron schedules so locks expire faster
+
+### References
+- [GKE Backup and Restore documentation](https://cloud.google.com/kubernetes-engine/docs/add-on/backup-for-gke/concepts/backup-plan)
+- [Backup delete lock behavior](https://cloud.google.com/kubernetes-engine/docs/add-on/backup-for-gke/concepts/retention)
+
+---
+
+## Issue #10: WIF Pool State Detection Bug (gcloud describe returns 0 for DELETED pools)
+
+**Status: FIXED**
+
+### Symptom
+```
+[INFO] WIF pool already active: github-actions-pool
+  -> Importing WIF resources into Terraform state...
+  -> Importing WIF pool into Terraform state...
+
+Error: Cannot import non-existent remote object
+
+Error 409: Requested entity already exists
+  with module.github_actions_wif.google_iam_workload_identity_pool.github_actions
+```
+
+The script reports the WIF pool as "active" but then fails to import it and Terraform fails to create it because it "already exists".
+
+### Root Cause
+The `check_wif_pool_state()` function in `scripts/gcp/lib/common.sh` had a bug in how it detected soft-deleted WIF pools.
+
+**Key insight**: `gcloud iam workload-identity-pools describe` returns **exit code 0 (success)** even for pools in the `DELETED` state. The command succeeds but the output shows `state: DELETED`.
+
+The original implementation only checked the exit code:
+```bash
+# BUGGY - gcloud describe returns 0 even for DELETED pools!
+if gcloud iam workload-identity-pools describe "$pool_id" \
+    --location=global \
+    --project="$project_id" &> /dev/null; then
+    return 1  # Active - WRONG! Could be DELETED state
+fi
+```
+
+### Solution (Implemented in scripts/gcp/lib/common.sh)
+Fixed the function to explicitly check the `state` field from the describe output:
+
+```bash
+check_wif_pool_state() {
+    local project_id="${1:-$(get_gcp_project)}"
+    local pool_id="${2:-$WIF_POOL_ID}"
+
+    # Get the pool state - gcloud describe returns success even for DELETED pools
+    # We must check the actual state field in the output
+    local pool_state
+    pool_state=$(gcloud iam workload-identity-pools describe "$pool_id" \
+        --location=global \
+        --project="$project_id" \
+        --format="value(state)" 2>/dev/null || echo "")
+
+    case "$pool_state" in
+        "ACTIVE")
+            return 1  # Active
+            ;;
+        "DELETED")
+            return 0  # Soft-deleted
+            ;;
+        *)
+            # Pool doesn't exist or couldn't be described
+            return 2  # Not found
+            ;;
+    esac
+}
+```
+
+### Debugging Steps
+To check the actual state of a WIF pool:
+```bash
+# Check state field explicitly
+gcloud iam workload-identity-pools describe github-actions-pool \
+    --location=global \
+    --project=PROJECT_ID \
+    --format="value(state)"
+# Output: ACTIVE or DELETED
+
+# Show full details
+gcloud iam workload-identity-pools describe github-actions-pool \
+    --location=global \
+    --project=PROJECT_ID \
+    --format=yaml
+```
+
+### Manual Recovery (if needed)
+If you encounter this issue before the fix is deployed:
+```bash
+# 1. Undelete the pool
+gcloud iam workload-identity-pools undelete github-actions-pool \
+    --location=global \
+    --project=PROJECT_ID
+
+# 2. Undelete the provider
+gcloud iam workload-identity-pools providers undelete github-actions-provider \
+    --workload-identity-pool=github-actions-pool \
+    --location=global \
+    --project=PROJECT_ID
+
+# 3. Import into Terraform state
+cd terraform/environments/gcp-preview
+terraform import -var="project_id=PROJECT_ID" -var="region=us-central1" \
+    'module.github_actions_wif.google_iam_workload_identity_pool.github_actions' \
+    'projects/PROJECT_ID/locations/global/workloadIdentityPools/github-actions-pool'
+
+terraform import -var="project_id=PROJECT_ID" -var="region=us-central1" \
+    'module.github_actions_wif.google_iam_workload_identity_pool_provider.github_actions' \
+    'projects/PROJECT_ID/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+```
+
+### Prevention
+- Always use the fixed version of `check_wif_pool_state()` that explicitly checks the `state` field
+- The automated recovery in `gke-preview-up.sh` now properly handles this case
 
 ---
 
