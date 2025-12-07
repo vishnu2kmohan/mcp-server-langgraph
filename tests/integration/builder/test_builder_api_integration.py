@@ -25,10 +25,6 @@ pytestmark = [
     pytest.mark.builder,
     pytest.mark.api,
     pytest.mark.xdist_group(name="builder_integration_tests"),
-    pytest.mark.skip(
-        reason="Builder service not yet implemented in docker-compose.test.yml. "
-        "See plan file: .claude/plans/keen-prancing-pizza.md Phase 3"
-    ),
 ]
 
 
