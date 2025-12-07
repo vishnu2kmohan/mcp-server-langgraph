@@ -33,10 +33,14 @@
 #   /vectors    - Qdrant (Vector Database)
 #   /tempo      - Tempo (Distributed Tracing)
 #   /logs       - Loki (Log Aggregation)
-#   /metrics    - Prometheus (Metrics)
-#   /alerts     - Alertmanager
-#   /dashboards - Grafana (Unified Dashboards)
+#   /mimir      - Mimir (Metrics Storage)
+#   /alloy      - Alloy (Unified Telemetry Collector)
+#   /dashboards - Grafana (Unified Dashboards + Alerting)
 #   /gateway    - Traefik Dashboard
+#
+# GRAFANA LGTM STACK:
+#   Grafana (Dashboards) + Loki (Logs) + Tempo (Traces) + Mimir (Metrics)
+#   Alloy is the unified collector that replaces Prometheus, Promtail, and OTEL Collector
 #
 # DIRECT PORTS (legacy, for direct access):
 #   9432  - PostgreSQL (test, offset +4000 from standard 5432)
@@ -78,6 +82,8 @@ services:
       - "--providers.docker.network=mcp-test-network"
       # Entrypoints
       - "--entrypoints.web.address=:80"
+      # Health check (required for traefik healthcheck --ping)
+      - "--ping=true"
       # Logging
       - "--log.level=INFO"
       - "--accesslog=true"
@@ -424,7 +430,7 @@ services:
 
       # Observability
       - OTEL_SDK_DISABLED=false
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo-test:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=mcp-server-test
 
       # GDPR
@@ -457,98 +463,34 @@ services:
       - "traefik.http.routers.mcp-api.middlewares=mcp-strip"
 
   # ==============================================================================
-  # OBSERVABILITY SERVICES
+  # OBSERVABILITY SERVICES (Grafana LGTM Stack)
   # ==============================================================================
-  # Note: Jaeger removed - Tempo handles distributed tracing in the Grafana LGTM stack
-  # Traces are now sent to tempo-test:4318 (OTLP HTTP)
-
-  prometheus-test:
-    image: prom/prometheus:v3.7.1
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=1d'  # Shorter retention for testing
-      - '--web.enable-lifecycle'
-      # Subpath configuration for gateway routing
-      - '--web.external-url=/metrics/'
-      - '--web.route-prefix=/metrics/'
-    ports:
-      - "19090:9090"  # Prometheus UI (offset by 10000)
-    volumes:
-      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    healthcheck:
-      # wget is available in the official Prometheus image (prom/prometheus)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/metrics/-/healthy"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 256M
-    networks:
-      mcp-test-network:
-        aliases:
-          - prometheus
-    labels:
-      - "traefik.enable=true"
-      # Route: /metrics/* -> prometheus:9090 (Metrics)
-      # Prometheus handles subpath via --web.external-url
-      - "traefik.http.routers.prometheus.rule=PathPrefix(`/metrics`)"
-      - "traefik.http.routers.prometheus.entrypoints=web"
-      - "traefik.http.routers.prometheus.priority=10"
-      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
-      # NO strip - Prometheus configured for /metrics subpath
-
-  alertmanager-test:
-    image: prom/alertmanager:v0.28.1
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
-      # Subpath configuration for gateway routing
-      - '--web.external-url=/alerts/'
-      - '--web.route-prefix=/alerts/'
-    ports:
-      - "19093:9093"  # AlertManager UI (offset by 10000)
-    volumes:
-      - ./monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-    healthcheck:
-      # wget is available in the official Alertmanager image (prom/alertmanager)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/alerts/-/healthy"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          cpus: '0.05'
-          memory: 128M
-    networks:
-      mcp-test-network:
-        aliases:
-          - alertmanager
-    labels:
-      - "traefik.enable=true"
-      # Route: /alerts/* -> alertmanager:9093 (Alerting)
-      # Alertmanager handles subpath via --web.external-url
-      - "traefik.http.routers.alertmanager.rule=PathPrefix(`/alerts`)"
-      - "traefik.http.routers.alertmanager.entrypoints=web"
-      - "traefik.http.routers.alertmanager.priority=10"
-      - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
-      # NO strip - Alertmanager configured for /alerts subpath
+  # Unified observability with Grafana Loki, Tempo, Mimir, and Alloy
+  #
+  # Architecture:
+  #   Applications -> Alloy (OTLP receiver) -> Tempo (traces) / Mimir (metrics)
+  #   Docker logs -> Alloy (log scraper) -> Loki (logs)
+  #   Grafana (unified UI for all telemetry + alerting)
+  #
+  # Removed (replaced by LGTM stack):
+  #   - Jaeger (replaced by Tempo)
+  #   - Prometheus (replaced by Alloy + Mimir)
+  #   - Alertmanager (replaced by Grafana Unified Alerting)
+  #   - Promtail (replaced by Alloy)
+  #
+  # See: docker/alloy/alloy-config.alloy for unified telemetry collection config
 
   grafana-test:
     image: grafana/grafana:12.2.0
     depends_on:
-      prometheus-test:
+      alloy-test:
         condition: service_healthy
+      loki-test:
+        condition: service_healthy
+      tempo-test:
+        condition: service_healthy
+      mimir-test:
+        condition: service_started  # Mimir has healthcheck disabled (distroless)
     ports:
       - "13001:3000"  # Grafana UI (offset by 10000 from prod's 3001)
     environment:
@@ -591,9 +533,10 @@ services:
       # NO strip - Grafana configured for /dashboards subpath
 
   # ==============================================================================
-  # LOGGING SERVICES (Loki + Promtail)
+  # LOG STORAGE (Loki)
   # ==============================================================================
-  # Centralized log aggregation with Grafana Loki
+  # Grafana Loki for centralized log storage and querying
+  # Logs collected by Alloy and stored in Loki
   # Logs accessible at /logs or via Grafana Explore
 
   loki-test:
@@ -632,25 +575,8 @@ services:
       - "traefik.http.middlewares.loki-strip.stripprefix.prefixes=/logs"
       - "traefik.http.routers.loki.middlewares=loki-strip"
 
-  promtail-test:
-    image: grafana/promtail:3.0.0
-    command: -config.file=/etc/promtail/config.yaml
-    volumes:
-      - ./docker/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro  # Read Docker logs
-    depends_on:
-      loki-test:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 128M
-        reservations:
-          cpus: '0.05'
-          memory: 64M
-    networks:
-      - mcp-test-network
+  # Note: Promtail removed - Alloy handles log collection from Docker containers
+  # See: docker/alloy/alloy-config.alloy (loki.source.docker block)
 
   # ==============================================================================
   # DISTRIBUTED TRACING (Tempo)
@@ -740,6 +666,65 @@ services:
       - "traefik.http.routers.mimir.middlewares=mimir-strip"
 
   # ==============================================================================
+  # UNIFIED TELEMETRY COLLECTOR (Alloy)
+  # ==============================================================================
+  # Grafana Alloy - unified collector replacing Prometheus, Promtail, and OTEL Collector
+  # Collects metrics, logs, and traces; forwards to Mimir, Loki, and Tempo
+  # Reference: https://grafana.com/docs/alloy/latest/
+
+  alloy-test:
+    image: grafana/alloy:v1.4.2
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --stability.level=generally-available
+    depends_on:
+      loki-test:
+        condition: service_healthy
+      tempo-test:
+        condition: service_healthy
+      mimir-test:
+        condition: service_started  # Mimir has healthcheck disabled (distroless)
+    ports:
+      - "12345:12345"  # Alloy UI/API
+      - "4317:4317"    # OTLP gRPC (applications send here)
+      - "4318:4318"    # OTLP HTTP (applications send here)
+    volumes:
+      - ./docker/alloy/alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # For Docker log collection
+    environment:
+      - ALLOY_DEPLOY_MODE=compose
+    healthcheck:
+      # Alloy exposes /-/ready endpoint for readiness checks
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:12345/-/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      mcp-test-network:
+        aliases:
+          - alloy
+    labels:
+      - "traefik.enable=true"
+      # Route: /alloy/* -> alloy:12345 (Telemetry Collector UI)
+      - "traefik.http.routers.alloy.rule=PathPrefix(`/alloy`)"
+      - "traefik.http.routers.alloy.entrypoints=web"
+      - "traefik.http.routers.alloy.priority=10"
+      - "traefik.http.services.alloy.loadbalancer.server.port=12345"
+      - "traefik.http.middlewares.alloy-strip.stripprefix.prefixes=/alloy"
+      - "traefik.http.routers.alloy.middlewares=alloy-strip"
+
+  # ==============================================================================
   # VISUAL WORKFLOW BUILDER
   # ==============================================================================
   # Unified builder service (API + React frontend via SPAStaticFiles)
@@ -756,7 +741,7 @@ services:
         condition: service_healthy
       openfga-test:
         condition: service_healthy
-      tempo-test:
+      alloy-test:
         condition: service_healthy
     ports:
       - "9001:8001"  # Test port (offset +1000 from dev port 8001)
@@ -786,7 +771,7 @@ services:
 
       # Observability (OpenTelemetry)
       - OTEL_SDK_DISABLED=false
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo-test:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=mcp-builder-test
       - LOG_FORMAT=json
     healthcheck:
@@ -835,7 +820,7 @@ services:
         condition: service_healthy
       redis-test:
         condition: service_healthy
-      tempo-test:
+      alloy-test:
         condition: service_healthy
     ports:
       - "9002:8002"  # Test port (offset +1000 from dev port 8002)
@@ -868,7 +853,7 @@ services:
 
       # Observability (OpenTelemetry)
       - OTEL_SDK_DISABLED=false
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo-test:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=mcp-playground-test
       - LOG_FORMAT=json
     healthcheck:
