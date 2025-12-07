@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764964294531,
+  "lastUpdate": 1765116537187,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -43376,6 +43376,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001927716636537041",
             "extra": "mean: 58.737593020609864 usec\nrounds: 4241"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "1349ac69c878fa32d5b6b313d9b321d83c8248a5",
+          "message": "feat(infra): add Traefik API gateway with unified routing and Loki logging\n\n- Add Traefik v3.2 as API gateway with path-based routing\n- Configure 12 gateway routes: /api, /build, /play, /authn, /authz,\n  /vectors, /traces, /logs, /metrics, /alerts, /dashboards, /gateway\n- Add Loki + Promtail for centralized log aggregation\n- Update Grafana datasources with Loki (trace correlation enabled)\n- Add gateway Makefile targets (test-gateway-status, test-gateway-logs)\n- Implement Builder UX improvements: dark mode, WebSocket auto-reconnect,\n  undo/redo, workflow validation, session timeout warnings\n- Add WCAG 2.1 AA accessibility compliance hooks\n- Implement HEART metrics for UX analytics\n- Create shared design tokens system for UI consistency\n- Add 190 frontend tests (all passing)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-07T09:01:33-05:00",
+          "tree_id": "b79fdcd95fb97f44dfc6ef90d021146f0ce69690",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/1349ac69c878fa32d5b6b313d9b321d83c8248a5"
+        },
+        "date": 1765116535541,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 142.83843319321022,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00027643680682536186",
+            "extra": "mean: 7.0009168936160995 msec\nrounds: 94"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 298.1644972251044,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00020439869377808615",
+            "extra": "mean: 3.3538533571454443 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 46083.41651364633,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.699780000119517 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46774.91629626848,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.378980000008596 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44202.43122191901,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.623190000103932 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.40352568834354,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.143939630000034 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.47379151316735,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.3510684000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.968891337879079,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.31205739 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1139575.1662078907,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 877.5200001309713 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12127.47430797768,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 82.45739999978241 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2962.135144926851,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.5943200001075 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2907.5346696630577,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.93398999981173 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 59920.4513334721,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000018268628800937922",
+            "extra": "mean: 16.688792853624435 usec\nrounds: 11446"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17014.004014990798,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018991660005468716",
+            "extra": "mean: 58.775112496677096 usec\nrounds: 4009"
           }
         ]
       }
