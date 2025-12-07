@@ -635,13 +635,13 @@ services:
 
   loki-test:
     image: grafana/loki:3.0.0
-    command: -config.file=/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml -target=all
     ports:
       - "13100:3100"  # Loki API (offset by 10000)
     volumes:
       - ./docker/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
     tmpfs:
-      - /loki:rw,noexec,nosuid,size=256m
+      - /tmp/loki:rw,noexec,nosuid,size=256m
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
       interval: 10s
@@ -749,11 +749,11 @@ services:
       - ./docker/mimir/alertmanager-fallback.yaml:/etc/mimir/alertmanager-fallback.yaml:ro
     tmpfs:
       - /tmp/mimir:rw,noexec,nosuid,size=256m
+    # NOTE: Mimir uses distroless image with no wget/curl
+    # See: https://github.com/grafana/mimir/issues/9034
+    # Healthcheck disabled; service is still accessible on port 9009
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9009/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      disable: true
     deploy:
       resources:
         limits:
