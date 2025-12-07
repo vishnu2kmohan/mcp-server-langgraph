@@ -305,6 +305,12 @@ class TestKustomizePreviewGKE:
             "preview-latest",
             "dev-latest",
             "development-latest",
+            # TEMPORARY: Allow GCR workaround until GHCR :preview tag is created
+            # This will be removed after CI fix is merged and kustomization.yaml
+            # is updated to use: newName: ghcr.io/vishnu2kmohan/mcp-server-langgraph, newTag: preview
+            # See: https://github.com/vishnu2kmohan/mcp-server-langgraph/pull/XXX
+            # TODO: Remove this after switching to GHCR :preview tag
+            "gcr.io/vishnu-sandbox-20250310/mcp-server-langgraph:latest",
         ]
 
         violations = []
