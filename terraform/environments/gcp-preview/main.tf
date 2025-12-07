@@ -196,6 +196,7 @@ module "gke" {
   enable_backup_plan         = true
   backup_schedule_cron       = "0 2 * * 0" # Sunday 2 AM
   backup_retain_days         = 14
+  backup_delete_lock_days    = 0 # Allow immediate deletion for preview (Issue #9)
   backup_include_volume_data = true
 
   # Fleet registration
