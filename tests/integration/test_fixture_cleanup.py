@@ -6,15 +6,28 @@ preventing test pollution and ensuring test isolation.
 
 TDD: These tests should fail initially (RED phase), then pass after
 implementing per-test cleanup fixtures (GREEN phase).
+
+Note: These tests require real infrastructure (PostgreSQL, Redis, OpenFGA)
+from docker-compose.test.yml. Run with `make test-infra-up` first.
 """
 
 import gc
+import os
 
 import pytest
 
 from tests.conftest import get_user_id
 
-pytestmark = pytest.mark.integration
+# Skip in CI if TESTING environment variable is not set
+# These tests require real infrastructure from docker-compose.test.yml
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        os.environ.get("CI") == "true" and os.environ.get("TESTING") != "true",
+        reason="Requires test infrastructure (docker-compose.test.yml). "
+        "Run `make test-infra-up` first or set TESTING=true in CI.",
+    ),
+]
 
 
 @pytest.mark.integration
