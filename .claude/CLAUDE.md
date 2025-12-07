@@ -2,7 +2,7 @@
 
 **Purpose**: Essential context auto-loaded at session start
 **Full Guide**: `.github/CLAUDE.md` (1,070 lines of comprehensive documentation)
-**Last Updated**: 2025-12-02
+**Last Updated**: 2025-12-07
 
 ---
 
@@ -103,6 +103,7 @@ async def test_feature():
 - `pre-commit-hooks-catalog.md` - 69 hooks reference
 - `make-targets.md` - 133 targets reference
 - `gke-infrastructure-testing.md` - GKE/WIF testing guidance (local vs CI gaps)
+- `container-security-patterns.md` - Non-root container UID/GID guide
 
 ---
 
@@ -194,6 +195,24 @@ uv run mypy src/
 uv run ruff check --fix src/
 uv run ruff format src/
 ```
+
+**Container permission errors?**
+```bash
+# Check container-security-patterns.md for UID reference
+# Common fixes: tmpfs uid/gid, file chmod 644, high ports
+```
+
+---
+
+## Docker/Container Guidelines
+
+When modifying `docker-compose*.yml` files, ensure:
+1. **All containers run as non-root** (except Promtail for Docker socket)
+2. **tmpfs mounts include uid/gid** matching container user
+3. **Config files are world-readable** (chmod 644)
+4. **Services use high ports** (>1024) for non-root binding
+
+See: `.claude/memory/container-security-patterns.md` | ADR-0067
 
 ---
 

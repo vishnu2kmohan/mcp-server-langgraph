@@ -1,21 +1,7 @@
 ---
 title: "44. Test Infrastructure Quick Wins"
-description: 'Architecture Decision Record: 44. Test Infrastructure Quick Wins'
-icon: 'flask'
-contentType: "reference"
-seoTitle: "44. Test Infrastructure Quick Wins - Architecture Decision Record"
-seoDescription: "Architecture Decision Record for 44. Test Infrastructure Quick Wins. Category: Testing & Quality. Part of MCP Server with LangGraph documentation."
-keywords:
-  - "architecture"
-  - "decision"
-  - "record"
-  - "ADR"
-  - "MCP Server"
-  - "LangGraph"
-  - "testing"
-  - "quality"
-  - "pytest"
-  - "Test"
+description: "Architecture Decision Record: 44. Test Infrastructure Quick Wins"
+icon: 'file-lines'
 ---
 
 # 44. Test Infrastructure Quick Wins
@@ -271,17 +257,17 @@ pytest tests/core/test_container.py -v
 - Add database migrations for persistent storage
 
 ### Phase 4: Infrastructure Optimizations
-- Optimize docker-compose.test.yml startup (target: `<2min`)
-- Optimize CI/CD E2E test execution (target: `<15min`)
+- Optimize docker-compose.test.yml startup (target: \<2min)
+- Optimize CI/CD E2E test execution (target: \<15min)
 - Update performance baselines with real infrastructure
 
 ## References
 
 - [CWE-269: Improper Privilege Management](https://cwe.mitre.org/data/definitions/269.html)
-- [ADR-0002: OpenFGA Authorization](./adr-0002-openfga-authorization.mdx)
-- [ADR-0026: Lazy Observability Initialization](./adr-0026-lazy-observability-initialization.mdx)
-- [ADR-0030: Resilience Patterns](./adr-0030-resilience-patterns.mdx)
-- [ADR-0039: OpenFGA Permission Inheritance](./adr-0039-openfga-permission-inheritance.mdx)
+- [ADR-0002: OpenFGA Authorization](./adr-0002-openfga-authorization.md)
+- [ADR-0026: Lazy Observability Initialization](./adr-0026-lazy-observability-initialization.md)
+- [ADR-0030: Resilience Patterns](./adr-0030-resilience-patterns.md)
+- [ADR-0039: OpenFGA Permission Inheritance](./adr-0039-openfga-permission-inheritance.md)
 - [OpenFGA Integration Test Findings](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)
 
 ## Metrics

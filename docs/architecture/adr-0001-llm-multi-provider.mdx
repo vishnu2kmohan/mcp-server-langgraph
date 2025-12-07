@@ -1,21 +1,7 @@
 ---
 title: "1. Multi-Provider LLM Support via LiteLLM"
-description: 'Architecture Decision Record: 1. Multi-Provider LLM Support via LiteLLM'
+description: "Architecture Decision Record: 1. Multi-Provider LLM Support via LiteLLM"
 icon: 'microchip'
-contentType: "reference"
-seoTitle: "1. Multi-Provider LLM Support via LiteLLM - Architecture Decision Record"
-seoDescription: "Architecture Decision Record for 1. Multi-Provider LLM Support via LiteLLM. Category: Core Architecture. Part of MCP Server with LangGraph documentation."
-keywords:
-  - "architecture"
-  - "decision"
-  - "record"
-  - "ADR"
-  - "MCP Server"
-  - "LangGraph"
-  - "Multi"
-  - "Provider"
-  - "LLM"
-  - "Support"
 ---
 
 # 1. Multi-Provider LLM Support via LiteLLM
@@ -146,7 +132,7 @@ Implementation in `llm_factory.py`:
 # src/mcp_server_langgraph/core/config.py
 llm_provider: str = "google"  # google, anthropic, openai, ollama
 model_name: str = "gemini-2.5-flash-002"
-fallback_models: list[str] = ["gemini-2.5-pro", "claude-sonnet-4-5"]
+fallback_models: list[str] = ["gemini-2.5-pro", "claude-3-5-sonnet"]
 ```
 
 ### Factory Pattern
@@ -173,5 +159,5 @@ response = await llm.ainvoke(messages)  # Works with any provider
 
 - [LiteLLM Documentation](https://docs.litellm.ai/)
 - [Supported Providers](https://docs.litellm.ai/docs/providers)
-- [integrations/litellm.md](../integrations/litellm.mdx)
+- [integrations/litellm.md](../integrations/litellm.md)
 - Related ADRs: [0005](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0005-pydantic-ai-integration.md) (Pydantic AI uses LiteLLM)

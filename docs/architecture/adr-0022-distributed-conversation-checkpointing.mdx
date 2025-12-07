@@ -1,21 +1,7 @@
 ---
 title: "22. Distributed Conversation Checkpointing for Auto-Scaling"
-description: 'Architecture Decision Record: 22. Distributed Conversation Checkpointing for Auto-Scaling'
+description: "Architecture Decision Record: 22. Distributed Conversation Checkpointing for Auto-Scaling"
 icon: 'database'
-contentType: "reference"
-seoTitle: "22. Distributed Conversation Checkpointing for Auto-Scaling - Architecture Decision Record"
-seoDescription: "Architecture Decision Record for 22. Distributed Conversation Checkpointing for Auto-Scaling. Category: Data & Storage. Part of MCP Server with LangGraph documentation."
-keywords:
-  - "architecture"
-  - "decision"
-  - "record"
-  - "ADR"
-  - "MCP Server"
-  - "LangGraph"
-  - "Distributed"
-  - "Conversation"
-  - "Checkpointing"
-  - "Auto"
 ---
 
 # 22. Distributed Conversation Checkpointing for Auto-Scaling
@@ -314,7 +300,7 @@ class Settings(BaseSettings):
 
 ### Request Flow (Auto-Scaling Scenario)
 
-```dockerfile
+```
 User Request 1 → Pod A (thread_id: "user-alice-123")
 ├─ LangGraph invokes with config: {"configurable": {"thread_id": "user-alice-123"}}
 ├─ RedisSaver stores checkpoint in Redis db 1
