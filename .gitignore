@@ -195,6 +195,8 @@ dependency-audit-*.txt
 # Node (if using any JS tooling)
 node_modules/
 package-lock.json
+# Exception: builder frontend needs package-lock.json for reproducible npm ci builds
+!src/mcp_server_langgraph/builder/frontend/package-lock.json
 yarn.lock
 
 # Terraform (if infrastructure as code)
