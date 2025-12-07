@@ -31,7 +31,7 @@
 #   /authn      - Keycloak (Authentication)
 #   /authz      - OpenFGA (Authorization)
 #   /vectors    - Qdrant (Vector Database)
-#   /traces     - Jaeger (Distributed Tracing)
+#   /tempo      - Tempo (Distributed Tracing)
 #   /logs       - Loki (Log Aggregation)
 #   /metrics    - Prometheus (Metrics)
 #   /alerts     - Alertmanager
@@ -424,7 +424,7 @@ services:
 
       # Observability
       - OTEL_SDK_DISABLED=false
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-test:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo-test:4318
       - OTEL_SERVICE_NAME=mcp-server-test
 
       # GDPR
@@ -459,45 +459,8 @@ services:
   # ==============================================================================
   # OBSERVABILITY SERVICES
   # ==============================================================================
-
-  jaeger-test:
-    image: jaegertracing/all-in-one:1.62.0
-    ports:
-      - "19686:16686"  # Jaeger UI (offset by 3000)
-      - "17268:14268"  # Jaeger collector HTTP
-      - "17250:14250"  # Jaeger collector gRPC
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
-      - LOG_LEVEL=warn
-      - SPAN_STORAGE_TYPE=memory
-      # Subpath configuration for gateway routing
-      - QUERY_BASE_PATH=/traces
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "16686"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          cpus: '0.05'
-          memory: 128M
-    networks:
-      mcp-test-network:
-        aliases:
-          - jaeger
-    labels:
-      - "traefik.enable=true"
-      # Route: /traces/* -> jaeger:16686 (Distributed Tracing)
-      # Jaeger handles subpath via QUERY_BASE_PATH
-      - "traefik.http.routers.jaeger.rule=PathPrefix(`/traces`)"
-      - "traefik.http.routers.jaeger.entrypoints=web"
-      - "traefik.http.routers.jaeger.priority=10"
-      - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
-      # NO strip - Jaeger configured for /traces subpath
+  # Note: Jaeger removed - Tempo handles distributed tracing in the Grafana LGTM stack
+  # Traces are now sent to tempo-test:4318 (OTLP HTTP)
 
   prometheus-test:
     image: prom/prometheus:v3.7.1
@@ -793,7 +756,7 @@ services:
         condition: service_healthy
       openfga-test:
         condition: service_healthy
-      jaeger-test:
+      tempo-test:
         condition: service_healthy
     ports:
       - "9001:8001"  # Test port (offset +1000 from dev port 8001)
@@ -823,7 +786,7 @@ services:
 
       # Observability (OpenTelemetry)
       - OTEL_SDK_DISABLED=false
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-test:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo-test:4318
       - OTEL_SERVICE_NAME=mcp-builder-test
       - LOG_FORMAT=json
     healthcheck:
@@ -872,7 +835,7 @@ services:
         condition: service_healthy
       redis-test:
         condition: service_healthy
-      jaeger-test:
+      tempo-test:
         condition: service_healthy
     ports:
       - "9002:8002"  # Test port (offset +1000 from dev port 8002)
@@ -905,7 +868,7 @@ services:
 
       # Observability (OpenTelemetry)
       - OTEL_SDK_DISABLED=false
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-test:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo-test:4318
       - OTEL_SERVICE_NAME=mcp-playground-test
       - LOG_FORMAT=json
     healthcheck:
