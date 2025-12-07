@@ -238,9 +238,14 @@ variable "binary_authorization_evaluation_mode" {
 }
 
 variable "enable_security_posture" {
-  description = "Enable GKE Security Posture (vulnerability scanning)"
+  description = <<-EOT
+    Enable explicit GKE Security Posture configuration. Set to false for Autopilot
+    clusters as security posture is enabled by default and managed automatically.
+    Setting this to true on Autopilot may cause API conflicts.
+    Reference: https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-security
+  EOT
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "security_posture_mode" {
@@ -281,8 +286,19 @@ variable "enable_network_policy" {
   default     = true
 }
 
+variable "enable_explicit_dns_config" {
+  description = <<-EOT
+    Enable explicit DNS configuration. Set to false for GKE Autopilot clusters
+    (v1.25.9-gke.400+) as Cloud DNS is pre-configured automatically.
+    Setting dns_config on newer Autopilot clusters causes API errors.
+    Reference: https://cloud.google.com/kubernetes-engine/docs/how-to/cloud-dns
+  EOT
+  type        = bool
+  default     = false
+}
+
 variable "cluster_dns_provider" {
-  description = "DNS provider (CLOUD_DNS or PLATFORM_DEFAULT)"
+  description = "DNS provider (CLOUD_DNS or PLATFORM_DEFAULT). Only used when enable_explicit_dns_config=true."
   type        = string
   default     = "CLOUD_DNS"
 
@@ -304,9 +320,9 @@ variable "cluster_dns_scope" {
 }
 
 variable "cluster_dns_domain" {
-  description = "Custom DNS domain for the cluster"
+  description = "Custom DNS domain for the cluster (default: cluster.local)"
   type        = string
-  default     = ""
+  default     = "cluster.local"
 }
 
 #######################

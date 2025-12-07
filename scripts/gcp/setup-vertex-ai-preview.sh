@@ -1,15 +1,15 @@
 #!/bin/bash
 #
-# Vertex AI Workload Identity Setup for Staging
+# Vertex AI Workload Identity Setup for Preview
 #
 # This script configures Workload Identity Federation for Vertex AI access
-# in the staging GKE environment. It creates a dedicated service account
+# in the preview GKE environment. It creates a dedicated service account
 # and binds it to the Kubernetes service account for keyless authentication.
 #
 # Prerequisites:
 # - GKE cluster with Workload Identity enabled
 # - gcloud CLI installed and authenticated
-# - Staging infrastructure already created (run setup-preview-infrastructure.sh first)
+# - Preview infrastructure already created (run setup-preview-infrastructure.sh first)
 #
 # Usage:
 #   ./scripts/gcp/setup-vertex-ai-preview.sh
@@ -20,10 +20,10 @@ set -euo pipefail
 # Configuration
 PROJECT_ID="${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
 REGION="us-central1"
-CLUSTER_NAME="mcp-staging-cluster"
-K8S_NAMESPACE="mcp-staging"
+CLUSTER_NAME="mcp-preview-cluster"
+K8S_NAMESPACE="mcp-preview"
 K8S_SERVICE_ACCOUNT="mcp-server-langgraph"
-GCP_SERVICE_ACCOUNT="vertex-ai-staging"
+GCP_SERVICE_ACCOUNT="vertex-ai-preview"
 
 # Colors for output
 RED='\033[0;31m'
@@ -84,7 +84,7 @@ check_prerequisites() {
 
     # Verify namespace exists
     if ! kubectl get namespace "$K8S_NAMESPACE" &> /dev/null; then
-        log_error "Kubernetes namespace '$K8S_NAMESPACE' not found. Deploy staging manifests first."
+        log_error "Kubernetes namespace '$K8S_NAMESPACE' not found. Deploy preview manifests first."
         exit 1
     fi
 }
@@ -111,7 +111,7 @@ create_service_account() {
     # Create service account
     gcloud iam service-accounts create "$GCP_SERVICE_ACCOUNT" \
         --display-name="Vertex AI Staging" \
-        --description="Service account for Vertex AI access in staging environment" \
+        --description="Service account for Vertex AI access in preview environment" \
         --project="$PROJECT_ID"
 
     log_info "Service account created: ${GCP_SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com"
@@ -170,7 +170,7 @@ annotate_kubernetes_service_account() {
     # Check if service account exists
     if ! kubectl get serviceaccount "$K8S_SERVICE_ACCOUNT" -n "$K8S_NAMESPACE" &> /dev/null; then
         log_error "Kubernetes service account '$K8S_SERVICE_ACCOUNT' not found in namespace '$K8S_NAMESPACE'"
-        log_error "Deploy the staging manifests first: kubectl apply -k deployments/overlays/preview-gke"
+        log_error "Deploy the preview manifests first: kubectl apply -k deployments/overlays/preview-gke"
         exit 1
     fi
 

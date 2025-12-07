@@ -261,6 +261,15 @@ spec:
       port: 3307  # Cloud SQL Proxy Admin API (private IP mode)
     - protocol: TCP
       port: 5432  # Database port (PostgreSQL)
+  # CloudSQL Private Services CIDR (172.20.0.0/16 allocated from 172.16.0.0/12)
+  - to:
+    - ipBlock:
+        cidr: 172.16.0.0/12
+    ports:
+    - protocol: TCP
+      port: 3307  # Cloud SQL Proxy Admin API (private IP mode)
+    - protocol: TCP
+      port: 5432  # Database port (PostgreSQL)
   # Allow Cloud SQL Auth Proxy API access (sqladmin.googleapis.com)
   - to:
     - ipBlock:
@@ -330,6 +339,15 @@ spec:
   - to:
     - ipBlock:
         cidr: 10.0.0.0/8
+    ports:
+    - protocol: TCP
+      port: 3307  # Cloud SQL Proxy Admin API (private IP mode)
+    - protocol: TCP
+      port: 5432  # Database port (PostgreSQL)
+  # CloudSQL Private Services CIDR (172.20.0.0/16 allocated from 172.16.0.0/12)
+  - to:
+    - ipBlock:
+        cidr: 172.16.0.0/12
     ports:
     - protocol: TCP
       port: 3307  # Cloud SQL Proxy Admin API (private IP mode)

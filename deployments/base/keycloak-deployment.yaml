@@ -182,7 +182,7 @@ spec:
         - name: work-dir
           mountPath: /opt/keycloak/data
         # REMOVED: /opt/keycloak/lib mount - overwrites Quarkus runtime JARs causing ClassNotFoundException
-        # See: tests/kubernetes/test_kustomize_staging_gke.py::test_keycloak_volume_mounts_dont_override_critical_paths
+        # See: tests/kubernetes/test_kustomize_preview_gke.py::test_keycloak_volume_mounts_dont_override_critical_paths
         - name: providers
           mountPath: /opt/keycloak/providers
         - name: themes

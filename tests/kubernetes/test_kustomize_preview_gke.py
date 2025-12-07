@@ -31,7 +31,7 @@ pytestmark = pytest.mark.deployment
 
 # Define project root relative to test file
 PROJECT_ROOT = get_repo_root()
-STAGING_GKE_OVERLAY = PROJECT_ROOT / "deployments" / "overlays" / "preview-gke"
+PREVIEW_GKE_OVERLAY = PROJECT_ROOT / "deployments" / "overlays" / "preview-gke"
 
 
 @pytest.mark.unit
@@ -47,13 +47,13 @@ class TestKustomizePreviewGKE:
 
     def _render_kustomize_manifests(self) -> list[dict[str, Any]]:
         """Render Kustomize manifests and return parsed YAML documents."""
-        if not STAGING_GKE_OVERLAY.exists():
-            pytest.skip(f"Preview GKE overlay not found: {STAGING_GKE_OVERLAY}")
+        if not PREVIEW_GKE_OVERLAY.exists():
+            pytest.skip(f"Preview GKE overlay not found: {PREVIEW_GKE_OVERLAY}")
 
         try:
             # Run kubectl kustomize to render manifests
             result = subprocess.run(
-                ["kubectl", "kustomize", str(STAGING_GKE_OVERLAY)],
+                ["kubectl", "kustomize", str(PREVIEW_GKE_OVERLAY)],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -371,6 +371,44 @@ class TestKustomizePreviewGKE:
 
         if missing_kinds:
             pytest.fail(f"Missing required resource kinds: {missing_kinds}\nFound kinds: {sorted(kinds)}")
+
+    def test_environment_labels_use_preview_not_staging(self):
+        """
+        Test that all environment labels/annotations use 'preview' not 'staging'.
+
+        RED: Should FAIL initially - kustomization.yaml and namespace.yaml use 'staging'
+        GREEN: Should PASS after updating all environment labels to 'preview'
+
+        This ensures consistency after the staging-to-preview rename and prevents
+        monitoring/alerting confusion from mixed environment labels.
+        """
+        manifests = self._render_kustomize_manifests()
+
+        violations = []
+
+        for manifest in manifests:
+            kind = manifest.get("kind")
+            name = manifest.get("metadata", {}).get("name", "unknown")
+
+            # Check labels
+            labels = manifest.get("metadata", {}).get("labels", {})
+            if labels.get("environment") == "staging":
+                violations.append(f"{kind}/{name}: metadata.labels.environment=staging")
+
+            # Check annotations
+            annotations = manifest.get("metadata", {}).get("annotations", {})
+            if annotations.get("environment") == "staging":
+                violations.append(f"{kind}/{name}: metadata.annotations.environment=staging")
+
+        if violations:
+            error_msg = "\n\nFound 'staging' environment labels (should be 'preview'):\n"
+            error_msg += "The staging-to-preview rename requires all environment labels to be updated.\n\n"
+            for v in violations:
+                error_msg += f"  - {v}\n"
+            error_msg += "\nFiles to update:\n"
+            error_msg += "  - deployments/overlays/preview-gke/kustomization.yaml\n"
+            error_msg += "  - deployments/overlays/preview-gke/namespace.yaml\n"
+            pytest.fail(error_msg)
 
 
 if __name__ == "__main__":

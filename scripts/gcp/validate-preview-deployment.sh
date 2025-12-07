@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Staging GKE Deployment Validation Script
+# Preview GKE Deployment Validation Script
 #
-# This script performs comprehensive validation of the staging GKE deployment,
+# This script performs comprehensive validation of the preview GKE deployment,
 # verifying infrastructure, application health, integration tests, and costs.
 #
 # Features:
@@ -30,11 +30,12 @@ set -euo pipefail
 # Configuration
 readonly PROJECT_ID="${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
 readonly REGION="us-central1"
-readonly CLUSTER_NAME="staging-mcp-server-langgraph-gke"
-readonly NAMESPACE="staging-mcp-server-langgraph"
-readonly CLOUD_SQL_INSTANCE="mcp-staging-postgres"
-readonly REDIS_INSTANCE="mcp-staging-redis"
-readonly VPC_NAME="staging-vpc"
+readonly CLUSTER_NAME="preview-mcp-server-langgraph-gke"
+readonly NAMESPACE="preview-mcp-server-langgraph"
+# Resource names match Terraform naming convention (short_prefix = "preview-mcp-slg")
+readonly CLOUD_SQL_INSTANCE="preview-mcp-slg-postgres"
+readonly REDIS_INSTANCE="preview-mcp-slg-redis"
+readonly VPC_NAME="preview-mcp-slg-vpc"
 readonly EXPECTED_MIN_COST=200
 readonly EXPECTED_MAX_COST=400
 
@@ -212,6 +213,37 @@ validate_infrastructure() {
         fi
     else
         record_test_fail "VPC network exists" "Network not found"
+    fi
+
+    # Validate Artifact Registry (optional - created during CI/CD)
+    log_info "Validating Artifact Registry..."
+    local ar_repo="mcp-preview"
+    if gcloud artifacts repositories describe "$ar_repo" --location="$REGION" --project="$PROJECT_ID" &> /dev/null; then
+        record_test_pass "Artifact Registry repository exists"
+    else
+        record_test_warn "Artifact Registry" "Repository $ar_repo not found (may not be created yet)"
+    fi
+
+    # Validate DNS Zone (optional - used for internal service discovery)
+    log_info "Validating DNS Zone..."
+    local dns_zone="preview-internal"
+    if gcloud dns managed-zones describe "$dns_zone" --project="$PROJECT_ID" &> /dev/null; then
+        record_test_pass "Internal DNS zone exists"
+    else
+        record_test_warn "DNS Zone" "Zone $dns_zone not found (may not be needed)"
+    fi
+
+    # Validate Monitoring Alert Policies
+    log_info "Validating monitoring alert policies..."
+    local alert_count
+    alert_count=$(gcloud alpha monitoring policies list \
+        --project="$PROJECT_ID" \
+        --filter="displayName~preview" \
+        --format="value(name)" 2>/dev/null | wc -l || echo "0")
+    if [ "$alert_count" -gt 0 ]; then
+        record_test_pass "Found $alert_count monitoring alert policies"
+    else
+        record_test_warn "Monitoring policies" "No preview alert policies found"
     fi
 
     log_success "Infrastructure validation complete"
@@ -486,7 +518,7 @@ generate_report() {
 ###############################################################################
 
 main() {
-    log_info "Starting staging GKE deployment validation..."
+    log_info "Starting preview GKE deployment validation..."
 
     # Parse command-line arguments
     while [[ $# -gt 0 ]]; do

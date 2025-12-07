@@ -44,7 +44,8 @@ services:
   # ==============================================================================
 
   postgres:
-    image: postgres:16.8-alpine
+    # PostgreSQL 16 to match CloudSQL (terraform/environments/gcp-preview/main.tf: postgres_major_version = 16)
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -146,7 +147,8 @@ services:
   # ==============================================================================
 
   redis:
-    image: redis:7-alpine
+    # Redis 7.2 to match Memorystore (terraform/environments/gcp-preview/main.tf: redis_version = "REDIS_7_2")
+    image: redis:7.2-alpine
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
@@ -169,7 +171,8 @@ services:
       - mcp-network
 
   redis-sessions:
-    image: redis:7-alpine
+    # Redis 7.2 to match Memorystore (terraform/environments/gcp-preview/main.tf: redis_version = "REDIS_7_2")
+    image: redis:7.2-alpine
     command: redis-server --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru
     ports:
       - "6380:6379"

@@ -1164,6 +1164,167 @@ deploy-rollback-production:
 	helm rollback langgraph-agent -n langgraph-agent
 	@echo "✓ Production rollback complete"
 
+# ==============================================================================
+# Preview GKE Deployment (unified workflow)
+# ==============================================================================
+# RECOMMENDED (single-command, full infrastructure + K8s):
+#   make gke-preview-up     # Deploy everything: Terraform + Kubernetes
+#   make gke-preview-down   # Teardown everything: Kubernetes + Terraform
+#   make gke-preview-status # Check environment status
+#
+# ALTERNATIVE (step-by-step, K8s only - assumes infrastructure exists):
+#   1. make preflight-preview-gke   # Pre-flight checks
+#   2. make deploy-preview-gke      # Deploy to GKE
+#   3. make postflight-preview-gke  # Validate deployment
+#   4. make teardown-preview-gke    # Clean teardown (K8s only)
+
+preflight-preview-gke:  ## Pre-flight check for Preview GKE deployment
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🔍 Preview GKE Pre-Flight Checks"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Validating Kustomize overlay..."
+	@kubectl kustomize deployments/overlays/preview-gke > /dev/null && echo "  ✓ Kustomize overlay valid" || (echo "  ✗ Kustomize overlay invalid" && exit 1)
+	@echo ""
+	@echo "▶ Checking GKE cluster access..."
+	@kubectl cluster-info > /dev/null 2>&1 && echo "  ✓ kubectl connected to cluster" || (echo "  ✗ kubectl not connected - run: gcloud container clusters get-credentials preview-mcp-server-langgraph-gke --region us-central1" && exit 1)
+	@echo ""
+	@echo "▶ Checking namespace exists..."
+	@kubectl get namespace preview-mcp-server-langgraph > /dev/null 2>&1 && echo "  ✓ Namespace exists" || echo "  ⚠ Namespace will be created during deploy"
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✓ Pre-flight checks passed"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+deploy-preview-gke:  ## Deploy to Preview GKE (includes preflight + postflight)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🚀 Deploying to Preview GKE"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@$(MAKE) preflight-preview-gke
+	@echo ""
+	@echo "▶ Applying Kustomize manifests..."
+	kubectl apply -k deployments/overlays/preview-gke
+	@echo ""
+	@echo "▶ Waiting for rollouts..."
+	@kubectl rollout status deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph --timeout=10m || true
+	@kubectl rollout status deployment/preview-keycloak -n preview-mcp-server-langgraph --timeout=10m || true
+	@kubectl rollout status deployment/preview-openfga -n preview-mcp-server-langgraph --timeout=10m || true
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✓ Preview GKE deployment complete"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "Next: Run 'make postflight-preview-gke' to validate"
+
+postflight-preview-gke:  ## Post-flight validation for Preview GKE deployment
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅ Preview GKE Post-Flight Validation"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	./scripts/gcp/validate-preview-deployment.sh
+
+smoke-test-preview-gke:  ## Run smoke tests on Preview GKE
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🧪 Preview GKE Smoke Tests"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	./scripts/gcp/preview-smoke-tests.sh
+
+teardown-preview-gke:  ## Teardown Preview GKE (Kubernetes resources only)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🗑️  Preview GKE Teardown (Kubernetes Resources)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "This will delete all Kubernetes resources in preview-mcp-server-langgraph namespace"
+	@echo ""
+	kubectl delete -k deployments/overlays/preview-gke --ignore-not-found=true || true
+	@echo ""
+	@echo "✓ Kubernetes resources deleted"
+	@echo ""
+	@echo "Note: To teardown infrastructure (GKE, CloudSQL, Redis, VPC), run:"
+	@echo "  ./scripts/gcp/teardown-preview-infrastructure.sh"
+
+teardown-preview-infra:  ## Teardown Preview GKE infrastructure (full cleanup)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "⚠️  WARNING: Full Preview Infrastructure Teardown"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "This will DELETE:"
+	@echo "  • GKE Autopilot cluster"
+	@echo "  • Cloud SQL PostgreSQL instance"
+	@echo "  • Memorystore Redis instance"
+	@echo "  • VPC and network resources"
+	@echo "  • IAM service accounts"
+	@echo "  • Secret Manager secrets"
+	@echo ""
+	./scripts/gcp/teardown-preview-infrastructure.sh
+
+deploy-rollback-preview-gke:  ## Rollback Preview GKE deployment
+	@echo "Rolling back Preview GKE deployment..."
+	kubectl rollout undo deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph
+	kubectl rollout status deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph
+	@echo "✓ Preview GKE rollback complete"
+
+# ==============================================================================
+# Single-Command GKE Preview Deployment (RECOMMENDED)
+# ==============================================================================
+# These targets use Terraform + wrapper scripts for complete infrastructure
+# management. They handle: prerequisites, cost warnings, Terraform, K8s, and
+# validation automatically.
+#
+# Environment Variables:
+#   GCP_PROJECT_ID  - Override default GCP project (vishnu-sandbox-20250310)
+#   GCP_REGION      - Override default region (us-central1)
+
+gke-preview-up:  ## 🚀 Deploy complete GKE preview environment (Terraform + K8s)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🚀 GKE Preview Environment - Full Setup"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "This will create:"
+	@echo "  • GKE Autopilot cluster (~15 min)"
+	@echo "  • Cloud SQL PostgreSQL HA (~10 min)"
+	@echo "  • Memorystore Redis HA (~5 min)"
+	@echo "  • VPC, Cloud NAT, networking"
+	@echo "  • Kubernetes workloads"
+	@echo ""
+	@echo "Estimated time: 25-30 minutes"
+	@echo "Estimated cost: ~\$$325/month"
+	@echo ""
+	./scripts/gcp/gke-preview-up.sh
+
+gke-preview-down:  ## 🗑️  Teardown complete GKE preview environment
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🗑️  GKE Preview Environment - Full Teardown"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	./scripts/gcp/gke-preview-down.sh
+
+gke-preview-status:  ## 📊 Check GKE preview environment status
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "📊 GKE Preview Environment Status"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "GCP Project: $${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
+	@echo "Region: $${GCP_REGION:-us-central1}"
+	@echo ""
+	@echo "▶ GKE Cluster:"
+	@gcloud container clusters describe preview-mcp-server-langgraph-gke \
+		--region=$${GCP_REGION:-us-central1} \
+		--project=$${GCP_PROJECT_ID:-vishnu-sandbox-20250310} \
+		--format="value(status)" 2>/dev/null && echo "  Status: RUNNING" || echo "  Status: NOT FOUND"
+	@echo ""
+	@echo "▶ Cloud SQL:"
+	@gcloud sql instances describe preview-mcp-slg-postgres \
+		--project=$${GCP_PROJECT_ID:-vishnu-sandbox-20250310} \
+		--format="value(state)" 2>/dev/null && echo "  Status: RUNNABLE" || echo "  Status: NOT FOUND"
+	@echo ""
+	@echo "▶ Memorystore Redis:"
+	@gcloud redis instances describe preview-mcp-slg-redis \
+		--region=$${GCP_REGION:-us-central1} \
+		--project=$${GCP_PROJECT_ID:-vishnu-sandbox-20250310} \
+		--format="value(state)" 2>/dev/null && echo "  Status: READY" || echo "  Status: NOT FOUND"
+	@echo ""
+	@echo "▶ Kubernetes Pods:"
+	@kubectl get pods -n preview-mcp-server-langgraph --no-headers 2>/dev/null | wc -l | xargs -I{} echo "  Count: {} pods" || echo "  Status: No kubectl access"
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
 # Deployment testing
 test-k8s-deployment:
 	@echo "Running Kubernetes deployment tests..."

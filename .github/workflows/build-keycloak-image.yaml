@@ -13,8 +13,8 @@ name: Build Keycloak Optimized Image
 # - Weekly schedule (to get security updates)
 #
 # The image is pushed to:
-# - Staging: us-central1-docker.pkg.dev/PROJECT/mcp-staging/keycloak
-# - Production: us-central1-docker.pkg.dev/PROJECT/mcp-production/keycloak
+# - Preview/Dev: ghcr.io/vishnu2kmohan/keycloak-optimized (GHCR)
+# - Production: Promoted from GHCR to cloud-specific registries (GCP, AWS, Azure)
 # ==============================================================================
 
 on:
@@ -51,7 +51,7 @@ env:
 
 permissions:
   contents: read
-  id-token: write  # Required for Workload Identity Federation
+  packages: write  # Required for pushing to GHCR
   security-events: write  # Required for SARIF upload to GitHub Security tab
 
 jobs:
@@ -78,19 +78,13 @@ jobs:
           fi
           echo "✅ Dockerfile.keycloak found"
 
-      # Authenticate to Google Cloud using Workload Identity Federation
-      - id: auth
-        name: Authenticate to Google Cloud
-        uses: ./.github/actions/setup-gcp-auth
+      # Authenticate to GitHub Container Registry using GITHUB_TOKEN
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.6.0
         with:
-          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
-          token-format: access_token
-
-      # Configure Docker to use gcloud credentials
-      - name: Configure Docker for Artifact Registry
-        run: |
-          echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://${{ env.GCP_REGION }}-docker.pkg.dev
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: ./.github/actions/setup-docker-buildx
@@ -101,7 +95,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak
+            ghcr.io/${{ github.repository_owner }}/keycloak-optimized
           tags: |
             type=raw,value=${{ env.KEYCLOAK_VERSION }}
             type=raw,value=${{ env.KEYCLOAK_VERSION }}-{{sha}}
@@ -110,8 +104,9 @@ jobs:
             org.opencontainers.image.title=Keycloak Optimized
             org.opencontainers.image.description=Pre-built Keycloak with Quarkus optimization
             org.opencontainers.image.version=${{ env.KEYCLOAK_VERSION }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
-      # Build and push to staging registry
+      # Build and push to GHCR
       - name: Build and push Keycloak image
         id: build
         uses: docker/build-push-action@v6.18.0
@@ -124,7 +119,7 @@ jobs:
           build-args: |
             KEYCLOAK_VERSION=${{ env.KEYCLOAK_VERSION }}
           cache-from: |
-            type=registry,ref=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:latest
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/keycloak-optimized:latest
           cache-to: |
             type=inline
           provenance: true
@@ -140,6 +135,7 @@ jobs:
           echo '${{ steps.meta.outputs.tags }}' | tr ',' '\n' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
 
   # Push to production registry (manual trigger only)
+  # Promotes image from GHCR to cloud-specific production registries
   push-to-production:
     name: Push to Production
     runs-on: ubuntu-latest
@@ -151,6 +147,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      # Authenticate to GHCR to pull the source image
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Authenticate to GCP to push to production registry
       - id: auth
         name: Authenticate to Google Cloud
         uses: ./.github/actions/setup-gcp-auth
@@ -163,33 +168,35 @@ jobs:
         run: |
           echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://${{ env.GCP_REGION }}-docker.pkg.dev
 
-      - name: Copy image to production registry
+      - name: Promote image from GHCR to production registry
         run: |
-          # Pull from staging
-          docker pull ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:${{ env.KEYCLOAK_VERSION }}
+          # Pull from GHCR (source of truth for preview images)
+          docker pull ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }}
 
-          # Tag for production
+          # Tag for GCP production registry
           docker tag \
-            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:${{ env.KEYCLOAK_VERSION }} \
+            ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }} \
             ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}
 
           docker tag \
-            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:${{ env.KEYCLOAK_VERSION }} \
+            ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }} \
             ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:latest
 
-          # Push to production
+          # Push to GCP production registry
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:latest
 
-          echo "✅ Pushed to production registry"
+          echo "✅ Promoted from GHCR to GCP production registry"
 
       - name: Output production info
         run: |
           echo "## Production Push Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Source:** ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}" >> $GITHUB_STEP_SUMMARY
 
   # Verify the built image works
+  # Pulls from GHCR for verification and security scanning
   verify-image:
     name: Verify Image
     runs-on: ubuntu-latest
@@ -200,21 +207,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - id: auth
-        name: Authenticate to Google Cloud
-        uses: ./.github/actions/setup-gcp-auth
+      # Authenticate to GHCR for pulling the image
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.6.0
         with:
-          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
-          token-format: access_token
-
-      - name: Configure Docker for Artifact Registry
-        run: |
-          echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://${{ env.GCP_REGION }}-docker.pkg.dev
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull and verify image
         run: |
-          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:${{ env.KEYCLOAK_VERSION }}"
+          IMAGE="ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }}"
 
           echo "Pulling image: $IMAGE"
           docker pull "$IMAGE"
@@ -230,7 +233,7 @@ jobs:
       - name: Security scan with Trivy
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: '${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-staging/keycloak:${{ env.KEYCLOAK_VERSION }}'
+          image-ref: 'ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }}'
           format: 'sarif'
           output: 'trivy-keycloak-results.sarif'
           severity: 'CRITICAL,HIGH'

@@ -1,26 +1,26 @@
 ---
-title: GKE Staging Implementation Summary
-description: 'Complete summary of the GKE staging environment implementation for the MCP Server LangGraph project'
+title: GKE Preview Implementation Summary
+description: 'Complete summary of the GKE preview environment implementation for the MCP Server LangGraph project'
 icon: 'dharmachakra'
-seoTitle: "GKE Staging Implementation Summary - Deployment Guide"
-seoDescription: "Deploy MCP Server: Complete summary of the GKE staging environment implementation for the MCP Server LangGraph project"
+seoTitle: "GKE Preview Implementation Summary - Deployment Guide"
+seoDescription: "Deploy MCP Server: Complete summary of the GKE preview environment implementation for the MCP Server LangGraph project"
 keywords: ["deployment", "cloud deployment", "MCP Server", "production deployment"]
 contentType: "how-to"
 ---
 
 ### Overview
 
-This document summarizes the complete GKE staging environment implementation for the MCP Server LangGraph project.
+This document summarizes the complete GKE preview environment implementation for the MCP Server LangGraph project.
 
 **Project ID**: `vishnu-sandbox-20250310`
 
 ### What Was Implemented
 
 #### 1. Infrastructure Setup Script
-**File**: `scripts/gcp/setup-staging-infrastructure.sh`
+**File**: `scripts/gcp/setup-preview-infrastructure.sh`
 
 **Creates**:
-- ✅ Staging VPC network (10.1.0.0/20) with flow logs
+- ✅ Preview VPC network (10.1.0.0/20) with flow logs
 - ✅ GKE Autopilot cluster with security hardening
   - Private nodes
   - Shielded nodes with secure boot
@@ -28,7 +28,7 @@ This document summarizes the complete GKE staging environment implementation for
   - Workload Identity enabled
 - ✅ Cloud SQL PostgreSQL (db-custom-1-4096, private IP)
 - ✅ Memorystore Redis (2GB standard tier, private IP)
-- ✅ GCP Service Account for staging (`mcp-staging-sa`)
+- ✅ GCP Service Account for preview (`mcp-preview-sa`)
 - ✅ Workload Identity Federation for GitHub Actions (keyless)
 - ✅ Artifact Registry repository for Docker images
 - ✅ Secret Manager secrets (with placeholders for API keys)
@@ -45,7 +45,7 @@ This document summarizes the complete GKE staging environment implementation for
 
 **Files Created**:
 1. **kustomization.yaml** - Main overlay configuration
-2. **namespace.yaml** - mcp-staging namespace
+2. **namespace.yaml** - mcp-preview namespace
 3. **deployment-patch.yaml** - Application deployment with:
    - Cloud SQL Proxy sidecar
    - Security contexts (non-root, drop capabilities)
@@ -104,14 +104,14 @@ This document summarizes the complete GKE staging environment implementation for
 #### 5. Documentation
 
 **Created**:
-1. **docs/deployment/kubernetes/gke-staging.mdx** - Complete deployment guide
+1. **docs/deployment/kubernetes/gke-preview.mdx** - Complete deployment guide
    - Architecture diagram
    - Step-by-step setup
    - Security features
    - Monitoring & troubleshooting
    - Cost optimization tips
 
-2. **docs/security/gke-staging-checklist.md** - Security verification checklist
+2. **docs/security/gke-preview-checklist.md** - Security verification checklist
    - ~80 security checks
    - Verification commands
    - Compliance tracking
@@ -180,7 +180,7 @@ This document summarizes the complete GKE staging environment implementation for
 1. **Run infrastructure setup**:
    ```bash
    export GCP_PROJECT_ID=vishnu-sandbox-20250310
-   ./scripts/gcp/setup-staging-infrastructure.sh
+   ./scripts/gcp/setup-preview-infrastructure.sh
    ```
 
 2. **Update API keys**:
@@ -343,7 +343,7 @@ GitHub Actions automatically rolls back on:
 ### Files Created
 
 #### Scripts
-- `scripts/gcp/setup-staging-infrastructure.sh` (infrastructure automation)
+- `scripts/gcp/setup-preview-infrastructure.sh` (infrastructure automation)
 - `scripts/gcp/staging-smoke-tests.sh` (deployment validation)
 
 #### Kubernetes Manifests
@@ -360,9 +360,9 @@ GitHub Actions automatically rolls back on:
 - `.github/workflows/deploy-preview-gke.yaml` (deployment workflow)
 
 #### Documentation
-- `docs/deployment/kubernetes/gke-staging.mdx` (deployment guide)
-- `docs/security/gke-staging-checklist.md` (security checklist)
-- `docs/deployment/GKE_STAGING_IMPLEMENTATION_SUMMARY.md` (this file)
+- `docs/deployment/kubernetes/gke-preview.mdx` (deployment guide)
+- `docs/security/gke-preview-checklist.md` (security checklist)
+- `docs/deployment/gke-preview-implementation-summary.mdx` (this file)
 
 #### Updates
 - `README.md` (added GKE staging section)
@@ -389,4 +389,4 @@ GitHub Actions automatically rolls back on:
 
 **Status**: ✅ **COMPLETE - Ready for deployment**
 
-**Next Action**: Run `./scripts/gcp/setup-staging-infrastructure.sh` to begin infrastructure setup.
+**Next Action**: Run `./scripts/gcp/setup-preview-infrastructure.sh` to begin infrastructure setup.

@@ -11,8 +11,6 @@ resources:
   - network-policy.yaml
   - external-secrets.yaml
   - serviceaccount-external-secrets.yaml
-  - serviceaccount-keycloak.yaml
-  - serviceaccount-openfga.yaml
   - pod-disruption-budget.yaml  # NEW: Staging-production parity
   - resource-quotas.yaml  # NEW: LimitRange + ResourceQuota (Trivy KSV039/KSV040)
   # redis-session-endpoints.yaml removed - using redis-session-service-patch.yaml instead
@@ -21,12 +19,12 @@ resources:
 commonAnnotations:
   platform: gcp
   cloud-provider: google
-  environment: staging
+  environment: preview
   managed-by: kustomize
 
 labels:
   - pairs:
-      environment: staging
+      environment: preview
       platform: gke
       cloud: gcp
 
@@ -42,27 +40,6 @@ patches:
     target:
       kind: Secret
       name: mcp-server-langgraph-secrets
-
-  # Delete base ServiceAccounts - replace with GCP-specific versions with Workload Identity
-  - patch: |-
-      apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: keycloak-sa
-      $patch: delete
-    target:
-      kind: ServiceAccount
-      name: keycloak-sa
-
-  - patch: |-
-      apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: openfga-sa
-      $patch: delete
-    target:
-      kind: ServiceAccount
-      name: openfga-sa
 
   # Exclude self-hosted database resources - use cloud-managed services instead
   # PostgreSQL → Cloud SQL, Redis → Memorystore Redis
@@ -171,6 +148,18 @@ patches:
       kind: ServiceAccount
       name: mcp-server-langgraph
 
+  # Keycloak ServiceAccount - Workload Identity annotation
+  - path: serviceaccount-keycloak.yaml
+    target:
+      kind: ServiceAccount
+      name: keycloak-sa
+
+  # OpenFGA ServiceAccount - Workload Identity annotation
+  - path: serviceaccount-openfga.yaml
+    target:
+      kind: ServiceAccount
+      name: openfga-sa
+
   # Keycloak - Add Cloud SQL Proxy sidecar
   - path: keycloak-patch.yaml
     target:
@@ -253,21 +242,53 @@ patches:
       name: qdrant
 
 # Image configuration
-# Codex Finding #6 (P1): Use full registry path for image name matching
-# For staging, use 'latest' tag with imagePullPolicy: Always to ensure newest image is always pulled
+# For preview/non-production: Use GHCR (GitHub Container Registry) directly
+# For production: Images are promoted from GHCR to cloud-specific registries (GCP, AWS, Azure)
+# This follows the pattern: GHCR (dev/preview) → Cloud Registry (production)
 images:
-  # Main application image
+  # Main application image - use GHCR directly for preview
   - name: ghcr.io/vishnu2kmohan/mcp-server-langgraph
-    newName: us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent
     newTag: preview-latest
 
   # Keycloak optimized image (pre-built with kc.sh build)
   # This image eliminates runtime Quarkus augmentation that causes ReadOnlyFileSystemException
-  # Built by: .github/workflows/build-keycloak-image.yaml
+  # Built by: .github/workflows/build-keycloak-image.yaml → pushes to GHCR
   # See: docker/Dockerfile.keycloak
   - name: quay.io/keycloak/keycloak
-    newName: us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/keycloak
+    newName: ghcr.io/vishnu2kmohan/keycloak-optimized
     newTag: "26.4.2"
+
+  # ===========================================================================
+  # GHCR-Mirrored Dependencies (avoid Docker Hub rate limits)
+  # ===========================================================================
+  # These images are mirrored from Docker Hub to GHCR by:
+  # .github/workflows/mirror-dependencies.yaml (runs weekly + manual dispatch)
+  #
+  # Benefits:
+  # - Unlimited pulls for public GHCR images
+  # - Supply chain security (vulnerability scanning before mirroring)
+  # - No Docker Hub rate limit issues (10 pulls/hour after Dec 2024)
+  # ===========================================================================
+
+  # OpenFGA - Authorization service
+  - name: openfga/openfga
+    newName: ghcr.io/vishnu2kmohan/openfga
+    newTag: v1.10.2
+
+  # OpenTelemetry Collector - Observability
+  - name: otel/opentelemetry-collector-contrib
+    newName: ghcr.io/vishnu2kmohan/otel-collector-contrib
+    newTag: "0.137.0"
+
+  # Qdrant - Vector database
+  - name: qdrant/qdrant
+    newName: ghcr.io/vishnu2kmohan/qdrant
+    newTag: v1.15.5
+
+  # BusyBox - Init containers
+  - name: docker.io/library/busybox
+    newName: ghcr.io/vishnu2kmohan/busybox
+    newTag: "1.36"
 
 # Patch OpenTelemetry Collector ConfigMap with GCP-specific configuration
 # Cannot use configMapGenerator because base has static ConfigMap (not generated)

@@ -47,7 +47,7 @@ data:
       attributes:
         actions:
           - key: deployment.environment
-            value: staging
+            value: preview
             action: insert
           - key: service.version
             value: unknown
@@ -75,7 +75,7 @@ data:
         log:
           default_log_name: mcp-preview-logs
         metric:
-          prefix: custom.googleapis.com/mcp-staging/
+          prefix: custom.googleapis.com/mcp-preview/
           skip_create_descriptor: false
           instrumentation_library_labels: true
           service_resource_labels: true
@@ -86,9 +86,9 @@ data:
       # Prometheus (for local metrics scraping)
       prometheus:
         endpoint: "0.0.0.0:8889"
-        namespace: mcp_staging
+        namespace: mcp_preview
         const_labels:
-          environment: staging
+          environment: preview
           platform: gke
 
     service:

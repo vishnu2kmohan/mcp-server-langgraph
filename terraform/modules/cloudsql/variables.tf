@@ -151,10 +151,22 @@ variable "enable_public_ip" {
   default     = false
 }
 
+variable "ssl_mode" {
+  description = "SSL mode for connections: ENCRYPTED_ONLY (default) or ALLOW_UNENCRYPTED_AND_ENCRYPTED. Replaces deprecated require_ssl."
+  type        = string
+  default     = "ENCRYPTED_ONLY"
+
+  validation {
+    condition     = contains(["ENCRYPTED_ONLY", "ALLOW_UNENCRYPTED_AND_ENCRYPTED"], var.ssl_mode)
+    error_message = "ssl_mode must be ENCRYPTED_ONLY or ALLOW_UNENCRYPTED_AND_ENCRYPTED."
+  }
+}
+
+# DEPRECATED: Use ssl_mode instead
 variable "require_ssl" {
-  description = "Require SSL for connections"
+  description = "DEPRECATED: Use ssl_mode instead. Will be removed in next major version."
   type        = bool
-  default     = true
+  default     = null
 }
 
 variable "authorized_networks" {
@@ -282,6 +294,12 @@ variable "database_flags" {
   description = "Map of database flags (PostgreSQL configuration parameters)"
   type        = map(string)
   default     = {}
+}
+
+variable "enable_default_database_flags" {
+  description = "Enable default database flags for logging and performance monitoring. Set to false for minimal configuration."
+  type        = bool
+  default     = false
 }
 
 variable "enable_query_insights" {

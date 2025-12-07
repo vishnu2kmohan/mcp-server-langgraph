@@ -102,6 +102,7 @@ async def test_feature():
 - `lint-workflow.md` - Linting enforcement
 - `pre-commit-hooks-catalog.md` - 69 hooks reference
 - `make-targets.md` - 133 targets reference
+- `gke-infrastructure-testing.md` - GKE/WIF testing guidance (local vs CI gaps)
 
 ---
 

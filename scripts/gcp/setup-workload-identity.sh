@@ -147,18 +147,18 @@ log_success "Workload Identity Provider: $WORKLOAD_IDENTITY_PROVIDER"
 
 log_info "Creating service accounts..."
 
-# Staging deployment service account
-SA_STAGING="github-actions-staging"
-SA_STAGING_EMAIL="$SA_STAGING@$GCP_PROJECT_ID.iam.gserviceaccount.com"
+# Preview deployment service account
+SA_PREVIEW="github-actions-preview"
+SA_PREVIEW_EMAIL="$SA_PREVIEW@$GCP_PROJECT_ID.iam.gserviceaccount.com"
 
-if gcloud iam service-accounts describe "$SA_STAGING_EMAIL" --project="$GCP_PROJECT_ID" &>/dev/null; then
-    log_warning "Service account '$SA_STAGING' already exists"
+if gcloud iam service-accounts describe "$SA_PREVIEW_EMAIL" --project="$GCP_PROJECT_ID" &>/dev/null; then
+    log_warning "Service account '$SA_PREVIEW' already exists"
 else
-    gcloud iam service-accounts create "$SA_STAGING" \
-        --display-name="GitHub Actions Staging Deployment" \
-        --description="Service account for GitHub Actions staging deployments" \
+    gcloud iam service-accounts create "$SA_PREVIEW" \
+        --display-name="GitHub Actions Preview Deployment" \
+        --description="Service account for GitHub Actions preview deployments" \
         --project="$GCP_PROJECT_ID"
-    log_success "Service account '$SA_STAGING' created"
+    log_success "Service account '$SA_PREVIEW' created"
 fi
 
 # Terraform service account
@@ -195,8 +195,8 @@ fi
 
 log_info "Granting IAM permissions..."
 
-# Permissions for staging service account
-STAGING_ROLES=(
+# Permissions for preview service account
+PREVIEW_ROLES=(
     "roles/container.developer"           # GKE deployment
     "roles/artifactregistry.writer"       # Push Docker images
     "roles/logging.logWriter"            # Write logs
@@ -204,19 +204,19 @@ STAGING_ROLES=(
     "roles/storage.objectViewer"         # Read from buckets
 )
 
-for role in "${STAGING_ROLES[@]}"; do
+for role in "${PREVIEW_ROLES[@]}"; do
     if gcloud projects get-iam-policy "$GCP_PROJECT_ID" \
         --flatten="bindings[].members" \
-        --filter="bindings.members:serviceAccount:$SA_STAGING_EMAIL AND bindings.role:$role" \
+        --filter="bindings.members:serviceAccount:$SA_PREVIEW_EMAIL AND bindings.role:$role" \
         --format="value(bindings.role)" | grep -q "$role"; then
-        log_success "$SA_STAGING already has $role"
+        log_success "$SA_PREVIEW already has $role"
     else
         gcloud projects add-iam-policy-binding "$GCP_PROJECT_ID" \
-            --member="serviceAccount:$SA_STAGING_EMAIL" \
+            --member="serviceAccount:$SA_PREVIEW_EMAIL" \
             --role="$role" \
             --condition=None \
             --no-user-output-enabled
-        log_success "Granted $role to $SA_STAGING"
+        log_success "Granted $role to $SA_PREVIEW"
     fi
 done
 
@@ -276,20 +276,20 @@ done
 
 log_info "Configuring Workload Identity Federation bindings..."
 
-# Allow GitHub Actions from the specific repository to impersonate the staging SA
-STAGING_BINDING_MEMBER="principalSet://iam.googleapis.com/$WORKLOAD_IDENTITY_PROVIDER/attribute.repository/$GITHUB_REPO"
+# Allow GitHub Actions from the specific repository to impersonate the preview SA
+PREVIEW_BINDING_MEMBER="principalSet://iam.googleapis.com/$WORKLOAD_IDENTITY_PROVIDER/attribute.repository/$GITHUB_REPO"
 
-if gcloud iam service-accounts get-iam-policy "$SA_STAGING_EMAIL" \
+if gcloud iam service-accounts get-iam-policy "$SA_PREVIEW_EMAIL" \
     --flatten="bindings[].members" \
-    --filter="bindings.members:$STAGING_BINDING_MEMBER" \
+    --filter="bindings.members:$PREVIEW_BINDING_MEMBER" \
     --format="value(bindings.role)" | grep -q "roles/iam.workloadIdentityUser"; then
-    log_success "WIF binding already exists for $SA_STAGING"
+    log_success "WIF binding already exists for $SA_PREVIEW"
 else
-    gcloud iam service-accounts add-iam-policy-binding "$SA_STAGING_EMAIL" \
-        --member="$STAGING_BINDING_MEMBER" \
+    gcloud iam service-accounts add-iam-policy-binding "$SA_PREVIEW_EMAIL" \
+        --member="$PREVIEW_BINDING_MEMBER" \
         --role="roles/iam.workloadIdentityUser" \
         --project="$GCP_PROJECT_ID"
-    log_success "Added WIF binding for $SA_STAGING"
+    log_success "Added WIF binding for $SA_PREVIEW"
 fi
 
 # Allow GitHub Actions to impersonate the Terraform SA
@@ -330,7 +330,7 @@ fi
 
 log_info "Setting up Artifact Registry..."
 
-REPO_NAME="mcp-staging"
+REPO_NAME="mcp-preview"
 REPO_LOCATION="$GCP_REGION"
 
 if gcloud artifacts repositories describe "$REPO_NAME" \
@@ -341,7 +341,7 @@ else
     gcloud artifacts repositories create "$REPO_NAME" \
         --repository-format=docker \
         --location="$REPO_LOCATION" \
-        --description="Docker images for MCP staging environment" \
+        --description="Docker images for MCP preview environment" \
         --project="$GCP_PROJECT_ID"
     log_success "Artifact Registry repository '$REPO_NAME' created"
 fi
