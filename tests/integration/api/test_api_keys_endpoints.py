@@ -613,6 +613,7 @@ class TestAPIKeyEndpointAuthorization:
 @pytest.mark.integration
 @pytest.mark.api
 @pytest.mark.slow
+@pytest.mark.timeout(300)  # 5 minutes for infrastructure setup + test execution
 @pytest.mark.xdist_group(name="api_keys_integration_tests")
 @pytest.mark.skip_isolation_check  # Uses test_fastapi_app with full stack mocking
 class TestAPIKeyEndpointsIntegration:
@@ -627,6 +628,7 @@ class TestAPIKeyEndpointsIntegration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @pytest.mark.asyncio
     async def test_full_api_key_lifecycle(self, integration_test_env, test_fastapi_app):
         """
         Test complete API key lifecycle with real services.
@@ -643,5 +645,4 @@ class TestAPIKeyEndpointsIntegration:
         6. Revoke key
         7. Verify revoked key fails validation
         """
-        # TODO: Implement full lifecycle test
-        # infrastructure is available via fixtures
+        pytest.skip("Not implemented yet - API key lifecycle requires full Keycloak integration")

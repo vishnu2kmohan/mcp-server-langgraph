@@ -1,0 +1,108 @@
+# Grafana Mimir Configuration for MCP Server LangGraph Test Environment
+# ======================================================================
+# Replaces Prometheus for metrics storage and querying.
+# Runs in monolithic mode for simplicity in test/dev environments.
+#
+# Reference: https://grafana.com/docs/mimir/latest/
+#
+# Key Features:
+#   - 100% PromQL compatible
+#   - Built-in alerting (replaces Alertmanager)
+#   - Multi-tenant capable
+#   - Local storage for testing
+
+# Target configuration - monolithic mode for testing
+target: all
+
+# Server configuration
+server:
+  http_listen_port: 9009
+  grpc_listen_port: 9095
+  log_level: warn
+
+# Multi-tenancy configuration
+multitenancy_enabled: false
+
+# Ingester configuration
+ingester:
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+    replication_factor: 1
+
+# Ingester client configuration
+ingester_client:
+  grpc_client_config:
+    max_recv_msg_size: 104857600  # 100MB
+    max_send_msg_size: 104857600
+
+# Distributor configuration
+distributor:
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+
+# Compactor configuration
+compactor:
+  data_dir: /data/mimir/compactor
+  sharding_ring:
+    kvstore:
+      store: inmemory
+
+# Store gateway configuration
+store_gateway:
+  sharding_ring:
+    replication_factor: 1
+    kvstore:
+      store: inmemory
+
+# Blocks storage configuration - local filesystem
+blocks_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/mimir/blocks
+  tsdb:
+    dir: /data/mimir/tsdb
+  bucket_store:
+    sync_dir: /data/mimir/bucket-sync
+
+# Ruler configuration (built-in alerting)
+ruler:
+  enable_api: true
+  rule_path: /data/mimir/rules
+  ring:
+    kvstore:
+      store: inmemory
+
+# Alertmanager configuration (built-in)
+alertmanager:
+  data_dir: /data/mimir/alertmanager
+  enable_api: true
+  external_url: http://localhost:9009/alertmanager
+  fallback_config_file: /etc/mimir/alertmanager-fallback.yaml
+
+# Limits configuration
+limits:
+  # Ingestion limits
+  ingestion_rate: 100000
+  ingestion_burst_size: 200000
+  max_global_series_per_user: 1000000
+  max_global_series_per_metric: 100000
+
+  # Query limits
+  max_fetched_series_per_query: 100000
+  max_fetched_chunks_per_query: 2000000
+  max_query_lookback: 31d
+
+  # Ruler limits
+  ruler_max_rules_per_rule_group: 20
+  ruler_max_rule_groups_per_tenant: 70
+
+  # Compactor limits
+  compactor_blocks_retention_period: 1h  # Short for testing
+
+# Runtime configuration
+runtime_config:
+  period: 10s

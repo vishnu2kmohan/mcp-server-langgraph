@@ -210,8 +210,15 @@ services:
   # ==============================================================================
 
   keycloak-test:
-    image: quay.io/keycloak/keycloak:26.4.2
-    command: start-dev --import-realm
+    # Use pre-optimized Keycloak image (no JIT compilation at startup)
+    # This matches production behavior and speeds up container startup
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.keycloak
+    # --optimized skips Quarkus augmentation (done at build time)
+    # --import-realm imports the test realm on first start
+    # --http-enabled=true must be explicit for production mode (Keycloak 26+)
+    command: start --optimized --import-realm --http-enabled=true
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -228,23 +235,20 @@ services:
       - KEYCLOAK_ADMIN_PASSWORD=admin
 
       # Database configuration - uses dedicated keycloak_test database for isolation
-      - KC_DB=postgres
+      # Note: KC_DB=postgres is baked into the optimized image (docker/Dockerfile.keycloak)
       - KC_DB_URL=jdbc:postgresql://postgres-test:5432/keycloak_test
       - KC_DB_USERNAME=postgres
       - KC_DB_PASSWORD=postgres
 
-      # Development/test settings
-      - KC_HTTP_ENABLED=true
+      # Runtime settings (not baked into build)
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
 
-      # Subpath configuration for gateway routing
-      - KC_HTTP_RELATIVE_PATH=/authn
+      # Note: KC_HTTP_RELATIVE_PATH=/authn is baked into the optimized image (build-time option)
 
-      # Health and management settings (Best Practice: Official Keycloak documentation)
-      - KC_HEALTH_ENABLED=true          # Enable health endpoints
+      # Health and management settings
+      # Note: KC_HEALTH_ENABLED=true and KC_METRICS_ENABLED=true are baked into the optimized image
       - KC_MANAGEMENT_ENABLED=true      # Enable management port (9000)
-      - KC_METRICS_ENABLED=false        # Disabled for test speed
       - KC_LOG_LEVEL=warn               # Reduced logging
 
       # Test-specific
@@ -257,8 +261,8 @@ services:
       test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/9000' && timeout 5 bash -c 'echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n\" > /dev/tcp/localhost/9000' || exit 1"]
       interval: 5s
       timeout: 5s
-      retries: 40
-      start_period: 60s  # Accounts for DB migration + realm import + JIT compilation
+      retries: 30
+      start_period: 30s  # Faster startup (no JIT compilation) - only DB migration + realm import
     # Note: deploy.resources.limits not supported in GitHub Actions
     # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
     networks:
@@ -684,6 +688,93 @@ services:
           memory: 64M
     networks:
       - mcp-test-network
+
+  # ==============================================================================
+  # DISTRIBUTED TRACING (Tempo)
+  # ==============================================================================
+  # Grafana Tempo for distributed trace storage and querying
+  # Traces accessible at /traces or via Grafana Explore
+
+  tempo-test:
+    image: grafana/tempo:2.9.0
+    command: ["-config.file=/etc/tempo/tempo-config.yaml"]
+    ports:
+      - "13200:3200"  # Tempo API (offset by 10000)
+      - "14317:4317"  # OTLP gRPC (offset by 10000)
+      - "14318:4318"  # OTLP HTTP (offset by 10000)
+    volumes:
+      - ./docker/tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
+    tmpfs:
+      - /tmp/tempo:rw,noexec,nosuid,size=256m
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3200/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      mcp-test-network:
+        aliases:
+          - tempo
+    labels:
+      - "traefik.enable=true"
+      # Route: /traces/* -> tempo:3200 (Distributed Tracing)
+      - "traefik.http.routers.tempo.rule=PathPrefix(`/tempo`)"
+      - "traefik.http.routers.tempo.entrypoints=web"
+      - "traefik.http.routers.tempo.priority=10"
+      - "traefik.http.services.tempo.loadbalancer.server.port=3200"
+      - "traefik.http.middlewares.tempo-strip.stripprefix.prefixes=/tempo"
+      - "traefik.http.routers.tempo.middlewares=tempo-strip"
+
+  # ==============================================================================
+  # METRICS STORAGE (Mimir)
+  # ==============================================================================
+  # Grafana Mimir for long-term metrics storage
+  # Metrics accessible via Grafana Explore
+
+  mimir-test:
+    image: grafana/mimir:3.0.1
+    command: ["-config.file=/etc/mimir/mimir-config.yaml"]
+    ports:
+      - "19009:9009"  # Mimir API (offset by 10000)
+    volumes:
+      - ./docker/mimir/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
+      - ./docker/mimir/alertmanager-fallback.yaml:/etc/mimir/alertmanager-fallback.yaml:ro
+    tmpfs:
+      - /tmp/mimir:rw,noexec,nosuid,size=256m
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9009/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      mcp-test-network:
+        aliases:
+          - mimir
+    labels:
+      - "traefik.enable=true"
+      # Route: /mimir/* -> mimir:9009 (Metrics Storage)
+      - "traefik.http.routers.mimir.rule=PathPrefix(`/mimir`)"
+      - "traefik.http.routers.mimir.entrypoints=web"
+      - "traefik.http.routers.mimir.priority=10"
+      - "traefik.http.services.mimir.loadbalancer.server.port=9009"
+      - "traefik.http.middlewares.mimir-strip.stripprefix.prefixes=/mimir"
+      - "traefik.http.routers.mimir.middlewares=mimir-strip"
 
   # ==============================================================================
   # VISUAL WORKFLOW BUILDER

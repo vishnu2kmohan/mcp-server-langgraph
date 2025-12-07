@@ -1,0 +1,250 @@
+// Grafana Alloy Configuration for MCP Server LangGraph Test Environment
+// ======================================================================
+// Unified telemetry collector for the Grafana LGTM stack:
+//   - Logs -> Loki
+//   - Metrics -> Mimir (Prometheus-compatible)
+//   - Traces -> Tempo
+//
+// Runs as non-root (UID 473) for enhanced security.
+// Reference: https://grafana.com/docs/alloy/latest/
+
+// =============================================================================
+// LOGGING CONFIGURATION
+// =============================================================================
+
+logging {
+  level  = "warn"
+  format = "logfmt"
+}
+
+// =============================================================================
+// SERVER CONFIGURATION
+// =============================================================================
+
+// HTTP server for debugging UI and health checks
+// Access at http://localhost:12345 (mapped via Docker)
+server {
+  http {
+    listen_addr = "0.0.0.0:12345"
+  }
+}
+
+// =============================================================================
+// OTLP RECEIVER (OpenTelemetry Protocol)
+// =============================================================================
+// Receives traces, metrics, and logs from applications via OTLP
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.batch.default.input]
+    traces  = [otelcol.processor.batch.default.input]
+  }
+}
+
+// =============================================================================
+// OTLP BATCH PROCESSOR
+// =============================================================================
+
+otelcol.processor.batch "default" {
+  output {
+    metrics = [otelcol.exporter.prometheus.mimir.input]
+    logs    = [otelcol.exporter.loki.default.input]
+    traces  = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+// =============================================================================
+// OTLP EXPORTERS
+// =============================================================================
+
+// Export traces to Tempo
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls {
+      insecure = true
+    }
+  }
+}
+
+// Export metrics to Mimir (Prometheus remote write)
+otelcol.exporter.prometheus "mimir" {
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+// Export OTLP logs to Loki
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+// =============================================================================
+// PROMETHEUS REMOTE WRITE TO MIMIR
+// =============================================================================
+
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "http://mimir:9009/api/v1/push"
+  }
+}
+
+// =============================================================================
+// DOCKER DISCOVERY (for container logs and metrics)
+// =============================================================================
+
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+
+  filter {
+    name   = "network"
+    values = ["mcp-test-network"]
+  }
+}
+
+// =============================================================================
+// RELABELING
+// =============================================================================
+
+discovery.relabel "docker_containers" {
+  targets = discovery.docker.containers.targets
+
+  // Use container name as label (strip leading slash)
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.+)"
+    target_label  = "container"
+  }
+
+  // Use Docker Compose service name if available
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+
+  // Use Docker Compose project name if available
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "project"
+  }
+
+  // Extract image name
+  rule {
+    source_labels = ["__meta_docker_container_image"]
+    target_label  = "image"
+  }
+
+  // Keep container ID for correlation with traces
+  rule {
+    source_labels = ["__meta_docker_container_id"]
+    target_label  = "container_id"
+  }
+}
+
+// =============================================================================
+// DOCKER LOG SOURCE
+// =============================================================================
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.docker_containers.output
+  forward_to = [loki.process.json_logs.receiver]
+
+  refresh_interval = "5s"
+}
+
+// =============================================================================
+// LOG PROCESSING PIPELINE
+// =============================================================================
+
+loki.process "json_logs" {
+  forward_to = [loki.write.loki.receiver]
+
+  // Stage 1: Parse JSON logs (common for our services)
+  stage.json {
+    expressions = {
+      level     = "level",
+      message   = "message",
+      timestamp = "timestamp",
+      logger    = "logger",
+      trace_id  = "trace_id",
+      span_id   = "span_id",
+    }
+  }
+
+  // Stage 2: Extract labels from parsed JSON
+  stage.labels {
+    values = {
+      level    = "",
+      logger   = "",
+      trace_id = "",
+      span_id  = "",
+    }
+  }
+
+  // Stage 3: Handle non-JSON logs - extract level from plain text
+  stage.regex {
+    expression = "(?P<level_fallback>(DEBUG|INFO|WARNING|ERROR|CRITICAL))"
+  }
+
+  // Stage 4: Use fallback level if JSON parsing didn't find one
+  stage.label_drop {
+    values = ["level_fallback"]
+  }
+
+  // Stage 5: Normalize log levels to lowercase
+  stage.template {
+    source   = "level"
+    template = "{{ ToLower .Value }}"
+  }
+
+  // Stage 6: Parse timestamp from log if available
+  stage.timestamp {
+    source = "timestamp"
+    format = "RFC3339"
+    fallback_formats = [
+      "RFC3339Nano",
+      "UnixMs",
+    ]
+    action_on_failure = "skip"
+  }
+
+  // Stage 7: Use message field as log line
+  stage.output {
+    source = "message"
+  }
+}
+
+// =============================================================================
+// LOKI OUTPUT
+// =============================================================================
+
+loki.write "loki" {
+  endpoint {
+    url       = "http://loki:3100/loki/api/v1/push"
+    tenant_id = "test"
+  }
+}
+
+// =============================================================================
+// PROMETHEUS SCRAPE (for service metrics)
+// =============================================================================
+
+prometheus.scrape "mcp_services" {
+  targets = discovery.relabel.docker_containers.output
+
+  forward_to = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+
+  // Only scrape containers with metrics port exposed
+  honor_labels = true
+}
