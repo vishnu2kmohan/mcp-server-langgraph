@@ -39,6 +39,37 @@ def kubectl_connected():
 
 
 @pytest.fixture(scope="session")
+def gke_preview_cluster():
+    """
+    Check if kubectl is connected to the GKE Preview cluster.
+
+    Returns the cluster name if connected to a GKE preview cluster,
+    None otherwise. This prevents GKE-specific tests from running
+    on local Kubernetes clusters (Docker Desktop, Minikube, etc.).
+
+    GKE Preview cluster context pattern: gke_*_preview-mcp-server-langgraph-gke
+    """
+    if not shutil.which("kubectl"):
+        return None
+    try:
+        result = subprocess.run(
+            ["kubectl", "config", "current-context"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode != 0:
+            return None
+        context = result.stdout.strip()
+        # Check for GKE preview cluster context pattern
+        if "preview-mcp-server-langgraph-gke" in context:
+            return context
+        return None
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+
+
+@pytest.fixture(scope="session")
 def helm_available():
     """Check if helm CLI tool is available."""
     return shutil.which("helm") is not None
