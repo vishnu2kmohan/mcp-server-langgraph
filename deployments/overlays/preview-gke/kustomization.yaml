@@ -258,6 +258,38 @@ images:
     newName: ghcr.io/vishnu2kmohan/keycloak-optimized
     newTag: "26.4.2"
 
+  # ===========================================================================
+  # GHCR-Mirrored Dependencies (avoid Docker Hub rate limits)
+  # ===========================================================================
+  # These images are mirrored from Docker Hub to GHCR by:
+  # .github/workflows/mirror-dependencies.yaml (runs weekly + manual dispatch)
+  #
+  # Benefits:
+  # - Unlimited pulls for public GHCR images
+  # - Supply chain security (vulnerability scanning before mirroring)
+  # - No Docker Hub rate limit issues (10 pulls/hour after Dec 2024)
+  # ===========================================================================
+
+  # OpenFGA - Authorization service
+  - name: openfga/openfga
+    newName: ghcr.io/vishnu2kmohan/openfga
+    newTag: v1.10.2
+
+  # OpenTelemetry Collector - Observability
+  - name: otel/opentelemetry-collector-contrib
+    newName: ghcr.io/vishnu2kmohan/otel-collector-contrib
+    newTag: "0.137.0"
+
+  # Qdrant - Vector database
+  - name: qdrant/qdrant
+    newName: ghcr.io/vishnu2kmohan/qdrant
+    newTag: v1.15.5
+
+  # BusyBox - Init containers
+  - name: docker.io/library/busybox
+    newName: ghcr.io/vishnu2kmohan/busybox
+    newTag: "1.36"
+
 # Patch OpenTelemetry Collector ConfigMap with GCP-specific configuration
 # Cannot use configMapGenerator because base has static ConfigMap (not generated)
 # Use strategic merge patch instead
