@@ -386,6 +386,50 @@ lifecycle {
 
 ---
 
+## Issue #8: WIF Pool Active but Not in Terraform State
+
+**Status: ✅ RESOLVED (Automated)**
+
+### Symptom
+```
+Error 409: Requested entity already exists
+
+  with module.github_actions_wif.google_iam_workload_identity_pool.github_actions
+
+Error 400: Identity Pool does not exist (projects/.../workloadIdentityPools/github-actions-pool)
+
+  with module.github_actions_wif.google_service_account_iam_member.github_actions_wif["preview"]
+```
+
+### Root Cause
+When a WIF pool exists in GCP in an **active** state (not soft-deleted), but Terraform state is empty (e.g., after `gke-preview-down.sh --terraform-only` or manual state deletion), Terraform tries to create the pool and fails with Error 409.
+
+Additionally, subsequent IAM bindings that reference the pool fail with Error 400 because Terraform's state shows the pool as non-existent (the create failed), while GCP shows it exists.
+
+### Solution (Automated in scripts/gcp/lib/common.sh)
+The `recover_soft_deleted_wif()` function now handles **both** soft-deleted and active pools:
+
+1. **Soft-deleted pool**: Undelete the pool and import into Terraform state
+2. **Active pool**: Import directly into Terraform state (new behavior)
+
+```bash
+# In recover_soft_deleted_wif() - case 1 (Active pool)
+1)  # Active - already exists in GCP
+    log_info "WIF pool already active: $pool_id"
+    # Still need to import into Terraform state if not already tracked
+    import_wif_to_terraform "$project_id" "$pool_id" "$provider_id"
+    return 0
+    ;;
+```
+
+The `import_wif_to_terraform()` function checks if the resource is already in Terraform state before importing, preventing duplicate import errors.
+
+### Prevention
+- Always use `gke-preview-down.sh` for teardown (handles state properly)
+- Script now auto-imports active WIF pools into Terraform state during `gke-preview-up.sh`
+
+---
+
 ## Automated Testing Recommendations
 
 1. **Pre-deployment checks**: Verify no orphaned resources exist
