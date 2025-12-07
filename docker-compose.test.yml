@@ -637,7 +637,8 @@ services:
     volumes:
       - ./docker/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
     tmpfs:
-      - /loki:rw,noexec,nosuid,size=256m
+      # UID 10001 is the loki user in grafana/loki:3.0.0
+      - /loki:rw,noexec,nosuid,size=256m,uid=10001,gid=10001
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
       interval: 10s
