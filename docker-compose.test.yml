@@ -67,7 +67,8 @@ services:
   # Dashboard available at http://localhost/gateway or :8080
 
   traefik-gateway:
-    image: traefik:v3.2
+    # v3.6: Latest stable with Gateway API v1.3+ support and security fixes
+    image: traefik:v3.6
     # Run as non-root user (requires high ports internally)
     # Reference: https://community.traefik.io/t/running-traefik-as-non-root-in-a-container/16381
     user: "1000:1000"
@@ -125,8 +126,7 @@ services:
   # ==============================================================================
 
   postgres-test:
-    # PostgreSQL 16 to match CloudSQL (terraform/environments/gcp-preview/main.tf: postgres_major_version = 16)
-    image: postgres:16-alpine
+    image: postgres:16.8-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -287,7 +287,7 @@ services:
   # ==============================================================================
 
   redis-test:
-    # Redis 7.2 to match Memorystore (terraform/environments/gcp-preview/main.tf: redis_version = "REDIS_7_2")
+    # Use 7.2 to match GCP Memorystore supported version for local/cloud parity
     image: redis:7.2-alpine
     command: redis-server --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru --save ""
     ports:
@@ -641,7 +641,8 @@ services:
   # Logs accessible at /logs or via Grafana Explore
 
   loki-test:
-    image: grafana/loki:3.0.0
+    # v3.6.2: Latest stable with improved performance and query capabilities
+    image: grafana/loki:3.6.2
     command: -config.file=/etc/loki/local-config.yaml
     ports:
       - "13100:3100"  # Loki API (offset by 10000)
@@ -678,7 +679,8 @@ services:
       - "traefik.http.routers.loki.middlewares=loki-strip"
 
   promtail-test:
-    image: grafana/promtail:3.0.0
+    # v3.6.2: Match Loki version (Promtail deprecated in favor of Grafana Alloy)
+    image: grafana/promtail:3.6.2
     command: -config.file=/etc/promtail/config.yaml
     volumes:
       - ./docker/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro

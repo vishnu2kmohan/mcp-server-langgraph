@@ -27,7 +27,8 @@ spec:
 
       containers:
       - name: redis
-        image: redis:7-alpine
+        # Use 7.2 to match GCP Memorystore supported version for local/cloud parity
+        image: redis:7.2-alpine
         imagePullPolicy: IfNotPresent
 
         ports:
