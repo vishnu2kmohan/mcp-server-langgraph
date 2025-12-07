@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765136532944,
+  "lastUpdate": 1765145674358,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -43620,6 +43620,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000023322465214676858",
             "extra": "mean: 48.59230420782272 usec\nrounds: 4967"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vishnu2kmohan@users.noreply.github.com",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "12597c21791fc7cdd060d4448d538256e3cec450",
+          "message": "fix(ci): add :preview Docker tag and complete staging-to-preview rename (#145)\n\n* fix(ci): complete staging-to-preview rename and fix CI failure\n\nThis commit completes Phases 1-4 of the staging-to-preview GKE environment\nrename, fixing the CI failure and ensuring consistency across all configs.\n\nChanges:\n- Fix CI: Update deploy-preview-gke.yaml to reference correct test file\n- Update environment labels: Change `environment: staging` to `environment: preview`\n  in 6 Kustomize files (kustomization.yaml, namespace.yaml, configmap-patch.yaml,\n  otel-collector-config.yaml, otel-collector-configmap-patch.yaml,\n  deployment-redis-url-json-patch.yaml)\n- Add TDD test: New test_environment_labels_use_preview_not_staging validates\n  all manifests use correct environment labels\n- Refactor test variables: Rename STAGING_GKE_* to PREVIEW_GKE_* in test files\n- Remove orphaned overlay: Delete deployments/overlays/staging/ (superseded by\n  preview-gke) and update workflow matrices\n\nRemaining work (Phases 5-7):\n- Phase 5: Terraform environment rename (gcp-staging → gcp-preview)\n- Phase 6: Update infrastructure scripts with preview resource names\n- Phase 7: Documentation updates (3 file renames + 91 content updates)\n\nFixes: CI failure \"file or directory not found: tests/kubernetes/test_kustomize_staging_gke.py\"\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* refactor: complete staging-to-preview rename for Terraform and scripts\n\nPhase 5: Create gcp-preview Terraform environments\n- Add terraform/environments/gcp-preview/ with all staging→preview renames\n- Add terraform/environments/gcp-preview-wif-only/ for WIF-only deployment\n- Add terraform/backend-configs/gcp-preview.gcs.tfbackend.example\n- Update service account names: preview-keycloak, preview-openfga, preview-mcp-server-langgraph\n- Update GitHub Actions service account: github-actions-preview\n- Update Artifact Registry: mcp-preview\n\nPhase 6: Update infrastructure scripts\n- Update scripts/gcp/setup-preview-infrastructure.sh resource names\n- Update scripts/gcp/teardown-preview-infrastructure.sh resource names\n- Update scripts/gcp/validate-preview-deployment.sh cluster references\n- Update scripts/gcp/preview-smoke-tests.sh namespace/service names\n- Update scripts/gcp/setup-vertex-ai-preview.sh cluster/namespace\n- Update scripts/gcp/setup-workload-identity.sh service accounts\n\nPhase 7: Documentation updates\n- Rename gke-staging-implementation-summary.mdx → gke-preview-implementation-summary.mdx\n- Rename gke-staging.mdx → gke-preview.mdx\n- Rename gke-staging-checklist.mdx → gke-preview-checklist.mdx\n- Update docs/docs.json navigation links\n- Update content within renamed files\n\nTests: All 22 kustomize tests pass (6 preview-gke + 16 builds)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(terraform): fix GKE Autopilot and Cloud SQL module defaults with TDD tests\n\nServiceAccount fixes:\n- Fix keycloak and openfga overlay ServiceAccounts to use -sa suffix\n- Update JSON patches to reference correct SA names (overlay resources\n  don't get namePrefix applied)\n- Update Terraform workload identity bindings to match K8s SA names\n\nGKE Autopilot module fixes:\n- Add enable_explicit_dns_config (default: false) to skip dns_config block\n  (GKE Autopilot v1.25.9+ has Cloud DNS pre-configured)\n- Add enable_security_posture (default: false) to skip security_posture_config\n  (GKE Autopilot v1.27+ manages security posture automatically)\n- Add lifecycle ignore_changes for monitoring_config, logging_config, node_pool\n  (Autopilot auto-enables components that cause Terraform drift)\n- Fix backup_config to use all_namespaces for wildcard namespace\n\nCloud SQL module fixes:\n- Add enable_default_database_flags (default: false)\n  (Prevents invalidFlagName errors on instance creation)\n- Make database_flags conditional based on enable_default_database_flags\n\nDocumentation fixes:\n- Update gke-staging references to gke-preview in docs\n\nTDD tests (21 tests):\n- Validate DNS domain default is \"cluster.local\"\n- Validate dns_config block is conditional (dynamic)\n- Validate security_posture_config is conditional\n- Validate lifecycle ignore_changes is comprehensive\n- Validate Cloud SQL database flags are optional\n- Validate high_availability defaults\n- Validate Memorystore transit encryption and auth defaults\n- Validate VPC private service connection variable exists\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* feat(gcp): add GKE preview wrapper scripts and fix Autopilot config\n\nAdd comprehensive wrapper scripts for GKE preview environment lifecycle:\n- gke-preview-up.sh: Automated deployment with WIF recovery, Terraform apply,\n  and Kubernetes manifest deployment\n- gke-preview-down.sh: Graceful teardown with proper resource ordering\n\nFix GKE Autopilot Terraform Error 400:\n- Remove explicit monitoring_config and logging_config blocks\n- These are auto-managed by Autopilot and cannot be explicitly configured\n- Add lifecycle ignore_changes for drift prevention\n\nAdd Make targets:\n- gke-preview-up: Deploy complete GKE preview environment\n- gke-preview-down: Teardown all GKE preview resources\n- gke-preview-status: Check health of all components\n\nDocument all known issues in docs-internal/infrastructure/:\n- WIF pool soft-delete recovery (Issue #1-2)\n- Service Networking Connection timing (Issue #3)\n- GKE cluster creation errors (Issue #4)\n- Terraform state locks (Issue #5)\n- Orphaned resources cleanup (Issue #6)\n- GKE Autopilot auto-managed configurations (Issue #7)\n\nTested: Full deploy/status/teardown cycle verified on GCP\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* feat(gcp): integrate WIF soft-delete recovery in gke-preview-up.sh\n\nAdd automatic Workload Identity Federation pool recovery to the\ngke-preview-up.sh script. This prevents \"Error 409: already exists\"\nwhen redeploying within 30 days of a previous teardown.\n\nChanges:\n- Add recover_soft_deleted_wif() call before Terraform init\n- Update known issues doc to mark Issue #1 as RESOLVED\n- Document the automated recovery behavior for users\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* feat(gcp): add retry logic for Service Networking Connection deletion\n\nThis addresses Issue #3 in GKE_PREVIEW_KNOWN_ISSUES.md where terraform\ndestroy fails with \"Error code 9: Failed to delete connection; Producer\nservices still using this connection\" due to GCP eventual consistency.\n\nChanges:\n- Add SERVICE_NETWORKING_MAX_RETRIES=3 and SERVICE_NETWORKING_RETRY_DELAY=120\n- Add cleanup_service_networking_with_gcloud() for direct gcloud fallback\n- Add remove_service_networking_from_state() for Terraform state cleanup\n- Modify terraform_destroy() with retry loop and error detection\n- Update GKE_PREVIEW_KNOWN_ISSUES.md to mark Issue #3 as resolved\n\nThe retry logic:\n1. Attempts terraform destroy\n2. If \"Error code 9\" detected, waits 2 minutes and retries (up to 3 times)\n3. If retries exhausted, falls back to gcloud direct deletion\n4. Removes problematic resources from Terraform state if needed\n5. Runs final terraform destroy for remaining resources\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* docs(gcp): add Issue #8 - WIF pool active state management\n\nDocument the WIF pool state management issue where an active pool\nexists in GCP but is not tracked in Terraform state. The fix in\ncommon.sh now imports active WIF pools into Terraform state before\nrunning terraform apply, preventing Error 409 (already exists) and\nthe cascading Error 400 (pool not found) failures.\n\nThis completes the automation of WIF pool lifecycle management:\n- Soft-deleted pools: Undelete + import\n- Active pools: Import directly (new behavior)\n- Not found: Create fresh via Terraform\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* docs(gcp): add Issues #9 and #10 to GKE preview known issues\n\nDocument two additional issues discovered during gke-preview-up/down testing:\n\nIssue #9: GKE BackupPlan Deletion with Locked Backups\n- Error 400 when trying to delete BackupPlan with locked backups\n- backup_delete_lock_days > 0 prevents deletion until lock expires\n- Workaround: Remove from state and let backups expire naturally\n- Long-term: Use backup_delete_lock_days = 0 for preview environments\n\nIssue #10: WIF Pool State Detection Bug (FIXED)\n- gcloud describe returns exit code 0 for DELETED pools\n- Original code only checked exit code, not actual state field\n- Fix: Parse --format=\"value(state)\" and check for ACTIVE/DELETED\n- This prevented proper soft-delete recovery in automated scripts\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(gcp): disable backup delete lock for preview environment (Issue #9)\n\nSet backup_delete_lock_days = 0 to allow immediate deletion of GKE\nBackupPlans during teardown. The 7-day default lock prevents cleanup\nand causes Error 400 when deleting BackupPlans with nested backups.\n\nThis enables clean preview environment teardown without manual\nintervention or waiting for lock expiration.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* docs(gcp): add GKE infrastructure testing guidance and known issues #11-12\n\n- Add Issue #11: BackupPlan Creation 409 Error (orphaned BackupPlan)\n- Add Issue #12: WIF Pool Soft-Delete Causing CI Failures\n- Add CI Failure Analysis Summary table (Docker Compose timing, WIF)\n- Add Test Cycle v4 Results Summary\n- Create .claude/memory/gke-infrastructure-testing.md with lessons learned\n- Update .claude/CLAUDE.md to reference new memory file\n\nKey insight: WIF-dependent tests (Vertex AI) cannot be validated locally\nas they require real GCP WIF authentication only available in CI.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* ci: migrate preview deployments from GCP Artifact Registry to GHCR\n\nSwitch preview/non-production Docker images to use GitHub Container Registry\n(GHCR) instead of GCP Artifact Registry. This follows the pattern:\n- GHCR: dev/preview images (direct push)\n- Cloud registries: production images (promoted from GHCR)\n\nChanges:\n- build-keycloak-image.yaml: Push to GHCR, GCP auth only for production\n- deploy-preview-gke.yaml: Build and push to GHCR registry\n- kustomization.yaml: Use GHCR image references, fix ServiceAccount patches\n\nBenefits:\n- Simplified preview deployments (no GCP auth needed)\n- Clear separation between dev and production registries\n- Unified image promotion workflow\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* feat(ci): add GHCR dependency mirroring workflow\n\nThis workflow mirrors critical Docker Hub images to GHCR to:\n- Avoid Docker Hub rate limits (10 pulls/hour after Dec 2024)\n- Ensure supply chain security through vulnerability scanning\n- Provide deployment reliability without external dependencies\n\nTier 1 (critical): openfga, otel-collector-contrib, qdrant, busybox\nTier 2 (dev): redis, postgres\n\nFeatures:\n- Weekly scheduled runs (Sundays 2 AM UTC)\n- Manual dispatch with force_mirror and skip_scan options\n- Trivy vulnerability scanning with SARIF upload\n- idempotent (skips if image already exists)\n\nEstimated cost: ~$1.70/month vs $7+/month Docker Hub Pro\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* feat(kustomize): use GHCR-mirrored dependencies to avoid Docker Hub rate limits\n\nAdd Kustomize image transformations to redirect Docker Hub images to GHCR:\n- openfga/openfga → ghcr.io/vishnu2kmohan/openfga:v1.10.2\n- otel/opentelemetry-collector-contrib → ghcr.io/vishnu2kmohan/otel-collector-contrib:0.137.0\n- qdrant/qdrant → ghcr.io/vishnu2kmohan/qdrant:v1.15.5\n- busybox → ghcr.io/vishnu2kmohan/busybox:1.36\n\nBenefits:\n- Unlimited pulls for public GHCR images\n- Supply chain security (vulnerability scanning before mirroring)\n- No Docker Hub rate limit issues (10 pulls/hour after Dec 2024)\n\nImages are mirrored by .github/workflows/mirror-dependencies.yaml\nwhich runs weekly and can be manually triggered.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(ci): add :preview Docker tag for preview-gke deployments\n\n- Add CI workflow to create ghcr.io/.../mcp-server-langgraph:preview\n  tag on main branch pushes (ci.yaml:1025-1033)\n- Fix redis-session-service-patch.yaml DNS names: staging → preview\n- Update kustomization.yaml comments to document GCR workaround and\n  GHCR :preview tag fix\n- Add temporary GCR workaround exception to test allowlist\n  (will be removed after switching to GHCR :preview tag)\n\nDocker Tagging Convention:\n- :preview - Created by CI on main branch pushes (for preview/staging)\n- :base-latest, :full-latest - Variant-specific tags\n- :<commit-sha> - Immutable, traceable builds\n- :latest - Reserved for production releases only (release.yaml)\n\nAfter this is merged:\n1. CI creates :preview tag on main pushes\n2. Follow-up PR: Update kustomization.yaml to use GHCR :preview\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-07T17:09:15-05:00",
+          "tree_id": "e47a5b24d4724158da048ed6d31a05085e9b4618",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/12597c21791fc7cdd060d4448d538256e3cec450"
+        },
+        "date": 1765145672088,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 143.38366751388514,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009013187929970002",
+            "extra": "mean: 6.974295031916106 msec\nrounds: 94"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 300.3947445226683,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001779311576366563",
+            "extra": "mean: 3.3289530467286133 msec\nrounds: 107"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45501.701763685895,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.977199999980712 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47040.7820059729,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.258149999994203 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44674.46831782674,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.384150000078762 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 193.89938889951623,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.157313829999879 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.42586502749025,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.477759090000035 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.973953298237566,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.26114721999988 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 966715.9691771235,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 1.0344300000042495 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12766.023178239735,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 78.3329300000446 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2964.217683373629,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.3571399998809 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2807.523804433598,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 356.185759999903 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 61688.36049914505,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000224624287195308",
+            "extra": "mean: 16.210513489232042 usec\nrounds: 12195"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17137.543326123978,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002388486461853802",
+            "extra": "mean: 58.351420677409976 usec\nrounds: 4488"
           }
         ]
       }
