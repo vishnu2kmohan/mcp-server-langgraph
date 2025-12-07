@@ -1,0 +1,88 @@
+# Promtail Configuration for MCP Server LangGraph Test Environment
+# ==================================================================
+# Scrapes Docker container logs and sends them to Loki.
+#
+# Reference: https://grafana.com/docs/loki/latest/send-data/promtail/configuration/
+#
+# IMPORTANT: Requires Docker socket mount for container log discovery.
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: warn
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    tenant_id: test
+
+scrape_configs:
+  # Scrape Docker container logs
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          # Only scrape containers on our test network
+          - name: network
+            values:
+              - mcp-test-network
+    relabel_configs:
+      # Use container name as job label
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.+)'
+        target_label: container
+      # Use compose service name if available
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: service
+      # Use compose project name if available
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
+        target_label: project
+      # Extract image name
+      - source_labels: ['__meta_docker_container_image']
+        target_label: image
+      # Keep container ID for correlation
+      - source_labels: ['__meta_docker_container_id']
+        target_label: container_id
+    pipeline_stages:
+      # Parse JSON logs (common for our services)
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+            logger: logger
+            trace_id: trace_id
+            span_id: span_id
+          source: output
+      # Extract log level for filtering
+      - labels:
+          level:
+          logger:
+          trace_id:
+          span_id:
+      # Handle non-JSON logs gracefully
+      - match:
+          selector: '{level=""}'
+          stages:
+            - regex:
+                expression: '(?P<level>(DEBUG|INFO|WARNING|ERROR|CRITICAL))'
+            - labels:
+                level:
+      # Normalize log levels
+      - template:
+          source: level
+          template: '{{ ToLower .Value }}'
+      # Add timestamp from log if available
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+          fallback_formats:
+            - RFC3339Nano
+            - UnixMs
+          action_on_failure: skip
+      # Final output
+      - output:
+          source: message

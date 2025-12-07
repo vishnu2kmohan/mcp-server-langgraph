@@ -1,6 +1,7 @@
 apiVersion: 1
 
 datasources:
+  # Metrics - Primary data source
   - name: Prometheus
     type: prometheus
     access: proxy
@@ -8,8 +9,23 @@ datasources:
     isDefault: true
     editable: true
 
+  # Tracing - Distributed traces
   - name: Jaeger
     type: jaeger
     access: proxy
     url: http://jaeger:16686
     editable: true
+
+  # Logging - Centralized logs
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      # Enable derived fields for trace correlation
+      derivedFields:
+        - datasourceUid: jaeger
+          matcherRegex: '"trace_id":"([a-f0-9]+)"'
+          name: TraceID
+          url: '$${__value.raw}'

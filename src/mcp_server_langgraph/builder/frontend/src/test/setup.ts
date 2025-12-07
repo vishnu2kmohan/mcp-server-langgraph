@@ -33,11 +33,38 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock ResizeObserver (required for React Flow)
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+class MockResizeObserver {
+  callback: ResizeObserverCallback;
+
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback;
+  }
+
+  observe(target: Element): void {
+    // Immediately invoke callback with a mocked entry
+    this.callback([{
+      target,
+      contentRect: {
+        width: 1000,
+        height: 800,
+        top: 0,
+        left: 0,
+        bottom: 800,
+        right: 1000,
+        x: 0,
+        y: 0,
+        toJSON: () => ({})
+      } as DOMRectReadOnly,
+      borderBoxSize: [],
+      contentBoxSize: [],
+      devicePixelContentBoxSize: []
+    }], this);
+  }
+
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 // Mock IntersectionObserver
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({
@@ -80,4 +107,12 @@ if (!global.PointerEvent) {
       super(type, params);
     }
   };
+}
+
+// Mock URL.createObjectURL and URL.revokeObjectURL (required for file download tests)
+if (typeof URL.createObjectURL === 'undefined') {
+  URL.createObjectURL = vi.fn(() => 'blob:mock-url');
+}
+if (typeof URL.revokeObjectURL === 'undefined') {
+  URL.revokeObjectURL = vi.fn();
 }

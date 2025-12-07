@@ -24,9 +24,23 @@
 #   - Observability services optional (can be disabled)
 #   - No hard-coded container names (allows multiple isolated test stacks)
 #
-# PORTS (offset by +1000 or +3000 to avoid conflicts with dev environment):
+# GATEWAY ROUTES (via Traefik on port 80):
+#   /api        - MCP Server API
+#   /build      - Visual Workflow Builder
+#   /play       - Interactive Playground
+#   /authn      - Keycloak (Authentication)
+#   /authz      - OpenFGA (Authorization)
+#   /vectors    - Qdrant (Vector Database)
+#   /traces     - Jaeger (Distributed Tracing)
+#   /logs       - Loki (Log Aggregation)
+#   /metrics    - Prometheus (Metrics)
+#   /alerts     - Alertmanager
+#   /dashboards - Grafana (Unified Dashboards)
+#   /gateway    - Traefik Dashboard
+#
+# DIRECT PORTS (legacy, for direct access):
 #   9432  - PostgreSQL (test, offset +4000 from standard 5432)
-#   9379  - Redis (test, offset +3000 from standard 6379, consolidated for both checkpoints and sessions)
+#   9379  - Redis (test, offset +3000 from standard 6379)
 #   9333  - Qdrant (test, offset +3000 from standard 6333)
 #   9080  - OpenFGA HTTP API (test, offset +1000 from standard 8080)
 #   9081  - OpenFGA gRPC (test, offset +1000 from standard 8081)
@@ -46,6 +60,59 @@
 #     docker compose -f docker-compose.test.yml exec postgres-test psql -U postgres
 
 services:
+  # ==============================================================================
+  # API GATEWAY (Traefik)
+  # ==============================================================================
+  # Single entry point for all web services with path-based routing
+  # Dashboard available at http://localhost/gateway or :8080
+
+  traefik-gateway:
+    image: traefik:v3.2
+    command:
+      # API and Dashboard
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      # Docker provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=mcp-test-network"
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      # Logging
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--accesslog.format=json"
+    ports:
+      - "80:80"      # Main gateway (single entry point)
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    networks:
+      mcp-test-network:
+        aliases:
+          - gateway
+    labels:
+      - "traefik.enable=true"
+      # Dashboard route: /gateway
+      - "traefik.http.routers.traefik-dashboard.rule=PathPrefix(`/gateway`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=web"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.middlewares.gateway-strip.stripprefix.prefixes=/gateway"
+      - "traefik.http.routers.traefik-dashboard.middlewares=gateway-strip"
+
   # ==============================================================================
   # DATABASE SERVICES
   # ==============================================================================
@@ -127,6 +194,15 @@ services:
       mcp-test-network:
         aliases:
           - openfga
+    labels:
+      - "traefik.enable=true"
+      # Route: /authz/* -> openfga:8080 (Authorization)
+      - "traefik.http.routers.openfga.rule=PathPrefix(`/authz`)"
+      - "traefik.http.routers.openfga.entrypoints=web"
+      - "traefik.http.routers.openfga.priority=10"
+      - "traefik.http.services.openfga.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.openfga-strip.stripprefix.prefixes=/authz"
+      - "traefik.http.routers.openfga.middlewares=openfga-strip"
 
   # ==============================================================================
   # AUTHENTICATION SERVICES
@@ -161,6 +237,9 @@ services:
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
 
+      # Subpath configuration for gateway routing
+      - KC_HTTP_RELATIVE_PATH=/authn
+
       # Health and management settings (Best Practice: Official Keycloak documentation)
       - KC_HEALTH_ENABLED=true          # Enable health endpoints
       - KC_MANAGEMENT_ENABLED=true      # Enable management port (9000)
@@ -185,6 +264,15 @@ services:
       mcp-test-network:
         aliases:
           - keycloak
+    labels:
+      - "traefik.enable=true"
+      # Route: /authn/* -> keycloak:8080 (Authentication)
+      # Keycloak handles subpath via KC_HTTP_RELATIVE_PATH
+      - "traefik.http.routers.keycloak.rule=PathPrefix(`/authn`)"
+      - "traefik.http.routers.keycloak.entrypoints=web"
+      - "traefik.http.routers.keycloak.priority=10"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+      # NO strip - Keycloak configured for /authn subpath
 
   # ==============================================================================
   # CACHE & SESSION STORAGE
@@ -252,6 +340,15 @@ services:
       mcp-test-network:
         aliases:
           - qdrant
+    labels:
+      - "traefik.enable=true"
+      # Route: /vectors/* -> qdrant:6333 (Vector Database)
+      - "traefik.http.routers.qdrant.rule=PathPrefix(`/vectors`)"
+      - "traefik.http.routers.qdrant.entrypoints=web"
+      - "traefik.http.routers.qdrant.priority=10"
+      - "traefik.http.services.qdrant.loadbalancer.server.port=6333"
+      - "traefik.http.middlewares.qdrant-strip.stripprefix.prefixes=/vectors"
+      - "traefik.http.routers.qdrant.middlewares=qdrant-strip"
 
   # ==============================================================================
   # MCP SERVER (for E2E tests)
@@ -281,7 +378,6 @@ services:
         condition: service_healthy
       redis-test:
         condition: service_healthy
-
       qdrant-test:
         condition: service_healthy
     ports:
@@ -344,6 +440,15 @@ services:
       mcp-test-network:
         aliases:
           - mcp-server
+    labels:
+      - "traefik.enable=true"
+      # Route: /api/* -> mcp-server:8000 (MCP Server API)
+      - "traefik.http.routers.mcp-api.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.mcp-api.entrypoints=web"
+      - "traefik.http.routers.mcp-api.priority=10"
+      - "traefik.http.services.mcp-api.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.mcp-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.mcp-api.middlewares=mcp-strip"
 
   # ==============================================================================
   # OBSERVABILITY SERVICES
@@ -359,6 +464,8 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
       - LOG_LEVEL=warn
       - SPAN_STORAGE_TYPE=memory
+      # Subpath configuration for gateway routing
+      - QUERY_BASE_PATH=/traces
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "16686"]
       interval: 5s
@@ -376,6 +483,15 @@ services:
       mcp-test-network:
         aliases:
           - jaeger
+    labels:
+      - "traefik.enable=true"
+      # Route: /traces/* -> jaeger:16686 (Distributed Tracing)
+      # Jaeger handles subpath via QUERY_BASE_PATH
+      - "traefik.http.routers.jaeger.rule=PathPrefix(`/traces`)"
+      - "traefik.http.routers.jaeger.entrypoints=web"
+      - "traefik.http.routers.jaeger.priority=10"
+      - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
+      # NO strip - Jaeger configured for /traces subpath
 
   prometheus-test:
     image: prom/prometheus:v3.7.1
@@ -384,13 +500,16 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=1d'  # Shorter retention for testing
       - '--web.enable-lifecycle'
+      # Subpath configuration for gateway routing
+      - '--web.external-url=/metrics/'
+      - '--web.route-prefix=/metrics/'
     ports:
       - "19090:9090"  # Prometheus UI (offset by 10000)
     volumes:
       - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     healthcheck:
       # wget is available in the official Prometheus image (prom/prometheus)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/metrics/-/healthy"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -406,20 +525,31 @@ services:
       mcp-test-network:
         aliases:
           - prometheus
+    labels:
+      - "traefik.enable=true"
+      # Route: /metrics/* -> prometheus:9090 (Metrics)
+      # Prometheus handles subpath via --web.external-url
+      - "traefik.http.routers.prometheus.rule=PathPrefix(`/metrics`)"
+      - "traefik.http.routers.prometheus.entrypoints=web"
+      - "traefik.http.routers.prometheus.priority=10"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+      # NO strip - Prometheus configured for /metrics subpath
 
   alertmanager-test:
     image: prom/alertmanager:v0.28.1
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
-      - '--web.external-url=http://localhost:19093'
+      # Subpath configuration for gateway routing
+      - '--web.external-url=/alerts/'
+      - '--web.route-prefix=/alerts/'
     ports:
       - "19093:9093"  # AlertManager UI (offset by 10000)
     volumes:
       - ./monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     healthcheck:
       # wget is available in the official Alertmanager image (prom/alertmanager)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/alerts/-/healthy"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -435,6 +565,15 @@ services:
       mcp-test-network:
         aliases:
           - alertmanager
+    labels:
+      - "traefik.enable=true"
+      # Route: /alerts/* -> alertmanager:9093 (Alerting)
+      # Alertmanager handles subpath via --web.external-url
+      - "traefik.http.routers.alertmanager.rule=PathPrefix(`/alerts`)"
+      - "traefik.http.routers.alertmanager.entrypoints=web"
+      - "traefik.http.routers.alertmanager.priority=10"
+      - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
+      # NO strip - Alertmanager configured for /alerts subpath
 
   grafana-test:
     image: grafana/grafana:12.2.0
@@ -447,7 +586,9 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=http://localhost:13001
+      # Subpath configuration for gateway routing
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/dashboards/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
       - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       - ./monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
@@ -470,6 +611,77 @@ services:
       mcp-test-network:
         aliases:
           - grafana
+    labels:
+      - "traefik.enable=true"
+      # Route: /dashboards/* -> grafana:3000 (Unified Dashboards)
+      # Grafana handles subpath via GF_SERVER_SERVE_FROM_SUB_PATH
+      - "traefik.http.routers.grafana.rule=PathPrefix(`/dashboards`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.routers.grafana.priority=10"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      # NO strip - Grafana configured for /dashboards subpath
+
+  # ==============================================================================
+  # LOGGING SERVICES (Loki + Promtail)
+  # ==============================================================================
+  # Centralized log aggregation with Grafana Loki
+  # Logs accessible at /logs or via Grafana Explore
+
+  loki-test:
+    image: grafana/loki:3.0.0
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "13100:3100"  # Loki API (offset by 10000)
+    volumes:
+      - ./docker/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    tmpfs:
+      - /loki:rw,noexec,nosuid,size=256m
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      mcp-test-network:
+        aliases:
+          - loki
+    labels:
+      - "traefik.enable=true"
+      # Route: /logs/* -> loki:3100 (Log Aggregation)
+      - "traefik.http.routers.loki.rule=PathPrefix(`/logs`)"
+      - "traefik.http.routers.loki.entrypoints=web"
+      - "traefik.http.routers.loki.priority=10"
+      - "traefik.http.services.loki.loadbalancer.server.port=3100"
+      - "traefik.http.middlewares.loki-strip.stripprefix.prefixes=/logs"
+      - "traefik.http.routers.loki.middlewares=loki-strip"
+
+  promtail-test:
+    image: grafana/promtail:3.0.0
+    command: -config.file=/etc/promtail/config.yaml
+    volumes:
+      - ./docker/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Read Docker logs
+    depends_on:
+      loki-test:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    networks:
+      - mcp-test-network
 
   # ==============================================================================
   # VISUAL WORKFLOW BUILDER
@@ -498,6 +710,9 @@ services:
       - TESTING=true
       - LOG_LEVEL=INFO
       - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
+
+      # Base path for gateway routing
+      - BASE_PATH=/build
 
       # Authentication (Keycloak)
       - AUTH_PROVIDER=keycloak
@@ -535,6 +750,15 @@ services:
       mcp-test-network:
         aliases:
           - builder
+    labels:
+      - "traefik.enable=true"
+      # Route: /build/* -> builder:8001 (Visual Workflow Builder)
+      - "traefik.http.routers.builder.rule=PathPrefix(`/build`)"
+      - "traefik.http.routers.builder.entrypoints=web"
+      - "traefik.http.routers.builder.priority=10"
+      - "traefik.http.services.builder.loadbalancer.server.port=8001"
+      - "traefik.http.middlewares.builder-strip.stripprefix.prefixes=/build"
+      - "traefik.http.routers.builder.middlewares=builder-strip"
 
   # ==============================================================================
   # INTERACTIVE PLAYGROUND
@@ -565,6 +789,9 @@ services:
       - TESTING=true
       - LOG_LEVEL=INFO
       - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
+
+      # Base path for gateway routing
+      - BASE_PATH=/play
 
       # Authentication (Keycloak)
       - AUTH_PROVIDER=keycloak
@@ -605,6 +832,16 @@ services:
       mcp-test-network:
         aliases:
           - playground
+    labels:
+      - "traefik.enable=true"
+      # Route: /play/* -> playground:8002 (Interactive Playground)
+      # WebSocket support is automatic in Traefik
+      - "traefik.http.routers.playground.rule=PathPrefix(`/play`)"
+      - "traefik.http.routers.playground.entrypoints=web"
+      - "traefik.http.routers.playground.priority=10"
+      - "traefik.http.services.playground.loadbalancer.server.port=8002"
+      - "traefik.http.middlewares.playground-strip.stripprefix.prefixes=/play"
+      - "traefik.http.routers.playground.middlewares=playground-strip"
 
 networks:
   mcp-test-network:

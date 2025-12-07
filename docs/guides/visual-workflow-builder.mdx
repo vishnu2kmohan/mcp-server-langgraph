@@ -1,0 +1,617 @@
+---
+title: Visual Workflow Builder
+description: 'Design and deploy AI agents visually with the drag-and-drop workflow builder'
+icon: 'diagram-project'
+seoTitle: "Visual Workflow Builder - MCP Server with LangGraph"
+seoDescription: "Create AI agent workflows with a visual drag-and-drop interface, generate LangGraph code, and deploy to production"
+keywords: ["workflow builder", "visual editor", "drag and drop", "AI agents", "code generation", "LangGraph"]
+contentType: "tutorial"
+---
+
+## Overview
+
+The Visual Workflow Builder enables you to design AI agent workflows through an intuitive drag-and-drop interface. Build complex multi-agent systems without writing code, then generate production-ready LangGraph Python code.
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="#quick-start"
+  >
+    Build your first workflow in minutes
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/builder"
+  >
+    Explore the Builder API
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<AccordionGroup>
+  <Accordion icon="hand-pointer" title="Drag-and-Drop Interface">
+    - Visual node-based editor
+    - React Flow integration for smooth interactions
+    - Real-time connection validation
+    - Auto-layout for clean workflows
+  </Accordion>
+
+  <Accordion icon="code" title="Code Generation">
+    - Generate production-ready LangGraph Python code
+    - Export as standalone modules
+    - Include type hints and docstrings
+    - MCP tool integration ready
+  </Accordion>
+
+  <Accordion icon="check-circle" title="Workflow Validation">
+    - Real-time validation as you build
+    - Graph connectivity checks
+    - Node configuration validation
+    - Error highlighting with suggestions
+  </Accordion>
+
+  <Accordion icon="cloud" title="One-Click Deploy">
+    - Deploy workflows to MCP Server
+    - Version control for workflows
+    - Rollback capabilities
+    - Environment-specific configurations
+  </Accordion>
+</AccordionGroup>
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Frontend["React Frontend"]
+        Editor["Visual Editor"]
+        ReactFlow["React Flow"]
+        Preview["Code Preview"]
+    end
+
+    subgraph Backend["Builder API"]
+        Validate["Validator"]
+        Generate["Code Generator"]
+        Store["Workflow Storage"]
+    end
+
+    subgraph Target["Deployment Targets"]
+        MCP["MCP Server"]
+        File["File Export"]
+    end
+
+    Editor --> ReactFlow
+    Editor --> |"Save"| Store
+    Editor --> |"Validate"| Validate
+    Editor --> |"Generate"| Generate
+    Generate --> Preview
+    Generate --> File
+    Store --> |"Deploy"| MCP
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef frontendStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef backendStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef targetStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+
+    class Editor,ReactFlow,Preview frontendStyle
+    class Validate,Generate,Store backendStyle
+    class MCP,File targetStyle
+```
+
+## Quick Start
+
+### Prerequisites
+
+- Docker and Docker Compose
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- Valid authentication credentials
+
+### Starting the Builder
+
+<Tabs>
+  <Tab title="Docker Compose">
+    ```bash
+    # Start full infrastructure including builder
+    make test-infra-full-up
+
+    # Access the builder
+    open http://localhost:13000
+    ```
+  </Tab>
+  <Tab title="Development Mode">
+    ```bash
+    # Start the backend
+    uv run uvicorn src.mcp_server_langgraph.builder.api.server:app \
+      --host 0.0.0.0 \
+      --port 8001
+
+    # Start the frontend (in another terminal)
+    cd builder-frontend
+    npm install
+    npm run dev
+    ```
+  </Tab>
+</Tabs>
+
+### Building Your First Workflow
+
+<Steps>
+  <Step title="Create New Workflow">
+    Click "New Workflow" and give it a name like "Customer Support Agent".
+  </Step>
+  <Step title="Add a Start Node">
+    Drag a **Start** node from the palette onto the canvas. This is the entry point.
+  </Step>
+  <Step title="Add an Agent Node">
+    Drag an **Agent** node and connect it to the Start node. Configure:
+    - **Name**: CustomerSupport
+    - **Prompt**: "You are a helpful customer support agent..."
+  </Step>
+  <Step title="Add Conditional Routing">
+    Add a **Router** node to direct conversations based on intent:
+    - Connect Agent → Router
+    - Configure conditions: "billing", "technical", "general"
+  </Step>
+  <Step title="Add Specialized Agents">
+    Add more Agent nodes for each route:
+    - BillingAgent
+    - TechnicalAgent
+    - GeneralAgent
+  </Step>
+  <Step title="Add End Node">
+    Connect all paths to an **End** node to complete the workflow.
+  </Step>
+  <Step title="Validate and Generate">
+    Click "Validate" to check your workflow, then "Generate Code" to export.
+  </Step>
+</Steps>
+
+## Node Types
+
+### Start Node
+
+Entry point for the workflow. Every workflow must have exactly one Start node.
+
+```yaml
+Properties:
+  - type: start
+  - id: Unique identifier
+  - position: {x, y} coordinates
+```
+
+### Agent Node
+
+An LLM-powered agent that processes messages.
+
+```yaml
+Properties:
+  - type: agent
+  - name: Display name
+  - prompt: System prompt for the agent
+  - model: LLM model to use (optional)
+  - tools: List of MCP tools to enable (optional)
+```
+
+### Router Node
+
+Conditional branching based on content or metadata.
+
+```yaml
+Properties:
+  - type: router
+  - conditions: List of routing conditions
+  - default: Default route if no conditions match
+```
+
+### Tool Node
+
+Execute an MCP tool directly in the workflow.
+
+```yaml
+Properties:
+  - type: tool
+  - tool_name: Name of the MCP tool
+  - arguments: Tool arguments (static or dynamic)
+```
+
+### Human-in-the-Loop Node
+
+Pause for human review or input.
+
+```yaml
+Properties:
+  - type: human
+  - prompt: Message to show reviewer
+  - timeout: Maximum wait time
+  - options: Available response options
+```
+
+### End Node
+
+Termination point for the workflow. Multiple End nodes are allowed.
+
+```yaml
+Properties:
+  - type: end
+  - output: Final output configuration
+```
+
+## Workflow Examples
+
+### Simple Q&A Bot
+
+```mermaid
+flowchart LR
+    Start([Start]) --> Agent[QA Agent]
+    Agent --> End([End])
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef agentStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef endStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class Start startStyle
+    class Agent agentStyle
+    class End endStyle
+```
+
+**Use Case**: Basic question-answering with a single agent.
+
+### Multi-Stage Pipeline
+
+```mermaid
+flowchart LR
+    Start([Start]) --> Classifier[Intent Classifier]
+    Classifier --> |"question"| QA[QA Agent]
+    Classifier --> |"task"| Task[Task Agent]
+    QA --> Summarizer[Summarizer]
+    Task --> Summarizer
+    Summarizer --> End([End])
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef routerStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef agentStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef endStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class Start startStyle
+    class Classifier routerStyle
+    class QA,Task,Summarizer agentStyle
+    class End endStyle
+```
+
+**Use Case**: Process requests through multiple specialized agents.
+
+### Human-in-the-Loop Review
+
+```mermaid
+flowchart LR
+    Start([Start]) --> Draft[Draft Agent]
+    Draft --> Review{Human Review}
+    Review --> |"approve"| Publish[Publish Agent]
+    Review --> |"revise"| Draft
+    Publish --> End([End])
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef agentStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef humanStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef endStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class Start startStyle
+    class Draft,Publish agentStyle
+    class Review humanStyle
+    class End endStyle
+```
+
+**Use Case**: Content generation with human approval.
+
+## Validation Rules
+
+The builder validates workflows against these rules:
+
+| Rule | Description |
+|------|-------------|
+| **Single Start** | Exactly one Start node required |
+| **Reachable End** | All paths must lead to an End node |
+| **No Orphans** | All nodes must be connected |
+| **No Cycles** | Workflow must be a DAG (no loops without Exit condition) |
+| **Valid Configs** | All node configurations must be complete |
+| **Unique IDs** | All node IDs must be unique |
+
+### Validation Errors
+
+When validation fails, the builder highlights problematic nodes:
+
+```json
+{
+  "valid": false,
+  "errors": [
+    {
+      "type": "MISSING_END_NODE",
+      "message": "Workflow must have at least one End node",
+      "severity": "error"
+    },
+    {
+      "type": "ORPHAN_NODE",
+      "message": "Node 'agent_3' is not connected to the workflow",
+      "node_id": "agent_3",
+      "severity": "warning"
+    }
+  ]
+}
+```
+
+## Code Generation
+
+### Generated Code Structure
+
+The builder generates production-ready LangGraph code:
+
+```python
+"""
+Generated workflow: Customer Support Agent
+Created: 2025-12-06T10:30:00Z
+"""
+
+from typing import TypedDict
+from langgraph.graph import StateGraph, START, END
+
+
+class AgentState(TypedDict):
+    messages: list
+    current_intent: str | None
+
+
+def customer_support(state: AgentState) -> AgentState:
+    """Customer support agent node."""
+    # Agent implementation
+    return state
+
+
+def router(state: AgentState) -> str:
+    """Route based on detected intent."""
+    intent = state.get("current_intent")
+    if intent == "billing":
+        return "billing_agent"
+    elif intent == "technical":
+        return "technical_agent"
+    return "general_agent"
+
+
+def billing_agent(state: AgentState) -> AgentState:
+    """Billing specialist agent."""
+    return state
+
+
+def technical_agent(state: AgentState) -> AgentState:
+    """Technical support agent."""
+    return state
+
+
+def general_agent(state: AgentState) -> AgentState:
+    """General inquiry agent."""
+    return state
+
+
+# Build the graph
+workflow = StateGraph(AgentState)
+
+# Add nodes
+workflow.add_node("customer_support", customer_support)
+workflow.add_node("billing_agent", billing_agent)
+workflow.add_node("technical_agent", technical_agent)
+workflow.add_node("general_agent", general_agent)
+
+# Add edges
+workflow.add_edge(START, "customer_support")
+workflow.add_conditional_edges(
+    "customer_support",
+    router,
+    {
+        "billing_agent": "billing_agent",
+        "technical_agent": "technical_agent",
+        "general_agent": "general_agent",
+    }
+)
+workflow.add_edge("billing_agent", END)
+workflow.add_edge("technical_agent", END)
+workflow.add_edge("general_agent", END)
+
+# Compile
+app = workflow.compile()
+```
+
+### Code Generation Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `include_types` | Generate TypedDict state classes | `true` |
+| `include_docstrings` | Add docstrings to functions | `true` |
+| `include_mcp_tools` | Generate MCP tool imports | `true` |
+| `checkpoint_config` | Include checkpointing setup | `false` |
+| `output_format` | Output format (python, module) | `python` |
+
+## Workflow Storage
+
+Workflows are stored with versioning support:
+
+```json
+{
+  "id": "wf_abc123",
+  "name": "Customer Support Agent",
+  "description": "Multi-agent customer support workflow",
+  "version": 3,
+  "created_at": "2025-12-01T10:00:00Z",
+  "updated_at": "2025-12-06T10:30:00Z",
+  "created_by": "alice",
+  "nodes": [...],
+  "edges": [...],
+  "metadata": {
+    "tags": ["support", "production"],
+    "environment": "production"
+  }
+}
+```
+
+### Version History
+
+```bash
+# List versions
+curl http://localhost:9001/api/builder/workflows/wf_abc123/versions \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get specific version
+curl http://localhost:9001/api/builder/workflows/wf_abc123/versions/2 \
+  -H "Authorization: Bearer $TOKEN"
+
+# Rollback to version
+curl -X POST http://localhost:9001/api/builder/workflows/wf_abc123/rollback \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"version": 2}'
+```
+
+## Security
+
+### Authentication
+
+All builder endpoints require JWT authentication:
+
+```bash
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...
+```
+
+### Authorization
+
+Workflow access is controlled by OpenFGA:
+
+```yaml
+# Permission model
+user:alice can create workflow:*
+user:alice can edit workflow:wf_abc123
+user:alice can deploy workflow:wf_abc123
+user:bob can view workflow:wf_abc123  # Read-only access
+
+# Team permissions
+team:engineering can edit workflow:*
+team:engineering can deploy workflow:*
+```
+
+<Warning>
+Workflows may contain sensitive prompts and configurations. Ensure proper access controls before sharing.
+</Warning>
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/builder/workflows` | POST | Create new workflow |
+| `/api/builder/workflows` | GET | List workflows |
+| `/api/builder/workflows/{id}` | GET | Get workflow details |
+| `/api/builder/workflows/{id}` | PUT | Update workflow |
+| `/api/builder/workflows/{id}` | DELETE | Delete workflow |
+| `/api/builder/validate` | POST | Validate workflow |
+| `/api/builder/generate` | POST | Generate code |
+| `/api/builder/health` | GET | Health check |
+
+See [Builder API Reference](/api-reference/builder) for complete documentation.
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl/Cmd + S` | Save workflow |
+| `Ctrl/Cmd + Z` | Undo |
+| `Ctrl/Cmd + Shift + Z` | Redo |
+| `Delete` | Delete selected node |
+| `Ctrl/Cmd + D` | Duplicate selected node |
+| `Ctrl/Cmd + A` | Select all nodes |
+| `Escape` | Deselect all |
+| `Space + Drag` | Pan canvas |
+| `Scroll` | Zoom in/out |
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Workflow won't save" icon="floppy-disk">
+    **Symptoms**: Save button doesn't respond or shows error
+
+    **Solutions**:
+    1. Check authentication token hasn't expired
+    2. Validate workflow before saving (may have errors)
+    3. Check network connectivity to backend
+    4. Clear browser cache and reload
+  </Accordion>
+
+  <Accordion title="Code generation fails" icon="code">
+    **Symptoms**: Generated code is empty or incomplete
+
+    **Solutions**:
+    1. Ensure workflow passes validation first
+    2. Check all agent prompts are configured
+    3. Verify node connections are complete
+    4. Check backend logs for detailed errors
+  </Accordion>
+
+  <Accordion title="Nodes won't connect" icon="plug">
+    **Symptoms**: Can't drag connections between nodes
+
+    **Solutions**:
+    1. Check node types are compatible
+    2. Ensure you're connecting output → input
+    3. Verify node isn't already connected (single output only)
+    4. Try refreshing the page
+  </Accordion>
+
+  <Accordion title="Workflow won't deploy" icon="cloud">
+    **Symptoms**: Deploy button shows error
+
+    **Solutions**:
+    1. Validate workflow first
+    2. Check MCP Server is running
+    3. Verify deployment permissions
+    4. Check for conflicting workflow names
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Start Simple" icon="seedling">
+    Begin with a linear workflow, then add complexity incrementally
+  </Card>
+  <Card title="Name Clearly" icon="tag">
+    Use descriptive names for nodes and workflows
+  </Card>
+  <Card title="Validate Often" icon="check">
+    Run validation after each major change
+  </Card>
+  <Card title="Version Control" icon="code-branch">
+    Save versions before major changes
+  </Card>
+</CardGroup>
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Interactive Playground" icon="play" href="/guides/playground">
+    Test your workflows in real-time
+  </Card>
+  <Card title="LangGraph Concepts" icon="diagram-project" href="/getting-started/architecture">
+    Understand LangGraph fundamentals
+  </Card>
+  <Card title="MCP Tools" icon="wrench" href="/api-reference/mcp/tools">
+    Configure MCP tools
+  </Card>
+  <Card title="Deployment" icon="rocket" href="/deployment/overview">
+    Deploy workflows to production
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Ready to build!** Open the Visual Workflow Builder and start creating your first AI agent workflow.
+</Check>

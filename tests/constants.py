@@ -91,6 +91,48 @@ TEST_RUN_ID = "test-run-123"
 
 
 # ==============================================================================
+# Service Ports (Test Environment)
+# ==============================================================================
+# Test ports use +1000 or +3000 offset to avoid conflicts with dev environment
+# These MUST match docker-compose.test.yml port mappings
+
+# Core Infrastructure Ports
+TEST_POSTGRES_PORT = 9432  # +4000 from standard 5432
+TEST_REDIS_PORT = 9379  # +3000 from standard 6379
+TEST_QDRANT_PORT = 9333  # +3000 from standard 6333
+TEST_OPENFGA_HTTP_PORT = 9080  # +1000 from standard 8080
+TEST_OPENFGA_GRPC_PORT = 9081  # +1000 from standard 8081
+TEST_KEYCLOAK_PORT = 9082  # +1002 from standard 8080
+
+# Application Service Ports
+TEST_MCP_SERVER_PORT = 8000  # Main MCP server
+TEST_BUILDER_API_PORT = 9001  # +1000 from dev port 8001
+TEST_PLAYGROUND_API_PORT = 9002  # +1000 from dev port 8002
+
+# Observability Ports
+TEST_JAEGER_UI_PORT = 19686  # +3000 from standard 16686
+TEST_PROMETHEUS_PORT = 19090  # +10000 from standard 9090
+TEST_ALERTMANAGER_PORT = 19093  # +10000 from standard 9093
+TEST_GRAFANA_PORT = 13001  # +10000 from prod's 3001
+
+# Redis Database Indices (same Redis instance, different databases)
+TEST_REDIS_CHECKPOINT_DB = 1  # LangGraph checkpoints
+TEST_REDIS_SESSION_DB = 0  # Session storage
+TEST_REDIS_PLAYGROUND_DB = 2  # Playground sessions
+
+
+# ==============================================================================
+# Playground Configuration
+# ==============================================================================
+
+# Maximum messages per playground session
+TEST_MAX_MESSAGES_PER_SESSION = 50
+
+# Session timeout in seconds
+TEST_SESSION_TIMEOUT_SECONDS = 60
+
+
+# ==============================================================================
 # Validation Functions
 # ==============================================================================
 

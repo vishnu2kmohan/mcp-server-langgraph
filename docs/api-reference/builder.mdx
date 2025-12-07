@@ -1,0 +1,989 @@
+---
+title: Builder API
+description: 'API endpoints for the Visual Workflow Builder'
+icon: 'diagram-project'
+seoTitle: "Builder API Reference - MCP Server"
+seoDescription: "API documentation for the Visual Workflow Builder including workflow CRUD, validation, and code generation"
+keywords: ["API reference", "builder", "workflows", "validation", "code generation"]
+contentType: "reference"
+---
+
+## Overview
+
+The Builder API provides endpoints for creating, managing, and deploying visual workflows. All endpoints (except health and static assets) require JWT authentication.
+
+```mermaid
+flowchart LR
+    subgraph Endpoints["Builder API"]
+        Health["/health"]
+        Workflows["/workflows"]
+        Validate["/validate"]
+        Generate["/generate"]
+        Tools["/tools"]
+    end
+
+    subgraph Operations["Operations"]
+        CRUD["CRUD"]
+        Valid["Validation"]
+        Code["Code Gen"]
+        MCP["MCP Tools"]
+    end
+
+    Workflows --> CRUD
+    Validate --> Valid
+    Generate --> Code
+    Tools --> MCP
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef endpointStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef operationStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+
+    class Health,Workflows,Validate,Generate,Tools endpointStyle
+    class CRUD,Valid,Code,MCP operationStyle
+```
+
+## Base URL
+
+```yaml
+# Development
+http://localhost:8001
+
+# Test Infrastructure
+http://localhost:9001
+
+# Production
+https://builder.yourdomain.com
+```
+
+## Authentication
+
+All API endpoints (except `/health` and static assets) require JWT authentication:
+
+```bash
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...
+```
+
+---
+
+## Health Endpoints
+
+### GET /api/builder/health
+
+Health check endpoint (no authentication required).
+
+**Response**:
+
+```json
+{
+  "status": "healthy",
+  "version": "1.0.0"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Service is healthy
+</ResponseField>
+
+---
+
+### GET /
+
+Serves the React SPA frontend (no authentication required).
+
+**Response**: HTML content with React application.
+
+---
+
+## Workflow Endpoints
+
+### POST /api/builder/workflows
+
+Create a new workflow.
+
+<ParamField path="name" type="string" required>
+  Display name for the workflow
+</ParamField>
+
+<ParamField path="description" type="string">
+  Optional description
+</ParamField>
+
+<ParamField path="nodes" type="array" required>
+  List of workflow nodes
+</ParamField>
+
+<ParamField path="edges" type="array" required>
+  List of connections between nodes
+</ParamField>
+
+**Request**:
+
+```bash
+curl -X POST http://localhost:9001/api/builder/workflows \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Customer Support Agent",
+    "description": "Multi-agent support workflow",
+    "nodes": [
+      {"id": "start", "type": "start", "position": {"x": 100, "y": 100}},
+      {"id": "agent", "type": "agent", "position": {"x": 300, "y": 100}, "data": {"name": "Support", "prompt": "You are helpful"}},
+      {"id": "end", "type": "end", "position": {"x": 500, "y": 100}}
+    ],
+    "edges": [
+      {"id": "e1", "source": "start", "target": "agent"},
+      {"id": "e2", "source": "agent", "target": "end"}
+    ]
+  }'
+```
+
+**Response**:
+
+```json
+{
+  "id": "wf_abc123def456",
+  "name": "Customer Support Agent",
+  "description": "Multi-agent support workflow",
+  "version": 1,
+  "created_at": "2025-12-06T10:00:00Z",
+  "updated_at": "2025-12-06T10:00:00Z",
+  "created_by": "alice",
+  "nodes": [...],
+  "edges": [...]
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="201" type="Created">
+  Workflow created successfully
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid workflow definition
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Invalid or missing authentication token
+</ResponseField>
+
+---
+
+### GET /api/builder/workflows
+
+List all workflows for the authenticated user.
+
+<ParamField path="limit" type="integer" default="20">
+  Maximum number of workflows to return
+</ParamField>
+
+<ParamField path="offset" type="integer" default="0">
+  Number of workflows to skip for pagination
+</ParamField>
+
+<ParamField path="tag" type="string">
+  Filter by tag
+</ParamField>
+
+**Request**:
+
+```bash
+curl "http://localhost:9001/api/builder/workflows?limit=10" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+[
+  {
+    "id": "wf_abc123def456",
+    "name": "Customer Support Agent",
+    "description": "Multi-agent support workflow",
+    "version": 3,
+    "created_at": "2025-12-01T10:00:00Z",
+    "updated_at": "2025-12-06T10:00:00Z",
+    "node_count": 5,
+    "tags": ["support", "production"]
+  },
+  {
+    "id": "wf_xyz789",
+    "name": "Data Pipeline",
+    "description": "ETL workflow",
+    "version": 1,
+    "created_at": "2025-12-05T09:00:00Z",
+    "updated_at": "2025-12-05T09:00:00Z",
+    "node_count": 3,
+    "tags": ["data"]
+  }
+]
+```
+
+---
+
+### GET /api/builder/workflows/{workflow_id}
+
+Get details for a specific workflow.
+
+**Path Parameters**:
+
+<ParamField path="workflow_id" type="string" required>
+  The workflow ID
+</ParamField>
+
+**Request**:
+
+```bash
+curl http://localhost:9001/api/builder/workflows/wf_abc123def456 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+{
+  "id": "wf_abc123def456",
+  "name": "Customer Support Agent",
+  "description": "Multi-agent support workflow",
+  "version": 3,
+  "created_at": "2025-12-01T10:00:00Z",
+  "updated_at": "2025-12-06T10:00:00Z",
+  "created_by": "alice",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "position": {"x": 100, "y": 100}
+    },
+    {
+      "id": "agent",
+      "type": "agent",
+      "position": {"x": 300, "y": 100},
+      "data": {
+        "name": "Support",
+        "prompt": "You are a helpful customer support agent..."
+      }
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "position": {"x": 500, "y": 100}
+    }
+  ],
+  "edges": [
+    {"id": "e1", "source": "start", "target": "agent"},
+    {"id": "e2", "source": "agent", "target": "end"}
+  ],
+  "metadata": {
+    "tags": ["support", "production"],
+    "deployed": true,
+    "deployed_at": "2025-12-05T14:00:00Z"
+  }
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Workflow retrieved successfully
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Workflow does not exist or user lacks access
+</ResponseField>
+
+---
+
+### PUT /api/builder/workflows/{workflow_id}
+
+Update an existing workflow.
+
+**Request**:
+
+```bash
+curl -X PUT http://localhost:9001/api/builder/workflows/wf_abc123def456 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Customer Support Agent v2",
+    "nodes": [...],
+    "edges": [...]
+  }'
+```
+
+**Response**:
+
+```json
+{
+  "id": "wf_abc123def456",
+  "name": "Customer Support Agent v2",
+  "version": 4,
+  "updated_at": "2025-12-06T11:00:00Z"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Workflow updated successfully
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Workflow does not exist
+</ResponseField>
+
+---
+
+### DELETE /api/builder/workflows/{workflow_id}
+
+Delete a workflow.
+
+**Request**:
+
+```bash
+curl -X DELETE http://localhost:9001/api/builder/workflows/wf_abc123def456 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+{
+  "message": "Workflow deleted successfully"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="204" type="No Content">
+  Workflow deleted successfully
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Workflow does not exist
+</ResponseField>
+
+---
+
+## Validation Endpoints
+
+### POST /api/builder/validate
+
+Validate a workflow definition without saving.
+
+<ParamField path="nodes" type="array" required>
+  List of workflow nodes
+</ParamField>
+
+<ParamField path="edges" type="array" required>
+  List of connections between nodes
+</ParamField>
+
+**Request**:
+
+```bash
+curl -X POST http://localhost:9001/api/builder/validate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nodes": [
+      {"id": "start", "type": "start"},
+      {"id": "agent", "type": "agent", "data": {"name": "Test"}},
+      {"id": "end", "type": "end"}
+    ],
+    "edges": [
+      {"source": "start", "target": "agent"},
+      {"source": "agent", "target": "end"}
+    ]
+  }'
+```
+
+**Response (Valid)**:
+
+```json
+{
+  "valid": true,
+  "errors": [],
+  "warnings": []
+}
+```
+
+**Response (Invalid)**:
+
+```json
+{
+  "valid": false,
+  "errors": [
+    {
+      "type": "MISSING_END_NODE",
+      "message": "Workflow must have at least one End node",
+      "severity": "error"
+    },
+    {
+      "type": "ORPHAN_NODE",
+      "message": "Node 'agent_3' is not connected to the workflow",
+      "node_id": "agent_3",
+      "severity": "error"
+    }
+  ],
+  "warnings": [
+    {
+      "type": "EMPTY_PROMPT",
+      "message": "Agent 'agent_2' has no system prompt configured",
+      "node_id": "agent_2",
+      "severity": "warning"
+    }
+  ]
+}
+```
+
+**Validation Rules**:
+
+| Rule | Severity | Description |
+|------|----------|-------------|
+| `MISSING_START_NODE` | error | No Start node found |
+| `MULTIPLE_START_NODES` | error | More than one Start node |
+| `MISSING_END_NODE` | error | No End node found |
+| `ORPHAN_NODE` | error | Node not connected to workflow |
+| `UNREACHABLE_END` | error | End node not reachable from Start |
+| `CYCLE_DETECTED` | error | Circular reference without exit |
+| `DUPLICATE_NODE_ID` | error | Same ID used for multiple nodes |
+| `EMPTY_PROMPT` | warning | Agent has no system prompt |
+| `UNUSED_EDGE` | warning | Edge connects invalid nodes |
+
+---
+
+## Code Generation Endpoints
+
+### POST /api/builder/generate
+
+Generate LangGraph Python code from a workflow.
+
+<ParamField path="name" type="string">
+  Name for the generated module
+</ParamField>
+
+<ParamField path="nodes" type="array" required>
+  List of workflow nodes
+</ParamField>
+
+<ParamField path="edges" type="array" required>
+  List of connections between nodes
+</ParamField>
+
+<ParamField path="options" type="object">
+  Code generation options
+</ParamField>
+
+**Request**:
+
+```bash
+curl -X POST http://localhost:9001/api/builder/generate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "CustomerSupport",
+    "nodes": [
+      {"id": "start", "type": "start"},
+      {"id": "agent", "type": "agent", "data": {"name": "Support", "prompt": "You are helpful"}},
+      {"id": "end", "type": "end"}
+    ],
+    "edges": [
+      {"source": "start", "target": "agent"},
+      {"source": "agent", "target": "end"}
+    ],
+    "options": {
+      "include_types": true,
+      "include_docstrings": true
+    }
+  }'
+```
+
+**Response**:
+
+```json
+{
+  "code": "\"\"\"\\nGenerated workflow: CustomerSupport\\n...\\n\"\"\"\\n\\nfrom typing import TypedDict\\nfrom langgraph.graph import StateGraph, START, END\\n\\n\\nclass AgentState(TypedDict):\\n    messages: list\\n\\n\\ndef support(state: AgentState) -> AgentState:\\n    \\\"\\\"\\\"Support agent node.\\\"\\\"\\\"\\n    return state\\n\\n\\nworkflow = StateGraph(AgentState)\\nworkflow.add_node(\\\"support\\\", support)\\nworkflow.add_edge(START, \\\"support\\\")\\nworkflow.add_edge(\\\"support\\\", END)\\n\\napp = workflow.compile()\\n",
+  "filename": "customer_support.py",
+  "language": "python",
+  "dependencies": [
+    "langgraph>=1.0.0",
+    "langchain-core>=0.3.0"
+  ]
+}
+```
+
+**Generation Options**:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `include_types` | boolean | `true` | Generate TypedDict state classes |
+| `include_docstrings` | boolean | `true` | Add docstrings to functions |
+| `include_mcp_tools` | boolean | `true` | Generate MCP tool imports |
+| `checkpoint_config` | boolean | `false` | Include checkpointing setup |
+| `async_mode` | boolean | `false` | Generate async functions |
+
+---
+
+## MCP Integration Endpoints
+
+### GET /api/builder/tools
+
+List available MCP tools for workflow integration.
+
+**Request**:
+
+```bash
+curl http://localhost:9001/api/builder/tools \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+[
+  {
+    "name": "web_search",
+    "description": "Search the web for information",
+    "parameters": {
+      "query": {"type": "string", "required": true},
+      "max_results": {"type": "integer", "default": 10}
+    }
+  },
+  {
+    "name": "calculator",
+    "description": "Perform mathematical calculations",
+    "parameters": {
+      "expression": {"type": "string", "required": true}
+    }
+  }
+]
+```
+
+---
+
+### GET /api/builder/resources
+
+List available MCP resources.
+
+**Request**:
+
+```bash
+curl http://localhost:9001/api/builder/resources \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+[
+  {
+    "uri": "file:///data/knowledge_base.txt",
+    "name": "Knowledge Base",
+    "mimeType": "text/plain"
+  },
+  {
+    "uri": "db://customers",
+    "name": "Customer Database",
+    "mimeType": "application/json"
+  }
+]
+```
+
+---
+
+## Version History Endpoints
+
+### GET /api/builder/workflows/{workflow_id}/versions
+
+List version history for a workflow.
+
+**Request**:
+
+```bash
+curl http://localhost:9001/api/builder/workflows/wf_abc123/versions \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+[
+  {
+    "version": 3,
+    "created_at": "2025-12-06T10:00:00Z",
+    "created_by": "alice",
+    "message": "Added billing agent"
+  },
+  {
+    "version": 2,
+    "created_at": "2025-12-05T14:00:00Z",
+    "created_by": "alice",
+    "message": "Updated prompts"
+  },
+  {
+    "version": 1,
+    "created_at": "2025-12-01T10:00:00Z",
+    "created_by": "alice",
+    "message": "Initial version"
+  }
+]
+```
+
+---
+
+### GET /api/builder/workflows/{workflow_id}/versions/{version}
+
+Get a specific version of a workflow.
+
+**Request**:
+
+```bash
+curl http://localhost:9001/api/builder/workflows/wf_abc123/versions/2 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+### POST /api/builder/workflows/{workflow_id}/rollback
+
+Rollback to a previous version.
+
+<ParamField path="version" type="integer" required>
+  Version number to rollback to
+</ParamField>
+
+**Request**:
+
+```bash
+curl -X POST http://localhost:9001/api/builder/workflows/wf_abc123/rollback \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"version": 2}'
+```
+
+**Response**:
+
+```json
+{
+  "id": "wf_abc123",
+  "version": 4,
+  "message": "Rolled back to version 2"
+}
+```
+
+---
+
+## Error Responses
+
+All endpoints may return the following errors:
+
+### 400 Bad Request
+
+```json
+{
+  "error": "bad_request",
+  "message": "Invalid workflow definition",
+  "details": [
+    {"field": "nodes", "error": "must not be empty"}
+  ],
+  "code": "INVALID_WORKFLOW"
+}
+```
+
+### 401 Unauthorized
+
+```json
+{
+  "error": "unauthorized",
+  "message": "Invalid or expired token",
+  "code": "AUTH_INVALID_TOKEN"
+}
+```
+
+### 403 Forbidden
+
+```json
+{
+  "error": "forbidden",
+  "message": "Access denied to this workflow",
+  "code": "AUTH_ACCESS_DENIED"
+}
+```
+
+### 404 Not Found
+
+```json
+{
+  "error": "not_found",
+  "message": "Workflow not found",
+  "code": "WORKFLOW_NOT_FOUND"
+}
+```
+
+### 422 Unprocessable Entity
+
+```json
+{
+  "error": "validation_error",
+  "message": "Workflow validation failed",
+  "details": {
+    "valid": false,
+    "errors": [...]
+  },
+  "code": "VALIDATION_FAILED"
+}
+```
+
+---
+
+## Node Type Reference
+
+### Start Node
+
+```json
+{
+  "id": "start",
+  "type": "start",
+  "position": {"x": 100, "y": 100}
+}
+```
+
+### Agent Node
+
+```json
+{
+  "id": "agent_1",
+  "type": "agent",
+  "position": {"x": 300, "y": 100},
+  "data": {
+    "name": "AssistantAgent",
+    "prompt": "You are a helpful assistant...",
+    "model": "gemini-2.5-flash",
+    "tools": ["web_search", "calculator"],
+    "temperature": 0.7
+  }
+}
+```
+
+### Router Node
+
+```json
+{
+  "id": "router_1",
+  "type": "router",
+  "position": {"x": 500, "y": 100},
+  "data": {
+    "conditions": [
+      {"label": "billing", "pattern": "billing|payment|invoice"},
+      {"label": "technical", "pattern": "error|bug|issue"},
+      {"label": "default", "pattern": ".*"}
+    ]
+  }
+}
+```
+
+### Tool Node
+
+```json
+{
+  "id": "tool_1",
+  "type": "tool",
+  "position": {"x": 700, "y": 100},
+  "data": {
+    "tool_name": "web_search",
+    "arguments": {
+      "query": "{{state.query}}",
+      "max_results": 5
+    }
+  }
+}
+```
+
+### Human Node
+
+```json
+{
+  "id": "human_1",
+  "type": "human",
+  "position": {"x": 900, "y": 100},
+  "data": {
+    "prompt": "Please review this response:",
+    "timeout": 3600,
+    "options": ["approve", "reject", "revise"]
+  }
+}
+```
+
+### End Node
+
+```json
+{
+  "id": "end",
+  "type": "end",
+  "position": {"x": 1100, "y": 100},
+  "data": {
+    "output": "state.messages[-1]"
+  }
+}
+```
+
+---
+
+## SDK Examples
+
+### Python
+
+```python
+import httpx
+
+class BuilderClient:
+    def __init__(self, base_url: str, token: str):
+        self.client = httpx.Client(
+            base_url=base_url,
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+    def create_workflow(self, name: str, nodes: list, edges: list) -> dict:
+        response = self.client.post(
+            "/api/builder/workflows",
+            json={"name": name, "nodes": nodes, "edges": edges}
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def validate(self, nodes: list, edges: list) -> dict:
+        response = self.client.post(
+            "/api/builder/validate",
+            json={"nodes": nodes, "edges": edges}
+        )
+        return response.json()
+
+    def generate_code(self, name: str, nodes: list, edges: list) -> str:
+        response = self.client.post(
+            "/api/builder/generate",
+            json={"name": name, "nodes": nodes, "edges": edges}
+        )
+        return response.json()["code"]
+
+# Usage
+client = BuilderClient("http://localhost:9001", token)
+
+nodes = [
+    {"id": "start", "type": "start"},
+    {"id": "agent", "type": "agent", "data": {"name": "Helper", "prompt": "Be helpful"}},
+    {"id": "end", "type": "end"}
+]
+edges = [
+    {"source": "start", "target": "agent"},
+    {"source": "agent", "target": "end"}
+]
+
+# Validate first
+result = client.validate(nodes, edges)
+if result["valid"]:
+    # Create workflow
+    workflow = client.create_workflow("My Workflow", nodes, edges)
+    print(f"Created: {workflow['id']}")
+
+    # Generate code
+    code = client.generate_code("my_workflow", nodes, edges)
+    print(code)
+```
+
+### JavaScript/TypeScript
+
+```typescript
+class BuilderClient {
+  private baseUrl: string;
+  private token: string;
+
+  constructor(baseUrl: string, token: string) {
+    this.baseUrl = baseUrl;
+    this.token = token;
+  }
+
+  private async request(path: string, options: RequestInit = {}): Promise<Response> {
+    return fetch(`${this.baseUrl}${path}`, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    });
+  }
+
+  async createWorkflow(name: string, nodes: Node[], edges: Edge[]): Promise<Workflow> {
+    const response = await this.request('/api/builder/workflows', {
+      method: 'POST',
+      body: JSON.stringify({ name, nodes, edges })
+    });
+    return response.json();
+  }
+
+  async validate(nodes: Node[], edges: Edge[]): Promise<ValidationResult> {
+    const response = await this.request('/api/builder/validate', {
+      method: 'POST',
+      body: JSON.stringify({ nodes, edges })
+    });
+    return response.json();
+  }
+
+  async generateCode(name: string, nodes: Node[], edges: Edge[]): Promise<string> {
+    const response = await this.request('/api/builder/generate', {
+      method: 'POST',
+      body: JSON.stringify({ name, nodes, edges })
+    });
+    const data = await response.json();
+    return data.code;
+  }
+}
+
+// Usage
+const client = new BuilderClient('http://localhost:9001', token);
+
+const nodes = [
+  { id: 'start', type: 'start' },
+  { id: 'agent', type: 'agent', data: { name: 'Helper', prompt: 'Be helpful' }},
+  { id: 'end', type: 'end' }
+];
+
+const edges = [
+  { source: 'start', target: 'agent' },
+  { source: 'agent', target: 'end' }
+];
+
+const result = await client.validate(nodes, edges);
+if (result.valid) {
+  const code = await client.generateCode('my_workflow', nodes, edges);
+  console.log(code);
+}
+```
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Builder Guide" icon="diagram-project" href="/guides/visual-workflow-builder">
+    Learn how to use the builder
+  </Card>
+  <Card title="Authentication API" icon="key" href="/api-reference/authentication">
+    Authentication endpoints
+  </Card>
+  <Card title="LangGraph Concepts" icon="code" href="/getting-started/architecture">
+    Understand LangGraph fundamentals
+  </Card>
+  <Card title="MCP Tools" icon="wrench" href="/api-reference/mcp/tools">
+    Configure MCP tools
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Full API access!** Use these endpoints to programmatically manage workflows and integrate with your development pipeline.
+</Check>

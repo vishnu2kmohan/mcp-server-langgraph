@@ -755,6 +755,7 @@ markers = [
     "playground: Interactive playground tests (API, WebSocket, sessions)",
     "websocket: WebSocket endpoint tests (streaming, real-time)",
     "builder: Visual workflow builder tests",
+    "redis: Redis-backed storage tests (sessions, checkpoints)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

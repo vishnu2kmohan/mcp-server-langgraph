@@ -182,6 +182,13 @@
             ]
           },
           {
+            "group": "Developer Tools",
+            "pages": [
+              "api-reference/playground",
+              "api-reference/builder"
+            ]
+          },
+          {
             "group": "MCP Protocol",
             "pages": [
               "api-reference/mcp/messages",
@@ -326,6 +333,13 @@
             "pages": [
               "guides/presets",
               "guides/agent-architecture"
+            ]
+          },
+          {
+            "group": "Developer Tools",
+            "pages": [
+              "guides/visual-workflow-builder",
+              "guides/playground"
             ]
           },
           {

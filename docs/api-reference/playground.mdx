@@ -1,0 +1,791 @@
+---
+title: Playground API
+description: 'API endpoints for the Interactive Playground'
+icon: 'play'
+seoTitle: "Playground API Reference - MCP Server"
+seoDescription: "API documentation for the Interactive Playground including sessions, chat, and observability endpoints"
+keywords: ["API reference", "playground", "sessions", "chat", "WebSocket", "streaming"]
+contentType: "reference"
+---
+
+## Overview
+
+The Playground API provides endpoints for managing chat sessions, sending messages, and retrieving observability data. All endpoints (except health) require JWT authentication.
+
+```mermaid
+flowchart LR
+    subgraph Endpoints["Playground API"]
+        Health["/health"]
+        Sessions["/sessions"]
+        Chat["/chat"]
+        Traces["/observability/traces"]
+        WS["WebSocket /ws"]
+    end
+
+    subgraph Clients["Clients"]
+        Browser["Browser"]
+        CLI["CLI"]
+        SDK["SDK"]
+    end
+
+    Browser --> Endpoints
+    CLI --> Endpoints
+    SDK --> Endpoints
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef endpointStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+
+    class Health,Sessions,Chat,Traces,WS endpointStyle
+    class Browser,CLI,SDK clientStyle
+```
+
+## Base URL
+
+```yaml
+# Development
+http://localhost:8002
+
+# Test Infrastructure
+http://localhost:9002
+
+# Production
+https://playground.yourdomain.com
+```
+
+## Authentication
+
+All endpoints except `/api/playground/health` require JWT authentication:
+
+```bash
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...
+```
+
+---
+
+## Health Endpoints
+
+### GET /api/playground/health
+
+Health check endpoint (no authentication required).
+
+**Response**:
+
+```json
+{
+  "status": "healthy",
+  "version": "1.0.0",
+  "dependencies": {
+    "redis": "healthy",
+    "mcp_server": "healthy"
+  }
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Service is healthy
+</ResponseField>
+
+<ResponseField name="503" type="Service Unavailable">
+  One or more dependencies are unhealthy
+```json
+  {
+    "status": "unhealthy",
+    "dependencies": {
+      "redis": "unhealthy",
+      "mcp_server": "healthy"
+    }
+  }
+  ```
+</ResponseField>
+
+---
+
+## Session Endpoints
+
+### POST /api/playground/sessions
+
+Create a new chat session.
+
+<ParamField path="name" type="string">
+  Display name for the session (optional)
+</ParamField>
+
+<ParamField path="metadata" type="object">
+  Custom metadata to attach to the session (optional)
+</ParamField>
+
+**Request**:
+
+```bash
+curl -X POST http://localhost:9002/api/playground/sessions \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Chat Session",
+    "metadata": {
+      "project": "demo"
+    }
+  }'
+```
+
+**Response**:
+
+```json
+{
+  "session_id": "sess_abc123def456",
+  "name": "My Chat Session",
+  "user_id": "alice",
+  "created_at": "2025-12-06T10:00:00Z",
+  "updated_at": "2025-12-06T10:00:00Z",
+  "metadata": {
+    "project": "demo"
+  }
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="201" type="Created">
+  Session created successfully
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Invalid or missing authentication token
+</ResponseField>
+
+---
+
+### GET /api/playground/sessions
+
+List all sessions for the authenticated user.
+
+<ParamField path="limit" type="integer" default="20">
+  Maximum number of sessions to return
+</ParamField>
+
+<ParamField path="offset" type="integer" default="0">
+  Number of sessions to skip for pagination
+</ParamField>
+
+**Request**:
+
+```bash
+curl http://localhost:9002/api/playground/sessions?limit=10 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+[
+  {
+    "session_id": "sess_abc123def456",
+    "name": "My Chat Session",
+    "user_id": "alice",
+    "created_at": "2025-12-06T10:00:00Z",
+    "updated_at": "2025-12-06T10:30:00Z",
+    "message_count": 5
+  },
+  {
+    "session_id": "sess_xyz789",
+    "name": "Test Session",
+    "user_id": "alice",
+    "created_at": "2025-12-05T09:00:00Z",
+    "updated_at": "2025-12-05T09:15:00Z",
+    "message_count": 3
+  }
+]
+```
+
+---
+
+### GET /api/playground/sessions/{session_id}
+
+Get details for a specific session including message history.
+
+**Path Parameters**:
+
+<ParamField path="session_id" type="string" required>
+  The session ID
+</ParamField>
+
+**Request**:
+
+```bash
+curl http://localhost:9002/api/playground/sessions/sess_abc123def456 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+{
+  "session_id": "sess_abc123def456",
+  "name": "My Chat Session",
+  "user_id": "alice",
+  "created_at": "2025-12-06T10:00:00Z",
+  "updated_at": "2025-12-06T10:30:00Z",
+  "messages": [
+    {
+      "id": "msg_001",
+      "role": "user",
+      "content": "Hello, what can you help me with?",
+      "timestamp": "2025-12-06T10:00:05Z"
+    },
+    {
+      "id": "msg_002",
+      "role": "assistant",
+      "content": "I can help you with a variety of tasks...",
+      "timestamp": "2025-12-06T10:00:08Z",
+      "tool_calls": []
+    }
+  ],
+  "metadata": {
+    "model": "gemini-2.5-flash",
+    "total_tokens": 150
+  }
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Session retrieved successfully
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Session does not exist or user lacks access
+</ResponseField>
+
+---
+
+### DELETE /api/playground/sessions/{session_id}
+
+Delete a session and all its messages.
+
+**Request**:
+
+```bash
+curl -X DELETE http://localhost:9002/api/playground/sessions/sess_abc123def456 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+{
+  "message": "Session deleted successfully"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="204" type="No Content">
+  Session deleted successfully
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Session does not exist
+</ResponseField>
+
+---
+
+## Chat Endpoints
+
+### POST /api/playground/chat
+
+Send a message and receive a response.
+
+<ParamField path="session_id" type="string" required>
+  The session ID to send the message to
+</ParamField>
+
+<ParamField path="message" type="string" required>
+  The user's message content
+</ParamField>
+
+<ParamField path="stream" type="boolean" default="false">
+  Enable streaming response (SSE)
+</ParamField>
+
+**Request (Non-Streaming)**:
+
+```bash
+curl -X POST http://localhost:9002/api/playground/chat \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "session_id": "sess_abc123def456",
+    "message": "What is 2 + 2?"
+  }'
+```
+
+**Response**:
+
+```json
+{
+  "message_id": "msg_003",
+  "role": "assistant",
+  "content": "2 + 2 equals 4.",
+  "timestamp": "2025-12-06T10:30:05Z",
+  "tool_calls": [],
+  "usage": {
+    "prompt_tokens": 25,
+    "completion_tokens": 10,
+    "total_tokens": 35
+  }
+}
+```
+
+**Request (Streaming)**:
+
+```bash
+curl -X POST http://localhost:9002/api/playground/chat \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{
+    "session_id": "sess_abc123def456",
+    "message": "Explain machine learning",
+    "stream": true
+  }'
+```
+
+**Streaming Response (SSE)**:
+
+```text
+event: token
+data: {"content": "Machine"}
+
+event: token
+data: {"content": " learning"}
+
+event: token
+data: {"content": " is"}
+
+event: tool_call
+data: {"name": "search", "args": {"query": "machine learning definition"}}
+
+event: tool_result
+data: {"content": "ML is a subset of AI..."}
+
+event: end
+data: {"usage": {"total_tokens": 150}}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Message processed successfully
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid request body
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Session does not exist
+</ResponseField>
+
+---
+
+## Observability Endpoints
+
+### GET /api/playground/observability/traces
+
+Get OpenTelemetry traces for a session.
+
+<ParamField path="session_id" type="string" required>
+  Filter traces by session ID
+</ParamField>
+
+<ParamField path="limit" type="integer" default="50">
+  Maximum number of traces to return
+</ParamField>
+
+**Request**:
+
+```bash
+curl "http://localhost:9002/api/playground/observability/traces?session_id=sess_abc123" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+[
+  {
+    "trace_id": "abc123def456789",
+    "span_id": "span_001",
+    "operation": "chat.process",
+    "duration_ms": 1250,
+    "status": "OK",
+    "attributes": {
+      "model": "gemini-2.5-flash",
+      "tokens": 150
+    },
+    "timestamp": "2025-12-06T10:30:00Z"
+  }
+]
+```
+
+---
+
+### GET /api/playground/observability/logs
+
+Get structured logs for a session.
+
+<ParamField path="session_id" type="string" required>
+  Filter logs by session ID
+</ParamField>
+
+<ParamField path="level" type="string" default="INFO">
+  Minimum log level (DEBUG, INFO, WARN, ERROR)
+</ParamField>
+
+**Request**:
+
+```bash
+curl "http://localhost:9002/api/playground/observability/logs?session_id=sess_abc123&level=INFO" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+[
+  {
+    "timestamp": "2025-12-06T10:30:00Z",
+    "level": "INFO",
+    "message": "Processing chat message",
+    "attributes": {
+      "session_id": "sess_abc123",
+      "message_length": 25
+    }
+  }
+]
+```
+
+---
+
+### GET /api/playground/observability/metrics
+
+Get metrics for a session.
+
+**Request**:
+
+```bash
+curl "http://localhost:9002/api/playground/observability/metrics?session_id=sess_abc123" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+
+```json
+{
+  "session_id": "sess_abc123",
+  "message_count": 10,
+  "total_tokens": 1500,
+  "average_latency_ms": 850,
+  "error_count": 0,
+  "tool_call_count": 3
+}
+```
+
+---
+
+## WebSocket API
+
+### WS /ws/playground/{session_id}
+
+Real-time bidirectional chat using WebSocket.
+
+**Connection**:
+
+```javascript
+const ws = new WebSocket('ws://localhost:9002/ws/playground/sess_abc123');
+
+ws.onopen = () => {
+  // Authenticate
+  ws.send(JSON.stringify({
+    type: 'auth',
+    token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...'
+  }));
+};
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Received:', data);
+};
+```
+
+**Message Types**:
+
+<Tabs>
+  <Tab title="Client Messages">
+    ```json
+    // Authentication
+    { "type": "auth", "token": "eyJ..." }
+
+    // Send chat message
+    { "type": "chat", "message": "Hello!" }
+
+    // Cancel current response
+    { "type": "cancel" }
+
+    // Ping (keepalive)
+    { "type": "ping" }
+    ```
+  </Tab>
+  <Tab title="Server Messages">
+    ```json
+    // Authentication result
+    { "type": "auth_success", "user_id": "alice" }
+    { "type": "auth_error", "message": "Invalid token" }
+
+    // Streaming tokens
+    { "type": "token", "content": "Hello" }
+
+    // Tool calls
+    { "type": "tool_call", "name": "search", "args": {...} }
+    { "type": "tool_result", "content": "..." }
+
+    // Completion
+    { "type": "end", "usage": {"total_tokens": 100} }
+
+    // Errors
+    { "type": "error", "message": "Processing failed" }
+
+    // Pong (keepalive response)
+    { "type": "pong" }
+    ```
+  </Tab>
+</Tabs>
+
+**Example Session**:
+
+```javascript
+const ws = new WebSocket('ws://localhost:9002/ws/playground/sess_abc123');
+
+ws.onopen = () => {
+  // Step 1: Authenticate
+  ws.send(JSON.stringify({ type: 'auth', token: TOKEN }));
+};
+
+ws.onmessage = (event) => {
+  const msg = JSON.parse(event.data);
+
+  switch (msg.type) {
+    case 'auth_success':
+      // Step 2: Send chat message
+      ws.send(JSON.stringify({ type: 'chat', message: 'Hello!' }));
+      break;
+
+    case 'token':
+      // Step 3: Handle streaming tokens
+      process.stdout.write(msg.content);
+      break;
+
+    case 'tool_call':
+      console.log(`\nTool: ${msg.name}(${JSON.stringify(msg.args)})`);
+      break;
+
+    case 'end':
+      console.log(`\nTotal tokens: ${msg.usage.total_tokens}`);
+      break;
+
+    case 'error':
+      console.error('Error:', msg.message);
+      break;
+  }
+};
+```
+
+---
+
+## Error Responses
+
+All endpoints may return the following errors:
+
+### 401 Unauthorized
+
+```json
+{
+  "error": "unauthorized",
+  "message": "Invalid or expired token",
+  "code": "AUTH_INVALID_TOKEN"
+}
+```
+
+### 403 Forbidden
+
+```json
+{
+  "error": "forbidden",
+  "message": "Access denied to this resource",
+  "code": "AUTH_ACCESS_DENIED"
+}
+```
+
+### 404 Not Found
+
+```json
+{
+  "error": "not_found",
+  "message": "Session not found",
+  "code": "SESSION_NOT_FOUND"
+}
+```
+
+### 429 Too Many Requests
+
+```json
+{
+  "error": "rate_limit_exceeded",
+  "message": "Too many requests. Please try again later.",
+  "retry_after": 60,
+  "code": "RATE_LIMIT"
+}
+```
+
+### 500 Internal Server Error
+
+```json
+{
+  "error": "internal_error",
+  "message": "An unexpected error occurred",
+  "trace_id": "abc123...",
+  "code": "INTERNAL_ERROR"
+}
+```
+
+---
+
+## SDK Examples
+
+### Python
+
+```python
+import httpx
+
+class PlaygroundClient:
+    def __init__(self, base_url: str, token: str):
+        self.client = httpx.AsyncClient(
+            base_url=base_url,
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+    async def create_session(self, name: str = None) -> dict:
+        response = await self.client.post(
+            "/api/playground/sessions",
+            json={"name": name}
+        )
+        return response.json()
+
+    async def chat(self, session_id: str, message: str) -> dict:
+        response = await self.client.post(
+            "/api/playground/chat",
+            json={"session_id": session_id, "message": message}
+        )
+        return response.json()
+
+    async def delete_session(self, session_id: str) -> None:
+        await self.client.delete(f"/api/playground/sessions/{session_id}")
+
+# Usage
+client = PlaygroundClient("http://localhost:9002", token)
+session = await client.create_session("My Session")
+response = await client.chat(session["session_id"], "Hello!")
+print(response["content"])
+```
+
+### JavaScript/TypeScript
+
+```typescript
+class PlaygroundClient {
+  private baseUrl: string;
+  private token: string;
+
+  constructor(baseUrl: string, token: string) {
+    this.baseUrl = baseUrl;
+    this.token = token;
+  }
+
+  async createSession(name?: string): Promise<Session> {
+    const response = await fetch(`${this.baseUrl}/api/playground/sessions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name })
+    });
+    return response.json();
+  }
+
+  async *streamChat(sessionId: string, message: string): AsyncGenerator<ChatEvent> {
+    const response = await fetch(`${this.baseUrl}/api/playground/chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream'
+      },
+      body: JSON.stringify({ session_id: sessionId, message, stream: true })
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      for (const line of chunk.split('\n')) {
+        if (line.startsWith('data: ')) {
+          yield JSON.parse(line.slice(6));
+        }
+      }
+    }
+  }
+}
+
+// Usage
+const client = new PlaygroundClient('http://localhost:9002', token);
+const session = await client.createSession('My Session');
+
+for await (const event of client.streamChat(session.session_id, 'Hello!')) {
+  if (event.type === 'token') {
+    process.stdout.write(event.content);
+  }
+}
+```
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Playground Guide" icon="play" href="/guides/playground">
+    Learn how to use the playground
+  </Card>
+  <Card title="Authentication API" icon="key" href="/api-reference/authentication">
+    Authentication endpoints
+  </Card>
+  <Card title="MCP Protocol" icon="plug" href="/api-reference/mcp/messages">
+    MCP message format
+  </Card>
+  <Card title="Observability" icon="chart-line" href="/guides/observability">
+    Set up monitoring
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Full API access!** Use these endpoints to build custom integrations with the Interactive Playground.
+</Check>

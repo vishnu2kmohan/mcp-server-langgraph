@@ -19,7 +19,9 @@ Usage:
 Note: Mount SPA AFTER all API routes to ensure APIs take precedence.
 """
 
+from collections.abc import MutableMapping
 from pathlib import Path
+from typing import Any
 
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
@@ -69,7 +71,7 @@ class SPAStaticFiles(StaticFiles):
 
         super().__init__(directory=directory, html=html)
 
-    async def get_response(self, path: str, scope: dict) -> Response:
+    async def get_response(self, path: str, scope: MutableMapping[str, Any]) -> Response:
         """
         Get response for the requested path.
 

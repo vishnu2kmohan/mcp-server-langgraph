@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -12,9 +12,69 @@ import ReactFlow, {
   Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Download, Play, Save, Code2, FileJson } from 'lucide-react';
+import { Download, Save, Code2, FileJson, Loader2, AlertCircle, AlertTriangle, CheckCircle2, Undo2, Redo2, Sun, Moon } from 'lucide-react';
+import { useDarkMode } from './hooks/useDarkMode';
+import { useWorkflowValidation } from './hooks/useWorkflowValidation';
+import { useUndoRedo } from './hooks/useUndoRedo';
+import { NodeConfigModal } from './components/NodeConfigModal';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
+import { Toaster, toast } from 'sonner';
+
+// ==============================================================================
+// Error Boundary Component
+// ==============================================================================
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  handleReset = (): void => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render(): ReactNode {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="max-w-md p-8 bg-white rounded-lg shadow-lg text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h2>
+            <p className="text-gray-600 mb-4">
+              {this.state.error?.message || 'An unexpected error occurred'}
+            </p>
+            <button
+              onClick={this.handleReset}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // ==============================================================================
 // Types
@@ -67,14 +127,40 @@ const nodeTypes = [
 // Main App Component
 // ==============================================================================
 
-function App() {
+function AppContent() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<string>('');
   const [showCodePanel, setShowCodePanel] = useState(false);
   const [workflowName, setWorkflowName] = useState('my_agent');
   const [workflowDescription, setWorkflowDescription] = useState('My custom agent workflow');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // ==============================================================================
+  // Dark Mode
+  // ==============================================================================
+
+  const { isDarkMode, toggle: toggleDarkMode } = useDarkMode();
+
+  // ==============================================================================
+  // Workflow Validation
+  // ==============================================================================
+
+  const validation = useWorkflowValidation(nodes, edges);
+
+  // ==============================================================================
+  // Undo/Redo System
+  // ==============================================================================
+
+  const { undo, redo, canUndo, canRedo, takeSnapshot } = useUndoRedo(
+    nodes,
+    edges,
+    setNodes,
+    setEdges
+  );
 
   // ==============================================================================
   // Node and Edge Handlers
@@ -88,12 +174,28 @@ function App() {
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       setSelectedNode(node as WorkflowNode);
+      setIsConfigModalOpen(true);
     },
     []
   );
 
+  // Handle node configuration save
+  const handleNodeConfigSave = useCallback(
+    (updatedNode: WorkflowNode) => {
+      takeSnapshot();
+      setNodes((nds) =>
+        nds.map((n) => (n.id === updatedNode.id ? updatedNode : n))
+      );
+      setIsConfigModalOpen(false);
+    },
+    [setNodes, takeSnapshot]
+  );
+
   const addNewNode = useCallback(
     (nodeType: string) => {
+      // Take snapshot before making changes for undo support
+      takeSnapshot();
+
       const id = `node_${Date.now()}`;
       const newNode: WorkflowNode = {
         id,
@@ -118,7 +220,7 @@ function App() {
 
       setNodes((nds) => [...nds, newNode]);
     },
-    [setNodes]
+    [setNodes, takeSnapshot]
   );
 
   // ==============================================================================
@@ -126,6 +228,9 @@ function App() {
   // ==============================================================================
 
   const generateCode = async () => {
+    if (isGenerating) return;
+    setIsGenerating(true);
+
     try {
       // Build workflow definition
       const workflow = {
@@ -158,9 +263,12 @@ function App() {
 
       setGeneratedCode(response.data.code);
       setShowCodePanel(true);
+      toast.success('Code generated successfully!');
     } catch (error) {
       console.error('Code generation failed:', error);
-      alert('Code generation failed. See console for details.');
+      toast.error('Code generation failed. See console for details.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -175,6 +283,9 @@ function App() {
   };
 
   const saveToFile = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+
     try {
       const workflow = {
         name: workflowName,
@@ -198,39 +309,86 @@ function App() {
         output_path: `src/agents/${workflowName}.py`,
       });
 
-      alert(`Workflow saved to src/agents/${workflowName}.py`);
+      toast.success(`Workflow saved to src/agents/${workflowName}.py`);
     } catch (error) {
       console.error('Save failed:', error);
-      alert('Save failed. See console for details.');
+      toast.error('Save failed. See console for details.');
+    } finally {
+      setIsSaving(false);
     }
   };
+
+  // ==============================================================================
+  // Keyboard Shortcuts
+  // ==============================================================================
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S or Cmd+S for save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveToFile();
+      }
+      // Ctrl+G or Cmd+G for generate code
+      if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
+        e.preventDefault();
+        generateCode();
+      }
+      // Ctrl+Z or Cmd+Z for undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        if (canUndo) undo();
+      }
+      // Ctrl+Y or Cmd+Shift+Z for redo
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        if (canRedo) redo();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [nodes, edges, workflowName, workflowDescription, isGenerating, isSaving, canUndo, canRedo, undo, redo]);
 
   // ==============================================================================
   // Render
   // ==============================================================================
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className={`h-screen flex flex-col ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+      <Toaster position="top-right" richColors closeButton />
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className={`px-6 py-4 border-b ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               Visual Workflow Builder
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               MCP Server with LangGraph - Build agents visually, export to code
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <input
               type="text"
               value={workflowName}
               onChange={(e) => setWorkflowName(e.target.value)}
-              className="px-3 py-2 border rounded-md"
+              className={`px-3 py-2 border rounded-md ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
               placeholder="Workflow name"
             />
+            <button
+              onClick={toggleDarkMode}
+              className={`p-2 rounded-lg transition-colors ${
+                isDarkMode
+                  ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
           </div>
         </div>
       </header>
@@ -238,21 +396,51 @@ function App() {
       {/* Main Content */}
       <div className="flex-1 flex">
         {/* Sidebar - Node Palette */}
-        <aside className="w-64 bg-white border-r border-gray-200 p-4">
-          <h2 className="text-lg font-semibold mb-4">Node Types</h2>
+        <aside className={`w-64 p-4 border-r ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          {/* Undo/Redo Toolbar */}
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              title="Undo (Ctrl+Z)"
+              className={`flex-1 px-3 py-2 bg-gray-100 rounded-lg flex items-center justify-center gap-1 ${
+                !canUndo ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'
+              }`}
+            >
+              <Undo2 size={16} />
+              <span className="text-sm">Undo</span>
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              title="Redo (Ctrl+Y)"
+              className={`flex-1 px-3 py-2 bg-gray-100 rounded-lg flex items-center justify-center gap-1 ${
+                !canRedo ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'
+              }`}
+            >
+              <Redo2 size={16} />
+              <span className="text-sm">Redo</span>
+            </button>
+          </div>
+
+          <h2 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Node Types</h2>
 
           <div className="space-y-2">
             {nodeTypes.map((nodeType) => (
               <button
                 key={nodeType.type}
                 onClick={() => addNewNode(nodeType.type)}
-                className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+                className={`w-full px-4 py-3 text-left rounded-lg transition-colors border ${
+                  isDarkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 border-gray-600 text-white'
+                    : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                }`}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{nodeType.icon}</span>
                   <div>
                     <div className="font-medium">{nodeType.label}</div>
-                    <div className="text-xs text-gray-500">{nodeType.description}</div>
+                    <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{nodeType.description}</div>
                   </div>
                 </div>
               </button>
@@ -262,18 +450,40 @@ function App() {
           <div className="mt-8 space-y-2">
             <button
               onClick={generateCode}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-2"
+              disabled={isGenerating}
+              title="Export Code (Ctrl+G)"
+              className={`w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Code2 size={16} />
-              Export Code
+              {isGenerating ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Code2 size={16} />
+                  Export Code
+                </>
+              )}
             </button>
 
             <button
               onClick={saveToFile}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+              disabled={isSaving}
+              title="Save to File (Ctrl+S)"
+              className={`w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Save size={16} />
-              Save to File
+              {isSaving ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save size={16} />
+                  Save to File
+                </>
+              )}
             </button>
 
             <button
@@ -314,6 +524,61 @@ function App() {
                 <div className="font-semibold mb-2">Workflow Stats</div>
                 <div>Nodes: {nodes.length}</div>
                 <div>Edges: {edges.length}</div>
+              </div>
+            </Panel>
+
+            {/* Validation Panel */}
+            <Panel position="bottom-right" className="bg-white p-4 rounded-lg shadow-lg max-w-xs" data-testid="validation-panel">
+              <div className="text-sm">
+                <div className="font-semibold mb-2 flex items-center gap-2">
+                  {validation.isValid && validation.warnings.length === 0 ? (
+                    <>
+                      <CheckCircle2 size={16} className="text-green-600" />
+                      <span className="text-green-600">Workflow Valid</span>
+                    </>
+                  ) : validation.errors.length > 0 ? (
+                    <>
+                      <AlertCircle size={16} className="text-red-600" />
+                      <span className="text-red-600">Validation Errors</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle size={16} className="text-yellow-600" />
+                      <span className="text-yellow-600">Warnings</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Errors */}
+                {validation.errors.length > 0 && (
+                  <div className="mt-2">
+                    {validation.errors.map((error, idx) => (
+                      <div key={idx} className="text-red-600 text-xs flex items-start gap-1 mt-1">
+                        <AlertCircle size={12} className="mt-0.5 flex-shrink-0" />
+                        <span>{error.message}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Warnings */}
+                {validation.warnings.length > 0 && (
+                  <div className="mt-2">
+                    {validation.warnings.map((warning, idx) => (
+                      <div key={idx} className="text-yellow-600 text-xs flex items-start gap-1 mt-1">
+                        <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" />
+                        <span>{warning.message}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Valid state */}
+                {validation.isValid && validation.warnings.length === 0 && (
+                  <div className="text-green-600 text-xs mt-1">
+                    All nodes connected and configured correctly.
+                  </div>
+                )}
               </div>
             </Panel>
           </ReactFlow>
@@ -366,7 +631,7 @@ function App() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 px-6 py-3 text-sm text-gray-600">
+      <footer className={`px-6 py-3 text-sm border-t ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-400' : 'bg-white border-gray-200 text-gray-600'}`}>
         <div className="flex justify-between items-center">
           <div>
             MCP Server with LangGraph Visual Builder - Drag nodes, connect edges, export
@@ -382,7 +647,27 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Node Configuration Modal */}
+      <NodeConfigModal
+        isOpen={isConfigModalOpen}
+        node={selectedNode}
+        onSave={handleNodeConfigSave}
+        onClose={() => setIsConfigModalOpen(false)}
+      />
     </div>
+  );
+}
+
+// ==============================================================================
+// Main App Component with Error Boundary
+// ==============================================================================
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
   );
 }
 
