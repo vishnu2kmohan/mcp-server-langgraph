@@ -208,10 +208,13 @@ def test_infrastructure_ports():
     # Return FIXED base ports for all workers
     # All xdist workers (gw0, gw1, gw2, ...) connect to the same ports
     # Isolation is achieved via schemas, DB indices, stores, not port offsets
+    # NOTE: docker-compose.test.yml uses a SINGLE Redis instance for both checkpoints and sessions
+    # Port 9379 is the consolidated Redis port (logical isolation via DB indices)
+    # This matches docker-compose.test.yml:296-317 (redis-test service)
     return {
         "postgres": 9432,
         "redis_checkpoints": 9379,
-        "redis_sessions": 9380,
+        "redis_sessions": 9379,  # Same as checkpoints - consolidated Redis instance
         "qdrant": 9333,
         "qdrant_grpc": 9334,
         "openfga_http": 9080,
