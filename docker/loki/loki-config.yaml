@@ -64,9 +64,11 @@ ruler:
   enable_api: false
 
 limits_config:
-  # Reject old samples older than 1 hour (test environment)
-  reject_old_samples: true
-  reject_old_samples_max_age: 1h
+  # Accept old samples for test environment robustness
+  # Alloy may batch and buffer logs before sending, causing timestamp delays
+  # Disabled rejection to prevent 400 errors during test runs
+  reject_old_samples: false
+  reject_old_samples_max_age: 168h  # 7 days (only applies if reject_old_samples: true)
   # Allow ingestion rate suitable for test workloads
   ingestion_rate_mb: 10
   ingestion_burst_size_mb: 20

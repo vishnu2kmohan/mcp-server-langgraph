@@ -697,7 +697,8 @@ services:
       - ALLOY_DEPLOY_MODE=compose
     healthcheck:
       # Alloy exposes /-/ready endpoint for readiness checks
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:12345/-/ready"]
+      # NOTE: grafana/alloy image doesn't have wget/curl, use bash TCP check
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/localhost/12345' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
