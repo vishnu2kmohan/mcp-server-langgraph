@@ -93,12 +93,37 @@ def validate_start_period(keycloak_service: dict) -> str | None:
     return None  # Success
 
 
+def is_optimized_keycloak_build(keycloak_service: dict) -> bool:
+    """
+    Check if Keycloak uses an optimized pre-built image.
+
+    Optimized builds (using docker/Dockerfile.keycloak) have KC_DB, KC_HEALTH_ENABLED,
+    and KC_METRICS_ENABLED baked in at build time, so they don't need to be set as
+    runtime environment variables.
+
+    Returns:
+        True if using optimized build, False otherwise
+    """
+    build_config = keycloak_service.get("build", {})
+    if isinstance(build_config, str):
+        # Simple string format: build: ./path
+        return "keycloak" in build_config.lower()
+    elif isinstance(build_config, dict):
+        # Dict format: build: {context: ., dockerfile: docker/Dockerfile.keycloak}
+        dockerfile = build_config.get("dockerfile", "")
+        return "keycloak" in dockerfile.lower()
+    return False
+
+
 def validate_environment_variables(keycloak_service: dict) -> str | None:
     """
     Validate Keycloak has required environment variables.
 
     Accepts both old (KEYCLOAK_ADMIN*) and new (KC_BOOTSTRAP_ADMIN*) variable names
     for Keycloak 26.4+ compatibility.
+
+    For optimized builds (using docker/Dockerfile.keycloak), KC_DB and KC_HEALTH_ENABLED
+    are baked into the image at build time and don't need runtime environment variables.
     """
     if "environment" not in keycloak_service:
         return "keycloak-test service must have environment variables"
@@ -122,7 +147,14 @@ def validate_environment_variables(keycloak_service: dict) -> str | None:
         return "keycloak-test service missing admin password (KEYCLOAK_ADMIN_PASSWORD or KC_BOOTSTRAP_ADMIN_PASSWORD)"
 
     # Check for other required variables
-    other_required_vars = ["KC_DB", "KC_DB_URL", "KC_HEALTH_ENABLED"]
+    # For optimized builds, KC_DB and KC_HEALTH_ENABLED are baked into the image
+    if is_optimized_keycloak_build(keycloak_service):
+        # Only require KC_DB_URL for optimized builds (runtime DB connection)
+        other_required_vars = ["KC_DB_URL"]
+    else:
+        # Standard Keycloak image requires all runtime config
+        other_required_vars = ["KC_DB", "KC_DB_URL", "KC_HEALTH_ENABLED"]
+
     missing_vars = [var for var in other_required_vars if var not in env_keys]
 
     if missing_vars:
