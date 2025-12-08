@@ -69,11 +69,11 @@ gcloud container clusters describe preview-mcp-server-langgraph-gke \
 **Verification:**
 ```bash
 ## List network policies
-kubectl get networkpolicies -n staging-mcp-server-langgraph
+kubectl get networkpolicies -n preview-mcp-server-langgraph
 
 ## Check specific policies
-kubectl describe networkpolicy default-deny-ingress -n staging-mcp-server-langgraph
-kubectl describe networkpolicy allow-egress -n staging-mcp-server-langgraph
+kubectl describe networkpolicy default-deny-ingress -n preview-mcp-server-langgraph
+kubectl describe networkpolicy allow-egress -n preview-mcp-server-langgraph
 ```
 
 #### Firewall Rules
@@ -83,8 +83,8 @@ kubectl describe networkpolicy allow-egress -n staging-mcp-server-langgraph
 
 **Verification:**
 ```bash
-## List firewall rules for staging VPC
-gcloud compute firewall-rules list --filter="network:staging-vpc"
+## List firewall rules for preview VPC
+gcloud compute firewall-rules list --filter="network:preview-vpc"
 ```
 
 ### Identity & Access Management (IAM)
@@ -99,11 +99,11 @@ gcloud compute firewall-rules list --filter="network:staging-vpc"
 ```bash
 ## Check service account IAM bindings
 gcloud iam service-accounts get-iam-policy \
-  mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com
+  mcp-preview-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com
 
 ## Verify no keys exist
 gcloud iam service-accounts keys list \
-  --iam-account=mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com
+  --iam-account=mcp-preview-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com
 ```
 #### Workload Identity
 - [ ] Kubernetes service account is annotated with GCP SA
@@ -113,13 +113,13 @@ gcloud iam service-accounts keys list \
 **Verification:**
 ```bash
 ## Check K8s service account annotation
-kubectl describe sa mcp-server-langgraph -n staging-mcp-server-langgraph | grep iam.gke.io
+kubectl describe sa mcp-server-langgraph -n preview-mcp-server-langgraph | grep iam.gke.io
 
 ## Test Workload Identity from pod
 kubectl run -it --rm test \
   --image=google/cloud-sdk:slim \
   --serviceaccount=mcp-server-langgraph \
-  --namespace=mcp-staging \
+  --namespace=preview-mcp-server-langgraph \
   -- gcloud auth list
 ```
 
@@ -151,11 +151,11 @@ gcloud iam workload-identity-pools providers describe github-provider \
 
 **Verification:**
 ```bash
-## List staging secrets
-gcloud secrets list --filter="name:staging-*"
+## List preview secrets
+gcloud secrets list --filter="name:preview-*"
 
 ## Verify permissions
-gcloud secrets get-iam-policy staging-jwt-secret
+gcloud secrets get-iam-policy preview-jwt-secret
 ```
 
 #### External Secrets Operator
@@ -170,10 +170,10 @@ gcloud secrets get-iam-policy staging-jwt-secret
 kubectl get pods -n external-secrets-system
 
 ## Check ExternalSecret status
-kubectl get externalsecret mcp-staging-secrets -n staging-mcp-server-langgraph
+kubectl get externalsecret mcp-preview-secrets -n preview-mcp-server-langgraph
 
 ## Verify secrets are synced
-kubectl get secret mcp-staging-secrets -n staging-mcp-server-langgraph
+kubectl get secret mcp-preview-secrets -n preview-mcp-server-langgraph
 ```
 ### Container Security
 
@@ -186,7 +186,7 @@ kubectl get secret mcp-staging-secrets -n staging-mcp-server-langgraph
 **Verification:**
 ```bash
 ## Check image source
-kubectl get deployment staging-mcp-server-langgraph -n staging-mcp-server-langgraph \
+kubectl get deployment preview-mcp-server-langgraph -n preview-mcp-server-langgraph \
   -o jsonpath='{.spec.template.spec.containers[0].image}'
 
 ## Check Binary Authorization policy
@@ -203,11 +203,11 @@ gcloud container binauthz policy export
 **Verification:**
 ```bash
 ## Check pod security context
-kubectl get pod -n staging-mcp-server-langgraph -o json | \
+kubectl get pod -n preview-mcp-server-langgraph -o json | \
   jq '.items[].spec.securityContext'
 
 ## Check for privileged containers
-kubectl get pods -n staging-mcp-server-langgraph -o json | \
+kubectl get pods -n preview-mcp-server-langgraph -o json | \
   jq '.items[].spec.containers[] | select(.securityContext.privileged == true)'
 ```
 #### Cloud SQL Proxy Sidecar
@@ -219,7 +219,7 @@ kubectl get pods -n staging-mcp-server-langgraph -o json | \
 **Verification:**
 ```bash
 ## Check Cloud SQL proxy container
-kubectl get pod -n staging-mcp-server-langgraph -o json | \
+kubectl get pod -n preview-mcp-server-langgraph -o json | \
   jq '.items[].spec.containers[] | select(.name == "cloud-sql-proxy")'
 ```
 
@@ -237,7 +237,7 @@ kubectl get pod -n staging-mcp-server-langgraph -o json | \
 kubectl cluster-info
 
 ## Check Cloud SQL instance encryption
-gcloud sql instances describe mcp-staging-postgres \
+gcloud sql instances describe mcp-preview-postgres \
   --format='value(diskEncryptionStatus.kmsKeyName)'
 ```
 
@@ -250,11 +250,11 @@ gcloud sql instances describe mcp-staging-postgres \
 **Verification:**
 ```bash
 ## Check Cloud SQL IP configuration
-gcloud sql instances describe mcp-staging-postgres \
+gcloud sql instances describe mcp-preview-postgres \
   --format='value(ipAddresses[])'
 
 ## Check backup configuration
-gcloud sql instances describe mcp-staging-postgres \
+gcloud sql instances describe mcp-preview-postgres \
   --format='value(settings.backupConfiguration)'
 ```
 
@@ -267,11 +267,11 @@ gcloud sql instances describe mcp-staging-postgres \
 **Verification:**
 ```bash
 ## Check Redis configuration
-gcloud redis instances describe mcp-staging-redis \
+gcloud redis instances describe mcp-preview-redis \
   --region=us-central1
 
 ## Verify AUTH is enabled
-gcloud redis instances describe mcp-staging-redis \
+gcloud redis instances describe mcp-preview-redis \
   --region=us-central1 \
   --format='value(authEnabled)'
 ```
@@ -321,7 +321,7 @@ gcloud alpha monitoring policies list
 **Verification:**
 ```bash
 ## This is configured in OTel collector, check collector logs
-kubectl logs -n staging-mcp-server-langgraph -l app=otel-collector
+kubectl logs -n preview-mcp-server-langgraph -l app=otel-collector
 ```
 
 ### Compliance & Governance
@@ -339,7 +339,7 @@ gcloud container clusters describe preview-mcp-server-langgraph-gke \
   --format='value(resourceLabels)'
 
 ## Check pods have labels
-kubectl get pods -n staging-mcp-server-langgraph --show-labels
+kubectl get pods -n preview-mcp-server-langgraph --show-labels
 ```
 #### Resource Limits
 - [ ] All containers have resource requests
@@ -350,14 +350,14 @@ kubectl get pods -n staging-mcp-server-langgraph --show-labels
 **Verification:**
 ```bash
 ## Check container resources
-kubectl get pods -n staging-mcp-server-langgraph -o json | \
+kubectl get pods -n preview-mcp-server-langgraph -o json | \
   jq '.items[].spec.containers[] | {name: .name, resources: .resources}'
 
 ## Check ResourceQuota
-kubectl get resourcequota -n staging-mcp-server-langgraph
+kubectl get resourcequota -n preview-mcp-server-langgraph
 
 ## Check LimitRange
-kubectl get limitrange -n staging-mcp-server-langgraph
+kubectl get limitrange -n preview-mcp-server-langgraph
 ```
 
 #### Backup & Disaster Recovery
@@ -369,11 +369,11 @@ kubectl get limitrange -n staging-mcp-server-langgraph
 **Verification:**
 ```bash
 ## Check backup configuration
-gcloud sql instances describe mcp-staging-postgres \
+gcloud sql instances describe mcp-preview-postgres \
   --format='value(settings.backupConfiguration.enabled)'
 
 ## List backups
-gcloud sql backups list --instance=mcp-staging-postgres
+gcloud sql backups list --instance=mcp-preview-postgres
 ```
 ### GitHub Actions Security
 
@@ -386,7 +386,7 @@ gcloud sql backups list --instance=mcp-staging-postgres
 
 **Verification:**
 - Review `.github/workflows/deploy-preview-gke.yaml`
-- Check GitHub repository settings → Environments → staging
+- Check GitHub repository settings → Environments → preview
 
 #### Deployment Validation
 - [ ] Smoke tests run post-deployment
@@ -398,7 +398,7 @@ gcloud sql backups list --instance=mcp-staging-postgres
 ```bash
 ## Check recent deployments in Cloud Console
 gcloud container clusters get-credentials preview-mcp-server-langgraph-gke --region=us-central1
-kubectl rollout history deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
+kubectl rollout history deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph
 ```
 
 ### Security Scanning
@@ -416,7 +416,7 @@ gcloud services enable containeranalysis.googleapis.com
 
 ## Scan image
 gcloud artifacts docker images scan \
-  us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent:staging-latest
+  us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-preview/agent:preview-latest
 ```
 #### Security Auditing
 - [ ] Regular security audits scheduled
@@ -433,14 +433,14 @@ gcloud artifacts docker images scan \
 
 #### Rollback Procedures
 - [ ] Documented rollback procedure
-- [ ] Rollback tested in staging
+- [ ] Rollback tested in preview
 - [ ] Automatic rollback configured in CI/CD
 
 **Test Rollback:**
 ```bash
 ## Manual rollback test
-kubectl rollout undo deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
-kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
+kubectl rollout undo deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph
+kubectl rollout status deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph
 ```
 
 ---
@@ -453,7 +453,7 @@ kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-se
 - **90-100% complete**: Excellent - Production-ready security posture
 - **80-89% complete**: Good - Minor improvements needed
 - **70-79% complete**: Fair - Significant gaps exist
-- **&lt;70% complete**: Poor - Not ready for production-like staging
+- **&lt;70% complete**: Poor - Not ready for production-like preview
 
 ### Next Steps
 
