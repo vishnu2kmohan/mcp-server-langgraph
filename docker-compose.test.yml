@@ -546,8 +546,10 @@ services:
       - "13100:3100"  # Loki API (offset by 10000)
     volumes:
       - ./docker/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    # Note: noexec removed - Loki WAL operations require it
+    # nosuid retained for security
     tmpfs:
-      - /tmp/loki:rw,noexec,nosuid,size=256m
+      - /tmp/loki:rw,nosuid,size=256m
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
       interval: 10s
