@@ -258,8 +258,11 @@ class TestKeycloakServiceConfiguration:
 
         Required vars:
         - Admin credentials: KEYCLOAK_ADMIN (legacy) OR KC_BOOTSTRAP_ADMIN_USERNAME (Keycloak 22+)
-        - Database: KC_DB, KC_DB_URL
-        - Health: KC_HEALTH_ENABLED
+        - Database: KC_DB_URL (KC_DB is baked into optimized builds)
+        - Health: KC_HEALTH_ENABLED (baked into optimized builds)
+
+        For optimized Keycloak builds (using docker/Dockerfile.keycloak), KC_DB and
+        KC_HEALTH_ENABLED are baked into the image at build time.
         """
         compose_file = Path(__file__).parent.parent.parent / "docker-compose.test.yml"
 
@@ -289,15 +292,39 @@ class TestKeycloakServiceConfiguration:
             "keycloak-test service missing admin password: must have KEYCLOAK_ADMIN_PASSWORD or KC_BOOTSTRAP_ADMIN_PASSWORD"
         )
 
-        # Database and health configuration (required regardless of Keycloak version)
-        required_vars = [
-            "KC_DB",
-            "KC_DB_URL",
-            "KC_HEALTH_ENABLED",
-        ]
+        # Check if using optimized Keycloak build (KC_DB, KC_HEALTH_ENABLED baked in)
+        is_optimized_build = self._is_optimized_keycloak_build(keycloak_service)
+
+        # Database and health configuration
+        # For optimized builds, KC_DB and KC_HEALTH_ENABLED are baked into the image
+        if is_optimized_build:
+            required_vars = ["KC_DB_URL"]
+        else:
+            required_vars = ["KC_DB", "KC_DB_URL", "KC_HEALTH_ENABLED"]
 
         for var in required_vars:
             assert var in env_keys, f"keycloak-test service missing required environment variable: {var}"
+
+    def _is_optimized_keycloak_build(self, keycloak_service: dict) -> bool:
+        """
+        Check if Keycloak uses an optimized pre-built image.
+
+        Optimized builds (using docker/Dockerfile.keycloak) have KC_DB, KC_HEALTH_ENABLED,
+        and KC_METRICS_ENABLED baked in at build time, so they don't need to be set as
+        runtime environment variables.
+
+        Returns:
+            True if using optimized build, False otherwise
+        """
+        build_config = keycloak_service.get("build", {})
+        if isinstance(build_config, str):
+            # Simple string format: build: ./path
+            return "keycloak" in build_config.lower()
+        elif isinstance(build_config, dict):
+            # Dict format: build: {context: ., dockerfile: docker/Dockerfile.keycloak}
+            dockerfile = build_config.get("dockerfile", "")
+            return "keycloak" in dockerfile.lower()
+        return False
 
 
 @pytest.mark.xdist_group(name="testgracefulserviceskipping")
