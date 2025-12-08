@@ -13,11 +13,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, within } from './test/test-utils';
+import { render, screen, waitFor } from './test/test-utils';
 import userEvent from '@testing-library/user-event';
 import axios from 'axios';
 import App from './App';
-import { mockWorkflow, mockGeneratedCode, createMockAxiosResponse, createMockAxiosError } from './test/test-utils';
+import { mockGeneratedCode, createMockAxiosResponse, createMockAxiosError } from './test/test-utils';
 
 // Mock axios
 vi.mock('axios');
@@ -863,11 +863,6 @@ describe('App Component', () => {
     it('catches and displays errors gracefully', () => {
       // Suppress console.error for this test
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      // Create a component that throws
-      const ThrowingComponent = () => {
-        throw new Error('Test error');
-      };
 
       // Error boundary should catch and display error
       // This test validates the error boundary exists
