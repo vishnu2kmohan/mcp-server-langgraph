@@ -63,8 +63,10 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never \
     UV_PROJECT_ENVIRONMENT=/app/.venv
 
-# Copy dependency files
+# Copy dependency files and source code
+# NOTE: Source must be copied BEFORE uv sync because pyproject.toml references src/
 COPY pyproject.toml uv.lock ./
+COPY src/ ./src/
 
 # Install Python dependencies with playground extras
 # --frozen: Use lockfile exactly, fail if out of sync
@@ -72,9 +74,6 @@ COPY pyproject.toml uv.lock ./
 # --extra playground: Include WebSocket and other playground deps
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --extra playground
-
-# Copy source code
-COPY src/ ./src/
 
 # Create non-root user for security (DS002 compliance)
 RUN useradd -m -u 1000 appuser && \

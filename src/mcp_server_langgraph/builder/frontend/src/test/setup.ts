@@ -64,10 +64,10 @@ class MockResizeObserver {
   unobserve = vi.fn();
   disconnect = vi.fn();
 }
-global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 // Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+globalThis.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
@@ -87,8 +87,8 @@ HTMLElement.prototype.getBoundingClientRect = vi.fn().mockReturnValue({
 });
 
 // Mock DOMRect
-// @ts-ignore
-global.DOMRect = {
+// @ts-ignore - DOMRect is readonly in lib.dom.d.ts
+globalThis.DOMRect = {
   fromRect: () => ({
     top: 0,
     left: 0,
@@ -96,13 +96,16 @@ global.DOMRect = {
     right: 0,
     width: 0,
     height: 0,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
   }),
 };
 
 // Mock PointerEvent (for React Flow drag interactions)
-if (!global.PointerEvent) {
-  // @ts-ignore
-  global.PointerEvent = class PointerEvent extends MouseEvent {
+if (!globalThis.PointerEvent) {
+  // @ts-ignore - PointerEvent is readonly in lib.dom.d.ts
+  globalThis.PointerEvent = class PointerEvent extends MouseEvent {
     constructor(type: string, params: any = {}) {
       super(type, params);
     }

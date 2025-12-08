@@ -258,7 +258,6 @@ describe('NodeConfigModal Component', () => {
     });
 
     it('enables save button when label is valid', async () => {
-      const user = userEvent.setup();
       render(
         <NodeConfigModal
           isOpen={true}

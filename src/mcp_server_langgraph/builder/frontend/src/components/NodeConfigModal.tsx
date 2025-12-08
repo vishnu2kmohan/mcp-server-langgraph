@@ -8,7 +8,7 @@
  * - Save/Cancel actions
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, Settings } from 'lucide-react';
 import type { Node } from 'reactflow';
 
