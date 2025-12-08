@@ -80,7 +80,8 @@ class TestGetEngine:
         ) as mock_create:
             result = get_engine("postgresql+asyncpg://localhost/testdb", echo=True)
 
-            assert result == mock_engine
+            # Use 'is' for identity comparison to avoid xdist MagicMock comparison issues
+            assert result is mock_engine
             call_args = mock_create.call_args
             assert call_args[1]["echo"] is True
 
