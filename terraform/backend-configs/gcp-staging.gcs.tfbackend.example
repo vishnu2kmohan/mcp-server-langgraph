@@ -1,2 +1,0 @@
-bucket = "mcp-langgraph-tfstate"
-prefix = "env/staging"

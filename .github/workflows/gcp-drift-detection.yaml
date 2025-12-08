@@ -259,11 +259,11 @@ jobs:
             }
 
   # ============================================================================
-  # Detect Drift in Staging
+  # Detect Drift in Preview
   # ============================================================================
 
-  detect-drift-staging:
-    name: Detect Drift - Staging
+  detect-drift-preview:
+    name: Detect Drift - Preview
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Only run in main repository (not forks) to avoid secret availability issues
@@ -284,14 +284,14 @@ jobs:
           workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service-account: ${{ secrets.GCP_TERRAFORM_SA_EMAIL }}
 
-      - name: Check staging drift
+      - name: Check preview drift
         run: |
-          cd terraform/environments/gcp-staging
+          cd terraform/environments/gcp-preview
           terraform init
           terraform plan -detailed-exitcode || EXIT_CODE=$?
 
           if [ "$EXIT_CODE" = "2" ]; then
-            echo "⚠️ Drift detected in staging"
+            echo "⚠️ Drift detected in preview"
           else
-            echo "✅ No drift in staging"
+            echo "✅ No drift in preview"
           fi

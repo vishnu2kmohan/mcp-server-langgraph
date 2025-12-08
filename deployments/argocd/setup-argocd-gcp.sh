@@ -167,9 +167,9 @@ echo "   # Get dev cluster credentials"
 echo "   gcloud container clusters get-credentials mcp-dev-gke --zone=us-central1-a"
 echo "   argocd cluster add gke_${PROJECT_ID}_us-central1-a_mcp-dev-gke --name=gcp-dev"
 echo
-echo "   # Get staging cluster credentials"
-echo "   gcloud container clusters get-credentials staging-mcp-server-langgraph-gke --region=us-central1"
-echo "   argocd cluster add gke_${PROJECT_ID}_us-central1_staging-mcp-server-langgraph-gke --name=gcp-staging"
+echo "   # Get preview cluster credentials"
+echo "   gcloud container clusters get-credentials preview-mcp-server-langgraph-gke --region=us-central1"
+echo "   argocd cluster add gke_${PROJECT_ID}_us-central1_preview-mcp-server-langgraph-gke --name=gcp-preview"
 echo
 echo "   # Get production cluster credentials"
 echo "   gcloud container clusters get-credentials production-mcp-server-langgraph-gke --region=us-central1"
