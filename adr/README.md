@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2025-11-30
-**Total ADRs**: 63
+**Last Updated**: 2025-12-07
+**Total ADRs**: 64
 
 ## Overview
 
@@ -79,6 +79,12 @@ Each ADR follows this structure:
 | [ADR-0063](adr-0063-mintlify-documentation-platform.md) | 63. Mintlify as Documentation Platform | Accepted | 2025-11-29 |
 | [ADR-0064](adr-0064-pre-commit-hooks-strategy.md) | 64. Pre-commit Hooks Strategy | Accepted | 2025-11-29 |
 | [ADR-0065](adr-0065-ruff-code-quality.md) | 65. Ruff for Code Quality | Accepted | 2025-11-29 |
+
+### Infrastructure
+
+| ADR | Title | Status | Date |
+|-----|-------|--------|------|
+| [ADR-0067](adr-0067-grafana-lgtm-stack-migration.md) | 67. Grafana LGTM Stack Migration | Accepted | 2025-12-07 |
 
 ### Infrastructure & Deployment
 
