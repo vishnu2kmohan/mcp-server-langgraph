@@ -116,8 +116,7 @@ Testing:
 	@echo "  make test-all-quality-ci       All quality tests + coverage (CI mode)"
 	@echo ""
 	@echo "New Testing Features:"
-	@echo "  make test-infra-up            Start test infrastructure with API gateway"
-	@echo "  make test-infra-full-up       Start full infrastructure (incl. builder, playground)"
+	@echo "  make test-infra-up            Start full test infrastructure (all services)"
 	@echo "  make test-infra-down          Stop and clean test infrastructure"
 	@echo "  make test-infra-logs          View test infrastructure logs"
 	@echo "  make test-gateway-status      Check gateway health and routes"
@@ -445,35 +444,48 @@ test-all-quality-ci: test-property-ci test-contract-ci test-regression-ci test-p
 
 # New Testing Infrastructure Targets
 
+# Consolidated test infrastructure (full stack with Builder, Playground, Observability)
+# Use this target for all test infrastructure needs - it includes everything
 test-infra-up:
-	@echo "Starting test infrastructure (docker-compose.test.yml)..."
+	@echo "Starting full test infrastructure (docker-compose.test.yml)..."
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d
-	@echo "✓ Test infrastructure started"
 	@echo ""
 	@echo "═══════════════════════════════════════════════════════════════"
-	@echo "  API Gateway: http://localhost (Traefik)"
+	@echo "✓ Full test infrastructure started!"
 	@echo "═══════════════════════════════════════════════════════════════"
 	@echo ""
-	@echo "Gateway Routes (via http://localhost):"
-	@echo "  /api        - MCP Server API"
-	@echo "  /build      - Visual Workflow Builder"
-	@echo "  /play       - Interactive Playground"
-	@echo "  /authn      - Keycloak (Authentication)"
-	@echo "  /authz      - OpenFGA (Authorization)"
-	@echo "  /vectors    - Qdrant (Vector Database)"
-	@echo "  /traces     - Jaeger (Distributed Tracing)"
-	@echo "  /logs       - Loki (Log Aggregation)"
-	@echo "  /metrics    - Prometheus (Metrics)"
-	@echo "  /alerts     - Alertmanager"
-	@echo "  /dashboards - Grafana (Unified Dashboards)"
-	@echo "  /gateway    - Traefik Dashboard"
+	@echo "┌─────────────────────────────────────────────────────────────┐"
+	@echo "│  API GATEWAY: http://localhost (Traefik)                   │"
+	@echo "└─────────────────────────────────────────────────────────────┘"
 	@echo ""
-	@echo "Direct Ports (legacy):"
-	@echo "  PostgreSQL: localhost:9432"
-	@echo "  Redis:      localhost:9379"
-	@echo "  OpenFGA:    http://localhost:9080"
-	@echo "  Keycloak:   http://localhost:9082"
-	@echo "  Qdrant:     http://localhost:9333"
+	@echo "Gateway Routes (recommended):"
+	@echo "  http://localhost/api        - MCP Server API"
+	@echo "  http://localhost/build      - Visual Workflow Builder"
+	@echo "  http://localhost/play       - Interactive Playground"
+	@echo "  http://localhost/authn      - Keycloak (Authentication)"
+	@echo "  http://localhost/authz      - OpenFGA (Authorization)"
+	@echo "  http://localhost/vectors    - Qdrant (Vector Database)"
+	@echo "  http://localhost/tempo      - Tempo (Distributed Tracing)"
+	@echo "  http://localhost/logs       - Loki (Log Aggregation)"
+	@echo "  http://localhost/mimir      - Mimir (Metrics Storage)"
+	@echo "  http://localhost/alloy      - Alloy (Unified Telemetry)"
+	@echo "  http://localhost/dashboards - Grafana (Unified Dashboards)"
+	@echo "  http://localhost/gateway    - Traefik Dashboard"
+	@echo ""
+	@echo "Direct Ports (legacy, for debugging):"
+	@echo "  PostgreSQL:   localhost:9432"
+	@echo "  Redis:        localhost:9379"
+	@echo "  OpenFGA:      http://localhost:9080"
+	@echo "  Keycloak:     http://localhost:9082"
+	@echo "  Qdrant:       http://localhost:9333"
+	@echo "  MCP Server:   http://localhost:8000"
+	@echo "  Builder:      http://localhost:9001"
+	@echo "  Playground:   http://localhost:9002"
+	@echo "  Tempo:        http://localhost:13200"
+	@echo "  Grafana:      http://localhost:13001"
+	@echo "  Loki:         http://localhost:13100"
+	@echo "  Mimir:        http://localhost:19009"
+	@echo "  Alloy:        http://localhost:12345"
 	@echo ""
 
 test-infra-down:
@@ -500,8 +512,8 @@ test-gateway-logs:
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml logs -f traefik-gateway
 
 test-loki-logs:
-	@echo "Showing Loki logs..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml logs -f loki-test promtail-test
+	@echo "Showing Loki and Alloy logs..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml logs -f loki-test alloy-test
 
 test-builder-up:
 	@echo "Starting builder service (unified API + React frontend)..."
@@ -540,44 +552,11 @@ test-playground-down:
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml stop playground-test
 	@echo "✓ Playground stopped"
 
-test-infra-full-up: test-infra-up test-builder-up test-playground-up
-	@echo ""
-	@echo "═══════════════════════════════════════════════════════════════"
-	@echo "✓ Full test infrastructure started!"
-	@echo "═══════════════════════════════════════════════════════════════"
-	@echo ""
-	@echo "┌─────────────────────────────────────────────────────────────┐"
-	@echo "│  API GATEWAY: http://localhost (Traefik)                   │"
-	@echo "└─────────────────────────────────────────────────────────────┘"
-	@echo ""
-	@echo "Gateway Routes (recommended):"
-	@echo "  http://localhost/api        - MCP Server API"
-	@echo "  http://localhost/build      - Visual Workflow Builder"
-	@echo "  http://localhost/play       - Interactive Playground"
-	@echo "  http://localhost/authn      - Keycloak (Authentication)"
-	@echo "  http://localhost/authz      - OpenFGA (Authorization)"
-	@echo "  http://localhost/vectors    - Qdrant (Vector Database)"
-	@echo "  http://localhost/traces     - Jaeger (Distributed Tracing)"
-	@echo "  http://localhost/logs       - Loki (Log Aggregation)"
-	@echo "  http://localhost/metrics    - Prometheus (Metrics)"
-	@echo "  http://localhost/alerts     - Alertmanager"
-	@echo "  http://localhost/dashboards - Grafana (Unified Dashboards)"
-	@echo "  http://localhost/gateway    - Traefik Dashboard"
-	@echo ""
-	@echo "Direct Ports (legacy, for debugging):"
-	@echo "  PostgreSQL:   localhost:9432"
-	@echo "  Redis:        localhost:9379"
-	@echo "  OpenFGA:      http://localhost:9080"
-	@echo "  Keycloak:     http://localhost:9082"
-	@echo "  Qdrant:       http://localhost:9333"
-	@echo "  MCP Server:   http://localhost:8000"
-	@echo "  Builder:      http://localhost:9001"
-	@echo "  Playground:   http://localhost:9002"
-	@echo "  Jaeger:       http://localhost:19686"
-	@echo "  Prometheus:   http://localhost:19090"
-	@echo "  Grafana:      http://localhost:13001"
-	@echo "  Loki:         http://localhost:13100"
-	@echo ""
+# DEPRECATED: Use test-infra-up instead (now consolidated to include all services)
+# Kept for backwards compatibility - redirects to test-infra-up
+test-infra-full-up: test-infra-up
+	@echo "NOTE: 'make test-infra-full-up' is deprecated. Use 'make test-infra-up' instead."
+	@echo "      test-infra-up now starts the complete infrastructure including Builder and Playground."
 
 test-e2e:
 	@echo "Running end-to-end tests (parallel execution, requires test infrastructure)..."

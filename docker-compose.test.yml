@@ -71,7 +71,7 @@ services:
   # Dashboard available at http://localhost/gateway or :8080
 
   traefik-gateway:
-    image: traefik:v3.2
+    image: traefik:v3.6.4
     command:
       # API and Dashboard
       - "--api.dashboard=true"
@@ -136,7 +136,9 @@ services:
       - "9432:5432"  # Offset port to avoid conflicts with dev environment
     volumes:
       # Mount migration scripts for database initialization
-      - ./migrations:/docker-entrypoint-initdb.d:ro
+      - ./migrations:/docker-entrypoint-initdb.d/01-migrations:ro
+      # Mount test database initialization script
+      - ./docker/postgres/init-test-databases.sh:/docker-entrypoint-initdb.d/00-init-databases.sh:ro
     # No persistent volumes - ephemeral storage for test isolation
     # OpenAI Codex Finding Fix (2025-11-20): Increased from 256m to 512m
     # Reason: Multiple worker schemas (test_worker_gw0, gw1, gw2...) need more space
@@ -160,7 +162,7 @@ services:
   # ==============================================================================
 
   openfga-migrate-test:
-    image: openfga/openfga:v1.10.2
+    image: openfga/openfga:v1.11.2
     command: migrate --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable'
     depends_on:
       postgres-test:
@@ -173,7 +175,7 @@ services:
     restart: "no"  # Run once and exit
 
   openfga-test:
-    image: openfga/openfga:v1.10.2
+    image: openfga/openfga:v1.11.2
     command: run --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable'
     depends_on:
       postgres-test:
@@ -321,13 +323,19 @@ services:
   # ==============================================================================
 
   qdrant-test:
-    image: qdrant/qdrant:v1.15.5
+    # Use unprivileged image for non-root execution (Kubernetes-compatible)
+    image: qdrant/qdrant:v1.15.5-unprivileged
+    # Qdrant unprivileged runs as UID 1000
+    user: "1000"
     ports:
       - "9333:6333"  # HTTP API
       - "9334:6334"  # gRPC API
     # No volumes - ephemeral storage
+    # Note: noexec removed - Qdrant mmap operations may require it
+    # nosuid retained for security
+    # uid/gid set to 1000 (qdrant user) for write permissions
     tmpfs:
-      - /qdrant/storage:rw,noexec,nosuid,size=256m
+      - /qdrant/storage:rw,nosuid,size=256m,uid=1000,gid=1000
     environment:
       - QDRANT_ALLOW_RECOVERY_MODE=true
       - QDRANT__LOG_LEVEL=WARN  # Reduced logging
@@ -486,7 +494,7 @@ services:
       alloy-test:
         condition: service_healthy
       loki-test:
-        condition: service_healthy
+        condition: service_started  # Loki has healthcheck disabled (distroless image)
       tempo-test:
         condition: service_healthy
       mimir-test:
@@ -540,7 +548,7 @@ services:
   # Logs accessible at /logs or via Grafana Explore
 
   loki-test:
-    image: grafana/loki:3.0.0
+    image: grafana/loki:3.6.2
     # Loki runs as UID 10001 in the official image
     # Must set user to match tmpfs uid for write permissions
     user: "10001"
@@ -555,11 +563,11 @@ services:
     tmpfs:
       - /tmp/loki:rw,nosuid,size=256m,uid=10001,gid=10001
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      # NOTE: Loki 3.6.2 uses distroless image with no shell utilities (no bash, wget, curl)
+      # Healthcheck disabled; service is still accessible on port 3100
+      # Dependent services use condition: service_started instead of service_healthy
+      # See: https://github.com/grafana/loki/issues/18890
+      disable: true
     deploy:
       resources:
         limits:
@@ -680,7 +688,7 @@ services:
   # Reference: https://grafana.com/docs/alloy/latest/
 
   alloy-test:
-    image: grafana/alloy:v1.4.2
+    image: grafana/alloy:v1.12.0
     command:
       - run
       - /etc/alloy/config.alloy
@@ -688,7 +696,7 @@ services:
       - --stability.level=generally-available
     depends_on:
       loki-test:
-        condition: service_healthy
+        condition: service_started  # Loki has healthcheck disabled (distroless image)
       tempo-test:
         condition: service_healthy
       mimir-test:

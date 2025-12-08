@@ -131,6 +131,7 @@ TEST_ALERTMANAGER_PORT = TEST_MIMIR_PORT  # Alertmanager replaced by Grafana Uni
 TEST_REDIS_CHECKPOINT_DB = 1  # LangGraph checkpoints
 TEST_REDIS_SESSION_DB = 0  # Session storage
 TEST_REDIS_PLAYGROUND_DB = 2  # Playground sessions
+TEST_REDIS_BUILDER_DB = 3  # Builder workflow storage
 
 
 # ==============================================================================

@@ -1,12 +1,16 @@
 # Loki Configuration for MCP Server LangGraph Test Environment
 # =============================================================
 # Minimal configuration for local development and testing.
-# Uses filesystem storage with in-memory ring for single-node mode.
+# Uses filesystem storage with inmemory ring for single-node mode.
 #
 # Reference: https://grafana.com/docs/loki/latest/configure/
 #
 # IMPORTANT: This configuration is for testing only.
 # Production deployments should use persistent storage (S3, GCS, etc.)
+#
+# NOTE: For single-node test environments, inmemory ring store is simpler.
+# WAL is disabled to avoid startup delays from replay.
+# See: https://github.com/grafana/loki/issues/18890
 
 # auth disabled for testing
 auth_enabled: false
@@ -25,22 +29,29 @@ common:
       rules_directory: /tmp/loki/rules
   replication_factor: 1
   ring:
+    instance_addr: 127.0.0.1
     kvstore:
       store: inmemory
 
-# Ingester configuration for single-node
+# Ingester configuration for single-node (simplified for test environment)
 ingester:
   lifecycler:
+    address: 127.0.0.1
     ring:
       kvstore:
         store: inmemory
       replication_factor: 1
     final_sleep: 0s
+    # Faster token registration for single-node
+    min_ready_duration: 0s
+    num_tokens: 128
   chunk_idle_period: 5m
   chunk_retain_period: 30s
+  # WAL disabled for faster startup in test environment
+  # The "empty ring" error often occurs during WAL replay
+  # See: https://utcc.utoronto.ca/~cks/space/blog/sysadmin/GrafanaLokiStartupWALReplayIssue
   wal:
-    enabled: true
-    dir: /tmp/loki/wal
+    enabled: false
 
 query_range:
   results_cache:
@@ -64,6 +75,9 @@ ruler:
   enable_api: false
 
 limits_config:
+  # Enable metric aggregation for pattern ingester
+  # Required for Loki 3.x single-node mode
+  metric_aggregation_enabled: true
   # Accept old samples for test environment robustness
   # Alloy may batch and buffer logs before sending, causing timestamp delays
   # Disabled rejection to prevent 400 errors during test runs
@@ -92,6 +106,9 @@ table_manager:
   retention_deletes_enabled: true
   retention_period: 24h
 
-# Pattern ingester disabled (causes issues in single-node)
+# Pattern ingester enabled for metric aggregation
+# Required to avoid "empty ring" errors in Loki 3.x
+# See: https://github.com/grafana/loki/issues/18890
+# See: https://community.grafana.com/t/after-loki-version-3-0-im-getting-empty-ring-error/137229
 pattern_ingester:
-  enabled: false
+  enabled: true
