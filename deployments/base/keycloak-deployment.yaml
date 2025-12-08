@@ -61,10 +61,19 @@ spec:
             ephemeral-storage: 100Mi
       containers:
       - name: keycloak
-        image: quay.io/keycloak/keycloak:26.4.2
+        # IMPORTANT: Use pre-optimized Keycloak image from GHCR
+        # This image is built via .github/workflows/build-keycloak-image.yaml from docker/Dockerfile.keycloak
+        # Quarkus is pre-compiled at build time, eliminating JIT at startup.
+        # Benefits:
+        #   - Faster container startup (no runtime augmentation)
+        #   - Enables readOnlyRootFilesystem: true (no JAR file writes needed)
+        #   - Matches docker-compose.test.yml behavior for dev/prod parity
+        # Override in overlays: images[name=keycloak].newName/newTag
+        image: ghcr.io/vishnu2kmohan/keycloak-optimized:26.4.2
         imagePullPolicy: Always
         args:
         - start
+        - --optimized
         - --http-enabled=true
         - --http-port=8080
         - --hostname-strict=false
@@ -119,9 +128,13 @@ spec:
           value: 'false'
         - name: KC_PROXY
           value: edge
+        # HTTP relative path for Traefik gateway routing (matches docker/Dockerfile.keycloak)
+        # This allows Keycloak to be served at /authn/* via Traefik
+        - name: KC_HTTP_RELATIVE_PATH
+          value: /authn
         startupProbe:
           httpGet:
-            path: /health/started
+            path: /authn/health/started
             port: http
           initialDelaySeconds: 30
           periodSeconds: 5
@@ -129,7 +142,7 @@ spec:
           failureThreshold: 60
         livenessProbe:
           httpGet:
-            path: /health/live
+            path: /authn/health/live
             port: http
           initialDelaySeconds: 60
           periodSeconds: 10
@@ -137,7 +150,7 @@ spec:
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /health/ready
+            path: /authn/health/ready
             port: http
           initialDelaySeconds: 30
           periodSeconds: 5
@@ -153,19 +166,18 @@ spec:
             memory: 2Gi
             ephemeral-storage: 1Gi
         # Security context for Keycloak container
-        # NOTE: readOnlyRootFilesystem: false required for Quarkus JIT compilation
-        # Keycloak uses Quarkus framework which performs JIT compilation at runtime,
-        # requiring write access to filesystem. Native images (GraalVM) not officially
-        # supported by Keycloak (GitHub issue #10150).
-        # Compensating security controls:
+        # With --optimized mode (pre-built Quarkus artifacts), we can enable
+        # readOnlyRootFilesystem: true since no JIT compilation occurs at runtime.
+        # Note: Requires using the optimized Keycloak image (docker/Dockerfile.keycloak)
+        # Security controls:
         #   - runAsNonRoot: true (UID 10000)
         #   - allowPrivilegeEscalation: false
         #   - capabilities.drop: ALL
-        #   - emptyDir volumes for writable paths (/tmp, /var/tmp, /opt/keycloak/data)
-        # Security exception documented in deployments/base/.trivyignore (AVD-KSV-0014)
+        #   - readOnlyRootFilesystem: true (enabled with --optimized mode)
+        #   - emptyDir volumes for runtime data (/tmp, /var/tmp, /opt/keycloak/data)
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false  # Required for Quarkus JIT compilation (issue #10150)
+          readOnlyRootFilesystem: true  # Enabled with --optimized mode (no JIT)
           runAsNonRoot: true
           runAsUser: 10000
           capabilities:

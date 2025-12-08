@@ -57,7 +57,8 @@ class TestGetEngine:
         ) as mock_create:
             result = get_engine("postgresql+asyncpg://user:pass@localhost/testdb")
 
-            assert result == mock_engine
+            # Use 'is' for identity comparison to avoid xdist MagicMock comparison issues
+            assert result is mock_create.return_value
             mock_create.assert_called_once()
 
             # Verify call arguments
