@@ -142,7 +142,7 @@ describe('useSessionTimeout Hook', () => {
 
     it('calls onWarning callback when entering warning state', async () => {
       const onWarning = vi.fn();
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useSessionTimeout({
           sessionDuration: 60000,
           warningThreshold: 30000,
@@ -160,7 +160,7 @@ describe('useSessionTimeout Hook', () => {
 
     it('does not call onWarning multiple times', async () => {
       const onWarning = vi.fn();
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useSessionTimeout({
           sessionDuration: 60000,
           warningThreshold: 30000,
@@ -210,7 +210,7 @@ describe('useSessionTimeout Hook', () => {
 
     it('calls onExpire callback when session expires', async () => {
       const onExpire = vi.fn();
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useSessionTimeout({
           sessionDuration: 5000,
           onExpire,

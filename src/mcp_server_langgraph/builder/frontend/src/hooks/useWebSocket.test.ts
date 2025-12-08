@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useWebSocket } from './useWebSocket';
 
 // ==============================================================================
@@ -175,7 +175,7 @@ describe('useWebSocket Hook', () => {
 
     it('calls onMessage callback when provided', async () => {
       const onMessage = vi.fn();
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket('ws://localhost:8001', { onMessage })
       );
 
@@ -243,7 +243,6 @@ describe('useWebSocket Hook', () => {
     it('uses exponential backoff for reconnection attempts', async () => {
       // Track how many WebSocket instances are created (to verify reconnect attempts)
       let wsInstanceCount = 0;
-      const originalWebSocket = (global as any).WebSocket;
 
       vi.stubGlobal('WebSocket', class extends MockWebSocket {
         constructor(url: string) {
@@ -397,7 +396,7 @@ describe('useWebSocket Hook', () => {
 
     it('calls onError callback when provided', async () => {
       const onError = vi.fn();
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket('ws://localhost:8001', { onError })
       );
 

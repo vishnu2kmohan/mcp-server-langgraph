@@ -9,7 +9,6 @@
  * - ARIA accessibility
  */
 
-import React from 'react';
 import { AlertTriangle, Clock, RefreshCw } from 'lucide-react';
 import { useSessionTimeout } from '../hooks/useSessionTimeout';
 
@@ -37,7 +36,6 @@ export function SessionTimeoutWarning({
   className = '',
 }: SessionTimeoutWarningProps) {
   const {
-    remainingTime,
     isWarning,
     isExpired,
     refreshSession,
