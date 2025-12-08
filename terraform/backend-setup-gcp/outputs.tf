@@ -59,7 +59,7 @@ output "setup_instructions" {
 
     2. Initialize your Terraform configuration:
 
-       cd terraform/environments/gcp-prod  # or gcp-staging, gcp-dev
+       cd terraform/environments/gcp-prod  # or gcp-preview, gcp-dev
        terraform init
 
     3. The state file will be stored at:
