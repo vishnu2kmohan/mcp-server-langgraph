@@ -517,20 +517,27 @@ class TestPrometheusSLAQueries:
             MagicMock(json=MagicMock(return_value=mock_percentile_response(0.650)), raise_for_status=MagicMock()),
         ]
 
-        with patch.object(httpx.AsyncClient, "get", new_callable=AsyncMock, side_effect=mock_responses):
-            await client.initialize()
+        # Create a mock AsyncClient instance (xdist-safe: patch instance, not class)
+        mock_http_client = MagicMock(spec=httpx.AsyncClient)
+        mock_http_client.get = AsyncMock(side_effect=mock_responses)
 
-            # Act
-            percentiles = await client.query_percentiles(
-                metric="http_request_duration_seconds", percentiles=[50, 95, 99], timerange="1h"
-            )
+        # Manually initialize with mock client to avoid class-level patching
+        client._initialized = True
+        client.client = mock_http_client
 
-            # Assert
-            assert percentiles[50] == 0.250
-            assert percentiles[95] == 0.450
-            assert percentiles[99] == 0.650
+        # Act
+        percentiles = await client.query_percentiles(
+            metric="http_request_duration_seconds", percentiles=[50, 95, 99], timerange="1h"
+        )
 
-        await client.close()
+        # Assert
+        assert percentiles[50] == 0.250
+        assert percentiles[95] == 0.450
+        assert percentiles[99] == 0.650
+
+        # Cleanup - don't close since we're using a mock
+        client.client = None
+        client._initialized = False
 
     @pytest.mark.unit
     @pytest.mark.asyncio
