@@ -59,7 +59,7 @@ services:
   # ==============================================================================
 
   redis:
-    # Redis 7.2 to match Memorystore (terraform/environments/gcp-preview/main.tf: redis_version = "REDIS_7_2")
+    # Use 7.2 to match GCP Memorystore supported version for local/cloud parity
     image: redis:7.2-alpine
     container_name: mcp-redis-minimal
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru

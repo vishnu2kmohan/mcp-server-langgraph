@@ -1,21 +1,7 @@
 ---
 title: "42. Dependency Injection Configuration Fixes"
-description: 'Architecture Decision Record: 42. Dependency Injection Configuration Fixes'
+description: "Architecture Decision Record: 42. Dependency Injection Configuration Fixes"
 icon: 'cube'
-contentType: "reference"
-seoTitle: "42. Dependency Injection Configuration Fixes - Architecture Decision Record"
-seoDescription: "Architecture Decision Record for 42. Dependency Injection Configuration Fixes. Category: Core Architecture. Part of MCP Server with LangGraph documentation."
-keywords:
-  - "architecture"
-  - "decision"
-  - "record"
-  - "ADR"
-  - "MCP Server"
-  - "LangGraph"
-  - "Dependency"
-  - "Injection"
-  - "Configuration"
-  - "Fixes"
 ---
 
 # 42. Dependency Injection Configuration Fixes
@@ -93,7 +79,6 @@ keycloak_config = KeycloakConfig(
 ```
 
 **Impact**:
-
 - ✅ Admin API operations now authenticate correctly
 - ✅ API key manager can create/delete keys
 - ✅ Service principal creation works
@@ -146,7 +131,6 @@ def get_openfga_client() -> Optional[OpenFGAClient]:
 ```
 
 **Impact**:
-
 - ✅ Returns `None` when config incomplete instead of broken client
 - ✅ Logs clear warning about missing configuration
 - ✅ Enables graceful degradation in non-production environments
@@ -201,7 +185,6 @@ if self.openfga is not None:
 ```
 
 **Impact**:
-
 - ✅ No more AttributeError crashes when OpenFGA disabled
 - ✅ Service principal operations work in fallback mode
 - ✅ Keycloak operations succeed independently of OpenFGA
@@ -277,7 +260,6 @@ def get_cache() -> CacheService:
 ```
 
 **Impact**:
-
 - ✅ L2 cache now works with secure Redis deployments
 - ✅ Honors `REDIS_URL`, `REDIS_PASSWORD`, `REDIS_SSL` settings
 - ✅ Consistent pattern with API key manager
@@ -340,9 +322,9 @@ Tests added:
 
 ### Neutral
 
-🔄 **Configuration Required**: OpenFGA now requires explicit configuration
-- Production: Must set `OPENFGA_STORE_ID` and `OPENFGA_MODEL_ID`
-- Development: Falls back gracefully with warning
+- 🔄 **Configuration Required**: OpenFGA now requires explicit configuration
+  - Production: Must set `OPENFGA_STORE_ID` and `OPENFGA_MODEL_ID`
+  - Development: Falls back gracefully with warning
 
 ## Implementation Notes
 
@@ -401,8 +383,8 @@ REDIS_SSL=true
 ## References
 
 - OpenAI Codex Security Review (2025-01-28)
-- [ADR-0034](./adr-0034-api-key-jwt-exchange.mdx): API Key JWT Exchange
-- [ADR-0033](./adr-0033-service-principal-design.mdx): Service Principal Design
+- [ADR-0034](./adr-0034-api-key-jwt-exchange.md): API Key JWT Exchange
+- [ADR-0033](./adr-0033-service-principal-design.md): Service Principal Design
 - Production Incident: Revision 758b8f744 (Redis password encoding)
 
 ## Verification

@@ -1,21 +1,7 @@
 ---
 title: "20. Dual MCP Transport Protocol (STDIO + StreamableHTTP)"
-description: 'Architecture Decision Record: 20. Dual MCP Transport Protocol (STDIO + StreamableHTTP)'
+description: "Architecture Decision Record: 20. Dual MCP Transport Protocol (STDIO + StreamableHTTP)"
 icon: 'plug'
-contentType: "reference"
-seoTitle: "20. Dual MCP Transport Protocol (STDIO + StreamableHTTP) - Architecture Decision Record"
-seoDescription: "Architecture Decision Record for 20. Dual MCP Transport Protocol (STDIO + StreamableHTTP). Category: Core Architecture. Part of MCP Server with LangGraph documentation."
-keywords:
-  - "architecture"
-  - "decision"
-  - "record"
-  - "ADR"
-  - "MCP Server"
-  - "LangGraph"
-  - "Dual"
-  - "MCP"
-  - "Transport"
-  - "Protocol"
 ---
 
 # 20. Dual MCP Transport Protocol (STDIO + StreamableHTTP)
@@ -133,7 +119,7 @@ async def main():
 ```
 
 **Communication Flow**:
-```json
+```
 Client (Claude Desktop)
     ↓ (stdin)
     {"jsonrpc": "2.0", "method": "tools/list", "id": 1}
@@ -191,7 +177,7 @@ async def call_tool(request: ToolCallRequest):
 ```
 
 **Communication Flow**:
-```yaml
+```
 Client (Web App)
     ↓ (HTTP POST)
     POST /mcp/tools/call {"name": "chat", "args": {...}}

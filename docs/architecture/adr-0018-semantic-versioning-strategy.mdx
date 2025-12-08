@@ -1,20 +1,7 @@
 ---
 title: "18. Semantic Versioning Strategy"
-description: 'Architecture Decision Record: 18. Semantic Versioning Strategy'
+description: "Architecture Decision Record: 18. Semantic Versioning Strategy"
 icon: 'tag'
-contentType: "reference"
-seoTitle: "18. Semantic Versioning Strategy - Architecture Decision Record"
-seoDescription: "Architecture Decision Record for 18. Semantic Versioning Strategy. Category: Development & Tooling. Part of MCP Server with LangGraph documentation."
-keywords:
-  - "architecture"
-  - "decision"
-  - "record"
-  - "ADR"
-  - "MCP Server"
-  - "LangGraph"
-  - "Semantic"
-  - "Versioning"
-  - "Strategy"
 ---
 
 # 18. Semantic Versioning Strategy
@@ -50,7 +37,7 @@ We will adopt **Semantic Versioning 2.0.0** (SemVer) with the following conventi
 
 ### Version Format
 
-```yaml
+```
 MAJOR.MINOR.PATCH[-PRERELEASE][+BUILDMETADATA]
 
 Examples:
@@ -169,7 +156,7 @@ version = "2.2.0"
 
 We use [Keep a Changelog](https://keepachangelog.com/) format:
 
-```md
+```markdown
 ## [2.2.0] - 2025-10-13
 
 ### Added
@@ -344,7 +331,7 @@ langgraph deploy --version v2.2.0
 ### Documentation
 
 **README.md**: Display current version badge
-```md
+```markdown
 [![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](CHANGELOG.md)
 ```
 

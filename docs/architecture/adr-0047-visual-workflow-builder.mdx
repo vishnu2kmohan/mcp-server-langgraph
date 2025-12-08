@@ -1,20 +1,7 @@
 ---
 title: "47. Visual Workflow Builder"
-description: 'Architecture Decision Record: 47. Visual Workflow Builder'
+description: "Architecture Decision Record: 47. Visual Workflow Builder"
 icon: 'diagram-project'
-contentType: "reference"
-seoTitle: "47. Visual Workflow Builder - Architecture Decision Record"
-seoDescription: "Architecture Decision Record for 47. Visual Workflow Builder. Category: Development & Tooling. Part of MCP Server with LangGraph documentation."
-keywords:
-  - "architecture"
-  - "decision"
-  - "record"
-  - "ADR"
-  - "MCP Server"
-  - "LangGraph"
-  - "Visual"
-  - "Workflow"
-  - "Builder"
 ---
 
 # 47. Visual Workflow Builder
@@ -131,7 +118,7 @@ We will implement a **Visual Workflow Builder** with the following architecture:
 
 ### **API Endpoints**
 
-```yaml
+```
 Backend: http://localhost:8001
 
 POST /api/builder/generate
@@ -195,7 +182,7 @@ class EdgeDefinition(BaseModel):
 
 2. **LLM Node** 🧠
    - Call language models
-   - Config: `{"model": "claude-sonnet-4-5", "temperature": 0.7}`
+   - Config: `{"model": "claude-3-5-sonnet", "temperature": 0.7}`
    - Supports all providers (Anthropic, OpenAI, Google)
 
 3. **Conditional Node** 🔀

@@ -238,7 +238,9 @@ docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d --pull always \
     keycloak-test \
     redis-test \
     qdrant-test \
-    mcp-server-test
+    mcp-server-test \
+    builder-test \
+    playground-test
 
 log_success "Services started"
 
@@ -246,7 +248,7 @@ log_success "Services started"
 log_info "Waiting for services to be healthy..."
 # Use smart wait utility instead of hardcoded sleep loops
 # Only wait for critical services to prevent optional services (observability) from blocking tests
-if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE" postgres-test keycloak-test openfga-test redis-test qdrant-test mcp-server-test; then
+if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE" postgres-test keycloak-test openfga-test redis-test qdrant-test mcp-server-test builder-test playground-test; then
     log_success "All services healthy"
     echo ""
 

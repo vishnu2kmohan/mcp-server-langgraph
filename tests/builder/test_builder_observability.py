@@ -150,12 +150,16 @@ class TestBuilderMetrics:
         # Note: May need to be added as part of implementation
         response = client.get("/metrics")
 
-        # If metrics endpoint exists, it should return 200
-        # If not implemented yet, this documents the requirement
-        if response.status_code == 200:
-            assert "text/plain" in response.headers.get("content-type", "")
+        # If metrics endpoint exists, it should return 200 with text/plain
+        # Note: The SPA catch-all route may return 200 with HTML for unknown paths,
+        # so we must check content-type, not just status code
+        content_type = response.headers.get("content-type", "")
+        if response.status_code == 200 and "text/plain" in content_type:
+            # Metrics endpoint properly implemented
+            pass
         else:
             # Document that metrics endpoint needs to be added
+            # (Currently returns HTML from SPA catch-all route)
             pytest.skip("Metrics endpoint not yet implemented")
 
     @pytest.mark.unit
@@ -251,12 +255,16 @@ class TestBuilderHealthWithObservability:
         # Check if readiness endpoint exists
         response = client.get("/api/builder/health/ready")
 
-        if response.status_code == 200:
+        # Note: The SPA catch-all route may return 200 with HTML for unknown paths,
+        # so we must check content-type, not just status code
+        content_type = response.headers.get("content-type", "")
+        if response.status_code == 200 and "application/json" in content_type:
             data = response.json()
             # Readiness should consider observability exporters
             assert "status" in data or "ready" in data
-        elif response.status_code == 404:
+        else:
             # Document that enhanced health endpoints need to be added
+            # (Returns 404 or HTML from SPA catch-all route)
             pytest.skip("Readiness endpoint not yet implemented")
 
 

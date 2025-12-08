@@ -1,20 +1,7 @@
 ---
 title: "26. Lazy Observability Initialization"
-description: 'Architecture Decision Record: 26. Lazy Observability Initialization'
+description: "Architecture Decision Record: 26. Lazy Observability Initialization"
 icon: 'chart-line'
-contentType: "reference"
-seoTitle: "26. Lazy Observability Initialization - Architecture Decision Record"
-seoDescription: "Architecture Decision Record for 26. Lazy Observability Initialization. Category: Core Architecture. Part of MCP Server with LangGraph documentation."
-keywords:
-  - "architecture"
-  - "decision"
-  - "record"
-  - "ADR"
-  - "MCP Server"
-  - "LangGraph"
-  - "Lazy"
-  - "Observability"
-  - "Initialization"
 ---
 
 # 26. Lazy Observability Initialization
@@ -187,9 +174,9 @@ def _setup_logging(self, enable_file_logging: bool = False):
 
 ### Neutral
 
-ℹ️ **Test Fixtures Updated**: `conftest.py` adds `pytest_configure()` hook
-ℹ️ **File Logging Default**: Changed from always-on to opt-in
-ℹ️ **Import Statements Unchanged**: Lazy proxies preserve existing import syntax
+- ℹ️ **Test Fixtures Updated**: `conftest.py` adds `pytest_configure()` hook
+- ℹ️ **File Logging Default**: Changed from always-on to opt-in
+- ℹ️ **Import Statements Unchanged**: Lazy proxies preserve existing import syntax
 
 ## Implementation
 

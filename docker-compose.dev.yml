@@ -75,8 +75,8 @@ services:
       - mcp-network
 
   # Redis (sessions + checkpoints)
-  # Redis 7.2 to match Memorystore (terraform/environments/gcp-preview/main.tf: redis_version = "REDIS_7_2")
   redis:
+    # Use 7.2 to match GCP Memorystore supported version for local/cloud parity
     image: redis:7.2-alpine
     ports:
       - "6379:6379"

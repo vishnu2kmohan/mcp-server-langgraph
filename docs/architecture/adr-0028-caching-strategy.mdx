@@ -1,21 +1,7 @@
 ---
 title: "28. Multi-Layer Caching Strategy"
-description: 'Architecture Decision Record: 28. Multi-Layer Caching Strategy'
+description: "Architecture Decision Record: 28. Multi-Layer Caching Strategy"
 icon: 'memory'
-contentType: "reference"
-seoTitle: "28. Multi-Layer Caching Strategy - Architecture Decision Record"
-seoDescription: "Architecture Decision Record for 28. Multi-Layer Caching Strategy. Category: Performance & Resilience. Part of MCP Server with LangGraph documentation."
-keywords:
-  - "architecture"
-  - "decision"
-  - "record"
-  - "ADR"
-  - "MCP Server"
-  - "LangGraph"
-  - "Multi"
-  - "Layer"
-  - "Caching"
-  - "Strategy"
 ---
 
 # 28. Multi-Layer Caching Strategy
@@ -206,7 +192,7 @@ cached_content = caching.CachedContent.create(
 ### Cache Key Design
 
 **Hierarchical Key Format**:
-```typescript
+```
 <namespace>:<entity>:<identifier>:<version>
 ```
 
@@ -216,7 +202,7 @@ cached_content = caching.CachedContent.create(
 "auth:permission:user:alice:resource:doc123:action:read:v1"
 
 # LLM response cache
-"llm:response:model:claude-sonnet-4-5:hash:abc123def:v1"
+"llm:response:model:claude-3-5:hash:abc123def:v1"
 
 # Embedding cache
 "embedding:text:hash:xyz789:model:all-minilm-l6-v2:v1"
