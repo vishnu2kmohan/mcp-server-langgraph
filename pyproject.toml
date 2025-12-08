@@ -598,6 +598,7 @@ module = [
     "sentence_transformers.*",
     "cachetools.*",
     "redis.*",  # redis 6.x inline types are incomplete (from_url untyped, generic params issues)
+    "google.cloud.*",  # GCP libraries lack py.typed marker
 ]
 ignore_missing_imports = true
 # Disable additional strict checks for third-party libraries
@@ -748,6 +749,7 @@ markers = [
     "requires_kustomize: Tests requiring kustomize CLI tool",
     "requires_kubectl: Tests requiring kubectl CLI tool",
     "requires_helm: Tests requiring helm CLI tool",
+    "requires_full_infrastructure: Tests requiring full infrastructure (make test-infra-full-up)",
     "validation: Validation tests for deployments and configurations",
     "cli: CLI tool tests",
     "skip_isolation_check: Skip enforce_worker_isolation check (for tests using worker-scoped schemas)",
@@ -756,6 +758,7 @@ markers = [
     "websocket: WebSocket endpoint tests (streaming, real-time)",
     "builder: Visual workflow builder tests",
     "redis: Redis-backed storage tests (sessions, checkpoints)",
+    "postgres: PostgreSQL-backed storage tests (workflows, sessions, durable persistence)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

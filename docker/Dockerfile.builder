@@ -74,17 +74,16 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never \
     UV_PROJECT_ENVIRONMENT=/app/.venv
 
-# Copy dependency files
+# Copy dependency files and source code
+# NOTE: uv sync needs src/ because pyproject.toml uses "packages = [..., from = 'src']"
 COPY pyproject.toml uv.lock ./
+COPY src/ ./src/
 
 # Install Python dependencies (production only, no dev extras)
 # --frozen: Use lockfile exactly, fail if out of sync
 # --no-dev: Skip development dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
-
-# Copy source code
-COPY src/ ./src/
 
 # Copy built frontend from stage 1
 # Place in builder/frontend/dist to match SPAStaticFiles path expectations

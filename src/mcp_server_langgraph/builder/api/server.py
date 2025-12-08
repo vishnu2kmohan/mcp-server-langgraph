@@ -15,7 +15,9 @@ Example:
 
 import os
 import tempfile
+import uuid
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, AsyncIterator, Literal
 
@@ -31,7 +33,17 @@ from mcp_server_langgraph.observability.telemetry import (
     tracer,
 )
 
+from mcp_server_langgraph.utils.spa_static_files import create_spa_static_files
+
 from ..codegen import CodeGenerator, WorkflowDefinition
+from ..storage import (
+    PostgresWorkflowManager,
+    RedisWorkflowManager,
+    StoredWorkflow,
+    create_postgres_engine,
+    create_redis_pool,
+    init_builder_database,
+)
 from ..workflow import WorkflowBuilder
 
 # ==============================================================================
@@ -128,6 +140,52 @@ class ImportWorkflowRequest(BaseModel):
     layout: Literal["hierarchical", "force", "grid"] = "hierarchical"
 
 
+class CreateWorkflowRequest(BaseModel):
+    """Request to create a new workflow."""
+
+    name: str
+    description: str = ""
+    nodes: list[dict[str, Any]] = []
+    edges: list[dict[str, Any]] = []
+
+
+class UpdateWorkflowRequest(BaseModel):
+    """Request to update an existing workflow."""
+
+    name: str | None = None
+    description: str | None = None
+    nodes: list[dict[str, Any]] | None = None
+    edges: list[dict[str, Any]] | None = None
+
+
+class WorkflowResponse(BaseModel):
+    """Response with workflow data."""
+
+    id: str
+    name: str
+    description: str = ""
+    nodes: list[dict[str, Any]] = []
+    edges: list[dict[str, Any]] = []
+    created_at: str
+    updated_at: str
+
+
+# ==============================================================================
+# Workflow Storage (Postgres, Redis, or in-memory fallback)
+# ==============================================================================
+# Storage backend priority:
+#   1. Postgres (BUILDER_POSTGRES_URL) - Production, durable persistence
+#   2. Redis (BUILDER_REDIS_URL or REDIS_URL) - Session-like storage, optional TTL
+#   3. In-memory - Development/testing only, data lost on restart
+
+# Global workflow manager (initialized in lifespan)
+_workflow_manager: PostgresWorkflowManager | RedisWorkflowManager | None = None
+
+# In-memory fallback for development/testing without persistence
+_workflows_fallback: dict[str, dict[str, Any]] = {}
+_storage_backend: str = "memory"  # "postgres", "redis", or "memory"
+
+
 # ==============================================================================
 # Security & Authentication
 # ==============================================================================
@@ -193,12 +251,15 @@ def verify_builder_auth(authorization: str = Header(None)) -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """
-    Builder service lifecycle with observability.
+    Builder service lifecycle with observability and persistent storage.
 
     Initializes OpenTelemetry tracing and metrics on startup,
-    gracefully shuts down exporters on termination.
+    connects to Postgres or Redis for workflow storage (priority: Postgres > Redis > Memory),
+    gracefully shuts down on termination.
     """
-    # STARTUP
+    global _workflow_manager, _storage_backend
+
+    # STARTUP - Observability
     if not is_initialized():
         try:
             from mcp_server_langgraph.core.config import Settings
@@ -213,9 +274,60 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             # Don't fail startup if observability init fails
             print(f"WARNING: Observability initialization failed: {e}")
 
+    # STARTUP - Storage backend (priority: Postgres > Redis > Memory)
+    # 1. Try Postgres first (for durable production storage)
+    postgres_url = os.getenv("BUILDER_POSTGRES_URL", os.getenv("POSTGRES_URL"))
+    if postgres_url:
+        try:
+            # Ensure asyncpg driver is used
+            if not postgres_url.startswith("postgresql+asyncpg://"):
+                postgres_url = postgres_url.replace("postgresql://", "postgresql+asyncpg://")
+
+            engine = await create_postgres_engine(postgres_url)
+            # Initialize database schema
+            await init_builder_database(engine)
+            _workflow_manager = PostgresWorkflowManager(engine=engine)
+            _storage_backend = "postgres"
+            logger.info(
+                "Builder connected to PostgreSQL for workflow storage",
+                extra={"backend": "postgres"},
+            )
+        except Exception as e:
+            logger.warning(f"Failed to connect to PostgreSQL: {e}")
+            # Fall through to Redis
+
+    # 2. Try Redis if Postgres not configured or failed
+    if _storage_backend == "memory":
+        redis_url = os.getenv("BUILDER_REDIS_URL", os.getenv("REDIS_URL"))
+        if redis_url:
+            try:
+                redis_client = await create_redis_pool(redis_url)
+                # Test connection
+                await redis_client.ping()
+                # No TTL for workflows - they should persist indefinitely
+                _workflow_manager = RedisWorkflowManager(redis_client=redis_client, ttl_seconds=None)
+                _storage_backend = "redis"
+                logger.info(
+                    "Builder connected to Redis for workflow storage",
+                    extra={"backend": "redis"},
+                )
+            except Exception as e:
+                logger.warning(f"Failed to connect to Redis, using in-memory storage: {e}")
+
+    # 3. Fallback to in-memory
+    if _storage_backend == "memory":
+        logger.info(
+            "Using in-memory workflow storage (data will be lost on restart)",
+            extra={"backend": "memory"},
+        )
+
     yield  # Application runs here
 
     # SHUTDOWN
+    if _workflow_manager:
+        await _workflow_manager.close()
+        logger.info(f"Builder {_storage_backend} connection closed")
+
     logger.info("Builder service shutting down")
     shutdown_observability()
 
@@ -546,6 +658,234 @@ async def get_template(template_id: str) -> dict[str, Any]:
     raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found")
 
 
+# ==============================================================================
+# Workflow CRUD Endpoints (Redis-backed with in-memory fallback)
+# ==============================================================================
+
+
+def _stored_to_response(workflow: StoredWorkflow) -> WorkflowResponse:
+    """Convert StoredWorkflow to API response."""
+    return WorkflowResponse(
+        id=workflow.id,
+        name=workflow.name,
+        description=workflow.description,
+        nodes=workflow.nodes,
+        edges=workflow.edges,
+        created_at=workflow.created_at.isoformat(),
+        updated_at=workflow.updated_at.isoformat(),
+    )
+
+
+@app.post("/api/builder/workflows", status_code=status.HTTP_201_CREATED)
+async def create_workflow(
+    request: CreateWorkflowRequest,
+    _auth: None = Depends(verify_builder_auth),
+) -> WorkflowResponse:
+    """
+    Create a new workflow.
+
+    Args:
+        request: Workflow data
+
+    Returns:
+        Created workflow with ID
+
+    Example:
+        POST /api/builder/workflows
+        {"name": "My Workflow", "nodes": [...], "edges": [...]}
+    """
+    if _storage_backend != "memory" and _workflow_manager:
+        # Use persistent storage (Postgres or Redis)
+        workflow = await _workflow_manager.create_workflow(
+            name=request.name,
+            description=request.description,
+            nodes=request.nodes,
+            edges=request.edges,
+        )
+        logger.info(
+            f"Workflow created ({_storage_backend})",
+            extra={"workflow_id": workflow.id, "workflow_name": request.name, "backend": _storage_backend},
+        )
+        return _stored_to_response(workflow)
+    else:
+        # In-memory fallback
+        workflow_id = str(uuid.uuid4())
+        now = datetime.now(UTC).isoformat()
+
+        workflow_data: dict[str, Any] = {
+            "id": workflow_id,
+            "name": request.name,
+            "description": request.description,
+            "nodes": request.nodes,
+            "edges": request.edges,
+            "created_at": now,
+            "updated_at": now,
+        }
+
+        _workflows_fallback[workflow_id] = workflow_data
+
+        logger.info(
+            "Workflow created (in-memory)",
+            extra={"workflow_id": workflow_id, "workflow_name": request.name},
+        )
+
+        return WorkflowResponse(
+            id=workflow_id,
+            name=request.name,
+            description=request.description,
+            nodes=request.nodes,
+            edges=request.edges,
+            created_at=now,
+            updated_at=now,
+        )
+
+
+@app.get("/api/builder/workflows")
+async def list_workflows(
+    _auth: None = Depends(verify_builder_auth),
+) -> dict[str, Any]:
+    """
+    List all workflows.
+
+    Returns:
+        List of workflows
+    """
+    if _storage_backend != "memory" and _workflow_manager:
+        summaries = await _workflow_manager.list_workflows()
+        workflows = [
+            {
+                "id": s.id,
+                "name": s.name,
+                "description": s.description,
+                "node_count": s.node_count,
+                "edge_count": s.edge_count,
+                "created_at": s.created_at.isoformat(),
+                "updated_at": s.updated_at.isoformat(),
+            }
+            for s in summaries
+        ]
+        return {"workflows": workflows, "storage_backend": _storage_backend}
+    else:
+        workflows = list(_workflows_fallback.values())
+        return {"workflows": workflows, "storage_backend": "memory"}
+
+
+@app.get("/api/builder/workflows/{workflow_id}")
+async def get_workflow(
+    workflow_id: str,
+    _auth: None = Depends(verify_builder_auth),
+) -> WorkflowResponse:
+    """
+    Get a specific workflow by ID.
+
+    Args:
+        workflow_id: Workflow identifier
+
+    Returns:
+        Workflow data
+    """
+    if _storage_backend != "memory" and _workflow_manager:
+        workflow = await _workflow_manager.get_workflow(workflow_id)
+        if not workflow:
+            raise HTTPException(status_code=404, detail=f"Workflow '{workflow_id}' not found")
+        return _stored_to_response(workflow)
+    else:
+        if workflow_id not in _workflows_fallback:
+            raise HTTPException(status_code=404, detail=f"Workflow '{workflow_id}' not found")
+        return WorkflowResponse(**_workflows_fallback[workflow_id])
+
+
+@app.put("/api/builder/workflows/{workflow_id}")
+async def update_workflow(
+    workflow_id: str,
+    request: UpdateWorkflowRequest,
+    _auth: None = Depends(verify_builder_auth),
+) -> WorkflowResponse:
+    """
+    Update an existing workflow.
+
+    Args:
+        workflow_id: Workflow identifier
+        request: Updated workflow data
+
+    Returns:
+        Updated workflow
+    """
+    if _storage_backend != "memory" and _workflow_manager:
+        workflow = await _workflow_manager.update_workflow(
+            workflow_id=workflow_id,
+            name=request.name,
+            description=request.description,
+            nodes=request.nodes,
+            edges=request.edges,
+        )
+        if not workflow:
+            raise HTTPException(status_code=404, detail=f"Workflow '{workflow_id}' not found")
+
+        logger.info(
+            f"Workflow updated ({_storage_backend})",
+            extra={"workflow_id": workflow_id, "backend": _storage_backend},
+        )
+        return _stored_to_response(workflow)
+    else:
+        if workflow_id not in _workflows_fallback:
+            raise HTTPException(status_code=404, detail=f"Workflow '{workflow_id}' not found")
+
+        workflow_dict = _workflows_fallback[workflow_id]
+        now = datetime.now(UTC).isoformat()
+
+        # Update only provided fields
+        if request.name is not None:
+            workflow_dict["name"] = request.name
+        if request.description is not None:
+            workflow_dict["description"] = request.description
+        if request.nodes is not None:
+            workflow_dict["nodes"] = request.nodes
+        if request.edges is not None:
+            workflow_dict["edges"] = request.edges
+
+        workflow_dict["updated_at"] = now
+
+        logger.info(
+            "Workflow updated (in-memory)",
+            extra={"workflow_id": workflow_id},
+        )
+
+        return WorkflowResponse(**workflow_dict)
+
+
+@app.delete("/api/builder/workflows/{workflow_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_workflow(
+    workflow_id: str,
+    _auth: None = Depends(verify_builder_auth),
+) -> None:
+    """
+    Delete a workflow.
+
+    Args:
+        workflow_id: Workflow identifier
+    """
+    if _storage_backend != "memory" and _workflow_manager:
+        deleted = await _workflow_manager.delete_workflow(workflow_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Workflow '{workflow_id}' not found")
+
+        logger.info(
+            f"Workflow deleted ({_storage_backend})",
+            extra={"workflow_id": workflow_id, "backend": _storage_backend},
+        )
+    else:
+        if workflow_id not in _workflows_fallback:
+            raise HTTPException(status_code=404, detail=f"Workflow '{workflow_id}' not found")
+
+        del _workflows_fallback[workflow_id]
+
+        logger.info(
+            "Workflow deleted (in-memory)",
+            extra={"workflow_id": workflow_id, "backend": "memory"},
+        )
+
+
 @app.post("/api/builder/import")
 async def import_workflow(
     request: ImportWorkflowRequest,
@@ -646,8 +986,6 @@ async def list_node_types() -> dict[str, Any]:
 # SPA Static Files Mount (React Frontend)
 # ==============================================================================
 # Mount AFTER all API routes - SPAStaticFiles is a catch-all for client-side routing
-
-from mcp_server_langgraph.utils.spa_static_files import create_spa_static_files
 
 # Calculate frontend dist path relative to this module
 _frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"

@@ -294,6 +294,10 @@ class TestDockerComposeHealthChecks:
             if not health_check:
                 continue
 
+            # Skip services with disabled healthchecks (e.g., distroless images like Mimir)
+            if health_check.get("disable"):
+                continue
+
             # Validate health check has required fields
             assert "test" in health_check, f"Service '{service_name}' health check missing 'test' field"
 

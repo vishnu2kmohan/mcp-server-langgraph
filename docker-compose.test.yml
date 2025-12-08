@@ -742,7 +742,7 @@ services:
       openfga-test:
         condition: service_healthy
       alloy-test:
-        condition: service_healthy
+        condition: service_started  # Alloy healthcheck can be flaky due to Loki timestamp rejections
     ports:
       - "9001:8001"  # Test port (offset +1000 from dev port 8001)
     environment:
@@ -821,7 +821,7 @@ services:
       redis-test:
         condition: service_healthy
       alloy-test:
-        condition: service_healthy
+        condition: service_started  # Alloy healthcheck can be flaky due to Loki timestamp rejections
     ports:
       - "9002:8002"  # Test port (offset +1000 from dev port 8002)
     environment:

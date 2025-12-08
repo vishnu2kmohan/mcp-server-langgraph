@@ -98,6 +98,10 @@ TEST_RUN_ID = "test-run-123"
 
 # Core Infrastructure Ports
 TEST_POSTGRES_PORT = 9432  # +4000 from standard 5432
+TEST_POSTGRES_HOST = "localhost"  # Docker-compose test network
+TEST_POSTGRES_USER = "postgres"  # Test database user
+TEST_POSTGRES_PASSWORD = "postgres"  # Test database password (not for production)
+TEST_POSTGRES_DB = "mcp_test"  # Test database name
 TEST_REDIS_PORT = 9379  # +3000 from standard 6379
 TEST_QDRANT_PORT = 9333  # +3000 from standard 6333
 TEST_OPENFGA_HTTP_PORT = 9080  # +1000 from standard 8080
@@ -109,11 +113,19 @@ TEST_MCP_SERVER_PORT = 8000  # Main MCP server
 TEST_BUILDER_API_PORT = 9001  # +1000 from dev port 8001
 TEST_PLAYGROUND_API_PORT = 9002  # +1000 from dev port 8002
 
-# Observability Ports
-TEST_JAEGER_UI_PORT = 19686  # +3000 from standard 16686
-TEST_PROMETHEUS_PORT = 19090  # +10000 from standard 9090
-TEST_ALERTMANAGER_PORT = 19093  # +10000 from standard 9093
+# Observability Ports (Grafana LGTM Stack)
+# Jaeger replaced by Tempo, Prometheus/Alertmanager replaced by Mimir + Alloy
+TEST_TEMPO_PORT = 13200  # +10000 from standard 3200
+TEST_LOKI_PORT = 13100  # +10000 from standard 3100
+TEST_MIMIR_PORT = 19009  # +10000 from standard 9009
+TEST_ALLOY_PORT = 12345  # Alloy UI/API (no offset, uses standard port)
 TEST_GRAFANA_PORT = 13001  # +10000 from prod's 3001
+
+# Legacy port aliases (deprecated, use new names above)
+# These are kept for backwards compatibility with existing tests
+TEST_JAEGER_UI_PORT = TEST_TEMPO_PORT  # Jaeger replaced by Tempo
+TEST_PROMETHEUS_PORT = TEST_MIMIR_PORT  # Prometheus replaced by Mimir
+TEST_ALERTMANAGER_PORT = TEST_MIMIR_PORT  # Alertmanager replaced by Grafana Unified Alerting
 
 # Redis Database Indices (same Redis instance, different databases)
 TEST_REDIS_CHECKPOINT_DB = 1  # LangGraph checkpoints
