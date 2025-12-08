@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765150775108,
+  "lastUpdate": 1765157319655,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -43864,6 +43864,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002043365145849427",
             "extra": "mean: 59.30499374728233 usec\nrounds: 4478"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vishnu2kmohan@users.noreply.github.com",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5203ff7c84b5a5ba94bd4800eda80f1254e403dc",
+          "message": "refactor: complete staging-to-preview GKE environment rename (#148)\n\n* docs: complete staging-to-preview rename in documentation (Phase 7)\n\nUpdate documentation to reflect the staging → preview environment rename:\n\n- Security checklist: update namespace/resource names to preview-*\n- Naming conventions: update environments table and examples\n- GKE cluster requirements: rename staging cluster to preview cluster\n- Add Kustomize namePrefix gotchas memory file documenting secretKeyRef issue\n\nFiles updated:\n- docs/security/gke-preview-checklist.mdx\n- docs/development/naming-conventions.mdx\n- docs/deployment/infrastructure/gke-cluster-requirements.mdx\n- .claude/memory/kustomize-nameprefix-gotchas.md (new)\n\nCompletes Phase 7 of staging-to-preview rename plan (PR #140 follow-up).\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* refactor: complete gcp-staging to gcp-preview rename (Phase 5-6)\n\nRemove all gcp-staging references and update to gcp-preview:\n\nTerraform environments:\n- Delete terraform/environments/gcp-staging/ directory\n- Delete terraform/environments/gcp-staging-wif-only/ directory\n- Delete terraform/backend-configs/gcp-staging.gcs.tfbackend.example\n\nUpdated file references:\n- .github/SECRETS.md: Update Vertex AI SA path reference\n- deployments/argocd/: Update cluster names and endpoints\n- scripts/README.md: Update environment variable documentation\n- terraform/modules/gcp-secrets/README.md: Update examples\n- terraform/modules/gcp-vpc/README.md: Update environment links\n- terraform/backend-setup-gcp/outputs.tf: Update comments\n- tests/: Update test file paths and expected outputs\n\nThis completes the staging-to-preview rename started in #140.\nThe gcp-preview environments already exist and are functional.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n* fix(docs): update gcp-staging to gcp-preview in terraform outputs comment\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-12-07T20:26:45-05:00",
+          "tree_id": "e6ba326a092166cb44331f09a1b29b8e29bb2597",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/5203ff7c84b5a5ba94bd4800eda80f1254e403dc"
+        },
+        "date": 1765157317529,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/integration/patterns/test_supervisor.py::test_supervisor_performance_with_multiple_agents_executes_quickly",
+            "value": 139.12665362646416,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013724078226087417",
+            "extra": "mean: 7.1876953404260115 msec\nrounds: 94"
+          },
+          {
+            "name": "tests/integration/patterns/test_swarm.py::test_swarm_performance_with_multiple_agents_executes_quickly",
+            "value": 294.20928136185125,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00023722510729411417",
+            "extra": "mean: 3.3989410373838234 msec\nrounds: 107"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44106.43234966387,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.67243000005692 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 41235.446979817745,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 24.25098000003345 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 43949.301843339104,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.7534900000137 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 193.92313391947152,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.156682340000032 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.40854493707933,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.523697589999955 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.964814018488868,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.35310224000014 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1357073.064542597,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 736.8800001472664 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12699.902820331788,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 78.74076000007335 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2909.7828237036515,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.66825999995854 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2799.221211871403,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 357.2422199999892 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_performance_with_benchmark_measures_execution_speed",
+            "value": 58911.42084395785,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000035276742080631736",
+            "extra": "mean: 16.974637271926593 usec\nrounds: 8108"
+          },
+          {
+            "name": "tests/unit/observability/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16956.042669986582,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000025696151932016785",
+            "extra": "mean: 58.97602521194831 usec\nrounds: 4601"
           }
         ]
       }
