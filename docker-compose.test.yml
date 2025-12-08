@@ -541,6 +541,9 @@ services:
 
   loki-test:
     image: grafana/loki:3.0.0
+    # Loki runs as UID 10001 in the official image
+    # Must set user to match tmpfs uid for write permissions
+    user: "10001"
     command: -config.file=/etc/loki/local-config.yaml -target=all
     ports:
       - "13100:3100"  # Loki API (offset by 10000)
@@ -548,8 +551,9 @@ services:
       - ./docker/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
     # Note: noexec removed - Loki WAL operations require it
     # nosuid retained for security
+    # uid/gid set to 10001 (loki user) for write permissions
     tmpfs:
-      - /tmp/loki:rw,nosuid,size=256m
+      - /tmp/loki:rw,nosuid,size=256m,uid=10001,gid=10001
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
       interval: 10s
