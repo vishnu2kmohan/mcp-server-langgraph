@@ -268,7 +268,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
-      start_period: 30s  # Faster startup (no JIT compilation) - only DB migration + realm import
+      start_period: 60s  # Per ADR-0053: Keycloak requires at least 60s to initialize
     # Note: deploy.resources.limits not supported in GitHub Actions
     # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
     networks:
