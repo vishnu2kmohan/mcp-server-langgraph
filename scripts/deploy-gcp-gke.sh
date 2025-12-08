@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 PROJECT_ID="${GCP_PROJECT_ID:-}"
 CLUSTER_NAME="${GKE_CLUSTER_NAME:-mcp-production}"
 REGION="${GCP_REGION:-us-central1}"
-ENVIRONMENT="${GCP_ENVIRONMENT:-gcp-prod}"  # Options: gcp-dev, gcp-staging, gcp-prod
+ENVIRONMENT="${GCP_ENVIRONMENT:-gcp-prod}"  # Options: gcp-dev, gcp-preview, gcp-prod
 NAMESPACE="mcp-server-langgraph"
 
 # Functions
@@ -65,8 +65,8 @@ check_prerequisites() {
     fi
 
     # Validate environment
-    if [[ ! "$ENVIRONMENT" =~ ^(gcp-dev|gcp-staging|gcp-prod)$ ]]; then
-        log_error "Invalid GCP_ENVIRONMENT: $ENVIRONMENT. Must be one of: gcp-dev, gcp-staging, gcp-prod"
+    if [[ ! "$ENVIRONMENT" =~ ^(gcp-dev|gcp-preview|gcp-prod)$ ]]; then
+        log_error "Invalid GCP_ENVIRONMENT: $ENVIRONMENT. Must be one of: gcp-dev, gcp-preview, gcp-prod"
         exit 1
     fi
 

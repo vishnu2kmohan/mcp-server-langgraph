@@ -27,7 +27,7 @@ from tests.helpers.path_helpers import get_repo_root
 pytestmark = pytest.mark.unit
 
 REPO_ROOT = get_repo_root()
-TERRAFORM_WIF_DIR = REPO_ROOT / "terraform" / "environments" / "gcp-staging-wif-only"
+TERRAFORM_WIF_DIR = REPO_ROOT / "terraform" / "environments" / "gcp-preview-wif-only"
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 
 
@@ -106,7 +106,7 @@ class TestGCPServiceAccountConsistency:
 
         assert not missing, (
             f"Found {len(missing)} service account(s) referenced in workflows but not in Terraform.\\n"
-            f"Add these to terraform/environments/gcp-staging-wif-only/main.tf:\\n"
+            f"Add these to terraform/environments/gcp-preview-wif-only/main.tf:\\n"
             + "\\n".join(f"  - {m}" for m in missing[:10])
         )
 
@@ -261,7 +261,7 @@ class TestTerraformWorkflowParity:
 
         # Expected output keys (based on workflow expectations)
         expected_outputs = [
-            "GCP_STAGING_SA_EMAIL",
+            "GCP_PREVIEW_SA_EMAIL",
             "GCP_PRODUCTION_SA_EMAIL",
             "GCP_TERRAFORM_SA_EMAIL",
             "GCP_COMPLIANCE_SA_EMAIL",

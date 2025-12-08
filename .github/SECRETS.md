@@ -65,12 +65,12 @@ gcloud iam service-accounts add-iam-policy-binding \
   --member="principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/attribute.repository/vishnu2kmohan/mcp-server-langgraph"
 ```
 
-#### Staging Deployment
+#### Preview Deployment
 
 | Secret Name | Description | Setup Instructions |
 |-------------|-------------|-------------------|
 | `GCP_WIF_PROVIDER` | Workload Identity Pool Provider (same as production) | See above |
-| `GCP_STAGING_SA_EMAIL` | Staging service account | `staging-deployer@PROJECT_ID.iam.gserviceaccount.com` |
+| `GCP_PREVIEW_SA_EMAIL` | Preview service account | `preview-deployer@PROJECT_ID.iam.gserviceaccount.com` |
 
 **Used By**:
 - `.github/workflows/deploy-preview-gke.yaml` (4 jobs)
@@ -106,7 +106,7 @@ gcloud iam service-accounts add-iam-policy-binding \
 
 **Setup Steps**:
 ```bash
-# Service account is created by Terraform (terraform/environments/gcp-staging-wif-only)
+# Service account is created by Terraform (terraform/environments/gcp-preview-wif-only)
 # After terraform apply, add the secret:
 gh secret set GCP_VERTEX_AI_SA_EMAIL --body "github-actions-vertex-ai@PROJECT_ID.iam.gserviceaccount.com"
 ```

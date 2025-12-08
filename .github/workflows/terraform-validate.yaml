@@ -124,8 +124,8 @@ jobs:
             exit 1
           fi
 
-  terraform-validate-staging:
-    name: Validate - Staging
+  terraform-validate-preview:
+    name: Validate - Preview
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -136,20 +136,20 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Terraform Init (Staging)
+      - name: Terraform Init (Preview)
         run: |
-          cd terraform/environments/gcp-staging
+          cd terraform/environments/gcp-preview
           terraform init -backend=false
 
-      - name: Terraform Validate (Staging)
+      - name: Terraform Validate (Preview)
         run: |
-          cd terraform/environments/gcp-staging
+          cd terraform/environments/gcp-preview
           terraform validate
 
           if [ $? -eq 0 ]; then
-            echo "✅ Staging environment validation passed"
+            echo "✅ Preview environment validation passed"
           else
-            echo "❌ Staging environment validation failed"
+            echo "❌ Preview environment validation failed"
             exit 1
           fi
 
@@ -234,7 +234,7 @@ jobs:
     needs:
       - terraform-fmt
       - terraform-validate-dev
-      - terraform-validate-staging
+      - terraform-validate-preview
       - terraform-validate-prod
       - terraform-validate-modules
     if: always() && github.event_name == 'pull_request'
@@ -252,7 +252,7 @@ jobs:
             const jobs = {
               'terraform-fmt': 'Format Check',
               'terraform-validate-dev': 'Development Environment',
-              'terraform-validate-staging': 'Staging Environment',
+              'terraform-validate-preview': 'Preview Environment',
               'terraform-validate-prod': 'Production Environment',
               'terraform-validate-modules': 'All Modules'
             };

@@ -117,7 +117,7 @@ The GKE and EKS scripts now support environment selection:
 **GKE Environments**:
 ```bash
 export GCP_ENVIRONMENT=gcp-dev      # Development environment
-export GCP_ENVIRONMENT=gcp-staging  # Staging environment
+export GCP_ENVIRONMENT=gcp-preview  # Preview environment
 export GCP_ENVIRONMENT=gcp-prod     # Production environment (default)
 ```
 

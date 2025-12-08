@@ -9,7 +9,7 @@ This directory contains Terraform backend configuration files for each environme
 1. Copy the example file for your environment:
    ```bash
    cp gcp-dev.gcs.tfbackend.example gcp-dev.gcs.tfbackend
-   cp gcp-staging.gcs.tfbackend.example gcp-staging.gcs.tfbackend
+   cp gcp-preview.gcs.tfbackend.example gcp-preview.gcs.tfbackend
    cp gcp-prod.gcs.tfbackend.example gcp-prod.gcs.tfbackend
    ```
 

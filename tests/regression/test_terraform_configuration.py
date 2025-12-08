@@ -307,7 +307,7 @@ class TestTerraformProviderVersions:
 
         RED (Before Fix - 2025-11-12):
         - modules/github-actions-wif/versions.tf: version = "~> 5.0"
-        - environments/gcp-staging-wif-only/main.tf: version = "~> 6.0"
+        - environments/gcp-preview-wif-only/main.tf: version = "~> 6.0"
         - Error: "no available releases match the given constraints ~> 5.0, ~> 6.0"
 
         GREEN (After Fix - 2025-11-12):

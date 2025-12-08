@@ -160,7 +160,7 @@ jobs:
         with:
           # WIF provider: Uses secret if set, otherwise falls back to default pool/provider naming
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || format('projects/{0}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider', env.PROJECT_NUMBER) }}
-          # Service account created by: terraform/environments/gcp-staging-wif-only/main.tf
+          # Service account created by: terraform/environments/gcp-preview-wif-only/main.tf
           service_account: ${{ secrets.GCP_COMPLIANCE_SA_EMAIL || format('compliance-scanner@{0}.iam.gserviceaccount.com', env.PROJECT_ID) }}
 
       - name: Set up Cloud SDK

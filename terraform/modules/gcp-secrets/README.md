@@ -8,7 +8,7 @@ This Terraform module manages application secrets in GCP Secret Manager, ensurin
 
 - Creates all required application secrets
 - Manages IAM bindings for External Secrets Operator
-- Supports multiple environments (dev, staging, production)
+- Supports multiple environments (dev, preview, production)
 - Automatic replication policy
 - Labeled for organization
 
@@ -19,10 +19,10 @@ module "secrets" {
   source = "../../modules/gcp-secrets"
 
   project_id  = "vishnu-sandbox-20250310"
-  environment = "staging"
+  environment = "preview"
 
   # External Secrets Operator service account
-  external_secrets_service_account = "external-secrets-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com"
+  external_secrets_service_account = "external-secrets-preview@vishnu-sandbox-20250310.iam.gserviceaccount.com"
 
   # Optional: Application service account for direct access
   app_service_account = ""
@@ -53,18 +53,18 @@ This module creates the following secrets (with environment prefix):
 If secrets already exist (created manually), import them:
 
 ```bash
-cd terraform/environments/gcp-staging
+cd terraform/environments/gcp-preview
 
 # Import each secret
-terraform import 'module.secrets.google_secret_manager_secret.secrets["staging-anthropic-api-key"]' \
-  projects/vishnu-sandbox-20250310/secrets/staging-anthropic-api-key
+terraform import 'module.secrets.google_secret_manager_secret.secrets["preview-anthropic-api-key"]' \
+  projects/vishnu-sandbox-20250310/secrets/preview-anthropic-api-key
 
-terraform import 'module.secrets.google_secret_manager_secret.secrets["staging-jwt-secret"]' \
-  projects/vishnu-sandbox-20250310/secrets/staging-jwt-secret
+terraform import 'module.secrets.google_secret_manager_secret.secrets["preview-jwt-secret"]' \
+  projects/vishnu-sandbox-20250310/secrets/preview-jwt-secret
 
 # Import IAM bindings
-terraform import 'module.secrets.google_secret_manager_secret_iam_member.external_secrets["staging-anthropic-api-key"]' \
-  "projects/vishnu-sandbox-20250310/secrets/staging-anthropic-api-key roles/secretmanager.secretAccessor serviceAccount:external-secrets-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com"
+terraform import 'module.secrets.google_secret_manager_secret_iam_member.external_secrets["preview-anthropic-api-key"]' \
+  "projects/vishnu-sandbox-20250310/secrets/preview-anthropic-api-key roles/secretmanager.secretAccessor serviceAccount:external-secrets-preview@vishnu-sandbox-20250310.iam.gserviceaccount.com"
 
 # Repeat for all secrets...
 ```
@@ -77,12 +77,12 @@ To set/update secret values:
 
 ```bash
 # Create/update secret value
-echo -n "your-secret-value" | gcloud secrets versions add staging-anthropic-api-key \
+echo -n "your-secret-value" | gcloud secrets versions add preview-anthropic-api-key \
   --data-file=- \
   --project=vishnu-sandbox-20250310
 
 # Or from file
-gcloud secrets versions add staging-jwt-secret \
+gcloud secrets versions add preview-jwt-secret \
   --data-file=/path/to/secret.txt \
   --project=vishnu-sandbox-20250310
 ```

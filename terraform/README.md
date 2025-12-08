@@ -15,7 +15,7 @@ terraform/
 │   └── gke-workload-identity/ # Workload Identity (GCP's IRSA equivalent)
 └── environments/              # Environment-specific configurations
     ├── gcp-dev/              # Development environment (cost-optimized)
-    ├── gcp-staging/          # Staging environment (matches production)
+    ├── gcp-preview/          # Preview environment (matches production)
     └── gcp-prod/             # Production environment (full HA)
 ```
 
@@ -76,7 +76,7 @@ gsutil uniformbucketlevelaccess set on gs://mcp-langgraph-tfstate
 Create a `terraform.tfvars` file in your environment directory:
 
 ```bash
-cd terraform/environments/gcp-staging
+cd terraform/environments/gcp-preview
 
 cat > terraform.tfvars <<EOF
 project_id = "your-gcp-project-id"
@@ -134,7 +134,7 @@ kubectl get nodes
 
 ## Environment Configuration
 
-Each environment (gcp-dev/gcp-staging/gcp-prod) has its own:
+Each environment (gcp-dev/gcp-preview/gcp-prod) has its own:
 - `main.tf` - Main infrastructure configuration
 - `variables.tf` - Environment-specific variable definitions
 - `outputs.tf` - Output values (cluster info, connection strings, etc.)
@@ -142,7 +142,7 @@ Each environment (gcp-dev/gcp-staging/gcp-prod) has its own:
 
 ### Environment Differences
 
-| Feature | Dev | Staging | Production |
+| Feature | Dev | Preview | Production |
 |---------|-----|---------|------------|
 | Cluster Type | Zonal | Regional | Regional |
 | GKE Backup | Disabled | Weekly | Daily |
@@ -236,7 +236,7 @@ Terraform state is stored in Google Cloud Storage:
 
 **State file organization**:
 - `env/dev/` - Development state
-- `env/staging/` - Staging state
+- `env/preview/` - Preview state
 - `env/prod/` - Production state
 
 ## Security Best Practices

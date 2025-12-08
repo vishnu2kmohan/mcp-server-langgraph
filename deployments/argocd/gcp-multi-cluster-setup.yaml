@@ -26,10 +26,10 @@ spec:
             project: ${GCP_PROJECT_ID}  # TEMPLATE: Replace with your GCP project ID
             region: us-central1
 
-          - cluster: gcp-staging
-            url: https://GCP_STAGING_CLUSTER_ENDPOINT  # TEMPLATE: Replace with actual cluster endpoint
+          - cluster: gcp-preview
+            url: https://GCP_PREVIEW_CLUSTER_ENDPOINT  # TEMPLATE: Replace with actual cluster endpoint
             overlay: preview-gke
-            namespace: mcp-staging
+            namespace: mcp-preview
             replicas: "2"
             project: ${GCP_PROJECT_ID}  # TEMPLATE: Replace with your GCP project ID
             region: us-central1
@@ -109,14 +109,14 @@ stringData:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: gcp-staging-cluster
+  name: gcp-preview-cluster
   namespace: argocd
   labels:
     argocd.argoproj.io/secret-type: cluster
 type: Opaque
 stringData:
-  name: gcp-staging
-  server: https://GCP_STAGING_CLUSTER_ENDPOINT
+  name: gcp-preview
+  server: https://GCP_PREVIEW_CLUSTER_ENDPOINT
   config: |
     {
       "execProviderConfig": {

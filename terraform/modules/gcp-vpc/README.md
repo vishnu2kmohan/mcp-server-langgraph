@@ -668,7 +668,7 @@ See [outputs.tf](./outputs.tf) for complete list of outputs.
 See the [examples](../../environments/) directory for complete working examples:
 
 - [GCP Development](../../environments/gcp-dev/)
-- [GCP Staging](../../environments/gcp-staging/)
+- [GCP Preview](../../environments/gcp-preview/)
 - [GCP Production](../../environments/gcp-prod/)
 
 ## License
