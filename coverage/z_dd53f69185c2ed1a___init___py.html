@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for src/mcp_server_langgraph/__init__.py: 50%</title>
+    <title>Coverage for src/mcp_server_langgraph/__init__.py: 55%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8432e98f.css" type="text/css">
     <script src="coverage_html_cb_bcae5fc4.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>src&#8201;/&#8201;mcp_server_langgraph&#8201;/&#8201;__init__.py</b>:
-            <span class="pc_cov">50%</span>
+            <span class="pc_cov">55%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -56,8 +56,8 @@
         </aside>
         <h2>
             <span class="text">130 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">65<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">65<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">71<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">59<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">3<span class="text"> excluded</span></button>
             <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">15<span class="text"> partial</span></button>
         </h2>
@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_976f9bf762e23b33___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.12.0">coverage.py v7.12.0</a>,
-            created at 2025-12-05 16:42 +0000
+            created at 2025-12-08 06:31 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -192,13 +192,13 @@
     <p class="mis show_mis"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">        <span class="key">import</span> <span class="nam">mcp_server_langgraph</span><span class="op">.</span><span class="nam">auth</span> <span class="key">as</span> <span class="nam">auth_module</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">        <span class="key">return</span> <span class="nam">auth_module</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">    <span class="key">elif</span> <span class="nam">name</span> <span class="op">==</span> <span class="str">"api"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">111&#x202F;&#x219B;&#x202F;115</span><span class="annotate long">line 111 didn't jump to line 115 because the condition on line 111 was never true</span></span></p>
+    <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">    <span class="key">elif</span> <span class="nam">name</span> <span class="op">==</span> <span class="str">"api"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">        <span class="com"># Allow access to api submodule for importlib.reload() scenarios</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">        <span class="com"># Used in tests/regression/test_bearer_scheme_isolation.py</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">        <span class="com"># Prevent recursion: if api module is already being imported, return it from sys.modules</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">        <span class="nam">module_name</span> <span class="op">=</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">__name__</span><span class="op">}</span><span class="fst">.api</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t">        <span class="key">if</span> <span class="nam">module_name</span> <span class="key">in</span> <span class="nam">sys</span><span class="op">.</span><span class="nam">modules</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">            <span class="key">return</span> <span class="nam">sys</span><span class="op">.</span><span class="nam">modules</span><span class="op">[</span><span class="nam">module_name</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">        <span class="nam">module_name</span> <span class="op">=</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">__name__</span><span class="op">}</span><span class="fst">.api</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="par run show_par"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t">        <span class="key">if</span> <span class="nam">module_name</span> <span class="key">in</span> <span class="nam">sys</span><span class="op">.</span><span class="nam">modules</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">116&#x202F;&#x219B;&#x202F;119</span><span class="annotate long">line 116 didn't jump to line 119 because the condition on line 116 was always true</span></span></p>
+    <p class="run"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">            <span class="key">return</span> <span class="nam">sys</span><span class="op">.</span><span class="nam">modules</span><span class="op">[</span><span class="nam">module_name</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">        <span class="key">import</span> <span class="nam">mcp_server_langgraph</span><span class="op">.</span><span class="nam">api</span> <span class="key">as</span> <span class="nam">api_module</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -242,11 +242,11 @@
     <p class="mis show_mis"><span class="n"><a id="t158" href="#t158">158</a></span><span class="t">        <span class="key">import</span> <span class="nam">mcp_server_langgraph</span><span class="op">.</span><span class="nam">core</span> <span class="key">as</span> <span class="nam">core_module</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t159" href="#t159">159</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t160" href="#t160">160</a></span><span class="t">        <span class="key">return</span> <span class="nam">core_module</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t161" href="#t161">161</a></span><span class="t">    <span class="key">elif</span> <span class="nam">name</span> <span class="op">==</span> <span class="str">"monitoring"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">161&#x202F;&#x219B;&#x202F;163</span><span class="annotate long">line 161 didn't jump to line 163 because the condition on line 161 was never true</span></span></p>
+    <p class="run"><span class="n"><a id="t161" href="#t161">161</a></span><span class="t">    <span class="key">elif</span> <span class="nam">name</span> <span class="op">==</span> <span class="str">"monitoring"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t162" href="#t162">162</a></span><span class="t">        <span class="com"># Allow access to monitoring submodule for tests (needed for Python 3.10 mock compatibility)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t163" href="#t163">163</a></span><span class="t">        <span class="nam">module_name</span> <span class="op">=</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">__name__</span><span class="op">}</span><span class="fst">.monitoring</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t164" href="#t164">164</a></span><span class="t">        <span class="key">if</span> <span class="nam">module_name</span> <span class="key">in</span> <span class="nam">sys</span><span class="op">.</span><span class="nam">modules</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t165" href="#t165">165</a></span><span class="t">            <span class="key">return</span> <span class="nam">sys</span><span class="op">.</span><span class="nam">modules</span><span class="op">[</span><span class="nam">module_name</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t163" href="#t163">163</a></span><span class="t">        <span class="nam">module_name</span> <span class="op">=</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">__name__</span><span class="op">}</span><span class="fst">.monitoring</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="par run show_par"><span class="n"><a id="t164" href="#t164">164</a></span><span class="t">        <span class="key">if</span> <span class="nam">module_name</span> <span class="key">in</span> <span class="nam">sys</span><span class="op">.</span><span class="nam">modules</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">164&#x202F;&#x219B;&#x202F;167</span><span class="annotate long">line 164 didn't jump to line 167 because the condition on line 164 was always true</span></span></p>
+    <p class="run"><span class="n"><a id="t165" href="#t165">165</a></span><span class="t">            <span class="key">return</span> <span class="nam">sys</span><span class="op">.</span><span class="nam">modules</span><span class="op">[</span><span class="nam">module_name</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t166" href="#t166">166</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t167" href="#t167">167</a></span><span class="t">        <span class="key">import</span> <span class="nam">mcp_server_langgraph</span><span class="op">.</span><span class="nam">monitoring</span> <span class="key">as</span> <span class="nam">monitoring_module</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t168" href="#t168">168</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -336,7 +336,7 @@
             <a class="nav" href="z_976f9bf762e23b33___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.12.0">coverage.py v7.12.0</a>,
-            created at 2025-12-05 16:42 +0000
+            created at 2025-12-08 06:31 +0000
         </p>
     </div>
 </footer>
