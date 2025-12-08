@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2025-11-30
-**Total ADRs**: 63
+**Last Updated**: 2025-12-07
+**Total ADRs**: 64
 
 ## Overview
 
@@ -110,6 +110,7 @@ Each ADR follows this structure:
 | [ADR-0041](adr-0041-postgresql-gdpr-storage.md) | 41. Pure PostgreSQL for GDPR/HIPAA/SOC2 Compliance Storage | Accepted | 2025-11-02 |
 | [ADR-0056](adr-0056-asyncmock-configuration-prevention.md) | 56. AsyncMock Configuration Prevention Mechanisms | Accepted | 2025-11-13 |
 | [ADR-0066](adr-0066-helm-chart-security-risk-acceptance.md) | 66. Helm Chart Security Risk Acceptance | Accepted | 2025-11-29 |
+| [ADR-0067](adr-0067-non-root-container-security.md) | Non-Root Container Security Strategy | Accepted | 2025-12-07 |
 
 ### Testing & Quality
 

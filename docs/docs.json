@@ -561,7 +561,8 @@
               "architecture/adr-0053-ci-cd-failure-prevention-framework",
               "architecture/adr-0054-pod-failure-prevention-framework",
               "architecture/adr-0064-pre-commit-hooks-strategy",
-              "architecture/adr-0066-helm-chart-security-risk-acceptance"
+              "architecture/adr-0066-helm-chart-security-risk-acceptance",
+              "architecture/adr-0067-non-root-container-security"
             ]
           },
           {
