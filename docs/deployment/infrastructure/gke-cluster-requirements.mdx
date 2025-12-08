@@ -16,23 +16,23 @@ The CI/CD pipeline requires GKE clusters to exist before deployment workflows ca
 
 ## Required Clusters
 
-### Staging Cluster
+### Preview Cluster
 
-**Name:** `staging-mcp-server-langgraph-gke`
+**Name:** `preview-mcp-server-langgraph-gke`
 **Location:** `us-central1`
 **Project:** `vishnu-sandbox-20250310`
 **Type:** GKE Autopilot (recommended) or Standard
 
 **Creation via Terraform:**
 ```bash
-cd terraform/environments/gcp-staging
+cd terraform/environments/gcp-preview
 terraform init
 terraform plan
 terraform apply
 ```
 **Manual Creation:**
 ```bash
-gcloud container clusters create-auto staging-mcp-server-langgraph-gke \
+gcloud container clusters create-auto preview-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310 \
   --release-channel=regular \
@@ -60,17 +60,17 @@ terraform apply
 ### deploy-preview-gke.yaml
 
 This workflow requires:
-- ✅ GKE cluster: `staging-mcp-server-langgraph-gke` in `us-central1`
-- ✅ Service account: `github-actions-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com`
-- ✅ Artifact Registry: `mcp-staging` repository
-- ✅ GitHub variable: `ENABLE_STAGING_AUTODEPLOY=true`
+- ✅ GKE cluster: `preview-mcp-server-langgraph-gke` in `us-central1`
+- ✅ Service account: `github-actions-preview@vishnu-sandbox-20250310.iam.gserviceaccount.com`
+- ✅ Artifact Registry: `mcp-preview` repository
+- ✅ GitHub variable: `ENABLE_PREVIEW_AUTODEPLOY=true`
 
 **Workflow Trigger:**
-- Push to `main` branch (when `ENABLE_STAGING_AUTODEPLOY=true`)
+- Push to `main` branch (when `ENABLE_PREVIEW_AUTODEPLOY=true`)
 - Manual dispatch
 
 **Current Status:**
-- ❌ Cluster not found error: The cluster `staging-mcp-server-langgraph-gke` does not exist in the specified location.
+- ✅ Cluster created and operational
 
 **Resolution:**
 Create the cluster using one of the methods above, then re-run the workflow.
@@ -91,8 +91,8 @@ This workflow requires:
 After creating clusters, verify they're accessible:
 
 ```bash
-# Verify staging cluster
-gcloud container clusters describe staging-mcp-server-langgraph-gke \
+# Verify preview cluster
+gcloud container clusters describe preview-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310
 
@@ -102,7 +102,7 @@ gcloud container clusters describe production-mcp-server-langgraph-gke \
   --project=vishnu-sandbox-20250310
 
 # Test GitHub Actions service account access
-gcloud container clusters get-credentials staging-mcp-server-langgraph-gke \
+gcloud container clusters get-credentials preview-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310
 
@@ -134,7 +134,7 @@ The GKE Autopilot module is located at:
 
 **Symptom:**
 ```yaml
-Error: NOT_FOUND: projects/vishnu-sandbox-20250310/locations/us-central1/clusters/staging-mcp-server-langgraph-gke not found
+Error: NOT_FOUND: projects/vishnu-sandbox-20250310/locations/us-central1/clusters/preview-mcp-server-langgraph-gke not found
 ```
 
 **Solution:**
@@ -144,7 +144,7 @@ The cluster doesn't exist. Create it using the methods above.
 
 **Symptom:**
 ```yaml
-Error: github-actions-staging does not have permission to access cluster
+Error: github-actions-preview does not have permission to access cluster
 ```
 
 **Solution:**
@@ -152,15 +152,15 @@ Verify the service account has the `container.developer` role:
 ```bash
 gcloud projects get-iam-policy vishnu-sandbox-20250310 \
   --flatten="bindings[].members" \
-  --filter="bindings.members:github-actions-staging*"
+  --filter="bindings.members:github-actions-preview*"
 ```
 ### Error: Artifact Registry repository not found
 
 **Solution:**
 Create the Artifact Registry repositories:
 ```bash
-# Staging
-gcloud artifacts repositories create mcp-staging \
+# Preview
+gcloud artifacts repositories create mcp-preview \
   --repository-format=docker \
   --location=us-central1 \
   --project=vishnu-sandbox-20250310
@@ -177,8 +177,8 @@ gcloud artifacts repositories create mcp-production \
 The deployment workflows check repository variables to determine if auto-deploy is enabled:
 
 ```bash
-# Enable staging auto-deploy
-gh variable set ENABLE_STAGING_AUTODEPLOY --body "true"
+# Enable preview auto-deploy
+gh variable set ENABLE_PREVIEW_AUTODEPLOY --body "true"
 
 # Enable dev auto-deploy
 gh variable set ENABLE_DEV_AUTODEPLOY --body "true"
@@ -202,4 +202,4 @@ gh variable list
 - Terraform module: ✅ Fixed and validated
 - Service accounts: ✅ Created and configured
 - Auto-deploy variables: ✅ Set
-- GKE clusters: ❌ Need to be created
+- GKE clusters: ✅ Created (preview-mcp-server-langgraph-gke)
