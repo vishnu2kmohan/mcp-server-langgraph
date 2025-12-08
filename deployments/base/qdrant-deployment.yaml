@@ -27,7 +27,7 @@ spec:
         runAsGroup: 10000
       containers:
       - name: qdrant
-        image: qdrant/qdrant:v1.15.5
+        image: qdrant/qdrant:v1.15.5-unprivileged
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
