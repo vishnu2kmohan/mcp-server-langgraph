@@ -131,17 +131,6 @@ class TestBuilderServerKeycloakAuth:
         """Test that /api/builder/generate requires valid Keycloak token."""
         from mcp_server_langgraph.builder.api.server import app
 
-        # Create a test app with auth middleware
-        test_app = FastAPI()
-
-        # Import the router instead of app to mount with middleware
-        from mcp_server_langgraph.builder.api.server import (
-            root,
-        )
-
-        # Add routes without auth dependency (we'll use middleware)
-        test_app.get("/")(root)
-
         # Test without auth middleware first (should fail in production mode)
         client = TestClient(app)
 

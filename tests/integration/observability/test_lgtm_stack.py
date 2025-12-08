@@ -115,6 +115,7 @@ def skip_if_infra_not_running() -> None:
 # ==============================================================================
 
 
+@pytest.mark.xdist_group(name="lgtm_config")
 class TestLGTMConfiguration:
     """
     Test LGTM stack configuration files.
@@ -122,6 +123,10 @@ class TestLGTMConfiguration:
     These tests validate that configuration files are correct and consistent.
     They don't require Docker and can run offline.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_grafana_dashboards_yml_references_existing_paths(self) -> None:
         """
