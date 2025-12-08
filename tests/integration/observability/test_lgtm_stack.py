@@ -187,9 +187,15 @@ class TestLGTMConfiguration:
             config = yaml.safe_load(f)
 
         # Verify key sections exist
-        required_sections = ["server", "common", "schema_config", "storage_config"]
+        # Note: Loki 3.x uses common.storage instead of storage_config (legacy pattern)
+        # See: https://grafana.com/docs/loki/latest/configure/
+        required_sections = ["server", "common", "schema_config"]
         for section in required_sections:
             assert section in config, f"Loki config missing '{section}' section"
+
+        # Verify storage is configured (either via common.storage or storage_config)
+        has_storage = "storage_config" in config or ("common" in config and "storage" in config.get("common", {}))
+        assert has_storage, "Loki config missing storage configuration (storage_config or common.storage)"
 
     def test_tempo_config_valid(self) -> None:
         """Verify Tempo configuration is valid."""

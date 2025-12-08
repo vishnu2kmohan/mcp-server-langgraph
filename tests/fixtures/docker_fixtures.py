@@ -91,11 +91,14 @@ async def _verify_schema_ready(host: str, port: int, timeout: float = 30.0) -> b
 
     while time.time() - start_time < timeout:
         try:
-            # Connect to gdpr_test database
+            # Connect to mcp_test database (canonical test database per tests/constants.py)
+            # Note: Import from constants for single source of truth
+            from tests.constants import TEST_POSTGRES_DB
+
             conn = await asyncpg.connect(
                 host=host,
                 port=port,
-                database=os.getenv("POSTGRES_DB", "gdpr_test"),
+                database=os.getenv("POSTGRES_DB", TEST_POSTGRES_DB),
                 user=os.getenv("POSTGRES_USER", "postgres"),
                 password=os.getenv("POSTGRES_PASSWORD", "postgres"),
                 timeout=5,
@@ -298,26 +301,40 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
     if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
         pytest.skip("Keycloak test service not available - run 'make test-integration'")
 
-    # Best Practice: Use /health/ready endpoint on management port (9000)
-    # Reference: https://www.keycloak.org/observability/health
-    # Keycloak 26.x exposes health endpoints on port 9000 (management port)
-    # This is more reliable than /realms/master as it's purpose-built for health checks
+    # Keycloak Health Check Strategy (Keycloak 26.x):
+    # 1. Primary: Use /health/ready on management port 9000 (mapped to 9900)
+    # 2. Fallback: Use /authn/realms/master on HTTP port 8080 (mapped to 9082)
+    # The management port may not always be configured correctly in test environments,
+    # but the realms endpoint is a reliable indicator of Keycloak being fully operational.
+    #
     # Retry with backoff since Keycloak HTTP server may take time to initialize after port opens
     # This accounts for:
     #   1. Database schema migration
     #   2. Realm import from keycloak-test-realm.json
     #   3. JIT compilation of Java bytecode
-    keycloak_health_url = f"http://localhost:{test_infrastructure_ports['keycloak_management']}/health/ready"
     keycloak_ready = False
-    for attempt in range(30):  # 30 attempts * 2s = 60s max additional wait
+    # Try management port first (best practice)
+    keycloak_health_url = f"http://localhost:{test_infrastructure_ports['keycloak_management']}/health/ready"
+    for attempt in range(5):  # 5 attempts * 2s = 10s for management port
         if _check_http_health(keycloak_health_url, timeout=5):
             keycloak_ready = True
+            logging.info("✓ Keycloak ready (management port /health/ready)")
             break
         time.sleep(2)
 
+    # Fallback to realms endpoint on HTTP port
     if not keycloak_ready:
-        logging.error("Keycloak /health/ready endpoint not responding after 60s additional wait")
-        pytest.skip("Keycloak health check failed - /health/ready endpoint not responding (port 9900)")
+        keycloak_realms_url = f"http://localhost:{test_infrastructure_ports['keycloak']}/authn/realms/master"
+        for attempt in range(15):  # 15 attempts * 2s = 30s for realms endpoint
+            if _check_http_health(keycloak_realms_url, timeout=5):
+                keycloak_ready = True
+                logging.info("✓ Keycloak ready (fallback /authn/realms/master)")
+                break
+            time.sleep(2)
+
+    if not keycloak_ready:
+        logging.error("Keycloak not responding on management port or realms endpoint after 40s")
+        pytest.skip("Keycloak health check failed - neither /health/ready (port 9900) nor /authn/realms/master responding")
     logging.info("✓ Keycloak ready")
 
     # Qdrant

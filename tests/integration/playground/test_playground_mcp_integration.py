@@ -63,7 +63,8 @@ class TestMCPServerConnection:
         """Test that MCP server is healthy."""
         import httpx
 
-        async with httpx.AsyncClient() as client:
+        # Use follow_redirects=True to handle 307 redirects (FastAPI redirects /health to /health/)
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(f"{mcp_url}/health")
             assert response.status_code == 200
 

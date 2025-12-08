@@ -154,20 +154,23 @@ class TestE2EInfrastructure:
         Test that Keycloak is available through test infrastructure.
 
         TDD: This test validates Keycloak connectivity.
+
+        Note: Keycloak with KC_HTTP_RELATIVE_PATH=/authn requires the /authn prefix
+        for all health endpoints. Management port 9000 (mapped to 9900) also needs the prefix.
         """
         import httpx
 
         # Test HTTP connection to Keycloak
-        # Keycloak 26 exposes health on management port 9000 (mapped to 9900)
-        # Or /health/ready on main port if enabled (but might be legacy)
-        # docker-compose.test.yml maps 9900:9000
+        # Keycloak 26 with KC_HTTP_RELATIVE_PATH=/authn requires /authn prefix even for health
+        # docker-compose.test.yml maps 9900:9000 (management port)
         try:
-            # Try management port first
-            response = httpx.get("http://localhost:9900/health/ready", timeout=5.0)
+            # Try management port with /authn prefix (required for KC_HTTP_RELATIVE_PATH=/authn)
+            response = httpx.get("http://localhost:9900/authn/health/ready", timeout=5.0)
             assert response.status_code == 200
         except Exception:
-            # Fallback to main port (settings url)
+            # Fallback to main port with /authn prefix
             try:
+                # keycloak_server_url already includes /authn suffix (e.g., http://localhost:9082/authn)
                 response = httpx.get(f"{test_app_settings.keycloak_server_url}/health/ready", timeout=5.0)
                 assert response.status_code == 200
             except Exception as e:

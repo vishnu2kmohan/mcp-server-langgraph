@@ -45,6 +45,11 @@ COPY tests/ ./tests/
 COPY scripts/ ./scripts/
 COPY deployments/ ./deployments/
 
+# Copy Alembic configuration and migrations for database schema setup
+# Required by alembic-migrate-test service in docker-compose.test.yml
+COPY alembic.ini ./
+COPY alembic/ ./alembic/
+
 # Install Python dependencies with uv sync --frozen (same as local/CI)
 # --frozen: Use lockfile exactly, fail if out of sync
 # --extra dev: Include test dependencies

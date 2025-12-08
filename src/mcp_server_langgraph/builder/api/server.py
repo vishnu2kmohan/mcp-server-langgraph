@@ -207,16 +207,21 @@ def verify_builder_auth(authorization: str = Header(None)) -> None:
     Raises:
         HTTPException: 401 if not authenticated
 
+    Environment handling:
+        - development: Allow unauthenticated access (local dev only)
+        - test: Require authentication (E2E tests)
+        - production: Require authentication
+
     TODO: Integrate with main auth system (Keycloak, etc.)
     """
-    # Allow unauthenticated access in development (local testing)
+    # Allow unauthenticated access ONLY in development (not test or production)
     environment = os.getenv("ENVIRONMENT", "development")
     if environment == "development" and not authorization:
         # Log warning but allow
         print("WARNING: Builder accessed without auth in development mode")
         return
 
-    # In production, require authentication
+    # In test and production environments, require authentication
     if not authorization:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -354,9 +359,9 @@ app.add_middleware(
 # ==============================================================================
 
 
-@app.get("/")
-def root() -> dict[str, Any]:
-    """API information."""
+@app.get("/api/builder")
+def api_info() -> dict[str, Any]:
+    """API information endpoint (moved from root to allow SPA serving)."""
     return {
         "name": "Visual Workflow Builder API",
         "version": "1.0.0",

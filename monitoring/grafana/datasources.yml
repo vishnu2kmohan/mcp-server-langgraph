@@ -1,15 +1,44 @@
 apiVersion: 1
 
 datasources:
-  # Metrics - Primary data source
+  # Metrics - Mimir (Prometheus-compatible, replaces Prometheus)
+  - name: Mimir
+    type: prometheus
+    access: proxy
+    url: http://mimir:9009/prometheus
+    isDefault: true
+    editable: true
+
+  # Metrics - Prometheus (legacy, for compatibility)
   - name: Prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090
-    isDefault: true
     editable: true
 
-  # Tracing - Distributed traces
+  # Tracing - Tempo (primary tracing backend)
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: true
+    jsonData:
+      tracesToLogs:
+        datasourceUid: loki
+        tags: ['trace_id']
+        mappedTags: [{ key: 'service.name', value: 'service_name' }]
+        mapTagNamesEnabled: true
+        filterByTraceID: true
+        filterBySpanID: true
+      tracesToMetrics:
+        datasourceUid: mimir
+        tags: [{ key: 'service.name', value: 'service' }]
+      nodeGraph:
+        enabled: true
+      lokiSearch:
+        datasourceUid: loki
+
+  # Tracing - Jaeger (legacy, for compatibility)
   - name: Jaeger
     type: jaeger
     access: proxy
@@ -25,7 +54,7 @@ datasources:
     jsonData:
       # Enable derived fields for trace correlation
       derivedFields:
-        - datasourceUid: jaeger
+        - datasourceUid: tempo
           matcherRegex: '"trace_id":"([a-f0-9]+)"'
           name: TraceID
           url: '$${__value.raw}'

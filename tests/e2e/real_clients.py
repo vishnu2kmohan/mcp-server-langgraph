@@ -32,6 +32,9 @@ class RealKeycloakAuth:
 
     Connects to Keycloak test instance on port 9082.
     Uses password grant flow for user authentication.
+
+    IMPORTANT: Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
+    All endpoints must be prefixed with /authn (e.g., /authn/realms/master/...)
     """
 
     def __init__(self, base_url: str = None):
@@ -39,9 +42,11 @@ class RealKeycloakAuth:
         Initialize Keycloak auth client.
 
         Args:
-            base_url: Keycloak base URL (default: http://localhost:9082)
+            base_url: Keycloak base URL (default: http://localhost:9082/authn)
+                      Note: Must include /authn path due to KC_HTTP_RELATIVE_PATH config
         """
-        self.base_url = base_url or os.getenv("KEYCLOAK_URL", "http://localhost:9082")
+        # Default includes /authn path per KC_HTTP_RELATIVE_PATH in docker-compose.test.yml
+        self.base_url = base_url or os.getenv("KEYCLOAK_URL", "http://localhost:9082/authn")
         self.realm = os.getenv("KEYCLOAK_REALM", "master")
         self.client_id = os.getenv("KEYCLOAK_CLIENT_ID", "mcp-server")
         # CODEX FINDING FIX (2025-11-20): Add client_secret for token introspection

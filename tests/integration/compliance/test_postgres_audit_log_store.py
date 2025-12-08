@@ -303,13 +303,19 @@ async def test_list_user_logs_ordered_by_timestamp(store: PostgresAuditLogStore)
 @pytest.mark.gdpr
 async def test_anonymize_user_logs(store: PostgresAuditLogStore):
     """Test anonymizing audit logs for deleted user (GDPR Article 17)"""
-    user_id = get_user_id("grace")
+    import uuid
+
+    # Use worker_id + uuid for complete xdist isolation
+    # The worker_id prefix ensures cleanup pattern works: test_{worker_id}_%
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    test_id = uuid.uuid4().hex[:8]
+    user_id = f"test_{worker_id}_anon_user_{test_id}"
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
-    # Create logs
+    # Create logs with unique IDs matching cleanup pattern
     for i in range(3):
         entry = AuditLogEntry(
-            log_id=f"test_anon_{i}",
+            log_id=f"test_{worker_id}_anon_{test_id}_{i}",
             user_id=user_id,
             action=f"action_{i}",
             resource_type="resource",
@@ -325,9 +331,11 @@ async def test_anonymize_user_logs(store: PostgresAuditLogStore):
     logs = await store.list_user_logs(user_id)
     assert len(logs) == 0  # No logs for original user_id
 
-    # Check logs are now anonymized (user_id = 'anonymized')
-    anon_logs = await store.list_user_logs("anonymized")
-    assert len(anon_logs) == 3
+    # Verify our specific logs were anonymized by checking them directly
+    for i in range(3):
+        log = await store.get(f"test_{worker_id}_anon_{test_id}_{i}")
+        assert log is not None
+        assert log.user_id == "anonymized"
 
 
 @pytest.mark.asyncio
