@@ -303,6 +303,11 @@ services:
 
       # Test-specific
       - TESTING=true
+
+      # JVM memory settings to prevent OOM
+      # Keycloak 26.x defaults to -XX:MaxRAMPercentage=70 which can exceed container limits
+      # Explicit heap limits ensure predictable memory usage
+      - JAVA_OPTS_APPEND=-Xms512m -Xmx768m -XX:MaxMetaspaceSize=192m
     healthcheck:
       # Best Practice: Use /health/ready endpoint on management port 9000
       # Reference: https://www.keycloak.org/observability/health
@@ -316,11 +321,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 768M
+          cpus: '1.0'
+          memory: 1280M
         reservations:
-          cpus: '0.1'
-          memory: 384M
+          cpus: '0.25'
+          memory: 640M
     networks:
       mcp-test-network:
         aliases:
