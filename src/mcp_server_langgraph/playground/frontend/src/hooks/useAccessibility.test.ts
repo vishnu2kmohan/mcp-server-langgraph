@@ -131,4 +131,118 @@ describe('useAccessibility', () => {
       expect(result.current.isFocusTrapEnabled).toBe(false);
     });
   });
+
+  describe('useKeyboardNavigation', () => {
+    it('should_navigate_with_arrow_keys', () => {
+      const items = ['a', 'b', 'c'];
+      const onSelect = vi.fn();
+      const { result } = renderHook(() =>
+        __importKeyboardNavigation(items, onSelect)
+      );
+
+      expect(result.current.activeIndex).toBe(0);
+
+      act(() => {
+        result.current.handleKeyDown({ key: 'ArrowDown', preventDefault: vi.fn() } as unknown as React.KeyboardEvent);
+      });
+      expect(result.current.activeIndex).toBe(1);
+
+      act(() => {
+        result.current.handleKeyDown({ key: 'ArrowUp', preventDefault: vi.fn() } as unknown as React.KeyboardEvent);
+      });
+      expect(result.current.activeIndex).toBe(0);
+    });
+
+    it('should_navigate_to_start_and_end', () => {
+      const items = ['a', 'b', 'c'];
+      const onSelect = vi.fn();
+      const { result } = renderHook(() =>
+        __importKeyboardNavigation(items, onSelect)
+      );
+
+      act(() => {
+        result.current.handleKeyDown({ key: 'End', preventDefault: vi.fn() } as unknown as React.KeyboardEvent);
+      });
+      expect(result.current.activeIndex).toBe(2);
+
+      act(() => {
+        result.current.handleKeyDown({ key: 'Home', preventDefault: vi.fn() } as unknown as React.KeyboardEvent);
+      });
+      expect(result.current.activeIndex).toBe(0);
+    });
+
+    it('should_select_item_on_enter', () => {
+      const items = ['a', 'b', 'c'];
+      const onSelect = vi.fn();
+      const { result } = renderHook(() =>
+        __importKeyboardNavigation(items, onSelect)
+      );
+
+      act(() => {
+        result.current.handleKeyDown({ key: 'Enter', preventDefault: vi.fn() } as unknown as React.KeyboardEvent);
+      });
+      expect(onSelect).toHaveBeenCalledWith('a', 0);
+    });
+
+    it('should_select_item_on_space', () => {
+      const items = ['a', 'b', 'c'];
+      const onSelect = vi.fn();
+      const { result } = renderHook(() =>
+        __importKeyboardNavigation(items, onSelect)
+      );
+
+      act(() => {
+        result.current.handleKeyDown({ key: ' ', preventDefault: vi.fn() } as unknown as React.KeyboardEvent);
+      });
+      expect(onSelect).toHaveBeenCalledWith('a', 0);
+    });
+
+    it('should_allow_setting_active_index', () => {
+      const items = ['a', 'b', 'c'];
+      const onSelect = vi.fn();
+      const { result } = renderHook(() =>
+        __importKeyboardNavigation(items, onSelect)
+      );
+
+      act(() => {
+        result.current.setActiveIndex(2);
+      });
+      expect(result.current.activeIndex).toBe(2);
+    });
+  });
+
+  describe('useSkipLink', () => {
+    it('should_return_skip_link_props', () => {
+      const { result } = renderHook(() => __importSkipLink('main-content'));
+
+      expect(result.current.skipLinkProps.href).toBe('#main-content');
+      expect(result.current.targetProps.id).toBe('main-content');
+      expect(result.current.targetProps.tabIndex).toBe(-1);
+    });
+
+    it('should_focus_target_on_click', () => {
+      const targetElement = document.createElement('div');
+      targetElement.id = 'main-content';
+      targetElement.tabIndex = -1;
+      document.body.appendChild(targetElement);
+
+      const { result } = renderHook(() => __importSkipLink('main-content'));
+
+      const mockEvent = {
+        preventDefault: vi.fn(),
+      } as unknown as React.MouseEvent;
+
+      act(() => {
+        result.current.skipLinkProps.onClick(mockEvent);
+      });
+
+      expect(mockEvent.preventDefault).toHaveBeenCalled();
+      expect(document.activeElement).toBe(targetElement);
+
+      document.body.removeChild(targetElement);
+    });
+  });
 });
+
+// Import helpers for testing
+import { useKeyboardNavigation as __importKeyboardNavigation, useSkipLink as __importSkipLink } from './useAccessibility';
