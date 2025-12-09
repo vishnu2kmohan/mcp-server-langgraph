@@ -341,6 +341,58 @@ services:
       # NO strip - Keycloak configured for /authn subpath
 
   # ==============================================================================
+  # KEYCLOAK ADMIN INITIALIZATION
+  # ==============================================================================
+  # This service runs once after Keycloak is healthy to fix the admin user's
+  # required actions. The KEYCLOAK_ADMIN env var creates an admin user with
+  # UPDATE_PASSWORD required action, which prevents password grant for Admin API.
+  # This service uses kcadm.sh to clear the required actions.
+
+  keycloak-init-test:
+    # Use the same Keycloak image to have access to kcadm.sh
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.keycloak
+    # Override entrypoint and command to run the init script
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "Waiting for Keycloak to be fully ready..."
+        # Wait for Keycloak HTTP endpoint to be available
+        for i in {1..60}; do
+          if /opt/keycloak/bin/kcadm.sh config credentials \
+            --server http://keycloak-test:8080/authn \
+            --realm master \
+            --user admin \
+            --password admin 2>/dev/null; then
+            echo "Keycloak Admin CLI connected successfully"
+            break
+          fi
+          echo "Waiting for Keycloak... attempt $i/60"
+          sleep 2
+        done
+
+        # Get admin user ID
+        ADMIN_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master -q username=admin --fields id 2>/dev/null | grep -o '"id" : "[^"]*"' | head -1 | cut -d'"' -f4)
+
+        if [ -n "$$ADMIN_ID" ]; then
+          echo "Found admin user ID: $$ADMIN_ID"
+          # Clear required actions for admin user
+          /opt/keycloak/bin/kcadm.sh update users/$$ADMIN_ID -r master -s 'requiredActions=[]' 2>/dev/null
+          echo "Cleared required actions for admin user"
+        else
+          echo "Could not find admin user - may already be configured correctly"
+        fi
+
+        echo "Keycloak initialization complete"
+    depends_on:
+      keycloak-test:
+        condition: service_healthy
+    networks:
+      - mcp-test-network
+    restart: "no"  # Run once and exit
+
+  # ==============================================================================
   # CACHE & SESSION STORAGE
   # ==============================================================================
 
@@ -415,13 +467,20 @@ services:
           - qdrant
     labels:
       - "traefik.enable=true"
-      # Route: /vectors/* -> qdrant:6333 (Vector Database)
+      # Route: /vectors/* -> qdrant:6333 (Vector Database API)
       - "traefik.http.routers.qdrant.rule=PathPrefix(`/vectors`)"
       - "traefik.http.routers.qdrant.entrypoints=web"
       - "traefik.http.routers.qdrant.priority=10"
       - "traefik.http.services.qdrant.loadbalancer.server.port=6333"
       - "traefik.http.middlewares.qdrant-strip.stripprefix.prefixes=/vectors"
       - "traefik.http.routers.qdrant.middlewares=qdrant-strip"
+      # Route: /dashboard/* -> qdrant:6333/dashboard/* (Qdrant Web UI assets)
+      # Qdrant dashboard uses absolute paths (/dashboard/*), so we need a
+      # separate route to serve those assets when accessed via /vectors/dashboard
+      - "traefik.http.routers.qdrant-dashboard.rule=PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.qdrant-dashboard.entrypoints=web"
+      - "traefik.http.routers.qdrant-dashboard.priority=10"
+      - "traefik.http.routers.qdrant-dashboard.service=qdrant"
 
   # ==============================================================================
   # MCP SERVER (for E2E tests)

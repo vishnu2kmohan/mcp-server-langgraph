@@ -12,6 +12,12 @@ Model Versions (Latest as of 2025):
 Authentication:
 - On GKE: Workload Identity (automatic)
 - Locally: GOOGLE_APPLICATION_CREDENTIALS environment variable
+
+Environment Variables for Claude on Vertex AI:
+- ANTHROPIC_VERTEX_PROJECT_ID: Project ID for Claude on Vertex AI (falls back to VERTEX_PROJECT)
+- CLOUD_ML_REGION: Region for Claude on Vertex AI (defaults to global, falls back to us-east5)
+- VERTEX_PROJECT: General Vertex AI project ID (for Gemini: defaults to global, falls back to us-central1)
+- VERTEX_LOCATION: General Vertex AI location (for Gemini models)
 """
 
 import gc
@@ -25,6 +31,26 @@ from mcp_server_langgraph.llm.factory import LLMFactory
 pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
 
+def get_claude_vertex_project() -> str | None:
+    """Get project ID for Claude on Vertex AI.
+
+    Checks ANTHROPIC_VERTEX_PROJECT_ID first, falls back to VERTEX_PROJECT.
+    """
+    return os.getenv("ANTHROPIC_VERTEX_PROJECT_ID") or os.getenv("VERTEX_PROJECT")
+
+
+def get_claude_vertex_location() -> str:
+    """Get location for Claude on Vertex AI.
+
+    Checks CLOUD_ML_REGION first, then VERTEX_LOCATION, defaults to global.
+    Falls back to 'us-east5' if the region is not set.
+
+    Note: Claude on Vertex AI is available in limited regions. 'global' works
+    for most cases, with 'us-east5' as a reliable fallback.
+    """
+    return os.getenv("CLOUD_ML_REGION") or os.getenv("VERTEX_LOCATION", "global") or "us-east5"
+
+
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="vertex_ai_anthropic_tests")
 class TestVertexAIAnthropicModels:
@@ -35,8 +61,8 @@ class TestVertexAIAnthropicModels:
         gc.collect()
 
     @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
+        not get_claude_vertex_project(),
+        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
     )
     @pytest.mark.asyncio
     async def test_claude_sonnet_4_5_via_vertex_ai(self):
@@ -44,8 +70,8 @@ class TestVertexAIAnthropicModels:
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/claude-sonnet-4-5@20250929",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "us-central1"),
+            vertex_project=get_claude_vertex_project(),
+            vertex_location=get_claude_vertex_location(),
         )
 
         messages = [HumanMessage(content="Say 'Hello from Vertex AI Claude Sonnet 4.5' and nothing else.")]
@@ -58,8 +84,8 @@ class TestVertexAIAnthropicModels:
         assert len(response.content) > 0
 
     @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
+        not get_claude_vertex_project(),
+        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
     )
     @pytest.mark.asyncio
     async def test_claude_haiku_4_5_via_vertex_ai(self):
@@ -67,8 +93,8 @@ class TestVertexAIAnthropicModels:
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/claude-haiku-4-5@20251001",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "us-central1"),
+            vertex_project=get_claude_vertex_project(),
+            vertex_location=get_claude_vertex_location(),
         )
 
         messages = [HumanMessage(content="Say 'Hello from Vertex AI Claude Haiku 4.5' and nothing else.")]
@@ -81,8 +107,8 @@ class TestVertexAIAnthropicModels:
         assert len(response.content) > 0
 
     @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
+        not get_claude_vertex_project(),
+        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
     )
     @pytest.mark.asyncio
     async def test_claude_opus_4_5_via_vertex_ai(self):
@@ -90,8 +116,8 @@ class TestVertexAIAnthropicModels:
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/claude-opus-4-5@20251101",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "us-central1"),
+            vertex_project=get_claude_vertex_project(),
+            vertex_location=get_claude_vertex_location(),
         )
 
         messages = [HumanMessage(content="Say 'Hello from Vertex AI Claude Opus 4.5' and nothing else.")]
@@ -104,8 +130,8 @@ class TestVertexAIAnthropicModels:
         assert len(response.content) > 0
 
     @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
+        not get_claude_vertex_project(),
+        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
     )
     @pytest.mark.asyncio
     async def test_claude_sonnet_4_5_reasoning(self):
@@ -113,8 +139,8 @@ class TestVertexAIAnthropicModels:
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/claude-sonnet-4-5@20250929",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "us-central1"),
+            vertex_project=get_claude_vertex_project(),
+            vertex_location=get_claude_vertex_location(),
         )
 
         messages = [HumanMessage(content="What is 2 + 2? Think through this step by step, then provide your answer.")]
@@ -127,8 +153,8 @@ class TestVertexAIAnthropicModels:
         assert "4" in response.content
 
     @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
+        not get_claude_vertex_project(),
+        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
     )
     @pytest.mark.asyncio
     async def test_vertex_ai_claude_with_conversation(self):
@@ -136,8 +162,8 @@ class TestVertexAIAnthropicModels:
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/claude-sonnet-4-5@20250929",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location=os.getenv("VERTEX_LOCATION", "us-central1"),
+            vertex_project=get_claude_vertex_project(),
+            vertex_location=get_claude_vertex_location(),
         )
 
         # Multi-turn conversation
@@ -167,19 +193,17 @@ class TestVertexAIAnthropicConfiguration:
         gc.collect()
 
     @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
+        not get_claude_vertex_project(),
+        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
     )
     @pytest.mark.asyncio
     async def test_vertex_ai_uses_project_from_config(self):
         """Test that Vertex AI uses project ID from configuration."""
-        vertex_project = os.getenv("VERTEX_PROJECT")
-
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/claude-haiku-4-5@20251001",
-            vertex_project=vertex_project,
-            vertex_location="us-central1",
+            vertex_project=get_claude_vertex_project(),
+            vertex_location=get_claude_vertex_location(),
         )
 
         # Verify configuration is set correctly
@@ -187,18 +211,18 @@ class TestVertexAIAnthropicConfiguration:
         assert "claude" in llm.model_name.lower()
 
     @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
+        not get_claude_vertex_project(),
+        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
     )
     @pytest.mark.asyncio
     async def test_vertex_ai_supports_multiple_regions(self):
-        """Test that Vertex AI works with different regions."""
-        # Test with explicit region
+        """Test that Vertex AI works with different regions (fallback to global)."""
+        # Test with 'global' region as fallback
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/claude-haiku-4-5@20251001",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="global",  # Different region
+            vertex_project=get_claude_vertex_project(),
+            vertex_location="global",  # Fallback region
         )
 
         messages = [HumanMessage(content="Hello")]
@@ -226,15 +250,15 @@ class TestVertexAIAnthropicErrorHandling:
             provider="vertex_ai",
             model_name="vertex_ai/claude-haiku-4-5@20251001",
             vertex_project=None,  # No project specified
-            vertex_location="us-central1",
+            vertex_location=get_claude_vertex_location(),
         )
 
         # The factory should be created, but invocation may fail without credentials
         assert llm is not None
 
     @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
+        not get_claude_vertex_project(),
+        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
     )
     @pytest.mark.asyncio
     async def test_vertex_ai_invalid_model_name(self):
@@ -242,8 +266,8 @@ class TestVertexAIAnthropicErrorHandling:
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/invalid-model-name",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
-            vertex_location="us-central1",
+            vertex_project=get_claude_vertex_project(),
+            vertex_location=get_claude_vertex_location(),
         )
 
         messages = [HumanMessage(content="Hello")]

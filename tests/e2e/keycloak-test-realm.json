@@ -9,6 +9,27 @@
   "ssoSessionMaxLifespan": 36000,
   "clients": [
     {
+      "clientId": "admin-cli-service",
+      "name": "Admin CLI Service Account",
+      "description": "Service account for Admin API operations (replaces password grant for admin user)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "admin-cli-test-secret",
+      "directAccessGrantsEnabled": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "web-origins",
+        "profile",
+        "roles",
+        "email"
+      ]
+    },
+    {
       "clientId": "mcp-server",
       "name": "MCP Server Test Client",
       "enabled": true,

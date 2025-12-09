@@ -1,0 +1,33 @@
+# OpenShift Security Context Patch for PostgreSQL
+# ================================================
+# Configures PostgreSQL StatefulSet for OpenShift restricted-v2 SCC.
+#
+# PostgreSQL Alpine image runs as UID 70 (postgres user), but
+# OpenShift will assign an arbitrary UID. fsGroup: 0 ensures
+# the postgres data directory is accessible.
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        # runAsUser omitted - OpenShift assigns arbitrary UID
+        runAsGroup: 0  # Root group for file access
+        fsGroup: 0     # Root group for volume ownership (critical for /var/lib/postgresql)
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgres
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false  # PostgreSQL needs to write to data directory
+            runAsNonRoot: true
+            # runAsUser omitted - OpenShift assigns arbitrary UID
+            runAsGroup: 0
+            capabilities:
+              drop:
+                - ALL

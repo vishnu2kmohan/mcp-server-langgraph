@@ -45,6 +45,11 @@ spec:
         # Build-time options (--health-enabled, --metrics-enabled) are baked
         # into the image via ENV variables in docker/Dockerfile.keycloak
         # They CANNOT be passed at runtime with --optimized
+        env:
+        # JVM memory settings for production (2Gi limit)
+        # Scaled proportionally: -Xmx ≈ 75% of container limit
+        - name: JAVA_OPTS_APPEND
+          value: "-Xms1g -Xmx1536m -XX:MaxMetaspaceSize=256m"
         args:
         - start
         - --optimized

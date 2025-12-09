@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
+import React, { useCallback, useState, useEffect, useRef, Component, ErrorInfo, ReactNode } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -10,9 +10,11 @@ import ReactFlow, {
   Background,
   MiniMap,
   Panel,
+  useReactFlow,
+  ReactFlowProvider,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Download, Save, Code2, FileJson, Loader2, AlertCircle, AlertTriangle, CheckCircle2, Undo2, Redo2, Sun, Moon } from 'lucide-react';
+import { Download, Save, Code2, FileJson, Loader2, AlertCircle, AlertTriangle, CheckCircle2, Undo2, Redo2, Sun, Moon, Trash2, Settings } from 'lucide-react';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useWorkflowValidation } from './hooks/useWorkflowValidation';
 import { useUndoRedo } from './hooks/useUndoRedo';
@@ -139,6 +141,17 @@ function AppContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    nodeId: string;
+  } | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
+  // Selected nodes for deletion
+  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
+
   // ==============================================================================
   // Dark Mode
   // ==============================================================================
@@ -174,10 +187,101 @@ function AppContent() {
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       setSelectedNode(node as WorkflowNode);
+      setSelectedNodeIds([node.id]);
       setIsConfigModalOpen(true);
+      setContextMenu(null); // Close context menu on node click
     },
     []
   );
+
+  // Handle node selection change (for multi-select and deletion)
+  const onSelectionChange = useCallback(
+    ({ nodes: selectedNodes }: { nodes: Node[]; edges: Edge[] }) => {
+      setSelectedNodeIds(selectedNodes.map((n) => n.id));
+    },
+    []
+  );
+
+  // Handle node right-click for context menu
+  const onNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      event.preventDefault();
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        nodeId: node.id,
+      });
+      setSelectedNode(node as WorkflowNode);
+    },
+    []
+  );
+
+  // Delete selected nodes (excluding protected Start node)
+  const deleteSelectedNodes = useCallback(() => {
+    const nodesToDelete = selectedNodeIds.filter((id) => id !== 'start');
+    const protectedNodeAttempted = selectedNodeIds.includes('start');
+
+    if (protectedNodeAttempted && nodesToDelete.length === 0) {
+      toast.error('Cannot delete the Start node');
+      return;
+    }
+
+    if (nodesToDelete.length > 0) {
+      takeSnapshot();
+      setNodes((nds) => nds.filter((n) => !nodesToDelete.includes(n.id)));
+      // Also remove edges connected to deleted nodes
+      setEdges((eds) =>
+        eds.filter(
+          (e) => !nodesToDelete.includes(e.source) && !nodesToDelete.includes(e.target)
+        )
+      );
+      toast.success(
+        `Deleted ${nodesToDelete.length} node${nodesToDelete.length > 1 ? 's' : ''}`
+      );
+
+      if (protectedNodeAttempted) {
+        toast.info('Start node was preserved (required)');
+      }
+    }
+
+    setContextMenu(null);
+  }, [selectedNodeIds, setNodes, setEdges, takeSnapshot]);
+
+  // Delete specific node by ID
+  const deleteNode = useCallback(
+    (nodeId: string) => {
+      if (nodeId === 'start') {
+        toast.error('Cannot delete the Start node');
+        return;
+      }
+
+      takeSnapshot();
+      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+      setEdges((eds) =>
+        eds.filter((e) => e.source !== nodeId && e.target !== nodeId)
+      );
+      toast.success('Node deleted');
+      setContextMenu(null);
+    },
+    [setNodes, setEdges, takeSnapshot]
+  );
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        contextMenuRef.current &&
+        !contextMenuRef.current.contains(event.target as globalThis.Node)
+      ) {
+        setContextMenu(null);
+      }
+    };
+
+    if (contextMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [contextMenu]);
 
   // Handle node configuration save
   const handleNodeConfigSave = useCallback(
@@ -324,6 +428,13 @@ function AppContent() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle shortcuts when typing in inputs
+      const target = e.target as HTMLElement;
+      const isInputField =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable;
+
       // Ctrl+S or Cmd+S for save
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
@@ -344,11 +455,22 @@ function AppContent() {
         e.preventDefault();
         if (canRedo) redo();
       }
+      // Delete or Backspace to delete selected nodes (only when not in input fields)
+      if (!isInputField && (e.key === 'Delete' || e.key === 'Backspace')) {
+        e.preventDefault();
+        if (selectedNodeIds.length > 0) {
+          deleteSelectedNodes();
+        }
+      }
+      // Escape to close context menu
+      if (e.key === 'Escape') {
+        setContextMenu(null);
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [nodes, edges, workflowName, workflowDescription, isGenerating, isSaving, canUndo, canRedo, undo, redo]);
+  }, [nodes, edges, workflowName, workflowDescription, isGenerating, isSaving, canUndo, canRedo, undo, redo, selectedNodeIds, deleteSelectedNodes]);
 
   // ==============================================================================
   // Render
@@ -513,6 +635,10 @@ function AppContent() {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onNodeClick={onNodeClick}
+            onNodeContextMenu={onNodeContextMenu}
+            onSelectionChange={onSelectionChange}
+            onPaneClick={() => setContextMenu(null)}
+            deleteKeyCode={null}
             fitView
           >
             <Background />
@@ -582,6 +708,60 @@ function AppContent() {
               </div>
             </Panel>
           </ReactFlow>
+
+          {/* Context Menu */}
+          {contextMenu && (
+            <div
+              ref={contextMenuRef}
+              data-testid="context-menu"
+              className={`absolute z-50 min-w-[160px] rounded-lg shadow-lg border ${
+                isDarkMode
+                  ? 'bg-gray-800 border-gray-600'
+                  : 'bg-white border-gray-200'
+              }`}
+              style={{
+                left: contextMenu.x,
+                top: contextMenu.y,
+              }}
+              role="menu"
+            >
+              <button
+                onClick={() => {
+                  if (selectedNode) {
+                    setIsConfigModalOpen(true);
+                  }
+                  setContextMenu(null);
+                }}
+                role="menuitem"
+                className={`w-full px-4 py-2 text-left flex items-center gap-2 rounded-t-lg ${
+                  isDarkMode
+                    ? 'text-white hover:bg-gray-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Settings size={16} />
+                Configure Node
+              </button>
+              <button
+                onClick={() => deleteNode(contextMenu.nodeId)}
+                role="menuitem"
+                disabled={contextMenu.nodeId === 'start'}
+                className={`w-full px-4 py-2 text-left flex items-center gap-2 rounded-b-lg ${
+                  contextMenu.nodeId === 'start'
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : isDarkMode
+                    ? 'text-red-400 hover:bg-gray-700'
+                    : 'text-red-600 hover:bg-gray-100'
+                }`}
+              >
+                <Trash2 size={16} />
+                Delete Node
+                {contextMenu.nodeId === 'start' && (
+                  <span className="text-xs ml-auto">(protected)</span>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Code Panel */}

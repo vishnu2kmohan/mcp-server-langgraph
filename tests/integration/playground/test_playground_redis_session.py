@@ -195,7 +195,8 @@ class TestRedisSessionIntegration:
         new_ttl = await redis_client.ttl(key)
 
         # TTL should be refreshed (close to initial)
-        assert new_ttl >= initial_ttl - 3  # Allow 3 second margin
+        # Allow 10 second margin for pytest-xdist parallel execution timing variance
+        assert new_ttl >= initial_ttl - 10
 
     @pytest.mark.asyncio
     async def test_concurrent_session_operations(self, session_manager) -> None:

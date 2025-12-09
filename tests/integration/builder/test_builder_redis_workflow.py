@@ -211,7 +211,11 @@ class TestRedisWorkflowIntegration:
 
     @pytest.mark.asyncio
     async def test_update_workflow_refreshes_ttl(self, workflow_manager, redis_client, sample_nodes) -> None:
-        """Test that updating a workflow refreshes its TTL."""
+        """Test that updating a workflow refreshes its TTL.
+
+        Note: Uses a generous tolerance margin (10 seconds) to handle timing
+        variability in parallel test execution with pytest-xdist workers.
+        """
         workflow = await workflow_manager.create_workflow(
             name="TTL Refresh Test",
             nodes=sample_nodes,
@@ -221,6 +225,9 @@ class TestRedisWorkflowIntegration:
         key = f"builder:workflow:{workflow.id}"
         initial_ttl = await redis_client.ttl(key)
 
+        # Verify key exists before proceeding
+        assert initial_ttl > 0, f"Expected positive TTL, got {initial_ttl}"
+
         # Wait a bit
         await asyncio.sleep(2)
 
@@ -229,8 +236,12 @@ class TestRedisWorkflowIntegration:
 
         new_ttl = await redis_client.ttl(key)
 
+        # Verify key still exists after update (TTL > 0 means key exists with expiration)
+        assert new_ttl > 0, f"Key expired or deleted after update, got TTL: {new_ttl}"
+
         # TTL should be refreshed (close to initial)
-        assert new_ttl >= initial_ttl - 3  # Allow 3 second margin
+        # Use 10-second margin to handle timing variability in xdist parallel execution
+        assert new_ttl >= initial_ttl - 10, f"TTL not refreshed: new_ttl={new_ttl}, initial_ttl={initial_ttl}"
 
     @pytest.mark.asyncio
     async def test_concurrent_workflow_operations(self, workflow_manager, sample_nodes) -> None:

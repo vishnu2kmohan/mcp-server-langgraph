@@ -132,6 +132,13 @@ spec:
         # This allows Keycloak to be served at /authn/* via Traefik
         - name: KC_HTTP_RELATIVE_PATH
           value: /authn
+        # JVM memory settings to prevent OOM (matches docker-compose.test.yml)
+        # Keycloak 26.x with Quarkus defaults to -XX:MaxRAMPercentage=70 which can
+        # exceed container limits during startup. Explicit heap limits ensure
+        # predictable memory usage: -Xms (initial) + -Xmx (max) + metaspace.
+        # Base settings for 2Gi limit; override in overlays for different limits.
+        - name: JAVA_OPTS_APPEND
+          value: "-Xms512m -Xmx1536m -XX:MaxMetaspaceSize=256m"
         startupProbe:
           httpGet:
             path: /authn/health/started

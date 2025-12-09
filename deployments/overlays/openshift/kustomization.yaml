@@ -1,0 +1,124 @@
+# OpenShift Overlay for MCP Server LangGraph
+# ============================================
+# This overlay provides OpenShift-compatible security contexts for all services.
+#
+# OpenShift Security Context Constraints (SCC):
+# - restricted-v2 SCC is the default for all namespaces
+# - Containers run with arbitrary UIDs assigned by OpenShift
+# - All processes must belong to GID 0 (root group) for file access
+# - Dockerfiles use g=u permissions pattern (group gets user permissions)
+#
+# Usage:
+#   oc apply -k deployments/overlays/openshift
+#   # or
+#   kustomize build deployments/overlays/openshift | oc apply -f -
+#
+# References:
+#   - https://developers.redhat.com/blog/2020/10/26/adapting-docker-and-kubernetes-containers-to-run-on-red-hat-openshift-container-platform
+#   - https://docs.openshift.com/container-platform/latest/authentication/managing-security-context-constraints.html
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mcp-server-langgraph
+
+# Base configuration
+resources:
+  - ../../base
+
+# OpenShift-specific annotations
+commonAnnotations:
+  platform: openshift
+  managed-by: kustomize
+
+labels:
+  - pairs:
+      environment: openshift
+      platform: openshift
+      scc: restricted-v2
+
+# Strategic merge patches for OpenShift security contexts
+patches:
+  # MCP Server deployment - OpenShift security context
+  - path: mcp-server-patch.yaml
+    target:
+      kind: Deployment
+      name: mcp-server-langgraph
+
+  # MCP Server - Remove runAsUser from containers (OpenShift assigns arbitrary UID)
+  - path: mcp-server-json-patch.yaml
+    target:
+      kind: Deployment
+      name: mcp-server-langgraph
+
+  # Keycloak deployment - OpenShift security context
+  - path: keycloak-patch.yaml
+    target:
+      kind: Deployment
+      name: keycloak
+
+  # Keycloak - Remove runAsUser from containers
+  - path: keycloak-json-patch.yaml
+    target:
+      kind: Deployment
+      name: keycloak
+
+  # OpenFGA deployment - OpenShift security context
+  - path: openfga-patch.yaml
+    target:
+      kind: Deployment
+      name: openfga
+
+  # OpenFGA - Remove runAsUser from containers
+  - path: openfga-json-patch.yaml
+    target:
+      kind: Deployment
+      name: openfga
+
+  # Qdrant deployment - OpenShift security context
+  - path: qdrant-patch.yaml
+    target:
+      kind: Deployment
+      name: qdrant
+
+  # Qdrant - Remove runAsUser from container
+  - path: qdrant-json-patch.yaml
+    target:
+      kind: Deployment
+      name: qdrant
+
+  # PostgreSQL StatefulSet - OpenShift security context
+  - path: postgres-patch.yaml
+    target:
+      kind: StatefulSet
+      name: postgres
+
+  # PostgreSQL - Remove runAsUser from containers
+  - path: postgres-json-patch.yaml
+    target:
+      kind: StatefulSet
+      name: postgres
+
+  # Redis StatefulSet - OpenShift security context
+  - path: redis-patch.yaml
+    target:
+      kind: StatefulSet
+      name: redis-session
+
+  # Redis - Remove runAsUser from container
+  - path: redis-json-patch.yaml
+    target:
+      kind: StatefulSet
+      name: redis-session
+
+  # OpenTelemetry Collector deployment - OpenShift security context
+  - path: otel-collector-patch.yaml
+    target:
+      kind: Deployment
+      name: otel-collector
+
+  # OTel Collector - Remove runAsUser from container
+  - path: otel-collector-json-patch.yaml
+    target:
+      kind: Deployment
+      name: otel-collector

@@ -1,0 +1,43 @@
+# OpenShift Security Context Patch for Keycloak
+# ==============================================
+# Configures Keycloak deployment for OpenShift restricted-v2 SCC.
+#
+# Keycloak runs as UID 1000 in its official image, but OpenShift
+# will assign an arbitrary UID. The fsGroup: 0 ensures volumes
+# are accessible via group permissions.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        # runAsUser omitted - OpenShift assigns arbitrary UID
+        runAsGroup: 0  # Root group for file access
+        fsGroup: 0     # Root group for volume ownership
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: wait-for-postgres
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsGroup: 0
+            capabilities:
+              drop:
+                - ALL
+      containers:
+        - name: keycloak
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            # runAsUser omitted - OpenShift assigns arbitrary UID
+            runAsGroup: 0
+            capabilities:
+              drop:
+                - ALL
