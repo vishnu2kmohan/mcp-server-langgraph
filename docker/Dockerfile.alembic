@@ -1,0 +1,80 @@
+# Alembic Migration Dockerfile
+# ============================
+# Minimal image for running database migrations (~150MB)
+#
+# This image is purpose-built for the single task of running Alembic migrations.
+# It only includes the bare minimum dependencies needed to connect to PostgreSQL
+# and execute migration scripts.
+#
+# USAGE:
+#   docker build -f docker/Dockerfile.alembic -t alembic-migrate .
+#   docker run -e POSTGRES_HOST=postgres alembic-migrate
+#
+# DEPENDENCIES:
+#   - alembic: Database migration tool
+#   - sqlalchemy[asyncio]: ORM with async support
+#   - asyncpg: PostgreSQL async driver
+#   - pyyaml: YAML parsing (required by alembic env.py)
+#
+# SIZE COMPARISON:
+#   - Dockerfile.test: ~2GB (includes pytest, mypy, etc.)
+#   - Dockerfile.alembic: ~150MB (migration deps only)
+#
+# OPENSHIFT COMPATIBILITY:
+#   - Uses numeric UID (1001) in USER directive
+#   - Files owned by UID:0 (root group) for arbitrary UID support
+#   - Group permissions set with g=u for OpenShift restricted-v2 SCC
+#   - See: https://developers.redhat.com/articles/2021/11/11/best-practices-building-images-pass-red-hat-container-certification
+#
+# REFERENCES:
+#   - https://docs.astral.sh/uv/guides/integration/docker/
+#   - https://alembic.sqlalchemy.org/en/latest/
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install uv - Fast Python package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Copy only Alembic-related files (minimal context)
+COPY alembic.ini ./
+COPY alembic/ ./alembic/
+
+# Install ONLY the dependencies needed for migrations
+# Using uv pip install to avoid building the local package
+# Versions pinned to match pyproject.toml for consistency
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install --system --no-cache \
+    "alembic>=1.17.2" \
+    "sqlalchemy[asyncio]>=2.0.44" \
+    "asyncpg>=0.29.0" \
+    "pyyaml>=6.0.3"
+
+# Environment configuration
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    HOME=/app
+
+# Create non-root user with GID 0 for OpenShift arbitrary UID support
+# OpenShift runs containers with arbitrary UIDs in GID 0 (root group)
+# The container user is always a member of the root group
+RUN useradd -u 1001 -g 0 -d /app -s /sbin/nologin appuser && \
+    chown -R 1001:0 /app && chmod -R g=u /app
+
+# Drop privileges - use numeric UID for OpenShift compatibility
+USER 1001
+
+# OCI Image Labels
+LABEL org.opencontainers.image.title="Alembic Migrations"
+LABEL org.opencontainers.image.description="Minimal image for PostgreSQL database migrations"
+LABEL org.opencontainers.image.vendor="MCP Server LangGraph"
+LABEL org.opencontainers.image.size="~150MB"
+LABEL io.openshift.tags="database,migrations,alembic,postgresql"
+LABEL io.k8s.description="Minimal image for PostgreSQL database migrations using Alembic"
+
+# Default command runs all migrations
+CMD ["alembic", "upgrade", "head"]
+
+# No health check needed - this is a run-once container
+HEALTHCHECK NONE

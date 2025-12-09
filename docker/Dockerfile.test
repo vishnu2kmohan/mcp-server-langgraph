@@ -8,6 +8,12 @@
 #   - Test environment variables pre-configured
 #   - Fast builds with layer caching and lockfile
 #
+# OPENSHIFT COMPATIBILITY:
+#   - Uses numeric UID (1001) in USER directive
+#   - Files owned by UID:0 (root group) for arbitrary UID support
+#   - Group permissions set with g=u for OpenShift restricted SCC
+#   - See: https://developers.redhat.com/blog/2020/10/26/adapting-docker-and-kubernetes-containers-to-run-on-red-hat-openshift-container-platform
+#
 # REFERENCES:
 #   - https://docs.astral.sh/uv/guides/integration/docker/
 #   - https://hynek.me/articles/docker-uv/
@@ -56,21 +62,34 @@ COPY alembic/ ./alembic/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --extra dev
 
+# Create non-root user with GID 0 for OpenShift arbitrary UID support
+# OpenShift runs containers with arbitrary UIDs in GID 0
+RUN useradd -u 1001 -g 0 -d /app -s /bin/bash appuser && \
+    chown -R 1001:0 /app && chmod -R g=u /app
+
+# Drop privileges - use numeric UID for OpenShift compatibility
+USER 1001
+
 # Set test environment variables
-ENV TESTING=true
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+ENV TESTING=true \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    HOME=/app
 
 # Add venv to PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Disable observability during tests for cleaner output
-ENV ENABLE_TRACING=false
-ENV ENABLE_METRICS=false
-ENV ENABLE_CONSOLE_EXPORT=false
+ENV ENABLE_TRACING=false \
+    ENABLE_METRICS=false \
+    ENABLE_CONSOLE_EXPORT=false
 
 # Set pytest default options
 ENV PYTEST_ADDOPTS="-v --tb=short --strict-markers"
+
+# OpenShift / Kubernetes labels
+LABEL io.openshift.tags="mcp,langgraph,test"
+LABEL io.k8s.description="Test runner for MCP Server LangGraph"
 
 # Default command runs integration tests using uv run
 # Can be overridden in docker-compose or docker run

@@ -21,6 +21,12 @@
 #   - 62% smaller base image (530MB → 200MB)
 #   - 94% smaller test image (13.3GB → 800MB)
 #
+# OPENSHIFT COMPATIBILITY:
+#   - Uses numeric UID (1001) in USER directive
+#   - Files owned by UID:0 (root group) for arbitrary UID support
+#   - Group permissions set with g=u for OpenShift restricted SCC
+#   - See: https://developers.redhat.com/blog/2020/10/26/adapting-docker-and-kubernetes-containers-to-run-on-red-hat-openshift-container-platform
+#
 # REFERENCES:
 #   - https://docs.astral.sh/uv/guides/integration/docker/
 #   - https://hynek.me/articles/docker-uv/
@@ -119,39 +125,58 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # STAGE: runtime-distroless
 # Python 3.12 slim runtime (compatible with our build stage)
 # Note: Switched from distroless due to Python 3.11 vs 3.12 incompatibility
+#
+# OPENSHIFT COMPATIBILITY:
+#   - User created with GID 0 (root group) for arbitrary UID support
+#   - Numeric UID used in USER directive
+#   - /app owned by 1001:0 with g=u permissions
+#   - USER directive set in final stages after file copies
 # ==============================================================================
 FROM python:3.12-slim AS runtime-distroless
 
-RUN useradd -r -u 65532 -g users nonroot
+# Create user with GID 0 (root group) for OpenShift arbitrary UID support
+# OpenShift runs containers with arbitrary UIDs in GID 0
+RUN useradd -u 1001 -g 0 -d /app -s /sbin/nologin appuser && \
+    mkdir -p /app && chown -R 1001:0 /app && chmod -R g=u /app
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PATH=/home/nonroot/.local/bin:$PATH \
-    PORT=8000
+    PATH=/app/.local/bin:$PATH \
+    PORT=8000 \
+    HOME=/app
 
 WORKDIR /app
 
-USER nonroot
+# NOTE: USER directive moved to final stages after file copies
+# This allows COPY --chown to work, then we set permissions and drop privileges
 
 # ==============================================================================
 # STAGE: runtime-slim
 # Slim Python runtime (for test variant, needs shell)
+#
+# OPENSHIFT COMPATIBILITY:
+#   - User created with GID 0 (root group) for arbitrary UID support
+#   - /app owned by 1001:0 with g=u permissions
 # ==============================================================================
 FROM python:${PYTHON_VERSION}-slim AS runtime-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    TESTING=true
+    TESTING=true \
+    HOME=/app
 
 WORKDIR /app
 
 # Install runtime dependencies for tests (curl for health checks)
+# Create user with GID 0 for OpenShift arbitrary UID support
 RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-runtime-slim,sharing=private \
     --mount=type=cache,target=/var/lib/apt,id=apt-lib-runtime-slim,sharing=private \
     apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -u 1001 -g 0 -d /app -s /bin/bash appuser \
+    && chown -R 1001:0 /app && chmod -R g=u /app
 
 # ==============================================================================
 # FINAL STAGE: base variant (distroless)
@@ -159,19 +184,28 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-runtime-slim,sharing=p
 FROM runtime-distroless AS final-base
 
 # Copy virtual environment from build stage
-COPY --from=build-base --chown=nonroot:users /app/.venv /app/.venv
+# Use 1001:0 ownership for OpenShift arbitrary UID support
+COPY --from=build-base --chown=1001:0 /app/.venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy application code
-COPY --chown=nonroot:nonroot src/ ./src/
-COPY --chown=nonroot:nonroot pyproject.toml ./
+# Copy application code with OpenShift-compatible ownership
+COPY --chown=1001:0 src/ ./src/
+COPY --chown=1001:0 pyproject.toml ./
+
+# Ensure group-writable for OpenShift arbitrary UID
+RUN chmod -R g=u /app
+
+# Drop privileges - use numeric UID for OpenShift compatibility
+USER 1001
 
 # Metadata
 LABEL org.opencontainers.image.title="MCP Server LangGraph (Base)"
 LABEL org.opencontainers.image.description="Lightweight MCP server with API-based embeddings"
 LABEL org.opencontainers.image.variant="base"
 LABEL org.opencontainers.image.size="~200MB"
+LABEL io.openshift.tags="mcp,langgraph,llm,agent"
+LABEL io.k8s.description="MCP server with LangGraph for AI agent orchestration"
 
 EXPOSE 8000
 
@@ -184,19 +218,28 @@ CMD ["python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
 FROM runtime-distroless AS final-full
 
 # Copy virtual environment from build stage
-COPY --from=build-full --chown=nonroot:users /app/.venv /app/.venv
+# Use 1001:0 ownership for OpenShift arbitrary UID support
+COPY --from=build-full --chown=1001:0 /app/.venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy application code
-COPY --chown=nonroot:nonroot src/ ./src/
-COPY --chown=nonroot:nonroot pyproject.toml ./
+# Copy application code with OpenShift-compatible ownership
+COPY --chown=1001:0 src/ ./src/
+COPY --chown=1001:0 pyproject.toml ./
+
+# Ensure group-writable for OpenShift arbitrary UID
+RUN chmod -R g=u /app
+
+# Drop privileges - use numeric UID for OpenShift compatibility
+USER 1001
 
 # Metadata
 LABEL org.opencontainers.image.title="MCP Server LangGraph (Full)"
 LABEL org.opencontainers.image.description="Complete MCP server with local embeddings support"
 LABEL org.opencontainers.image.variant="full"
 LABEL org.opencontainers.image.size="~1.2GB"
+LABEL io.openshift.tags="mcp,langgraph,llm,agent,embeddings"
+LABEL io.k8s.description="MCP server with LangGraph and local embeddings support"
 
 EXPOSE 8000
 
@@ -209,18 +252,25 @@ CMD ["python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
 FROM runtime-slim AS final-test
 
 # Copy virtual environment from builder
-COPY --from=build-test /app/.venv /app/.venv
+# Use 1001:0 ownership for OpenShift arbitrary UID support
+COPY --from=build-test --chown=1001:0 /app/.venv /app/.venv
 
-# Copy application and test code
-COPY src/ ./src/
-COPY tests/ ./tests/
-COPY pyproject.toml ./
+# Copy application and test code with OpenShift-compatible ownership
+COPY --chown=1001:0 src/ ./src/
+COPY --chown=1001:0 tests/ ./tests/
+COPY --chown=1001:0 pyproject.toml ./
 
 # Copy additional directories required by tests
 # NOTE: Per ADR-0053, scripts/ and deployments/ are NOT copied to the Docker image.
 # Meta-tests that require these directories run on the host, not in the container.
 # Only adr/ is copied for documentation purposes.
-COPY adr/ ./adr/
+COPY --chown=1001:0 adr/ ./adr/
+
+# Ensure group-writable for OpenShift arbitrary UID
+RUN chmod -R g=u /app
+
+# Drop privileges - use numeric UID for OpenShift compatibility
+USER 1001
 
 # Set PATH to use virtual environment
 ENV PATH="/app/.venv/bin:$PATH"
@@ -235,6 +285,8 @@ LABEL org.opencontainers.image.title="MCP Server LangGraph (Test)"
 LABEL org.opencontainers.image.description="Test runner with dev dependencies"
 LABEL org.opencontainers.image.variant="test"
 LABEL org.opencontainers.image.size="~800MB"
+LABEL io.openshift.tags="mcp,langgraph,test"
+LABEL io.k8s.description="Test runner for MCP server with dev dependencies"
 
 # Default command runs integration tests
 CMD ["/app/.venv/bin/pytest", "-m", "integration", "-v", "--tb=short"]

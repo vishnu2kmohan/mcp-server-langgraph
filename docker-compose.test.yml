@@ -174,7 +174,7 @@ services:
   alembic-migrate-test:
     build:
       context: .
-      dockerfile: docker/Dockerfile.test
+      dockerfile: docker/Dockerfile.alembic
     # Run Alembic upgrade to apply all migrations to mcp_test database
     command: alembic upgrade head
     depends_on:

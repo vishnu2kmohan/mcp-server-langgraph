@@ -12,6 +12,12 @@
 #   - Keycloak for authentication (federated OIDC/OAuth2/SAML, LDAP/AD)
 #   - OpenFGA for fine-grained authorization (ReBAC)
 #
+# OPENSHIFT COMPATIBILITY:
+#   - Uses numeric UID (1001) in USER directive
+#   - Files owned by UID:0 (root group) for arbitrary UID support
+#   - Group permissions set with g=u for OpenShift restricted SCC
+#   - See: https://developers.redhat.com/blog/2020/10/26/adapting-docker-and-kubernetes-containers-to-run-on-red-hat-openshift-container-platform
+#
 # USAGE:
 #   docker build -f docker/Dockerfile.builder -t builder .
 #   docker run -p 8001:8001 \
@@ -87,21 +93,23 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Copy built frontend from stage 1
 # Place in builder/frontend/dist to match SPAStaticFiles path expectations
-COPY --from=frontend-builder /frontend/dist ./src/mcp_server_langgraph/builder/frontend/dist/
+COPY --from=frontend-builder --chown=1001:0 /frontend/dist ./src/mcp_server_langgraph/builder/frontend/dist/
 
-# Create non-root user for security (DS002 compliance)
-RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
+# Create non-root user with GID 0 for OpenShift arbitrary UID support
+# OpenShift runs containers with arbitrary UIDs in GID 0
+RUN useradd -u 1001 -g 0 -d /app -s /sbin/nologin appuser && \
+    chown -R 1001:0 /app && chmod -R g=u /app
 
-# Switch to non-root user
-USER appuser
+# Drop privileges - use numeric UID for OpenShift compatibility
+USER 1001
 
 # Add venv to PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Environment configuration (12-factor: config via env vars)
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    HOME=/app
 
 # Expose API port
 EXPOSE 8001
@@ -110,6 +118,10 @@ EXPOSE 8001
 # Matches /api/builder/health endpoint (no auth required)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl --fail http://localhost:8001/api/builder/health || exit 1
+
+# OpenShift / Kubernetes labels
+LABEL io.openshift.tags="mcp,langgraph,builder,react"
+LABEL io.k8s.description="Visual Workflow Builder for MCP Server LangGraph"
 
 # Run the unified server
 # --host 0.0.0.0: Bind to all interfaces (required for container networking)
