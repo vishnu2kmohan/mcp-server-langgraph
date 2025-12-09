@@ -1726,7 +1726,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                 content = params.get("content")
 
                 mcp_server = get_mcp_server()
-                result = await mcp_server.handle_elicitation_response(
+                elicitation_result = await mcp_server.handle_elicitation_response(
                     elicitation_id=elicitation_id,
                     action=action,
                     content=content,
@@ -1735,7 +1735,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                 response = {
                     "jsonrpc": "2.0",
                     "id": message_id,
-                    "result": result,
+                    "result": elicitation_result,
                 }
                 return JSONResponse(response)
 
@@ -1761,7 +1761,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                 mcp_server = get_mcp_server()
 
                 # Convert message data to SamplingMessage objects
-                messages = [
+                sampling_messages: list[SamplingMessage] = [
                     SamplingMessage(
                         role=m.get("role", "user"),
                         content=SamplingMessageContent(
@@ -1774,7 +1774,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
 
                 # Create sampling request
                 sampling_request = mcp_server.sampling_handler.create_request(
-                    messages=messages,
+                    messages=sampling_messages,
                     model_preferences=ModelPreferences(**model_prefs) if model_prefs else None,
                     system_prompt=system_prompt,
                     max_tokens=max_tokens,
@@ -1799,7 +1799,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                 response_content = params.get("response")
 
                 mcp_server = get_mcp_server()
-                result = await mcp_server.handle_sampling_response(
+                sampling_result = await mcp_server.handle_sampling_response(
                     request_id=request_id,
                     action=action,
                     response_content=response_content,
@@ -1808,7 +1808,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                 response = {
                     "jsonrpc": "2.0",
                     "id": message_id,
-                    "result": result,
+                    "result": sampling_result,
                 }
                 return JSONResponse(response)
 
