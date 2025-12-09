@@ -71,6 +71,16 @@ services:
       qdrant:
         condition: service_healthy
 
+    restart: unless-stopped
+    init: true  # Proper process cleanup for Python app
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - mcp-network
 
@@ -78,6 +88,7 @@ services:
   # Redis 7.2 to match Memorystore (terraform/environments/gcp-preview/main.tf: redis_version = "REDIS_7_2")
   redis:
     image: redis:7.2-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
     networks:
@@ -87,6 +98,15 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   # PostgreSQL (multi-database: gdpr, openfga, keycloak)
   postgres:
@@ -110,6 +130,15 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   # OpenFGA (authorization)
   openfga:
@@ -137,6 +166,15 @@ services:
       timeout: 3s
       retries: 10
       start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   # Qdrant (vector database for context loading)
   qdrant:
@@ -155,6 +193,15 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
 
   # Jaeger (OpenTelemetry traces - optional)
   jaeger:
@@ -167,6 +214,15 @@ services:
       - mcp-network
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
 
 networks:
   mcp-network:

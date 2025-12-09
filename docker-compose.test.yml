@@ -151,7 +151,14 @@ services:
       interval: 3s  # Codex Fix: interval must be >= timeout
       timeout: 3s
       retries: 20  # Increased from 10 to allow more time for migrations (60s max)
-    # Note: deploy.resources.limits not supported in GitHub Actions
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
     networks:
       mcp-test-network:
         aliases:
@@ -226,7 +233,14 @@ services:
       timeout: 3s
       retries: 15
       start_period: 5s
-    # Note: deploy.resources.limits not supported in GitHub Actions
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
     networks:
       mcp-test-network:
         aliases:
@@ -299,8 +313,14 @@ services:
       timeout: 5s
       retries: 30
       start_period: 60s  # Per ADR-0053: Keycloak requires at least 60s to initialize
-    # Note: deploy.resources.limits not supported in GitHub Actions
-    # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 768M
+        reservations:
+          cpus: '0.1'
+          memory: 384M
     networks:
       mcp-test-network:
         aliases:
@@ -480,6 +500,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+    init: true  # Proper process cleanup for Python app
     deploy:
       resources:
         limits:
@@ -828,6 +849,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    init: true  # Proper process cleanup for Python app
     deploy:
       resources:
         limits:
@@ -911,6 +933,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    init: true  # Proper process cleanup for Python app
     deploy:
       resources:
         limits:
