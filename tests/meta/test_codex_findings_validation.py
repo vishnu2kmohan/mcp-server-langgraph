@@ -464,9 +464,10 @@ class TestDockerImageContents:
         stage_section = "\n".join(lines[stage_start:stage_end])
 
         # Validate required COPY commands present
-        assert "COPY src/" in stage_section, "Dockerfile must copy src/ directory"
-        assert "COPY tests/" in stage_section, "Dockerfile must copy tests/ directory"
-        assert "COPY pyproject.toml" in stage_section, "Dockerfile must copy pyproject.toml"
+        # Match COPY with optional flags like --chown=1001:0
+        assert "src/" in stage_section and "COPY" in stage_section, "Dockerfile must copy src/ directory"
+        assert "tests/" in stage_section and "COPY" in stage_section, "Dockerfile must copy tests/ directory"
+        assert "pyproject.toml" in stage_section and "COPY" in stage_section, "Dockerfile must copy pyproject.toml"
 
         # Validate scripts/ and deployments/ are NOT copied (ADR-0053 compliance)
         # Per ADR-0053: These directories must be excluded from Docker image.
