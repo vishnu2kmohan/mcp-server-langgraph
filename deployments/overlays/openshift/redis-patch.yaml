@@ -30,3 +30,13 @@ spec:
             capabilities:
               drop:
                 - ALL
+          # OpenShift CPU ratio compliance: max 4.0 ratio (limit/request)
+          # Base: 100m request / 500m limit = 5.0 ratio (violates 4.0 max)
+          # Fixed: 125m request / 500m limit = 4.0 ratio (compliant)
+          resources:
+            requests:
+              cpu: 125m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
