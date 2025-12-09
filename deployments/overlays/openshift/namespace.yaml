@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: mcp-server-langgraph
-  labels:
-    environment: openshift
-    app: mcp-server-langgraph
-    platform: openshift
-    scc: restricted-v2

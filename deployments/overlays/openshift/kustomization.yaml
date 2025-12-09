@@ -23,9 +23,9 @@ kind: Kustomization
 namespace: mcp-server-langgraph
 
 # Base configuration
+# NOTE: Namespace is provided by base/namespace.yaml - do not duplicate
 resources:
   - ../../base
-  - namespace.yaml
 
 # OpenShift-specific annotations
 commonAnnotations:
