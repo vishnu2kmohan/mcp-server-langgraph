@@ -1,4 +1,4 @@
-.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-builder-up test-builder-down test-playground-up test-playground-down test-infra-full-up test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-docker-image validate-all validate-workflows validate-pre-push test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build docs-deploy docs-validate docs-validate-mdx docs-validate-links docs-validate-version docs-validate-mintlify docs-fix-mdx docs-test docs-audit generate-reports pre-commit-setup git-hooks
+.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-up-build test-infra-down test-infra-logs test-builder-up test-builder-down test-playground-up test-playground-down test-e2e test-api test-mcp-server validate-openapi validate-deployments validate-docker-image validate-all validate-workflows validate-pre-push test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build docs-deploy docs-validate docs-validate-version docs-validate-mintlify docs-fix-mdx docs-test docs-audit generate-reports pre-commit-setup git-hooks
 
 # Sequential-only targets (cannot be parallelized)
 .NOTPARALLEL: deploy-production deploy-staging deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
@@ -117,6 +117,7 @@ Testing:
 	@echo ""
 	@echo "New Testing Features:"
 	@echo "  make test-infra-up            Start full test infrastructure (all services)"
+	@echo "  make test-infra-up-build      Rebuild and start test infrastructure"
 	@echo "  make test-infra-down          Stop and clean test infrastructure"
 	@echo "  make test-infra-logs          View test infrastructure logs"
 	@echo "  make test-gateway-status      Check gateway health and routes"
@@ -124,8 +125,6 @@ Testing:
 	@echo "  make test-e2e                 Run end-to-end tests (full user journeys)"
 	@echo "  make test-api                 Run API endpoint tests"
 	@echo "  make test-mcp-server          Run MCP server unit tests"
-	@echo "  make test-new                 Run all newly added tests"
-	@echo "  make test-quick-new           Quick check of new tests (parallel)"
 	@echo ""
 	@echo "Validation:"
 	@echo "  make validate-pre-push        🚀 Run comprehensive pre-push validation (CI-equivalent)"
@@ -268,10 +267,6 @@ test-integration:
 test-integration-services:
 	@echo "Starting integration test services only..."
 	./scripts/test-integration.sh --services
-
-test-integration-build:
-	@echo "Rebuilding and running integration tests..."
-	./scripts/test-integration.sh --build
 
 test-integration-debug:
 	@echo "Running integration tests (keep containers for debugging)..."
@@ -488,6 +483,11 @@ test-infra-up:
 	@echo "  Alloy:        http://localhost:12345"
 	@echo ""
 
+test-infra-up-build:
+	@echo "Rebuilding and starting full test infrastructure..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d --build
+	@echo "✓ Full test infrastructure rebuilt and started!"
+
 test-infra-down:
 	@echo "Stopping test infrastructure..."
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml down -v --remove-orphans
@@ -552,12 +552,6 @@ test-playground-down:
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml stop playground-test
 	@echo "✓ Playground stopped"
 
-# DEPRECATED: Use test-infra-up instead (now consolidated to include all services)
-# Kept for backwards compatibility - redirects to test-infra-up
-test-infra-full-up: test-infra-up
-	@echo "NOTE: 'make test-infra-full-up' is deprecated. Use 'make test-infra-up' instead."
-	@echo "      test-infra-up now starts the complete infrastructure including Builder and Playground."
-
 test-e2e:
 	@echo "Running end-to-end tests (parallel execution, requires test infrastructure)..."
 	@echo "Ensuring test infrastructure is running..."
@@ -577,20 +571,8 @@ test-api:
 
 test-mcp-server:
 	@echo "Running MCP server unit tests (parallel execution)..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto tests/unit/test_mcp_stdio_server.py tests/test_mcp_streamable.py -v
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto tests/unit/mcp/test_mcp_stdio_server.py tests/integration/test_mcp_streamable.py -v
 	@echo "✓ MCP server tests complete"
-
-test-new:
-	@echo "Running newly added tests (parallel execution)..."
-	@echo ""
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto tests/api/ tests/unit/test_mcp_stdio_server.py -v
-	@echo ""
-	@echo "✓ All new tests complete"
-
-test-quick-new:
-	@echo "Quick check of newly added tests (parallel, no verbose)..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto tests/api/ tests/unit/test_mcp_stdio_server.py
-	@echo "✓ Quick test complete"
 
 # Validation
 validate-openapi:
