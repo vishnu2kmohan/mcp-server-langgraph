@@ -25,6 +25,7 @@ namespace: mcp-server-langgraph
 # Base configuration
 resources:
   - ../../base
+  - namespace.yaml
 
 # OpenShift-specific annotations
 commonAnnotations:
