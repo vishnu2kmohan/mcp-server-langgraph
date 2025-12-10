@@ -227,9 +227,16 @@ async def openfga_client_real(integration_test_env, test_infrastructure_ports):
                 )
                 pytest.skip(error_msg)
 
-    return client
+    yield client
 
-    # Cleanup happens per-test
+    # Session-level cleanup: Close OpenFGA client to prevent aiohttp session leaks
+    # Per-test cleanup (tuple deletion) happens in openfga_client_clean fixture
+    logging.info("Closing OpenFGA client session...")
+    try:
+        await client.close()
+        logging.debug("OpenFGA client closed successfully")
+    except Exception as e:
+        logging.warning(f"Error closing OpenFGA client: {e}")
 
 
 # =============================================================================

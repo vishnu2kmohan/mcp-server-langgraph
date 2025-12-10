@@ -72,12 +72,15 @@ async def openfga_seeded_tuples(test_infrastructure):
         "tools": ["agent_chat", "conversation_get", "conversation_search", "search_tools"],
     }
 
-    # Cleanup: Delete created tuples
+    # Cleanup: Delete created tuples and close client
     try:
         await client.delete_tuples(tuples_to_create)
     except Exception:
         # Cleanup failure is non-critical - tuples will be orphaned but won't affect other tests
         pass
+    finally:
+        # Close the OpenFGA client to prevent "Unclosed client session" warnings
+        await client.close()
 
 
 @pytest_asyncio.fixture
@@ -128,11 +131,14 @@ async def openfga_admin_tuples(test_infrastructure):
         "is_admin": True,
     }
 
-    # Cleanup
+    # Cleanup: Delete created tuples and close client
     try:
         await client.delete_tuples(tuples_to_create)
     except Exception:
         pass
+    finally:
+        # Close the OpenFGA client to prevent "Unclosed client session" warnings
+        await client.close()
 
 
 @pytest.fixture

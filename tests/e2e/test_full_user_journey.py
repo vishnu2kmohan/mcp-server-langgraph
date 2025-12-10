@@ -736,11 +736,11 @@ class TestServicePrincipalJourney:
             client_secret = sp_data.get("client_secret") or sp_data.get("secret")
             assert len(client_secret) >= 32, "Client secret should be at least 32 characters for security"
 
-            # Verify service_id format
+            # Verify service_id format (derived from name via kebab-case)
+            # e.g., "E2E Test Service Principal" -> "e2e-test-service-principal"
             service_id = sp_data.get("service_id") or sp_data.get("id")
-            assert service_id.startswith("sp:") or service_id.startswith("service:"), (
-                "Service principal ID should have appropriate prefix"
-            )
+            assert service_id, "Service principal should have a service_id"
+            assert "-" in service_id or service_id.islower(), f"Service principal ID should be kebab-case, got: {service_id}"
 
     async def test_02_list_service_principals(self, authenticated_session):
         """

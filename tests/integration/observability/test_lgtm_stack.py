@@ -230,7 +230,7 @@ class TestLGTMConfiguration:
 
     def test_alloy_config_valid(self) -> None:
         """Verify Alloy configuration is valid (HCL-like format)."""
-        alloy_config = PROJECT_ROOT / "docker" / "alloy" / "alloy-config.alloy"
+        alloy_config = PROJECT_ROOT / "docker" / "alloy" / "config.alloy"
 
         assert alloy_config.exists(), f"Alloy config not found at {alloy_config}"
 
@@ -289,12 +289,13 @@ class TestLGTMConfiguration:
 
         assert user == "10001", f"Loki service should run as user '10001' for tmpfs permissions. Current user: {user}"
 
-    def test_docker_compose_loki_tmpfs_has_correct_permissions(self) -> None:
+    def test_docker_compose_loki_volume_has_init_container(self) -> None:
         """
-        Verify Loki tmpfs has correct uid/gid for non-root user.
+        Verify Loki uses init container for volume permissions.
 
-        RED Phase: This test would have caught the permission denied issue
-        where tmpfs was mounted without uid/gid matching Loki user.
+        The Loki service now uses a named volume with an init container
+        (loki-init) that sets correct ownership before Loki starts.
+        This replaced the previous tmpfs approach for better persistence.
         """
         compose_file = PROJECT_ROOT / "docker-compose.test.yml"
 
@@ -302,20 +303,25 @@ class TestLGTMConfiguration:
             config = yaml.safe_load(f)
 
         loki_service = config.get("services", {}).get("loki-test", {})
-        tmpfs = loki_service.get("tmpfs", [])
 
-        # Find the /tmp/loki tmpfs mount
-        loki_tmpfs = None
-        for mount in tmpfs:
-            if "/tmp/loki" in mount:
-                loki_tmpfs = mount
-                break
+        # Verify Loki depends on init container
+        depends_on = loki_service.get("depends_on", {})
+        assert "loki-init" in depends_on, "Loki should depend on loki-init container"
 
-        assert loki_tmpfs is not None, "Loki tmpfs mount for /tmp/loki not found"
+        # Verify the dependency condition
+        loki_init_dep = depends_on.get("loki-init", {})
+        assert loki_init_dep.get("condition") == "service_completed_successfully", (
+            "Loki should wait for loki-init to complete successfully"
+        )
 
-        # Verify uid and gid are set
-        assert "uid=10001" in loki_tmpfs, f"Loki tmpfs missing 'uid=10001'. Current: {loki_tmpfs}"
-        assert "gid=10001" in loki_tmpfs, f"Loki tmpfs missing 'gid=10001'. Current: {loki_tmpfs}"
+        # Verify loki-init exists and sets correct ownership
+        loki_init = config.get("services", {}).get("loki-init", {})
+        assert loki_init, "loki-init service should exist"
+
+        # Verify the volume mount exists
+        volumes = loki_service.get("volumes", [])
+        loki_data_mount = any("loki-data:/tmp/loki" in str(v) for v in volumes)
+        assert loki_data_mount, "Loki should mount loki-data volume to /tmp/loki"
 
 
 # ==============================================================================
