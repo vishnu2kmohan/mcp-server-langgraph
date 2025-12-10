@@ -44,9 +44,12 @@ class TestDockerImageValidationHook:
         """
         Validate hook passes when required directories are copied.
 
-        GIVEN: A Dockerfile with required COPY commands for src/, tests/, pyproject.toml
+        GIVEN: A Dockerfile with required COPY commands for src/, tests/
         WHEN: Running the validation hook
         THEN: Hook should exit with code 0 (success)
+
+        Per ADR-0053: pyproject.toml is NOT copied to Docker image.
+        Version is read via importlib.metadata at runtime.
         """
         # Create temp Dockerfile with correct COPY statements
         dockerfile_content = """
@@ -58,12 +61,12 @@ FROM python:3.12-slim AS runtime-slim
 FROM runtime-slim AS final-test
 WORKDIR /app
 
-# Required COPY commands (correct design)
+# Required COPY commands (correct design per ADR-0053)
 COPY src/ ./src/
 COPY tests/ ./tests/
-COPY pyproject.toml ./
 
-# Integration tests only need src/, tests/, pyproject.toml
+# Per ADR-0053: pyproject.toml is NOT copied
+# Version is read via importlib.metadata at runtime
 # Meta-tests and deployment tests run on host with full repo
 
 CMD ["pytest", "-m", "integration"]
@@ -100,7 +103,6 @@ WORKDIR /app
 
 # Missing: COPY src/ ./src/
 COPY tests/ ./tests/
-COPY pyproject.toml ./
 
 CMD ["pytest"]
 """
@@ -136,7 +138,6 @@ WORKDIR /app
 
 COPY src/ ./src/
 # Missing: COPY tests/ ./tests/
-COPY pyproject.toml ./
 
 CMD ["pytest"]
 """
