@@ -520,33 +520,33 @@ class TestPrometheusSLAQueries:
                 "data": {"result": [{"metric": {}, "value": [1699920000.0, str(percentile_value)]}]},
             }
 
+        # Create properly structured mock responses (xdist-safe pattern)
+        def create_mock_response(percentile_value):
+            mock_resp = MagicMock()
+            mock_resp.json.return_value = mock_percentile_response(percentile_value)
+            mock_resp.raise_for_status = MagicMock()
+            return mock_resp
+
         mock_responses = [
-            MagicMock(json=MagicMock(return_value=mock_percentile_response(0.250)), raise_for_status=MagicMock()),
-            MagicMock(json=MagicMock(return_value=mock_percentile_response(0.450)), raise_for_status=MagicMock()),
-            MagicMock(json=MagicMock(return_value=mock_percentile_response(0.650)), raise_for_status=MagicMock()),
+            create_mock_response(0.250),
+            create_mock_response(0.450),
+            create_mock_response(0.650),
         ]
 
-        # Create a mock AsyncClient instance (xdist-safe: patch instance, not class)
-        mock_http_client = MagicMock(spec=httpx.AsyncClient)
-        mock_http_client.get = AsyncMock(side_effect=mock_responses)
+        with patch.object(httpx.AsyncClient, "get", new_callable=AsyncMock, side_effect=mock_responses):
+            await client.initialize()
 
-        # Manually initialize with mock client to avoid class-level patching
-        client._initialized = True
-        client.client = mock_http_client
+            # Act
+            percentiles = await client.query_percentiles(
+                metric="http_request_duration_seconds", percentiles=[50, 95, 99], timerange="1h"
+            )
 
-        # Act
-        percentiles = await client.query_percentiles(
-            metric="http_request_duration_seconds", percentiles=[50, 95, 99], timerange="1h"
-        )
+            # Assert
+            assert percentiles[50] == 0.250
+            assert percentiles[95] == 0.450
+            assert percentiles[99] == 0.650
 
-        # Assert
-        assert percentiles[50] == 0.250
-        assert percentiles[95] == 0.450
-        assert percentiles[99] == 0.650
-
-        # Cleanup - don't close since we're using a mock
-        client.client = None
-        client._initialized = False
+        await client.close()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
