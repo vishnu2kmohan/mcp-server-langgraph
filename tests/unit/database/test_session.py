@@ -248,16 +248,25 @@ class TestInitDatabase:
         mock_context.__aexit__ = AsyncMock(return_value=None)
         mock_engine.begin = MagicMock(return_value=mock_context)
 
-        # Patch get_engine to return our mock directly (xdist-safe)
-        # This avoids global state issues with _engine caching
-        with patch(
-            "mcp_server_langgraph.database.session.get_engine",
-            return_value=mock_engine,
-        ):
-            await init_database("postgresql+asyncpg://localhost/testdb")
+        # Reset global _engine state to ensure get_engine is called fresh
+        # This prevents xdist state contamination from previous tests
+        original_engine = session_module._engine
+        session_module._engine = None
 
-            mock_engine.begin.assert_called_once()
-            mock_conn.run_sync.assert_called_once()
+        try:
+            # Patch get_engine to return our mock directly (xdist-safe)
+            # This avoids global state issues with _engine caching
+            with patch(
+                "mcp_server_langgraph.database.session.get_engine",
+                return_value=mock_engine,
+            ):
+                await init_database("postgresql+asyncpg://localhost/testdb")
+
+                mock_engine.begin.assert_called_once()
+                mock_conn.run_sync.assert_called_once()
+        finally:
+            # Restore original engine state
+            session_module._engine = original_engine
 
 
 @pytest.mark.xdist_group(name="test_database_session")
