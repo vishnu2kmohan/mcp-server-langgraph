@@ -304,6 +304,7 @@ services:
   keycloak-test:
     # Use pre-optimized Keycloak image (no JIT compilation at startup)
     # This matches production behavior and speeds up container startup
+    image: mcp-server-langgraph-keycloak:test  # Named image for reuse by keycloak-init-test
     build:
       context: .
       dockerfile: docker/Dockerfile.keycloak
@@ -396,7 +397,12 @@ services:
   # This service uses kcadm.sh to clear the required actions.
 
   keycloak-init-test:
-    # Use the same Keycloak image to have access to kcadm.sh
+    # Reuse keycloak-test image (avoid duplicate builds) to have access to kcadm.sh
+    # NOTE: Both image: and build: are specified. Docker Compose will:
+    # 1. Build if the image doesn't exist locally
+    # 2. Reuse the cached image if keycloak-test was already built
+    # This avoids "pull access denied" errors while still enabling cache reuse
+    image: mcp-server-langgraph-keycloak:test
     build:
       context: .
       dockerfile: docker/Dockerfile.keycloak
@@ -804,6 +810,7 @@ services:
   loki-init:
     image: busybox:1.37
     user: root
+    restart: "no"  # One-shot init container - run once and exit
     command:
       - sh
       - -c
@@ -827,6 +834,7 @@ services:
   tempo-init:
     image: busybox:1.37
     user: root
+    restart: "no"  # One-shot init container - run once and exit
     command:
       - sh
       - -c
@@ -850,6 +858,7 @@ services:
   mimir-init:
     image: busybox:1.37
     user: root
+    restart: "no"  # One-shot init container - run once and exit
     command:
       - sh
       - -c
