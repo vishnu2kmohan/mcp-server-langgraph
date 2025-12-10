@@ -1,0 +1,212 @@
+---
+title: "68. Gateway-Level Authentication"
+description: 'Architecture Decision Record: 68. Gateway-Level Authentication with Traefik ForwardAuth'
+icon: 'shield-check'
+contentType: "reference"
+seoTitle: "68. Gateway-Level Authentication - Architecture Decision Record"
+seoDescription: "Architecture Decision Record for Gateway-Level Authentication with Traefik ForwardAuth. Category: Security. Part of MCP Server with LangGraph documentation."
+keywords:
+  - "architecture"
+  - "decision"
+  - "record"
+  - "ADR"
+  - "MCP Server"
+  - "LangGraph"
+  - "authentication"
+  - "Traefik"
+  - "ForwardAuth"
+  - "Keycloak"
+  - "OIDC"
+  - "gateway"
+  - "security"
+---
+
+# 68. Gateway-Level Authentication with Traefik ForwardAuth
+
+Date: 2025-12-09
+
+## Status
+
+Accepted
+
+## Category
+
+Security
+
+## Context
+
+Authentication in the MCP Server LangGraph stack was handled at the **application level**:
+
+- Each service (MCP Server, Builder, Playground) independently validates JWT tokens from Keycloak
+- Observability UIs (Grafana, Qdrant Dashboard, Traefik Dashboard) have no authentication
+- This creates security gaps and duplicated authentication logic
+
+### Problems with Previous Approach
+
+| Issue | Impact |
+|-------|--------|
+| **Security Gap** | Observability dashboards expose sensitive data without auth |
+| **Duplicated Logic** | Each service implements JWT validation independently |
+| **Inconsistent UX** | Some routes require auth, others don't |
+| **No SSO** | Users must authenticate separately per service |
+
+## Decision
+
+Implement **gateway-level authentication** using Traefik's ForwardAuth middleware with a dedicated authentication proxy service.
+
+### Architecture
+
+```
+                                ┌─────────────────┐
+                                │    Keycloak     │
+                                │   (OIDC IdP)    │
+                                └────────┬────────┘
+                                         │
+                                         │ OIDC
+                                         │
+┌──────────┐     ┌─────────────┐     ┌───▼────────────┐
+│  Client  │────▶│   Traefik   │────▶│  traefik-      │
+│          │     │   Gateway   │     │  forward-auth  │
+└──────────┘     └──────┬──────┘     └───────┬────────┘
+                        │                     │
+                        │ ForwardAuth         │ Token
+                        │ Middleware          │ Validation
+                        │                     │
+                ┌───────▼──────────────────────▼───────┐
+                │                                       │
+     ┌──────────┼──────────┬──────────┬───────────────┐
+     │          │          │          │               │
+     ▼          ▼          ▼          ▼               ▼
+┌─────────┐┌─────────┐┌─────────┐┌─────────┐    ┌──────────┐
+│   MCP   ││ Builder ││Playground││ Grafana │    │  Qdrant  │
+│ Server  ││         ││         ││         │    │Dashboard │
+└─────────┘└─────────┘└─────────┘└─────────┘    └──────────┘
+```
+
+### Route Classification
+
+| Category | Routes | Auth Required |
+|----------|--------|---------------|
+| **Public** | `/authn/*` (Keycloak), `*/health*`, `*/ready*` | No |
+| **Protected - Apps** | `/mcp/*`, `/build/*`, `/play/*` | Yes |
+| **Protected - Observability** | `/dashboards/*`, `/telemetry/*`, `/gateway/*` | Yes |
+| **Protected - Data** | `/authz/*`, `/vectors/*`, `/dashboard/*` | Yes |
+
+### Implementation Components
+
+#### 1. traefik-forward-auth Service
+
+Using [thomseddon/traefik-forward-auth](https://github.com/thomseddon/traefik-forward-auth):
+
+```yaml
+traefik-forward-auth:
+  image: thomseddon/traefik-forward-auth:2
+  environment:
+    - DEFAULT_PROVIDER=oidc
+    - PROVIDERS_OIDC_ISSUER_URL=http://keycloak-test:8080/authn/realms/master
+    - PROVIDERS_OIDC_CLIENT_ID=mcp-server
+    - PROVIDERS_OIDC_CLIENT_SECRET=test-client-secret-for-e2e-tests
+    - SECRET=random-secret-for-cookie-signing
+    - COOKIE_DOMAIN=localhost
+    - INSECURE_COOKIE=true  # For local dev (no HTTPS)
+  labels:
+    - "traefik.http.middlewares.forward-auth.forwardauth.address=http://traefik-forward-auth:4181"
+    - "traefik.http.middlewares.forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User,X-Auth-User"
+```
+
+#### 2. Traefik Middleware Configuration
+
+Apply middleware to protected routes:
+
+```yaml
+# Protected service example
+builder-test:
+  labels:
+    - "traefik.http.routers.builder.middlewares=forward-auth@docker,builder-strip"
+```
+
+#### 3. Public Route Bypass
+
+Health/readiness endpoints bypass auth by not including the `forward-auth` middleware.
+
+### Protected Routes Summary
+
+| Route | Service | Middleware Chain |
+|-------|---------|------------------|
+| `/gateway` | Traefik Dashboard | `forward-auth@docker,gateway-rewrite` |
+| `/authz` | OpenFGA API | `forward-auth@docker,openfga-strip` |
+| `/vectors` | Qdrant API | `forward-auth@docker,qdrant-strip` |
+| `/dashboard` | Qdrant Dashboard | `forward-auth@docker` |
+| `/mcp` | MCP Server API | `forward-auth@docker,mcp-strip` |
+| `/dashboards` | Grafana | `forward-auth@docker` |
+| `/telemetry` | Alloy | `forward-auth@docker,alloy-strip` |
+| `/build` | Builder | `forward-auth@docker,builder-strip` |
+| `/play` | MCP Playground | `forward-auth@docker,playground-strip` |
+
+### Test Users
+
+Pre-configured users in Keycloak test realm:
+
+| User | Password | Email |
+|------|----------|-------|
+| `admin` | `admin` | - |
+| `alice` | `alice123` | alice@example.com |
+| `bob` | `bob123` | bob@example.com |
+
+## Consequences
+
+### Positive
+
+1. **Centralized Authentication**: Single point of auth enforcement
+2. **Consistent Security**: All protected routes use same auth flow
+3. **SSO Experience**: One login works across all services
+4. **Reduced Code**: Remove JWT validation from individual services
+5. **Observability Protection**: Grafana, Qdrant UI now protected
+
+### Negative
+
+1. **Additional Service**: traefik-forward-auth adds complexity
+2. **Single Point of Failure**: Auth proxy down = all protected routes fail
+3. **Cookie-Based**: Session management adds state
+4. **Local Dev Complexity**: Need to handle auth in development
+
+### Neutral
+
+1. **Migration Required**: Existing services need middleware configuration
+2. **Testing Changes**: Integration tests need auth awareness
+
+## Alternatives Considered
+
+### 1. OAuth2 Proxy
+
+More feature-rich but heavier weight. Better for complex scenarios.
+
+### 2. Application-Level Only
+
+Current approach. Simple but duplicates logic and leaves gaps.
+
+### 3. Keycloak Gatekeeper
+
+Deprecated (louketo-proxy). Not recommended.
+
+### 4. Kong/Ambassador
+
+Full API gateway. Overkill for test infrastructure.
+
+## Related ADRs
+
+- [ADR-0007: Authentication Provider Pattern](/architecture/adr-0007-authentication-provider-pattern)
+- [ADR-0031: Keycloak Authoritative Identity](/architecture/adr-0031-keycloak-authoritative-identity)
+- [ADR-0067: Grafana LGTM Stack Migration](/architecture/adr-0067-grafana-lgtm-stack-migration)
+
+## Files Changed
+
+- `docker-compose.test.yml` - Added traefik-forward-auth service and middleware
+- `tests/integration/gateway/test_traefik_auth_middleware.py` - Integration tests
+- `adr/adr-0068-gateway-level-authentication.md` - This ADR
+
+## References
+
+- [Traefik ForwardAuth Middleware](https://doc.traefik.io/traefik/middlewares/http/forwardauth/)
+- [traefik-forward-auth](https://github.com/thomseddon/traefik-forward-auth)
+- [Keycloak OIDC Configuration](https://www.keycloak.org/docs/latest/securing_apps/)

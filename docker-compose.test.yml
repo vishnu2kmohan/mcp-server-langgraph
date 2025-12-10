@@ -25,18 +25,26 @@
 #   - No hard-coded container names (allows multiple isolated test stacks)
 #
 # GATEWAY ROUTES (via Traefik on port 80):
-#   /api        - MCP Server API
-#   /build      - Visual Workflow Builder
-#   /play       - Interactive Playground
-#   /authn      - Keycloak (Authentication)
-#   /authz      - OpenFGA (Authorization)
-#   /vectors    - Qdrant (Vector Database)
-#   /tempo      - Tempo (Distributed Tracing)
-#   /logs       - Loki (Log Aggregation)
-#   /mimir      - Mimir (Metrics Storage)
-#   /alloy      - Alloy (Unified Telemetry Collector)
-#   /dashboards - Grafana (Unified Dashboards + Alerting)
-#   /gateway    - Traefik Dashboard
+#   /_oauth     - OAuth callback (traefik-forward-auth)
+#   /mcp        - MCP Server API [protected]
+#   /build      - Visual Workflow Builder [protected]
+#   /play       - Interactive Playground [protected]
+#   /authn      - Keycloak (Authentication) [public]
+#   /authz      - OpenFGA API [protected]
+#   /playground - OpenFGA Playground UI [protected]
+#   /vectors    - Qdrant API [internal]
+#   /dashboard  - Qdrant Web UI [protected]
+#   /traces     - Tempo (Tracing) [internal]
+#   /logs       - Loki (Logs) [internal]
+#   /metrics    - Mimir (Metrics) [internal]
+#   /telemetry  - Alloy (Telemetry Collector) [protected]
+#   /dashboards - Grafana (Dashboards) [protected]
+#   /gateway    - Traefik Dashboard [protected]
+#
+# AUTHENTICATION (ADR-0054):
+#   Protected routes require Keycloak authentication via traefik-forward-auth.
+#   Public routes: /authn/*, health endpoints
+#   Internal routes: Observability backends (access via Grafana dashboards)
 #
 # GRAFANA LGTM STACK:
 #   Grafana (Dashboards) + Loki (Logs) + Tempo (Traces) + Mimir (Metrics)
@@ -112,16 +120,18 @@ services:
           - gateway
     labels:
       - "traefik.enable=true"
-      # Route: /gateway/* -> Traefik Dashboard
+      # Route: /gateway/* -> Traefik Dashboard [PROTECTED]
       # Traefik dashboard requires both /api and /dashboard paths internally.
       # We use replacepathregex to rewrite /gateway/api -> /api and /gateway/dashboard -> /dashboard
+      # Authentication via forward-auth middleware (ADR-0054)
       - "traefik.http.routers.gateway.rule=PathPrefix(`/gateway`)"
       - "traefik.http.routers.gateway.entrypoints=web"
       - "traefik.http.routers.gateway.service=api@internal"
       - "traefik.http.routers.gateway.priority=20"
       - "traefik.http.middlewares.gateway-rewrite.replacepathregex.regex=^/gateway/(.*)"
       - "traefik.http.middlewares.gateway-rewrite.replacepathregex.replacement=/$${1}"
-      - "traefik.http.routers.gateway.middlewares=gateway-rewrite"
+      # Middleware chain: forward-auth first, then rewrite
+      - "traefik.http.routers.gateway.middlewares=forward-auth@docker,gateway-rewrite"
 
   # ==============================================================================
   # DATABASE SERVICES
@@ -224,12 +234,13 @@ services:
     ports:
       - "9080:8080"  # HTTP API
       - "9081:8081"  # gRPC API
+      - "9003:3000"  # Playground UI (default port 3000)
     environment:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable
       - OPENFGA_LOG_FORMAT=json
       - OPENFGA_LOG_LEVEL=warn  # Reduced logging for tests
-      - OPENFGA_PLAYGROUND_ENABLED=true  # Enable playground UI at /playground
+      - OPENFGA_PLAYGROUND_ENABLED=true  # Enable playground UI on port 3000
       - TESTING=true
     healthcheck:
       test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
@@ -251,15 +262,25 @@ services:
           - openfga
     labels:
       - "traefik.enable=true"
-      # Route: /authz/* -> openfga:8080 (Authorization API + Playground UI)
-      # OpenFGA Playground is at /playground internally, accessed via /authz/playground
+      # Route: /authz/* -> openfga:8080 (Authorization API)
       # API endpoints are at /stores, /health, etc. accessed via /authz/stores, /authz/health
-      - "traefik.http.routers.openfga.rule=PathPrefix(`/authz`)"
-      - "traefik.http.routers.openfga.entrypoints=web"
-      - "traefik.http.routers.openfga.priority=10"
-      - "traefik.http.services.openfga.loadbalancer.server.port=8080"
+      - "traefik.http.routers.openfga-api.rule=PathPrefix(`/authz`)"
+      - "traefik.http.routers.openfga-api.entrypoints=web"
+      - "traefik.http.routers.openfga-api.priority=10"
+      - "traefik.http.services.openfga-api.loadbalancer.server.port=8080"
       - "traefik.http.middlewares.openfga-strip.stripprefix.prefixes=/authz"
-      - "traefik.http.routers.openfga.middlewares=openfga-strip"
+      - "traefik.http.routers.openfga-api.middlewares=openfga-strip"
+      # Route: /playground/* -> openfga:3000 (OpenFGA Playground UI) [PROTECTED]
+      # OpenFGA Playground runs on port 3000 (separate from API on 8080)
+      # Access at http://localhost/playground or direct at http://localhost:9003/playground
+      # Priority 11 to take precedence over MCP Playground (PathPrefix /play matches /playground)
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.openfga-playground.rule=PathPrefix(`/playground`)"
+      - "traefik.http.routers.openfga-playground.entrypoints=web"
+      - "traefik.http.routers.openfga-playground.priority=11"
+      - "traefik.http.routers.openfga-playground.service=openfga-playground"
+      - "traefik.http.routers.openfga-playground.middlewares=forward-auth@docker"
+      - "traefik.http.services.openfga-playground.loadbalancer.server.port=3000"
 
   # ==============================================================================
   # AUTHENTICATION SERVICES
@@ -397,6 +418,67 @@ services:
     networks:
       - mcp-test-network
     restart: "no"  # Run once and exit
+
+  # ==============================================================================
+  # GATEWAY AUTHENTICATION (traefik-forward-auth)
+  # ==============================================================================
+  # Centralized authentication proxy for Traefik ForwardAuth middleware
+  # Handles OIDC flow with Keycloak for all protected routes
+  # Reference: ADR-0054 - Gateway-Level Authentication
+
+  traefik-forward-auth:
+    image: thomseddon/traefik-forward-auth:2
+    depends_on:
+      keycloak-test:
+        condition: service_healthy
+    environment:
+      # OIDC Provider Configuration (Keycloak)
+      - DEFAULT_PROVIDER=oidc
+      - PROVIDERS_OIDC_ISSUER_URL=http://keycloak-test:8080/authn/realms/master
+      - PROVIDERS_OIDC_CLIENT_ID=mcp-server
+      - PROVIDERS_OIDC_CLIENT_SECRET=test-client-secret-for-e2e-tests
+      # Cookie and Session Configuration
+      - SECRET=test-forward-auth-secret-change-in-production
+      - COOKIE_DOMAIN=localhost
+      - INSECURE_COOKIE=true  # Required for HTTP (no TLS in test)
+      - AUTH_HOST=localhost
+      - URL_PATH=/_oauth
+      # Logging
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      # Test mode
+      - TESTING=true
+    healthcheck:
+      # traefik-forward-auth doesn't have a dedicated health endpoint
+      # Use TCP check on the listening port
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:4181/ || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    networks:
+      mcp-test-network:
+        aliases:
+          - forward-auth
+    labels:
+      - "traefik.enable=true"
+      # Define the ForwardAuth middleware that other services will use
+      - "traefik.http.middlewares.forward-auth.forwardauth.address=http://traefik-forward-auth:4181"
+      - "traefik.http.middlewares.forward-auth.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User,X-Auth-User,X-Auth-Email"
+      # OAuth callback route (handles redirect from Keycloak)
+      - "traefik.http.routers.forward-auth.rule=PathPrefix(`/_oauth`)"
+      - "traefik.http.routers.forward-auth.entrypoints=web"
+      - "traefik.http.routers.forward-auth.priority=100"
+      - "traefik.http.services.forward-auth.loadbalancer.server.port=4181"
 
   # ==============================================================================
   # CACHE & SESSION STORAGE
@@ -656,13 +738,15 @@ services:
           - grafana
     labels:
       - "traefik.enable=true"
-      # Route: /dashboards/* -> grafana:3000 (Unified Dashboards)
+      # Route: /dashboards/* -> grafana:3000 (Unified Dashboards) [PROTECTED]
       # Grafana handles subpath via GF_SERVER_SERVE_FROM_SUB_PATH
+      # Authentication via forward-auth middleware (ADR-0054)
       - "traefik.http.routers.grafana.rule=PathPrefix(`/dashboards`)"
       - "traefik.http.routers.grafana.entrypoints=web"
       # Priority 11 to take precedence over qdrant-dashboard (PathPrefix /dashboard)
       # since /dashboards starts with /dashboard
       - "traefik.http.routers.grafana.priority=11"
+      - "traefik.http.routers.grafana.middlewares=forward-auth@docker"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
       # NO strip - Grafana configured for /dashboards subpath
 
