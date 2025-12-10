@@ -77,6 +77,12 @@ dependencies = [
     "tenacity>=9.1.2",  # Retry logic with exponential backoff
     "cachetools>=5.3.0",  # In-memory LRU cache for L1 caching (ADR-0028)
     "slowapi>=0.1.9",  # Rate limiting for FastAPI (ADR-0027)
+    # LLM Provider SDKs (required for LiteLLM multi-provider support)
+    "google-cloud-aiplatform>=1.38.0",  # Vertex AI SDK (default: Anthropic Claude on Vertex)
+    "anthropic>=0.46.0",  # Anthropic Claude direct API
+    "openai>=1.82.0",  # OpenAI models (GPT-4, o1, etc.)
+    "boto3>=1.35.0",  # AWS Bedrock (Claude, Titan, Mistral on AWS)
+    "azure-identity>=1.15.0",  # Azure OpenAI authentication
 ]
 
 [project.optional-dependencies]
@@ -179,9 +185,12 @@ code-execution = [
 ]
 
 cloud = [
-    # Cloud provider SDKs for LiteLLM multi-provider support
-    "google-cloud-aiplatform>=1.38.0",  # Vertex AI (Google Cloud)
-    "boto3>=1.35.0",  # AWS Bedrock
+    # Additional cloud provider SDKs (optional)
+    # NOTE: Core LLM SDKs moved to main dependencies:
+    # - google-cloud-aiplatform (Vertex AI)
+    # - boto3 (AWS Bedrock)
+    # - anthropic, openai, azure-identity
+    # This group is now empty but retained for backwards compatibility
 ]
 
 # ==============================================================================
@@ -694,7 +703,8 @@ filterwarnings = [
     "ignore::RuntimeWarning:litellm.llms.custom_httpx.async_client_cleanup",
     # Litellm uses deprecated Pydantic V1 class-based config (external library issue)
     # See: https://errors.pydantic.dev/2.12/migration/ - litellm needs to update
-    "ignore:Support for class-based `config` is deprecated.*:DeprecationWarning:litellm",
+    # Note: Uses PydanticDeprecatedSince20 which is a DeprecationWarning subclass
+    "ignore:Support for class-based `config` is deprecated.*:DeprecationWarning",
     # Internal warnings
     "ignore:coroutine.*was never awaited.*:RuntimeWarning:mcp_server_langgraph.resilience.circuit_breaker",
     "ignore:Pydantic serializer warnings.*:UserWarning:pydantic.main",

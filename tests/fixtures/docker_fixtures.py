@@ -303,7 +303,7 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
 
     # Keycloak Health Check Strategy (Keycloak 26.x):
     # 1. Primary: Use /health/ready on management port 9000 (mapped to 9900)
-    # 2. Fallback: Use /authn/realms/master on HTTP port 8080 (mapped to 9082)
+    # 2. Fallback: Use /authn/realms/default on HTTP port 8080 (mapped to 9082)
     # The management port may not always be configured correctly in test environments,
     # but the realms endpoint is a reliable indicator of Keycloak being fully operational.
     #
@@ -324,17 +324,17 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
 
     # Fallback to realms endpoint on HTTP port
     if not keycloak_ready:
-        keycloak_realms_url = f"http://localhost:{test_infrastructure_ports['keycloak']}/authn/realms/master"
+        keycloak_realms_url = f"http://localhost:{test_infrastructure_ports['keycloak']}/authn/realms/default"
         for attempt in range(15):  # 15 attempts * 2s = 30s for realms endpoint
             if _check_http_health(keycloak_realms_url, timeout=5):
                 keycloak_ready = True
-                logging.info("✓ Keycloak ready (fallback /authn/realms/master)")
+                logging.info("✓ Keycloak ready (fallback /authn/realms/default)")
                 break
             time.sleep(2)
 
     if not keycloak_ready:
         logging.error("Keycloak not responding on management port or realms endpoint after 40s")
-        pytest.skip("Keycloak health check failed - neither /health/ready (port 9900) nor /authn/realms/master responding")
+        pytest.skip("Keycloak health check failed - neither /health/ready (port 9900) nor /authn/realms/default responding")
     logging.info("✓ Keycloak ready")
 
     # Qdrant

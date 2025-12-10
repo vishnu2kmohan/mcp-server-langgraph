@@ -34,7 +34,7 @@ class RealKeycloakAuth:
     Uses password grant flow for user authentication.
 
     IMPORTANT: Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
-    All endpoints must be prefixed with /authn (e.g., /authn/realms/master/...)
+    All endpoints must be prefixed with /authn (e.g., /authn/realms/default/...)
     """
 
     def __init__(self, base_url: str = None):
@@ -47,7 +47,7 @@ class RealKeycloakAuth:
         """
         # Default includes /authn path per KC_HTTP_RELATIVE_PATH in docker-compose.test.yml
         self.base_url = base_url or os.getenv("KEYCLOAK_URL", "http://localhost:9082/authn")
-        self.realm = os.getenv("KEYCLOAK_REALM", "master")
+        self.realm = os.getenv("KEYCLOAK_REALM", "default")
         self.client_id = os.getenv("KEYCLOAK_CLIENT_ID", "mcp-server")
         # CODEX FINDING FIX (2025-11-20): Add client_secret for token introspection
         # Keycloak requires client authentication for introspection endpoint

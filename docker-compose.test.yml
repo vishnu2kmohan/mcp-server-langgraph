@@ -202,6 +202,14 @@ services:
       - POSTGRES_DB=mcp_test
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
     networks:
       - mcp-test-network
     restart: "no"  # Run once and exit
@@ -219,6 +227,14 @@ services:
     environment:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
     networks:
       - mcp-test-network
     restart: "no"  # Run once and exit
@@ -415,6 +431,14 @@ services:
     depends_on:
       keycloak-test:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
     networks:
       - mcp-test-network
     restart: "no"  # Run once and exit
@@ -434,7 +458,7 @@ services:
     environment:
       # OIDC Provider Configuration (Keycloak)
       - DEFAULT_PROVIDER=oidc
-      - PROVIDERS_OIDC_ISSUER_URL=http://keycloak-test:8080/authn/realms/master
+      - PROVIDERS_OIDC_ISSUER_URL=http://keycloak-test:8080/authn/realms/default
       - PROVIDERS_OIDC_CLIENT_ID=mcp-server
       - PROVIDERS_OIDC_CLIENT_SECRET=test-client-secret-for-e2e-tests
       # Cookie and Session Configuration
@@ -449,13 +473,9 @@ services:
       # Test mode
       - TESTING=true
     healthcheck:
-      # traefik-forward-auth doesn't have a dedicated health endpoint
-      # Use TCP check on the listening port
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:4181/ || exit 0"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      # traefik-forward-auth is a scratch container with no shell utilities
+      # Traefik handles availability detection via Docker provider
+      disable: true
     deploy:
       resources:
         limits:
@@ -626,7 +646,7 @@ services:
       # IMPORTANT: Must use KEYCLOAK_SERVER_URL (not KEYCLOAK_URL) to match Settings field name
       # IMPORTANT: Include /authn path since Keycloak has KC_HTTP_RELATIVE_PATH=/authn baked into the image
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
-      - KEYCLOAK_REALM=master
+      - KEYCLOAK_REALM=default
       - KEYCLOAK_CLIENT_ID=mcp-server
       - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -674,7 +694,8 @@ services:
       - "traefik.http.routers.mcp-api.priority=10"
       - "traefik.http.services.mcp-api.loadbalancer.server.port=8000"
       - "traefik.http.middlewares.mcp-strip.stripprefix.prefixes=/mcp"
-      - "traefik.http.routers.mcp-api.middlewares=mcp-strip"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.mcp-api.middlewares=forward-auth@docker,mcp-strip"
 
   # ==============================================================================
   # OBSERVABILITY SERVICES (Grafana LGTM Stack)
@@ -948,7 +969,8 @@ services:
       - "traefik.http.routers.alloy.priority=10"
       - "traefik.http.services.alloy.loadbalancer.server.port=12345"
       - "traefik.http.middlewares.alloy-strip.stripprefix.prefixes=/telemetry"
-      - "traefik.http.routers.alloy.middlewares=alloy-strip"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.alloy.middlewares=forward-auth@docker,alloy-strip"
 
   # ==============================================================================
   # VISUAL WORKFLOW BUILDER
@@ -985,7 +1007,7 @@ services:
       # IMPORTANT: Include /authn path since Keycloak has KC_HTTP_RELATIVE_PATH=/authn baked into the image
       - AUTH_PROVIDER=keycloak
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
-      - KEYCLOAK_REALM=master
+      - KEYCLOAK_REALM=default
       - KEYCLOAK_CLIENT_ID=mcp-server
       - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -1027,7 +1049,8 @@ services:
       - "traefik.http.routers.builder.priority=10"
       - "traefik.http.services.builder.loadbalancer.server.port=8001"
       - "traefik.http.middlewares.builder-strip.stripprefix.prefixes=/build"
-      - "traefik.http.routers.builder.middlewares=builder-strip"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.builder.middlewares=forward-auth@docker,builder-strip"
 
   # ==============================================================================
   # INTERACTIVE PLAYGROUND
@@ -1066,7 +1089,7 @@ services:
       # IMPORTANT: Include /authn path since Keycloak has KC_HTTP_RELATIVE_PATH=/authn baked into the image
       - AUTH_PROVIDER=keycloak
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
-      - KEYCLOAK_REALM=master
+      - KEYCLOAK_REALM=default
       - KEYCLOAK_CLIENT_ID=mcp-server
       - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -1112,7 +1135,8 @@ services:
       - "traefik.http.routers.playground.priority=10"
       - "traefik.http.services.playground.loadbalancer.server.port=8002"
       - "traefik.http.middlewares.playground-strip.stripprefix.prefixes=/play"
-      - "traefik.http.routers.playground.middlewares=playground-strip"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.playground.middlewares=forward-auth@docker,playground-strip"
 
 networks:
   mcp-test-network:

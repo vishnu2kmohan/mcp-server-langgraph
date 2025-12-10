@@ -1,6 +1,6 @@
 {
-  "id": "master",
-  "realm": "master",
+  "id": "default",
+  "realm": "default",
   "enabled": true,
   "displayName": "MCP Server LangGraph - Test Realm",
   "accessTokenLifespan": 3600,
@@ -106,6 +106,34 @@
     }
   ],
   "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Realm",
+      "lastName": "Admin",
+      "email": "admin@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "offline_access",
+        "uma_authorization"
+      ],
+      "clientRoles": {
+        "account": [
+          "view-profile",
+          "manage-account"
+        ],
+        "realm-management": [
+          "realm-admin"
+        ]
+      }
+    },
     {
       "username": "alice",
       "enabled": true,

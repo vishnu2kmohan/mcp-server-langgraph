@@ -48,7 +48,8 @@ class KeycloakConfig(BaseModel):
     """Keycloak configuration"""
 
     server_url: str = Field(description="Keycloak server URL (e.g., http://localhost:8180)")
-    realm: str = Field(description="Keycloak realm name")
+    realm: str = Field(description="Keycloak realm name for user authentication")
+    admin_realm: str = Field(default="default", description="Keycloak realm for admin API operations")
     client_id: str = Field(description="OAuth2/OIDC client ID")
     client_secret: str | None = Field(default=None, description="OAuth2/OIDC client secret")
     admin_username: str | None = Field(default=None, description="Admin username for admin API access")
@@ -437,8 +438,11 @@ class KeycloakClient:
                         "password": self.config.admin_password,
                     }
 
-                    # Admin token endpoint is at master realm
-                    admin_token_url = f"{self.config.server_url}/realms/master/protocol/openid-connect/token"
+                    # Admin token endpoint uses the admin_realm (defaults to same as user realm)
+                    # Note: Keycloak admin user should have realm-admin role in the admin_realm
+                    admin_token_url = (
+                        f"{self.config.server_url}/realms/{self.config.admin_realm}/protocol/openid-connect/token"
+                    )
 
                     response = await client.post(admin_token_url, data=data)
                     response.raise_for_status()

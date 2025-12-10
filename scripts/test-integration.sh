@@ -260,7 +260,7 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE" postgres-test keycloa
         # Try to get a token using the test user credentials
         # This proves the realm, client, and user are all properly configured
         TOKEN_RESPONSE=$(curl -sf -X POST \
-            "http://localhost:9082/realms/master/protocol/openid-connect/token" \
+            "http://localhost:9082/authn/realms/default/protocol/openid-connect/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "grant_type=password" \
             -d "client_id=mcp-server" \

@@ -773,7 +773,7 @@ def test_app_settings(test_infrastructure_ports):
         openfga_model_id=None,
         # Keycloak settings
         keycloak_server_url=f"http://localhost:{test_infrastructure_ports['keycloak']}",
-        keycloak_realm="master",  # Use master realm for tests
+        keycloak_realm="default",  # Use default realm for tests
         keycloak_client_id="admin-cli",
         keycloak_admin_username="admin",
         keycloak_admin_password="admin",

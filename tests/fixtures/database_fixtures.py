@@ -513,8 +513,10 @@ async def db_pool_gdpr(integration_test_env):
 @pytest.fixture(scope="session")
 def qdrant_available():
     """Check if Qdrant is available for testing."""
+    from tests.constants import TEST_QDRANT_PORT
+
     qdrant_url = os.getenv("QDRANT_URL", "localhost")
-    qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
+    qdrant_port = int(os.getenv("QDRANT_PORT", str(TEST_QDRANT_PORT)))
 
     try:
         import httpx
@@ -534,8 +536,10 @@ def qdrant_client():
     except ImportError:
         pytest.skip("Qdrant client not installed")
 
+    from tests.constants import TEST_QDRANT_PORT
+
     qdrant_url = os.getenv("QDRANT_URL", "localhost")
-    qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
+    qdrant_port = int(os.getenv("QDRANT_PORT", str(TEST_QDRANT_PORT)))
 
     # Check if Qdrant is available
     try:

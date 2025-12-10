@@ -819,7 +819,7 @@ class TestServicePrincipalJourney:
 
             # Authenticate using client credentials
             auth_response = await client.post(
-                "http://localhost:9082/realms/master/protocol/openid-connect/token",
+                "http://localhost:9082/authn/realms/default/protocol/openid-connect/token",
                 data={"grant_type": "client_credentials", "client_id": client_id, "client_secret": client_secret},
                 timeout=30.0,
             )
@@ -879,7 +879,7 @@ class TestServicePrincipalJourney:
 
             # Authenticate as SP using client credentials
             auth_response = await client.post(
-                "http://localhost:9082/authn/realms/master/protocol/openid-connect/token",
+                "http://localhost:9082/authn/realms/default/protocol/openid-connect/token",
                 data={
                     "grant_type": "client_credentials",
                     "client_id": client_id,
@@ -1013,7 +1013,7 @@ class TestServicePrincipalJourney:
 
             # Verify new secret works for authentication
             new_auth_response = await client.post(
-                "http://localhost:9082/realms/master/protocol/openid-connect/token",
+                "http://localhost:9082/authn/realms/default/protocol/openid-connect/token",
                 data={
                     "grant_type": "client_credentials",
                     "client_id": service_id,
@@ -1088,7 +1088,7 @@ class TestServicePrincipalJourney:
 
             # Verify SP token no longer works for authentication
             auth_response = await client.post(
-                "http://localhost:9082/realms/master/protocol/openid-connect/token",
+                "http://localhost:9082/authn/realms/default/protocol/openid-connect/token",
                 data={
                     "grant_type": "client_credentials",
                     "client_id": service_id,

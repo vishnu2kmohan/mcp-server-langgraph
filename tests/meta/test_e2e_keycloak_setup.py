@@ -50,7 +50,7 @@ def test_keycloak_realm_import_file_exists(repo_root: Path):
         "\n"
         "Expected file: tests/e2e/keycloak-test-realm.json\n"
         "This file should contain:\n"
-        "  - Realm: master\n"
+        "  - Realm: default\n"
         "  - Client: mcp-server (publicClient, directAccessGrants enabled)\n"
         "  - User: alice with password alice123\n"
         "\n"
