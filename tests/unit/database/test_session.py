@@ -23,20 +23,20 @@ pytestmark = pytest.mark.unit
 
 @pytest.fixture(autouse=True)
 def reset_global_state():
-    """Reset global engine and session maker state before each test."""
-    # Store original values
-    original_engine = session_module._engine
-    original_session_maker = session_module._async_session_maker
+    """Reset global engine and session maker state before each test.
 
+    Note: We always reset to None after yield (not restore original) to avoid
+    xdist contamination where "original" values from other workers leak.
+    """
     # Reset to None for test isolation
     session_module._engine = None
     session_module._async_session_maker = None
 
     yield
 
-    # Restore original values
-    session_module._engine = original_engine
-    session_module._async_session_maker = original_session_maker
+    # Always reset to None after test (don't restore potentially contaminated state)
+    session_module._engine = None
+    session_module._async_session_maker = None
 
 
 @pytest.mark.xdist_group(name="test_database_session")
