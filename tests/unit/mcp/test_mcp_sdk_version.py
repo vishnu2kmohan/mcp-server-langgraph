@@ -26,13 +26,14 @@ class TestMCPSDKVersion:
         - SEP-1036: URL mode elicitation
         - SEP-1303: Tool validation errors as Tool Errors
         """
-        import mcp
+        from importlib.metadata import version as pkg_version
 
-        sdk_version = version.parse(mcp.__version__)
+        mcp_version_str = pkg_version("mcp")
+        sdk_version = version.parse(mcp_version_str)
         min_required = version.parse("1.23.0")
 
         assert sdk_version >= min_required, (
-            f"MCP SDK version {mcp.__version__} is too old. Version >= 1.23.0 required for MCP spec 2025-11-25 support."
+            f"MCP SDK version {mcp_version_str} is too old. Version >= 1.23.0 required for MCP spec 2025-11-25 support."
         )
 
     @pytest.mark.timeout(300)  # MCP SDK imports can be slow
