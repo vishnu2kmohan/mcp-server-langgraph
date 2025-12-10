@@ -127,7 +127,8 @@ class TestGetSessionMaker:
         ):
             result = get_session_maker("postgresql+asyncpg://localhost/testdb")
 
-            assert result == mock_session_maker
+            # Use 'is' with return_value for identity check to avoid xdist MagicMock comparison issues
+            assert result is mock_sm_class.return_value
             mock_sm_class.assert_called_once()
 
             # Verify session maker configuration
