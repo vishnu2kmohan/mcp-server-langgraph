@@ -247,3 +247,57 @@ clients/
 monitoring/
 Makefile
 justfile
+
+# ==============================================================================
+# Additional exclusions (cleanup from analysis)
+# ==============================================================================
+
+# Test helper libraries (bats-core, etc.) - not needed in Docker tests
+tests/test_helper/
+
+# NOTE: config/ is NOT excluded - it contains retention_policies.yaml
+# which is loaded by compliance/retention.py and schedulers/cleanup.py
+
+# Integration specifications - external integration docs
+integrations/
+
+# Code generators - OpenAPI/GraphQL generators for client SDKs
+generators/
+
+# Git hooks - local development only
+hooks/
+
+# Old migrations directory (alembic/ is the active one)
+migrations/
+
+# Logo/branding assets (root level - for docs/README only, not used by frontend)
+# Note: Frontend apps have their own bundled assets in src/*/frontend/
+logo/
+
+# Mintlify docs templates
+docs-templates-mintlify/
+
+# Root-level package-lock.json (if exists)
+package-lock.json
+
+# Helm chart lock files (already in deployments/ but be explicit)
+*.lock
+!uv.lock
+
+# Pre-commit configuration
+.pre-commit-config.yaml
+
+# Editor configurations
+.editorconfig
+pyrightconfig.json
+.pylintrc
+
+# Cost reports and audit files
+*-report*.md
+*_REPORT*.md
+*_AUDIT*.md
+cost-report.md
+
+# Profiling data
+*.pstats
+profile_*.json
