@@ -137,7 +137,7 @@ FROM python:${PYTHON_VERSION}-slim AS runtime-distroless
 # Create user with GID 0 (root group) for OpenShift arbitrary UID support
 # OpenShift runs containers with arbitrary UIDs in GID 0
 RUN useradd -u 1001 -g 0 -d /app -s /sbin/nologin appuser && \
-    mkdir -p /app && chown -R 1001:0 /app && chmod -R g=u /app
+    mkdir -p /app && chown 1001:0 /app && chmod g=u /app
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -176,7 +176,7 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-runtime-slim,sharing=p
     ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && useradd -u 1001 -g 0 -d /app -s /bin/bash appuser \
-    && chown -R 1001:0 /app && chmod -R g=u /app
+    && chown 1001:0 /app && chmod g=u /app
 
 # ==============================================================================
 # FINAL STAGE: base variant (distroless)
@@ -193,10 +193,8 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY --chown=1001:0 src/ ./src/
 COPY --chown=1001:0 pyproject.toml ./
 
-# Ensure group-writable for OpenShift arbitrary UID
-RUN chmod -R g=u /app
-
 # Drop privileges - use numeric UID for OpenShift compatibility
+# Note: --chown=1001:0 already sets correct ownership, no need for recursive chmod
 USER 1001
 
 # Metadata
@@ -227,10 +225,8 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY --chown=1001:0 src/ ./src/
 COPY --chown=1001:0 pyproject.toml ./
 
-# Ensure group-writable for OpenShift arbitrary UID
-RUN chmod -R g=u /app
-
 # Drop privileges - use numeric UID for OpenShift compatibility
+# Note: --chown=1001:0 already sets correct ownership, no need for recursive chmod
 USER 1001
 
 # Metadata
@@ -266,10 +262,8 @@ COPY --chown=1001:0 pyproject.toml ./
 # Only adr/ is copied for documentation purposes.
 COPY --chown=1001:0 adr/ ./adr/
 
-# Ensure group-writable for OpenShift arbitrary UID
-RUN chmod -R g=u /app
-
 # Drop privileges - use numeric UID for OpenShift compatibility
+# Note: --chown=1001:0 already sets correct ownership, no need for recursive chmod
 USER 1001
 
 # Set PATH to use virtual environment

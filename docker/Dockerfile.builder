@@ -57,21 +57,11 @@ COPY src/mcp_server_langgraph/builder/frontend/ ./
 RUN npm run build
 
 # ==============================================================================
-# Stage 2: Python Runtime with FastAPI + SPAStaticFiles
+# Stage 2: Python Builder - Install dependencies in isolated stage
 # ==============================================================================
-FROM python:${PYTHON_VERSION}-slim AS runtime
+FROM python:${PYTHON_VERSION}-slim AS python-builder
 
 WORKDIR /app
-
-# Install minimal system dependencies
-# curl: health checks
-# ca-certificates: HTTPS for auth providers
-RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-builder,sharing=private \
-    --mount=type=cache,target=/var/lib/apt,id=apt-lib-builder,sharing=private \
-    apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
 
 # Install uv - Fast Python package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
@@ -93,14 +83,35 @@ COPY src/ ./src/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-builder,sharing=private \
     uv sync --frozen --no-dev
 
+# ==============================================================================
+# Stage 3: Runtime - Minimal runtime image
+# ==============================================================================
+FROM python:${PYTHON_VERSION}-slim AS runtime
+
+WORKDIR /app
+
+# Install minimal system dependencies and create user BEFORE copying files
+# This avoids expensive post-copy chown layer duplication
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-builder,sharing=private \
+    --mount=type=cache,target=/var/lib/apt,id=apt-lib-builder,sharing=private \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -u 1001 -g 0 -d /app -s /sbin/nologin appuser \
+    && mkdir -p /app && chown 1001:0 /app && chmod g=u /app
+
+# Copy virtual environment from builder with correct ownership
+# Using --chown avoids expensive post-copy chown layer
+COPY --from=python-builder --chown=1001:0 /app/.venv /app/.venv
+
+# Copy source code with correct ownership
+COPY --chown=1001:0 src/ ./src/
+COPY --chown=1001:0 pyproject.toml ./
+
 # Copy built frontend from stage 1
 # Place in builder/frontend/dist to match SPAStaticFiles path expectations
 COPY --from=frontend-builder --chown=1001:0 /frontend/dist ./src/mcp_server_langgraph/builder/frontend/dist/
-
-# Create non-root user with GID 0 for OpenShift arbitrary UID support
-# OpenShift runs containers with arbitrary UIDs in GID 0
-RUN useradd -u 1001 -g 0 -d /app -s /sbin/nologin appuser && \
-    chown -R 1001:0 /app && chmod -R g=u /app
 
 # Drop privileges - use numeric UID for OpenShift compatibility
 USER 1001

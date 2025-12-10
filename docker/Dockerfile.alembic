@@ -39,10 +39,6 @@ WORKDIR /app
 # Install uv - Fast Python package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Copy only Alembic-related files (minimal context)
-COPY alembic.ini ./
-COPY alembic/ ./alembic/
-
 # Install ONLY the dependencies needed for migrations
 # Using uv pip install to avoid building the local package
 # Versions pinned to match pyproject.toml for consistency
@@ -53,16 +49,18 @@ RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-alembic,sharing=privat
     "asyncpg>=0.29.0" \
     "pyyaml>=6.0.3"
 
+# Create non-root user BEFORE copying files for efficient --chown
+RUN useradd -u 1001 -g 0 -d /app -s /sbin/nologin appuser && \
+    chown 1001:0 /app && chmod g=u /app
+
+# Copy only Alembic-related files with correct ownership
+COPY --chown=1001:0 alembic.ini ./
+COPY --chown=1001:0 alembic/ ./alembic/
+
 # Environment configuration
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     HOME=/app
-
-# Create non-root user with GID 0 for OpenShift arbitrary UID support
-# OpenShift runs containers with arbitrary UIDs in GID 0 (root group)
-# The container user is always a member of the root group
-RUN useradd -u 1001 -g 0 -d /app -s /sbin/nologin appuser && \
-    chown -R 1001:0 /app && chmod -R g=u /app
 
 # Drop privileges - use numeric UID for OpenShift compatibility
 USER 1001

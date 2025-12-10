@@ -77,16 +77,20 @@ FROM python:${PYTHON_VERSION}-slim AS runtime
 
 WORKDIR /app
 
-# Install runtime dependencies (curl for health checks)
+# Install runtime dependencies and create user BEFORE copying files
+# This avoids expensive chown on the 1.1GB venv layer
 RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-test-runtime,sharing=private \
     --mount=type=cache,target=/var/lib/apt,id=apt-lib-test-runtime,sharing=private \
     apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -u 1001 -g 0 -d /app -s /bin/bash appuser \
+    && mkdir -p /app && chown 1001:0 /app && chmod g=u /app
 
-# Copy virtual environment from builder stage
-COPY --from=builder /app/.venv /app/.venv
+# Copy virtual environment from builder stage with correct ownership
+# Using --chown avoids expensive post-copy chown layer
+COPY --from=builder --chown=1001:0 /app/.venv /app/.venv
 
 # Copy source code
 COPY --chown=1001:0 src/ ./src/
@@ -101,11 +105,6 @@ COPY --chown=1001:0 alembic/ ./alembic/
 # NOTE: Per ADR-0053, scripts/ and deployments/ are NOT copied to the Docker image.
 # Meta-tests that require these directories run on the host, not in the container.
 # Only adr/ is copied for documentation purposes (if needed).
-
-# Create non-root user with GID 0 for OpenShift arbitrary UID support
-# OpenShift runs containers with arbitrary UIDs in GID 0
-RUN useradd -u 1001 -g 0 -d /app -s /bin/bash appuser && \
-    chown -R 1001:0 /app && chmod -R g=u /app
 
 # Drop privileges - use numeric UID for OpenShift compatibility
 USER 1001
