@@ -35,15 +35,8 @@ FROM python:${PYTHON_VERSION}-slim AS builder
 
 WORKDIR /app
 
-# Install system dependencies for building
-RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-test-builder,sharing=private \
-    --mount=type=cache,target=/var/lib/apt,id=apt-lib-test-builder,sharing=private \
-    apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
 # Install uv - Fast Python package manager
+# Note: No apt packages needed in builder stage (curl/ca-certs only needed at runtime)
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # UV environment variables for optimal Docker builds

@@ -6,7 +6,7 @@
 # VARIANTS:
 #   - base:    Lightweight (200MB) - API-based embeddings only (Google Gemini)
 #   - full:    Complete (1.2GB)    - Includes sentence-transformers for local embeddings
-#   - test:    Test runner (800MB)  - Dev dependencies, no ML models
+#   - test:    Test runner (1.6GB)  - Dev dependencies, no ML models
 #
 # BUILD EXAMPLES:
 #   docker build --target final-base -t mcp-server-langgraph:base -f docker/Dockerfile .
@@ -19,7 +19,7 @@
 #   - Layer ordering optimized for cache hits
 #   - BuildKit cache mounts throughout
 #   - 62% smaller base image (530MB → 200MB)
-#   - 94% smaller test image (13.3GB → 800MB)
+#   - 88% smaller test image (13.3GB → 1.6GB)
 #
 # OPENSHIFT COMPATIBILITY:
 #   - Uses numeric UID (1001) in USER directive
@@ -278,7 +278,7 @@ ENV ENABLE_TRACING=false \
 LABEL org.opencontainers.image.title="MCP Server LangGraph (Test)"
 LABEL org.opencontainers.image.description="Test runner with dev dependencies"
 LABEL org.opencontainers.image.variant="test"
-LABEL org.opencontainers.image.size="~800MB"
+LABEL org.opencontainers.image.size="~1.6GB"
 LABEL io.openshift.tags="mcp,langgraph,test"
 LABEL io.k8s.description="Test runner for MCP server with dev dependencies"
 
