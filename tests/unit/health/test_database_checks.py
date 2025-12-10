@@ -18,7 +18,7 @@ References:
 
 import gc
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import asyncpg
 import pytest
@@ -562,8 +562,7 @@ class TestConvenienceFunction:
     @pytest.mark.asyncio
     async def test_validate_database_architecture_convenience_function(self):
         """Should provide convenient validation with default parameters"""
-        # Mock DatabaseValidator
-        mock_validator = MagicMock()
+        # Mock DatabaseValidator with spec for proper type checking
         mock_result = ValidationResult(
             environment=Environment.DEV,
             databases={},
@@ -571,7 +570,9 @@ class TestConvenienceFunction:
             errors=[],
             warnings=[],
         )
-        mock_validator.validate = AsyncMock(return_value=mock_result)
+        # Use AsyncMock for the validator to ensure all async methods work correctly in xdist
+        mock_validator = AsyncMock(spec=DatabaseValidator)
+        mock_validator.validate.return_value = mock_result
 
         with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator", return_value=mock_validator):
             result = await validate_database_architecture()
@@ -582,7 +583,6 @@ class TestConvenienceFunction:
     @pytest.mark.asyncio
     async def test_validate_database_architecture_with_custom_parameters(self):
         """Should accept custom connection parameters"""
-        mock_validator = MagicMock()
         mock_result = ValidationResult(
             environment=Environment.DEV,
             databases={},
@@ -590,7 +590,9 @@ class TestConvenienceFunction:
             errors=[],
             warnings=[],
         )
-        mock_validator.validate = AsyncMock(return_value=mock_result)
+        # Use AsyncMock for the validator to ensure all async methods work correctly in xdist
+        mock_validator = AsyncMock(spec=DatabaseValidator)
+        mock_validator.validate.return_value = mock_result
 
         with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator", return_value=mock_validator) as mock_class:
             result = await validate_database_architecture(
