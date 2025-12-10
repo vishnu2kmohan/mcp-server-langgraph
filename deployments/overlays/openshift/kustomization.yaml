@@ -27,6 +27,11 @@ namespace: mcp-server-langgraph
 resources:
   - ../../base
 
+# Include LGTM stack for self-hosted observability
+# (OpenShift deployments use LGTM instead of cloud-native observability)
+components:
+  - ../../base/lgtm
+
 # OpenShift-specific annotations
 commonAnnotations:
   platform: openshift
@@ -123,3 +128,8 @@ patches:
     target:
       kind: Deployment
       name: otel-collector
+
+  # LGTM Stack - OpenShift security context patches
+  # Remove runAsUser from Loki, Tempo, Mimir, Alloy, Grafana
+  # (OpenShift assigns arbitrary UIDs via SCC)
+  - path: lgtm-json-patches.yaml

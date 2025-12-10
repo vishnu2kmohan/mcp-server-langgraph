@@ -1,0 +1,103 @@
+# LGTM Stack OpenShift JSON Patches
+# ==================================
+# Remove runAsUser/runAsGroup from LGTM components
+# OpenShift assigns arbitrary UIDs via SCC (Security Context Constraints)
+#
+# These patches use JSON Patch (RFC 6902) format to remove specific fields
+
+---
+# Loki StatefulSet - Remove runAsUser from pod and container security contexts
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: loki
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsUser: null
+        fsGroup: null
+      initContainers:
+        - name: init-permissions
+          securityContext:
+            runAsUser: null
+      containers:
+        - name: loki
+          securityContext:
+            runAsUser: null
+---
+# Tempo StatefulSet - Remove runAsUser from pod and container security contexts
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tempo
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsUser: null
+        fsGroup: null
+      initContainers:
+        - name: init-permissions
+          securityContext:
+            runAsUser: null
+      containers:
+        - name: tempo
+          securityContext:
+            runAsUser: null
+---
+# Mimir StatefulSet - Remove runAsUser from pod and container security contexts
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mimir
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsUser: null
+        fsGroup: null
+      initContainers:
+        - name: init-permissions
+          securityContext:
+            runAsUser: null
+      containers:
+        - name: mimir
+          securityContext:
+            runAsUser: null
+---
+# Alloy Deployment - Remove runAsUser from pod and container security contexts
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alloy
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsUser: null
+        fsGroup: null
+      containers:
+        - name: alloy
+          securityContext:
+            runAsUser: null
+---
+# Grafana Deployment - Remove runAsUser from pod and container security contexts
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsUser: null
+        fsGroup: null
+      initContainers:
+        - name: init-permissions
+          securityContext:
+            runAsUser: null
+      containers:
+        - name: grafana
+          securityContext:
+            runAsUser: null

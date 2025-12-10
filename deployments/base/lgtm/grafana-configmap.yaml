@@ -1,0 +1,99 @@
+# Grafana ConfigMaps for Kubernetes LGTM Stack
+# =============================================
+# Datasources and dashboard provisioning configuration
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  labels:
+    app: grafana
+    component: observability
+data:
+  datasources.yaml: |
+    # Grafana Datasource Configuration for LGTM Stack
+    # Reference: monitoring/grafana/datasources.yml
+    apiVersion: 1
+
+    datasources:
+      # Mimir - Prometheus-compatible metrics
+      - name: Mimir
+        type: prometheus
+        access: proxy
+        url: http://mimir:9009/prometheus
+        isDefault: true
+        jsonData:
+          httpMethod: POST
+          manageAlerts: true
+          prometheusType: Mimir
+          exemplarTraceIdDestinations:
+            - name: trace_id
+              datasourceUid: tempo
+
+      # Tempo - Distributed tracing
+      - name: Tempo
+        type: tempo
+        access: proxy
+        url: http://tempo:3200
+        uid: tempo
+        jsonData:
+          httpMethod: GET
+          tracesToLogs:
+            datasourceUid: loki
+            tags: ['job', 'instance', 'pod', 'namespace']
+            mappedTags: [{ key: 'service.name', value: 'service' }]
+            mapTagNamesEnabled: true
+            spanStartTimeShift: '1h'
+            spanEndTimeShift: '1h'
+            filterByTraceID: true
+            filterBySpanID: false
+          tracesToMetrics:
+            datasourceUid: mimir
+            tags: [{ key: 'service.name', value: 'service' }]
+            queries:
+              - name: 'Request Rate'
+                query: 'sum(rate(traces_spanmetrics_calls_total{$$__tags}[5m]))'
+          serviceMap:
+            datasourceUid: mimir
+          nodeGraph:
+            enabled: true
+          lokiSearch:
+            datasourceUid: loki
+
+      # Loki - Log aggregation
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki:3100
+        uid: loki
+        jsonData:
+          derivedFields:
+            - datasourceUid: tempo
+              matcherRegex: '"trace_id":"([a-f0-9]+)"'
+              name: TraceID
+              url: '$${__value.raw}'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-config
+  labels:
+    app: grafana
+    component: observability
+data:
+  dashboards.yaml: |
+    # Grafana Dashboard Provisioning Configuration
+    apiVersion: 1
+
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: 'MCP Server LangGraph'
+        folderUid: ''
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards

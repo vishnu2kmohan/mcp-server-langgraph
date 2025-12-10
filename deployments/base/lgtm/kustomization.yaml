@@ -1,0 +1,58 @@
+# LGTM Stack Base Kustomization
+# ==============================
+# Grafana LGTM (Loki, Grafana, Tempo, Mimir) + Alloy for self-hosted observability
+#
+# USE CASES:
+#   - OpenShift deployments (on-prem, no cloud vendor lock-in)
+#   - Rancher deployments (on-prem, Kubernetes distributions)
+#   - Any environment where cloud-native observability isn't available
+#
+# NOT RECOMMENDED FOR:
+#   - GKE: Use Cloud Trace, Cloud Logging, Cloud Monitoring instead
+#   - EKS: Use X-Ray, CloudWatch instead
+#   - AKS: Use Application Insights, Azure Monitor instead
+#
+# COMPONENTS:
+#   - Grafana: Unified dashboards and alerting UI
+#   - Loki: Log aggregation (replaces Cloud Logging)
+#   - Tempo: Distributed tracing (replaces Jaeger, Cloud Trace)
+#   - Mimir: Metrics storage (replaces Prometheus, Cloud Monitoring)
+#   - Alloy: Unified telemetry collector (replaces otel-collector-contrib)
+#
+# USAGE:
+#   Include this component in overlay kustomization.yaml:
+#     components:
+#       - ../../base/lgtm
+#
+# Reference: docker-compose.test.yml LGTM stack configuration
+# Versions aligned with docker-compose.test.yml as of 2025-12-10:
+#   - grafana/grafana:12.2.0
+#   - grafana/loki:3.6.2
+#   - grafana/tempo:2.9.0
+#   - grafana/mimir:3.0.1
+#   - grafana/alloy:v1.12.0
+
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  # Core LGTM Stack
+  - loki-deployment.yaml
+  - tempo-deployment.yaml
+  - mimir-deployment.yaml
+  - alloy-deployment.yaml
+  - grafana-deployment.yaml
+  # ConfigMaps for each component
+  - loki-configmap.yaml
+  - tempo-configmap.yaml
+  - mimir-configmap.yaml
+  - alloy-configmap.yaml
+  - grafana-configmap.yaml
+  # Network policies for security
+  - lgtm-networkpolicy.yaml
+
+labels:
+  - pairs:
+      component: observability
+      stack: lgtm
+    includeSelectors: false
