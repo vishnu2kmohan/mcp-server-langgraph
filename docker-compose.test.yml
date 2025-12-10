@@ -480,6 +480,11 @@ services:
       - INSECURE_COOKIE=true  # Required for HTTP (no TLS in test)
       - AUTH_HOST=localhost
       - URL_PATH=/_oauth
+      # Session lifetime in seconds (default 43200 = 12 hours)
+      - LIFETIME=3600
+      # Logout Configuration
+      # /_oauth/logout redirects to Keycloak logout for complete SSO logout
+      - LOGOUT_REDIRECT=http://localhost/authn/realms/default/protocol/openid-connect/logout?post_logout_redirect_uri=http%3A%2F%2Flocalhost%2Fauthn%2Frealms%2Fdefault%2Faccount&client_id=mcp-server
       # Logging
       - LOG_LEVEL=info
       - LOG_FORMAT=json
