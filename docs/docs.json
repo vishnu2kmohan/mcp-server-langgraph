@@ -523,7 +523,8 @@
               "architecture/adr-0030-resilience-patterns",
               "architecture/adr-0040-gcp-gke-autopilot-deployment",
               "architecture/adr-0041-postgresql-gdpr-storage",
-              "architecture/adr-0051-memorystore-redis-externalname-service"
+              "architecture/adr-0051-memorystore-redis-externalname-service",
+              "architecture/adr-0067-mcp-2025-11-25-upgrade"
             ]
           },
           {
