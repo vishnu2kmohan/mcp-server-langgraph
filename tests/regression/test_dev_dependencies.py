@@ -366,6 +366,7 @@ def get_project_modules() -> set[str]:
         "validate_mintlify_docs",
         "fix_mdx_syntax",  # Script in scripts/ directory, not a package
         "hcl2",  # Optional import for Terraform parsing (try/except in tests)
+        "vertexai",  # Optional import for Vertex AI integration (try/except in tests)
         # Local scripts imported by tests (in scripts/ directory)
         "check_internal_links",  # Script for checking documentation links
         "check_mermaid_styling",  # Script for mermaid diagram validation
