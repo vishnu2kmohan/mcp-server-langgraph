@@ -82,7 +82,12 @@ blocks_storage:
 # Ruler configuration (built-in alerting)
 ruler:
   enable_api: true
-  rule_path: /tmp/mimir/rules
+  rule_path: /tmp/mimir/rules-wal
+  # Load rules from mounted directory
+  storage:
+    type: local
+    local:
+      directory: /etc/mimir/rules
   ring:
     kvstore:
       store: inmemory

@@ -1,0 +1,366 @@
+# LGTM Stack Alerting Rules for Mimir Ruler
+# ===========================================
+# Alerting rules for monitoring the observability stack itself
+# and all services in the MCP Server LangGraph deployment.
+#
+# Rules are loaded by Mimir's built-in ruler.
+# Reference: https://grafana.com/docs/mimir/latest/references/architecture/components/ruler/
+#
+# Alert Severity Levels:
+#   - critical: Immediate action required, service is down
+#   - warning: Degraded performance, action needed soon
+#   - info: Informational, may need investigation
+
+namespace: lgtm-stack
+
+groups:
+  # ===========================================================================
+  # LGTM Stack Health Alerts
+  # ===========================================================================
+  - name: lgtm-stack-health
+    interval: 30s
+    rules:
+      # Loki down
+      - alert: LokiDown
+        expr: up{job=~".*loki.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: loki
+          component: lgtm
+        annotations:
+          summary: "Loki is down"
+          description: "Loki log aggregation service has been down for more than 2 minutes."
+          runbook_url: "https://grafana.com/docs/loki/latest/operations/troubleshooting/"
+
+      # Grafana down
+      - alert: GrafanaDown
+        expr: up{job=~".*grafana.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: grafana
+          component: lgtm
+        annotations:
+          summary: "Grafana is down"
+          description: "Grafana dashboard service has been down for more than 2 minutes."
+
+      # Tempo down
+      - alert: TempoDown
+        expr: up{job=~".*tempo.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: tempo
+          component: lgtm
+        annotations:
+          summary: "Tempo is down"
+          description: "Tempo distributed tracing service has been down for more than 2 minutes."
+
+      # Mimir down
+      - alert: MimirDown
+        expr: up{job=~".*mimir.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: mimir
+          component: lgtm
+        annotations:
+          summary: "Mimir is down"
+          description: "Mimir metrics storage service has been down for more than 2 minutes."
+
+      # Alloy (collector) down
+      - alert: AlloyDown
+        expr: up{job=~".*alloy.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: alloy
+          component: lgtm
+        annotations:
+          summary: "Alloy telemetry collector is down"
+          description: "Alloy OTLP collector has been down for more than 2 minutes. No telemetry is being collected."
+
+      # Stack health below threshold
+      - alert: LGTMStackDegraded
+        expr: |
+          (count(up{job=~".*loki.*|.*tempo.*|.*mimir.*|.*alloy.*|.*grafana.*"} == 1) /
+          count(up{job=~".*loki.*|.*tempo.*|.*mimir.*|.*alloy.*|.*grafana.*"})) * 100 < 80
+        for: 5m
+        labels:
+          severity: warning
+          component: lgtm
+        annotations:
+          summary: "LGTM Stack health degraded"
+          description: "Less than 80% of LGTM stack components are healthy."
+
+  # ===========================================================================
+  # Loki Alerts
+  # ===========================================================================
+  - name: loki-alerts
+    interval: 30s
+    rules:
+      # High request latency
+      - alert: LokiHighRequestLatency
+        expr: |
+          histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket{job=~".*loki.*"}[5m])) by (le, route)) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: loki
+        annotations:
+          summary: "Loki high request latency"
+          description: "Loki p99 request latency is above 5 seconds for route {{ $labels.route }}."
+
+      # Ingestion rate too high
+      - alert: LokiHighIngestionRate
+        expr: sum(rate(loki_distributor_bytes_received_total{job=~".*loki.*"}[5m])) > 10485760
+        for: 10m
+        labels:
+          severity: warning
+          service: loki
+        annotations:
+          summary: "Loki high ingestion rate"
+          description: "Loki is receiving more than 10MB/s of logs."
+
+      # Active streams too high
+      - alert: LokiTooManyActiveStreams
+        expr: |
+          sum(loki_ingester_streams_created_total{job=~".*loki.*"}) -
+          sum(loki_ingester_streams_removed_total{job=~".*loki.*"}) > 10000
+        for: 10m
+        labels:
+          severity: warning
+          service: loki
+        annotations:
+          summary: "Loki has too many active streams"
+          description: "Loki has more than 10,000 active log streams."
+
+  # ===========================================================================
+  # Tempo Alerts
+  # ===========================================================================
+  - name: tempo-alerts
+    interval: 30s
+    rules:
+      # High span ingestion rate
+      - alert: TempoHighSpanRate
+        expr: sum(rate(tempo_distributor_spans_received_total{job=~".*tempo.*"}[5m])) > 10000
+        for: 10m
+        labels:
+          severity: warning
+          service: tempo
+        annotations:
+          summary: "Tempo high span ingestion rate"
+          description: "Tempo is receiving more than 10,000 spans/second."
+
+      # Query latency too high
+      - alert: TempoHighQueryLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(tempo_query_frontend_queries_duration_seconds_bucket{job=~".*tempo.*"}[5m])) by (le)) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: tempo
+        annotations:
+          summary: "Tempo high query latency"
+          description: "Tempo p95 query latency is above 10 seconds."
+
+  # ===========================================================================
+  # Mimir Alerts
+  # ===========================================================================
+  - name: mimir-alerts
+    interval: 30s
+    rules:
+      # Active time series too high
+      - alert: MimirHighActiveSeries
+        expr: sum(cortex_ingester_active_series{job=~".*mimir.*"}) > 500000
+        for: 10m
+        labels:
+          severity: warning
+          service: mimir
+        annotations:
+          summary: "Mimir high active time series count"
+          description: "Mimir has more than 500,000 active time series."
+
+      # Query latency too high
+      - alert: MimirHighQueryLatency
+        expr: |
+          histogram_quantile(0.99, sum(rate(cortex_request_duration_seconds_bucket{job=~".*mimir.*", route=~".*query.*"}[5m])) by (le)) > 30
+        for: 5m
+        labels:
+          severity: warning
+          service: mimir
+        annotations:
+          summary: "Mimir high query latency"
+          description: "Mimir p99 query latency is above 30 seconds."
+
+      # Ingestion rate limit approaching
+      - alert: MimirIngestionRateHigh
+        expr: |
+          sum(rate(cortex_distributor_samples_in_total{job=~".*mimir.*"}[5m])) > 80000
+        for: 10m
+        labels:
+          severity: warning
+          service: mimir
+        annotations:
+          summary: "Mimir ingestion rate approaching limit"
+          description: "Mimir sample ingestion rate is above 80,000/s (limit is 100,000/s)."
+
+  # ===========================================================================
+  # Alloy Alerts
+  # ===========================================================================
+  - name: alloy-alerts
+    interval: 30s
+    rules:
+      # Data being refused
+      - alert: AlloyDataRefused
+        expr: |
+          sum(rate(otelcol_receiver_refused_metric_points{job=~".*alloy.*"}[5m])) +
+          sum(rate(otelcol_receiver_refused_spans{job=~".*alloy.*"}[5m])) +
+          sum(rate(otelcol_receiver_refused_log_records{job=~".*alloy.*"}[5m])) > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: alloy
+        annotations:
+          summary: "Alloy is refusing telemetry data"
+          description: "Alloy OTLP receiver is refusing more than 100 data points/second."
+
+      # Exporter failures
+      - alert: AlloyExporterFailures
+        expr: |
+          sum(rate(otelcol_exporter_send_failed_metric_points{job=~".*alloy.*"}[5m])) +
+          sum(rate(otelcol_exporter_send_failed_spans{job=~".*alloy.*"}[5m])) +
+          sum(rate(otelcol_exporter_send_failed_log_records{job=~".*alloy.*"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: alloy
+        annotations:
+          summary: "Alloy failing to export telemetry"
+          description: "Alloy is failing to export more than 10 data points/second to backends."
+
+  # ===========================================================================
+  # Application Service Alerts
+  # ===========================================================================
+  - name: service-health
+    interval: 30s
+    rules:
+      # MCP Server down
+      - alert: MCPServerDown
+        expr: up{job=~".*mcp.*server.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: mcp-server
+        annotations:
+          summary: "MCP Server is down"
+          description: "MCP Server has been down for more than 2 minutes."
+
+      # Keycloak down
+      - alert: KeycloakDown
+        expr: up{job=~".*keycloak.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: keycloak
+        annotations:
+          summary: "Keycloak is down"
+          description: "Keycloak authentication service has been down for more than 2 minutes."
+
+      # OpenFGA down
+      - alert: OpenFGADown
+        expr: up{job=~".*openfga.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: openfga
+        annotations:
+          summary: "OpenFGA is down"
+          description: "OpenFGA authorization service has been down for more than 2 minutes."
+
+      # PostgreSQL down
+      - alert: PostgreSQLDown
+        expr: up{job=~".*postgres.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: postgresql
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database has been down for more than 2 minutes."
+
+      # Redis down
+      - alert: RedisDown
+        expr: up{job=~".*redis.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache/session store has been down for more than 2 minutes."
+
+      # Qdrant down
+      - alert: QdrantDown
+        expr: up{job=~".*qdrant.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: qdrant
+        annotations:
+          summary: "Qdrant is down"
+          description: "Qdrant vector database has been down for more than 2 minutes."
+
+      # Traefik down
+      - alert: TraefikDown
+        expr: up{job=~".*traefik.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: traefik
+        annotations:
+          summary: "Traefik API Gateway is down"
+          description: "Traefik API Gateway has been down for more than 2 minutes."
+
+  # ===========================================================================
+  # Traefik Gateway Alerts
+  # ===========================================================================
+  - name: traefik-alerts
+    interval: 30s
+    rules:
+      # High error rate
+      - alert: TraefikHighErrorRate
+        expr: |
+          (sum(rate(traefik_entrypoint_requests_total{job=~".*traefik.*", code=~"5.."}[5m])) /
+          sum(rate(traefik_entrypoint_requests_total{job=~".*traefik.*"}[5m]))) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: traefik
+        annotations:
+          summary: "Traefik high error rate"
+          description: "Traefik 5xx error rate is above 5%."
+
+      # High latency
+      - alert: TraefikHighLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(traefik_entrypoint_request_duration_seconds_bucket{job=~".*traefik.*"}[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: traefik
+        annotations:
+          summary: "Traefik high latency"
+          description: "Traefik p95 request latency is above 2 seconds."
+
+      # Backend service down
+      - alert: TraefikBackendDown
+        expr: traefik_service_server_up{job=~".*traefik.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: traefik
+        annotations:
+          summary: "Traefik backend service down"
+          description: "Backend service {{ $labels.service }} is not reachable through Traefik."

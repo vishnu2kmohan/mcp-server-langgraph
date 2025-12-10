@@ -474,22 +474,34 @@ class TestWebhookAlerts:
 
         Uses spec=httpx.Response for proper mock isolation under xdist.
         The response.raise_for_status() is synchronous in httpx, so we use MagicMock.
+
+        XDIST FIX: Mock the entire httpx module's AsyncClient class, not just the
+        return value. The async context manager must return the mock client instance
+        that we control, not a separate MagicMock instance.
         """
+        import httpx
+
         # Arrange
         monitor = BudgetMonitor(webhook_url="https://hooks.slack.com/services/ABC123")
 
         # Mock response - raise_for_status is sync in httpx
-        mock_response = MagicMock(spec=["raise_for_status"])
+        mock_response = MagicMock(spec=httpx.Response)
         mock_response.raise_for_status = MagicMock()
 
-        # Create mock client with proper async context manager protocol
-        # Use MagicMock for the client, with AsyncMock for the post method
-        mock_client = MagicMock()
+        # Create a mock that will be returned from the context manager
+        # The key is to make AsyncClient() return an object whose __aenter__
+        # returns our controllable mock_client
+        mock_client = MagicMock(spec=httpx.AsyncClient)
         mock_client.post = AsyncMock(return_value=mock_response)
-        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-        mock_client.__aexit__ = AsyncMock(return_value=None)
 
-        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", return_value=mock_client):
+        # Create the mock for AsyncClient class itself
+        mock_async_client_class = MagicMock()
+        mock_async_client_instance = MagicMock()
+        mock_async_client_instance.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_async_client_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_async_client_class.return_value = mock_async_client_instance
+
+        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", mock_async_client_class):
             # Act
             await monitor._send_webhook_alert(
                 level="critical", message="Budget exceeded", budget_id="budget_001", utilization=95.0

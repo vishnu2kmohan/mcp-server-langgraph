@@ -1,0 +1,43 @@
+# Grafana Unified Alerting Provisioning
+# ======================================
+# Configures Grafana's unified alerting with contact points and notification policies.
+# This file is mounted to /etc/grafana/provisioning/alerting/alerting.yml
+#
+# Reference: https://grafana.com/docs/grafana/latest/alerting/set-up/provision-alerting-resources/file-provisioning/
+#
+# NOTE: This configuration enables Grafana to display alerts from Mimir's ruler.
+# Mimir's built-in alertmanager handles the actual alerting logic.
+# Grafana uses the "Manage alerts via Alerting UI" feature to query Mimir.
+
+apiVersion: 1
+
+# Contact points define where notifications are sent
+contactPoints:
+  - orgId: 1
+    name: default-receiver
+    receivers:
+      # Webhook for test environment (logs alerts for debugging)
+      - uid: default-webhook
+        type: webhook
+        settings:
+          url: http://localhost:9999/alerts
+          httpMethod: POST
+        disableResolveMessage: false
+
+# Notification policies define routing rules
+policies:
+  - orgId: 1
+    receiver: default-receiver
+    group_by:
+      - alertname
+      - service
+    routes: []
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
+
+# Templates for notification messages
+templates: []
+
+# Mute timings (none configured in test environment)
+muteTimes: []

@@ -747,10 +747,17 @@ services:
       # Subpath configuration for gateway routing
       - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/dashboards/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      # Unified alerting configuration
+      - GF_ALERTING_ENABLED=true
+      - GF_UNIFIED_ALERTING_ENABLED=true
+      # Use Mimir as external Alertmanager
+      - GF_UNIFIED_ALERTING_ALERTMANAGERS_DISCOVER=false
+      - GF_UNIFIED_ALERTING_ALERTMANAGER_URL=http://mimir:9009/alertmanager
     volumes:
       - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       - ./monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/alerting.yml:/etc/grafana/provisioning/alerting/alerting.yml:ro
     healthcheck:
       # wget is available in the official Grafana image (grafana/grafana)
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
@@ -984,6 +991,7 @@ services:
     volumes:
       - ./docker/mimir/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
       - ./docker/mimir/alertmanager-fallback.yaml:/etc/mimir/alertmanager-fallback.yaml:ro
+      - ./docker/mimir/rules:/etc/mimir/rules:ro
       - mimir-data:/tmp/mimir
     # NOTE: Mimir uses distroless image with no wget/curl
     # See: https://github.com/grafana/mimir/issues/9034
