@@ -22,18 +22,74 @@ except ImportError:
     pytest.skip("Sandbox modules not implemented yet", allow_module_level=True)
 
 
-@pytest.fixture
-def kubernetes_available():
-    """Check if Kubernetes is available"""
+def _check_kubernetes_cluster_functional() -> tuple[bool, str]:
+    """
+    Check if Kubernetes cluster is functional (can schedule pods).
+
+    Returns:
+        Tuple of (is_functional, error_message)
+    """
     try:
         from kubernetes import client, config
+        from kubernetes.client.rest import ApiException
 
-        config.load_kube_config()
+        # Try to load kubeconfig
+        try:
+            config.load_kube_config()
+        except config.ConfigException:
+            try:
+                config.load_incluster_config()
+            except config.ConfigException:
+                return False, "No kubeconfig or in-cluster config"
+
+        # Verify API server is reachable
         v1 = client.CoreV1Api()
-        v1.list_namespace()
-        return True
-    except Exception:
-        pytest.skip("Kubernetes not available (no kubeconfig or cluster)")
+        try:
+            v1.list_namespace(limit=1, timeout_seconds=5)
+        except ApiException as e:
+            return False, f"API not reachable: {e.reason}"
+
+        # Check if there are any Ready nodes
+        try:
+            nodes = v1.list_node(timeout_seconds=5)
+            ready_nodes = 0
+            for node in nodes.items:
+                for condition in node.status.conditions or []:
+                    if condition.type == "Ready" and condition.status == "True":
+                        ready_nodes += 1
+                        break
+            if ready_nodes == 0:
+                return False, "No Ready nodes in cluster"
+        except ApiException as e:
+            return False, f"Cannot list nodes: {e.reason}"
+
+        return True, ""
+
+    except ImportError:
+        return False, "kubernetes Python package not installed"
+    except Exception as e:
+        return False, str(e)
+
+
+# Check once at module load to avoid repeated checks
+_K8S_FUNCTIONAL, _K8S_SKIP_REASON = _check_kubernetes_cluster_functional()
+
+
+@pytest.fixture
+def kubernetes_available():
+    """
+    Check if Kubernetes is available and can execute Jobs.
+
+    This fixture performs a comprehensive check:
+    1. kubeconfig can be loaded
+    2. API server is reachable
+    3. At least one Ready node exists (can schedule pods)
+
+    If any check fails, the test is skipped with a descriptive message.
+    """
+    if not _K8S_FUNCTIONAL:
+        pytest.skip(f"Kubernetes not functional: {_K8S_SKIP_REASON}")
+    return True
 
 
 @pytest.mark.integration
