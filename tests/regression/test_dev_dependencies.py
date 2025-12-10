@@ -526,6 +526,7 @@ def test_dev_dependencies_are_importable():
             "opentelemetry_exporter_otlp_proto_grpc",  # imports as opentelemetry.exporter.otlp.proto.grpc
             "opentelemetry_exporter_otlp_proto_http",  # imports as opentelemetry.exporter.otlp.proto.http
             "langgraph_checkpoint_redis",  # imports as langgraph.checkpoint.redis
+            "azure_identity",  # imports as azure.identity (namespace package)
             # Optional dependencies (not always installed)
             "torch",  # Only in embeddings-local extra
             "sentence_transformers",  # Only in embeddings-local extra

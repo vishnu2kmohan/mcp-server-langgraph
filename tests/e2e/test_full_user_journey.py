@@ -20,6 +20,8 @@ from typing import Any
 import pytest
 import pytest_asyncio
 
+from tests.conftest import get_user_id
+
 # These tests require the full test infrastructure
 pytestmark = pytest.mark.e2e
 
@@ -1543,7 +1545,7 @@ class TestErrorRecoveryJourney:
                     "conversation_get",
                     {
                         "thread_id": "non_existent_conversation_12345",
-                        "user_id": "user:bob",  # Different user than alice
+                        "user_id": get_user_id("bob"),  # Different user than alice
                         "token": access_token,
                     },
                 )
@@ -1719,8 +1721,8 @@ class TestMultiUserCollaboration:
         openfga_client = OpenFGAClient(config=config)
 
         # User A (alice) owns the conversation
-        user_a = "user:alice"
-        user_b = "user:bob"
+        user_a = get_user_id("alice")
+        user_b = get_user_id("bob")
         conversation_id = f"conversation:shared_test_{os.urandom(4).hex()}"
 
         tuples_to_cleanup = []
@@ -1799,8 +1801,8 @@ class TestMultiUserCollaboration:
         config = OpenFGAConfig(api_url=api_url, store_id=store_id, model_id=model_id)
         openfga_client = OpenFGAClient(config=config)
 
-        user_a = "user:alice"
-        user_b = "user:bob"
+        user_a = get_user_id("alice")
+        user_b = get_user_id("bob")
         conversation_id = f"conversation:edit_test_{os.urandom(4).hex()}"
 
         tuples_to_cleanup = []
@@ -1871,8 +1873,8 @@ class TestMultiUserCollaboration:
         config = OpenFGAConfig(api_url=api_url, store_id=store_id, model_id=model_id)
         openfga_client = OpenFGAClient(config=config)
 
-        user_a = "user:alice"
-        user_b = "user:bob"
+        user_a = get_user_id("alice")
+        user_b = get_user_id("bob")
         conversation_id = f"conversation:revoke_test_{os.urandom(4).hex()}"
 
         owner_tuple = {"user": user_a, "relation": "owner", "object": conversation_id}
@@ -1944,8 +1946,8 @@ class TestMultiUserCollaboration:
         config = OpenFGAConfig(api_url=api_url, store_id=store_id, model_id=model_id)
         openfga_client = OpenFGAClient(config=config)
 
-        user_a = "user:alice"
-        user_b = "user:bob"
+        user_a = get_user_id("alice")
+        user_b = get_user_id("bob")
         org_id = f"organization:test_org_{os.urandom(4).hex()}"
         conversation_id = f"conversation:org_test_{os.urandom(4).hex()}"
 
