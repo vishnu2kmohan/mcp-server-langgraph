@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/schemas/server.json",
+  "name": "io.github.vishnu2kmohan/mcp-server-langgraph",
+  "version": "2.8.0",
+  "description": "AI Agent server with LangGraph workflows, fine-grained authorization (OpenFGA), and multi-LLM support",
+  "homepage": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
+  "repository": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Vishnu Mohan",
+      "url": "https://github.com/vishnu2kmohan"
+    }
+  ],
+  "packages": {
+    "pypi": "mcp-server-langgraph",
+    "docker": "ghcr.io/vishnu2kmohan/mcp-server-langgraph"
+  },
+  "capabilities": {
+    "tools": {
+      "listChanged": true
+    },
+    "resources": {
+      "subscribe": true,
+      "listChanged": true
+    },
+    "prompts": {
+      "listChanged": true
+    },
+    "sampling": {},
+    "elicitation": {}
+  },
+  "protocolVersion": "2025-11-25",
+  "runtime": {
+    "command": "mcp-server-langgraph",
+    "args": [],
+    "env": {
+      "LANGGRAPH_AGENT_ENABLED": "true"
+    }
+  },
+  "features": [
+    "Fine-grained authorization with OpenFGA",
+    "Multi-LLM support (OpenAI, Anthropic, Google, Azure)",
+    "LangGraph workflows with checkpoint persistence",
+    "Keycloak SSO integration",
+    "Prometheus metrics and OpenTelemetry observability",
+    "Approval workflow with risk levels",
+    "Task tracking for long-running operations"
+  ],
+  "keywords": [
+    "mcp",
+    "langgraph",
+    "ai-agent",
+    "llm",
+    "openfga",
+    "keycloak",
+    "authorization"
+  ],
+  "maintainers": [
+    {
+      "name": "Vishnu Mohan",
+      "url": "https://github.com/vishnu2kmohan"
+    }
+  ]
+}
