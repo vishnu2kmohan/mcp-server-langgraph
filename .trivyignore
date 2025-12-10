@@ -23,11 +23,13 @@
 
 # AVD-KSV-0014: Containers should run with readOnlyRootFilesystem
 # Keycloak requires writable filesystem for Quarkus JIT compilation
-exp:2026-02-28 AVD-KSV-0014
+AVD-KSV-0014 exp:2026-02-28
 
-# KSV118: Default security context configured
+# KSV118/AVD-KSV-0118: Default security context configured
 # OpenFGA upstream chart limitation - configured via values.yaml overrides
-exp:2026-02-28 KSV118
+# Also affects Kustomize patch files scanned in isolation (they inherit from base)
+KSV118 exp:2026-02-28
+AVD-KSV-0118 exp:2026-02-28
 
 # AVD-KSV-0108: ExternalName Service for Redis (Cloud DNS integration)
 # See: deployments/overlays/preview-gke/.trivyignore, ADR-0051
