@@ -53,8 +53,9 @@ class TestPostgreSQLCleanup:
 
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="testrediscleanup")
+@pytest.mark.skip_isolation_check  # redis_client_clean uses worker-scoped DB for isolation
 class TestRedisCleanup:
-    """Test Redis cleanup between tests"""
+    """Test Redis cleanup between tests using worker-scoped isolation."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
