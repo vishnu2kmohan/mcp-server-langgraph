@@ -586,10 +586,16 @@ class TestPrometheusSLAQueries:
             "data": {"result": [{"metric": {}, "value": [1699920000.0, "100.0"]}]},  # 100 requests/sec
         }
 
-        mock_responses = [
-            MagicMock(json=MagicMock(return_value=error_response), raise_for_status=MagicMock()),
-            MagicMock(json=MagicMock(return_value=total_response), raise_for_status=MagicMock()),
-        ]
+        # Use spec=httpx.Response to prevent xdist mock leakage from GCP tests
+        mock_error_response = MagicMock(spec=httpx.Response)
+        mock_error_response.json.return_value = error_response
+        mock_error_response.raise_for_status = MagicMock()
+
+        mock_total_response = MagicMock(spec=httpx.Response)
+        mock_total_response.json.return_value = total_response
+        mock_total_response.raise_for_status = MagicMock()
+
+        mock_responses = [mock_error_response, mock_total_response]
 
         with patch.object(httpx.AsyncClient, "get", new_callable=AsyncMock, side_effect=mock_responses):
             await client.initialize()
