@@ -15,9 +15,44 @@ import time
 import uuid
 from collections import defaultdict
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+
+# =============================================================================
+# SEP-1577: Sampling with Tools (New in 2025-11-25)
+# =============================================================================
+
+
+class SamplingTool(BaseModel):
+    """Tool definition for sampling requests (SEP-1577).
+
+    Allows servers to provide tool definitions when requesting LLM completions,
+    enabling agentic loops where the LLM can call tools.
+    """
+
+    name: str
+    description: str | None = None
+    inputSchema: dict[str, Any]
+
+
+class ToolChoice(BaseModel):
+    """Tool selection preference for sampling requests (SEP-1577).
+
+    Controls how the LLM should use the provided tools:
+    - auto: LLM decides whether to use tools
+    - none: LLM should not use any tools
+    - tool: LLM must use the specified tool
+    """
+
+    type: Literal["auto", "none", "tool"]
+    name: str | None = None  # Required when type="tool"
+
+
+# =============================================================================
+# Message Types
+# =============================================================================
 
 
 class SamplingMessageContent(BaseModel):
@@ -52,7 +87,10 @@ class ModelPreferences(BaseModel):
 
 
 class SamplingRequest(BaseModel):
-    """Request for LLM completion from server to client."""
+    """Request for LLM completion from server to client.
+
+    SEP-1577 (2025-11-25): Added tools and toolChoice parameters for agentic loops.
+    """
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     request_id: int = Field(default=0)
@@ -60,6 +98,9 @@ class SamplingRequest(BaseModel):
     modelPreferences: ModelPreferences = Field(default_factory=ModelPreferences)
     systemPrompt: str | None = None
     maxTokens: int = 1000
+    # SEP-1577: Tool definitions for agentic loops
+    tools: list[SamplingTool] | None = None
+    toolChoice: ToolChoice | None = None
     status: str = "pending"
     rejection_reason: str | None = None
     response: "SamplingResponse | None" = None
@@ -67,16 +108,24 @@ class SamplingRequest(BaseModel):
 
     def to_jsonrpc(self) -> dict[str, Any]:
         """Convert to JSON-RPC 2.0 request format."""
+        params: dict[str, Any] = {
+            "messages": [m.model_dump() for m in self.messages],
+            "modelPreferences": self.modelPreferences.model_dump(),
+            "systemPrompt": self.systemPrompt,
+            "maxTokens": self.maxTokens,
+        }
+
+        # SEP-1577: Include tools and toolChoice if provided
+        if self.tools is not None:
+            params["tools"] = [t.model_dump() for t in self.tools]
+        if self.toolChoice is not None:
+            params["toolChoice"] = self.toolChoice.model_dump()
+
         return {
             "jsonrpc": "2.0",
             "id": self.request_id,
             "method": "sampling/createMessage",
-            "params": {
-                "messages": [m.model_dump() for m in self.messages],
-                "modelPreferences": self.modelPreferences.model_dump(),
-                "systemPrompt": self.systemPrompt,
-                "maxTokens": self.maxTokens,
-            },
+            "params": params,
         }
 
 
@@ -117,6 +166,8 @@ class SamplingHandler:
         model_preferences: ModelPreferences | None = None,
         system_prompt: str | None = None,
         max_tokens: int = 1000,
+        tools: list[SamplingTool] | None = None,
+        tool_choice: ToolChoice | None = None,
     ) -> SamplingRequest:
         """Create a new sampling request.
 
@@ -125,6 +176,8 @@ class SamplingHandler:
             model_preferences: Model selection preferences
             system_prompt: System prompt for the LLM
             max_tokens: Maximum tokens in response
+            tools: Tool definitions for agentic loops (SEP-1577)
+            tool_choice: Tool selection preference (SEP-1577)
 
         Returns:
             SamplingRequest object with pending status
@@ -136,6 +189,8 @@ class SamplingHandler:
             modelPreferences=model_preferences or ModelPreferences(),
             systemPrompt=system_prompt,
             maxTokens=max_tokens,
+            tools=tools,
+            toolChoice=tool_choice,
         )
         self._next_request_id += 1
         self._pending[request.id] = request

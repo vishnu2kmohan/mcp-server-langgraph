@@ -19,6 +19,34 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
+# =============================================================================
+# SEP-1330: Enhanced Enum Schema (New in 2025-11-25)
+# =============================================================================
+
+
+class EnumSchema(BaseModel):
+    """Enhanced enum schema with enumNames and defaults (SEP-1330).
+
+    MCP 2025-11-25 adds enumNames for human-readable labels and
+    default values for enum fields in elicitation schemas.
+
+    Attributes:
+        type: JSON schema type (default: "string")
+        enum: List of allowed values
+        enumNames: Human-readable labels for enum values (same order as enum)
+        default: Default value (must be in enum list)
+        title: Display title
+        description: Description text
+    """
+
+    type: str = "string"
+    enum: list[str]
+    enumNames: list[str] | None = None
+    default: str | None = None
+    title: str | None = None
+    description: str | None = None
+
+
 class ElicitationAction(str, Enum):
     """Possible actions for elicitation response."""
 

@@ -224,6 +224,19 @@ export interface ModelPreferences {
   intelligencePriority?: number;
 }
 
+// SEP-1577: Sampling with Tools (New in 2025-11-25)
+export interface SamplingTool {
+  name: string;
+  description?: string;
+  inputSchema: JSONSchema;
+}
+
+// SEP-1577: Tool selection preference
+export interface ToolChoice {
+  type: 'auto' | 'none' | 'tool';
+  name?: string;  // Required when type='tool'
+}
+
 export interface SamplingCreateParams {
   messages: SamplingMessage[];
   modelPreferences?: ModelPreferences;
@@ -233,6 +246,9 @@ export interface SamplingCreateParams {
   maxTokens: number;
   stopSequences?: string[];
   metadata?: Record<string, unknown>;
+  // SEP-1577: Tool definitions for agentic loops
+  tools?: SamplingTool[];
+  toolChoice?: ToolChoice;
 }
 
 export type StopReason = 'endTurn' | 'stopSequence' | 'maxTokens';
@@ -311,6 +327,8 @@ export interface JSONSchema {
   required?: string[];
   items?: JSONSchema;
   enum?: (string | number | boolean | null)[];
+  // SEP-1330: Human-readable labels for enum values (same order as enum array)
+  enumNames?: string[];
   description?: string;
   default?: unknown;
   minimum?: number;
