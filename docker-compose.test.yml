@@ -368,7 +368,7 @@ services:
             echo "Keycloak Admin CLI connected successfully"
             break
           fi
-          echo "Waiting for Keycloak... attempt $i/60"
+          echo "Waiting for Keycloak... attempt $$i/60"
           sleep 2
         done
 
