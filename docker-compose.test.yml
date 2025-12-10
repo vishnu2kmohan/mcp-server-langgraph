@@ -499,7 +499,7 @@ services:
       echo 'Waiting for dependencies to be ready...' &&
       sleep 5 &&
       echo 'Starting MCP server...' &&
-      uv run uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000
+      uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000
       "
     depends_on:
       postgres-test:
