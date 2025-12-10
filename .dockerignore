@@ -126,13 +126,10 @@ CONTRIBUTING.md
 CODE_OF_CONDUCT.md
 
 # ==============================================================================
-# Tests (excluded for base/full variants)
-# Note: tests/ is included in build-test stage explicitly via COPY
+# Tests - NOT excluded (needed by Dockerfile.test)
+# Only exclude test artifacts, not the tests/ directory itself
 # ==============================================================================
-tests/
-test_*.py
-*_test.py
-conftest.py
+# tests/  # NOT excluded - needed by Dockerfile.test
 .pytest_cache/
 .hypothesis/
 htmlcov/
