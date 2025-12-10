@@ -508,9 +508,13 @@ services:
       - "traefik.http.middlewares.forward-auth.forwardauth.trustForwardHeader=true"
       - "traefik.http.middlewares.forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User,X-Auth-User,X-Auth-Email"
       # OAuth callback route (handles redirect from Keycloak)
+      # IMPORTANT: The /_oauth route MUST use the forward-auth middleware, NOT direct service routing.
+      # traefik-forward-auth intercepts /_oauth via X-Forwarded-Uri header in middleware mode.
+      # Without this, the OAuth callback fails because forward-auth doesn't see the code/state params.
       - "traefik.http.routers.forward-auth.rule=PathPrefix(`/_oauth`)"
       - "traefik.http.routers.forward-auth.entrypoints=web"
       - "traefik.http.routers.forward-auth.priority=100"
+      - "traefik.http.routers.forward-auth.middlewares=forward-auth@docker"
       - "traefik.http.services.forward-auth.loadbalancer.server.port=4181"
 
   # ==============================================================================

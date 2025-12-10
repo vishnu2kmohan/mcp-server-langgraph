@@ -238,7 +238,12 @@ class TestInitDatabase:
 
     @pytest.mark.asyncio
     async def test_init_database_creates_tables(self) -> None:
-        """Test that init_database creates all tables."""
+        """Test that init_database creates all tables.
+
+        This test patches create_async_engine instead of get_engine to avoid
+        xdist race conditions where the module-level _engine cache interferes
+        with patching.
+        """
         mock_engine = MagicMock()
         mock_conn = AsyncMock()
         mock_conn.run_sync = AsyncMock()
@@ -248,16 +253,17 @@ class TestInitDatabase:
         mock_context.__aexit__ = AsyncMock(return_value=None)
         mock_engine.begin = MagicMock(return_value=mock_context)
 
-        # Reset global _engine state to ensure get_engine is called fresh
-        # This prevents xdist state contamination from previous tests
-        original_engine = session_module._engine
+        # Reset global _engine state to ensure create_async_engine is actually called
+        # This is critical for xdist isolation where workers might share module state
         session_module._engine = None
+        session_module._async_session_maker = None
 
         try:
-            # Patch get_engine to return our mock directly (xdist-safe)
-            # This avoids global state issues with _engine caching
+            # Patch create_async_engine at the import point within the module
+            # This is more reliable than patching get_engine because it catches
+            # the actual SQLAlchemy call regardless of module caching
             with patch(
-                "mcp_server_langgraph.database.session.get_engine",
+                "mcp_server_langgraph.database.session.create_async_engine",
                 return_value=mock_engine,
             ):
                 await init_database("postgresql+asyncpg://localhost/testdb")
@@ -265,8 +271,10 @@ class TestInitDatabase:
                 mock_engine.begin.assert_called_once()
                 mock_conn.run_sync.assert_called_once()
         finally:
-            # Restore original engine state
-            session_module._engine = original_engine
+            # Always reset to None to prevent xdist contamination
+            # (don't restore potentially contaminated original values)
+            session_module._engine = None
+            session_module._async_session_maker = None
 
 
 @pytest.mark.xdist_group(name="test_database_session")
