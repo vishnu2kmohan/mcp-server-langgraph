@@ -67,16 +67,16 @@ spec:
             - sh
             - -c
             - |
-              mkdir -p /tmp/mimir/data /tmp/mimir/tsdb /tmp/mimir/evaldata /tmp/mimir/ruleconfigs \
-                       /tmp/mimir/compactor /tmp/mimir/blocks /tmp/mimir/bucket-sync /tmp/mimir/alertmanager
-              chown -R 10001:10001 /tmp/mimir
+              mkdir -p /data/mimir/data /data/mimir/tsdb /data/mimir/evaldata /data/mimir/ruleconfigs \
+                       /data/mimir/compactor /data/mimir/blocks /data/mimir/bucket-sync /data/mimir/alertmanager
+              chown -R 10001:10001 /data/mimir
               echo "Mimir volume permissions set (UID 10001)"
           securityContext:
             runAsUser: 0
             runAsNonRoot: false
           volumeMounts:
             - name: mimir-data
-              mountPath: /tmp/mimir
+              mountPath: /data/mimir
       containers:
         - name: mimir
           image: grafana/mimir:3.0.1
@@ -103,10 +103,12 @@ spec:
               mountPath: /etc/mimir
               readOnly: true
             - name: mimir-data
-              mountPath: /tmp/mimir
+              mountPath: /data/mimir
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
-              cpu: 100m
+              cpu: 250m
               memory: 256Mi
             limits:
               cpu: 1000m
@@ -130,6 +132,8 @@ spec:
         - name: config
           configMap:
             name: mimir-config
+        - name: tmp
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: mimir-data

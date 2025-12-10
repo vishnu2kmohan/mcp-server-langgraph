@@ -117,9 +117,11 @@ spec:
               readOnly: true
             - name: tempo-data
               mountPath: /var/tempo
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
-              cpu: 100m
+              cpu: 250m
               memory: 256Mi
             limits:
               cpu: 1000m
@@ -144,6 +146,8 @@ spec:
         - name: config
           configMap:
             name: tempo-config
+        - name: tmp
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: tempo-data

@@ -121,9 +121,11 @@ spec:
               readOnly: true
             - name: grafana-data
               mountPath: /var/lib/grafana
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
-              cpu: 100m
+              cpu: 125m
               memory: 256Mi
             limits:
               cpu: 500m
@@ -152,6 +154,8 @@ spec:
           configMap:
             name: grafana-dashboards-config
         - name: grafana-data
+          emptyDir: {}
+        - name: tmp
           emptyDir: {}
 ---
 apiVersion: v1

@@ -29,7 +29,7 @@ data:
       storage:
         backend: filesystem
         filesystem:
-          dir: /tmp/mimir/data
+          dir: /data/mimir/data
 
     ingester:
       ring:
@@ -50,7 +50,7 @@ data:
           store: inmemory
 
     compactor:
-      data_dir: /tmp/mimir/compactor
+      data_dir: /data/mimir/compactor
       sharding_ring:
         kvstore:
           store: inmemory
@@ -64,15 +64,15 @@ data:
     blocks_storage:
       backend: filesystem
       filesystem:
-        dir: /tmp/mimir/blocks
+        dir: /data/mimir/blocks
       tsdb:
-        dir: /tmp/mimir/tsdb
+        dir: /data/mimir/tsdb
       bucket_store:
-        sync_dir: /tmp/mimir/bucket-sync
+        sync_dir: /data/mimir/bucket-sync
 
     ruler:
       enable_api: true
-      rule_path: /tmp/mimir/evaldata
+      rule_path: /data/mimir/evaldata
       alertmanager_url: http://localhost:9009/alertmanager
       ring:
         kvstore:
@@ -81,10 +81,10 @@ data:
     ruler_storage:
       backend: filesystem
       filesystem:
-        dir: /tmp/mimir/ruleconfigs
+        dir: /data/mimir/ruleconfigs
 
     alertmanager:
-      data_dir: /tmp/mimir/alertmanager
+      data_dir: /data/mimir/alertmanager
       enable_api: true
       external_url: http://localhost:9009/alertmanager
       sharding_ring:

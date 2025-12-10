@@ -24,11 +24,11 @@ data:
 
     common:
       instance_addr: 127.0.0.1
-      path_prefix: /tmp/loki
+      path_prefix: /data/loki
       storage:
         filesystem:
-          chunks_directory: /tmp/loki/chunks
-          rules_directory: /tmp/loki/rules
+          chunks_directory: /data/loki/chunks
+          rules_directory: /data/loki/rules
       replication_factor: 1
       ring:
         instance_addr: 127.0.0.1
@@ -72,8 +72,8 @@ data:
       storage:
         type: local
         local:
-          directory: /tmp/loki/rules
-      rule_path: /tmp/loki/ruler
+          directory: /data/loki/rules
+      rule_path: /data/loki/ruler
       alertmanager_url: ""
       enable_alertmanager_v2: false
       ring:
@@ -91,7 +91,7 @@ data:
       allow_structured_metadata: true
 
     compactor:
-      working_directory: /tmp/loki/compactor
+      working_directory: /data/loki/compactor
       compaction_interval: 10m
       retention_enabled: true
       retention_delete_delay: 2h

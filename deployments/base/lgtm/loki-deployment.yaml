@@ -67,15 +67,15 @@ spec:
             - sh
             - -c
             - |
-              mkdir -p /tmp/loki/chunks /tmp/loki/rules /tmp/loki/ruler /tmp/loki/compactor
-              chown -R 10001:10001 /tmp/loki
+              mkdir -p /data/loki/chunks /data/loki/rules /data/loki/ruler /data/loki/compactor
+              chown -R 10001:10001 /data/loki
               echo "Loki volume permissions set (UID 10001)"
           securityContext:
             runAsUser: 0
             runAsNonRoot: false
           volumeMounts:
             - name: loki-data
-              mountPath: /tmp/loki
+              mountPath: /data/loki
       containers:
         - name: loki
           image: grafana/loki:3.6.2
@@ -103,10 +103,12 @@ spec:
               mountPath: /etc/loki
               readOnly: true
             - name: loki-data
-              mountPath: /tmp/loki
+              mountPath: /data/loki
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
-              cpu: 100m
+              cpu: 250m
               memory: 256Mi
             limits:
               cpu: 1000m
@@ -131,6 +133,8 @@ spec:
         - name: config
           configMap:
             name: loki-config
+        - name: tmp
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: loki-data

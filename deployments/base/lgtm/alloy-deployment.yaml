@@ -94,9 +94,11 @@ spec:
               readOnly: true
             - name: alloy-data
               mountPath: /var/lib/alloy
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
-              cpu: 100m
+              cpu: 250m
               memory: 256Mi
             limits:
               cpu: 1000m
@@ -122,6 +124,8 @@ spec:
           configMap:
             name: alloy-config
         - name: alloy-data
+          emptyDir: {}
+        - name: tmp
           emptyDir: {}
 ---
 apiVersion: v1
