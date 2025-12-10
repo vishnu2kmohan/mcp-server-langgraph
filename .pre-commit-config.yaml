@@ -449,7 +449,7 @@ repos:
       \ from manual to pre-push to catch errors before remote push\n- See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md\n"
   - id: validate-adr-index
     name: Validate ADR Index is Up-to-Date
-    entry: python -u scripts/docs/generate_adr_index.py --check
+    entry: uv run python -u scripts/docs/generate_adr_index.py --check
     language: system
     files: ^adr/.*\.md$
     pass_filenames: false
