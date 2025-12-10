@@ -586,12 +586,12 @@ services:
           - mcp-server
     labels:
       - "traefik.enable=true"
-      # Route: /api/* -> mcp-server:8000 (MCP Server API)
-      - "traefik.http.routers.mcp-api.rule=PathPrefix(`/api`)"
+      # Route: /mcp/* -> mcp-server:8000 (MCP Server API)
+      - "traefik.http.routers.mcp-api.rule=PathPrefix(`/mcp`)"
       - "traefik.http.routers.mcp-api.entrypoints=web"
       - "traefik.http.routers.mcp-api.priority=10"
       - "traefik.http.services.mcp-api.loadbalancer.server.port=8000"
-      - "traefik.http.middlewares.mcp-strip.stripprefix.prefixes=/api"
+      - "traefik.http.middlewares.mcp-strip.stripprefix.prefixes=/mcp"
       - "traefik.http.routers.mcp-api.middlewares=mcp-strip"
 
   # ==============================================================================
@@ -756,11 +756,11 @@ services:
     labels:
       - "traefik.enable=true"
       # Route: /traces/* -> tempo:3200 (Distributed Tracing)
-      - "traefik.http.routers.tempo.rule=PathPrefix(`/tempo`)"
+      - "traefik.http.routers.tempo.rule=PathPrefix(`/traces`)"
       - "traefik.http.routers.tempo.entrypoints=web"
       - "traefik.http.routers.tempo.priority=10"
       - "traefik.http.services.tempo.loadbalancer.server.port=3200"
-      - "traefik.http.middlewares.tempo-strip.stripprefix.prefixes=/tempo"
+      - "traefik.http.middlewares.tempo-strip.stripprefix.prefixes=/traces"
       - "traefik.http.routers.tempo.middlewares=tempo-strip"
 
   # ==============================================================================
@@ -798,12 +798,12 @@ services:
           - mimir
     labels:
       - "traefik.enable=true"
-      # Route: /mimir/* -> mimir:9009 (Metrics Storage)
-      - "traefik.http.routers.mimir.rule=PathPrefix(`/mimir`)"
+      # Route: /metrics/* -> mimir:9009 (Metrics Storage)
+      - "traefik.http.routers.mimir.rule=PathPrefix(`/metrics`)"
       - "traefik.http.routers.mimir.entrypoints=web"
       - "traefik.http.routers.mimir.priority=10"
       - "traefik.http.services.mimir.loadbalancer.server.port=9009"
-      - "traefik.http.middlewares.mimir-strip.stripprefix.prefixes=/mimir"
+      - "traefik.http.middlewares.mimir-strip.stripprefix.prefixes=/metrics"
       - "traefik.http.routers.mimir.middlewares=mimir-strip"
 
   # ==============================================================================
