@@ -132,3 +132,13 @@ KSV110
 
 # no-user-pods-in-system-namespace
 no-user-pods-in-system-namespace
+
+# ==============================================================================
+# LGTM STACK (Observability)
+# ==============================================================================
+
+# KSV047/AVD-KSV-0047: Role permits privilege escalation from node proxy
+# Required for Grafana Alloy to scrape node-level metrics (nodes/proxy access)
+# Read-only access following principle of least privilege
+KSV047
+AVD-KSV-0047

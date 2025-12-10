@@ -1,12 +1,13 @@
 # LGTM Stack OpenShift JSON Patches
 # ==================================
-# Remove runAsUser/runAsGroup from LGTM components
+# Configure LGTM components for OpenShift restricted-v2 SCC
 # OpenShift assigns arbitrary UIDs via SCC (Security Context Constraints)
+# All processes must belong to GID 0 (root group) for file access
 #
-# These patches use JSON Patch (RFC 6902) format to remove specific fields
+# These patches use strategic merge format
 
 ---
-# Loki StatefulSet - Remove runAsUser from pod and container security contexts
+# Loki StatefulSet - OpenShift security context
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -16,17 +17,25 @@ spec:
     spec:
       securityContext:
         runAsUser: null
-        fsGroup: null
+        runAsGroup: 0
+        fsGroup: 0
       initContainers:
         - name: init-permissions
           securityContext:
             runAsUser: null
+            runAsNonRoot: true
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       containers:
         - name: loki
           securityContext:
             runAsUser: null
+            runAsGroup: 0
 ---
-# Tempo StatefulSet - Remove runAsUser from pod and container security contexts
+# Tempo StatefulSet - OpenShift security context
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -36,17 +45,25 @@ spec:
     spec:
       securityContext:
         runAsUser: null
-        fsGroup: null
+        runAsGroup: 0
+        fsGroup: 0
       initContainers:
         - name: init-permissions
           securityContext:
             runAsUser: null
+            runAsNonRoot: true
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       containers:
         - name: tempo
           securityContext:
             runAsUser: null
+            runAsGroup: 0
 ---
-# Mimir StatefulSet - Remove runAsUser from pod and container security contexts
+# Mimir StatefulSet - OpenShift security context
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -56,17 +73,25 @@ spec:
     spec:
       securityContext:
         runAsUser: null
-        fsGroup: null
+        runAsGroup: 0
+        fsGroup: 0
       initContainers:
         - name: init-permissions
           securityContext:
             runAsUser: null
+            runAsNonRoot: true
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       containers:
         - name: mimir
           securityContext:
             runAsUser: null
+            runAsGroup: 0
 ---
-# Alloy Deployment - Remove runAsUser from pod and container security contexts
+# Alloy Deployment - OpenShift security context
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -76,13 +101,15 @@ spec:
     spec:
       securityContext:
         runAsUser: null
-        fsGroup: null
+        runAsGroup: 0
+        fsGroup: 0
       containers:
         - name: alloy
           securityContext:
             runAsUser: null
+            runAsGroup: 0
 ---
-# Grafana Deployment - Remove runAsUser from pod and container security contexts
+# Grafana Deployment - OpenShift security context
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -92,12 +119,20 @@ spec:
     spec:
       securityContext:
         runAsUser: null
-        fsGroup: null
+        runAsGroup: 0
+        fsGroup: 0
       initContainers:
         - name: init-permissions
           securityContext:
             runAsUser: null
+            runAsNonRoot: true
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       containers:
         - name: grafana
           securityContext:
             runAsUser: null
+            runAsGroup: 0

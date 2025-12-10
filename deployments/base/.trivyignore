@@ -106,6 +106,38 @@ exp:2026-03-08 AVD-KSV-0014
 AVD-KSV-0109: configmap.yaml
 
 # ==============================================================================
+# AVD-KSV-0047: Role permits privilege escalation from node proxy
+# ==============================================================================
+# Finding: ClusterRole 'alloy' permits nodes/proxy access
+# Severity: HIGH
+#
+# Affected Component: Alloy ClusterRole (lgtm/alloy-deployment.yaml)
+#
+# Justification:
+# Grafana Alloy (unified telemetry collector) requires access to nodes/proxy
+# and nodes/metrics to scrape Kubernetes node-level metrics. This is a standard
+# requirement for any Prometheus-compatible metrics collector in Kubernetes.
+#
+# The ClusterRole follows the principle of least privilege by:
+# 1. Only granting read-only verbs: get, list, watch
+# 2. Limiting access to metrics endpoints only
+# 3. No write permissions to any resources
+#
+# Alternatives Considered:
+# - Not scraping node metrics: Would significantly reduce observability
+# - Using ServiceMonitors: Requires Prometheus Operator which may not be available
+#
+# Risk Assessment: ACCEPTABLE
+# - Read-only access to node metrics poses minimal security risk
+# - Standard pattern used by Prometheus, Victoria Metrics, and other collectors
+# - No ability to modify nodes or escalate privileges
+#
+# Review: 2026-06-08 (semi-annually)
+# Owner: @platform-team
+# ==============================================================================
+AVD-KSV-0047: lgtm/alloy-deployment.yaml
+
+# ==============================================================================
 # Future Suppressions
 # ==============================================================================
 # Additional security exceptions should be documented here with the same level
