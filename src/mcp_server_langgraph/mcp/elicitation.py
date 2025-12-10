@@ -14,7 +14,7 @@ Reference: https://modelcontextprotocol.io/specification/2025-11-25/client/elici
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -67,12 +67,20 @@ class ElicitationSchema(BaseModel):
 
 
 class ElicitationRequest(BaseModel):
-    """Request sent to client for elicitation."""
+    """Request sent to client for elicitation.
+
+    SEP-1036 (2025-11-25): Added mode and url fields for OAuth flows.
+    - mode="inline": Standard form rendering (default)
+    - mode="url": Open URL in browser for OAuth authentication
+    """
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     request_id: int = Field(default=0)
     message: str
     requestedSchema: ElicitationSchema
+    # SEP-1036: URL mode for OAuth credential collection
+    mode: Literal["inline", "url"] = "inline"
+    url: str | None = None  # Required when mode="url"
 
 
 class ElicitationResponse(BaseModel):
@@ -94,26 +102,38 @@ class ElicitationResponse(BaseModel):
 
 
 class Elicitation(BaseModel):
-    """Full elicitation state including request and status."""
+    """Full elicitation state including request and status.
+
+    SEP-1036 (2025-11-25): Added mode and url fields for OAuth flows.
+    """
 
     id: str
     request_id: int
     message: str
     requestedSchema: ElicitationSchema
+    # SEP-1036: URL mode for OAuth credential collection
+    mode: Literal["inline", "url"] = "inline"
+    url: str | None = None  # Required when mode="url"
     status: str = "pending"
     response: ElicitationResponse | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     def to_jsonrpc(self) -> dict[str, Any]:
         """Convert to JSON-RPC 2.0 request format."""
+        params: dict[str, Any] = {
+            "message": self.message,
+            "requestedSchema": self.requestedSchema.model_dump(),
+            "mode": self.mode,
+        }
+        # Only include url when mode is "url"
+        if self.mode == "url" and self.url is not None:
+            params["url"] = self.url
+
         return {
             "jsonrpc": "2.0",
             "id": self.request_id,
             "method": "elicitation/create",
-            "params": {
-                "message": self.message,
-                "requestedSchema": self.requestedSchema.model_dump(),
-            },
+            "params": params,
         }
 
 
@@ -130,12 +150,16 @@ class ElicitationHandler:
         self,
         message: str,
         schema: ElicitationSchema,
+        mode: Literal["inline", "url"] = "inline",
+        url: str | None = None,
     ) -> Elicitation:
         """Create a new elicitation request.
 
         Args:
             message: Human-readable message explaining what's needed
             schema: JSON schema describing expected input structure
+            mode: Elicitation mode - "inline" for forms, "url" for OAuth (SEP-1036)
+            url: OAuth URL (required when mode="url")
 
         Returns:
             Elicitation object with pending status
@@ -144,6 +168,8 @@ class ElicitationHandler:
             id=str(uuid.uuid4()),
             request_id=self._next_request_id,
             message=message,
+            mode=mode,
+            url=url,
             requestedSchema=schema,
         )
         self._next_request_id += 1

@@ -198,6 +198,9 @@ export interface PromptListResult {
 export interface ElicitationCreateParams {
   message: string;
   requestedSchema: JSONSchema;
+  // SEP-1036: URL mode for OAuth credential collection
+  mode?: 'inline' | 'url';
+  url?: string;  // Required when mode='url'
 }
 
 export type ElicitationAction = 'accept' | 'decline' | 'cancel';
