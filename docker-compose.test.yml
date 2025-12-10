@@ -68,7 +68,7 @@ services:
   # API GATEWAY (Traefik)
   # ==============================================================================
   # Single entry point for all web services with path-based routing
-  # Dashboard available at http://localhost:8080 (direct access only)
+  # Dashboard available at http://localhost/gateway or http://localhost:8080
 
   traefik-gateway:
     image: traefik:v3.6.4
@@ -112,10 +112,16 @@ services:
           - gateway
     labels:
       - "traefik.enable=true"
-      # NOTE: Traefik dashboard is available at http://localhost:8080 (direct)
-      # The internal dashboard doesn't work with path prefixes/stripping
-      # because it uses absolute redirects to "/"
-      # DO NOT route /gateway via port 80 - use :8080 directly
+      # Route: /gateway/* -> Traefik Dashboard
+      # Traefik dashboard requires both /api and /dashboard paths internally.
+      # We use replacepathregex to rewrite /gateway/api -> /api and /gateway/dashboard -> /dashboard
+      - "traefik.http.routers.gateway.rule=PathPrefix(`/gateway`)"
+      - "traefik.http.routers.gateway.entrypoints=web"
+      - "traefik.http.routers.gateway.service=api@internal"
+      - "traefik.http.routers.gateway.priority=20"
+      - "traefik.http.middlewares.gateway-rewrite.replacepathregex.regex=^/gateway/(.*)"
+      - "traefik.http.middlewares.gateway-rewrite.replacepathregex.replacement=/$${1}"
+      - "traefik.http.routers.gateway.middlewares=gateway-rewrite"
 
   # ==============================================================================
   # DATABASE SERVICES
@@ -245,18 +251,15 @@ services:
           - openfga
     labels:
       - "traefik.enable=true"
-      # Route: /authz/* -> openfga:8080 (Authorization API)
+      # Route: /authz/* -> openfga:8080 (Authorization API + Playground UI)
+      # OpenFGA Playground is at /playground internally, accessed via /authz/playground
+      # API endpoints are at /stores, /health, etc. accessed via /authz/stores, /authz/health
       - "traefik.http.routers.openfga.rule=PathPrefix(`/authz`)"
       - "traefik.http.routers.openfga.entrypoints=web"
       - "traefik.http.routers.openfga.priority=10"
       - "traefik.http.services.openfga.loadbalancer.server.port=8080"
       - "traefik.http.middlewares.openfga-strip.stripprefix.prefixes=/authz"
       - "traefik.http.routers.openfga.middlewares=openfga-strip"
-      # Route: /playground/* -> openfga:8080/playground (OpenFGA Playground UI)
-      - "traefik.http.routers.openfga-playground.rule=PathPrefix(`/playground`)"
-      - "traefik.http.routers.openfga-playground.entrypoints=web"
-      - "traefik.http.routers.openfga-playground.priority=10"
-      - "traefik.http.routers.openfga-playground.service=openfga"
 
   # ==============================================================================
   # AUTHENTICATION SERVICES
@@ -855,12 +858,12 @@ services:
           - alloy
     labels:
       - "traefik.enable=true"
-      # Route: /alloy/* -> alloy:12345 (Telemetry Collector UI)
-      - "traefik.http.routers.alloy.rule=PathPrefix(`/alloy`)"
+      # Route: /telemetry/* -> alloy:12345 (Telemetry Collector UI)
+      - "traefik.http.routers.alloy.rule=PathPrefix(`/telemetry`)"
       - "traefik.http.routers.alloy.entrypoints=web"
       - "traefik.http.routers.alloy.priority=10"
       - "traefik.http.services.alloy.loadbalancer.server.port=12345"
-      - "traefik.http.middlewares.alloy-strip.stripprefix.prefixes=/alloy"
+      - "traefik.http.middlewares.alloy-strip.stripprefix.prefixes=/telemetry"
       - "traefik.http.routers.alloy.middlewares=alloy-strip"
 
   # ==============================================================================
