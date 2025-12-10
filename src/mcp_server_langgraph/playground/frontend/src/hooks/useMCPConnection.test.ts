@@ -55,7 +55,7 @@ describe('useMCPConnection', () => {
   it('should_connect_when_connect_is_called', async () => {
     // GIVEN: Mock successful connection
     mockClient.initialize.mockResolvedValue({
-      protocolVersion: '2025-06-18',
+      protocolVersion: '2025-11-25',
       capabilities: { tools: {} },
       serverInfo: { name: 'test', version: '1.0.0' },
     });
@@ -103,7 +103,7 @@ describe('useMCPConnection', () => {
   it('should_disconnect_when_disconnect_is_called', async () => {
     // GIVEN: Connected client
     mockClient.initialize.mockResolvedValue({
-      protocolVersion: '2025-06-18',
+      protocolVersion: '2025-11-25',
       capabilities: {},
       serverInfo: { name: 'test', version: '1.0.0' },
     });
@@ -131,7 +131,7 @@ describe('useMCPConnection', () => {
   it('should_auto_connect_when_autoConnect_is_true', async () => {
     // GIVEN: Mock successful connection
     mockClient.initialize.mockResolvedValue({
-      protocolVersion: '2025-06-18',
+      protocolVersion: '2025-11-25',
       capabilities: {},
       serverInfo: { name: 'test', version: '1.0.0' },
     });

@@ -1,10 +1,14 @@
 """
-MCP Elicitation Protocol Handler (2025-06-18 Spec).
+MCP Elicitation Protocol Handler (2025-11-25 Spec).
 
 Implements elicitation/create for servers to request user input
 via JSON schema forms. Clients respond with accept/decline/cancel.
 
-Reference: https://modelcontextprotocol.io/specification/2025-06-18/client/elicitation
+New in 2025-11-25:
+- SEP-1330: Enhanced enum schemas with enumNames, default values
+- SEP-1036: URL mode for secure OAuth credential collection
+
+Reference: https://modelcontextprotocol.io/specification/2025-11-25/client/elicitation
 """
 
 import uuid

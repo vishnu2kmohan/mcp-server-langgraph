@@ -4,7 +4,7 @@
  * Client for communicating with the MCP backend using the
  * StreamableHTTP transport and NDJSON streaming.
  *
- * Implements the MCP 2025-06-18 specification.
+ * Implements the MCP 2025-11-25 specification.
  */
 
 import type {
@@ -130,7 +130,7 @@ class MCPClientImpl implements MCPClient {
 
     try {
       const result = await this.sendRequest<InitializeResult>('initialize', {
-        protocolVersion: '2025-06-18',
+        protocolVersion: '2025-11-25',
         capabilities: this.clientCapabilities,
         clientInfo: this.clientInfo,
       });

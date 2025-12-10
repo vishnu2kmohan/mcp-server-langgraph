@@ -44,7 +44,7 @@ describe('MCPClient', () => {
         jsonrpc: '2.0',
         id: 1,
         result: {
-          protocolVersion: '2025-06-18',
+          protocolVersion: '2025-11-25',
           capabilities: {
             tools: { listChanged: true },
             resources: { subscribe: true },
@@ -106,7 +106,7 @@ describe('MCPClient', () => {
             jsonrpc: '2.0',
             id: 1,
             result: {
-              protocolVersion: '2025-06-18',
+              protocolVersion: '2025-11-25',
               capabilities,
               serverInfo: { name: 'test-server', version: '1.0.0' },
             },
@@ -472,7 +472,7 @@ describe('MCPClient', () => {
             jsonrpc: '2.0',
             id: 1,
             result: {
-              protocolVersion: '2025-06-18',
+              protocolVersion: '2025-11-25',
               capabilities: {},
               serverInfo: { name: 'test', version: '1.0.0' },
             },
@@ -494,7 +494,7 @@ describe('MCPClient', () => {
             jsonrpc: '2.0',
             id: 1,
             result: {
-              protocolVersion: '2025-06-18',
+              protocolVersion: '2025-11-25',
               capabilities: {},
               serverInfo: { name: 'test', version: '1.0.0' },
             },

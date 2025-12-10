@@ -8,7 +8,7 @@ Architecture:
     LangGraph Interrupt → MCP Bridge → Elicitation Request → Client UI
     Client Response → MCP Bridge → ApprovalResponse → Resume Graph
 
-Reference: https://modelcontextprotocol.io/specification/2025-06-18/client/elicitation
+Reference: https://modelcontextprotocol.io/specification/2025-11-25/client/elicitation
 """
 
 from typing import Any

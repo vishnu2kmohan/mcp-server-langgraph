@@ -1,10 +1,13 @@
 """
-MCP Resources Protocol Handler (2025-06-18 Spec).
+MCP Resources Protocol Handler (2025-11-25 Spec).
 
 Implements resources/list and resources/read for servers to expose
 data and context to clients. Resources are read-only data endpoints.
 
-Reference: https://modelcontextprotocol.io/specification/2025-06-18/server/resources
+New in 2025-11-25 (SEP-973):
+- icon: IconReference - Optional icon metadata for UI representation
+
+Reference: https://modelcontextprotocol.io/specification/2025-11-25/server/resources
 """
 
 import fnmatch

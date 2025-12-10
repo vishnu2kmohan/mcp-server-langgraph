@@ -359,7 +359,7 @@ class MCPAgentStreamableServer:
         # Initialize auth using factory (respects settings.auth_provider)
         self.auth = create_auth_middleware(self.settings, openfga_client=self.openfga)
 
-        # Initialize MCP protocol handlers (2025-06-18 spec)
+        # Initialize MCP protocol handlers (2025-11-25 spec)
         self.elicitation_handler = ElicitationHandler()
         self.sampling_handler = SamplingHandler()
         self.sampling_rate_limiter = SamplingRateLimiter(max_requests_per_minute=10)
@@ -410,7 +410,7 @@ class MCPAgentStreamableServer:
         return await self._list_resources_handler()  # type: ignore[no-any-return]
 
     # =========================================================================
-    # MCP 2025-06-18 Protocol Handlers
+    # MCP 2025-11-25 Protocol Handlers
     # =========================================================================
 
     def list_prompts_public(self) -> list[dict[str, Any]]:
@@ -1536,8 +1536,12 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                     "jsonrpc": "2.0",
                     "id": message_id,
                     "result": {
-                        "protocolVersion": "2025-06-18",
-                        "serverInfo": {"name": "langgraph-agent", "version": mcp_server.settings.service_version},
+                        "protocolVersion": "2025-11-25",
+                        "serverInfo": {
+                            "name": "langgraph-agent",
+                            "version": mcp_server.settings.service_version,
+                            "description": "AI Agent with fine-grained authorization, LangGraph workflows, and multi-LLM support",
+                        },
                         "capabilities": {
                             "tools": {"listChanged": False},
                             "resources": {"listChanged": False, "subscribe": True},
@@ -1628,7 +1632,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                 return JSONResponse(response)
 
             # =========================================================================
-            # MCP 2025-06-18 Protocol Methods
+            # MCP 2025-11-25 Protocol Methods
             # =========================================================================
 
             elif method == "prompts/list":

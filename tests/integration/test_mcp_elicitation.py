@@ -1,5 +1,5 @@
 """
-Tests for MCP Elicitation Protocol (2025-06-18 Spec).
+Tests for MCP Elicitation Protocol (2025-11-25 Spec).
 
 Tests the elicitation/create endpoint that allows servers to request
 user input via JSON schema forms. Clients respond with accept/decline/cancel.

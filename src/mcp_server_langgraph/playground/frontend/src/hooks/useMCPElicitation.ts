@@ -1,7 +1,7 @@
 /**
  * useMCPElicitation Hook
  *
- * Handles MCP elicitation requests from servers (2025-06-18 spec).
+ * Handles MCP elicitation requests from servers (2025-11-25 spec).
  * Provides UI controls for accept/decline/cancel actions.
  */
 
@@ -15,7 +15,7 @@ export interface UseMCPElicitationResult {
   pendingCount: number;
   hasPending: boolean;
 
-  // Actions per 2025-06-18 spec
+  // Actions per 2025-11-25 spec
   accept: (content: Record<string, unknown>) => Promise<void>;
   decline: () => Promise<void>;
   cancel: () => Promise<void>;

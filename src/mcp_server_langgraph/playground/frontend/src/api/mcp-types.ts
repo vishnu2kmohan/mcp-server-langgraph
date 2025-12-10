@@ -1,5 +1,5 @@
 /**
- * MCP Protocol Types (2025-06-18 Specification)
+ * MCP Protocol Types (2025-11-25 Specification)
  *
  * TypeScript interfaces for the Model Context Protocol,
  * including JSON-RPC 2.0, tools, resources, prompts,
@@ -181,7 +181,7 @@ export interface PromptListResult {
 }
 
 // =============================================================================
-// MCP Elicitation Types (2025-06-18 Spec)
+// MCP Elicitation Types (2025-11-25 Spec)
 // =============================================================================
 
 export interface ElicitationCreateParams {

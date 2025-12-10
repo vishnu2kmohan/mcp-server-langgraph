@@ -104,7 +104,7 @@ describe('MCPHostContext', () => {
     it('should_add_server_and_connect', async () => {
       // GIVEN: Mock successful connection
       mockClient.initialize.mockResolvedValue({
-        protocolVersion: '2025-06-18',
+        protocolVersion: '2025-11-25',
         capabilities: { tools: { listChanged: true } },
         serverInfo: { name: 'test-server', version: '1.0.0' },
       });
@@ -130,7 +130,7 @@ describe('MCPHostContext', () => {
     it('should_remove_server_and_disconnect', async () => {
       // GIVEN: A connected server
       mockClient.initialize.mockResolvedValue({
-        protocolVersion: '2025-06-18',
+        protocolVersion: '2025-11-25',
         capabilities: {},
         serverInfo: { name: 'test', version: '1.0.0' },
       });
@@ -182,7 +182,7 @@ describe('MCPHostContext', () => {
     it('should_manage_multiple_servers', async () => {
       // GIVEN: Mock successful connections
       mockClient.initialize.mockResolvedValue({
-        protocolVersion: '2025-06-18',
+        protocolVersion: '2025-11-25',
         capabilities: {},
         serverInfo: { name: 'test', version: '1.0.0' },
       });
@@ -214,7 +214,7 @@ describe('MCPHostContext', () => {
     it('should_aggregate_tools_from_all_servers', async () => {
       // GIVEN: Two servers with different tools
       mockClient.initialize.mockResolvedValue({
-        protocolVersion: '2025-06-18',
+        protocolVersion: '2025-11-25',
         capabilities: { tools: { listChanged: true } },
         serverInfo: { name: 'test', version: '1.0.0' },
       });
@@ -252,7 +252,7 @@ describe('MCPHostContext', () => {
     it('should_aggregate_resources_from_all_servers', async () => {
       // GIVEN: Servers with resources
       mockClient.initialize.mockResolvedValue({
-        protocolVersion: '2025-06-18',
+        protocolVersion: '2025-11-25',
         capabilities: { resources: { subscribe: true } },
         serverInfo: { name: 'test', version: '1.0.0' },
       });
@@ -288,7 +288,7 @@ describe('MCPHostContext', () => {
     it('should_aggregate_prompts_from_all_servers', async () => {
       // GIVEN: Servers with prompts
       mockClient.initialize.mockResolvedValue({
-        protocolVersion: '2025-06-18',
+        protocolVersion: '2025-11-25',
         capabilities: { prompts: { listChanged: true } },
         serverInfo: { name: 'test', version: '1.0.0' },
       });
@@ -449,7 +449,7 @@ describe('MCPHostContext', () => {
     it('should_track_primary_server', async () => {
       // GIVEN: A connected server
       mockClient.initialize.mockResolvedValue({
-        protocolVersion: '2025-06-18',
+        protocolVersion: '2025-11-25',
         capabilities: {},
         serverInfo: { name: 'primary-server', version: '1.0.0' },
       });
@@ -472,7 +472,7 @@ describe('MCPHostContext', () => {
     it('should_allow_changing_primary_server', async () => {
       // GIVEN: Two connected servers
       mockClient.initialize.mockResolvedValue({
-        protocolVersion: '2025-06-18',
+        protocolVersion: '2025-11-25',
         capabilities: {},
         serverInfo: { name: 'test', version: '1.0.0' },
       });

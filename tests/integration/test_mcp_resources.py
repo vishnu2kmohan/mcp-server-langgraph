@@ -1,5 +1,5 @@
 """
-Tests for MCP Resources Protocol (2025-06-18 Spec).
+Tests for MCP Resources Protocol (2025-11-25 Spec).
 
 Tests the resources/list and resources/read endpoints that allow servers
 to expose data and context to clients. Resources are like REST GET endpoints.

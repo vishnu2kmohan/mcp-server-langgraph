@@ -1,5 +1,5 @@
 """
-Tests for MCP Sampling Protocol (2025-06-18 Spec).
+Tests for MCP Sampling Protocol (2025-11-25 Spec).
 
 Tests the sampling/createMessage endpoint that allows servers to request
 LLM completions from clients. Enables agentic behaviors with nested LLM calls.

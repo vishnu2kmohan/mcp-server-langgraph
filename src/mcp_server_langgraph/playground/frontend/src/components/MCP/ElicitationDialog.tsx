@@ -1,7 +1,7 @@
 /**
  * ElicitationDialog Component
  *
- * Modal dialog for MCP elicitation requests (2025-06-18 spec).
+ * Modal dialog for MCP elicitation requests (2025-11-25 spec).
  * Displays a JSON schema form and provides Accept/Decline/Cancel actions.
  */
 
@@ -113,7 +113,7 @@ export function ElicitationDialog({
             />
           </div>
 
-          {/* Action Buttons (per MCP 2025-06-18 spec) */}
+          {/* Action Buttons (per MCP 2025-11-25 spec) */}
           <div className="flex gap-3">
             <button
               onClick={handleAccept}

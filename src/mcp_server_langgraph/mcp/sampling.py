@@ -1,10 +1,14 @@
 """
-MCP Sampling Protocol Handler (2025-06-18 Spec).
+MCP Sampling Protocol Handler (2025-11-25 Spec).
 
 Implements sampling/createMessage for servers to request LLM completions
 from clients. Enables agentic behaviors with nested LLM calls.
 
-Reference: https://modelcontextprotocol.io/specification/2025-06-18/client/sampling
+New in 2025-11-25 (SEP-1577):
+- tools: list[SamplingTool] - Tool definitions for agentic loops
+- toolChoice: ToolChoice - Tool selection preference (auto, none, tool)
+
+Reference: https://modelcontextprotocol.io/specification/2025-11-25/client/sampling
 """
 
 import time
