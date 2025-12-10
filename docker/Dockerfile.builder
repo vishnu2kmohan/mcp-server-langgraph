@@ -106,8 +106,8 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-builder,sharing=privat
 COPY --from=python-builder --chown=1001:0 /app/.venv /app/.venv
 
 # Copy source code with correct ownership
+# Note: pyproject.toml not needed at runtime - version is read via importlib.metadata
 COPY --chown=1001:0 src/ ./src/
-COPY --chown=1001:0 pyproject.toml ./
 
 # Copy built frontend from stage 1
 # Place in builder/frontend/dist to match SPAStaticFiles path expectations

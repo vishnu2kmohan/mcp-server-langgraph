@@ -122,9 +122,9 @@ RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-test-main,sharing=priv
     --no-extra all
 
 # ==============================================================================
-# STAGE: runtime-distroless
+# STAGE: runtime-slim-production
 # Python 3.12 slim runtime (compatible with our build stage)
-# Note: Switched from distroless due to Python 3.11 vs 3.12 incompatibility
+# Note: Not using gcr.io/distroless due to Python 3.11 vs 3.12 incompatibility
 #
 # OPENSHIFT COMPATIBILITY:
 #   - User created with GID 0 (root group) for arbitrary UID support
@@ -132,7 +132,7 @@ RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-test-main,sharing=priv
 #   - /app owned by 1001:0 with g=u permissions
 #   - USER directive set in final stages after file copies
 # ==============================================================================
-FROM python:${PYTHON_VERSION}-slim AS runtime-distroless
+FROM python:${PYTHON_VERSION}-slim AS runtime-slim-production
 
 # Create user with GID 0 (root group) for OpenShift arbitrary UID support
 # OpenShift runs containers with arbitrary UIDs in GID 0
@@ -179,9 +179,9 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-runtime-slim,sharing=p
     && chown 1001:0 /app && chmod g=u /app
 
 # ==============================================================================
-# FINAL STAGE: base variant (distroless)
+# FINAL STAGE: base variant (slim production)
 # ==============================================================================
-FROM runtime-distroless AS final-base
+FROM runtime-slim-production AS final-base
 
 # Copy virtual environment from build stage
 # Use 1001:0 ownership for OpenShift arbitrary UID support
@@ -190,8 +190,8 @@ COPY --from=build-base --chown=1001:0 /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application code with OpenShift-compatible ownership
+# Note: pyproject.toml not needed at runtime - version is read via importlib.metadata
 COPY --chown=1001:0 src/ ./src/
-COPY --chown=1001:0 pyproject.toml ./
 
 # Drop privileges - use numeric UID for OpenShift compatibility
 # Note: --chown=1001:0 already sets correct ownership, no need for recursive chmod
@@ -211,9 +211,9 @@ EXPOSE 8000
 CMD ["python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
 
 # ==============================================================================
-# FINAL STAGE: full variant (distroless)
+# FINAL STAGE: full variant (slim production)
 # ==============================================================================
-FROM runtime-distroless AS final-full
+FROM runtime-slim-production AS final-full
 
 # Copy virtual environment from build stage
 # Use 1001:0 ownership for OpenShift arbitrary UID support
@@ -222,8 +222,8 @@ COPY --from=build-full --chown=1001:0 /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application code with OpenShift-compatible ownership
+# Note: pyproject.toml not needed at runtime - version is read via importlib.metadata
 COPY --chown=1001:0 src/ ./src/
-COPY --chown=1001:0 pyproject.toml ./
 
 # Drop privileges - use numeric UID for OpenShift compatibility
 # Note: --chown=1001:0 already sets correct ownership, no need for recursive chmod
@@ -252,9 +252,9 @@ FROM runtime-slim AS final-test
 COPY --from=build-test --chown=1001:0 /app/.venv /app/.venv
 
 # Copy application and test code with OpenShift-compatible ownership
+# Note: pyproject.toml not needed at runtime - version is read via importlib.metadata
 COPY --chown=1001:0 src/ ./src/
 COPY --chown=1001:0 tests/ ./tests/
-COPY --chown=1001:0 pyproject.toml ./
 
 # Copy additional directories required by tests
 # NOTE: Per ADR-0053, scripts/ and deployments/ are NOT copied to the Docker image.

@@ -74,3 +74,23 @@ def test_version_format_validation_with_semver_ensures_correct_structure():
 
     for part in parts:
         assert part.isdigit(), f"Version part '{part}' in {__version__} should be numeric"
+
+
+@pytest.mark.unit
+def test_version_via_importlib_metadata():
+    """Test that version can be retrieved via importlib.metadata.
+
+    This ensures the package is properly installed with metadata,
+    allowing version detection without requiring pyproject.toml at runtime.
+    This pattern is required for Docker runtime images that don't include pyproject.toml.
+    """
+    from importlib.metadata import version
+
+    from mcp_server_langgraph import __version__
+
+    # importlib.metadata.version reads from installed package metadata
+    metadata_version = version("mcp-server-langgraph")
+
+    assert metadata_version == __version__, (
+        f"importlib.metadata version ({metadata_version}) should match __version__ ({__version__})"
+    )
