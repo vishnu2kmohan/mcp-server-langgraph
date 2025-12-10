@@ -477,9 +477,14 @@ services:
       - "traefik.http.services.qdrant.loadbalancer.server.port=6333"
       - "traefik.http.middlewares.qdrant-strip.stripprefix.prefixes=/vectors"
       - "traefik.http.routers.qdrant.middlewares=qdrant-strip"
-      # Qdrant Dashboard: Access at http://localhost:9333/dashboard (direct)
-      # The dashboard uses hardcoded absolute paths (/dashboard/*) for assets,
-      # making it incompatible with path-prefix routing. Use direct port access.
+      # Route: /dashboard/* -> qdrant:6333/dashboard/* (Qdrant Web UI)
+      # Qdrant dashboard uses hardcoded absolute paths (/dashboard/*) for assets.
+      # Access via http://localhost/dashboard or http://localhost/vectors/dashboard
+      # Note: /dashboard (no 's') won't conflict with Grafana's /dashboards (priority 11)
+      - "traefik.http.routers.qdrant-dashboard.rule=PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.qdrant-dashboard.entrypoints=web"
+      - "traefik.http.routers.qdrant-dashboard.priority=10"
+      - "traefik.http.routers.qdrant-dashboard.service=qdrant"
 
   # ==============================================================================
   # MCP SERVER (for E2E tests)
