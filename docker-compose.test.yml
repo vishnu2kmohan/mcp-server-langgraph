@@ -784,6 +784,86 @@ services:
       # NO strip - Grafana configured for /dashboards subpath
 
   # ==============================================================================
+  # LGTM INIT CONTAINERS (Volume Permission Setup)
+  # ==============================================================================
+  # Init containers run as root to set correct ownership on Docker volumes
+  # Required because LGTM containers run as non-root (UID 10001) while
+  # Docker named volumes are created with root ownership by default.
+  # Pattern from: https://github.com/grafana/loki/blob/main/production/docker/docker-compose.yaml
+
+  # Init containers use busybox (has sh) since LGTM images are distroless (no shell)
+  # Pattern from: https://github.com/grafana/loki/blob/main/production/docker/docker-compose.yaml
+
+  loki-init:
+    image: busybox:1.37
+    user: root
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /tmp/loki/chunks /tmp/loki/rules /tmp/loki/ruler /tmp/loki/compactor
+        chown -R 10001:10001 /tmp/loki
+        echo "Loki volume permissions set (UID 10001)"
+    volumes:
+      - loki-data:/tmp/loki
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 32M
+        reservations:
+          cpus: '0.01'
+          memory: 8M
+    networks:
+      - mcp-test-network
+
+  tempo-init:
+    image: busybox:1.37
+    user: root
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /tmp/tempo/traces /tmp/tempo/wal /tmp/tempo/blocks
+        chown -R 10001:10001 /tmp/tempo
+        echo "Tempo volume permissions set (UID 10001)"
+    volumes:
+      - tempo-data:/tmp/tempo
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 32M
+        reservations:
+          cpus: '0.01'
+          memory: 8M
+    networks:
+      - mcp-test-network
+
+  mimir-init:
+    image: busybox:1.37
+    user: root
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /tmp/mimir/data /tmp/mimir/tsdb /tmp/mimir/ruler
+        chown -R 10001:10001 /tmp/mimir
+        echo "Mimir volume permissions set (UID 10001)"
+    volumes:
+      - mimir-data:/tmp/mimir
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 32M
+        reservations:
+          cpus: '0.01'
+          memory: 8M
+    networks:
+      - mcp-test-network
+
+  # ==============================================================================
   # LOG STORAGE (Loki)
   # ==============================================================================
   # Grafana Loki for centralized log storage and querying
@@ -792,9 +872,12 @@ services:
 
   loki-test:
     image: grafana/loki:3.6.2
-    # Loki runs as UID 10001 in the official image
-    # Must set user to match tmpfs uid for write permissions
+    # Loki runs as UID 10001 in the official image (non-root for security)
+    # Init container (loki-init) sets volume permissions before startup
     user: "10001"
+    depends_on:
+      loki-init:
+        condition: service_completed_successfully
     command: -config.file=/etc/loki/local-config.yaml -target=all
     ports:
       - "13100:3100"  # Loki API (offset by 10000)
@@ -840,6 +923,12 @@ services:
 
   tempo-test:
     image: grafana/tempo:2.9.0
+    # Tempo runs as UID 10001 in the official image (non-root for security)
+    # Init container (tempo-init) sets volume permissions before startup
+    user: "10001"
+    depends_on:
+      tempo-init:
+        condition: service_completed_successfully
     command: ["-config.file=/etc/tempo/tempo-config.yaml"]
     ports:
       - "13200:3200"  # Tempo API (offset by 10000)
@@ -883,6 +972,12 @@ services:
 
   mimir-test:
     image: grafana/mimir:3.0.1
+    # Mimir runs as UID 10001 in the official image (non-root for security)
+    # Init container (mimir-init) sets volume permissions before startup
+    user: "10001"
+    depends_on:
+      mimir-init:
+        condition: service_completed_successfully
     command: ["-config.file=/etc/mimir/mimir-config.yaml"]
     ports:
       - "19009:9009"  # Mimir API (offset by 10000)
