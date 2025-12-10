@@ -30,7 +30,9 @@
 #   - https://docs.astral.sh/uv/guides/integration/docker/
 #   - https://alembic.sqlalchemy.org/en/latest/
 
-FROM python:3.12-slim
+ARG PYTHON_VERSION=3.12
+
+FROM python:${PYTHON_VERSION}-slim
 
 WORKDIR /app
 
@@ -44,7 +46,7 @@ COPY alembic/ ./alembic/
 # Install ONLY the dependencies needed for migrations
 # Using uv pip install to avoid building the local package
 # Versions pinned to match pyproject.toml for consistency
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-alembic,sharing=private \
     uv pip install --system --no-cache \
     "alembic>=1.17.2" \
     "sqlalchemy[asyncio]>=2.0.44" \

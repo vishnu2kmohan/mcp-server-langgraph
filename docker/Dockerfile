@@ -82,7 +82,7 @@ COPY src/ ./src/
 # --frozen: Use lockfile exactly, fail if out of sync
 # --no-dev: Exclude development dependencies
 # --no-editable: Non-editable install for production
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-base,sharing=private \
     uv sync --frozen --no-dev --no-editable \
     --no-extra embeddings-local \
     --no-extra embeddings \
@@ -100,7 +100,7 @@ FROM base-builder AS build-full
 COPY src/ ./src/
 
 # Install full dependencies (includes PyTorch, sentence-transformers)
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-full,sharing=private \
     uv sync --frozen --no-dev --no-editable \
     --extra embeddings-local \
     --no-extra secrets
@@ -115,7 +115,7 @@ COPY src/ ./src/
 COPY tests/ ./tests/
 
 # Install test dependencies (dev extras)
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-test-main,sharing=private \
     uv sync --frozen --extra dev \
     --no-extra embeddings-local \
     --no-extra embeddings \
@@ -132,7 +132,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 #   - /app owned by 1001:0 with g=u permissions
 #   - USER directive set in final stages after file copies
 # ==============================================================================
-FROM python:3.12-slim AS runtime-distroless
+FROM python:${PYTHON_VERSION}-slim AS runtime-distroless
 
 # Create user with GID 0 (root group) for OpenShift arbitrary UID support
 # OpenShift runs containers with arbitrary UIDs in GID 0

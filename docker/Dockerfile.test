@@ -1,12 +1,19 @@
+# syntax=docker/dockerfile:1.4
 # Test Runner Dockerfile
 # ======================
-# Optimized image for running integration tests with uv sync --frozen
+# Optimized multi-stage image for running integration tests with uv sync --frozen
 #
 # FEATURES:
+#   - Multi-stage build for better layer caching
 #   - Uses `uv sync --frozen` for consistency with local/CI (same as Makefile)
 #   - Only test dependencies (from dependency-groups)
 #   - Test environment variables pre-configured
 #   - Fast builds with layer caching and lockfile
+#
+# OPTIMIZATION:
+#   - Dependencies installed in separate stage (cached when only source changes)
+#   - Uses sharing=private for parallel build support
+#   - Per ADR-0053: scripts/ and deployments/ are NOT copied (run on host)
 #
 # OPENSHIFT COMPATIBILITY:
 #   - Uses numeric UID (1001) in USER directive
@@ -18,15 +25,19 @@
 #   - https://docs.astral.sh/uv/guides/integration/docker/
 #   - https://hynek.me/articles/docker-uv/
 
-FROM python:3.12-slim
+ARG PYTHON_VERSION=3.12
 
-# Set working directory
+# ==============================================================================
+# STAGE: builder
+# Install dependencies in isolated stage for better caching
+# ==============================================================================
+FROM python:${PYTHON_VERSION}-slim AS builder
+
 WORKDIR /app
 
-# Install system dependencies for testing
-# Note: curl needed for health checks in some tests
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+# Install system dependencies for building
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-test-builder,sharing=private \
+    --mount=type=cache,target=/var/lib/apt,id=apt-lib-test-builder,sharing=private \
     apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
@@ -42,25 +53,54 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never \
     UV_PROJECT_ENVIRONMENT=/app/.venv
 
-# Copy dependency files
+# Copy dependency files FIRST (changes rarely - maximizes cache hits)
 COPY pyproject.toml uv.lock ./
 
-# Copy source code
+# Copy source code (needed for uv sync with src layout)
 COPY src/ ./src/
-COPY tests/ ./tests/
-COPY scripts/ ./scripts/
-COPY deployments/ ./deployments/
-
-# Copy Alembic configuration and migrations for database schema setup
-# Required by alembic-migrate-test service in docker-compose.test.yml
-COPY alembic.ini ./
-COPY alembic/ ./alembic/
 
 # Install Python dependencies with uv sync --frozen (same as local/CI)
 # --frozen: Use lockfile exactly, fail if out of sync
 # --extra dev: Include test dependencies
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --extra dev
+# Explicitly exclude heavy optional extras not needed for testing
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-test,sharing=private \
+    uv sync --frozen --extra dev \
+    --no-extra embeddings-local \
+    --no-extra embeddings \
+    --no-extra all
+
+# ==============================================================================
+# STAGE: runtime
+# Minimal runtime with installed dependencies
+# ==============================================================================
+FROM python:${PYTHON_VERSION}-slim AS runtime
+
+WORKDIR /app
+
+# Install runtime dependencies (curl for health checks)
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-test-runtime,sharing=private \
+    --mount=type=cache,target=/var/lib/apt,id=apt-lib-test-runtime,sharing=private \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy virtual environment from builder stage
+COPY --from=builder /app/.venv /app/.venv
+
+# Copy source code
+COPY --chown=1001:0 src/ ./src/
+COPY --chown=1001:0 tests/ ./tests/
+COPY --chown=1001:0 pyproject.toml ./
+
+# Copy Alembic configuration and migrations for database schema setup
+# Required by alembic-migrate-test service in docker-compose.test.yml
+COPY --chown=1001:0 alembic.ini ./
+COPY --chown=1001:0 alembic/ ./alembic/
+
+# NOTE: Per ADR-0053, scripts/ and deployments/ are NOT copied to the Docker image.
+# Meta-tests that require these directories run on the host, not in the container.
+# Only adr/ is copied for documentation purposes (if needed).
 
 # Create non-root user with GID 0 for OpenShift arbitrary UID support
 # OpenShift runs containers with arbitrary UIDs in GID 0
@@ -91,7 +131,7 @@ ENV PYTEST_ADDOPTS="-v --tb=short --strict-markers"
 LABEL io.openshift.tags="mcp,langgraph,test"
 LABEL io.k8s.description="Test runner for MCP Server LangGraph"
 
-# Default command runs integration tests using uv run
+# Default command runs integration tests
 # Can be overridden in docker-compose or docker run
 CMD ["pytest", "-m", "integration", "-v", "--tb=short"]
 

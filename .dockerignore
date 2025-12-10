@@ -1,0 +1,252 @@
+# ==============================================================================
+# .dockerignore - Reduces build context by 99%+ (10.5GB -> ~8MB)
+# ==============================================================================
+#
+# CRITICAL: This file MUST exist at the repository root for Docker to use it.
+# Source: docker/.dockerignore.optimized (reference copy)
+#
+# Build context size impact:
+#   Before: ~10.5GB (terraform, .git, node_modules, etc.)
+#   After:  ~8MB
+#
+# Only include what's needed for Docker build:
+#   + src/ directory (excluding node_modules, __pycache__)
+#   + pyproject.toml
+#   + uv.lock
+#   + tests/ (for test variant only - see Dockerfile build-test stage)
+#   + alembic/ (for migrations)
+#   + adr/ (for documentation tests)
+#
+# ==============================================================================
+
+# ==============================================================================
+# LARGE DIRECTORIES (Critical for CI disk space)
+# ==============================================================================
+
+# Terraform configurations (9.5GB - never needed in Docker images)
+terraform/
+
+# Node.js dependencies (239MB - rebuilt in Dockerfile.builder)
+**/node_modules/
+
+# Frontend build output (rebuilt in Docker)
+src/mcp_server_langgraph/builder/frontend/dist/
+
+# ==============================================================================
+# Python artifacts (generated during build)
+# ==============================================================================
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-wheel-metadata/
+
+# ==============================================================================
+# Virtual environments
+# ==============================================================================
+venv/
+ENV/
+env/
+.venv/
+env.bak/
+venv.bak/
+
+# ==============================================================================
+# IDEs and editors
+# ==============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+.project
+.pydevproject
+.settings/
+
+# ==============================================================================
+# OS files
+# ==============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ==============================================================================
+# Git (810MB)
+# ==============================================================================
+.git/
+.gitignore
+.gitattributes
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# ==============================================================================
+# Docker (avoid recursion)
+# ==============================================================================
+Dockerfile*
+docker-compose*.yml
+docker-compose*.yaml
+.dockerignore
+docker/
+
+# ==============================================================================
+# Documentation (not needed in image)
+# ==============================================================================
+*.md
+docs/
+docs-internal/
+*.txt
+!requirements*.txt
+LICENSE
+CHANGELOG.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+
+# ==============================================================================
+# Tests (excluded for base/full variants)
+# Note: tests/ is included in build-test stage explicitly via COPY
+# ==============================================================================
+tests/
+test_*.py
+*_test.py
+conftest.py
+.pytest_cache/
+.hypothesis/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.tox/
+coverage-integration/
+
+# ==============================================================================
+# CI/CD and deployment configs
+# ==============================================================================
+.github/
+.gitlab-ci.yml
+.circleci/
+azure-pipelines.yml
+.travis.yml
+Jenkinsfile
+skaffold.yaml
+
+# ==============================================================================
+# Logs and monitoring
+# ==============================================================================
+*.log
+logs/
+*.log.*
+
+# ==============================================================================
+# Secrets and sensitive files (CRITICAL - never in image)
+# ==============================================================================
+.env
+.env.*
+.envrc
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+*.secret
+.secrets/
+credentials.json
+service-account*.json
+
+# ==============================================================================
+# Kubernetes and deployment manifests
+# ==============================================================================
+deployments/
+k8s/
+kubernetes/
+helm/
+kustomize/
+manifests/
+*.yaml
+*.yml
+# Exceptions for Python project files
+!pyproject.toml
+!uv.lock
+
+# ==============================================================================
+# Caches
+# ==============================================================================
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pypackages__/
+
+# ==============================================================================
+# Development and profiling
+# ==============================================================================
+.benchmarks/
+.prof
+*.prof
+.mutmut-cache/
+reports/
+security-reports/
+
+# ==============================================================================
+# Database files
+# ==============================================================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ==============================================================================
+# Temporary files
+# ==============================================================================
+*.tmp
+*.bak
+*~
+.temp/
+tmp/
+
+# ==============================================================================
+# Large media files
+# ==============================================================================
+*.mp4
+*.avi
+*.mov
+*.mp3
+*.wav
+
+# ==============================================================================
+# Misc development files
+# ==============================================================================
+.claude/
+scripts/
+examples/
+notebooks/
+*.ipynb
+.jupyter/
+archive/
+clients/
+monitoring/
+Makefile
+justfile

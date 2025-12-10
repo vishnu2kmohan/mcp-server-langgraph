@@ -34,6 +34,8 @@
 #   - https://hynek.me/articles/docker-uv/
 #   - 12-factor app: https://12factor.net/
 
+ARG PYTHON_VERSION=3.12
+
 # ==============================================================================
 # Stage 1: Build React Frontend
 # ==============================================================================
@@ -57,15 +59,15 @@ RUN npm run build
 # ==============================================================================
 # Stage 2: Python Runtime with FastAPI + SPAStaticFiles
 # ==============================================================================
-FROM python:3.12-slim AS runtime
+FROM python:${PYTHON_VERSION}-slim AS runtime
 
 WORKDIR /app
 
 # Install minimal system dependencies
 # curl: health checks
 # ca-certificates: HTTPS for auth providers
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-builder,sharing=private \
+    --mount=type=cache,target=/var/lib/apt,id=apt-lib-builder,sharing=private \
     apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
@@ -88,7 +90,7 @@ COPY src/ ./src/
 # Install Python dependencies (production only, no dev extras)
 # --frozen: Use lockfile exactly, fail if out of sync
 # --no-dev: Skip development dependencies
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-builder,sharing=private \
     uv sync --frozen --no-dev
 
 # Copy built frontend from stage 1

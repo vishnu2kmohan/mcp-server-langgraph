@@ -61,10 +61,10 @@ ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 COPY requirements-infisical.txt .
 
 # Build wheels with caching
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=cache,target=/root/.cargo/registry \
-    --mount=type=cache,target=/root/.cargo/git \
-    --mount=type=cache,target=/root/.cache/cargo-build \
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-infisical,sharing=private \
+    --mount=type=cache,target=/root/.cargo/registry,id=cargo-registry-infisical,sharing=private \
+    --mount=type=cache,target=/root/.cargo/git,id=cargo-git-infisical,sharing=private \
+    --mount=type=cache,target=/root/.cache/cargo-build,id=cargo-build-infisical,sharing=private \
     mkdir -p /wheels && \
     uv pip wheel --no-cache --wheel-dir=/wheels -r requirements-infisical.txt
 
