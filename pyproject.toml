@@ -614,6 +614,18 @@ ignore_missing_imports = true
 disallow_untyped_defs = false
 disallow_untyped_calls = false
 
+# GCP Cloud backend modules - allow unused type: ignore comments
+# These files use conditional imports for optional GCP dependencies.
+# In CI (without GCP packages), mypy reports attr-defined errors requiring ignores.
+# Locally (with GCP packages), the ignores are unused. Suppress this warning.
+[[tool.mypy.overrides]]
+module = [
+    "mcp_server_langgraph.observability.query.backends.cloudlogging",
+    "mcp_server_langgraph.observability.query.backends.cloudtrace",
+    "mcp_server_langgraph.observability.query.backends.cloudmonitoring",
+]
+warn_unused_ignores = false
+
 # Gradual strictness rollout - Phase 1: Core modules with full strict typing
 [[tool.mypy.overrides]]
 module = [

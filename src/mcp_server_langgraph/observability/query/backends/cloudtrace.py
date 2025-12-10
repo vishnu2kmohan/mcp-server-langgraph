@@ -29,7 +29,7 @@ from ..interfaces import (
 )
 
 if TYPE_CHECKING:
-    from google.cloud import trace_v1
+    from google.cloud import trace_v1  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class CloudTraceClient(TracingQueryClient):
             return
 
         try:
-            from google.cloud import trace_v1
+            from google.cloud import trace_v1  # type: ignore[attr-defined]
 
             self._client = trace_v1.TraceServiceAsyncClient()
             self._initialized = True
@@ -100,7 +100,7 @@ class CloudTraceClient(TracingQueryClient):
         assert self._client is not None
 
         try:
-            from google.cloud import trace_v1
+            from google.cloud import trace_v1  # type: ignore[attr-defined]
 
             request = trace_v1.GetTraceRequest(
                 project_id=self._project_id,
@@ -165,7 +165,7 @@ class CloudTraceClient(TracingQueryClient):
             start = end - timedelta(hours=1)
 
         try:
-            from google.cloud import trace_v1
+            from google.cloud import trace_v1  # type: ignore[attr-defined]
             from google.protobuf import timestamp_pb2
 
             start_time = timestamp_pb2.Timestamp()
@@ -247,7 +247,7 @@ class CloudTraceClient(TracingQueryClient):
             start = end - timedelta(hours=1)
 
         try:
-            from google.cloud import trace_v1
+            from google.cloud import trace_v1  # type: ignore[attr-defined]
             from google.protobuf import timestamp_pb2
 
             start_time = timestamp_pb2.Timestamp()

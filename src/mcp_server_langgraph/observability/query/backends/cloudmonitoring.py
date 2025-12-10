@@ -28,7 +28,7 @@ from ..interfaces import (
 )
 
 if TYPE_CHECKING:
-    from google.cloud import monitoring_v3
+    from google.cloud import monitoring_v3  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class CloudMonitoringClient(MetricsQueryClient):
             return
 
         try:
-            from google.cloud import monitoring_v3
+            from google.cloud import monitoring_v3  # type: ignore[attr-defined]
 
             self._client = monitoring_v3.MetricServiceAsyncClient()
             self._initialized = True
@@ -135,7 +135,7 @@ class CloudMonitoringClient(MetricsQueryClient):
         assert self._client is not None
 
         try:
-            from google.cloud import monitoring_v3
+            from google.cloud import monitoring_v3  # type: ignore[attr-defined]
             from google.protobuf import duration_pb2, timestamp_pb2
 
             # Build time interval
@@ -216,7 +216,7 @@ class CloudMonitoringClient(MetricsQueryClient):
 
         for metric_type, metric_name in metric_types:
             try:
-                from google.cloud import monitoring_v3
+                from google.cloud import monitoring_v3  # type: ignore[attr-defined]
                 from google.protobuf import timestamp_pb2
 
                 start_time = timestamp_pb2.Timestamp()

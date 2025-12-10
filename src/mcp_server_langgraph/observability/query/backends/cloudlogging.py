@@ -28,7 +28,7 @@ from ..interfaces import (
 )
 
 if TYPE_CHECKING:
-    from google.cloud import logging_v2
+    from google.cloud import logging_v2  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class CloudLoggingClient(LoggingQueryClient):
             return
 
         try:
-            from google.cloud import logging_v2
+            from google.cloud import logging_v2  # type: ignore[attr-defined]
 
             self._client = logging_v2.LoggingServiceV2AsyncClient()
             self._initialized = True
@@ -147,7 +147,7 @@ class CloudLoggingClient(LoggingQueryClient):
         filter_str = " AND ".join(filter_parts)
 
         try:
-            from google.cloud import logging_v2
+            from google.cloud import logging_v2  # type: ignore[attr-defined]
 
             request = logging_v2.ListLogEntriesRequest(
                 resource_names=[f"projects/{self._project_id}"],
@@ -203,7 +203,7 @@ class CloudLoggingClient(LoggingQueryClient):
         filter_str = " AND ".join(filter_parts)
 
         try:
-            from google.cloud import logging_v2
+            from google.cloud import logging_v2  # type: ignore[attr-defined]
 
             request = logging_v2.ListLogEntriesRequest(
                 resource_names=[f"projects/{self._project_id}"],

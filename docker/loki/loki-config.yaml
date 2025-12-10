@@ -89,9 +89,11 @@ ruler:
       store: inmemory
 
 limits_config:
-  # Enable metric aggregation for pattern ingester
-  # Required for Loki 3.x single-node mode
-  metric_aggregation_enabled: true
+  # Disable metric aggregation - pattern ingester metrics require a remote write URL
+  # which isn't needed for test environments. The pattern_ingester.enabled is still
+  # required for Loki 3.x to avoid "empty ring" errors, but aggregation can be off.
+  # See: https://github.com/grafana/loki/issues/18890
+  metric_aggregation_enabled: false
   # Accept old samples for test environment robustness
   # Alloy may batch and buffer logs before sending, causing timestamp delays
   # Disabled rejection to prevent 400 errors during test runs

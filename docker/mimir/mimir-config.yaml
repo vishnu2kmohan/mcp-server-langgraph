@@ -80,17 +80,21 @@ blocks_storage:
     sync_dir: /tmp/mimir/bucket-sync
 
 # Ruler configuration (built-in alerting)
+# Note: In Mimir 3.x, ruler storage uses ruler_storage top-level config
 ruler:
   enable_api: true
   rule_path: /tmp/mimir/rules-wal
-  # Load rules from mounted directory
-  storage:
-    type: local
-    local:
-      directory: /etc/mimir/rules
   ring:
     kvstore:
       store: inmemory
+
+# Ruler storage configuration (Mimir 3.x format)
+# Uses local backend to load rules from mounted directory
+# Reference: https://grafana.com/docs/mimir/latest/configure/configuration-parameters/
+ruler_storage:
+  backend: local
+  local:
+    directory: /etc/mimir/rules
 
 # Alertmanager configuration (built-in)
 alertmanager:

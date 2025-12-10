@@ -1,4 +1,4 @@
-.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-up-build test-infra-down test-infra-logs test-builder-up test-builder-down test-playground-up test-playground-down test-e2e test-api test-mcp-server validate-openapi validate-deployments validate-docker-image validate-all validate-workflows validate-pre-push test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build docs-deploy docs-validate docs-validate-version docs-validate-mintlify docs-fix-mdx docs-test docs-audit generate-reports pre-commit-setup git-hooks
+.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-up-build test-infra-down test-infra-logs test-builder-up test-builder-down test-playground-up test-playground-down test-e2e test-api test-mcp-server validate-openapi validate-deployments validate-docker-image validate-lgtm-config validate-all validate-workflows validate-pre-push test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build docs-deploy docs-validate docs-validate-version docs-validate-mintlify docs-fix-mdx docs-test docs-audit generate-reports pre-commit-setup git-hooks
 
 # Sequential-only targets (cannot be parallelized)
 .NOTPARALLEL: deploy-production deploy-staging deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
@@ -606,6 +606,21 @@ validate-docker-compose:
 	$(DOCKER_COMPOSE) -f docker-compose.yml config --quiet
 	@echo "✓ Docker Compose valid"
 
+validate-lgtm-config:  ## Validate Grafana LGTM stack configurations (Mimir, Loki)
+	@echo "Validating LGTM stack configurations..."
+	@echo "  Validating Mimir config..."
+	@docker run --rm -v $(PWD)/docker/mimir:/etc/mimir grafana/mimir:3.0.1 \
+		-config.file=/etc/mimir/mimir-config.yaml -print.config > /dev/null 2>&1 && \
+		echo "  ✓ Mimir config valid" || \
+		(echo "  ✗ Mimir config invalid - run with verbose output for details:" && \
+		 echo "    docker run --rm -v \$$(pwd)/docker/mimir:/etc/mimir grafana/mimir:3.0.1 -config.file=/etc/mimir/mimir-config.yaml -print.config" && \
+		 exit 1)
+	@echo "  Validating Loki config (YAML syntax)..."
+	@$(UV_RUN) python -c "import yaml; yaml.safe_load(open('docker/loki/loki-config.yaml'))" && \
+		echo "  ✓ Loki config YAML valid" || \
+		(echo "  ✗ Loki config YAML invalid" && exit 1)
+	@echo "✓ LGTM configurations valid"
+
 validate-docker-image:
 	@echo "Validating Docker test image freshness..."
 	@./scripts/validators/validate_docker_image_freshness.sh --check-commits
@@ -631,7 +646,7 @@ validate-kustomize:
 	wait $$pid1 $$pid2 $$pid3
 	@echo "✓ All Kustomize overlays valid"
 
-validate-all: validate-deployments validate-docker-compose validate-docker-image validate-helm validate-kustomize
+validate-all: validate-deployments validate-docker-compose validate-lgtm-config validate-docker-image validate-helm validate-kustomize
 	@echo "✓ All deployment validations passed"
 
 validate-docs:  ## Verify Claude Code documentation accuracy (prevents drift)
