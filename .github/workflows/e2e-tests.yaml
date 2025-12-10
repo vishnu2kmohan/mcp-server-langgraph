@@ -205,11 +205,15 @@ jobs:
         # CODEX FINDING FIX (2025-11-24): Verify realm is imported, not just port open
         # Previous issue: Keycloak health check passes but realm not yet imported
         # Test that we can actually get tokens for the test user (proves realm is ready)
+        #
+        # FIX (2025-12-10): Use correct realm 'default' (not 'master') and '/authn' path prefix
+        # The test realm is 'default' (from tests/e2e/keycloak-test-realm.json)
+        # Keycloak has KC_HTTP_RELATIVE_PATH=/authn baked into the Docker image
         for i in {1..30}; do
           # Try to get a token using the test user credentials
           # This proves the realm, client, and user are all properly configured
           TOKEN_RESPONSE=$(curl -sf -X POST \
-            "http://localhost:9082/realms/master/protocol/openid-connect/token" \
+            "http://localhost:9082/authn/realms/default/protocol/openid-connect/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "grant_type=password" \
             -d "client_id=mcp-server" \
@@ -245,9 +249,10 @@ jobs:
         OTEL_SDK_DISABLED: "true"
         # Keycloak client configuration for token introspection
         # Must match the secret in tests/e2e/keycloak-test-realm.json
+        # FIX (2025-12-10): Use realm 'default' (not 'master') and include /authn path
         KEYCLOAK_CLIENT_SECRET: "test-client-secret-for-e2e-tests"
-        KEYCLOAK_URL: "http://localhost:9082"
-        KEYCLOAK_REALM: "master"
+        KEYCLOAK_URL: "http://localhost:9082/authn"
+        KEYCLOAK_REALM: "default"
         KEYCLOAK_CLIENT_ID: "mcp-server"
 
     - name: Upload E2E coverage artifact
