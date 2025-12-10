@@ -88,6 +88,14 @@ export interface InitializeResult {
 }
 
 // =============================================================================
+// SEP-973: Icons Metadata (New in 2025-11-25)
+// =============================================================================
+
+export interface IconReference {
+  uri: string;  // data: URI or https: URI
+}
+
+// =============================================================================
 // MCP Tool Types
 // =============================================================================
 
@@ -95,6 +103,7 @@ export interface MCPTool {
   name: string;
   description: string;
   inputSchema: JSONSchema;
+  icon?: IconReference;  // SEP-973
 }
 
 export interface MCPToolCallParams {
@@ -116,6 +125,7 @@ export interface MCPResource {
   name: string;
   description?: string;
   mimeType?: string;
+  icon?: IconReference;  // SEP-973
 }
 
 export interface MCPResourceTemplate {
@@ -153,6 +163,7 @@ export interface MCPPrompt {
   name: string;
   description?: string;
   arguments?: MCPPromptArgument[];
+  icon?: IconReference;  // SEP-973
 }
 
 export interface MCPPromptArgument {
