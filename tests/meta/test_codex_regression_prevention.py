@@ -617,12 +617,15 @@ class TestCodexFindingCompliance:
 
     def test_critical_findings_have_fixes(self):
         """Verify critical findings (E2E skips, state mutations, CLI guards) are fixed"""
-        # E2E xfail conversion
+        # E2E xfail conversion - originally had 20+ xfails, but tests have been fixed!
+        # Now we verify remaining xfails exist (regression protection for actual known issues)
+        # As tests are fixed, this count decreases which is GOOD progress.
         e2e_file = TESTS_DIR / "e2e" / "test_full_user_journey.py"
         if e2e_file.exists():
             content = _cached_read_file(str(e2e_file))
             xfail_count = content.count("@pytest.mark.xfail(strict=True")
-            assert xfail_count >= 20, f"E2E tests should have 20+ xfail markers, found {xfail_count}"
+            # Threshold updated 2024-12: xfails reduced from 20+ to 4 as tests were fixed
+            assert xfail_count >= 4, f"E2E tests should have xfail markers for known issues, found {xfail_count}"
 
         # State isolation with monkeypatch
         checkpoint_file = TESTS_DIR / "test_distributed_checkpointing.py"
