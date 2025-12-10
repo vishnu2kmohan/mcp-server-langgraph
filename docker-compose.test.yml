@@ -68,7 +68,7 @@ services:
   # API GATEWAY (Traefik)
   # ==============================================================================
   # Single entry point for all web services with path-based routing
-  # Dashboard available at http://localhost/gateway or :8080
+  # Dashboard available at http://localhost:8080 (direct access only)
 
   traefik-gateway:
     image: traefik:v3.6.4
@@ -112,12 +112,10 @@ services:
           - gateway
     labels:
       - "traefik.enable=true"
-      # Dashboard route: /gateway
-      - "traefik.http.routers.traefik-dashboard.rule=PathPrefix(`/gateway`)"
-      - "traefik.http.routers.traefik-dashboard.entrypoints=web"
-      - "traefik.http.routers.traefik-dashboard.service=api@internal"
-      - "traefik.http.middlewares.gateway-strip.stripprefix.prefixes=/gateway"
-      - "traefik.http.routers.traefik-dashboard.middlewares=gateway-strip"
+      # NOTE: Traefik dashboard is available at http://localhost:8080 (direct)
+      # The internal dashboard doesn't work with path prefixes/stripping
+      # because it uses absolute redirects to "/"
+      # DO NOT route /gateway via port 80 - use :8080 directly
 
   # ==============================================================================
   # DATABASE SERVICES
@@ -653,7 +651,9 @@ services:
       # Grafana handles subpath via GF_SERVER_SERVE_FROM_SUB_PATH
       - "traefik.http.routers.grafana.rule=PathPrefix(`/dashboards`)"
       - "traefik.http.routers.grafana.entrypoints=web"
-      - "traefik.http.routers.grafana.priority=10"
+      # Priority 11 to take precedence over qdrant-dashboard (PathPrefix /dashboard)
+      # since /dashboards starts with /dashboard
+      - "traefik.http.routers.grafana.priority=11"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
       # NO strip - Grafana configured for /dashboards subpath
 
