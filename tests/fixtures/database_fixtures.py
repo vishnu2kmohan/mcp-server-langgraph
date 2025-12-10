@@ -18,6 +18,7 @@ import os
 
 import pytest
 
+from tests.constants import TEST_REDIS_PORT
 from tests.utils.worker_utils import (
     get_worker_openfga_store,
     get_worker_postgres_schema,
@@ -113,9 +114,11 @@ async def redis_client_real(integration_test_env):
     except ImportError:
         pytest.skip("redis not installed")
 
+    # Use TEST_REDIS_PORT (9379) as default instead of standard 6379
+    # This ensures tests connect to the test infrastructure (docker-compose.test.yml)
     client = redis.Redis(
         host=os.getenv("REDIS_HOST", "localhost"),
-        port=int(os.getenv("REDIS_PORT", "6379")),
+        port=int(os.getenv("REDIS_PORT", str(TEST_REDIS_PORT))),
         decode_responses=True,
     )
 

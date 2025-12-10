@@ -236,6 +236,7 @@ class TestPlaygroundWebSocket:
     async def test_websocket_endpoint_exists(self, playground_url: str) -> None:
         """Test WebSocket endpoint is accessible."""
         import websockets
+        from websockets.exceptions import InvalidStatus
 
         ws_url = playground_url.replace("http://", "ws://")
 
@@ -246,9 +247,11 @@ class TestPlaygroundWebSocket:
             ) as _ws:
                 # Connection should succeed or fail with auth error
                 pass
-        except websockets.exceptions.InvalidStatusCode as e:
+        except InvalidStatus as e:
             # Auth error (401, 403) or not found (404) is expected
-            assert e.status_code in [401, 403, 404]
+            # websockets 14.0+: use response.status_code
+            status = e.response.status_code if hasattr(e, "response") else getattr(e, "status_code", 0)
+            assert status in [401, 403, 404]
         except Exception:
             # Connection refused means server not running - that's OK
             pass

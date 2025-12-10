@@ -28,6 +28,14 @@ from langchain_core.messages import HumanMessage
 
 from mcp_server_langgraph.llm.factory import LLMFactory
 
+# Check if vertexai SDK is installed (required for Vertex AI partner models)
+try:
+    import vertexai  # noqa: F401
+
+    VERTEX_SDK_AVAILABLE = True
+except ImportError:
+    VERTEX_SDK_AVAILABLE = False
+
 pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
 
@@ -37,6 +45,20 @@ def get_claude_vertex_project() -> str | None:
     Checks ANTHROPIC_VERTEX_PROJECT_ID first, falls back to VERTEX_PROJECT.
     """
     return os.getenv("ANTHROPIC_VERTEX_PROJECT_ID") or os.getenv("VERTEX_PROJECT")
+
+
+def vertex_ai_available() -> bool:
+    """Check if Vertex AI is available (SDK installed and project configured)."""
+    return VERTEX_SDK_AVAILABLE and bool(get_claude_vertex_project())
+
+
+def get_vertex_skip_reason() -> str:
+    """Get appropriate skip reason for Vertex AI tests."""
+    if not VERTEX_SDK_AVAILABLE:
+        return "vertexai SDK not installed - run: pip install google-cloud-aiplatform>=1.38"
+    if not get_claude_vertex_project():
+        return "ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access"
+    return ""
 
 
 def get_claude_vertex_location() -> str:
@@ -61,8 +83,8 @@ class TestVertexAIAnthropicModels:
         gc.collect()
 
     @pytest.mark.skipif(
-        not get_claude_vertex_project(),
-        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
+        not vertex_ai_available(),
+        reason=get_vertex_skip_reason() or "Vertex AI not available",
     )
     @pytest.mark.asyncio
     async def test_claude_sonnet_4_5_via_vertex_ai(self):
@@ -84,8 +106,8 @@ class TestVertexAIAnthropicModels:
         assert len(response.content) > 0
 
     @pytest.mark.skipif(
-        not get_claude_vertex_project(),
-        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
+        not vertex_ai_available(),
+        reason=get_vertex_skip_reason() or "Vertex AI not available",
     )
     @pytest.mark.asyncio
     async def test_claude_haiku_4_5_via_vertex_ai(self):
@@ -107,8 +129,8 @@ class TestVertexAIAnthropicModels:
         assert len(response.content) > 0
 
     @pytest.mark.skipif(
-        not get_claude_vertex_project(),
-        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
+        not vertex_ai_available(),
+        reason=get_vertex_skip_reason() or "Vertex AI not available",
     )
     @pytest.mark.asyncio
     async def test_claude_opus_4_5_via_vertex_ai(self):
@@ -130,8 +152,8 @@ class TestVertexAIAnthropicModels:
         assert len(response.content) > 0
 
     @pytest.mark.skipif(
-        not get_claude_vertex_project(),
-        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
+        not vertex_ai_available(),
+        reason=get_vertex_skip_reason() or "Vertex AI not available",
     )
     @pytest.mark.asyncio
     async def test_claude_sonnet_4_5_reasoning(self):
@@ -153,8 +175,8 @@ class TestVertexAIAnthropicModels:
         assert "4" in response.content
 
     @pytest.mark.skipif(
-        not get_claude_vertex_project(),
-        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
+        not vertex_ai_available(),
+        reason=get_vertex_skip_reason() or "Vertex AI not available",
     )
     @pytest.mark.asyncio
     async def test_vertex_ai_claude_with_conversation(self):
@@ -193,8 +215,8 @@ class TestVertexAIAnthropicConfiguration:
         gc.collect()
 
     @pytest.mark.skipif(
-        not get_claude_vertex_project(),
-        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
+        not vertex_ai_available(),
+        reason=get_vertex_skip_reason() or "Vertex AI not available",
     )
     @pytest.mark.asyncio
     async def test_vertex_ai_uses_project_from_config(self):
@@ -211,8 +233,8 @@ class TestVertexAIAnthropicConfiguration:
         assert "claude" in llm.model_name.lower()
 
     @pytest.mark.skipif(
-        not get_claude_vertex_project(),
-        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
+        not vertex_ai_available(),
+        reason=get_vertex_skip_reason() or "Vertex AI not available",
     )
     @pytest.mark.asyncio
     async def test_vertex_ai_supports_multiple_regions(self):
@@ -257,8 +279,8 @@ class TestVertexAIAnthropicErrorHandling:
         assert llm is not None
 
     @pytest.mark.skipif(
-        not get_claude_vertex_project(),
-        reason="ANTHROPIC_VERTEX_PROJECT_ID or VERTEX_PROJECT not set - requires Vertex AI access",
+        not vertex_ai_available(),
+        reason=get_vertex_skip_reason() or "Vertex AI not available",
     )
     @pytest.mark.asyncio
     async def test_vertex_ai_invalid_model_name(self):

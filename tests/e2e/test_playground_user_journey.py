@@ -374,11 +374,10 @@ class TestPlaygroundWebSocketJourney:
                 # Should receive at least acknowledgment
                 # Note: Auth may prevent actual chat
 
-        except websockets.exceptions.InvalidStatusCode as e:
-            # Auth error expected without valid token (legacy exception)
-            assert e.status_code in [401, 403, 404]
         except websockets.exceptions.InvalidStatus as e:
-            # Auth error expected without valid token (new exception in websockets 14+)
-            assert e.response.status_code in [401, 403, 404]
+            # Auth error expected without valid token (websockets 14+)
+            # Use response.status_code for new API, fall back to status_code for legacy
+            status = e.response.status_code if hasattr(e, "response") else getattr(e, "status_code", 0)
+            assert status in [401, 403, 404]
         except ConnectionRefusedError:
             pytest.skip("Playground server not running")
