@@ -248,8 +248,10 @@ class TestInitDatabase:
         mock_context.__aexit__ = AsyncMock(return_value=None)
         mock_engine.begin = MagicMock(return_value=mock_context)
 
+        # Patch get_engine to return our mock directly (xdist-safe)
+        # This avoids global state issues with _engine caching
         with patch(
-            "mcp_server_langgraph.database.session.create_async_engine",
+            "mcp_server_langgraph.database.session.get_engine",
             return_value=mock_engine,
         ):
             await init_database("postgresql+asyncpg://localhost/testdb")
