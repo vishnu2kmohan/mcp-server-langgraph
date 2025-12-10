@@ -159,11 +159,14 @@ CMD ["pytest"]
         finally:
             temp_file.unlink()
 
-    def test_hook_fails_when_pyproject_toml_missing(self):
+    def test_hook_fails_when_pyproject_toml_included(self):
         """
-        Validate hook fails when pyproject.toml is not copied.
+        Validate hook fails when pyproject.toml IS copied (should be excluded).
 
-        GIVEN: A Dockerfile missing COPY pyproject.toml command
+        Per ADR-0053: pyproject.toml must NOT be in Docker image.
+        Version is read via importlib.metadata at runtime.
+
+        GIVEN: A Dockerfile with COPY pyproject.toml command
         WHEN: Running the validation hook
         THEN: Hook should exit with code 1 (failure)
         """
@@ -173,7 +176,7 @@ WORKDIR /app
 
 COPY src/ ./src/
 COPY tests/ ./tests/
-# Missing: COPY pyproject.toml ./
+COPY pyproject.toml ./  # ❌ WRONG: pyproject.toml should NOT be in Docker image
 
 CMD ["pytest"]
 """
@@ -190,8 +193,8 @@ CMD ["pytest"]
                 timeout=60,
             )
 
-            assert result.returncode == 1, "Hook should fail when pyproject.toml missing"
-            assert "pyproject" in result.stderr.lower() or "toml" in result.stdout.lower()
+            assert result.returncode == 1, "Hook should fail when pyproject.toml is included"
+            assert "pyproject.toml" in result.stderr.lower() or "importlib" in result.stderr.lower()
         finally:
             temp_file.unlink()
 
@@ -209,7 +212,6 @@ WORKDIR /app
 
 COPY src/ ./src/
 COPY tests/ ./tests/
-COPY pyproject.toml ./
 COPY scripts/ ./scripts/  # ❌ WRONG: scripts/ should not be in Docker image
 
 CMD ["pytest"]
@@ -248,7 +250,6 @@ WORKDIR /app
 
 COPY src/ ./src/
 COPY tests/ ./tests/
-COPY pyproject.toml ./
 COPY deployments/ ./deployments/  # ❌ WRONG: deployments/ should not be in Docker image
 
 CMD ["pytest"]
@@ -292,10 +293,10 @@ FROM base AS runtime-slim
 FROM runtime-slim AS final-test
 WORKDIR /app
 
-# Only these COPY commands matter for integration tests
+# Only these COPY commands matter for integration tests (per ADR-0053)
 COPY src/ ./src/
 COPY tests/ ./tests/
-COPY pyproject.toml ./
+# Note: pyproject.toml is NOT copied - version read via importlib.metadata
 
 CMD ["pytest", "-m", "integration"]
 """
@@ -337,6 +338,7 @@ CMD ["pytest", "-m", "integration"]
 
         assert result.returncode == 0, (
             f"Hook should pass with production Dockerfile. "
-            f"Per ADR-0053, integration tests only need src/, tests/, pyproject.toml. "
+            f"Per ADR-0053, integration tests only need src/, tests/. "
+            f"pyproject.toml is NOT copied - version read via importlib.metadata. "
             f"stderr: {result.stderr}\nstdout: {result.stdout}"
         )
