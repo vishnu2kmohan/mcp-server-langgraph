@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2025-12-07
-**Total ADRs**: 64
+**Last Updated**: 2025-12-09
+**Total ADRs**: 65
 
 ## Overview
 
@@ -34,6 +34,7 @@ Each ADR follows this structure:
 | [ADR-0037](adr-0037-identity-federation.md) | 37. Identity Federation Architecture | Accepted | 2025-01-28 |
 | [ADR-0038](adr-0038-scim-implementation.md) | 38. SCIM 2.0 Implementation Approach | Accepted | 2025-01-28 |
 | [ADR-0039](adr-0039-openfga-permission-inheritance.md) | 39. OpenFGA Permission Inheritance for Service Principals | Accepted | 2025-01-28 |
+| [ADR-0068](adr-0068-gateway-level-authentication.md) | Gateway-Level Authentication with Traefik ForwardAuth | Unknown | Unknown |
 
 ### Core Architecture
 
