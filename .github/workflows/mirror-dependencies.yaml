@@ -68,9 +68,9 @@ jobs:
             description: OpenFGA authorization service
 
           # OpenTelemetry Collector - Observability
-          - source: docker.io/otel/opentelemetry-collector-contrib:0.137.0
+          - source: docker.io/otel/opentelemetry-collector-contrib:0.141.0
             target: otel-collector-contrib
-            tag: "0.137.0"
+            tag: "0.141.0"
             description: OpenTelemetry Collector with contrib modules
 
           # Qdrant - Vector database
@@ -257,7 +257,7 @@ jobs:
           echo "| Image | GHCR Path |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|-----------|" >> $GITHUB_STEP_SUMMARY
           echo "| openfga/openfga:v1.10.2 | ghcr.io/${{ env.GHCR_OWNER }}/openfga:v1.10.2 |" >> $GITHUB_STEP_SUMMARY
-          echo "| otel/opentelemetry-collector-contrib:0.137.0 | ghcr.io/${{ env.GHCR_OWNER }}/otel-collector-contrib:0.137.0 |" >> $GITHUB_STEP_SUMMARY
+          echo "| otel/opentelemetry-collector-contrib:0.141.0 | ghcr.io/${{ env.GHCR_OWNER }}/otel-collector-contrib:0.141.0 |" >> $GITHUB_STEP_SUMMARY
           echo "| qdrant/qdrant:v1.15.5 | ghcr.io/${{ env.GHCR_OWNER }}/qdrant:v1.15.5 |" >> $GITHUB_STEP_SUMMARY
           echo "| busybox:1.36 | ghcr.io/${{ env.GHCR_OWNER }}/busybox:1.36 |" >> $GITHUB_STEP_SUMMARY
           echo "| redis:7-alpine | ghcr.io/${{ env.GHCR_OWNER }}/redis:7-alpine |" >> $GITHUB_STEP_SUMMARY

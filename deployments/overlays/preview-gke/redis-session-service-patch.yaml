@@ -14,7 +14,9 @@
 # - Environment portability
 # - Centralized IP management
 apiVersion: v1
-# trivy:ignore:AVD-KSV-0108
+# trivy:ignore:AVD-KSV-0108 -- ExternalName service, no containers
+# trivy:ignore:KSV039 -- ExternalName service, no containers to set limits on
+# trivy:ignore:KSV040 -- ExternalName service, no resource quota applicable
 kind: Service
 metadata:
   name: redis-session
