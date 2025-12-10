@@ -736,6 +736,8 @@ services:
   grafana-test:
     image: grafana/grafana:12.2.0
     depends_on:
+      grafana-init:
+        condition: service_completed_successfully
       alloy-test:
         condition: service_healthy
       loki-test:
@@ -753,6 +755,15 @@ services:
       # Subpath configuration for gateway routing
       - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/dashboards/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      # Database configuration - prevent "database is locked" errors during concurrent provisioning
+      # Reference: https://community.grafana.com/t/database-is-locked/87028
+      # Reference: https://github.com/prometheus-community/helm-charts/issues/4542
+      - GF_DATABASE_WAL=true
+      - GF_DATABASE_CACHE_MODE=shared
+      - GF_DATABASE_LOCKING_ATTEMPT_TIMEOUT_SEC=30
+      # Disable migration locking - prevents lock contention during startup with provisioning
+      # This is safe for single-instance test environments
+      - GF_DATABASE_MIGRATION_LOCKING=false
       # Unified alerting configuration
       - GF_ALERTING_ENABLED=true
       - GF_UNIFIED_ALERTING_ENABLED=true
@@ -760,6 +771,7 @@ services:
       - GF_UNIFIED_ALERTING_ALERTMANAGERS_DISCOVER=false
       - GF_UNIFIED_ALERTING_ALERTMANAGER_URL=http://mimir:9009/alertmanager
     volumes:
+      - grafana-data:/var/lib/grafana  # Named volume prevents SQLite locking issues
       - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       - ./monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
@@ -769,7 +781,8 @@ services:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 15
+      start_period: 60s  # Give Grafana time to initialize database and download plugins
     deploy:
       resources:
         limits:
@@ -863,11 +876,35 @@ services:
       - sh
       - -c
       - |
-        mkdir -p /tmp/mimir/data /tmp/mimir/tsdb /tmp/mimir/ruler
+        mkdir -p /tmp/mimir/data /tmp/mimir/tsdb /tmp/mimir/evaldata /tmp/mimir/ruleconfigs
         chown -R 10001:10001 /tmp/mimir
         echo "Mimir volume permissions set (UID 10001)"
     volumes:
       - mimir-data:/tmp/mimir
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 32M
+        reservations:
+          cpus: '0.01'
+          memory: 8M
+    networks:
+      - mcp-test-network
+
+  grafana-init:
+    image: busybox:1.37
+    user: root
+    restart: "no"  # One-shot init container - run once and exit
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /var/lib/grafana/plugins /var/lib/grafana/provisioning/alerting
+        chown -R 472:0 /var/lib/grafana
+        echo "Grafana volume permissions set (UID 472)"
+    volumes:
+      - grafana-data:/var/lib/grafana
     deploy:
       resources:
         limits:
@@ -1000,7 +1037,8 @@ services:
     volumes:
       - ./docker/mimir/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
       - ./docker/mimir/alertmanager-fallback.yaml:/etc/mimir/alertmanager-fallback.yaml:ro
-      - ./docker/mimir/rules:/etc/mimir/rules:ro
+      # Ruler storage is configured in mimir-config.yaml to use /tmp/mimir/ruler
+      # which is created by mimir-init with correct permissions (UID 10001)
       - mimir-data:/tmp/mimir
     # NOTE: Mimir uses distroless image with no wget/curl
     # See: https://github.com/grafana/mimir/issues/9034
@@ -1281,3 +1319,4 @@ volumes:
   loki-data:
   tempo-data:
   mimir-data:
+  grafana-data:

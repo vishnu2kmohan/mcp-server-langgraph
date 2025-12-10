@@ -504,6 +504,7 @@ test-infra-clean-volumes:
 	docker volume rm mcp-server-langgraph_loki-data 2>/dev/null || true
 	docker volume rm mcp-server-langgraph_tempo-data 2>/dev/null || true
 	docker volume rm mcp-server-langgraph_mimir-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_grafana-data 2>/dev/null || true
 	@echo "✓ Test volumes cleaned"
 
 test-infra-reset: test-infra-down test-infra-clean-volumes

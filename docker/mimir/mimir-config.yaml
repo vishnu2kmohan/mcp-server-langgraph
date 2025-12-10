@@ -79,22 +79,26 @@ blocks_storage:
   bucket_store:
     sync_dir: /tmp/mimir/bucket-sync
 
-# Ruler configuration (built-in alerting)
-# Note: In Mimir 3.x, ruler storage uses ruler_storage top-level config
+# Ruler configuration
+# The ruler must have rule_path set explicitly or it defaults to ./data-ruler/ which causes
+# permission errors. We use /tmp/mimir/evaldata which is created by mimir-init container
+# with correct ownership (UID 10001).
+# IMPORTANT: rule_path and ruler_storage.filesystem.dir must not share any prefix
+# Mimir does prefix-matching to detect overlap - "rule" is prefix of "rules" fails validation
+# Reference: https://github.com/grafana/mimir/discussions/3300
 ruler:
   enable_api: true
-  rule_path: /tmp/mimir/rules-wal
+  rule_path: /tmp/mimir/evaldata  # Ruler evaluation data (no overlap with storage)
+  alertmanager_url: http://localhost:9009/alertmanager
   ring:
     kvstore:
       store: inmemory
 
-# Ruler storage configuration (Mimir 3.x format)
-# Uses local backend to load rules from mounted directory
-# Reference: https://grafana.com/docs/mimir/latest/configure/configuration-parameters/
+# Ruler storage - must be COMPLETELY different path from ruler.rule_path (no prefix overlap)
 ruler_storage:
-  backend: local
-  local:
-    directory: /etc/mimir/rules
+  backend: filesystem
+  filesystem:
+    dir: /tmp/mimir/ruleconfigs
 
 # Alertmanager configuration (built-in)
 alertmanager:
