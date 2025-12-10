@@ -4,16 +4,23 @@ Tests for MCP SDK version compatibility with 2025-11-25 specification.
 TDD: RED phase - This test defines expected behavior for MCP spec upgrade.
 """
 
+import gc
+
 import pytest
 from packaging import version
 
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="mcp_sdk_version")
 class TestMCPSDKVersion:
     """Test MCP SDK version supports 2025-11-25 specification."""
 
-    @pytest.mark.timeout(300)  # MCP SDK imports can be slow
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
+
+    @pytest.mark.timeout(60)  # Reduced timeout for faster feedback
     def test_mcp_sdk_version_supports_2025_11_25_spec(self) -> None:
         """MCP SDK version must be >= 1.23.0 for 2025-11-25 spec support.
 
@@ -36,7 +43,7 @@ class TestMCPSDKVersion:
             f"MCP SDK version {mcp_version_str} is too old. Version >= 1.23.0 required for MCP spec 2025-11-25 support."
         )
 
-    @pytest.mark.timeout(300)  # MCP SDK imports can be slow
+    @pytest.mark.timeout(60)  # Reduced timeout for faster feedback
     def test_mcp_sdk_has_latest_protocol_version_constant(self) -> None:
         """MCP SDK should have LATEST_PROTOCOL_VERSION for 2025-11-25."""
         try:

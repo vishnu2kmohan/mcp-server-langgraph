@@ -7,13 +7,20 @@ enabling better UI rendering with human-readable labels and default selections.
 TDD: RED phase - Define expected behavior for SEP-1330 implementation.
 """
 
+import gc
+
 import pytest
 
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="mcp_elicitation_enum")
 class TestEnhancedEnumSchema:
     """Test enhanced enum schema with enumNames and defaults."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_elicitation_schema_with_enum_names(self) -> None:
         """ElicitationSchema should support enumNames for human-readable labels."""
@@ -100,8 +107,13 @@ class TestEnhancedEnumSchema:
         assert action_prop["default"] == "approve"
 
 
+@pytest.mark.xdist_group(name="mcp_elicitation_enum")
 class TestEnumSchemaModel:
     """Test dedicated EnumSchema model for complex enums."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_enum_schema_with_all_fields(self) -> None:
         """EnumSchema should accept all SEP-1330 fields."""

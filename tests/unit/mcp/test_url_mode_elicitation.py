@@ -8,13 +8,20 @@ authentication instead of inline form rendering.
 TDD: RED phase - Define expected behavior for SEP-1036 implementation.
 """
 
+import gc
+
 import pytest
 
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="mcp_url_elicitation")
 class TestElicitationMode:
     """Test elicitation mode types."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_elicitation_request_default_mode_is_inline(self) -> None:
         """ElicitationRequest should default to inline mode."""
@@ -78,8 +85,13 @@ class TestElicitationMode:
         assert request.url == "https://auth.example.com/oauth/authorize"
 
 
+@pytest.mark.xdist_group(name="mcp_url_elicitation")
 class TestElicitationUrlModeJsonRpc:
     """Test URL mode in JSON-RPC serialization."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_url_mode_elicitation_to_jsonrpc(self) -> None:
         """URL mode elicitation should include mode and url in JSON-RPC."""
@@ -133,8 +145,13 @@ class TestElicitationUrlModeJsonRpc:
         assert "url" not in params or params.get("url") is None
 
 
+@pytest.mark.xdist_group(name="mcp_url_elicitation")
 class TestElicitationHandlerUrlMode:
     """Test ElicitationHandler with URL mode support."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_create_url_mode_elicitation(self) -> None:
         """ElicitationHandler should create URL mode elicitations."""
@@ -178,8 +195,13 @@ class TestElicitationHandlerUrlMode:
         assert elicitation.url is None
 
 
+@pytest.mark.xdist_group(name="mcp_url_elicitation")
 class TestTypescriptTypes:
     """Test that TypeScript types are aligned with Python models."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_elicitation_mode_types_defined(self) -> None:
         """Verify the expected modes are supported."""

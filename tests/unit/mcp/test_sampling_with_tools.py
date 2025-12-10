@@ -7,13 +7,20 @@ enabling servers to request LLM completions with tool definitions.
 TDD: RED phase - Define expected behavior for SEP-1577 implementation.
 """
 
+import gc
+
 import pytest
 
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="mcp_sampling")
 class TestSamplingToolTypes:
     """Test SamplingTool and ToolChoice type definitions."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_sampling_tool_model_with_all_fields(self) -> None:
         """SamplingTool should accept all fields per SEP-1577."""
@@ -76,8 +83,13 @@ class TestSamplingToolTypes:
         assert choice.name == "calculator"
 
 
+@pytest.mark.xdist_group(name="mcp_sampling")
 class TestSamplingRequestWithTools:
     """Test SamplingRequest with tools and toolChoice parameters."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_sampling_request_with_tools(self) -> None:
         """SamplingRequest should accept tools parameter."""
@@ -185,8 +197,13 @@ class TestSamplingRequestWithTools:
         assert params["toolChoice"]["type"] == "auto"
 
 
+@pytest.mark.xdist_group(name="mcp_sampling")
 class TestSamplingHandlerWithTools:
     """Test SamplingHandler methods with tools support."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_create_request_with_tools(self) -> None:
         """create_request should accept tools parameter."""

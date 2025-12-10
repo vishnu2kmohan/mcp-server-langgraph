@@ -7,13 +7,20 @@ operations with status, progress, and result polling.
 TDD: RED phase - Define expected behavior for SEP-1686 implementation.
 """
 
+import gc
+
 import pytest
 
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="mcp_tasks")
 class TestTaskStatus:
     """Test TaskStatus enum values."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_task_status_values(self) -> None:
         """TaskStatus should have all required states."""
@@ -26,8 +33,13 @@ class TestTaskStatus:
         assert TaskStatus.CANCELLED == "cancelled"
 
 
+@pytest.mark.xdist_group(name="mcp_tasks")
 class TestTaskModel:
     """Test Task model."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_task_creation_with_required_fields(self) -> None:
         """Task should be created with required fields."""
@@ -102,8 +114,13 @@ class TestTaskModel:
         assert "timeout" in task.error.lower()
 
 
+@pytest.mark.xdist_group(name="mcp_tasks")
 class TestTaskHandler:
     """Test TaskHandler for managing task lifecycle."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_create_task_returns_working_task(self) -> None:
         """TaskHandler should create new tasks."""
@@ -221,8 +238,13 @@ class TestTaskHandler:
         assert len(tasks) == 3
 
 
+@pytest.mark.xdist_group(name="mcp_tasks")
 class TestTaskSerialization:
     """Test Task serialization for API responses."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_task_to_dict(self) -> None:
         """Task should serialize to dict."""

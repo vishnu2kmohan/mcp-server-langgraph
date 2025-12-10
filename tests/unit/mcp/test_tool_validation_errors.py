@@ -8,13 +8,20 @@ returned as Tool Errors (isError=True in result), not Protocol Errors
 TDD: RED phase - Define expected behavior for SEP-1303 implementation.
 """
 
+import gc
+
 import pytest
 
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="mcp_tool_errors")
 class TestToolValidationErrorResponse:
     """Test that validation errors are returned as tool errors."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_validation_error_result_format(self) -> None:
         """Validation errors should return isError=True in result."""
@@ -47,8 +54,13 @@ class TestToolValidationErrorResponse:
         assert "integer" in result["content"][0]["text"]
 
 
+@pytest.mark.xdist_group(name="mcp_tool_errors")
 class TestToolValidationErrorHandler:
     """Test tool validation error handler utility."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_handle_pydantic_validation_error(self) -> None:
         """Should handle Pydantic ValidationError and return tool error."""
@@ -87,8 +99,13 @@ class TestToolValidationErrorHandler:
         assert "thread_id" in result["content"][0]["text"]
 
 
+@pytest.mark.xdist_group(name="mcp_tool_errors")
 class TestToolErrorTypes:
     """Test tool error type classification."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_is_validation_error_for_pydantic(self) -> None:
         """Should identify Pydantic ValidationError as validation error."""

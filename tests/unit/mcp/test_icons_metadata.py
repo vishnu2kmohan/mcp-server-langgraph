@@ -7,13 +7,20 @@ Icons can be data: URIs or https: URIs for client rendering.
 TDD: RED phase - Define expected behavior for SEP-973 implementation.
 """
 
+import gc
+
 import pytest
 
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="mcp_icons")
 class TestIconReference:
     """Test IconReference model for icon metadata."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_icon_reference_with_data_uri(self) -> None:
         """IconReference should accept data: URIs."""
@@ -46,8 +53,13 @@ class TestIconReference:
         assert data == {"uri": "https://example.com/icon.png"}
 
 
+@pytest.mark.xdist_group(name="mcp_icons")
 class TestToolWithIcon:
     """Test tool definitions with icon metadata."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_tool_definition_with_icon(self) -> None:
         """Tool definition should include optional icon field."""
@@ -96,8 +108,13 @@ class TestToolWithIcon:
         assert data["icon"]["uri"] == "data:image/png;base64,ABC123"
 
 
+@pytest.mark.xdist_group(name="mcp_icons")
 class TestResourceWithIcon:
     """Test resource definitions with icon metadata."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_resource_definition_with_icon(self) -> None:
         """Resource definition should include optional icon field."""
@@ -128,8 +145,13 @@ class TestResourceWithIcon:
         assert resource.icon is None
 
 
+@pytest.mark.xdist_group(name="mcp_icons")
 class TestPromptWithIcon:
     """Test prompt definitions with icon metadata."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_prompt_definition_with_icon(self) -> None:
         """Prompt definition should include optional icon field."""
@@ -157,8 +179,13 @@ class TestPromptWithIcon:
         assert prompt.icon is None
 
 
+@pytest.mark.xdist_group(name="mcp_icons")
 class TestPredefinedIcons:
     """Test predefined icons for common tools."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_get_tool_icon_for_known_tool(self) -> None:
         """Should return predefined icon for known tools."""

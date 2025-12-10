@@ -7,13 +7,20 @@ Origin headers in HTTP requests.
 TDD: RED phase - Define expected behavior for origin validation.
 """
 
+import gc
+
 import pytest
 
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="mcp_origin")
 class TestOriginValidator:
     """Test origin validation logic."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_validate_origin_allowed_single(self) -> None:
         """Should allow origin that matches single allowed origin."""
@@ -75,8 +82,13 @@ class TestOriginValidator:
         assert result is True
 
 
+@pytest.mark.xdist_group(name="mcp_origin")
 class TestOriginValidationResponse:
     """Test origin validation error response format."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_create_forbidden_response(self) -> None:
         """Should create HTTP 403 forbidden response."""
@@ -101,8 +113,13 @@ class TestOriginValidationResponse:
         assert response["content_type"] == "application/json"
 
 
+@pytest.mark.xdist_group(name="mcp_origin")
 class TestOriginValidationMiddleware:
     """Test origin validation middleware helper."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_should_validate_origin_for_post(self) -> None:
         """Should validate origin for POST requests."""

@@ -7,13 +7,20 @@ sampling, elicitation, and tool execution.
 TDD: RED phase - Define expected behavior for MCP metrics.
 """
 
+import gc
+
 import pytest
 
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="mcp_metrics")
 class TestMCPMetricsDefinition:
     """Test that MCP metrics are properly defined."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_task_created_counter_exists(self) -> None:
         """Should have counter for task creation."""
@@ -51,8 +58,13 @@ class TestMCPMetricsDefinition:
         assert hasattr(mcp_tool_validation_errors_total, "inc")
 
 
+@pytest.mark.xdist_group(name="mcp_metrics")
 class TestMCPMetricsLabels:
     """Test that metrics have appropriate labels."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_task_created_has_operation_label(self) -> None:
         """Task created counter should have operation label."""
@@ -77,8 +89,13 @@ class TestMCPMetricsLabels:
         assert labeled is not None
 
 
+@pytest.mark.xdist_group(name="mcp_metrics")
 class TestMCPMetricsHelpers:
     """Test helper functions for recording metrics."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
 
     def test_record_task_created_increments_counter(self) -> None:
         """Should increment task created counter."""
