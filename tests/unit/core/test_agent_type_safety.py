@@ -19,6 +19,10 @@ from pathlib import Path
 
 import pytest
 
+# Disable OTEL during type safety tests to prevent metric reader thread interference
+# This prevents timeout issues during xdist parallel execution when spawning subprocesses
+os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+
 pytestmark = pytest.mark.unit
 
 
