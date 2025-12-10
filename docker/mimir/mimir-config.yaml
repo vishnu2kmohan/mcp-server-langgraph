@@ -116,7 +116,7 @@ limits:
   ruler_max_rule_groups_per_tenant: 70
 
   # Compactor limits
-  compactor_blocks_retention_period: 1h  # Short for testing
+  compactor_blocks_retention_period: 168h  # 7 days for persistent storage
 
 # Runtime configuration
 runtime_config:

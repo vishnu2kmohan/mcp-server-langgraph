@@ -46,7 +46,7 @@ ingester:
 # Compactor configuration
 compactor:
   compaction:
-    block_retention: 1h  # Short retention for testing
+    block_retention: 168h  # 7 days for persistent storage
 
 # Storage configuration - local filesystem
 storage:

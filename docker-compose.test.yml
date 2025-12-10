@@ -157,13 +157,8 @@ services:
       - ./migrations:/docker-entrypoint-initdb.d/01-migrations:ro
       # Mount test database initialization script
       - ./docker/postgres/init-test-databases.sh:/docker-entrypoint-initdb.d/00-init-databases.sh:ro
-    # No persistent volumes - ephemeral storage for test isolation
-    # OpenAI Codex Finding Fix (2025-11-20): Increased from 256m to 512m
-    # Reason: Multiple worker schemas (test_worker_gw0, gw1, gw2...) need more space
-    # Previous: 256MB caused OOM with 4+ parallel workers
-    # Current: 512MB supports 8+ workers safely
-    tmpfs:
-      - /var/lib/postgresql/data:rw,noexec,nosuid,size=512m
+      # Persistent data volume
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 3s  # Codex Fix: interval must be >= timeout
@@ -529,12 +524,11 @@ services:
   redis-test:
     # Redis 7.2 to match Memorystore (terraform/environments/gcp-preview/main.tf: redis_version = "REDIS_7_2")
     image: redis:7.2-alpine
-    command: redis-server --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru --save ""
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
     ports:
       - "9379:6379"
-    # No volumes - ephemeral storage
-    tmpfs:
-      - /data:rw,noexec,nosuid,size=128m
+    volumes:
+      - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s  # Codex Fix: interval must be >= timeout
@@ -565,12 +559,8 @@ services:
     ports:
       - "9333:6333"  # HTTP API
       - "9334:6334"  # gRPC API
-    # No volumes - ephemeral storage
-    # Note: noexec removed - Qdrant mmap operations may require it
-    # nosuid retained for security
-    # uid/gid set to 1000 (qdrant user) for write permissions
-    tmpfs:
-      - /qdrant/storage:rw,nosuid,size=256m,uid=1000,gid=1000
+    volumes:
+      - qdrant-data:/qdrant/storage
     environment:
       - QDRANT_ALLOW_RECOVERY_MODE=true
       - QDRANT__LOG_LEVEL=WARN  # Reduced logging
@@ -810,11 +800,7 @@ services:
       - "13100:3100"  # Loki API (offset by 10000)
     volumes:
       - ./docker/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
-    # Note: noexec removed - Loki WAL operations require it
-    # nosuid retained for security
-    # uid/gid set to 10001 (loki user) for write permissions
-    tmpfs:
-      - /tmp/loki:rw,nosuid,size=256m,uid=10001,gid=10001
+      - loki-data:/tmp/loki
     healthcheck:
       # NOTE: Loki 3.6.2 uses distroless image with no shell utilities (no bash, wget, curl)
       # Healthcheck disabled; service is still accessible on port 3100
@@ -861,8 +847,7 @@ services:
       - "14318:4318"  # OTLP HTTP (offset by 10000)
     volumes:
       - ./docker/tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
-    tmpfs:
-      - /tmp/tempo:rw,noexec,nosuid,size=256m
+      - tempo-data:/tmp/tempo
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3200/ready"]
       interval: 10s
@@ -904,8 +889,7 @@ services:
     volumes:
       - ./docker/mimir/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
       - ./docker/mimir/alertmanager-fallback.yaml:/etc/mimir/alertmanager-fallback.yaml:ro
-    tmpfs:
-      - /tmp/mimir:rw,noexec,nosuid,size=256m
+      - mimir-data:/tmp/mimir
     # NOTE: Mimir uses distroless image with no wget/curl
     # See: https://github.com/grafana/mimir/issues/9034
     # Healthcheck disabled; service is still accessible on port 9009
@@ -959,7 +943,7 @@ services:
       - "4317:4317"    # OTLP gRPC (applications send here)
       - "4318:4318"    # OTLP HTTP (applications send here)
     volumes:
-      - ./docker/alloy/alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - ./docker/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro  # For Docker log collection
     environment:
       - ALLOY_DEPLOY_MODE=compose
@@ -1165,9 +1149,23 @@ networks:
     driver: bridge
     name: mcp-test-network
 
-# Note: No volumes section - all storage is ephemeral via tmpfs
-# This ensures:
-#   1. Fast startup/teardown
-#   2. Complete test isolation (no state persists between runs)
-#   3. Parallel test execution (multiple compose stacks can run)
-#   4. Clean slate for each test run
+# ==============================================================================
+# NAMED VOLUMES FOR DATA PERSISTENCE
+# ==============================================================================
+# These volumes persist data across container restarts.
+# Use `make test-infra-clean-volumes` to reset all data.
+
+volumes:
+  # Database persistence
+  postgres-data:
+
+  # Cache persistence
+  redis-data:
+
+  # Vector DB persistence
+  qdrant-data:
+
+  # LGTM Stack persistence
+  loki-data:
+  tempo-data:
+  mimir-data:

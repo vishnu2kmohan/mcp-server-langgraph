@@ -104,7 +104,7 @@ compactor:
 # Table manager (legacy, but needed for some operations)
 table_manager:
   retention_deletes_enabled: true
-  retention_period: 24h
+  retention_period: 168h  # 7 days for persistent storage
 
 # Pattern ingester enabled for metric aggregation
 # Required to avoid "empty ring" errors in Loki 3.x

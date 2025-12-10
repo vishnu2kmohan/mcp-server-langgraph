@@ -118,7 +118,9 @@ Testing:
 	@echo "New Testing Features:"
 	@echo "  make test-infra-up            Start full test infrastructure (all services)"
 	@echo "  make test-infra-up-build      Rebuild and start test infrastructure"
-	@echo "  make test-infra-down          Stop and clean test infrastructure"
+	@echo "  make test-infra-down          Stop test infrastructure (data persists)"
+	@echo "  make test-infra-clean-volumes Remove test infrastructure data volumes"
+	@echo "  make test-infra-reset         Stop and clean ALL data (down + clean-volumes)"
 	@echo "  make test-infra-logs          View test infrastructure logs"
 	@echo "  make test-gateway-status      Check gateway health and routes"
 	@echo "  make test-gateway-logs        View gateway (Traefik) logs"
@@ -490,8 +492,22 @@ test-infra-up-build:
 
 test-infra-down:
 	@echo "Stopping test infrastructure..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml down -v --remove-orphans
-	@echo "✓ Test infrastructure stopped and cleaned"
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml down --remove-orphans
+	@echo "✓ Test infrastructure stopped"
+	@echo "Note: Data persists in Docker volumes. Use 'make test-infra-clean-volumes' to remove."
+
+test-infra-clean-volumes:
+	@echo "Removing test infrastructure volumes..."
+	docker volume rm mcp-server-langgraph_postgres-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_redis-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_qdrant-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_loki-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_tempo-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_mimir-data 2>/dev/null || true
+	@echo "✓ Test volumes cleaned"
+
+test-infra-reset: test-infra-down test-infra-clean-volumes
+	@echo "✓ Test infrastructure reset (all data removed)"
 
 test-infra-logs:
 	@echo "Showing test infrastructure logs..."

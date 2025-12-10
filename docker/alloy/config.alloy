@@ -18,18 +18,6 @@ logging {
 }
 
 // =============================================================================
-// SERVER CONFIGURATION
-// =============================================================================
-
-// HTTP server for debugging UI and health checks
-// Access at http://localhost:12345 (mapped via Docker)
-server {
-  http {
-    listen_addr = "0.0.0.0:12345"
-  }
-}
-
-// =============================================================================
 // OTLP RECEIVER (OpenTelemetry Protocol)
 // =============================================================================
 // Receives traces, metrics, and logs from applications via OTLP
