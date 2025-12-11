@@ -92,6 +92,11 @@ services:
       - "--providers.docker.network=mcp-test-network"
       # Entrypoints
       - "--entrypoints.web.address=:80"
+      # Prometheus metrics (for Grafana dashboards)
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.addEntryPointsLabels=true"
+      - "--metrics.prometheus.addRoutersLabels=true"
+      - "--metrics.prometheus.addServicesLabels=true"
       # Health check (required for traefik healthcheck --ping)
       - "--ping=true"
       # Logging
@@ -120,6 +125,8 @@ services:
       mcp-test-network:
         aliases:
           - gateway
+          # 'traefik-gateway' alias for Alloy Prometheus scrape target
+          - traefik-gateway
           # 'localhost' alias enables traefik-forward-auth to resolve OIDC issuer URL
           # (http://localhost/authn/realms/default) to traefik-gateway instead of 127.0.0.1.
           # This is required because extra_hosts: localhost:host-gateway doesn't work reliably
