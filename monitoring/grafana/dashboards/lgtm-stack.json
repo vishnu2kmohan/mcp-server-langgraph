@@ -92,7 +92,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -105,7 +107,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "up{job=~\".*loki.*\"}",
+          "expr": "up{job=\"loki\"}",
           "legendFormat": "Status",
           "refId": "A"
         }
@@ -170,7 +172,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -183,7 +187,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "up{job=~\".*grafana.*\"}",
+          "expr": "up{job=\"grafana\"}",
           "legendFormat": "Status",
           "refId": "A"
         }
@@ -248,7 +252,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -261,7 +267,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "up{job=~\".*tempo.*\"}",
+          "expr": "up{job=\"tempo\"}",
           "legendFormat": "Status",
           "refId": "A"
         }
@@ -326,7 +332,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -339,7 +347,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "up{job=~\".*mimir.*\"}",
+          "expr": "up{job=\"mimir\"}",
           "legendFormat": "Status",
           "refId": "A"
         }
@@ -404,7 +412,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -417,7 +427,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "up{job=~\".*alloy.*\"}",
+          "expr": "up{job=\"alloy\"}",
           "legendFormat": "Status",
           "refId": "A"
         }
@@ -469,7 +479,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -482,7 +494,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "count(up{job=~\".*loki.*|.*tempo.*|.*mimir.*|.*alloy.*|.*grafana.*\"} == 1) / count(up{job=~\".*loki.*|.*tempo.*|.*mimir.*|.*alloy.*|.*grafana.*\"}) * 100",
+          "expr": "count(up{job=~\"loki|tempo|mimir|alloy|grafana\"} == 1) / count(up{job=~\"loki|tempo|mimir|alloy|grafana\"}) * 100",
           "legendFormat": "Health",
           "refId": "A"
         }
@@ -566,7 +578,10 @@
       "id": 10,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -583,7 +598,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(loki_request_duration_seconds_count{job=~\".*loki.*\"}[5m])) by (route)",
+          "expr": "sum(rate(loki_request_duration_seconds_count{job=\"loki\"}[5m])) by (route)",
           "legendFormat": "{{route}}",
           "refId": "A"
         }
@@ -654,7 +669,10 @@
       "id": 11,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -671,7 +689,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket{job=~\".*loki.*\"}[5m])) by (le, route))",
+          "expr": "histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket{job=\"loki\"}[5m])) by (le, route))",
           "legendFormat": "{{route}} p99",
           "refId": "A"
         }
@@ -742,7 +760,10 @@
       "id": 12,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -759,7 +780,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(loki_distributor_bytes_received_total{job=~\".*loki.*\"}[5m]))",
+          "expr": "sum(rate(loki_distributor_bytes_received_total{job=\"loki\"}[5m]))",
           "legendFormat": "Ingestion Rate",
           "refId": "A"
         }
@@ -830,7 +851,10 @@
       "id": 13,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -847,7 +871,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(loki_ingester_streams_created_total{job=~\".*loki.*\"}) - sum(loki_ingester_streams_removed_total{job=~\".*loki.*\"})",
+          "expr": "sum(loki_ingester_streams_created_total{job=\"loki\"}) - sum(loki_ingester_streams_removed_total{job=\"loki\"})",
           "legendFormat": "Active Streams",
           "refId": "A"
         }
@@ -931,7 +955,10 @@
       "id": 20,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -948,7 +975,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(tempo_distributor_spans_received_total{job=~\".*tempo.*\"}[5m]))",
+          "expr": "sum(rate(tempo_distributor_spans_received_total{job=\"tempo\"}[5m]))",
           "legendFormat": "Spans/sec",
           "refId": "A"
         }
@@ -1019,7 +1046,10 @@
       "id": 21,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1036,7 +1066,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(tempo_distributor_bytes_received_total{job=~\".*tempo.*\"}[5m]))",
+          "expr": "sum(rate(tempo_distributor_bytes_received_total{job=\"tempo\"}[5m]))",
           "legendFormat": "Ingestion Rate",
           "refId": "A"
         }
@@ -1107,7 +1137,10 @@
       "id": 22,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1124,7 +1157,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "histogram_quantile(0.95, sum(rate(tempo_query_frontend_queries_duration_seconds_bucket{job=~\".*tempo.*\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(tempo_query_frontend_queries_duration_seconds_bucket{job=\"tempo\"}[5m])) by (le))",
           "legendFormat": "p95",
           "refId": "A"
         },
@@ -1133,7 +1166,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "histogram_quantile(0.50, sum(rate(tempo_query_frontend_queries_duration_seconds_bucket{job=~\".*tempo.*\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(tempo_query_frontend_queries_duration_seconds_bucket{job=\"tempo\"}[5m])) by (le))",
           "legendFormat": "p50",
           "refId": "B"
         }
@@ -1204,7 +1237,10 @@
       "id": 23,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1221,7 +1257,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "tempo_ingester_live_traces{job=~\".*tempo.*\"}",
+          "expr": "tempo_ingester_live_traces{job=\"tempo\"}",
           "legendFormat": "Live Traces",
           "refId": "A"
         }
@@ -1305,7 +1341,10 @@
       "id": 30,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1322,7 +1361,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(cortex_ingester_active_series{job=~\".*mimir.*\"})",
+          "expr": "sum(cortex_ingester_active_series{job=\"mimir\"})",
           "legendFormat": "Active Series",
           "refId": "A"
         }
@@ -1393,7 +1432,10 @@
       "id": 31,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1410,7 +1452,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(cortex_distributor_samples_in_total{job=~\".*mimir.*\"}[5m]))",
+          "expr": "sum(rate(cortex_distributor_samples_in_total{job=\"mimir\"}[5m]))",
           "legendFormat": "Samples/sec",
           "refId": "A"
         }
@@ -1481,7 +1523,10 @@
       "id": 32,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1498,7 +1543,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(cortex_request_duration_seconds_bucket{job=~\".*mimir.*\", route=~\".*query.*\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(cortex_request_duration_seconds_bucket{job=\"mimir\", route=~\".*query.*\"}[5m])) by (le))",
           "legendFormat": "Query p99",
           "refId": "A"
         }
@@ -1569,7 +1614,10 @@
       "id": 33,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1586,7 +1634,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(cortex_request_duration_seconds_count{job=~\".*mimir.*\"}[5m])) by (route)",
+          "expr": "sum(rate(cortex_request_duration_seconds_count{job=\"mimir\"}[5m])) by (route)",
           "legendFormat": "{{route}}",
           "refId": "A"
         }
@@ -1670,7 +1718,10 @@
       "id": 40,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1687,7 +1738,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_accepted_metric_points{job=~\".*alloy.*\"}[5m]))",
+          "expr": "sum(rate(otelcol_receiver_accepted_metric_points{job=\"alloy\"}[5m]))",
           "legendFormat": "Metrics",
           "refId": "A"
         },
@@ -1696,7 +1747,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_accepted_spans{job=~\".*alloy.*\"}[5m]))",
+          "expr": "sum(rate(otelcol_receiver_accepted_spans{job=\"alloy\"}[5m]))",
           "legendFormat": "Spans",
           "refId": "B"
         },
@@ -1705,7 +1756,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_accepted_log_records{job=~\".*alloy.*\"}[5m]))",
+          "expr": "sum(rate(otelcol_receiver_accepted_log_records{job=\"alloy\"}[5m]))",
           "legendFormat": "Logs",
           "refId": "C"
         }
@@ -1776,7 +1827,10 @@
       "id": 41,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1793,7 +1847,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_exporter_sent_metric_points{job=~\".*alloy.*\"}[5m]))",
+          "expr": "sum(rate(otelcol_exporter_sent_metric_points{job=\"alloy\"}[5m]))",
           "legendFormat": "Metrics to Mimir",
           "refId": "A"
         },
@@ -1802,7 +1856,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_exporter_sent_spans{job=~\".*alloy.*\"}[5m]))",
+          "expr": "sum(rate(otelcol_exporter_sent_spans{job=\"alloy\"}[5m]))",
           "legendFormat": "Spans to Tempo",
           "refId": "B"
         },
@@ -1811,7 +1865,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_exporter_sent_log_records{job=~\".*alloy.*\"}[5m]))",
+          "expr": "sum(rate(otelcol_exporter_sent_log_records{job=\"alloy\"}[5m]))",
           "legendFormat": "Logs to Loki",
           "refId": "C"
         }
@@ -1882,7 +1936,10 @@
       "id": 42,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1899,7 +1956,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_refused_metric_points{job=~\".*alloy.*\"}[5m]))",
+          "expr": "sum(rate(otelcol_receiver_refused_metric_points{job=\"alloy\"}[5m]))",
           "legendFormat": "Refused Metrics",
           "refId": "A"
         },
@@ -1908,7 +1965,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_refused_spans{job=~\".*alloy.*\"}[5m]))",
+          "expr": "sum(rate(otelcol_receiver_refused_spans{job=\"alloy\"}[5m]))",
           "legendFormat": "Refused Spans",
           "refId": "B"
         },
@@ -1917,7 +1974,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_refused_log_records{job=~\".*alloy.*\"}[5m]))",
+          "expr": "sum(rate(otelcol_receiver_refused_log_records{job=\"alloy\"}[5m]))",
           "legendFormat": "Refused Logs",
           "refId": "C"
         }
@@ -1988,7 +2045,10 @@
       "id": 43,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -2005,7 +2065,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "otelcol_processor_batch_batch_size_trigger_send{job=~\".*alloy.*\"}",
+          "expr": "otelcol_processor_batch_batch_size_trigger_send{job=\"alloy\"}",
           "legendFormat": "Batch Sends",
           "refId": "A"
         }
@@ -2017,7 +2077,15 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["lgtm", "loki", "grafana", "tempo", "mimir", "alloy", "mcp-server"],
+  "tags": [
+    "lgtm",
+    "loki",
+    "grafana",
+    "tempo",
+    "mimir",
+    "alloy",
+    "mcp-server"
+  ],
   "templating": {
     "list": []
   },
@@ -2026,7 +2094,18 @@
     "to": "now"
   },
   "timepicker": {
-    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
   },
   "timezone": "browser",
   "title": "LGTM Stack Self-Monitoring",
