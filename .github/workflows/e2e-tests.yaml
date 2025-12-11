@@ -171,7 +171,11 @@ jobs:
         # FIX (2025-12-10): Use correct realm 'default' (not 'master') and '/authn' path prefix
         # The test realm is 'default' (from tests/e2e/keycloak-test-realm.json)
         # Keycloak has KC_HTTP_RELATIVE_PATH=/authn baked into the Docker image
-        for i in {1..30}; do
+        #
+        # TIMEOUT FIX (2025-12-10): 150 iterations * 3s = 7.5 minutes total
+        # Keycloak initialization can take 3-5 minutes on slow GitHub runners.
+        # Meta test test_e2e_workflow_has_adequate_timeout requires >= 7 minutes.
+        for i in {1..150}; do
           # Try to get a token using the test user credentials
           # This proves the realm, client, and user are all properly configured
           TOKEN_RESPONSE=$(curl -sf -X POST \
@@ -187,14 +191,14 @@ jobs:
             echo "✓ Keycloak realm fully imported (user authentication works)"
             break
           fi
-          if [ $i -eq 30 ]; then
-            echo "❌ Keycloak realm not ready after 30 attempts"
+          if [ $i -eq 150 ]; then
+            echo "❌ Keycloak realm not ready after 150 attempts (7.5 minutes)"
             echo "Last response: $TOKEN_RESPONSE"
             docker compose -f docker-compose.test.yml logs keycloak-test
             exit 1
           fi
-          echo "Waiting for Keycloak realm import... (attempt $i/30)"
-          sleep 2
+          echo "Waiting for Keycloak realm import... (attempt $i/150)"
+          sleep 3
         done
 
         echo ""

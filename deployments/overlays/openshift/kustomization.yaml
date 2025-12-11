@@ -132,4 +132,27 @@ patches:
   # LGTM Stack - OpenShift security context patches
   # Remove runAsUser from Loki, Tempo, Mimir, Alloy, Grafana
   # (OpenShift assigns arbitrary UIDs via SCC)
-  - path: lgtm-json-patches.yaml
+  - path: loki-openshift-patch.yaml
+    target:
+      kind: StatefulSet
+      name: loki
+
+  - path: tempo-openshift-patch.yaml
+    target:
+      kind: StatefulSet
+      name: tempo
+
+  - path: mimir-openshift-patch.yaml
+    target:
+      kind: StatefulSet
+      name: mimir
+
+  - path: alloy-openshift-patch.yaml
+    target:
+      kind: Deployment
+      name: alloy
+
+  - path: grafana-openshift-patch.yaml
+    target:
+      kind: Deployment
+      name: grafana

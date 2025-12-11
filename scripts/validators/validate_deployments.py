@@ -354,12 +354,19 @@ class DeploymentValidator:
         # Check agent service
         agent = services.get("agent", {})
         if agent:
-            # Check volume mounts
+            # Check for source code - either via volume mount (dev) or Docker build (prod)
             volumes = agent.get("volumes", [])
-            if not any("src/mcp_server_langgraph" in str(v) for v in volumes):
-                self.errors.append("Docker Compose agent: Source code not mounted correctly")
+            has_volume_mount = any("src/mcp_server_langgraph" in str(v) for v in volumes)
+            has_docker_build = "build" in agent and agent.get("build", {}).get("dockerfile")
+
+            if has_volume_mount:
+                print("  ✓ Agent service volume mounts correct (development mode)")
+            elif has_docker_build:
+                print("  ✓ Agent service uses Docker build (production mode)")
             else:
-                print("  ✓ Agent service volume mounts correct")
+                self.errors.append(
+                    "Docker Compose agent: Source code not configured - needs either volume mount (dev) or Docker build (prod)"
+                )
 
     def validate_helm_chart(self):
         """Validate Helm chart configuration."""

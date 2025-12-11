@@ -231,9 +231,13 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE"; then
 
     # CODEX FINDING FIX (2025-11-24): Verify Keycloak realm is actually imported
     # Docker health check passes but realm may not be fully imported yet
+    #
+    # TIMEOUT FIX (2025-12-10): 150 iterations * 3s = 7.5 minutes total
+    # Keycloak initialization can take 3-5 minutes on slow runners.
+    # Matches e2e-tests.yaml workflow timeout for CI/local parity.
     log_info "Verifying Keycloak realm is fully imported..."
     KEYCLOAK_READY=false
-    for i in {1..30}; do
+    for i in {1..150}; do
         # Try to get a token using the test user credentials
         # This proves the realm, client, and user are all properly configured
         TOKEN_RESPONSE=$(curl -sf -X POST \
@@ -251,12 +255,12 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE"; then
             break
         fi
         echo -n "."
-        sleep 2
+        sleep 3
     done
     echo ""
 
     if [ "$KEYCLOAK_READY" = false ]; then
-        log_warning "Keycloak realm may not be fully imported (auth test failed)"
+        log_warning "Keycloak realm may not be fully imported after 150 attempts (7.5 min)"
         log_info "Some tests requiring authentication may fail"
     fi
 

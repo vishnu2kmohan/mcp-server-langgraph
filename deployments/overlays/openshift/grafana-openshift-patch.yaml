@@ -1,0 +1,31 @@
+# Grafana Deployment - OpenShift security context
+# ================================================
+# Configure Grafana for OpenShift restricted-v2 SCC
+# OpenShift assigns arbitrary UIDs via SCC (Security Context Constraints)
+# All processes must belong to GID 0 (root group) for file access
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsUser: null
+        runAsGroup: 0
+        fsGroup: 0
+      initContainers:
+        - name: init-permissions
+          securityContext:
+            runAsUser: null
+            runAsNonRoot: true
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      containers:
+        - name: grafana
+          securityContext:
+            runAsUser: null
+            runAsGroup: 0
