@@ -223,7 +223,8 @@ services:
     volumes:
       # Import test realm with pre-configured client and users
       # This eliminates the need for manual setup and prevents E2E test auth failures
-      - ./tests/e2e/keycloak-test-realm.json:/opt/keycloak/data/import/realm.json:ro
+      # NOTE: Using mcp-test realm (not master) because Keycloak --import-realm only creates NEW realms
+      - ./tests/e2e/mcp-test-realm.json:/opt/keycloak/data/import/mcp-test-realm.json:ro
     environment:
       # Admin credentials
       - KEYCLOAK_ADMIN=admin
@@ -405,7 +406,7 @@ services:
       # Use Docker internal network for reliable CI/CD (host.docker.internal doesn't work in GitHub Actions)
       # IMPORTANT: Must use KEYCLOAK_SERVER_URL (not KEYCLOAK_URL) to match Settings field name
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080
-      - KEYCLOAK_REALM=master
+      - KEYCLOAK_REALM=mcp-test
       - KEYCLOAK_CLIENT_ID=mcp-server
       - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -726,7 +727,7 @@ services:
       # Authentication (Keycloak)
       - AUTH_PROVIDER=keycloak
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080
-      - KEYCLOAK_REALM=master
+      - KEYCLOAK_REALM=mcp-test
       - KEYCLOAK_CLIENT_ID=mcp-server
       - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -805,7 +806,7 @@ services:
       # Authentication (Keycloak)
       - AUTH_PROVIDER=keycloak
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080
-      - KEYCLOAK_REALM=master
+      - KEYCLOAK_REALM=mcp-test
       - KEYCLOAK_CLIENT_ID=mcp-server
       - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
       - KEYCLOAK_ADMIN_PASSWORD=admin

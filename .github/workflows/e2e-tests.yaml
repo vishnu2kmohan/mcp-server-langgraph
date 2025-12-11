@@ -212,7 +212,7 @@ jobs:
           # Try to get a token using the test user credentials
           # This proves the realm, client, and user are all properly configured
           TOKEN_RESPONSE=$(curl -sf -X POST \
-            "http://localhost:9082/realms/master/protocol/openid-connect/token" \
+            "http://localhost:9082/realms/mcp-test/protocol/openid-connect/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "grant_type=password" \
             -d "client_id=mcp-server" \
@@ -247,10 +247,10 @@ jobs:
         TESTING: "true"
         OTEL_SDK_DISABLED: "true"
         # Keycloak client configuration for token introspection
-        # Must match the secret in tests/e2e/keycloak-test-realm.json
+        # Must match the secret in tests/e2e/mcp-test-realm.json
         KEYCLOAK_CLIENT_SECRET: "test-client-secret-for-e2e-tests"
         KEYCLOAK_URL: "http://localhost:9082"
-        KEYCLOAK_REALM: "master"
+        KEYCLOAK_REALM: "mcp-test"
         KEYCLOAK_CLIENT_ID: "mcp-server"
 
     - name: Upload E2E coverage artifact

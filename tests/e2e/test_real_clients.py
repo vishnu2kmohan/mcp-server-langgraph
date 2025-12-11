@@ -65,7 +65,7 @@ class TestRealKeycloakAuth:
 
             mock_instance.post.assert_called_once()
             call_args = mock_instance.post.call_args
-            assert "/realms/master/protocol/openid-connect/token" in call_args[0][0]
+            assert "/realms/mcp-test/protocol/openid-connect/token" in call_args[0][0]
             assert call_args[1]["data"]["grant_type"] == "password"
             assert call_args[1]["data"]["username"] == "alice"
             assert call_args[1]["data"]["password"] == "password123"

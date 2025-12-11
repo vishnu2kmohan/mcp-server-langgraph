@@ -59,11 +59,11 @@ async def test_user_credentials():
     """
     Test user credentials for E2E tests.
 
-    Uses pre-configured user from tests/e2e/keycloak-test-realm.json.
+    Uses pre-configured user from tests/e2e/mcp-test-realm.json.
     User is imported when Keycloak container starts.
 
     Credentials:
-    - username: alice (from keycloak-test-realm.json)
+    - username: alice (from mcp-test-realm.json)
     - password: alice123 (configured in realm import)
     - email: alice@example.com
 
@@ -761,7 +761,7 @@ class TestServicePrincipalJourney:
 
             # Authenticate using client credentials
             auth_response = await client.post(
-                "http://localhost:9082/realms/master/protocol/openid-connect/token",
+                "http://localhost:9082/realms/mcp-test/protocol/openid-connect/token",
                 data={"grant_type": "client_credentials", "client_id": client_id, "client_secret": client_secret},
                 timeout=30.0,
             )
