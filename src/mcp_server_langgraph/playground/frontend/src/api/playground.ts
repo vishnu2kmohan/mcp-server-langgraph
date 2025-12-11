@@ -109,7 +109,7 @@ export class PlaygroundAPI {
   // ===========================================================================
 
   async getTraces(params?: TraceListParams): Promise<TraceInfo[]> {
-    const queryString = this.buildQueryString(params);
+    const queryString = this.buildQueryString(params as Record<string, unknown>);
     const response = await this.get<APIResponse<TraceInfo[]>>(
       `/observability/traces${queryString}`
     );
@@ -121,7 +121,7 @@ export class PlaygroundAPI {
   }
 
   async getLogs(params?: LogListParams): Promise<LogEntry[]> {
-    const queryString = this.buildQueryString(params);
+    const queryString = this.buildQueryString(params as Record<string, unknown>);
     const response = await this.get<APIResponse<LogEntry[]>>(
       `/observability/logs${queryString}`
     );
@@ -134,7 +134,7 @@ export class PlaygroundAPI {
   }
 
   async getAlerts(params?: AlertListParams): Promise<Alert[]> {
-    const queryString = this.buildQueryString(params);
+    const queryString = this.buildQueryString(params as Record<string, unknown>);
     const response = await this.get<APIResponse<Alert[]>>(
       `/observability/alerts${queryString}`
     );
@@ -215,7 +215,7 @@ export class PlaygroundAPI {
       throw new PlaygroundAPIError(
         errorData?.code || `HTTP_${response.status}`,
         errorData?.message || response.statusText,
-        errorData?.details
+        errorData?.details as Record<string, unknown> | undefined
       );
     }
 

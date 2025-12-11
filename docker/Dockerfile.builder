@@ -77,14 +77,19 @@ ENV UV_COMPILE_BYTECODE=1 \
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
 
-# Install Python dependencies (production only, no dev extras)
+# Install Python dependencies first (without the project itself)
 # --frozen: Use lockfile exactly, fail if out of sync
 # --no-dev: Skip development dependencies
+# --no-install-project: Skip installing the project (src/ not yet copied)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --no-install-project
 
 # Copy source code
 COPY src/ ./src/
+
+# Install the project now that src/ is available
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
 
 # Copy built frontend from stage 1
 # Place in builder/frontend/dist to match SPAStaticFiles path expectations

@@ -24,9 +24,6 @@ import type {
   PendingElicitation,
   PendingSamplingRequest,
   ElicitationAction,
-  JSONSchema,
-  SamplingMessage,
-  ModelPreferences,
 } from '../api/mcp-types';
 
 // =============================================================================
@@ -301,8 +298,8 @@ export function MCPHostProvider({ children }: MCPHostProviderProps): React.React
   }, []);
 
   const respondToElicitation = useCallback(
-    (id: string, action: ElicitationAction, content?: Record<string, unknown>) => {
-      // TODO: Send response to server
+    (id: string, _action: ElicitationAction, _content?: Record<string, unknown>) => {
+      // TODO: Send response to server (action and content will be used when implemented)
       dispatch({ type: 'REMOVE_ELICITATION', payload: { id } });
     },
     []
@@ -314,8 +311,8 @@ export function MCPHostProvider({ children }: MCPHostProviderProps): React.React
   }, []);
 
   const respondToSampling = useCallback(
-    (id: string, approved: boolean, result?: unknown) => {
-      // TODO: Send response to server
+    (id: string, _approved: boolean, _result?: unknown) => {
+      // TODO: Send response to server (approved and result will be used when implemented)
       dispatch({ type: 'REMOVE_SAMPLING_REQUEST', payload: { id } });
     },
     []

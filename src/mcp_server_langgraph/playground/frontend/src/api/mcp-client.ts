@@ -17,8 +17,6 @@ import type {
   InitializeResult,
   MCPTool,
   MCPToolResult,
-  MCPResource,
-  MCPResourceTemplate,
   ResourceReadResult,
   ResourceListResult,
   MCPPrompt,
@@ -26,7 +24,6 @@ import type {
   MCPStreamChunk,
   MCPConnectionStatus,
   MCPRequestOptions,
-  MCP_METHODS,
 } from './mcp-types';
 
 // =============================================================================

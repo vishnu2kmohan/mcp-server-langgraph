@@ -9,18 +9,13 @@ export * from './types';
 export * from './mcp-types';
 
 // MCP Client
-export {
-  MCPClient,
-  MCPClientError,
-  MCPClientOptions,
-  createMCPClient,
-  MCP_METHODS,
-} from './mcp-client';
+export type { MCPClient, MCPClientOptions } from './mcp-client';
+export { MCPClientError, createMCPClient, MCP_METHODS } from './mcp-client';
 
 // Playground REST API
+export type { PlaygroundAPIConfig } from './playground';
 export {
   PlaygroundAPI,
-  PlaygroundAPIConfig,
   createPlaygroundAPI,
   getPlaygroundAPI,
   configurePlaygroundAPI,

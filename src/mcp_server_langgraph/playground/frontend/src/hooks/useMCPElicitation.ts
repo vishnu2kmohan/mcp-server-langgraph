@@ -7,7 +7,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { useMCPHost } from '../contexts/MCPHostContext';
-import type { PendingElicitation, ElicitationAction } from '../api/mcp-types';
+import type { PendingElicitation } from '../api/mcp-types';
 
 export interface UseMCPElicitationResult {
   // Current elicitation (first in queue)

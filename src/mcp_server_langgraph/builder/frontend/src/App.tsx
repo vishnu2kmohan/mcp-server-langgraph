@@ -135,7 +135,8 @@ function AppContent() {
   const [generatedCode, setGeneratedCode] = useState<string>('');
   const [showCodePanel, setShowCodePanel] = useState(false);
   const [workflowName, setWorkflowName] = useState('my_agent');
-  const [workflowDescription, setWorkflowDescription] = useState('My custom agent workflow');
+  // Description setter is kept for future editing capability
+  const [workflowDescription, _setWorkflowDescription] = useState('My custom agent workflow');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 

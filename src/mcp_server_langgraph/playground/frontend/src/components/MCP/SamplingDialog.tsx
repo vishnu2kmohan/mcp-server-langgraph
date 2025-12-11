@@ -7,10 +7,10 @@
 
 import React, { useId, useEffect } from 'react';
 import clsx from 'clsx';
-import type { SamplingRequest } from '../../api/mcp-types';
+import type { PendingSamplingRequest, SamplingMessage, ModelHint } from '../../api/mcp-types';
 
 export interface SamplingDialogProps {
-  request: SamplingRequest | null;
+  request: PendingSamplingRequest | null;
   onApprove: () => void;
   onReject: (reason?: string) => void;
 }
@@ -95,7 +95,7 @@ export function SamplingDialog({
               Messages
             </h3>
             <div className="space-y-2">
-              {request.messages.map((msg, idx) => (
+              {request.messages.map((msg: SamplingMessage, idx: number) => (
                 <div
                   key={idx}
                   className={clsx(
@@ -122,7 +122,7 @@ export function SamplingDialog({
               Model Preferences
             </h3>
             <div className="flex flex-wrap gap-2">
-              {request.modelPreferences.hints?.map((hint, idx) => (
+              {request.modelPreferences?.hints?.map((hint: ModelHint, idx: number) => (
                 <span
                   key={idx}
                   className="px-2 py-1 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded"

@@ -138,6 +138,7 @@ dev = [
     "jinja2>=3.1.0",  # Template engine for code generation
     "rich>=13.0.0",  # Rich text and beautiful formatting in the terminal
     "websockets>=12.0",  # Required for E2E test imports (also in playground extra)
+    "packaging>=21.0",  # Version parsing for MCP SDK version tests
 ]
 
 secrets = [
@@ -756,6 +757,7 @@ markers = [
     "websocket: WebSocket endpoint tests (streaming, real-time)",
     "builder: Visual workflow builder tests",
     "redis: Redis-backed storage tests (sessions, checkpoints)",
+    "requires_full_infrastructure: Tests requiring full Docker infrastructure (builder, playground, observability stack)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

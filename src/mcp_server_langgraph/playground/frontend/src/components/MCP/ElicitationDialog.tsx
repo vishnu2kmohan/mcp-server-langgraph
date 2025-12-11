@@ -8,10 +8,10 @@
 import React, { useState, useCallback, useId, useEffect } from 'react';
 import clsx from 'clsx';
 import { SchemaForm } from './SchemaForm';
-import type { Elicitation, JSONSchema } from '../../api/mcp-types';
+import type { PendingElicitation } from '../../api/mcp-types';
 
 export interface ElicitationDialogProps {
-  elicitation: Elicitation | null;
+  elicitation: PendingElicitation | null;
   onAccept: (content: Record<string, unknown>) => void;
   onDecline: () => void;
   onCancel: () => void;
@@ -24,7 +24,6 @@ export function ElicitationDialog({
   onCancel,
 }: ElicitationDialogProps): React.ReactElement | null {
   const titleId = useId();
-  const formRef = React.useRef<{ getData: () => Record<string, unknown> } | null>(null);
   const [formData, setFormData] = useState<Record<string, unknown>>({});
 
   // Reset form data when elicitation changes

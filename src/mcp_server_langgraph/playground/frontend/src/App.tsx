@@ -17,16 +17,16 @@ import { useMCPSampling } from './hooks/useMCPSampling';
 
 function AppContent(): React.ReactElement {
   const {
-    pendingElicitation,
+    currentElicitation,
     accept: acceptElicitation,
     decline: declineElicitation,
     cancel: cancelElicitation,
   } = useMCPElicitation();
 
   const {
-    pendingSamplingRequest,
-    approveSampling,
-    rejectSampling,
+    currentRequest: currentSamplingRequest,
+    approve: approveSampling,
+    reject: rejectSampling,
   } = useMCPSampling();
 
   return (
@@ -38,7 +38,7 @@ function AppContent(): React.ReactElement {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar with Sessions */}
         <Sidebar>
-          <SessionList />
+          <SessionList sessions={[]} />
         </Sidebar>
 
         {/* Main Content Area */}
@@ -57,14 +57,14 @@ function AppContent(): React.ReactElement {
 
       {/* MCP Dialogs */}
       <ElicitationDialog
-        elicitation={pendingElicitation}
+        elicitation={currentElicitation}
         onAccept={acceptElicitation}
         onDecline={declineElicitation}
         onCancel={cancelElicitation}
       />
       <SamplingDialog
-        request={pendingSamplingRequest}
-        onApprove={approveSampling}
+        request={currentSamplingRequest}
+        onApprove={() => approveSampling(undefined)}
         onReject={rejectSampling}
       />
     </div>

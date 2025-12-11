@@ -52,7 +52,7 @@ export function TraceWaterfall({
 
   return (
     <div className="space-y-1 p-2">
-      {spans.map((span, index) => {
+      {spans.map((span) => {
         const offset = getSpanOffset(span, traceStart, totalDuration);
         const width = getSpanWidth(span, totalDuration);
         const depth = span.parentSpanId ? 1 : 0;

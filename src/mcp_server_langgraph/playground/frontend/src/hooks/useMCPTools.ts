@@ -5,7 +5,7 @@
  * Includes helpers for common tool operations.
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { useMCPHost } from '../contexts/MCPHostContext';
 import type { MCPTool, MCPToolResult, MCPStreamChunk, MCPRequestOptions } from '../api/mcp-types';
 

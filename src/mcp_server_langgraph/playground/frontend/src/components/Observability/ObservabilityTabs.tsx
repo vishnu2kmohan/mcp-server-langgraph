@@ -91,7 +91,7 @@ export function ObservabilityTabs({
             <TracePanel
               traces={traces}
               isLoading={isLoading}
-              onSelectTrace={onSelectTrace}
+              onTraceSelect={onSelectTrace}
             />
           </div>
         )}

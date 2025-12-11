@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { createMCPClient, MCPClient, MCPClientError } from '../api/mcp-client';
+import { createMCPClient, MCPClient } from '../api/mcp-client';
 import type {
   MCPConnectionStatus,
   MCPServerCapabilities,
