@@ -208,6 +208,15 @@ jobs:
         # Test that we can actually get tokens for the test user (proves realm is ready)
         # 2025-12-11: Increased from 30 to 90 attempts (180s) for slower CI runners
         #             Keycloak realm import with PostgreSQL can take 90+ seconds on resource-constrained runners
+
+        # Diagnostic: Check if the realm file is mounted
+        echo "Checking realm file mount..."
+        docker compose -f docker-compose.test.yml exec -T keycloak-test ls -la /opt/keycloak/data/import/ || echo "Warning: Could not list import directory"
+
+        # Diagnostic: Show recent Keycloak logs to see import status
+        echo "Keycloak startup logs (last 50 lines):"
+        docker compose -f docker-compose.test.yml logs keycloak-test --tail=50 2>&1 || true
+
         for i in {1..90}; do
           # Try to get a token using the test user credentials
           # This proves the realm, client, and user are all properly configured
