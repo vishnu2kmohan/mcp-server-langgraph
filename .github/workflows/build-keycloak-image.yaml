@@ -95,7 +95,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository_owner }}/keycloak-optimized
+            ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-keycloak
           tags: |
             type=raw,value=${{ env.KEYCLOAK_VERSION }}
             type=raw,value=${{ env.KEYCLOAK_VERSION }}-{{sha}}
@@ -119,7 +119,7 @@ jobs:
           build-args: |
             KEYCLOAK_VERSION=${{ env.KEYCLOAK_VERSION }}
           cache-from: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/keycloak-optimized:latest
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-keycloak:latest
           cache-to: |
             type=inline
           provenance: true
@@ -171,15 +171,15 @@ jobs:
       - name: Promote image from GHCR to production registry
         run: |
           # Pull from GHCR (source of truth for preview images)
-          docker pull ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }}
+          docker pull ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-keycloak:${{ env.KEYCLOAK_VERSION }}
 
           # Tag for GCP production registry
           docker tag \
-            ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }} \
+            ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-keycloak:${{ env.KEYCLOAK_VERSION }} \
             ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}
 
           docker tag \
-            ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }} \
+            ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-keycloak:${{ env.KEYCLOAK_VERSION }} \
             ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:latest
 
           # Push to GCP production registry
@@ -192,7 +192,7 @@ jobs:
         run: |
           echo "## Production Push Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Source:** ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Source:** ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-keycloak:${{ env.KEYCLOAK_VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "**Target:** ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}" >> $GITHUB_STEP_SUMMARY
 
   # Verify the built image works
@@ -217,7 +217,7 @@ jobs:
 
       - name: Pull and verify image
         run: |
-          IMAGE="ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }}"
+          IMAGE="ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-keycloak:${{ env.KEYCLOAK_VERSION }}"
 
           echo "Pulling image: $IMAGE"
           docker pull "$IMAGE"
@@ -233,7 +233,7 @@ jobs:
       - name: Security scan with Trivy
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: 'ghcr.io/${{ github.repository_owner }}/keycloak-optimized:${{ env.KEYCLOAK_VERSION }}'
+          image-ref: 'ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-keycloak:${{ env.KEYCLOAK_VERSION }}'
           format: 'sarif'
           output: 'trivy-keycloak-results.sarif'
           severity: 'CRITICAL,HIGH'

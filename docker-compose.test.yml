@@ -225,9 +225,18 @@ services:
   # Pattern matches openfga-migrate-test for consistency
 
   alembic-migrate-test:
+    # IMAGE STRATEGY (2025-12-11):
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest)
+    #   Built by .github/workflows/build-alembic-image.yaml
+    # - Local: Build with `docker compose build alembic-migrate-test`
+    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest for push
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.alembic
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:local
     # Run Alembic upgrade to apply all migrations to mcp_test database
     command: alembic upgrade head
     depends_on:
@@ -344,10 +353,21 @@ services:
   keycloak-test:
     # Use pre-optimized Keycloak image (no JIT compilation at startup)
     # This matches production behavior and speeds up container startup
-    image: mcp-server-langgraph-keycloak:test  # Named image for reuse by keycloak-init-test
+    #
+    # IMAGE STRATEGY (2025-12-11):
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest)
+    #   Built by .github/workflows/build-keycloak-image.yaml
+    # - Local: Build with `docker compose build keycloak-test`
+    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest for push
+    #
+    # The GHCR image is pushed with tags: latest, 26.4.2, 26.4.2-<sha>
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.keycloak
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:local
     # --optimized skips Quarkus augmentation (done at build time)
     # --import-realm imports the test realm on first start
     # --http-enabled=true must be explicit for production mode (Keycloak 26+)
@@ -437,11 +457,11 @@ services:
 
   keycloak-init-test:
     # Reuse keycloak-test image (avoid duplicate builds) to have access to kcadm.sh
-    # NOTE: Both image: and build: are specified. Docker Compose will:
-    # 1. Build if the image doesn't exist locally
-    # 2. Reuse the cached image if keycloak-test was already built
-    # This avoids "pull access denied" errors while still enabling cache reuse
-    image: mcp-server-langgraph-keycloak:test
+    # NOTE: Uses same GHCR image as keycloak-test for consistency
+    # Both image: and build: are specified. Docker Compose will:
+    # 1. Pull from GHCR if available (CI)
+    # 2. Fall back to building from docker/Dockerfile.keycloak (local)
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.keycloak
@@ -696,9 +716,19 @@ services:
     # =========================================================
     # Enables end-to-end testing of MCP protocol and full user journeys
     # Addresses Bucket 4: E2E MCP journeys missing service dependencies
+    #
+    # IMAGE STRATEGY (2025-12-11):
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest)
+    #   Built by .github/workflows/ci.yaml docker-build job (test variant)
+    # - Local: Build with `docker compose build mcp-server-test`
+    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest for push
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest
     build:
       context: .
       dockerfile: docker/Dockerfile.test
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-local
     command: >
       sh -c "
       echo 'Waiting for dependencies to be ready...' &&
@@ -1189,9 +1219,18 @@ services:
   # Auth: Keycloak + OpenFGA (same as mcp-server-test)
 
   builder-test:
+    # IMAGE STRATEGY (2025-12-11):
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest)
+    #   Built by .github/workflows/build-builder-image.yaml
+    # - Local: Build with `docker compose build builder-test`
+    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest for push
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.builder
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:local
     depends_on:
       mcp-server-test:
         condition: service_healthy
@@ -1251,9 +1290,18 @@ services:
   # Auth: Keycloak + OpenFGA (same as mcp-server-test)
 
   playground-test:
+    # IMAGE STRATEGY (2025-12-11):
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest)
+    #   Built by .github/workflows/build-playground-image.yaml
+    # - Local: Build with `docker compose build playground-test`
+    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest for push
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.playground
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:local
     depends_on:
       mcp-server-test:
         condition: service_healthy

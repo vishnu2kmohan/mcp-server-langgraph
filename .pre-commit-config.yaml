@@ -1231,6 +1231,41 @@ repos:
       Regression prevention for Codex Finding #1 (P0 Blocker)
 
       '
+  - id: validate-helm-chart-deps
+    name: Validate Helm Chart Dependencies Complete
+    entry: >
+      bash -c 'if ! command -v helm >/dev/null 2>&1; then
+      echo "SKIP: helm not installed, cannot validate chart dependencies.";
+      exit 0; fi;
+      CHART_DIR="deployments/helm/mcp-server-langgraph";
+      EXPECTED_CHARTS=7;
+      if [ ! -d "$CHART_DIR/charts" ]; then
+      echo "ERROR: charts/ directory not found. Run: helm dependency build $CHART_DIR";
+      exit 1; fi;
+      ACTUAL_CHARTS=$(ls "$CHART_DIR/charts/"*.tgz 2>/dev/null | wc -l);
+      if [ "$ACTUAL_CHARTS" -ne "$EXPECTED_CHARTS" ]; then
+      echo "ERROR: Helm chart dependencies incomplete: $ACTUAL_CHARTS/$EXPECTED_CHARTS";
+      echo "Expected: openfga, postgresql, redis, keycloak, grafana, jaeger, kube-prometheus-stack";
+      echo "Run: helm dependency build $CHART_DIR";
+      exit 1; fi;
+      echo "✅ All $ACTUAL_CHARTS Helm chart dependencies present"'
+    language: system
+    files: ^deployments/helm/.*\.(yaml|yml)$
+    pass_filenames: false
+    stages:
+    - pre-push
+    description: 'Validates ALL Helm chart dependencies are downloaded.
+
+      CI PARITY FIX (2025-12-11): Prevents corrupted partial cache issues.
+
+      Checks that charts/ contains all 7 expected charts (openfga, postgresql,
+      redis, keycloak, grafana, jaeger, kube-prometheus-stack).
+
+      Run helm dependency build deployments/helm/mcp-server-langgraph to fix.
+
+      See: .claude/plans/purrfect-dazzling-breeze.md for root cause analysis.
+
+      '
   - id: validate-cloud-overlays
     name: Validate Cloud Overlays Build Successfully
     entry: >

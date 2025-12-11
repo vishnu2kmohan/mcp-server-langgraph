@@ -56,12 +56,28 @@ jobs:
       - name: Add Helm Repositories and Build Dependencies
         run: |
           set -euo pipefail
-          # Check if cached dependencies exist and are valid
-          if [ -d "deployments/helm/mcp-server-langgraph/charts" ] && \
-             [ -n "$(ls -A deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null)" ]; then
-            echo "✅ Using cached Helm dependencies"
-            ls -la deployments/helm/mcp-server-langgraph/charts/
+          # CRITICAL: Validate ALL expected charts are present, not just "some exist"
+          # This prevents CI failures from corrupted partial caches
+          EXPECTED_CHARTS=7  # openfga, postgresql, redis, keycloak, grafana, jaeger, kube-prometheus-stack
+          REBUILD_NEEDED=false
+
+          # Check if cached dependencies exist and are COMPLETE (not just present)
+          if [ -d "deployments/helm/mcp-server-langgraph/charts" ]; then
+            ACTUAL_CHARTS=$(ls deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null | wc -l || echo "0")
+            if [ "$ACTUAL_CHARTS" -eq "$EXPECTED_CHARTS" ]; then
+              echo "✅ Using cached Helm dependencies ($ACTUAL_CHARTS/$EXPECTED_CHARTS charts)"
+              ls -la deployments/helm/mcp-server-langgraph/charts/
+            else
+              echo "⚠️ Cache incomplete: found $ACTUAL_CHARTS charts, expected $EXPECTED_CHARTS"
+              echo "🔄 Clearing incomplete cache and rebuilding..."
+              rm -rf deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null || true
+              REBUILD_NEEDED=true
+            fi
           else
+            REBUILD_NEEDED=true
+          fi
+
+          if [ "$REBUILD_NEEDED" = true ]; then
             echo "🔨 Adding Helm repositories..."
             helm repo add openfga https://openfga.github.io/helm-charts || true
             helm repo add bitnami https://charts.bitnami.com/bitnami || true
@@ -80,12 +96,16 @@ jobs:
               sleep $((i * 10))
             done
 
-            # Verify dependencies were downloaded
-            if [ -z "$(ls -A charts/*.tgz 2>/dev/null)" ]; then
-              echo "❌ Helm dependency build failed - charts directory is empty"
+            # Verify ALL dependencies were downloaded
+            ACTUAL_CHARTS=$(ls charts/*.tgz 2>/dev/null | wc -l || echo "0")
+            if [ "$ACTUAL_CHARTS" -ne "$EXPECTED_CHARTS" ]; then
+              echo "❌ Helm dependency build incomplete: $ACTUAL_CHARTS/$EXPECTED_CHARTS charts"
+              echo "Expected: openfga, postgresql, redis, keycloak, grafana, jaeger, kube-prometheus-stack"
+              echo "Actual charts:"
+              ls -1 charts/*.tgz 2>/dev/null || echo "  (none found)"
               exit 1
             fi
-            echo "✅ Helm dependencies built successfully"
+            echo "✅ Helm dependencies built successfully ($ACTUAL_CHARTS charts)"
             ls -la charts/
           fi
 

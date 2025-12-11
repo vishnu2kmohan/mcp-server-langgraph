@@ -209,6 +209,9 @@ fi
 # PARITY FIX (2025-12-10): Align with Makefile test-infra-up target
 # The Makefile uses simple 'docker compose up -d' without extra flags
 # This ensures local and CI behavior are identical
+#
+# NOTE (2025-12-11): Custom images (like keycloak-test) use GHCR registry images
+# in CI, with fallback to local build. See docker-compose.test.yml for details.
 log_info "Starting infrastructure services..."
 echo ""
 
