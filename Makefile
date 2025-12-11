@@ -893,10 +893,13 @@ validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 ## validate-pre-push-full: Comprehensive pre-push validation with integration tests
-validate-pre-push-full:  ## Comprehensive pre-push validation with Docker integration tests (8-12 min)
+## Use cases: Pre-release audit, major refactoring, CI debugging
+validate-pre-push-full:  ## Comprehensive CI-equivalent validation with Docker (8-12 min)
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "🔍 Running comprehensive pre-push validation (FULL - CI-equivalent)"
+	@echo "🎯 CI-EQUIVALENT VALIDATION (FULL)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "Use cases: Pre-release audit, major refactoring, CI debugging"
 	@echo ""
 	@$(MAKE) _validate-pre-push-phases-1-2
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -933,22 +936,6 @@ validate-pre-push:  ## Pre-push validation (auto-detects CI_PARITY for full vs q
 		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
 		$(MAKE) validate-pre-push-quick; \
 	fi
-
-## validate-pre-push-ci: Run validation on ALL files (exact CI match)
-## This is different from git hooks which run on CHANGED files only for speed
-validate-pre-push-ci:  ## Pre-push CI-equivalent validation (all files, not just changed)
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "🎯 CI-EQUIVALENT VALIDATION (All Files)"
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo ""
-	@echo "This runs the same validation as CI on ALL files."
-	@echo "Git hooks run on CHANGED files only for speed."
-	@echo ""
-	@echo "Use case: Pre-release audit, major refactoring, CI debugging"
-	@echo ""
-	@echo "Reference: P0-2 - Pre-commit/Pre-push Hook Remediation Plan"
-	@echo ""
-	CI_PARITY=1 $(MAKE) validate-pre-push-full
 
 act-dry-run:
 	@echo "Showing what would execute in CI workflows..."

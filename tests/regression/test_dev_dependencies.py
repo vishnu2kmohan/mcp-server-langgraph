@@ -507,6 +507,7 @@ def test_dev_dependencies_are_importable():
             "infisical_python",  # imports as infisical_client
             "pydantic_ai",  # imports as pydantic_ai (normalized)
             "types_pyyaml",  # type stub, no runtime import
+            "types_psutil",  # type stub, no runtime import
             "types_requests",  # type stub, no runtime import
             "types_redis",  # type stub, no runtime import
             "openapi_spec_validator",  # Complex import structure

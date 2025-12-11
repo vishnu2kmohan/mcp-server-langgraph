@@ -125,6 +125,7 @@ dev = [
     # types-redis removed (2025-11-28) - redis 5.0+ includes inline type hints (py.typed)
     # types-redis was causing conflicts with redis 6.x inline types
     "types-requests",
+    "types-psutil",  # Type stubs for psutil (memory monitoring)
     "bandit>=1.7.6",
     # Security scanning (CodeQL parity - PR #121)
     "semgrep>=1.51.0",  # Static security analysis for Python (matches CodeQL detection capabilities)
@@ -741,12 +742,14 @@ markers = [
     "mcp: MCP protocol tests",
     "llm: LLM API tests (expensive, requires API keys, skipped in CI)",
     "observability: OpenTelemetry/metrics/logging tests",
+    "metrics: Prometheus/OTel metrics instrumentation tests",
     "benchmark: Performance benchmark tests",
     "property: Property-based tests (hypothesis)",
     "scim: SCIM 2.0 provisioning tests",
     "contract: Contract tests (MCP protocol, OpenAPI)",
     "regression: Performance regression tests",
     "mutation: Mutation testing (slow, runs on schedule)",
+    "compliance: Generic compliance tests (metrics, auditing)",
     "gdpr: GDPR compliance tests (data subject rights)",
     "soc2: SOC 2 compliance tests (evidence collection, access reviews)",
     "sla: SLA monitoring tests (uptime, response time, error rate)",
