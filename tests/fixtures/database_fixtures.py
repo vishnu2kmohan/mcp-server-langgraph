@@ -130,9 +130,15 @@ async def redis_client_real(integration_test_env):
 
     yield client
 
-    # Cleanup test data
-    await client.flushdb()
-    await client.aclose()
+    # Cleanup test data - ignore errors if connection already closed during teardown
+    try:
+        await client.flushdb()
+    except Exception:
+        pass  # Connection may be closed during CI cleanup
+    try:
+        await client.aclose()
+    except Exception:
+        pass  # Already closed
 
 
 @pytest.fixture(scope="session")

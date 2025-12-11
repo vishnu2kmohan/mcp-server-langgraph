@@ -562,7 +562,6 @@ class TestConvenienceFunction:
     @pytest.mark.asyncio
     async def test_validate_database_architecture_convenience_function(self):
         """Should provide convenient validation with default parameters"""
-        # Mock DatabaseValidator with spec for proper type checking
         mock_result = ValidationResult(
             environment=Environment.DEV,
             databases={},
@@ -570,10 +569,12 @@ class TestConvenienceFunction:
             errors=[],
             warnings=[],
         )
-        # Use AsyncMock for the validator to ensure all async methods work correctly in xdist
-        # Note: AsyncMock(spec=...) doesn't auto-detect async methods, so we must explicitly
-        # set validate as an AsyncMock to avoid "MagicMock can't be used in await" errors
-        mock_validator = AsyncMock(spec=DatabaseValidator)
+        # IMPORTANT: Don't use AsyncMock(spec=...) - spec introspection doesn't detect
+        # async methods correctly, causing MagicMock to be used instead of AsyncMock
+        # for the validate() method. Use a plain mock and explicitly set async methods.
+        from unittest.mock import MagicMock
+
+        mock_validator = MagicMock()
         mock_validator.validate = AsyncMock(return_value=mock_result)
 
         with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator", return_value=mock_validator):
@@ -592,10 +593,12 @@ class TestConvenienceFunction:
             errors=[],
             warnings=[],
         )
-        # Use AsyncMock for the validator to ensure all async methods work correctly in xdist
-        # Note: AsyncMock(spec=...) doesn't auto-detect async methods, so we must explicitly
-        # set validate as an AsyncMock to avoid "MagicMock can't be used in await" errors
-        mock_validator = AsyncMock(spec=DatabaseValidator)
+        # IMPORTANT: Don't use AsyncMock(spec=...) - spec introspection doesn't detect
+        # async methods correctly, causing MagicMock to be used instead of AsyncMock
+        # for the validate() method. Use a plain mock and explicitly set async methods.
+        from unittest.mock import MagicMock
+
+        mock_validator = MagicMock()
         mock_validator.validate = AsyncMock(return_value=mock_result)
 
         with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator", return_value=mock_validator) as mock_class:

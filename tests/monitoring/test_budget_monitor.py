@@ -23,6 +23,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+
 from mcp_server_langgraph.monitoring.budget_monitor import AlertLevel, BudgetMonitor, BudgetPeriod
 
 pytestmark = pytest.mark.unit
@@ -543,24 +544,30 @@ class TestWebhookAlerts:
     async def test_send_webhook_alert_includes_timestamp(self):
         """Test _send_webhook_alert() includes ISO 8601 timestamp in payload.
 
-        Uses proper async mock pattern for httpx.AsyncClient under xdist.
+        Uses AsyncMock with proper context manager protocol for xdist isolation.
         """
         # Arrange
         monitor = BudgetMonitor(webhook_url="https://example.com/webhook")
 
         # Mock response - raise_for_status is sync in httpx
-        mock_response = MagicMock(spec=["raise_for_status"])
+        mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
 
         before = datetime.now(UTC)
 
         # Create mock client with proper async context manager protocol
+        # The post method is async, so it must be AsyncMock
+        mock_post = AsyncMock(return_value=mock_response)
         mock_client = MagicMock()
-        mock_client.post = AsyncMock(return_value=mock_response)
-        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-        mock_client.__aexit__ = AsyncMock(return_value=None)
+        mock_client.post = mock_post
 
-        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", return_value=mock_client):
+        # AsyncClient is used as async context manager: async with httpx.AsyncClient() as client
+        # The __aenter__ returns the client object, __aexit__ handles cleanup
+        mock_async_client_class = MagicMock()
+        mock_async_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_async_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", mock_async_client_class):
             # Act
             await monitor._send_webhook_alert(
                 level="warning", message="Budget alert", budget_id="budget_001", utilization=80.0
@@ -568,7 +575,8 @@ class TestWebhookAlerts:
 
             # Assert
             after = datetime.now(UTC)
-            payload = mock_client.post.call_args[1]["json"]
+            mock_post.assert_called_once()
+            payload = mock_post.call_args[1]["json"]
             timestamp_str = payload["timestamp"]
             timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
             assert before <= timestamp <= after

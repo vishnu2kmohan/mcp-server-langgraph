@@ -35,11 +35,19 @@ def playground_url() -> str:
 
 
 @pytest.fixture
-def api_client(playground_url: str):
+async def api_client(playground_url: str):
     """Create HTTP client for Playground API."""
     import httpx
 
-    return httpx.AsyncClient(base_url=playground_url, timeout=30.0)
+    client = httpx.AsyncClient(base_url=playground_url, timeout=30.0)
+    # Test connectivity by trying to reach the server
+    try:
+        await client.get("/")
+    except (httpx.ConnectError, httpx.ConnectTimeout, OSError) as e:
+        await client.aclose()
+        pytest.skip(f"Playground API not available: {e}")
+    yield client
+    await client.aclose()
 
 
 @pytest.mark.xdist_group(name="playground_integration_tests")

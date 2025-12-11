@@ -187,6 +187,12 @@ class TestBearerSchemeOverrideDiagnostic:
                 get_openfga_client,
                 get_service_principal_manager,
             )
+
+            # These imports can also trigger network connections during singleton init
+            from mcp_server_langgraph.auth.keycloak import KeycloakClient
+            from mcp_server_langgraph.auth.openfga import OpenFGAClient
+            from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
+            from tests.conftest import get_user_id
         except httpx.ConnectError as e:
             pytest.skip(f"Infrastructure not available: {e}")
         except Exception as e:
@@ -201,12 +207,6 @@ class TestBearerSchemeOverrideDiagnostic:
 
         # Create fresh app
         app = FastAPI()
-
-        # Create mocks
-        from mcp_server_langgraph.auth.keycloak import KeycloakClient
-        from mcp_server_langgraph.auth.openfga import OpenFGAClient
-        from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
-        from tests.conftest import get_user_id
 
         mock_sp_manager = AsyncMock(spec=ServicePrincipalManager)
         mock_keycloak = AsyncMock(spec=KeycloakClient)

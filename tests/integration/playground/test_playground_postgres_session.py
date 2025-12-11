@@ -50,8 +50,17 @@ async def postgres_engine(postgres_url: str):
         init_playground_database,
     )
 
-    engine = await create_postgres_engine(postgres_url, echo=False)
-    await init_playground_database(engine)
+    try:
+        engine = await create_postgres_engine(postgres_url, echo=False)
+        await init_playground_database(engine)
+    except OSError as e:
+        pytest.skip(f"PostgreSQL infrastructure not available: {e}")
+    except Exception as e:
+        # Catch other connection-related errors
+        error_msg = str(e)
+        if any(pattern in error_msg for pattern in ["Connect call failed", "Connection refused", "Network is unreachable"]):
+            pytest.skip(f"PostgreSQL infrastructure not available: {e}")
+        raise
     yield engine
     await engine.dispose()
 
