@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -12,9 +15,10 @@
       }
     ]
   },
+  "description": "Authentication monitoring for MCP Server with LangGraph. Tracks login activity, token operations, session lifecycle, and JWKS cache performance. Use this dashboard to identify authentication failures, slow logins, and session issues.",
   "editable": true,
-  "gnetId": null,
-  "graphTooltip": 0,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [
     {
@@ -23,7 +27,7 @@
       "includeVars": true,
       "keepTime": true,
       "tags": [],
-      "targetBlank": true,
+      "targetBlank": false,
       "title": "Keycloak SSO",
       "tooltip": "View Keycloak SSO Dashboard",
       "type": "link",
@@ -35,11 +39,11 @@
       "includeVars": true,
       "keepTime": true,
       "tags": [],
-      "targetBlank": true,
-      "title": "Redis Sessions",
-      "tooltip": "View Redis Sessions Dashboard",
+      "targetBlank": false,
+      "title": "OpenFGA",
+      "tooltip": "View OpenFGA Authorization Dashboard",
       "type": "link",
-      "url": "/d/redis-sessions/redis-sessions"
+      "url": "/d/openfga/openfga"
     },
     {
       "asDropdown": false,
@@ -47,16 +51,33 @@
       "includeVars": true,
       "keepTime": true,
       "tags": [],
-      "targetBlank": true,
+      "targetBlank": false,
       "title": "Security",
       "tooltip": "View Security Dashboard",
       "type": "link",
       "url": "/d/security/security"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Redis Sessions",
+      "tooltip": "View Redis Sessions Dashboard",
+      "type": "link",
+      "url": "/d/redis-sessions/redis-sessions"
     }
   ],
+  "liveNow": false,
   "panels": [
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current auth service health. GREEN = UP, RED = DOWN. Check immediately if RED.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -65,16 +86,8 @@
           "mappings": [
             {
               "options": {
-                "0": {
-                  "color": "red",
-                  "index": 0,
-                  "text": "DOWN"
-                },
-                "1": {
-                  "color": "green",
-                  "index": 1,
-                  "text": "UP"
-                }
+                "0": { "color": "red", "index": 0, "text": "DOWN" },
+                "1": { "color": "green", "index": 1, "text": "UP" }
               },
               "type": "value"
             }
@@ -82,330 +95,185 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
             ]
           },
           "unit": "none"
-        }
+        },
+        "overrides": []
       },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 0,
-        "y": 0
-      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
       "id": 1,
       "options": {
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "9.0.0",
+      "pluginVersion": "10.0.0",
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "up{job=\"langgraph-agent\"}",
           "refId": "A"
         }
       ],
-      "title": "Auth Service Status",
+      "title": "Status",
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Current login attempt rate per second. Monitor for traffic patterns and spikes.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 200 }
             ]
           },
           "unit": "reqps"
-        }
+        },
+        "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 10,
-        "x": 4,
-        "y": 0
-      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
       "id": 2,
       "options": {
-        "legend": {
-          "calcs": [
-            "last",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
       },
-      "pluginVersion": "9.0.0",
+      "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rate(auth_login_attempts_total[5m])",
-          "legendFormat": "Login Attempts",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate(auth_login_attempts_total[5m]))",
           "refId": "A"
-        },
-        {
-          "expr": "rate(auth_login_success_total[5m])",
-          "legendFormat": "Successful Logins",
-          "refId": "B"
-        },
-        {
-          "expr": "rate(auth_login_failed_total[5m])",
-          "legendFormat": "Failed Logins",
-          "refId": "C"
         }
       ],
-      "title": "Login Activity Rate",
-      "type": "timeseries"
+      "title": "Login Rate",
+      "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Percentage of failed logins. YELLOW > 1%, RED > 5%. Investigate if elevated.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 0.01
-              },
-              {
-                "color": "red",
-                "value": 0.05
-              }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.01 },
+              { "color": "red", "value": 0.05 }
             ]
           },
           "unit": "percentunit"
-        }
+        },
+        "overrides": []
       },
-      "gridPos": {
-        "h": 4,
-        "w": 5,
-        "x": 14,
-        "y": 0
-      },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
       "id": 3,
       "options": {
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "9.0.0",
+      "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rate(auth_login_failed_total[5m]) / (rate(auth_login_attempts_total[5m]) + 0.0001)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate(auth_login_failures_total[5m])) / (sum(rate(auth_login_attempts_total[5m])) + 0.0001)",
           "refId": "A"
         }
       ],
-      "title": "Login Failure Rate",
+      "title": "Failure Rate",
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "95th percentile login latency. YELLOW > 500ms, RED > 1s. Slow logins impact UX.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 500
-              },
-              {
-                "color": "red",
-                "value": 1000
-              }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 500 },
+              { "color": "red", "value": 1000 }
             ]
           },
           "unit": "ms"
-        }
+        },
+        "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 10,
-        "x": 19,
-        "y": 0
-      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
       "id": 4,
       "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
       },
-      "pluginVersion": "9.0.0",
+      "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum(rate(auth_login_duration_bucket[5m])) by (le))",
-          "legendFormat": "p50",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.95, sum(rate(auth_login_duration_seconds_bucket[5m])) by (le)) * 1000",
           "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.95, sum(rate(auth_login_duration_bucket[5m])) by (le))",
-          "legendFormat": "p95",
-          "refId": "B"
-        },
-        {
-          "expr": "histogram_quantile(0.99, sum(rate(auth_login_duration_bucket[5m])) by (le))",
-          "legendFormat": "p99",
-          "refId": "C"
         }
       ],
-      "title": "Login Response Time Percentiles",
-      "type": "timeseries"
+      "title": "p95 Latency",
+      "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Current number of active sessions. YELLOW > 1000, RED > 5000. Monitor for session leaks.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1000
-              },
-              {
-                "color": "red",
-                "value": 5000
-              }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1000 },
+              { "color": "red", "value": 5000 }
             ]
           },
           "unit": "short"
-        }
+        },
+        "overrides": []
       },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 0,
-        "y": 4
-      },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
       "id": 5,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "textMode": "auto"
       },
-      "pluginVersion": "9.0.0",
+      "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(session_active_count)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(auth_sessions_active)",
           "refId": "A"
         }
       ],
@@ -413,425 +281,387 @@
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "JWKS cache hit rate. Low values (<90%) indicate excessive key fetching. Check Keycloak connectivity.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.8 },
+              { "color": "green", "value": 0.95 }
             ]
           },
-          "unit": "reqps"
-        }
+          "unit": "percentunit"
+        },
+        "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 10,
-        "x": 4,
-        "y": 8
-      },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
       "id": 6,
       "options": {
-        "legend": {
-          "calcs": [
-            "last",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
       },
-      "pluginVersion": "9.0.0",
+      "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "rate(token_created_total[5m])",
-          "legendFormat": "Tokens Created",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate(auth_jwks_cache_operations_total{type=\"hit\"}[5m])) / (sum(rate(auth_jwks_cache_operations_total{type=\"hit\"}[5m])) + sum(rate(auth_jwks_cache_operations_total{type=\"miss\"}[5m])) + 0.0001)",
           "refId": "A"
-        },
-        {
-          "expr": "rate(token_verified_total[5m])",
-          "legendFormat": "Tokens Verified",
-          "refId": "B"
-        },
-        {
-          "expr": "rate(token_refreshed_total[5m])",
-          "legendFormat": "Tokens Refreshed",
-          "refId": "C"
-        },
-        {
-          "expr": "rate(token_verification_failed_total[5m])",
-          "legendFormat": "Verification Failures",
-          "refId": "D"
         }
       ],
-      "title": "Token Operations Rate",
-      "type": "timeseries"
+      "title": "JWKS Cache",
+      "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 4 },
+      "id": 100,
+      "panels": [],
+      "title": "Login Activity",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Login activity over time showing attempts, successes, and failures. Identify patterns and spikes.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true
+            "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto",
+            "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none",
+            "hideFrom": { "tooltip": false, "viz": false, "legend": false },
+            "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+            "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": true,
+            "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
           },
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percent"
-        }
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "reqps"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Attempts" }, "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Successful" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Failed" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
+        ]
       },
-      "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 14,
-        "y": 8
-      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
       "id": 7,
       "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
+        "legend": { "calcs": ["last", "max", "mean"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "none" }
       },
-      "pluginVersion": "9.0.0",
+      "pluginVersion": "10.0.0",
       "targets": [
-        {
-          "expr": "(jwks_cache_hits_total / (jwks_cache_hits_total + jwks_cache_misses_total)) * 100",
-          "legendFormat": "JWKS Cache Hit Rate",
-          "refId": "A"
-        }
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_login_attempts_total[5m]))", "legendFormat": "Attempts", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_login_attempts_total[5m])) - sum(rate(auth_login_failures_total[5m]))", "legendFormat": "Successful", "refId": "B" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_login_failures_total[5m]))", "legendFormat": "Failed", "refId": "C" }
       ],
-      "title": "JWKS Cache Performance",
+      "title": "Login Activity Rate",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Login latency percentiles (p50, p95, p99). Identify slow authentication and performance degradation.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true
+            "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto",
+            "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none",
+            "hideFrom": { "tooltip": false, "viz": false, "legend": false },
+            "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+            "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": true,
+            "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "line" }
           },
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "reqps"
-        }
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 500 }, { "color": "red", "value": 1000 }] },
+          "unit": "ms"
+        },
+        "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 21,
-        "y": 8
-      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
       "id": 8,
       "options": {
-        "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
+        "legend": { "calcs": ["mean", "max", "last"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "none" }
       },
-      "pluginVersion": "9.0.0",
+      "pluginVersion": "10.0.0",
       "targets": [
-        {
-          "expr": "sum(rate(auth_login_failed_total[5m])) by (failure_reason)",
-          "legendFormat": "{{failure_reason}}",
-          "refId": "A"
-        }
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "histogram_quantile(0.50, sum(rate(auth_login_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p50", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "histogram_quantile(0.95, sum(rate(auth_login_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p95", "refId": "B" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "histogram_quantile(0.99, sum(rate(auth_login_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p99", "refId": "C" }
       ],
-      "title": "Login Failures by Reason",
+      "title": "Login Response Time Percentiles",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
+      "collapsed": true,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "id": 101,
+      "panels": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "description": "Token operation rates: created, verified, refreshed, and verification failures.",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto",
+                "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none",
+                "hideFrom": { "tooltip": false, "viz": false, "legend": false },
+                "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+                "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": true,
+                "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+              },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "reqps"
             },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true
+            "overrides": []
           },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 14 },
+          "id": 9,
+          "options": {
+            "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "mode": "multi", "sort": "none" }
           },
-          "unit": "reqps"
-        }
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 15,
-        "x": 0,
-        "y": 16
-      },
-      "id": 9,
-      "options": {
-        "legend": {
-          "calcs": [
-            "last",
-            "max"
+          "pluginVersion": "10.0.0",
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_token_created_total[5m]))", "legendFormat": "Created", "refId": "A" },
+            { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_token_verifications_total{result=\"success\"}[5m]))", "legendFormat": "Verified", "refId": "B" },
+            { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_token_refresh_total{result=\"success\"}[5m]))", "legendFormat": "Refreshed", "refId": "C" },
+            { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_token_verifications_total{result!=\"success\"}[5m]))", "legendFormat": "Verify Failed", "refId": "D" }
           ],
-          "displayMode": "table",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "pluginVersion": "9.0.0",
-      "targets": [
-        {
-          "expr": "sum(rate(session_created_total[5m])) by (provider)",
-          "legendFormat": "Created - {{provider}}",
-          "refId": "A"
+          "title": "Token Operations Rate",
+          "type": "timeseries"
         },
         {
-          "expr": "sum(rate(session_retrieved_total[5m])) by (provider)",
-          "legendFormat": "Retrieved - {{provider}}",
-          "refId": "B"
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "description": "Token verification results breakdown by status (success, expired, invalid, revoked).",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto",
+                "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none",
+                "hideFrom": { "tooltip": false, "viz": false, "legend": false },
+                "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+                "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": true,
+                "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+              },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 14 },
+          "id": 10,
+          "options": {
+            "legend": { "calcs": ["last"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "mode": "multi", "sort": "none" }
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_token_verifications_total[5m])) by (result)", "legendFormat": "{{result}}", "refId": "A" }
+          ],
+          "title": "Token Verification by Result",
+          "type": "timeseries"
         },
         {
-          "expr": "sum(rate(session_refreshed_total[5m])) by (provider)",
-          "legendFormat": "Refreshed - {{provider}}",
-          "refId": "C"
-        },
-        {
-          "expr": "sum(rate(session_revoked_total[5m])) by (provider)",
-          "legendFormat": "Revoked - {{provider}}",
-          "refId": "D"
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "description": "Login failure breakdown by reason (invalid_credentials, expired, locked, etc).",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto",
+                "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none",
+                "hideFrom": { "tooltip": false, "viz": false, "legend": false },
+                "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+                "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": true,
+                "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+              },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 14 },
+          "id": 11,
+          "options": {
+            "legend": { "calcs": ["last"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "mode": "multi", "sort": "none" }
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_login_failures_total[5m])) by (reason)", "legendFormat": "{{reason}}", "refId": "A" }
+          ],
+          "title": "Login Failures by Reason",
+          "type": "timeseries"
         }
       ],
-      "title": "Session Lifecycle Operations",
-      "type": "timeseries"
+      "title": "Token Management",
+      "type": "row"
     },
     {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        }
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 14,
-        "x": 15,
-        "y": 16
-      },
-      "id": 10,
-      "options": {
-        "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "pluginVersion": "9.0.0",
-      "targets": [
+      "collapsed": true,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 102,
+      "panels": [
         {
-          "expr": "sum(rate(auth_provider_operations_total[5m])) by (provider, operation)",
-          "legendFormat": "{{provider}} - {{operation}}",
-          "refId": "A"
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "description": "Session lifecycle operations: created, revoked by backend (redis, memory, postgres).",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto",
+                "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none",
+                "hideFrom": { "tooltip": false, "viz": false, "legend": false },
+                "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+                "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": true,
+                "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+              },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+          "id": 12,
+          "options": {
+            "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "mode": "multi", "sort": "none" }
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_session_created_total[5m])) by (backend)", "legendFormat": "Created - {{backend}}", "refId": "A" },
+            { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_session_revoked_total[5m])) by (backend)", "legendFormat": "Revoked - {{backend}}", "refId": "B" }
+          ],
+          "title": "Session Lifecycle Operations",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "description": "Active sessions by backend storage type over time.",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto",
+                "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none",
+                "hideFrom": { "tooltip": false, "viz": false, "legend": false },
+                "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+                "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": true,
+                "stacking": { "group": "A", "mode": "normal" }, "thresholdsStyle": { "mode": "off" }
+              },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+          "id": 13,
+          "options": {
+            "legend": { "calcs": ["last"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "mode": "multi", "sort": "none" }
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(auth_sessions_active) by (backend)", "legendFormat": "{{backend}}", "refId": "A" }
+          ],
+          "title": "Active Sessions by Backend",
+          "type": "timeseries"
         }
       ],
-      "title": "Auth Provider Operations",
-      "type": "timeseries"
+      "title": "Sessions",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "id": 103,
+      "panels": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "description": "JWKS cache operations breakdown: hits, misses, and refreshes. Monitor for cache efficiency.",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto",
+                "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none",
+                "hideFrom": { "tooltip": false, "viz": false, "legend": false },
+                "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+                "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": true,
+                "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+              },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "reqps"
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "hit" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "miss" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "refresh" }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] }
+            ]
+          },
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+          "id": 14,
+          "options": {
+            "legend": { "calcs": ["last", "sum"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "mode": "multi", "sort": "none" }
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(auth_jwks_cache_operations_total[5m])) by (type)", "legendFormat": "{{type}}", "refId": "A" }
+          ],
+          "title": "JWKS Cache Operations",
+          "type": "timeseries"
+        }
+      ],
+      "title": "Cache Performance",
+      "type": "row"
     }
   ],
   "refresh": "10s",
-  "schemaVersion": 36,
+  "schemaVersion": 38,
   "style": "dark",
-  "tags": [
-    "authentication",
-    "security",
-    "langgraph-agent"
-  ],
+  "tags": ["authentication", "security", "langgraph-agent"],
   "templating": {
-    "list": []
-  },
-  "time": {
-    "from": "now-1h",
-    "to": "now"
-  },
-  "timepicker": {
-    "refresh_intervals": [
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
+    "list": [
+      {
+        "current": { "selected": false, "text": "Prometheus", "value": "prometheus" },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Data Source",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
     ]
   },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"] },
   "timezone": "",
   "title": "Authentication - MCP Server with LangGraph",
   "uid": "authentication",
-  "version": 1
+  "version": 1,
+  "weekStart": ""
 }
