@@ -72,6 +72,8 @@ services:
       # API and Dashboard
       - "--api.dashboard=true"
       - "--api.insecure=true"
+      # Health endpoint (required for healthcheck)
+      - "--ping=true"
       # Docker provider
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -676,6 +678,11 @@ services:
     depends_on:
       loki-test:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9080/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     deploy:
       resources:
         limits:
