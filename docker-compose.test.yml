@@ -604,7 +604,7 @@ services:
   # Redis Exporter for Prometheus metrics
   # Exposes redis_* metrics for the Redis Sessions dashboard
   redis-exporter:
-    image: oliver006/redis_exporter:v1.67.0
+    image: oliver006/redis_exporter:v1.67.0-alpine
     # RESILIENCE: Auto-restart on failure for observability infrastructure
     restart: unless-stopped
     depends_on:
