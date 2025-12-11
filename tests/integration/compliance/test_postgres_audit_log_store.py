@@ -14,7 +14,7 @@ import pytest
 
 from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresAuditLogStore
 from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry
-from tests.conftest import get_user_id
+from tests.conftest import get_log_id, get_user_id
 
 # Mark as integration test with xdist_group for worker isolation
 # Note: skip_isolation_check is used because these tests use worker-scoped Postgres schemas
@@ -96,8 +96,9 @@ async def test_log_audit_entry(store: PostgresAuditLogStore):
     """Test logging an audit entry"""
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     user_id = get_user_id("alice")
+    expected_log_id = get_log_id("entry")  # Worker-safe ID for parallel execution
     entry = AuditLogEntry(
-        log_id="test_log_123",
+        log_id=expected_log_id,
         user_id=user_id,
         action="profile.update",
         resource_type="user_profile",
@@ -109,7 +110,7 @@ async def test_log_audit_entry(store: PostgresAuditLogStore):
     )
 
     log_id = await store.log(entry)
-    assert log_id == "test_log_123"
+    assert log_id == expected_log_id
 
 
 @pytest.mark.asyncio
@@ -118,8 +119,9 @@ async def test_log_audit_entry(store: PostgresAuditLogStore):
 async def test_log_system_event_without_user(store: PostgresAuditLogStore):
     """Test logging system event (no user_id)"""
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    expected_log_id = get_log_id("system")  # Worker-safe ID for parallel execution
     entry = AuditLogEntry(
-        log_id="test_system_log",
+        log_id=expected_log_id,
         user_id="",  # System event, no user
         action="system.startup",
         resource_type="system",
@@ -128,7 +130,7 @@ async def test_log_system_event_without_user(store: PostgresAuditLogStore):
     )
 
     log_id = await store.log(entry)
-    assert log_id == "test_system_log"
+    assert log_id == expected_log_id
 
 
 # ============================================================================
@@ -143,8 +145,9 @@ async def test_get_audit_log_entry(store: PostgresAuditLogStore):
     """Test retrieving audit log entry by ID"""
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     user_id = get_user_id("bob")
+    expected_log_id = get_log_id("get")  # Worker-safe ID for parallel execution
     entry = AuditLogEntry(
-        log_id="test_get_log",
+        log_id=expected_log_id,
         user_id=user_id,
         action="data.access",
         resource_type="medical_record",
@@ -154,9 +157,9 @@ async def test_get_audit_log_entry(store: PostgresAuditLogStore):
     await store.log(entry)
 
     # Retrieve
-    retrieved = await store.get("test_get_log")
+    retrieved = await store.get(expected_log_id)
     assert retrieved is not None
-    assert retrieved.log_id == "test_get_log"
+    assert retrieved.log_id == expected_log_id
     assert retrieved.user_id == user_id
     assert retrieved.action == "data.access"
 
@@ -180,13 +183,18 @@ async def test_get_nonexistent_audit_log(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_list_user_logs_basic(store: PostgresAuditLogStore):
     """Test listing all logs for a user"""
+    import uuid
+
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
-    user_id = get_user_id("charlie")
+    # Use unique IDs per test run to avoid accumulation from previous runs
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    test_id = uuid.uuid4().hex[:8]
+    user_id = f"test_{worker_id}_list_user_{test_id}"
 
     # Create multiple logs
     for i in range(3):
         entry = AuditLogEntry(
-            log_id=f"test_list_{i}",
+            log_id=f"test_{worker_id}_list_{test_id}_{i}",  # Unique log ID
             user_id=user_id,
             action=f"action_{i}",
             resource_type="resource",
@@ -204,15 +212,21 @@ async def test_list_user_logs_basic(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_list_user_logs_with_date_range(store: PostgresAuditLogStore):
     """Test listing user logs with date range filter (HIPAA compliance query)"""
-    user_id = get_user_id("david")
+    import uuid
+
+    # Use unique IDs per test run to avoid accumulation from previous runs
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    test_id = uuid.uuid4().hex[:8]
+    user_id = f"test_{worker_id}_date_range_{test_id}"
 
     # Create logs at different times
     base_time = datetime.now(UTC)
 
     # Old log (30 days ago)
+    old_log_id = f"test_{worker_id}_old_{test_id}"
     old_time = (base_time - timedelta(days=30)).isoformat().replace("+00:00", "Z")
     old_entry = AuditLogEntry(
-        log_id="test_old_log",
+        log_id=old_log_id,
         user_id=user_id,
         action="old.action",
         resource_type="resource",
@@ -221,9 +235,10 @@ async def test_list_user_logs_with_date_range(store: PostgresAuditLogStore):
     await store.log(old_entry)
 
     # Recent log (1 day ago)
+    recent_log_id = f"test_{worker_id}_recent_{test_id}"
     recent_time = (base_time - timedelta(days=1)).isoformat().replace("+00:00", "Z")
     recent_entry = AuditLogEntry(
-        log_id="test_recent_log",
+        log_id=recent_log_id,
         user_id=user_id,
         action="recent.action",
         resource_type="resource",
@@ -237,7 +252,7 @@ async def test_list_user_logs_with_date_range(store: PostgresAuditLogStore):
 
     # Should only get recent log
     assert len(logs) == 1
-    assert logs[0].log_id == "test_recent_log"
+    assert logs[0].log_id == recent_log_id
 
 
 @pytest.mark.asyncio
@@ -245,13 +260,18 @@ async def test_list_user_logs_with_date_range(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_list_user_logs_with_limit(store: PostgresAuditLogStore):
     """Test listing user logs with limit"""
-    user_id = get_user_id("eve")
+    import uuid
+
+    # Use unique IDs per test run to avoid accumulation from previous runs
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    test_id = uuid.uuid4().hex[:8]
+    user_id = f"test_{worker_id}_limit_user_{test_id}"
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create many logs
     for i in range(150):
         entry = AuditLogEntry(
-            log_id=f"test_limit_{i}",
+            log_id=f"test_{worker_id}_limit_{test_id}_{i}",  # Unique log ID
             user_id=user_id,
             action=f"action_{i}",
             resource_type="resource",
@@ -269,14 +289,20 @@ async def test_list_user_logs_with_limit(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_list_user_logs_ordered_by_timestamp(store: PostgresAuditLogStore):
     """Test that logs are returned in descending timestamp order"""
-    user_id = get_user_id("frank")
+    import uuid
+
+    # Use unique IDs per test run to avoid accumulation from previous runs
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    test_id = uuid.uuid4().hex[:8]
+    user_id = f"test_{worker_id}_order_user_{test_id}"
     base_time = datetime.now(UTC)
 
     # Create logs in reverse chronological order
+    log_ids = [f"test_{worker_id}_order_{test_id}_{i}" for i in range(3)]
     for i in range(3):
         timestamp = (base_time - timedelta(hours=i)).isoformat().replace("+00:00", "Z")
         entry = AuditLogEntry(
-            log_id=f"test_order_{i}",
+            log_id=log_ids[i],
             user_id=user_id,
             action=f"action_{i}",
             resource_type="resource",
@@ -288,9 +314,9 @@ async def test_list_user_logs_ordered_by_timestamp(store: PostgresAuditLogStore)
     logs = await store.list_user_logs(user_id)
 
     # Verify ordered by timestamp descending (most recent first)
-    assert logs[0].log_id == "test_order_0"  # Most recent
-    assert logs[1].log_id == "test_order_1"
-    assert logs[2].log_id == "test_order_2"  # Oldest
+    assert logs[0].log_id == log_ids[0]  # Most recent
+    assert logs[1].log_id == log_ids[1]
+    assert logs[2].log_id == log_ids[2]  # Oldest
 
 
 # ============================================================================
@@ -347,8 +373,9 @@ async def test_anonymize_preserves_audit_trail(store: PostgresAuditLogStore):
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create log with detailed information
+    log_id = get_log_id("preserve")  # Worker-safe ID
     entry = AuditLogEntry(
-        log_id="test_preserve",
+        log_id=log_id,
         user_id=user_id,
         action="phi.access",
         resource_type="medical_record",
@@ -364,7 +391,7 @@ async def test_anonymize_preserves_audit_trail(store: PostgresAuditLogStore):
     await store.anonymize_user_logs(user_id)
 
     # Retrieve anonymized log
-    retrieved = await store.get("test_preserve")
+    retrieved = await store.get(log_id)
     assert retrieved is not None
 
     # Verify audit trail preserved (except user_id)
@@ -388,8 +415,9 @@ async def test_audit_log_immutability(store: PostgresAuditLogStore):
     """Test that audit logs are immutable (cannot be updated)"""
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     user_id = get_user_id("ivan")
+    log_id = get_log_id("immutable")  # Worker-safe ID
     entry = AuditLogEntry(
-        log_id="test_immutable",
+        log_id=log_id,
         user_id=user_id,
         action="original.action",
         resource_type="resource",
@@ -423,8 +451,9 @@ async def test_audit_log_metadata_json(store: PostgresAuditLogStore):
         "approvers": [admin1, admin2],
     }
 
+    log_id = get_log_id("complex_meta")  # Worker-safe ID
     entry = AuditLogEntry(
-        log_id="test_complex_meta",
+        log_id=log_id,
         user_id=user_id,
         action="approval.granted",
         resource_type="request",
@@ -436,7 +465,7 @@ async def test_audit_log_metadata_json(store: PostgresAuditLogStore):
     await store.log(entry)
 
     # Verify complex metadata preserved
-    retrieved = await store.get("test_complex_meta")
+    retrieved = await store.get(log_id)
     assert retrieved is not None
     assert retrieved.metadata == complex_metadata
     assert retrieved.metadata["changes"]["after"]["status"] == "approved"
@@ -453,14 +482,19 @@ async def test_audit_log_metadata_json(store: PostgresAuditLogStore):
 @pytest.mark.slow
 async def test_list_logs_performance_with_many_users(store: PostgresAuditLogStore):
     """Test query performance with many users (index verification)"""
+    import uuid
+
+    # Use unique IDs per test run to avoid accumulation from previous runs
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    test_id = uuid.uuid4().hex[:8]
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
-    target_user = get_user_id("perf_test")
+    target_user = f"test_{worker_id}_perf_target_{test_id}"
 
     # Create logs for many different users
     for i in range(100):
         entry = AuditLogEntry(
-            log_id=f"test_perf_{i}",
-            user_id=get_user_id(f"perf_{i}"),
+            log_id=f"test_{worker_id}_perf_{test_id}_{i}",  # Unique log ID
+            user_id=f"test_{worker_id}_perf_user_{test_id}_{i}",
             action="action",
             resource_type="resource",
             timestamp=now,
@@ -470,7 +504,7 @@ async def test_list_logs_performance_with_many_users(store: PostgresAuditLogStor
     # Create logs for target user
     for i in range(10):
         entry = AuditLogEntry(
-            log_id=f"test_target_{i}",
+            log_id=f"test_{worker_id}_target_{test_id}_{i}",  # Unique log ID
             user_id=target_user,
             action="action",
             resource_type="resource",

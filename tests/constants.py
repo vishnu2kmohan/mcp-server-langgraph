@@ -8,9 +8,10 @@ be synchronized across:
 - CI/CD workflows (.github/workflows/*.yaml)
 
 OpenAI Codex Finding (2025-11-16):
-==================================Integration tests failed due to JWT secret mismatch:
+==================================
+Integration tests failed due to JWT secret mismatch:
 - conftest.py mock_jwt_token used "test-secret-key"
-- docker-compose.test.yml used "test-secret-key-for-integration-tests"
+- docker-compose.test.yml used "test-jwt-secret-key-for-e2e-testing-only"
 - CI workflows used "test-secret-key-for-ci"
 - Auth middleware validated with settings.jwt_secret_key from environment
 - Token signing vs validation mismatch caused PermissionError in MCP tests
@@ -54,10 +55,11 @@ Production JWT secrets must be:
 
 # JWT secret for test token signing and verification
 # IMPORTANT: This MUST match the value in:
-#   - docker-compose.test.yml (JWT_SECRET_KEY environment variable)
+#   - .env.test (JWT_SECRET_KEY)
+#   - docker-compose.test.yml (via env_file: .env.test)
 #   - .github/workflows/*.yaml (JWT_SECRET_KEY environment variable)
 #   - tests/conftest.py (mock_jwt_token fixture)
-TEST_JWT_SECRET = "test-secret-key-for-integration-tests"
+TEST_JWT_SECRET = "test-jwt-secret-key-for-e2e-testing-only"
 
 # JWT algorithm for test token encoding/decoding
 # IMPORTANT: Must match settings.jwt_algorithm in core/config.py

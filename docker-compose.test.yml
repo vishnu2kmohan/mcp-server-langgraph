@@ -721,49 +721,22 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"  # HTTP API
+    # 12-Factor: Config from .env.test file (checked into git)
+    # Override locally with .env.test.local (gitignored) or shell environment
+    env_file:
+      - .env.test
     environment:
-      # Application settings
-      - ENVIRONMENT=test
-      - TESTING=true
-      - LOG_LEVEL=INFO
-      - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
-
-      # Database - uses mcp_test (canonical test database per tests/constants.py)
-      # Note: All test databases share the same schema (GDPR tables applied via init script)
+      # Docker networking values (must reference container names)
+      # These override values from .env.test because they require compose-level resolution
+      # Note: Values below take precedence over .env.test per Docker Compose rules
       - POSTGRES_HOST=postgres-test
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=mcp_test
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-
-      # Authentication
-      - AUTH_PROVIDER=keycloak
-      # Use Docker internal network for reliable CI/CD (host.docker.internal doesn't work in GitHub Actions)
-      # IMPORTANT: Must use KEYCLOAK_SERVER_URL (not KEYCLOAK_URL) to match Settings field name
-      # IMPORTANT: Include /authn path since Keycloak has KC_HTTP_RELATIVE_PATH=/authn baked into the image
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
-      - KEYCLOAK_REALM=default
-      - KEYCLOAK_CLIENT_ID=mcp-server
-      - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-
-      # Authorization
       - OPENFGA_API_URL=http://openfga-test:8080
-
-      # Cache & Sessions
       - REDIS_URL=redis://redis-test:6379/1
       - REDIS_SESSION_URL=redis://redis-test:6379/0
-
-      # Vector DB
+      - CHECKPOINT_REDIS_URL=redis://redis-test:6379/1
       - QDRANT_URL=http://qdrant-test:6333
-
-      # Observability
-      - OTEL_SDK_DISABLED=false
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
-      - OTEL_SERVICE_NAME=mcp-server-test
-
-      # GDPR
-      - GDPR_STORAGE_BACKEND=postgres
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 5s
@@ -1229,33 +1202,15 @@ services:
         condition: service_started  # Alloy healthcheck can be flaky due to Loki timestamp rejections
     ports:
       - "9001:8001"  # Test port (offset +1000 from dev port 8001)
+    # 12-Factor: Config from .env.test file (checked into git)
+    env_file:
+      - .env.test
     environment:
-      # Application settings
-      - ENVIRONMENT=test
-      - TESTING=true
-      - LOG_LEVEL=INFO
-      - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
-
-      # Base path for gateway routing
+      # Docker networking values and service-specific overrides
       - BASE_PATH=/build
-
-      # Authentication (Keycloak)
-      # IMPORTANT: Include /authn path since Keycloak has KC_HTTP_RELATIVE_PATH=/authn baked into the image
-      - AUTH_PROVIDER=keycloak
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
-      - KEYCLOAK_REALM=default
-      - KEYCLOAK_CLIENT_ID=mcp-server
-      - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-
-      # Authorization (OpenFGA)
       - OPENFGA_API_URL=http://openfga-test:8080
-
-      # MCP Server integration
       - MCP_SERVER_URL=http://mcp-server-test:8000
-
-      # Observability (OpenTelemetry)
-      - OTEL_SDK_DISABLED=false
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=mcp-builder-test
       - LOG_FORMAT=json
@@ -1311,36 +1266,17 @@ services:
         condition: service_started  # Alloy healthcheck can be flaky due to Loki timestamp rejections
     ports:
       - "9002:8002"  # Test port (offset +1000 from dev port 8002)
+    # 12-Factor: Config from .env.test file (checked into git)
+    env_file:
+      - .env.test
     environment:
-      # Application settings
-      - ENVIRONMENT=test
-      - TESTING=true
-      - LOG_LEVEL=INFO
-      - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
-
-      # Base path for gateway routing
+      # Docker networking values and service-specific overrides
       - BASE_PATH=/play
-
-      # Authentication (Keycloak)
-      # IMPORTANT: Include /authn path since Keycloak has KC_HTTP_RELATIVE_PATH=/authn baked into the image
-      - AUTH_PROVIDER=keycloak
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
-      - KEYCLOAK_REALM=default
-      - KEYCLOAK_CLIENT_ID=mcp-server
-      - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-
-      # Authorization (OpenFGA)
       - OPENFGA_API_URL=http://openfga-test:8080
-
-      # MCP Server integration
       - MCP_SERVER_URL=http://mcp-server-test:8000
-
-      # Session storage (Redis DB 2 for playground sessions)
+      # Session storage (Redis DB 2 for playground sessions - different from mcp-server)
       - REDIS_URL=redis://redis-test:6379/2
-
-      # Observability (OpenTelemetry)
-      - OTEL_SDK_DISABLED=false
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=mcp-playground-test
       - LOG_FORMAT=json
