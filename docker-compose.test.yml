@@ -118,10 +118,6 @@ services:
       mcp-test-network:
         aliases:
           - gateway
-          # 'localhost' alias allows traefik-forward-auth to resolve localhost to the gateway
-          # This is required because OIDC issuer URL uses localhost and forward-auth
-          # needs to fetch .well-known/openid-configuration from it. See ADR-0068.
-          - localhost
     labels:
       - "traefik.enable=true"
       # Route: /gateway/* -> Traefik Dashboard [PROTECTED]
@@ -334,11 +330,10 @@ services:
       - KC_DB_PASSWORD=postgres
 
       # Runtime settings (not baked into build)
-      # IMPORTANT: Set KC_HOSTNAME to full URL so OIDC issuer matches browser-accessible URL.
-      # This ensures the issuer in .well-known/openid-configuration is http://localhost/authn/realms/default
+      # NOTE: KC_HOSTNAME is intentionally NOT set. Keycloak will return the issuer
+      # based on the request hostname, allowing forward-auth to use the internal
+      # Docker hostname (keycloak-test:8080) while browsers use localhost.
       # See: https://www.keycloak.org/server/hostname
-      - KC_HOSTNAME=http://localhost/authn
-      - KC_PROXY_HEADERS=xforwarded
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
 
@@ -465,12 +460,19 @@ services:
     depends_on:
       keycloak-test:
         condition: service_healthy
+      traefik-gateway:
+        condition: service_healthy
+    # Use extra_hosts to route 'localhost' to the Docker host's gateway IP.
+    # This allows forward-auth to fetch OIDC config from http://localhost/authn/...
+    # which routes through Traefik gateway -> Keycloak, ensuring browser-compatible URLs.
+    extra_hosts:
+      - "localhost:host-gateway"
     environment:
       # OIDC Provider Configuration (Keycloak)
-      # Use internal Docker hostname for container-to-container communication.
-      # The issuer URL MUST match what Keycloak returns in .well-known/openid-configuration
-      # (controlled by KC_HOSTNAME=http://localhost/authn in keycloak-test).
-      # See ADR-0068.
+      # Forward-auth fetches OIDC config from http://localhost/authn/... which is routed
+      # through the Traefik gateway to Keycloak. This ensures the OIDC issuer and
+      # authorization_endpoint URLs use localhost (browser-accessible) instead of
+      # internal Docker hostnames like keycloak-test.
       - DEFAULT_PROVIDER=oidc
       - PROVIDERS_OIDC_ISSUER_URL=http://localhost/authn/realms/default
       - PROVIDERS_OIDC_CLIENT_ID=mcp-server

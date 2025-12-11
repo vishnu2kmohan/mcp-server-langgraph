@@ -225,6 +225,69 @@ loki.write "loki" {
 // PROMETHEUS SCRAPE (for service metrics)
 // =============================================================================
 
+// Static targets for infrastructure services with known metrics endpoints
+// These services expose Prometheus metrics on specific ports/paths
+
+prometheus.scrape "qdrant" {
+  targets = [{
+    __address__ = "qdrant:6333",
+    service     = "qdrant-test",
+    job         = "qdrant",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "traefik" {
+  targets = [{
+    __address__ = "traefik-gateway:8080",
+    service     = "traefik-gateway",
+    job         = "traefik",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "keycloak" {
+  targets = [{
+    __address__ = "keycloak:9000",
+    service     = "keycloak-test",
+    job         = "keycloak",
+  }]
+  // Keycloak 26.x exposes metrics on the management interface at /metrics
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "openfga" {
+  targets = [{
+    __address__ = "openfga:8080",
+    service     = "openfga-test",
+    job         = "openfga",
+  }]
+  // OpenFGA exposes Prometheus metrics on the HTTP server
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+// NOTE: Redis and PostgreSQL require exporters for Prometheus metrics
+// Redis: redis:6379 doesn't expose /metrics directly (needs redis-exporter)
+// PostgreSQL: postgres:5432 doesn't expose /metrics directly (needs postgres-exporter)
+// These are NOT scraped here - add exporters to docker-compose.test.yml if needed
+
+// MCP Application services (dynamic discovery as fallback)
 prometheus.scrape "mcp_services" {
   targets = discovery.relabel.docker_containers.output
 
