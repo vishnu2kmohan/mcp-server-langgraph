@@ -1277,10 +1277,10 @@ repos:
     entry: uv run --frozen python -u scripts/validators/check_async_mock_configuration.py
     language: system
     files: ^tests/.*test_.*\.py$
-    pass_filenames: true
+    pass_filenames: false
     always_run: false
     stages:
-    - manual
+    - pre-commit
     description: 'Validates that all AsyncMock instances have explicit return_value or side_effect configuration.
 
 
