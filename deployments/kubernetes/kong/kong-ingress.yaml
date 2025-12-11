@@ -152,7 +152,8 @@ spec:
     healthchecks:
       active:
         type: http
-        http_path: /health
+        # Use /health/live to avoid 307 redirect (/health -> /health/ due to sub-app mount)
+        http_path: /health/live
         timeout: 10
         concurrency: 10
         healthy:

@@ -738,7 +738,8 @@ services:
       - QDRANT_URL=http://qdrant-test:6333
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      # Use /health/live to avoid 307 redirect (/health -> /health/ due to sub-app mount)
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
       interval: 5s
       timeout: 5s
       retries: 20

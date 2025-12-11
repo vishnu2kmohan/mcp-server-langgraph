@@ -307,8 +307,9 @@ services:
       - PROMETHEUS_METRICS_ENABLED=true
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
     healthcheck:
+      # Use /health/live to avoid 307 redirect (/health -> /health/ due to sub-app mount)
       # wget is available in the API service image (built from our Dockerfile)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health/live"]
       interval: 10s
       timeout: 5s
       retries: 10

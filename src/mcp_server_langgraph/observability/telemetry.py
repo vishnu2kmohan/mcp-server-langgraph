@@ -31,14 +31,26 @@ except ImportError:
     OTLPSpanExporterGRPC = None  # type: ignore[misc, assignment, unused-ignore]
 
 try:
-    from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter as OTLPMetricExporterHTTP
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter as OTLPSpanExporterHTTP
+    from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+        OTLPMetricExporter as OTLPMetricExporterHTTP,
+    )
+    from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+        _append_metrics_path,
+    )
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+        OTLPSpanExporter as OTLPSpanExporterHTTP,
+    )
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+        _append_trace_path,
+    )
 
     HTTP_AVAILABLE = True
 except ImportError:
     HTTP_AVAILABLE = False
     OTLPMetricExporterHTTP = None  # type: ignore[misc, assignment, unused-ignore]
     OTLPSpanExporterHTTP = None  # type: ignore[misc, assignment, unused-ignore]
+    _append_metrics_path = None  # type: ignore[misc, assignment, unused-ignore]
+    _append_trace_path = None  # type: ignore[misc, assignment, unused-ignore]
 
 from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
 
@@ -112,7 +124,11 @@ class ObservabilityConfig:
             grpc_span_exporter = OTLPSpanExporterGRPC(endpoint=self.otlp_endpoint)
             provider.add_span_processor(BatchSpanProcessor(grpc_span_exporter))
         elif HTTP_AVAILABLE and OTLPSpanExporterHTTP is not None:
-            http_span_exporter = OTLPSpanExporterHTTP(endpoint=self.otlp_endpoint.replace(":4317", ":4318"))
+            # HTTP endpoint needs /v1/traces path appended (SDK only does this for env vars)
+            http_endpoint = self.otlp_endpoint.replace(":4317", ":4318")
+            if _append_trace_path is not None:
+                http_endpoint = _append_trace_path(http_endpoint)
+            http_span_exporter = OTLPSpanExporterHTTP(endpoint=http_endpoint)
             provider.add_span_processor(BatchSpanProcessor(http_span_exporter))
         elif OBSERVABILITY_VERBOSE:
             print("⚠ OTLP exporters not available, using console-only tracing")
@@ -141,7 +157,11 @@ class ObservabilityConfig:
             grpc_reader = PeriodicExportingMetricReader(grpc_metric_exporter, export_interval_millis=5000)
             readers.append(grpc_reader)
         elif HTTP_AVAILABLE and OTLPMetricExporterHTTP is not None:
-            http_metric_exporter = OTLPMetricExporterHTTP(endpoint=self.otlp_endpoint.replace(":4317", ":4318"))
+            # HTTP endpoint needs /v1/metrics path appended (SDK only does this for env vars)
+            http_endpoint = self.otlp_endpoint.replace(":4317", ":4318")
+            if _append_metrics_path is not None:
+                http_endpoint = _append_metrics_path(http_endpoint)
+            http_metric_exporter = OTLPMetricExporterHTTP(endpoint=http_endpoint)
             http_reader = PeriodicExportingMetricReader(http_metric_exporter, export_interval_millis=5000)
             readers.append(http_reader)
         elif OBSERVABILITY_VERBOSE:
