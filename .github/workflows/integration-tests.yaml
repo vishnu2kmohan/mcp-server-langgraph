@@ -161,7 +161,7 @@ jobs:
         extras: 'dev'
 
     - name: Download all coverage artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v6.0.0
       with:
         pattern: coverage-integration-*-py3.12
         path: coverage-reports/

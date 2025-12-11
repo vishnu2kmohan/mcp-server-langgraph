@@ -482,7 +482,7 @@ jobs:
         extras: 'dev'
 
     - name: Download all coverage artifacts
-      uses: actions/download-artifact@v4.1.8
+      uses: actions/download-artifact@v6.0.0
       with:
         pattern: coverage-*-py3.12
         path: coverage-artifacts/
