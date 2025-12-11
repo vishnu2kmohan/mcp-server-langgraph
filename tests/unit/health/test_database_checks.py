@@ -571,8 +571,10 @@ class TestConvenienceFunction:
             warnings=[],
         )
         # Use AsyncMock for the validator to ensure all async methods work correctly in xdist
+        # Note: AsyncMock(spec=...) doesn't auto-detect async methods, so we must explicitly
+        # set validate as an AsyncMock to avoid "MagicMock can't be used in await" errors
         mock_validator = AsyncMock(spec=DatabaseValidator)
-        mock_validator.validate.return_value = mock_result
+        mock_validator.validate = AsyncMock(return_value=mock_result)
 
         with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator", return_value=mock_validator):
             result = await validate_database_architecture()
@@ -591,8 +593,10 @@ class TestConvenienceFunction:
             warnings=[],
         )
         # Use AsyncMock for the validator to ensure all async methods work correctly in xdist
+        # Note: AsyncMock(spec=...) doesn't auto-detect async methods, so we must explicitly
+        # set validate as an AsyncMock to avoid "MagicMock can't be used in await" errors
         mock_validator = AsyncMock(spec=DatabaseValidator)
-        mock_validator.validate.return_value = mock_result
+        mock_validator.validate = AsyncMock(return_value=mock_result)
 
         with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator", return_value=mock_validator) as mock_class:
             result = await validate_database_architecture(
