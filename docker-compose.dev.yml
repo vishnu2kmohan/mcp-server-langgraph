@@ -203,26 +203,19 @@ services:
           cpus: '0.1'
           memory: 256M
 
-  # Jaeger (OpenTelemetry traces - optional)
-  jaeger:
-    image: jaegertracing/all-in-one:1.62.0
-    ports:
-      - "4317:4317"  # OTLP gRPC
-      - "4318:4318"  # OTLP HTTP
-      - "16686:16686"  # Jaeger UI
-    networks:
-      - mcp-network
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 256M
+  # ==============================================================================
+  # OBSERVABILITY
+  # ==============================================================================
+  # Legacy services (Jaeger, Prometheus, Alertmanager) have been replaced by LGTM stack:
+  #   - Jaeger (replaced by Tempo)
+  #   - Prometheus (replaced by Alloy + Mimir)
+  #   - Alertmanager (replaced by Grafana Unified Alerting)
+  #
+  # For observability in development, use docker-compose.test.yml which includes
+  # the full LGTM stack (Grafana, Loki, Tempo, Mimir, Alloy).
+  #
+  # To run with observability:
+  #   docker compose -f docker-compose.test.yml up -d
 
 networks:
   mcp-network:
