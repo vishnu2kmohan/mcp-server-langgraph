@@ -340,7 +340,9 @@ prometheus.scrape "grafana" {
     service     = "grafana-test",
     job         = "grafana",
   }]
-  metrics_path = "/metrics"
+  // Grafana runs with GF_SERVER_SERVE_FROM_SUB_PATH=true and subpath /dashboards/
+  // so metrics are exposed at /dashboards/metrics instead of /metrics
+  metrics_path = "/dashboards/metrics"
   forward_to   = [prometheus.remote_write.mimir.receiver]
 
   scrape_interval = "15s"
