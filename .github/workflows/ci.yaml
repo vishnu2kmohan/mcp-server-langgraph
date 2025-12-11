@@ -727,7 +727,7 @@ jobs:
     - name: Install Trivy
       if: matrix.needs_trivy
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.50.0
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.68.1
         trivy --version
 
     - name: Setup Node.js
