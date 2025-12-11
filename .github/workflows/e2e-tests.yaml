@@ -97,8 +97,9 @@ jobs:
         # (from audit: E2E tests had 64% failure rate with 7.5 min timeout)
         for i in {1..200}; do
           # Count healthy services by checking health status directly (docker compose ps --filter only supports status, not health)
+          # Note: Only count services that HAVE a healthcheck defined (excludes promtail-test, openfga-migrate-test)
           HEALTHY=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health == "healthy") | .Service' | wc -l | tr -d ' ')
-          TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l | tr -d ' ')
+          TOTAL=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health != null and .Health != "") | .Service' | wc -l | tr -d ' ')
 
           echo "Attempt $i/200: $HEALTHY/$TOTAL services healthy"
 

@@ -678,11 +678,9 @@ services:
     depends_on:
       loki-test:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9080/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # Note: Promtail image doesn't have wget/curl, so we remove the healthcheck.
+    # Promtail's health is not critical for tests - Loki handles log ingestion.
+    # The service will be counted as "running" (not "healthy") but that's acceptable.
     deploy:
       resources:
         limits:
