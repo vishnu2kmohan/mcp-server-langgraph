@@ -80,6 +80,8 @@ services:
 
   traefik-gateway:
     image: traefik:v3.6.4
+    # RESILIENCE: Auto-restart on failure for critical gateway infrastructure
+    restart: unless-stopped
     command:
       # API and Dashboard
       - "--api.dashboard=true"
@@ -118,6 +120,11 @@ services:
       mcp-test-network:
         aliases:
           - gateway
+          # 'localhost' alias enables traefik-forward-auth to resolve OIDC issuer URL
+          # (http://localhost/authn/realms/default) to traefik-gateway instead of 127.0.0.1.
+          # This is required because extra_hosts: localhost:host-gateway doesn't work reliably
+          # (default 127.0.0.1 localhost entry in /etc/hosts takes precedence).
+          - localhost
     labels:
       - "traefik.enable=true"
       # Route: /gateway/* -> Traefik Dashboard [PROTECTED]
@@ -457,16 +464,18 @@ services:
 
   traefik-forward-auth:
     image: thomseddon/traefik-forward-auth:2
+    # RESILIENCE: Auto-restart on failure for critical auth infrastructure
+    # The forward-auth service is stateless and can safely restart
+    restart: unless-stopped
     depends_on:
       keycloak-test:
         condition: service_healthy
       traefik-gateway:
         condition: service_healthy
-    # Use extra_hosts to route 'localhost' to the Docker host's gateway IP.
-    # This allows forward-auth to fetch OIDC config from http://localhost/authn/...
-    # which routes through Traefik gateway -> Keycloak, ensuring browser-compatible URLs.
-    extra_hosts:
-      - "localhost:host-gateway"
+    # NOTE: traefik-gateway has 'localhost' as a network alias (see traefik-gateway service),
+    # so forward-auth can resolve http://localhost/authn/... to traefik-gateway internally.
+    # This ensures OIDC issuer URL matches what browser sees (localhost) while working
+    # within Docker networking.
     environment:
       # OIDC Provider Configuration (Keycloak)
       # Forward-auth fetches OIDC config from http://localhost/authn/... which is routed
