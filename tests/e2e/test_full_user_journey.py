@@ -760,8 +760,11 @@ class TestServicePrincipalJourney:
             client_secret = sp_data.get("client_secret") or sp_data.get("secret")
 
             # Authenticate using client credentials
+            # CRITICAL: Use /authn prefix because Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
+            keycloak_url = os.getenv("KEYCLOAK_URL", "http://localhost:9082/authn")
+            realm = os.getenv("KEYCLOAK_REALM", "mcp-test")
             auth_response = await client.post(
-                "http://localhost:9082/realms/mcp-test/protocol/openid-connect/token",
+                f"{keycloak_url}/realms/{realm}/protocol/openid-connect/token",
                 data={"grant_type": "client_credentials", "client_id": client_id, "client_secret": client_secret},
                 timeout=30.0,
             )

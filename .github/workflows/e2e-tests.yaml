@@ -220,9 +220,10 @@ jobs:
         for i in {1..90}; do
           # Try to get a token using the test user credentials
           # This proves the realm, client, and user are all properly configured
+          # CRITICAL: Use /authn prefix because Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
           # Note: Use -s (silent) without -f to capture error responses for debugging
           TOKEN_RESPONSE=$(curl -s -X POST \
-            "http://localhost:9082/realms/mcp-test/protocol/openid-connect/token" \
+            "http://localhost:9082/authn/realms/mcp-test/protocol/openid-connect/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "grant_type=password" \
             -d "client_id=mcp-server" \
@@ -239,7 +240,7 @@ jobs:
             echo "Last response: $TOKEN_RESPONSE"
             # Show HTTP status code for debugging
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-              "http://localhost:9082/realms/mcp-test/protocol/openid-connect/token" \
+              "http://localhost:9082/authn/realms/mcp-test/protocol/openid-connect/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=password" \
               -d "client_id=mcp-server" \
@@ -269,7 +270,8 @@ jobs:
         # Keycloak client configuration for token introspection
         # Must match the secret in tests/e2e/mcp-test-realm.json
         KEYCLOAK_CLIENT_SECRET: "test-client-secret-for-e2e-tests"
-        KEYCLOAK_URL: "http://localhost:9082"
+        # CRITICAL: Include /authn subpath because Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
+        KEYCLOAK_URL: "http://localhost:9082/authn"
         KEYCLOAK_REALM: "mcp-test"
         KEYCLOAK_CLIENT_ID: "mcp-server"
 

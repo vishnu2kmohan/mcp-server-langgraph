@@ -41,7 +41,8 @@ class RealKeycloakAuth:
         Args:
             base_url: Keycloak base URL (default: http://localhost:9082)
         """
-        self.base_url = base_url or os.getenv("KEYCLOAK_URL", "http://localhost:9082")
+        # CRITICAL: Include /authn prefix because Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
+        self.base_url = base_url or os.getenv("KEYCLOAK_URL", "http://localhost:9082/authn")
         self.realm = os.getenv("KEYCLOAK_REALM", "mcp-test")
         self.client_id = os.getenv("KEYCLOAK_CLIENT_ID", "mcp-server")
         # CODEX FINDING FIX (2025-11-20): Add client_secret for token introspection

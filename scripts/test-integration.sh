@@ -257,8 +257,9 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE" postgres-test keycloa
     for i in {1..30}; do
         # Try to get a token using the test user credentials
         # This proves the realm, client, and user are all properly configured
+        # CRITICAL: Use /authn prefix because Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
         TOKEN_RESPONSE=$(curl -sf -X POST \
-            "http://localhost:9082/realms/mcp-test/protocol/openid-connect/token" \
+            "http://localhost:9082/authn/realms/mcp-test/protocol/openid-connect/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "grant_type=password" \
             -d "client_id=mcp-server" \
