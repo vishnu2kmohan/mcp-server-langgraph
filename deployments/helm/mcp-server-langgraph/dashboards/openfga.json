@@ -18,6 +18,7 @@
   "graphTooltip": 1,
   "id": null,
   "links": [
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Overview", "tooltip": "View LangGraph Agent Overview", "type": "link", "url": "/d/langgraph-agent-overview/langgraph-agent-overview" },
     { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Authentication", "tooltip": "View Authentication Dashboard", "type": "link", "url": "/d/authentication/authentication" },
     { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Security", "tooltip": "View Security Dashboard", "type": "link", "url": "/d/security/security" }
   ],
