@@ -356,10 +356,29 @@ jobs:
           conftest test deployments/overlays/preview-gke/*.yaml -p deployments/policies || true
           conftest test deployments/overlays/production-gke/*.yaml -p deployments/policies || true
 
+  validate-grafana-dashboards:
+    name: Validate Grafana Dashboards
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          extras: 'dev'
+
+      - name: Validate Grafana dashboard JSON files
+        run: |
+          echo "Validating Grafana dashboard best practices..."
+          uv run --frozen python scripts/validation/validate_grafana_dashboards.py --strict
+
   summary:
     name: Validation Summary
     runs-on: ubuntu-latest
-    needs: [validate-helm, validate-kustomize, validate-network-policies, validate-service-accounts, validate-conftest-policies]
+    needs: [validate-helm, validate-kustomize, validate-network-policies, validate-service-accounts, validate-conftest-policies, validate-grafana-dashboards]
     if: always()
 
     steps:

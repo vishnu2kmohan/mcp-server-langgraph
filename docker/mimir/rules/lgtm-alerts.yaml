@@ -31,7 +31,7 @@ groups:
         annotations:
           summary: "Loki is down"
           description: "Loki log aggregation service has been down for more than 2 minutes."
-          runbook_url: "https://grafana.com/docs/loki/latest/operations/troubleshooting/"
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md#lokidown"
 
       # Grafana down
       - alert: GrafanaDown
@@ -44,6 +44,7 @@ groups:
         annotations:
           summary: "Grafana is down"
           description: "Grafana dashboard service has been down for more than 2 minutes."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md"
 
       # Tempo down
       - alert: TempoDown
@@ -56,6 +57,7 @@ groups:
         annotations:
           summary: "Tempo is down"
           description: "Tempo distributed tracing service has been down for more than 2 minutes."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md#tempodown"
 
       # Mimir down
       - alert: MimirDown
@@ -68,6 +70,7 @@ groups:
         annotations:
           summary: "Mimir is down"
           description: "Mimir metrics storage service has been down for more than 2 minutes."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md#mimirdown"
 
       # Alloy (collector) down
       - alert: AlloyDown
@@ -80,6 +83,7 @@ groups:
         annotations:
           summary: "Alloy telemetry collector is down"
           description: "Alloy OTLP collector has been down for more than 2 minutes. No telemetry is being collected."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md"
 
       # Stack health below threshold
       - alert: LGTMStackDegraded
@@ -256,6 +260,7 @@ groups:
         annotations:
           summary: "MCP Server is down"
           description: "MCP Server has been down for more than 2 minutes."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-agent-health.md#servicedown"
 
       # Keycloak down
       - alert: KeycloakDown
@@ -267,6 +272,7 @@ groups:
         annotations:
           summary: "Keycloak is down"
           description: "Keycloak authentication service has been down for more than 2 minutes."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/authentication-alerts.md#keycloakdown"
 
       # OpenFGA down
       - alert: OpenFGADown
@@ -278,6 +284,7 @@ groups:
         annotations:
           summary: "OpenFGA is down"
           description: "OpenFGA authorization service has been down for more than 2 minutes."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/authentication-alerts.md#openfgadown"
 
       # PostgreSQL down
       - alert: PostgreSQLDown
@@ -289,6 +296,7 @@ groups:
         annotations:
           summary: "PostgreSQL is down"
           description: "PostgreSQL database has been down for more than 2 minutes."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md#postgresqldown"
 
       # Redis down
       - alert: RedisDown
@@ -300,6 +308,7 @@ groups:
         annotations:
           summary: "Redis is down"
           description: "Redis cache/session store has been down for more than 2 minutes."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md#redisdown"
 
       # Qdrant down
       - alert: QdrantDown
@@ -311,6 +320,7 @@ groups:
         annotations:
           summary: "Qdrant is down"
           description: "Qdrant vector database has been down for more than 2 minutes."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md"
 
       # Traefik down
       - alert: TraefikDown
@@ -322,6 +332,7 @@ groups:
         annotations:
           summary: "Traefik API Gateway is down"
           description: "Traefik API Gateway has been down for more than 2 minutes."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md"
 
   # ===========================================================================
   # Traefik Gateway Alerts

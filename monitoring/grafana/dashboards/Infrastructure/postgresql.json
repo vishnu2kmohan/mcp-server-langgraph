@@ -20,7 +20,44 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Overview",
+      "tooltip": "View LangGraph Agent Overview",
+      "type": "link",
+      "url": "/d/langgraph-agent-overview/langgraph-agent-overview"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "LGTM Stack",
+      "tooltip": "View LGTM Stack Dashboard",
+      "type": "link",
+      "url": "/d/lgtm-stack/lgtm-stack"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "SLA Monitoring",
+      "tooltip": "View SLA Monitoring Dashboard",
+      "type": "link",
+      "url": "/d/sla-monitoring/sla-monitoring"
+    }
+  ],
   "panels": [
     {
       "collapsed": false,
@@ -120,7 +157,8 @@
         }
       ],
       "title": "PostgreSQL Status",
-      "type": "stat"
+      "type": "stat",
+      "description": "Database server health status. RED indicates connectivity failure."
     },
     {
       "datasource": {
@@ -255,7 +293,8 @@
         }
       ],
       "title": "Connection Pool Usage",
-      "type": "stat"
+      "type": "stat",
+      "description": "Percentage of max connections used. >80% indicates need to scale or optimize."
     },
     {
       "datasource": {
@@ -314,7 +353,8 @@
         }
       ],
       "title": "Database Size",
-      "type": "stat"
+      "type": "stat",
+      "description": "Total database size on disk. Monitor for unexpected growth."
     },
     {
       "datasource": {
@@ -381,7 +421,8 @@
         }
       ],
       "title": "Avg Query Time",
-      "type": "stat"
+      "type": "stat",
+      "description": "Average query execution time. High values may indicate slow queries or lock contention."
     },
     {
       "datasource": {
@@ -440,7 +481,8 @@
         }
       ],
       "title": "Server Start Time",
-      "type": "stat"
+      "type": "stat",
+      "description": "Database server uptime since last restart."
     },
     {
       "collapsed": false,
@@ -544,7 +586,8 @@
         }
       ],
       "title": "Connections by State",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Connection states: active, idle, waiting. Many idle_in_transaction may indicate connection leaks."
     },
     {
       "datasource": {
@@ -648,7 +691,8 @@
         }
       ],
       "title": "Connections per Database",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Connection distribution by database. Compare to max_connections threshold."
     },
     {
       "collapsed": false,
@@ -761,7 +805,8 @@
         }
       ],
       "title": "Transactions per Second",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Commit and rollback rates. High rollback rate may indicate application issues."
     },
     {
       "datasource": {
@@ -879,7 +924,8 @@
         }
       ],
       "title": "Tuple Operations per Second",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Row operations: fetched, inserted, updated, deleted. Monitor for workload patterns."
     },
     {
       "collapsed": false,
@@ -959,7 +1005,8 @@
         }
       ],
       "title": "Buffer Cache Hit Ratio",
-      "type": "gauge"
+      "type": "gauge",
+      "description": "Cache efficiency. Should be >95%. Low values indicate need for more shared_buffers."
     },
     {
       "datasource": {
@@ -1059,7 +1106,8 @@
         }
       ],
       "title": "Block I/O",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Disk read vs cache hit rates. High reads may indicate cache pressure."
     },
     {
       "datasource": {
@@ -1255,7 +1303,8 @@
         }
       ],
       "title": "Locks by Mode",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Active locks by type. Exclusive locks may indicate contention."
     },
     {
       "datasource": {
@@ -1346,7 +1395,8 @@
         }
       ],
       "title": "Conflicts per Second",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Query conflicts from replication. High values may affect replica consistency."
     }
   ],
   "refresh": "30s",

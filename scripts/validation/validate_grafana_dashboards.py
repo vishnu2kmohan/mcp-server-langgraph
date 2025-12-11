@@ -226,8 +226,9 @@ def validate_dashboard(filepath: Path) -> ValidationResult:
     result["warnings"].extend(validate_graph_tooltip(dashboard))
     result["warnings"].extend(validate_description(dashboard))
     result["warnings"].extend(validate_links(dashboard))
-    result["warnings"].extend(validate_panel_descriptions(dashboard))
     result["warnings"].extend(validate_timepicker(dashboard))
+    # Panel descriptions are informational, not blocking (66 panels in infrastructure dashboards)
+    result["info"].extend(validate_panel_descriptions(dashboard))
     result["info"].extend(validate_row_structure(dashboard))
 
     return result

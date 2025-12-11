@@ -20,7 +20,44 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Overview",
+      "tooltip": "View LangGraph Agent Overview",
+      "type": "link",
+      "url": "/d/langgraph-agent-overview/langgraph-agent-overview"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "LLM Performance",
+      "tooltip": "View LLM Performance Dashboard",
+      "type": "link",
+      "url": "/d/llm-performance/llm-performance"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "LGTM Stack",
+      "tooltip": "View LGTM Stack Dashboard",
+      "type": "link",
+      "url": "/d/lgtm-stack/lgtm-stack"
+    }
+  ],
   "panels": [
     {
       "collapsed": false,
@@ -113,7 +150,8 @@
         }
       ],
       "title": "Qdrant Status",
-      "type": "stat"
+      "type": "stat",
+      "description": "Vector database health status. RED indicates connectivity failure."
     },
     {
       "datasource": {
@@ -172,7 +210,8 @@
         }
       ],
       "title": "Total Collections",
-      "type": "stat"
+      "type": "stat",
+      "description": "Number of vector collections. Each collection holds vectors with same dimensions."
     },
     {
       "datasource": {
@@ -231,7 +270,8 @@
         }
       ],
       "title": "Total Points",
-      "type": "stat"
+      "type": "stat",
+      "description": "Total vector entries across all collections. Monitor for unexpected growth."
     },
     {
       "datasource": {
@@ -290,7 +330,8 @@
         }
       ],
       "title": "Total Vectors",
-      "type": "stat"
+      "type": "stat",
+      "description": "Total stored vectors. Multiple vectors per point if using named vectors."
     },
     {
       "datasource": {
@@ -357,7 +398,8 @@
         }
       ],
       "title": "Avg REST Response",
-      "type": "stat"
+      "type": "stat",
+      "description": "Average API response latency. High values may indicate search complexity."
     },
     {
       "datasource": {
@@ -437,7 +479,8 @@
         }
       ],
       "title": "Recovery Mode",
-      "type": "stat"
+      "type": "stat",
+      "description": "Recovery status. Orange indicates data recovery in progress."
     },
     {
       "collapsed": false,
@@ -541,7 +584,8 @@
         }
       ],
       "title": "Points per Collection",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Vector count per collection over time. Monitor for data growth patterns."
     },
     {
       "datasource": {
@@ -632,7 +676,8 @@
         }
       ],
       "title": "Vectors per Collection",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Named vectors per collection. Multiple vectors per point if using multi-vector mode."
     },
     {
       "collapsed": false,
@@ -745,7 +790,8 @@
         }
       ],
       "title": "REST API Requests/sec",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "API throughput by endpoint. Monitor for traffic patterns and failures."
     },
     {
       "datasource": {
@@ -845,7 +891,8 @@
         }
       ],
       "title": "REST API Response Duration",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Response latency by endpoint. High max values may indicate complex queries."
     },
     {
       "datasource": {
@@ -945,7 +992,8 @@
         }
       ],
       "title": "gRPC API Requests/sec",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "gRPC throughput for high-performance clients. Compare to REST patterns."
     },
     {
       "datasource": {
@@ -1012,7 +1060,8 @@
         }
       ],
       "title": "REST API Error Rate",
-      "type": "gauge"
+      "type": "gauge",
+      "description": "Percentage of failed requests. Should be <1%. High values need investigation."
     },
     {
       "collapsed": false,
@@ -1125,7 +1174,8 @@
         }
       ],
       "title": "Vector I/O",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Read/write throughput for vector operations. High writes during indexing."
     },
     {
       "datasource": {
@@ -1216,7 +1266,8 @@
         }
       ],
       "title": "Running Optimizations",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Active index optimization jobs. May temporarily increase latency."
     },
     {
       "collapsed": false,
@@ -1317,7 +1368,8 @@
         }
       ],
       "title": "Snapshots Created",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Cumulative snapshot count. Used for backups and cluster replication."
     },
     {
       "datasource": {
@@ -1404,7 +1456,8 @@
         }
       ],
       "title": "Snapshot Creation Status",
-      "type": "stat"
+      "type": "stat",
+      "description": "Snapshot operation status. Blue indicates active creation."
     },
     {
       "datasource": {
@@ -1491,7 +1544,8 @@
         }
       ],
       "title": "Snapshot Recovery Status",
-      "type": "stat"
+      "type": "stat",
+      "description": "Recovery from snapshot status. Orange indicates active restore."
     }
   ],
   "refresh": "30s",

@@ -20,7 +20,44 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Overview",
+      "tooltip": "View LangGraph Agent Overview",
+      "type": "link",
+      "url": "/d/langgraph-agent-overview/langgraph-agent-overview"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "PostgreSQL",
+      "tooltip": "View PostgreSQL Dashboard",
+      "type": "link",
+      "url": "/d/postgresql/postgresql"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Redis Sessions",
+      "tooltip": "View Redis Sessions Dashboard",
+      "type": "link",
+      "url": "/d/redis-sessions/redis-sessions"
+    }
+  ],
   "panels": [
     {
       "collapsed": false,
@@ -194,7 +231,8 @@
         }
       ],
       "title": "Grafana Status",
-      "type": "stat"
+      "type": "stat",
+      "description": "Dashboard visualization service health."
     },
     {
       "datasource": {
@@ -504,7 +542,8 @@
         }
       ],
       "title": "Stack Health %",
-      "type": "stat"
+      "type": "stat",
+      "description": "Percentage of LGTM components that are healthy. Target: 100%."
     },
     {
       "collapsed": false,
@@ -608,7 +647,8 @@
         }
       ],
       "title": "Loki Request Rate by Route",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "API request rate broken down by route. High rates on query routes may indicate heavy log queries."
     },
     {
       "datasource": {
@@ -699,7 +739,8 @@
         }
       ],
       "title": "Loki Request Latency (p99)",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "99th percentile latency by route. Spikes may indicate storage pressure or complex queries."
     },
     {
       "datasource": {
@@ -790,7 +831,8 @@
         }
       ],
       "title": "Loki Log Ingestion Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Bytes per second being ingested. Monitor for sudden drops (data loss) or spikes (noisy apps)."
     },
     {
       "datasource": {
@@ -881,7 +923,8 @@
         }
       ],
       "title": "Loki Active Streams",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Number of active log streams. High cardinality may impact query performance."
     },
     {
       "collapsed": false,
@@ -985,7 +1028,8 @@
         }
       ],
       "title": "Tempo Trace Pushes/sec",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Trace push rate to ingesters. Monitor for drops indicating collection issues."
     },
     {
       "datasource": {
@@ -1076,7 +1120,8 @@
         }
       ],
       "title": "Tempo Trace Ingestion Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Bytes per second being flushed to storage. Monitor for backpressure."
     },
     {
       "datasource": {
@@ -1176,7 +1221,8 @@
         }
       ],
       "title": "Tempo Query Latency",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Trace query response time percentiles. High latency affects trace lookup."
     },
     {
       "datasource": {
@@ -1267,7 +1313,8 @@
         }
       ],
       "title": "Tempo Ingester Queue",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Flush queue depth. High values indicate storage write latency."
     },
     {
       "collapsed": false,
@@ -1371,7 +1418,8 @@
         }
       ],
       "title": "Mimir Active Time Series",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Total unique time series. Monitor for cardinality explosion."
     },
     {
       "datasource": {
@@ -1462,7 +1510,8 @@
         }
       ],
       "title": "Mimir Samples Ingestion Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Metrics samples per second being ingested. Drops indicate scrape failures."
     },
     {
       "datasource": {
