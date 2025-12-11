@@ -20,7 +20,8 @@
   "links": [
     { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Overview", "tooltip": "View LangGraph Agent Overview", "type": "link", "url": "/d/langgraph-agent-overview/langgraph-agent-overview" },
     { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Authentication", "tooltip": "View Authentication Dashboard", "type": "link", "url": "/d/authentication/authentication" },
-    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "PostgreSQL", "tooltip": "View PostgreSQL Dashboard", "type": "link", "url": "/d/postgresql/postgresql" }
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "PostgreSQL", "tooltip": "View PostgreSQL Dashboard", "type": "link", "url": "/d/postgresql/postgresql" },
+    { "asDropdown": false, "icon": "doc", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": true, "title": "📖 Runbook", "tooltip": "View Infrastructure Alerts Runbook", "type": "link", "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md#redisdown" }
   ],
   "liveNow": false,
   "panels": [

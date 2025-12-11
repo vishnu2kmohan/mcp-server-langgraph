@@ -69,6 +69,18 @@
       "tooltip": "View Authentication Dashboard",
       "type": "link",
       "url": "/d/authentication/authentication"
+    },
+    {
+      "asDropdown": false,
+      "icon": "doc",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "📖 Runbook",
+      "tooltip": "View SLA Alerts Runbook",
+      "type": "link",
+      "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md"
     }
   ],
   "liveNow": false,

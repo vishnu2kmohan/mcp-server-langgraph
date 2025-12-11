@@ -20,7 +20,8 @@
   "links": [
     { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Overview", "tooltip": "View LangGraph Agent Overview", "type": "link", "url": "/d/langgraph-agent-overview/langgraph-agent-overview" },
     { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Authentication", "tooltip": "View Authentication Dashboard", "type": "link", "url": "/d/authentication/authentication" },
-    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Security", "tooltip": "View Security Dashboard", "type": "link", "url": "/d/security/security" }
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Security", "tooltip": "View Security Dashboard", "type": "link", "url": "/d/security/security" },
+    { "asDropdown": false, "icon": "doc", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": true, "title": "📖 Runbook", "tooltip": "View Authentication Alerts Runbook", "type": "link", "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/authentication-alerts.md#openfgadown" }
   ],
   "liveNow": false,
   "panels": [

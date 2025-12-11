@@ -56,6 +56,18 @@
       "tooltip": "View Builder Dashboard",
       "type": "link",
       "url": "/d/builder/builder"
+    },
+    {
+      "asDropdown": false,
+      "icon": "doc",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "📖 Runbook",
+      "tooltip": "View LLM Performance Alerts Runbook",
+      "type": "link",
+      "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/llm-performance-alerts.md"
     }
   ],
   "liveNow": false,

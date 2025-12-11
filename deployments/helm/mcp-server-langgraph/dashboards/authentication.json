@@ -68,6 +68,18 @@
       "tooltip": "View Redis Sessions Dashboard",
       "type": "link",
       "url": "/d/redis-sessions/redis-sessions"
+    },
+    {
+      "asDropdown": false,
+      "icon": "doc",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "📖 Runbook",
+      "tooltip": "View Authentication Alerts Runbook",
+      "type": "link",
+      "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/authentication-alerts.md"
     }
   ],
   "liveNow": false,
