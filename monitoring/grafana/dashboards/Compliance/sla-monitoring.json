@@ -28,26 +28,47 @@
       }
     ]
   },
+  "description": "SLA Monitoring for MCP Server with LangGraph. Tracks uptime, response time, error rate SLAs, and downtime budgets. Use this dashboard to verify SLA compliance, identify breaches, and forecast availability. Key targets: 99.9% uptime, p95 <500ms latency, <1% error rate.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
   "links": [
     {
-      "icon": "dashboard",
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
       "tags": [],
-      "title": "Overview Dashboard",
-      "tooltip": "View Overview Dashboard",
+      "targetBlank": false,
+      "title": "Overview",
+      "tooltip": "View LangGraph Agent Overview",
       "type": "link",
       "url": "/d/langgraph-agent-overview/langgraph-agent-overview"
     },
     {
-      "icon": "dashboard",
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
       "tags": [],
-      "title": "SOC 2 Compliance Dashboard",
-      "tooltip": "View Compliance Dashboard",
+      "targetBlank": false,
+      "title": "SOC 2 Compliance",
+      "tooltip": "View SOC 2 Compliance Dashboard",
       "type": "link",
       "url": "/d/soc2-compliance/soc2-compliance"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Authentication",
+      "tooltip": "View Authentication Dashboard",
+      "type": "link",
+      "url": "/d/authentication/authentication"
     }
   ],
   "liveNow": false,

@@ -14,7 +14,10 @@
         "type": "dashboard"
       },
       {
-        "datasource": "Prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "mimir"
+        },
         "enable": true,
         "expr": "changes(compliance_report_generated_total[1h]) > 0",
         "iconColor": "blue",
@@ -25,31 +28,56 @@
       }
     ]
   },
+  "description": "SOC 2 Type II Compliance monitoring for MCP Server with LangGraph. Tracks Trust Services Criteria (Security, Availability), evidence collection, access reviews, and GDPR operations. Use this dashboard to verify compliance posture, monitor control status, and prepare for audits.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
   "links": [
     {
-      "icon": "dashboard",
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
       "tags": [],
-      "title": "SLA Monitoring Dashboard",
-      "tooltip": "View SLA Dashboard",
+      "targetBlank": false,
+      "title": "Overview",
+      "tooltip": "View LangGraph Agent Overview",
+      "type": "link",
+      "url": "/d/langgraph-agent-overview/langgraph-agent-overview"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "SLA Monitoring",
+      "tooltip": "View SLA Monitoring Dashboard",
       "type": "link",
       "url": "/d/sla-monitoring/sla-monitoring"
     },
     {
-      "icon": "dashboard",
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
       "tags": [],
-      "title": "Authentication Dashboard",
+      "targetBlank": false,
+      "title": "Authentication",
       "tooltip": "View Authentication Dashboard",
       "type": "link",
       "url": "/d/authentication/authentication"
     },
     {
-      "icon": "dashboard",
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
       "tags": [],
-      "title": "Security Dashboard",
+      "targetBlank": false,
+      "title": "Security",
       "tooltip": "View Security Dashboard",
       "type": "link",
       "url": "/d/security/security"
@@ -71,7 +99,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Overall SOC 2 compliance score (weighted: passed + partial*0.5)",
       "fieldConfig": {
         "defaults": {
@@ -123,7 +154,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "compliance_score",
           "refId": "A"
         }
@@ -132,7 +166,10 @@
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Number of controls passed, failed, and partial",
       "fieldConfig": {
         "defaults": {
@@ -233,19 +270,28 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "evidence_items_total{status=\"success\"}",
           "legendFormat": "Passed",
           "refId": "A"
         },
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "evidence_items_total{status=\"failure\"}",
           "legendFormat": "Failed",
           "refId": "B"
         },
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "evidence_items_total{status=\"partial\"}",
           "legendFormat": "Partial",
           "refId": "C"
@@ -255,7 +301,10 @@
       "type": "piechart"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Evidence items by control category",
       "fieldConfig": {
         "defaults": {
@@ -308,7 +357,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "sum by (control_category) (evidence_items_total)",
           "legendFormat": "{{ control_category }}",
           "refId": "A"
@@ -331,7 +383,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "CC6.1 - Access Control: Active sessions and MFA statistics",
       "fieldConfig": {
         "defaults": {
@@ -379,8 +434,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "session_store_active_sessions",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "auth_sessions_active",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -407,7 +465,10 @@
       "type": "table"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "CC6.6 - Audit Logs: Logging system status and retention",
       "fieldConfig": {
         "defaults": {
@@ -481,7 +542,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "rate(audit_logs_total[5m])",
           "legendFormat": "Audit Log Rate",
           "refId": "A"
@@ -491,7 +555,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "CC7.2 - System Monitoring: Prometheus/Grafana metrics collection rate",
       "fieldConfig": {
         "defaults": {
@@ -565,7 +632,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "rate(prometheus_tsdb_head_samples_appended_total[5m])",
           "legendFormat": "Metrics Collection Rate",
           "refId": "A"
@@ -588,7 +658,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "A1.2 - SLA Monitoring: Uptime percentage tracking",
       "fieldConfig": {
         "defaults": {
@@ -674,8 +747,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "(\n  sum(up{job=\"mcp-server-langgraph\"})\n  / count(up{job=\"mcp-server-langgraph\"})\n  * 100\n)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(\n  sum(up{job=\"langgraph-agent\"})\n  / count(up{job=\"langgraph-agent\"})\n  * 100\n)",
           "legendFormat": "Uptime % (Target: 99.9%)",
           "refId": "A"
         }
@@ -684,7 +760,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "A1.2 - Backup Verification: Last successful backup timestamp",
       "fieldConfig": {
         "defaults": {
@@ -747,7 +826,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "time() - last_successful_backup_timestamp",
           "refId": "A"
         }
@@ -769,7 +851,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Evidence collection operations per second",
       "fieldConfig": {
         "defaults": {
@@ -843,7 +928,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "sum by (evidence_type) (rate(evidence_collection_operations_total[5m]))",
           "legendFormat": "{{ evidence_type }}",
           "refId": "A"
@@ -853,7 +941,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Compliance reports generated over time",
       "fieldConfig": {
         "defaults": {
@@ -927,7 +1018,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "increase(compliance_report_generated_total[1h])",
           "legendFormat": "{{ report_type }}",
           "refId": "A"
@@ -937,7 +1031,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Compliance score trend over the last 30 days",
       "fieldConfig": {
         "defaults": {
@@ -1024,7 +1121,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "compliance_score",
           "legendFormat": "Compliance Score",
           "refId": "A"
@@ -1047,7 +1147,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Access review operations and findings",
       "fieldConfig": {
         "defaults": {
@@ -1103,7 +1206,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "access_review_items_total",
           "format": "table",
           "instant": true,
@@ -1132,7 +1238,10 @@
       "type": "table"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Inactive user accounts identified in access reviews",
       "fieldConfig": {
         "defaults": {
@@ -1181,7 +1290,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "inactive_user_accounts_total",
           "refId": "A"
         }
@@ -1203,7 +1315,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Scheduled compliance job execution status",
       "fieldConfig": {
         "defaults": {
@@ -1309,19 +1424,463 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "increase(compliance_job_executions_total{status=\"success\"}[1h])",
           "legendFormat": "Success - {{ job_type }}",
           "refId": "A"
         },
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "increase(compliance_job_executions_total{status=\"failure\"}[1h])",
           "legendFormat": "Failure - {{ job_type }}",
           "refId": "B"
         }
       ],
       "title": "Compliance Job Executions",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 60
+      },
+      "id": 30,
+      "panels": [],
+      "title": "GDPR Compliance Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Data anonymization operations for GDPR compliance",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 61
+      },
+      "id": 31,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "increase(gdpr_anonymization_total[1h])",
+          "legendFormat": "Anonymization Operations",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Anonymization Operations",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GDPR data export requests (Subject Access Requests)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 61
+      },
+      "id": 32,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "increase(gdpr_data_export_total[1h])",
+          "legendFormat": "Data Exports",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Export Requests (SAR)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GDPR data deletion requests (Right to be Forgotten)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 69
+      },
+      "id": 33,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "increase(gdpr_data_deletion_total[24h])",
+          "legendFormat": "Deletions",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Deletion Requests (24h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Automated data retention cleanup operations",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 69
+      },
+      "id": 34,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "increase(gdpr_retention_cleanup_total[24h])",
+          "legendFormat": "Cleanup Operations",
+          "refId": "A"
+        }
+      ],
+      "title": "Retention Cleanup (24h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GDPR compliance operations over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 69
+      },
+      "id": 35,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "increase(gdpr_anonymization_total[1h])",
+          "legendFormat": "Anonymization",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "increase(gdpr_data_export_total[1h])",
+          "legendFormat": "Data Export",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "increase(gdpr_data_deletion_total[1h])",
+          "legendFormat": "Deletion",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "increase(gdpr_retention_cleanup_total[1h])",
+          "legendFormat": "Retention Cleanup",
+          "refId": "D"
+        }
+      ],
+      "title": "All GDPR Operations Over Time",
       "type": "timeseries"
     }
   ],
@@ -1331,12 +1890,33 @@
   "tags": [
     "compliance",
     "soc2",
+    "gdpr",
     "security",
     "audit",
     "langgraph-agent"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Mimir",
+          "value": "mimir"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-7d",

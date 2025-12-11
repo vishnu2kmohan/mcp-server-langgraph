@@ -28,34 +28,59 @@
       }
     ]
   },
+  "description": "SOC 2 Type II Compliance monitoring for MCP Server with LangGraph. Tracks Trust Services Criteria (Security, Availability), evidence collection, access reviews, and GDPR operations. Use this dashboard to verify compliance posture, monitor control status, and prepare for audits.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
   "links": [
     {
-      "icon": "dashboard",
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
       "tags": [],
-      "title": "SLA Monitoring Dashboard",
-      "tooltip": "View SLA Dashboard",
+      "targetBlank": false,
+      "title": "Overview",
+      "tooltip": "View LangGraph Agent Overview",
+      "type": "link",
+      "url": "/d/langgraph-agent-overview/langgraph-agent-overview"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "SLA Monitoring",
+      "tooltip": "View SLA Monitoring Dashboard",
       "type": "link",
       "url": "/d/sla-monitoring/sla-monitoring"
     },
     {
-      "icon": "dashboard",
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
       "tags": [],
-      "title": "Authentication Dashboard",
+      "targetBlank": false,
+      "title": "Authentication",
       "tooltip": "View Authentication Dashboard",
       "type": "link",
       "url": "/d/authentication/authentication"
     },
     {
-      "icon": "dashboard",
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
       "tags": [],
-      "title": "Security Dashboard",
+      "targetBlank": false,
+      "title": "Security",
       "tooltip": "View Security Dashboard",
       "type": "link",
-      "url": "/d/langgraph-agent-security/langgraph-agent-security"
+      "url": "/d/security/security"
     }
   ],
   "liveNow": false,

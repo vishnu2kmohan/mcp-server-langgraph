@@ -14,7 +14,10 @@
         "type": "dashboard"
       },
       {
-        "datasource": "Prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "mimir"
+        },
         "enable": true,
         "expr": "ALERTS{alertname=~\"SLA.*\",alertstate=\"firing\"}",
         "iconColor": "red",
@@ -25,26 +28,47 @@
       }
     ]
   },
+  "description": "SLA Monitoring for MCP Server with LangGraph. Tracks uptime, response time, error rate SLAs, and downtime budgets. Use this dashboard to verify SLA compliance, identify breaches, and forecast availability. Key targets: 99.9% uptime, p95 <500ms latency, <1% error rate.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
   "links": [
     {
-      "icon": "dashboard",
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
       "tags": [],
-      "title": "Overview Dashboard",
-      "tooltip": "View Overview Dashboard",
+      "targetBlank": false,
+      "title": "Overview",
+      "tooltip": "View LangGraph Agent Overview",
       "type": "link",
-      "url": "/d/langgraph-agent/overview"
+      "url": "/d/langgraph-agent-overview/langgraph-agent-overview"
     },
     {
-      "icon": "dashboard",
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
       "tags": [],
-      "title": "SOC 2 Compliance Dashboard",
-      "tooltip": "View Compliance Dashboard",
+      "targetBlank": false,
+      "title": "SOC 2 Compliance",
+      "tooltip": "View SOC 2 Compliance Dashboard",
       "type": "link",
       "url": "/d/soc2-compliance/soc2-compliance"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Authentication",
+      "tooltip": "View Authentication Dashboard",
+      "type": "link",
+      "url": "/d/authentication/authentication"
     }
   ],
   "liveNow": false,
@@ -63,7 +87,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Overall SLA compliance score (weighted: 40% uptime, 30% response time, 30% error rate)",
       "fieldConfig": {
         "defaults": {
@@ -115,8 +142,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "(\n  (\n    # Uptime component (40% weight)\n    (\n      sum(up{job=\"mcp-server-langgraph\"})\n      / count(up{job=\"mcp-server-langgraph\"})\n      * 100\n    ) * 0.4\n  ) + (\n    # Response time component (30% weight)\n    (\n      (500 - histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"mcp-server-langgraph\"}[5m])) * 1000)\n      / 500 * 100\n    ) * 0.3\n  ) + (\n    # Error rate component (30% weight)\n    (\n      (1.0 - sum(rate(http_requests_total{job=\"mcp-server-langgraph\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m])) * 100)\n      / 1.0 * 100\n    ) * 0.3\n  )\n)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(\n  (\n    # Uptime component (40% weight)\n    (\n      sum(up{job=\"langgraph-agent\"})\n      / count(up{job=\"langgraph-agent\"})\n      * 100\n    ) * 0.4\n  ) + (\n    # Response time component (30% weight)\n    (\n      (500 - histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])) * 1000)\n      / 500 * 100\n    ) * 0.3\n  ) + (\n    # Error rate component (30% weight)\n    (\n      (1.0 - sum(rate(http_requests_total{job=\"langgraph-agent\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m])) * 100)\n      / 1.0 * 100\n    ) * 0.3\n  )\n)",
           "refId": "A"
         }
       ],
@@ -124,7 +154,10 @@
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "System uptime percentage (Target: 99.9%)",
       "fieldConfig": {
         "defaults": {
@@ -176,8 +209,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "(\n  sum(up{job=\"mcp-server-langgraph\"})\n  / count(up{job=\"mcp-server-langgraph\"})\n  * 100\n)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(\n  sum(up{job=\"langgraph-agent\"})\n  / count(up{job=\"langgraph-agent\"})\n  * 100\n)",
           "refId": "A"
         }
       ],
@@ -185,7 +221,10 @@
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "P95 response time in milliseconds (Target: <500ms)",
       "fieldConfig": {
         "defaults": {
@@ -237,8 +276,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "histogram_quantile(\n  0.95,\n  rate(http_request_duration_seconds_bucket{job=\"mcp-server-langgraph\"}[5m])\n) * 1000",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(\n  0.95,\n  rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])\n) * 1000",
           "refId": "A"
         }
       ],
@@ -246,7 +288,10 @@
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "API error rate percentage (Target: <1%)",
       "fieldConfig": {
         "defaults": {
@@ -298,8 +343,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "(\n  sum(rate(http_requests_total{job=\"mcp-server-langgraph\",status=~\"5..\"}[5m]))\n  / sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m]))\n  * 100\n)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(\n  sum(rate(http_requests_total{job=\"langgraph-agent\",status=~\"5..\"}[5m]))\n  / sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))\n  * 100\n)",
           "refId": "A"
         }
       ],
@@ -320,7 +368,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "System uptime percentage over time",
       "fieldConfig": {
         "defaults": {
@@ -406,8 +457,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "(\n  sum(up{job=\"mcp-server-langgraph\"})\n  / count(up{job=\"mcp-server-langgraph\"})\n  * 100\n)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(\n  sum(up{job=\"langgraph-agent\"})\n  / count(up{job=\"langgraph-agent\"})\n  * 100\n)",
           "legendFormat": "Uptime %",
           "refId": "A"
         }
@@ -416,7 +470,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Remaining downtime budget for the month (99.9% SLA = 43.2 minutes/month)",
       "fieldConfig": {
         "defaults": {
@@ -468,8 +525,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "43.2 - (\n  (\n    (time() - (time() - time() % (30 * 24 * 3600)))\n    * (1 - (sum(up{job=\"mcp-server-langgraph\"}) / count(up{job=\"mcp-server-langgraph\"})))\n  ) / 60\n)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "43.2 - (\n  (\n    (time() - (time() - time() % (30 * 24 * 3600)))\n    * (1 - (sum(up{job=\"langgraph-agent\"}) / count(up{job=\"langgraph-agent\"})))\n  ) / 60\n)",
           "refId": "A"
         }
       ],
@@ -490,7 +550,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "API response time percentiles (p50, p95, p99)",
       "fieldConfig": {
         "defaults": {
@@ -575,20 +638,29 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"mcp-server-langgraph\"}[5m])) * 1000",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])) * 1000",
           "legendFormat": "p50",
           "refId": "A"
         },
         {
-          "datasource": "Prometheus",
-          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"mcp-server-langgraph\"}[5m])) * 1000",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])) * 1000",
           "legendFormat": "p95 (SLA Target: 500ms)",
           "refId": "B"
         },
         {
-          "datasource": "Prometheus",
-          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job=\"mcp-server-langgraph\"}[5m])) * 1000",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])) * 1000",
           "legendFormat": "p99",
           "refId": "C"
         }
@@ -610,7 +682,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "API error rate percentage over time",
       "fieldConfig": {
         "defaults": {
@@ -696,8 +771,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "(\n  sum(rate(http_requests_total{job=\"mcp-server-langgraph\",status=~\"5..\"}[5m]))\n  / sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m]))\n  * 100\n)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(\n  sum(rate(http_requests_total{job=\"langgraph-agent\",status=~\"5..\"}[5m]))\n  / sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))\n  * 100\n)",
           "legendFormat": "Error Rate %",
           "refId": "A"
         }
@@ -706,7 +784,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "HTTP errors per second by status code",
       "fieldConfig": {
         "defaults": {
@@ -780,8 +861,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "sum by (status) (rate(http_requests_total{job=\"mcp-server-langgraph\",status=~\"5..\"}[5m]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (status) (rate(http_requests_total{job=\"langgraph-agent\",status=~\"5..\"}[5m]))",
           "legendFormat": "{{ status }}",
           "refId": "A"
         }
@@ -803,7 +887,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Requests per second (current vs 7-day average)",
       "fieldConfig": {
         "defaults": {
@@ -880,20 +967,29 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))",
           "legendFormat": "Current Throughput",
           "refId": "A"
         },
         {
-          "datasource": "Prometheus",
-          "expr": "avg_over_time(sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m]))[7d:1h])",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time(sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))[7d:1h])",
           "legendFormat": "7-Day Average",
           "refId": "B"
         },
         {
-          "datasource": "Prometheus",
-          "expr": "avg_over_time(sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m]))[7d:1h]) * 0.5",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg_over_time(sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))[7d:1h]) * 0.5",
           "legendFormat": "50% of Average (Alert Threshold)",
           "refId": "C"
         }
@@ -915,7 +1011,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Availability status of critical dependencies",
       "fieldConfig": {
         "defaults": {
@@ -984,7 +1083,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "up{job=~\"postgres|redis|openfga|keycloak\"}",
           "format": "table",
           "instant": true,
@@ -1017,7 +1119,10 @@
       "type": "table"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "P95 response time for critical dependencies",
       "fieldConfig": {
         "defaults": {
@@ -1096,7 +1201,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "histogram_quantile(0.95, rate(dependency_request_duration_seconds_bucket{job=~\"postgres|redis|openfga\"}[5m])) * 1000",
           "legendFormat": "{{ job }}",
           "refId": "A"
@@ -1119,7 +1227,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "CPU utilization percentage",
       "fieldConfig": {
         "defaults": {
@@ -1205,8 +1316,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "rate(process_cpu_seconds_total{job=\"mcp-server-langgraph\"}[5m]) * 100",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "rate(process_cpu_seconds_total{job=\"langgraph-agent\"}[5m]) * 100",
           "legendFormat": "CPU Utilization",
           "refId": "A"
         }
@@ -1215,7 +1329,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Memory utilization percentage",
       "fieldConfig": {
         "defaults": {
@@ -1301,8 +1418,11 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "(\n  process_resident_memory_bytes{job=\"mcp-server-langgraph\"}\n  / node_memory_MemTotal_bytes\n  * 100\n)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(\n  process_resident_memory_bytes{job=\"langgraph-agent\"}\n  / node_memory_MemTotal_bytes\n  * 100\n)",
           "legendFormat": "Memory Utilization",
           "refId": "A"
         }
@@ -1324,7 +1444,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Predicted uptime in 24 hours based on current 4-hour trend",
       "fieldConfig": {
         "defaults": {
@@ -1409,14 +1532,20 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "(\n  sum(up{job=\"mcp-server-langgraph\"})\n  / count(up{job=\"mcp-server-langgraph\"})\n  * 100\n)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(\n  sum(up{job=\"langgraph-agent\"})\n  / count(up{job=\"langgraph-agent\"})\n  * 100\n)",
           "legendFormat": "Current Uptime",
           "refId": "A"
         },
         {
-          "datasource": "Prometheus",
-          "expr": "predict_linear(\n  sum(up{job=\"mcp-server-langgraph\"})\n  / count(up{job=\"mcp-server-langgraph\"})\n  * 100 [4h], 24 * 3600\n)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "predict_linear(\n  sum(up{job=\"langgraph-agent\"})\n  / count(up{job=\"langgraph-agent\"})\n  * 100 [4h], 24 * 3600\n)",
           "legendFormat": "Predicted Uptime (24h)",
           "refId": "B"
         }
@@ -1435,7 +1564,27 @@
     "langgraph-agent"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Mimir",
+          "value": "mimir"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-6h",
