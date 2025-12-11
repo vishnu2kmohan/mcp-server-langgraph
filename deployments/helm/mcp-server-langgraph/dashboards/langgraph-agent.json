@@ -15,17 +15,24 @@
       }
     ]
   },
+  "description": "Main overview dashboard for MCP Server with LangGraph. Shows service health, request rates, error rates, response times, and resource utilization. Start here for overall system health then drill down to specialized dashboards.",
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
-  "links": [],
+  "links": [
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "LLM Performance", "tooltip": "View LLM Performance Dashboard", "type": "link", "url": "/d/llm-performance/llm-performance" },
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Authentication", "tooltip": "View Authentication Dashboard", "type": "link", "url": "/d/authentication/authentication" },
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "OpenFGA", "tooltip": "View OpenFGA Authorization Dashboard", "type": "link", "url": "/d/openfga/openfga" },
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Playground", "tooltip": "View Playground Dashboard", "type": "link", "url": "/d/playground/playground" },
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Builder", "tooltip": "View Builder Dashboard", "type": "link", "url": "/d/builder/builder" }
+  ],
   "liveNow": false,
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -73,7 +80,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "up{job=\"langgraph-agent\"}",
           "refId": "A"
@@ -85,7 +92,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -160,7 +167,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "rate(agent_tool_calls_total[5m])",
           "legendFormat": "{{tool}}",
@@ -173,7 +180,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -248,7 +255,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "rate(agent_calls_failed_total[5m]) / (rate(agent_calls_successful_total[5m]) + rate(agent_calls_failed_total[5m]))",
           "legendFormat": "Error Rate",
@@ -261,7 +268,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -344,7 +351,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.50, rate(agent_response_duration_bucket[5m]))",
           "legendFormat": "p50",
@@ -353,7 +360,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.95, rate(agent_response_duration_bucket[5m]))",
           "legendFormat": "p95",
@@ -362,7 +369,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, rate(agent_response_duration_bucket[5m]))",
           "legendFormat": "p99",
@@ -375,7 +382,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -450,7 +457,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "container_memory_working_set_bytes{pod=~\"langgraph-agent-.*\"} / container_spec_memory_limit_bytes{pod=~\"langgraph-agent-.*\"}",
           "legendFormat": "{{pod}}",
@@ -463,7 +470,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -538,7 +545,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "rate(container_cpu_usage_seconds_total{pod=~\"langgraph-agent-.*\"}[5m]) / container_spec_cpu_quota{pod=~\"langgraph-agent-.*\"}",
           "legendFormat": "{{pod}}",
@@ -551,7 +558,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -657,7 +664,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "increase(agent_calls_successful_total[5m])",
           "legendFormat": "Successful",
@@ -666,7 +673,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "increase(agent_calls_failed_total[5m])",
           "legendFormat": "Failed",
@@ -682,7 +689,9 @@
   "style": "dark",
   "tags": ["langgraph", "mcp", "agent"],
   "templating": {
-    "list": []
+    "list": [
+      { "current": { "selected": false, "text": "Prometheus", "value": "prometheus" }, "hide": 0, "includeAll": false, "label": "Data Source", "multi": false, "name": "datasource", "options": [], "query": "prometheus", "queryValue": "", "refresh": 1, "regex": "", "skipUrlSync": false, "type": "datasource" }
+    ]
   },
   "time": {
     "from": "now-1h",
