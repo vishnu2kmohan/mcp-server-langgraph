@@ -1,0 +1,66 @@
+# OpenShift Security Context Patch for MCP Server
+# ================================================
+# Configures the MCP Server deployment for OpenShift restricted-v2 SCC.
+#
+# Key changes from base:
+# - runAsUser: removed (OpenShift assigns arbitrary UID)
+# - runAsGroup: 0 (root group for file access with g=u permissions)
+# - fsGroup: 0 (root group for volume ownership)
+#
+# The Dockerfile uses UID 1001 with GID 0 and g=u permissions,
+# allowing any UID assigned by OpenShift to access files.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server-langgraph
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        # runAsUser omitted - OpenShift assigns arbitrary UID
+        runAsGroup: 0  # Root group for file access
+        fsGroup: 0     # Root group for volume ownership
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: wait-for-openfga
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            # runAsUser omitted - OpenShift assigns arbitrary UID
+            runAsGroup: 0
+            capabilities:
+              drop:
+                - ALL
+        - name: wait-for-keycloak
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsGroup: 0
+            capabilities:
+              drop:
+                - ALL
+        - name: wait-for-redis
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsGroup: 0
+            capabilities:
+              drop:
+                - ALL
+      containers:
+        - name: mcp-server-langgraph
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            # runAsUser omitted - OpenShift assigns arbitrary UID
+            runAsGroup: 0
+            capabilities:
+              drop:
+                - ALL

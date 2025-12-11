@@ -35,17 +35,35 @@ def mcp_url() -> str:
 
 
 @pytest.fixture
-def mcp_client(mcp_url: str):
+async def mcp_client(mcp_url: str):
     """Create MCP client for testing."""
+    import httpx
+
     from mcp_server_langgraph.playground.mcp.client import MCPClient
+
+    # Verify MCP server is reachable before creating client
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, timeout=5.0) as client:
+            await client.get(f"{mcp_url}/health")
+    except (httpx.ConnectError, httpx.ConnectTimeout, OSError) as e:
+        pytest.skip(f"MCP server not available: {e}")
 
     return MCPClient(base_url=mcp_url, timeout=30.0)
 
 
 @pytest.fixture
-def streaming_client(mcp_url: str):
+async def streaming_client(mcp_url: str):
     """Create streaming MCP client for testing."""
+    import httpx
+
     from mcp_server_langgraph.playground.mcp.client import MCPStreamingClient
+
+    # Verify MCP server is reachable before creating client
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, timeout=5.0) as client:
+            await client.get(f"{mcp_url}/health")
+    except (httpx.ConnectError, httpx.ConnectTimeout, OSError) as e:
+        pytest.skip(f"MCP server not available: {e}")
 
     return MCPStreamingClient(base_url=mcp_url, timeout=60.0)
 
@@ -63,9 +81,13 @@ class TestMCPServerConnection:
         """Test that MCP server is healthy."""
         import httpx
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{mcp_url}/health")
-            assert response.status_code == 200
+        # Use follow_redirects=True to handle 307 redirects (FastAPI redirects /health to /health/)
+        try:
+            async with httpx.AsyncClient(follow_redirects=True) as client:
+                response = await client.get(f"{mcp_url}/health")
+                assert response.status_code == 200
+        except (httpx.ConnectError, httpx.ConnectTimeout, OSError) as e:
+            pytest.skip(f"MCP server not available: {e}")
 
     @pytest.mark.asyncio
     async def test_initialize_returns_server_info(self, mcp_client) -> None:
@@ -133,9 +155,18 @@ class TestMCPBridgeIntegration:
         gc.collect()
 
     @pytest.fixture
-    def bridge(self, mcp_url: str):
+    async def bridge(self, mcp_url: str):
         """Create PlaygroundMCPBridge."""
+        import httpx
+
         from mcp_server_langgraph.playground.mcp.integration import PlaygroundMCPBridge
+
+        # Verify MCP server is reachable before creating bridge
+        try:
+            async with httpx.AsyncClient(follow_redirects=True, timeout=5.0) as client:
+                await client.get(f"{mcp_url}/health")
+        except (httpx.ConnectError, httpx.ConnectTimeout, OSError) as e:
+            pytest.skip(f"MCP server not available: {e}")
 
         return PlaygroundMCPBridge(mcp_url=mcp_url)
 

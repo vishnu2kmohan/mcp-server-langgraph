@@ -39,7 +39,7 @@ class TestRedisSessionManager:
         """Test that creating a session stores it in Redis."""
         from mcp_server_langgraph.playground.session.manager import RedisSessionManager
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(return_value=None)  # Container for configured methods
         mock_redis.setex = AsyncMock(return_value=True)
         mock_redis.get = AsyncMock(return_value=None)
 
@@ -57,7 +57,7 @@ class TestRedisSessionManager:
         """Test that getting a session retrieves it from Redis."""
         from mcp_server_langgraph.playground.session.manager import RedisSessionManager
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(return_value=None)  # Container for configured methods
         # Mock stored session data
         stored_data = {
             "session_id": "test-session-123",
@@ -85,7 +85,7 @@ class TestRedisSessionManager:
         """Test that getting a nonexistent session returns None."""
         from mcp_server_langgraph.playground.session.manager import RedisSessionManager
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(return_value=None)  # Container for configured methods
         mock_redis.get = AsyncMock(return_value=None)
 
         manager = RedisSessionManager(redis_client=mock_redis)
@@ -100,7 +100,7 @@ class TestRedisSessionManager:
         """Test that deleting a session removes it from Redis."""
         from mcp_server_langgraph.playground.session.manager import RedisSessionManager
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(return_value=None)  # Container for configured methods
         # get returns None (session has no user_id to clean up)
         mock_redis.get = AsyncMock(return_value=None)
         mock_redis.delete = AsyncMock(return_value=1)
@@ -118,7 +118,7 @@ class TestRedisSessionManager:
         """Test that sessions have TTL set in Redis."""
         from mcp_server_langgraph.playground.session.manager import RedisSessionManager
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(return_value=None)  # Container for configured methods
         mock_redis.setex = AsyncMock(return_value=True)
         mock_redis.get = AsyncMock(return_value=None)
 
@@ -137,7 +137,7 @@ class TestRedisSessionManager:
         """Test adding a message to session history."""
         from mcp_server_langgraph.playground.session.manager import RedisSessionManager
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(return_value=None)  # Container for configured methods
         stored_data = {
             "session_id": "test-session-123",
             "name": "Test",
@@ -168,7 +168,7 @@ class TestRedisSessionManager:
         """Test listing sessions for a user."""
         from mcp_server_langgraph.playground.session.manager import RedisSessionManager
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(return_value=None)  # Container for configured methods
         # Mock Redis SCAN for keys matching pattern
         mock_redis.scan = AsyncMock(return_value=(0, [b"session:user:alice:1", b"session:user:alice:2"]))
 
@@ -204,7 +204,7 @@ class TestRedisSessionManager:
         """Test that updating a session refreshes its TTL."""
         from mcp_server_langgraph.playground.session.manager import RedisSessionManager
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(return_value=None)  # Container for configured methods
         stored_data = {
             "session_id": "test-session-123",
             "name": "Test",
@@ -309,7 +309,7 @@ class TestSessionManagerConnectionHandling:
         """Test graceful handling of Redis connection errors."""
         from mcp_server_langgraph.playground.session.manager import RedisSessionManager
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(return_value=None)  # Container for configured methods
         mock_redis.get = AsyncMock(side_effect=ConnectionError("Redis unavailable"))
 
         manager = RedisSessionManager(redis_client=mock_redis)
@@ -326,7 +326,7 @@ class TestSessionManagerConnectionHandling:
 
         # Mock the redis.asyncio.from_url
         with patch("redis.asyncio.from_url") as mock_from_url:
-            mock_pool = AsyncMock()
+            mock_pool = AsyncMock(return_value=None)  # Container for pool methods
             mock_from_url.return_value = mock_pool
 
             _pool = await create_redis_pool("redis://localhost:6379/2")
@@ -342,8 +342,8 @@ class TestSessionManagerConnectionHandling:
         """Test graceful shutdown closes Redis connections."""
         from mcp_server_langgraph.playground.session.manager import RedisSessionManager
 
-        mock_redis = AsyncMock()
-        mock_redis.close = AsyncMock()
+        mock_redis = AsyncMock(return_value=None)  # Container for configured methods
+        mock_redis.close = AsyncMock(return_value=None)
 
         manager = RedisSessionManager(redis_client=mock_redis)
 

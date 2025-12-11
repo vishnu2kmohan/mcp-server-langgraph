@@ -226,18 +226,21 @@ class TestHealthCheckEndpoints:
 
     @patch("mcp_server_langgraph.health.checks.settings")
     def test_prometheus_metrics_endpoint(self, mock_settings: MagicMock, test_client: TestClient) -> None:
-        """Test Prometheus metrics endpoint"""
+        """Test Prometheus metrics endpoint returns Prometheus text format"""
         mock_settings.service_version = "1.0.0"
         mock_settings.service_name = "mcp-server-langgraph"
 
         response = test_client.get("/metrics/prometheus")
 
         assert response.status_code == 200
-        data = response.json()
+        # Prometheus metrics are returned as text/plain, not JSON
+        data = response.text
 
-        # Verify metrics format
-        assert "langgraph_agent_info" in str(data)
-        assert "version" in str(data)
+        # Verify Prometheus text exposition format with expected metrics
+        assert "# HELP" in data  # Prometheus format includes HELP lines
+        assert "# TYPE" in data  # Prometheus format includes TYPE lines
+        # Check for key application metrics
+        assert "agent_memory_bytes" in data or "python_info" in data
 
 
 @pytest.mark.integration

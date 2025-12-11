@@ -36,7 +36,7 @@ def output_verifier():
     )
 
     # Mock the LLM
-    verifier.llm = AsyncMock()
+    verifier.llm = AsyncMock(return_value=None)  # Container for configured methods
 
     return verifier
 

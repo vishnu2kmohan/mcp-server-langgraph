@@ -1,0 +1,87 @@
+# Grafana Tempo Configuration for MCP Server LangGraph Test Environment
+# ======================================================================
+# Replaces Jaeger for distributed tracing.
+# Uses local storage for simplicity in test/dev environments.
+#
+# Reference: https://grafana.com/docs/tempo/latest/
+#
+# Key Features:
+#   - OTLP native (gRPC and HTTP)
+#   - Jaeger, Zipkin protocol compatibility
+#   - Local filesystem storage (no S3/GCS needed for testing)
+#   - Integrated with Grafana via datasource
+
+# Server configuration
+server:
+  http_listen_port: 3200
+  grpc_listen_port: 9095
+  log_level: warn
+
+# Distributor configuration
+distributor:
+  receivers:
+    # OTLP gRPC receiver (OpenTelemetry native)
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+    # Jaeger protocol support (backward compatibility)
+    jaeger:
+      protocols:
+        thrift_http:
+          endpoint: 0.0.0.0:14268
+        grpc:
+          endpoint: 0.0.0.0:14250
+        thrift_compact:
+          endpoint: 0.0.0.0:6831
+
+# Ingester configuration
+ingester:
+  trace_idle_period: 10s
+  max_block_bytes: 1048576  # 1MB
+  max_block_duration: 5m
+
+# Compactor configuration
+compactor:
+  compaction:
+    block_retention: 168h  # 7 days for persistent storage
+
+# Storage configuration - local filesystem
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/traces
+    wal:
+      path: /var/tempo/wal
+    pool:
+      max_workers: 10
+      queue_depth: 100
+
+# Metrics generator (optional, for span metrics)
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+      cluster: test
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://mimir:9009/api/v1/push
+        send_exemplars: true
+
+# Query frontend configuration
+query_frontend:
+  search:
+    duration_slo: 5s
+    throughput_bytes_slo: 1073741824  # 1GB
+
+# Overrides configuration
+overrides:
+  defaults:
+    metrics_generator:
+      processors:
+        - service-graphs
+        - span-metrics

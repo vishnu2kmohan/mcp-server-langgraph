@@ -1530,8 +1530,23 @@ async def list_resources() -> dict[str, Any]:
 
 # Include health check routes
 from mcp_server_langgraph.health.checks import app as health_app  # noqa: E402
+from mcp_server_langgraph.health.checks import prometheus_metrics  # noqa: E402
 
 app.mount("/health", health_app)
+
+
+# Root-level metrics endpoint for Prometheus/Alloy scraping
+# This is required because Alloy scrapes /metrics by default
+@app.get("/metrics")
+async def root_metrics() -> Any:
+    """
+    Root-level Prometheus metrics endpoint.
+
+    Alloy scrapes /metrics by default. This endpoint redirects to the
+    health app's metrics endpoint for consistency.
+    """
+    return await prometheus_metrics()
+
 
 from mcp_server_langgraph.api.api_keys import router as api_keys_router  # noqa: E402
 from mcp_server_langgraph.api.gdpr import router as gdpr_router  # noqa: E402

@@ -1,0 +1,219 @@
+name: Build Alembic Image
+
+# ==============================================================================
+# Alembic Migration Image Build Workflow
+# ==============================================================================
+#
+# This workflow builds and pushes the Alembic database migration image.
+# This is a minimal image (~185MB) used for running database migrations.
+#
+# Triggers:
+# - Push to main (when Dockerfile.alembic or migrations change)
+# - Manual dispatch (for ad-hoc builds)
+# - Weekly schedule (to get security updates)
+#
+# The image is pushed to:
+# - Preview/Dev: ghcr.io/vishnu2kmohan/mcp-alembic (GHCR)
+# - Production: Promoted from GHCR to cloud-specific registries
+#
+# Note: This is a run-once container (no health endpoint).
+# Verification is done by running `alembic current` to check DB connection.
+# ==============================================================================
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker/Dockerfile.alembic'
+      - 'migrations/**'
+      - 'alembic.ini'
+      - '.github/workflows/build-alembic-image.yaml'
+
+  # Weekly rebuild to pick up base image security updates
+  schedule:
+    - cron: '0 7 * * 1'  # Every Monday at 7 AM UTC
+
+  workflow_dispatch:
+    inputs:
+      push_to_production:
+        description: 'Also push to production registry'
+        type: boolean
+        default: false
+
+concurrency:
+  group: build-alembic-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
+
+permissions:
+  contents: read
+  packages: write  # Required for pushing to GHCR
+  security-events: write  # Required for SARIF upload to GitHub Security tab
+
+jobs:
+  build-and-push:
+    name: Build Alembic Image
+    runs-on: ubuntu-latest
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    timeout-minutes: 20
+
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Validate Dockerfile exists
+        run: |
+          if [ ! -f docker/Dockerfile.alembic ]; then
+            echo "::error::Dockerfile.alembic not found"
+            exit 1
+          fi
+          echo "✅ Dockerfile.alembic found"
+
+      # Authenticate to GitHub Container Registry using GITHUB_TOKEN
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: ./.github/actions/setup-docker-buildx
+
+      # Generate image metadata (tags, labels)
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-alembic
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+            type=ref,event=branch
+          labels: |
+            org.opencontainers.image.title=MCP Alembic Migrations
+            org.opencontainers.image.description=Database migration runner for MCP Server LangGraph
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      # Build and push to GHCR
+      - name: Build and push Alembic image
+        id: build
+        uses: docker/build-push-action@v6.18.0
+        with:
+          context: .
+          file: docker/Dockerfile.alembic
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-alembic:latest
+          cache-to: |
+            type=inline
+          provenance: true
+          sbom: true
+
+      - name: Output image info
+        run: |
+          echo "## Alembic Image Built Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Digest:** ${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.meta.outputs.tags }}' | tr ',' '\n' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+
+  # Verify the built image works
+  verify-image:
+    name: Verify Image
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    timeout-minutes: 10
+
+    services:
+      # Start a PostgreSQL instance for migration verification
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mcp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # Authenticate to GHCR for pulling the image
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull and verify image
+        run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-alembic:latest"
+
+          echo "Pulling image: $IMAGE"
+          docker pull "$IMAGE"
+
+          echo ""
+          echo "Verifying alembic can connect to database..."
+          # Run alembic current to verify DB connection and migration state
+          docker run --rm \
+            --network host \
+            -e POSTGRES_HOST=localhost \
+            -e POSTGRES_PORT=5432 \
+            -e POSTGRES_DB=mcp_test \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            "$IMAGE" alembic current || {
+              echo "Alembic current check failed"
+              exit 1
+            }
+
+          echo ""
+          echo "Running alembic upgrade head..."
+          docker run --rm \
+            --network host \
+            -e POSTGRES_HOST=localhost \
+            -e POSTGRES_PORT=5432 \
+            -e POSTGRES_DB=mcp_test \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            "$IMAGE" alembic upgrade head || {
+              echo "Alembic upgrade failed"
+              exit 1
+            }
+
+          echo ""
+          echo "✅ Image verification passed - migrations ran successfully"
+
+      - name: Security scan with Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: 'ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-alembic:latest'
+          format: 'sarif'
+          output: 'trivy-alembic-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: 'trivy-alembic-results.sarif'

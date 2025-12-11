@@ -190,22 +190,27 @@ class TestBuilderValidationJourney:
         """Test that valid workflows pass validation."""
         import httpx
 
+        # WorkflowDefinition model expects: name, entry_point, nodes, edges
+        # Edges use "from"/"to" instead of "source"/"target"
         valid_workflow = {
+            "name": "TestWorkflow",
+            "entry_point": "agent",
             "nodes": [
                 {"id": "start", "type": "start"},
                 {"id": "agent", "type": "agent", "data": {"name": "Test"}},
                 {"id": "end", "type": "end"},
             ],
             "edges": [
-                {"source": "start", "target": "agent"},
-                {"source": "agent", "target": "end"},
+                {"from": "start", "to": "agent"},
+                {"from": "agent", "to": "end"},
             ],
         }
 
         async with httpx.AsyncClient() as client:
+            # API expects {"workflow": {...}} wrapper
             response = await client.post(
                 f"{builder_url}/api/builder/validate",
-                json=valid_workflow,
+                json={"workflow": valid_workflow},
                 headers=auth_headers,
             )
 
@@ -233,9 +238,10 @@ class TestBuilderValidationJourney:
         }
 
         async with httpx.AsyncClient() as client:
+            # API expects {"workflow": {...}} wrapper
             response = await client.post(
                 f"{builder_url}/api/builder/validate",
-                json=invalid_workflow,
+                json={"workflow": invalid_workflow},
                 headers=auth_headers,
             )
 

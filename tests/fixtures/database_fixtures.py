@@ -18,6 +18,7 @@ import os
 
 import pytest
 
+from tests.constants import TEST_REDIS_PORT
 from tests.utils.worker_utils import (
     get_worker_openfga_store,
     get_worker_postgres_schema,
@@ -113,9 +114,11 @@ async def redis_client_real(integration_test_env):
     except ImportError:
         pytest.skip("redis not installed")
 
+    # Use TEST_REDIS_PORT (9379) as default instead of standard 6379
+    # This ensures tests connect to the test infrastructure (docker-compose.test.yml)
     client = redis.Redis(
         host=os.getenv("REDIS_HOST", "localhost"),
-        port=int(os.getenv("REDIS_PORT", "6379")),
+        port=int(os.getenv("REDIS_PORT", str(TEST_REDIS_PORT))),
         decode_responses=True,
     )
 
@@ -127,9 +130,15 @@ async def redis_client_real(integration_test_env):
 
     yield client
 
-    # Cleanup test data
-    await client.flushdb()
-    await client.aclose()
+    # Cleanup test data - ignore errors if connection already closed during teardown
+    try:
+        await client.flushdb()
+    except Exception:
+        pass  # Connection may be closed during CI cleanup
+    try:
+        await client.aclose()
+    except Exception:
+        pass  # Already closed
 
 
 @pytest.fixture(scope="session")
@@ -224,9 +233,16 @@ async def openfga_client_real(integration_test_env, test_infrastructure_ports):
                 )
                 pytest.skip(error_msg)
 
-    return client
+    yield client
 
-    # Cleanup happens per-test
+    # Session-level cleanup: Close OpenFGA client to prevent aiohttp session leaks
+    # Per-test cleanup (tuple deletion) happens in openfga_client_clean fixture
+    logging.info("Closing OpenFGA client session...")
+    try:
+        await client.close()
+        logging.debug("OpenFGA client closed successfully")
+    except Exception as e:
+        logging.warning(f"Error closing OpenFGA client: {e}")
 
 
 # =============================================================================
@@ -510,8 +526,10 @@ async def db_pool_gdpr(integration_test_env):
 @pytest.fixture(scope="session")
 def qdrant_available():
     """Check if Qdrant is available for testing."""
+    from tests.constants import TEST_QDRANT_PORT
+
     qdrant_url = os.getenv("QDRANT_URL", "localhost")
-    qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
+    qdrant_port = int(os.getenv("QDRANT_PORT", str(TEST_QDRANT_PORT)))
 
     try:
         import httpx
@@ -531,8 +549,10 @@ def qdrant_client():
     except ImportError:
         pytest.skip("Qdrant client not installed")
 
+    from tests.constants import TEST_QDRANT_PORT
+
     qdrant_url = os.getenv("QDRANT_URL", "localhost")
-    qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
+    qdrant_port = int(os.getenv("QDRANT_PORT", str(TEST_QDRANT_PORT)))
 
     # Check if Qdrant is available
     try:

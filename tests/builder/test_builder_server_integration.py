@@ -131,17 +131,6 @@ class TestBuilderServerKeycloakAuth:
         """Test that /api/builder/generate requires valid Keycloak token."""
         from mcp_server_langgraph.builder.api.server import app
 
-        # Create a test app with auth middleware
-        test_app = FastAPI()
-
-        # Import the router instead of app to mount with middleware
-        from mcp_server_langgraph.builder.api.server import (
-            root,
-        )
-
-        # Add routes without auth dependency (we'll use middleware)
-        test_app.get("/")(root)
-
         # Test without auth middleware first (should fail in production mode)
         client = TestClient(app)
 
@@ -208,7 +197,7 @@ class TestBuilderServerOpenFGAAuth:
     async def test_generate_code_checks_openfga_permission(self) -> None:
         """Test that code generation checks OpenFGA 'builder:execute' permission."""
         # Setup mock OpenFGA client
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)  # Container for configured methods
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # This test validates the integration pattern - actual implementation
@@ -220,7 +209,7 @@ class TestBuilderServerOpenFGAAuth:
     async def test_unauthorized_user_cannot_generate_code(self) -> None:
         """Test that user without 'builder:execute' permission cannot generate code."""
         # Setup mock OpenFGA client that denies permission
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)  # Container for configured methods
         mock_openfga.check_permission = AsyncMock(return_value=False)
 
         # When OpenFGA returns False, endpoint should return 403

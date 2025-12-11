@@ -1,0 +1,446 @@
+// Grafana Alloy Configuration for MCP Server LangGraph Test Environment
+// ======================================================================
+// Unified telemetry collector for the Grafana LGTM stack:
+//   - Logs -> Loki
+//   - Metrics -> Mimir (Prometheus-compatible)
+//   - Traces -> Tempo
+//
+// Runs as non-root (UID 473) for enhanced security.
+// Reference: https://grafana.com/docs/alloy/latest/
+
+// =============================================================================
+// LOGGING CONFIGURATION
+// =============================================================================
+
+logging {
+  level  = "warn"
+  format = "logfmt"
+}
+
+// =============================================================================
+// OTLP RECEIVER (OpenTelemetry Protocol)
+// =============================================================================
+// Receives traces, metrics, and logs from applications via OTLP
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.batch.default.input]
+    traces  = [otelcol.processor.batch.default.input]
+  }
+}
+
+// =============================================================================
+// OTLP BATCH PROCESSOR
+// =============================================================================
+
+otelcol.processor.batch "default" {
+  output {
+    metrics = [otelcol.exporter.prometheus.mimir.input]
+    logs    = [otelcol.exporter.loki.default.input]
+    traces  = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+// =============================================================================
+// OTLP EXPORTERS
+// =============================================================================
+
+// Export traces to Tempo
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls {
+      insecure = true
+    }
+  }
+}
+
+// Export metrics to Mimir (Prometheus remote write)
+otelcol.exporter.prometheus "mimir" {
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+// Export OTLP logs to Loki
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+// =============================================================================
+// PROMETHEUS REMOTE WRITE TO MIMIR
+// =============================================================================
+
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "http://mimir:9009/api/v1/push"
+  }
+}
+
+// =============================================================================
+// DOCKER DISCOVERY (for container logs and metrics)
+// =============================================================================
+
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+
+  filter {
+    name   = "network"
+    values = ["mcp-test-network"]
+  }
+}
+
+// =============================================================================
+// RELABELING
+// =============================================================================
+
+discovery.relabel "docker_containers" {
+  targets = discovery.docker.containers.targets
+
+  // Use container name as label (strip leading slash)
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.+)"
+    target_label  = "container"
+  }
+
+  // Use Docker Compose service name if available
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+
+  // Use Docker Compose project name if available
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "project"
+  }
+
+  // Extract image name
+  rule {
+    source_labels = ["__meta_docker_container_image"]
+    target_label  = "image"
+  }
+
+  // Keep container ID for correlation with traces
+  rule {
+    source_labels = ["__meta_docker_container_id"]
+    target_label  = "container_id"
+  }
+}
+
+// =============================================================================
+// DOCKER LOG SOURCE
+// =============================================================================
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.docker_containers.output
+  forward_to = [loki.process.json_logs.receiver]
+
+  refresh_interval = "5s"
+}
+
+// =============================================================================
+// LOG PROCESSING PIPELINE
+// =============================================================================
+
+loki.process "json_logs" {
+  forward_to = [loki.write.loki.receiver]
+
+  // Stage 1: Parse JSON logs (common for our services)
+  stage.json {
+    expressions = {
+      level     = "level",
+      message   = "message",
+      timestamp = "timestamp",
+      logger    = "logger",
+      trace_id  = "trace_id",
+      span_id   = "span_id",
+    }
+  }
+
+  // Stage 2: Extract labels from parsed JSON
+  stage.labels {
+    values = {
+      level    = "",
+      logger   = "",
+      trace_id = "",
+      span_id  = "",
+    }
+  }
+
+  // Stage 3: Handle non-JSON logs - extract level from plain text
+  stage.regex {
+    expression = "(?P<level_fallback>(DEBUG|INFO|WARNING|ERROR|CRITICAL))"
+  }
+
+  // Stage 4: Use fallback level if JSON parsing didn't find one
+  stage.label_drop {
+    values = ["level_fallback"]
+  }
+
+  // Stage 5: Normalize log levels to lowercase
+  stage.template {
+    source   = "level"
+    template = "{{ ToLower .Value }}"
+  }
+
+  // Stage 6: Parse timestamp from log if available
+  stage.timestamp {
+    source = "timestamp"
+    format = "RFC3339"
+    fallback_formats = [
+      "RFC3339Nano",
+      "UnixMs",
+    ]
+    action_on_failure = "skip"
+  }
+
+  // Stage 7: Use message field as log line
+  stage.output {
+    source = "message"
+  }
+}
+
+// =============================================================================
+// LOKI OUTPUT
+// =============================================================================
+
+loki.write "loki" {
+  endpoint {
+    url       = "http://loki:3100/loki/api/v1/push"
+    tenant_id = "test"
+  }
+}
+
+// =============================================================================
+// PROMETHEUS SCRAPE (for service metrics)
+// =============================================================================
+
+// Static targets for infrastructure services with known metrics endpoints
+// These services expose Prometheus metrics on specific ports/paths
+
+prometheus.scrape "qdrant" {
+  targets = [{
+    __address__ = "qdrant:6333",
+    service     = "qdrant-test",
+    job         = "qdrant",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "traefik" {
+  targets = [{
+    __address__ = "traefik-gateway:8080",
+    service     = "traefik-gateway",
+    job         = "traefik",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "keycloak" {
+  targets = [{
+    __address__ = "keycloak:9000",
+    service     = "keycloak-test",
+    job         = "keycloak",
+  }]
+  // Keycloak 26.x exposes metrics on the management interface at /authn/metrics
+  // The path includes the KC_HTTP_RELATIVE_PATH prefix (/authn) which also
+  // applies to the management interface (http-management-relative-path)
+  metrics_path = "/authn/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "openfga" {
+  targets = [{
+    __address__ = "openfga:2112",
+    service     = "openfga-test",
+    job         = "openfga",
+  }]
+  // OpenFGA exposes Prometheus metrics on dedicated metrics port 2112
+  // Reference: https://openfga.dev/docs/getting-started/setup-openfga/configure-openfga
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+// =============================================================================
+// DATABASE EXPORTERS
+// =============================================================================
+// Redis and PostgreSQL don't expose /metrics directly - use dedicated exporters
+
+prometheus.scrape "redis" {
+  targets = [{
+    __address__ = "redis-exporter:9121",
+    service     = "redis-test",
+    job         = "redis",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "postgres" {
+  targets = [{
+    __address__ = "postgres-exporter:9187",
+    service     = "postgres-test",
+    job         = "postgres",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+// =============================================================================
+// LGTM STACK SELF-MONITORING
+// =============================================================================
+// Scrape internal metrics from LGTM components for the LGTM Self-Monitoring dashboard
+
+prometheus.scrape "loki" {
+  targets = [{
+    __address__ = "loki:3100",
+    service     = "loki-test",
+    job         = "loki",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "tempo" {
+  targets = [{
+    __address__ = "tempo:3200",
+    service     = "tempo-test",
+    job         = "tempo",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "mimir" {
+  targets = [{
+    __address__ = "mimir:9009",
+    service     = "mimir-test",
+    job         = "mimir",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "grafana" {
+  targets = [{
+    __address__ = "grafana:3000",
+    service     = "grafana-test",
+    job         = "grafana",
+  }]
+  // Grafana runs with GF_SERVER_SERVE_FROM_SUB_PATH=true and subpath /dashboards/
+  // so metrics are exposed at /dashboards/metrics instead of /metrics
+  metrics_path = "/dashboards/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "alloy" {
+  targets = [{
+    __address__ = "localhost:12345",
+    service     = "alloy-test",
+    job         = "alloy",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+// MCP Application services (dynamic discovery as fallback)
+prometheus.scrape "mcp_services" {
+  targets = discovery.relabel.docker_containers.output
+
+  forward_to = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+
+  // Only scrape containers with metrics port exposed
+  honor_labels = true
+}
+
+// =============================================================================
+// MCP APPLICATION SERVICES (Explicit targets for dashboard compatibility)
+// =============================================================================
+// These scrape targets use job labels that match the Grafana dashboards
+
+prometheus.scrape "langgraph_agent" {
+  targets = [{
+    __address__ = "mcp-server-test:8000",
+    service     = "mcp-server-test",
+    job         = "langgraph-agent",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "mcp_builder" {
+  targets = [{
+    __address__ = "builder-test:8001",
+    service     = "mcp-builder-test",
+    job         = "mcp-builder",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "mcp_playground" {
+  targets = [{
+    __address__ = "playground-test:8002",
+    service     = "mcp-playground-test",
+    job         = "mcp-playground",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}

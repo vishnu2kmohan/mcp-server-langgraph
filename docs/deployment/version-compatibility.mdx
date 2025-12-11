@@ -1,15 +1,15 @@
 ---
 title: Version Compatibility Matrix
-description: 'Last Updated: 2025-10-14 This document tracks all infrastructure component versions across deployment methods and provides upgrade guidance.'
+description: 'Last Updated: 2025-12-08 This document tracks all infrastructure component versions across deployment methods and provides upgrade guidance.'
 icon: 'rocket'
 seoTitle: "Version Compatibility Matrix - Deployment Guide"
-seoDescription: "Deploy MCP Server: Last Updated: 2025-10-14 This document tracks all infrastructure component versions across deployment methods and provides upgrade guid"
+seoDescription: "Deploy MCP Server: Version compatibility matrix tracking infrastructure component versions across deployment methods with upgrade guidance."
 keywords: ["deployment", "cloud deployment", "MCP Server", "production deployment"]
 contentType: "how-to"
 ---
 
 
-Last Updated: 2025-10-14
+Last Updated: 2025-12-08
 
 This document tracks all infrastructure component versions across deployment methods and provides upgrade guidance.
 
@@ -33,25 +33,32 @@ This document tracks all infrastructure component versions across deployment met
 |---------|-------|-----------------|------------------|---------|
 | **Authorization & Auth** |
 | OpenFGA | `openfga/openfga` | **v1.10.2** | v1.5.0 | 2025-10-14 |
-| Keycloak | `quay.io/keycloak/keycloak` | **26.4.0** | 23.0 | 2025-10-14 |
+| Keycloak | `ghcr.io/vishnu2kmohan/keycloak-optimized` | **26.4.2** | 26.4.0 | 2025-12-08 |
 | **Databases** |
 | PostgreSQL | `postgres` | **16-alpine** | 15-alpine | 2025-10-14 |
 | Redis | `redis` | 7-alpine | 7-alpine | ✓ Current |
-| **Observability** |
+| **Observability (LGTM Stack)** |
+| Grafana Alloy | `grafana/alloy` | **v1.9.0** | N/A (new) | 2025-12-08 |
+| Grafana Loki | `grafana/loki` | **3.5.1** | N/A (new) | 2025-12-08 |
+| Grafana Mimir | `grafana/mimir` | **2.16.1** | N/A (new) | 2025-12-08 |
+| Grafana Tempo | `grafana/tempo` | **2.8.0** | N/A (new) | 2025-12-08 |
+| Grafana | `grafana/grafana` | **11.5.1** | 10.2.3 | 2025-10-14 |
+| **Legacy Observability (deprecated)** |
 | OpenTelemetry Collector | `otel/opentelemetry-collector-contrib` | **0.137.0** | 0.91.0 | 2025-10-14 |
 | Jaeger | `jaegertracing/all-in-one` | **1.74.0** | 1.53.0 | 2025-10-14 |
 | Prometheus | `prom/prometheus` | **v3.2.1** | v2.48.0 | 2025-10-14 |
-| Grafana | `grafana/grafana` | **11.5.1** | 10.2.3 | 2025-10-14 |
 
 #### Kubernetes Base Manifests
 
 | Component | Image | Current Version | Notes |
 |-----------|-------|-----------------|-------|
 | Init Containers | `busybox` | 1.36 | Latest stable |
-| Keycloak | `quay.io/keycloak/keycloak` | **26.4.0** | Updated 2025-10-14 |
+| Keycloak | `ghcr.io/vishnu2kmohan/keycloak-optimized` | **26.4.2** | Updated 2025-12-08 (GHCR optimized image) |
 | Redis Session | `redis` | 7-alpine | Current stable |
 | PostgreSQL | `postgres` | **16-alpine** | New deployment |
 | OpenFGA | `openfga/openfga` | **v1.10.2** | New deployment |
+
+**Note:** Keycloak now uses a pre-optimized GHCR image with `--optimized` mode, enabling `readOnlyRootFilesystem: true` for enhanced security. Health check endpoints are at `/authn/health/*` paths to match the `KC_HTTP_RELATIVE_PATH=/authn` configuration for Traefik gateway routing.
 
 #### Helm Chart Dependencies
 
@@ -338,11 +345,17 @@ helm rollback mcp-server-langgraph 1 --namespace mcp-server-langgraph
 
 | Date | Component | From | To | Notes |
 |------|-----------|------|-----|-------|
+| 2025-12-08 | LGTM Stack | N/A | Added | Migrated to Grafana LGTM (Loki, Grafana, Tempo, Mimir) |
+| 2025-12-08 | Grafana Alloy | N/A | v1.9.0 | Replaces OTEL Collector + Promtail |
+| 2025-12-08 | Grafana Loki | N/A | 3.5.1 | Log aggregation (new) |
+| 2025-12-08 | Grafana Mimir | N/A | 2.16.1 | Replaces Prometheus |
+| 2025-12-08 | Grafana Tempo | N/A | 2.8.0 | Replaces Jaeger |
+| 2025-12-08 | Keycloak | 26.4.0 | 26.4.2 | GHCR optimized image, readOnlyRootFilesystem: true |
 | 2025-10-14 | OpenFGA | v1.5.0 | v1.10.2 | Added PostgreSQL backend |
 | 2025-10-14 | Keycloak | 23.0 | 26.4.0 | Major upgrade, test SSO |
-| 2025-10-14 | OTEL Collector | 0.91.0 | 0.137.0 | Review config schema |
-| 2025-10-14 | Jaeger | 1.53.0 | 1.74.0 | Performance improvements |
+| 2025-10-14 | OTEL Collector | 0.91.0 | 0.137.0 | Review config schema (deprecated - use Alloy) |
+| 2025-10-14 | Jaeger | 1.53.0 | 1.74.0 | Performance improvements (deprecated - use Tempo) |
 | 2025-10-14 | PostgreSQL | 15-alpine | 16-alpine | Added StatefulSet |
-| 2025-10-14 | Prometheus | v2.48.0 | v3.2.1 | Major upgrade, test queries |
+| 2025-10-14 | Prometheus | v2.48.0 | v3.2.1 | Major upgrade, test queries (deprecated - use Mimir) |
 | 2025-10-14 | Grafana | 10.2.3 | 11.5.1 | Test dashboard compatibility |
 | 2025-10-14 | Helm Charts | Various | Updated | All Bitnami charts updated |

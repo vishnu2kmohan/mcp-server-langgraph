@@ -95,7 +95,7 @@ def _create_embeddings(
                 def embed_query(self, text: str) -> list[float]:
                     """Embed a single query."""
                     embedding = self.model.encode(text)
-                    return embedding.tolist()  # type: ignore[no-any-return]
+                    return embedding.tolist()  # type: ignore[no-any-return, unused-ignore]
 
             embeddings = SentenceTransformerEmbeddings(model_name)
 

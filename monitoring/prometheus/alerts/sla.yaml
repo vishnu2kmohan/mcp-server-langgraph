@@ -22,7 +22,7 @@ groups:
           summary: "SLA uptime breach detected"
           description: "System uptime {{ $value | humanizePercentage }} is below SLA target of 99.9% for the last 5 minutes."
           dashboard: "https://grafana.example.com/d/sla/sla-dashboard"
-          runbook: "https://docs.example.com/runbooks/sla-uptime-breach"
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slauotimebreach"
 
       - alert: SLAUptimeAtRisk
         expr: |
@@ -58,7 +58,7 @@ groups:
           summary: "SLA response time breach (p95)"
           description: "API p95 response time {{ $value | humanizeDuration }} exceeds SLA target of 500ms for the last 10 minutes."
           dashboard: "https://grafana.example.com/d/performance/performance-dashboard"
-          runbook: "https://docs.example.com/runbooks/sla-response-time-breach"
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slaresponsetimebreach"
 
       - alert: SLAResponseTimeAtRisk
         expr: |
@@ -109,7 +109,7 @@ groups:
           summary: "SLA error rate breach"
           description: "API error rate {{ $value | humanizePercentage }} exceeds SLA target of 1% for the last 5 minutes."
           dashboard: "https://grafana.example.com/d/errors/error-dashboard"
-          runbook: "https://docs.example.com/runbooks/sla-error-rate-breach"
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slaerrorratebreach"
 
       - alert: SLAErrorRateAtRisk
         expr: |
@@ -245,7 +245,7 @@ groups:
         annotations:
           summary: "Critical dependency down: {{ $labels.job }}"
           description: "Critical dependency {{ $labels.job }} is down, which may impact SLA compliance."
-          runbook: "https://docs.example.com/runbooks/dependency-recovery"
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md"
 
       - alert: SLADependencyDegraded
         expr: |

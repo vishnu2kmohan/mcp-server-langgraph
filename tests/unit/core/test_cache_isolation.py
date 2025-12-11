@@ -81,15 +81,26 @@ class TestCacheIsolation:
         This affects all data in that DB, including API key cache if sharing DB 2.
 
         This test should PASS after replacing flushdb() with pattern-based deletion.
+
+        XDIST FIX: Import CacheService before patching and directly inject mock attributes.
+        This avoids import-time module caching issues under pytest-xdist.
         """
-        # Mock Redis
+        from mcp_server_langgraph.core.cache import CacheService
+
+        # Mock Redis client
         mock_redis = MagicMock()
         mock_redis.keys.return_value = [b"cache:key1", b"cache:key2", b"cache:key3"]
 
-        with patch("mcp_server_langgraph.core.cache.redis.from_url", return_value=mock_redis):
-            from mcp_server_langgraph.core.cache import CacheService
+        # Mock L1 cache (TTLCache-like)
+        mock_l1_cache = MagicMock()
 
-            cache = CacheService(redis_url="redis://localhost:6379", redis_db=2)
+        # Create CacheService with mock injection (bypass __init__)
+        with patch.object(CacheService, "__init__", lambda self, **kwargs: None):
+            cache = CacheService.__new__(CacheService)
+            # Inject required attributes that clear() uses
+            cache.redis = mock_redis
+            cache.redis_available = True
+            cache.l1_cache = mock_l1_cache
 
             # Clear all cache without pattern
             cache.clear()
@@ -100,24 +111,38 @@ class TestCacheIsolation:
                 "Use pattern-based deletion (keys('*') + delete) instead."
             )
 
-            # Should use pattern-based deletion
-            mock_redis.keys.assert_called()  # Should scan for keys
-            if mock_redis.keys.return_value:  # If keys exist
-                mock_redis.delete.assert_called()  # Should delete them
+            # Should clear L1 cache
+            mock_l1_cache.clear.assert_called_once()
+
+            # Should use pattern-based deletion for L2 (Redis)
+            mock_redis.keys.assert_called_with("*")  # Should scan for all keys
+            mock_redis.delete.assert_called_once_with(b"cache:key1", b"cache:key2", b"cache:key3")
 
     def test_cache_service_clear_with_pattern_works(self):
         """
         Verify that cache.clear(pattern="foo:*") works correctly.
 
         This should work both before and after the fix.
+
+        XDIST FIX: Import CacheService before patching and directly inject mock attributes.
+        This avoids import-time module caching issues under pytest-xdist.
         """
+        from mcp_server_langgraph.core.cache import CacheService
+
+        # Mock Redis client
         mock_redis = MagicMock()
         mock_redis.keys.return_value = [b"foo:1", b"foo:2"]
 
-        with patch("mcp_server_langgraph.core.cache.redis.from_url", return_value=mock_redis):
-            from mcp_server_langgraph.core.cache import CacheService
+        # Mock L1 cache (TTLCache-like)
+        mock_l1_cache = MagicMock()
 
-            cache = CacheService(redis_url="redis://localhost:6379", redis_db=2)
+        # Create CacheService with mock injection (bypass __init__)
+        with patch.object(CacheService, "__init__", lambda self, **kwargs: None):
+            cache = CacheService.__new__(CacheService)
+            # Inject required attributes that clear() uses
+            cache.redis = mock_redis
+            cache.redis_available = True
+            cache.l1_cache = mock_l1_cache
 
             # Clear with pattern
             cache.clear(pattern="foo:*")

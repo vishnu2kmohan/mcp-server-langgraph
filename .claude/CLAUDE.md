@@ -63,7 +63,7 @@ async def test_feature():
 - **LLM Providers**: OpenAI, Anthropic, Google (Vertex AI), Azure
 - **Auth**: Keycloak SSO + OpenFGA authorization
 - **Storage**: PostgreSQL + Redis (langgraph-checkpoint-redis)
-- **Observability**: OpenTelemetry + Prometheus + Grafana
+- **Observability**: OpenTelemetry + Grafana LGTM (Loki/Tempo/Mimir/Alloy)
 - **Deployment**: Kubernetes (Helm + Kustomize)
 
 ---

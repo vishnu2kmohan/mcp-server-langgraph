@@ -32,9 +32,10 @@ from mcp_server_langgraph.core.exceptions import (
     LLMRateLimitError,
     LLMTimeoutError,
 )
-from mcp_server_langgraph.resilience.retry import extract_retry_after_from_exception, is_overload_error
+from mcp_server_langgraph.llm.metrics import record_llm_request_duration, record_llm_token_usage
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_timeout
+from mcp_server_langgraph.resilience.retry import extract_retry_after_from_exception, is_overload_error
 
 
 class LLMFactory:
@@ -304,6 +305,10 @@ class LLMFactory:
         Returns:
             AIMessage with the response
         """
+        import time
+
+        start_time = time.perf_counter()
+
         with tracer.start_as_current_span("llm.invoke") as span:
             span.set_attribute("llm.provider", self.provider)
             span.set_attribute("llm.model", self.model_name)
@@ -325,7 +330,18 @@ class LLMFactory:
 
                 content = response.choices[0].message.content  # type: ignore[union-attr]
 
-                # Track metrics
+                # Record LLM metrics
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_llm_request_duration(self.model_name, duration_ms, self.provider)
+
+                if response.usage:  # type: ignore[attr-defined]
+                    record_llm_token_usage(
+                        self.model_name,
+                        response.usage.prompt_tokens or 0,  # type: ignore[attr-defined]
+                        response.usage.completion_tokens or 0,  # type: ignore[attr-defined]
+                    )
+
+                # Track OTel metrics
                 metrics.successful_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
 
                 logger.info(
@@ -339,6 +355,10 @@ class LLMFactory:
                 return AIMessage(content=content)
 
             except Exception as e:
+                # Record failure duration
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_llm_request_duration(self.model_name, duration_ms, self.provider)
+
                 logger.error(
                     f"LLM invocation failed: {e}", extra={"model": self.model_name, "provider": self.provider}, exc_info=True
                 )
@@ -380,6 +400,10 @@ class LLMFactory:
             BulkheadRejectedError: If too many concurrent LLM calls
             LLMProviderError: For other LLM provider errors
         """
+        import time
+
+        start_time = time.perf_counter()
+
         with tracer.start_as_current_span("llm.ainvoke") as span:
             span.set_attribute("llm.provider", self.provider)
             span.set_attribute("llm.model", self.model_name)
@@ -399,6 +423,17 @@ class LLMFactory:
                 response: ModelResponse = await acompletion(**params)
 
                 content = response.choices[0].message.content  # type: ignore[union-attr]
+
+                # Record LLM metrics
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_llm_request_duration(self.model_name, duration_ms, self.provider)
+
+                if response.usage:  # type: ignore[attr-defined]
+                    record_llm_token_usage(
+                        self.model_name,
+                        response.usage.prompt_tokens or 0,  # type: ignore[attr-defined]
+                        response.usage.completion_tokens or 0,  # type: ignore[attr-defined]
+                    )
 
                 metrics.successful_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
 

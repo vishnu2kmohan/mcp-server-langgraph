@@ -1,6 +1,6 @@
 {
-  "id": "master",
-  "realm": "master",
+  "id": "default",
+  "realm": "default",
   "enabled": true,
   "displayName": "MCP Server LangGraph - Test Realm",
   "accessTokenLifespan": 3600,
@@ -8,6 +8,27 @@
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 36000,
   "clients": [
+    {
+      "clientId": "admin-cli-service",
+      "name": "Admin CLI Service Account",
+      "description": "Service account for Admin API operations (replaces password grant for admin user)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "admin-cli-test-secret",
+      "directAccessGrantsEnabled": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "web-origins",
+        "profile",
+        "roles",
+        "email"
+      ]
+    },
     {
       "clientId": "mcp-server",
       "name": "MCP Server Test Client",
@@ -21,11 +42,15 @@
       "serviceAccountsEnabled": true,
       "protocol": "openid-connect",
       "redirectUris": [
-        "http://localhost:*",
-        "http://127.0.0.1:*"
+        "http://localhost/*",
+        "http://localhost:*/*",
+        "http://127.0.0.1/*",
+        "http://127.0.0.1:*/*"
       ],
       "webOrigins": [
+        "http://localhost",
         "http://localhost:*",
+        "http://127.0.0.1",
         "http://127.0.0.1:*"
       ],
       "defaultClientScopes": [
@@ -85,6 +110,34 @@
     }
   ],
   "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Realm",
+      "lastName": "Admin",
+      "email": "admin@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "offline_access",
+        "uma_authorization"
+      ],
+      "clientRoles": {
+        "account": [
+          "view-profile",
+          "manage-account"
+        ],
+        "realm-management": [
+          "realm-admin"
+        ]
+      }
+    },
     {
       "username": "alice",
       "enabled": true,

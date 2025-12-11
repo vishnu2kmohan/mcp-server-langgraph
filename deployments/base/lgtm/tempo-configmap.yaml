@@ -1,0 +1,80 @@
+# Tempo ConfigMap for Kubernetes LGTM Stack
+# ==========================================
+# Configuration aligned with docker/tempo/tempo-config.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  labels:
+    app: tempo
+    component: observability
+data:
+  tempo-config.yaml: |
+    # Tempo Configuration for Kubernetes LGTM Stack
+    # Reference: docker/tempo/tempo-config.yaml
+
+    server:
+      http_listen_port: 3200
+      grpc_listen_port: 9095
+      log_level: warn
+
+    distributor:
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+            http:
+              endpoint: 0.0.0.0:4318
+        jaeger:
+          protocols:
+            thrift_http:
+              endpoint: 0.0.0.0:14268
+            grpc:
+              endpoint: 0.0.0.0:14250
+            thrift_compact:
+              endpoint: 0.0.0.0:6831
+
+    ingester:
+      trace_idle_period: 10s
+      max_block_bytes: 1048576
+      max_block_duration: 5m
+
+    compactor:
+      compaction:
+        block_retention: 168h
+
+    storage:
+      trace:
+        backend: local
+        local:
+          path: /var/tempo/traces
+        wal:
+          path: /var/tempo/wal
+        pool:
+          max_workers: 10
+          queue_depth: 100
+
+    metrics_generator:
+      registry:
+        external_labels:
+          source: tempo
+          cluster: kubernetes
+      storage:
+        path: /var/tempo/generator/wal
+        remote_write:
+          - url: http://mimir:9009/api/v1/push
+            send_exemplars: true
+
+    query_frontend:
+      search:
+        duration_slo: 5s
+        throughput_bytes_slo: 1073741824
+
+    overrides:
+      defaults:
+        metrics_generator:
+          processors:
+            - service-graphs
+            - span-metrics

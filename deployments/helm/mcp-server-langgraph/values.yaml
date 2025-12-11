@@ -509,6 +509,13 @@ keycloak:
   service:
     type: ClusterIP
     port: 8080
+  # JVM memory settings to prevent OOM (matches docker-compose.test.yml pattern)
+  # Keycloak 26.x with Quarkus defaults to -XX:MaxRAMPercentage=70 which can
+  # exceed container limits during startup. Explicit heap limits ensure
+  # predictable memory usage. Scaled for 2Gi memory limit.
+  extraEnv: |
+    - name: JAVA_OPTS_APPEND
+      value: "-Xms1g -Xmx1536m -XX:MaxMetaspaceSize=256m"
   resources:
     requests:
       cpu: 500m

@@ -40,7 +40,7 @@ def mock_settings():
 def mock_agent():
     """Mock Pydantic AI agent."""
     mock = Mock()
-    mock.run = AsyncMock()
+    mock.run = AsyncMock(return_value=None)  # Configured return value
     return mock
 
 

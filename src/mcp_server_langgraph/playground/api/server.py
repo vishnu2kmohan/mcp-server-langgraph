@@ -35,9 +35,10 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import Any, AsyncIterator
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket, WebSocketDisconnect, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 
+from mcp_server_langgraph.middleware import MetricsMiddleware
 from mcp_server_langgraph.observability.telemetry import (
     init_observability,
     is_initialized,
@@ -72,23 +73,48 @@ from .models import (
 )
 
 # ==============================================================================
-# In-Memory Session Storage (for development/testing)
-# Production should use Redis via langgraph-checkpoint-redis
+# Session Storage (Postgres, Redis, or in-memory fallback)
 # ==============================================================================
+# Storage backend priority:
+#   1. Postgres (PLAYGROUND_POSTGRES_URL) - Production, durable persistence
+#   2. Redis (PLAYGROUND_REDIS_URL or REDIS_URL) - Session-like storage
+#   3. In-memory - Development/testing only, data lost on restart
 
-_sessions: dict[str, dict[str, Any]] = {}
+from ..session import (
+    PostgresSessionManager,
+    RedisSessionManager,
+    create_postgres_engine,
+    create_redis_pool,
+    init_playground_database,
+)
+from .metrics import (
+    record_chat_message,
+    record_session_created,
+    record_session_deleted,
+    websocket_connected,
+    websocket_disconnected,
+)
+
+# Global session manager (initialized in lifespan)
+_session_manager: PostgresSessionManager | RedisSessionManager | None = None
+
+# In-memory fallback for development/testing without persistence
+_sessions_fallback: dict[str, dict[str, Any]] = {}
+_storage_backend: str = "memory"  # "postgres", "redis", or "memory"
+
+# Observability data (kept in-memory for now)
 _session_traces: dict[str, list[TraceInfo]] = {}
 _session_logs: dict[str, list[LogEntry]] = {}
 _active_alerts: list[Alert] = []
 
 
-def _get_session(session_id: str) -> dict[str, Any] | None:
-    """Get session from storage."""
-    return _sessions.get(session_id)
+def _get_session_memory(session_id: str) -> dict[str, Any] | None:
+    """Get session from in-memory storage (fallback)."""
+    return _sessions_fallback.get(session_id)
 
 
-def _create_session(session_id: str, name: str, config: SessionConfig) -> dict[str, Any]:
-    """Create a new session."""
+def _create_session_memory(session_id: str, name: str, config: SessionConfig) -> dict[str, Any]:
+    """Create a new session in in-memory storage (fallback)."""
     now = datetime.now(UTC)
     session = {
         "session_id": session_id,
@@ -98,16 +124,16 @@ def _create_session(session_id: str, name: str, config: SessionConfig) -> dict[s
         "updated_at": now,
         "messages": [],
     }
-    _sessions[session_id] = session
+    _sessions_fallback[session_id] = session
     _session_traces[session_id] = []
     _session_logs[session_id] = []
     return session
 
 
-def _delete_session(session_id: str) -> bool:
-    """Delete a session."""
-    if session_id in _sessions:
-        del _sessions[session_id]
+def _delete_session_memory(session_id: str) -> bool:
+    """Delete a session from in-memory storage (fallback)."""
+    if session_id in _sessions_fallback:
+        del _sessions_fallback[session_id]
         _session_traces.pop(session_id, None)
         _session_logs.pop(session_id, None)
         return True
@@ -180,12 +206,15 @@ def verify_playground_auth(authorization: str = Header(None)) -> dict[str, Any] 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """
-    Playground service lifecycle with observability.
+    Playground service lifecycle with observability and persistent storage.
 
     Initializes OpenTelemetry tracing and metrics on startup,
-    gracefully shuts down exporters on termination.
+    connects to Postgres or Redis for session storage (priority: Postgres > Redis > Memory),
+    gracefully shuts down on termination.
     """
-    # STARTUP
+    global _session_manager, _storage_backend
+
+    # STARTUP - Observability
     if not is_initialized():
         try:
             from mcp_server_langgraph.core.config import Settings
@@ -199,9 +228,61 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         except Exception as e:
             print(f"WARNING: Observability initialization failed: {e}")
 
+    # STARTUP - Storage backend (priority: Postgres > Redis > Memory)
+    # 1. Try Postgres first (for durable production storage)
+    postgres_url = os.getenv("PLAYGROUND_POSTGRES_URL", os.getenv("POSTGRES_URL"))
+    if postgres_url:
+        try:
+            # Ensure asyncpg driver is used
+            if not postgres_url.startswith("postgresql+asyncpg://"):
+                postgres_url = postgres_url.replace("postgresql://", "postgresql+asyncpg://")
+
+            engine = await create_postgres_engine(postgres_url)
+            # Initialize database schema
+            await init_playground_database(engine)
+            _session_manager = PostgresSessionManager(engine=engine)
+            _storage_backend = "postgres"
+            logger.info(
+                "Playground connected to PostgreSQL for session storage",
+                extra={"backend": "postgres"},
+            )
+        except Exception as e:
+            logger.warning(f"Failed to connect to PostgreSQL: {e}")
+            # Fall through to Redis
+
+    # 2. Try Redis if Postgres not configured or failed
+    if _storage_backend == "memory":
+        redis_url = os.getenv("PLAYGROUND_REDIS_URL", os.getenv("REDIS_URL"))
+        if redis_url:
+            try:
+                redis_client = await create_redis_pool(redis_url)
+                # Test connection
+                await redis_client.ping()
+                # Session TTL (default: 7 days)
+                ttl = int(os.getenv("PLAYGROUND_SESSION_TTL", 604800))
+                _session_manager = RedisSessionManager(redis_client=redis_client, ttl_seconds=ttl)
+                _storage_backend = "redis"
+                logger.info(
+                    "Playground connected to Redis for session storage",
+                    extra={"backend": "redis", "ttl_seconds": ttl},
+                )
+            except Exception as e:
+                logger.warning(f"Failed to connect to Redis, using in-memory storage: {e}")
+
+    # 3. Fallback to in-memory
+    if _storage_backend == "memory":
+        logger.info(
+            "Using in-memory session storage (data will be lost on restart)",
+            extra={"backend": "memory"},
+        )
+
     yield  # Application runs here
 
     # SHUTDOWN
+    if _session_manager:
+        await _session_manager.close()
+        logger.info(f"Playground {_storage_backend} connection closed")
+
     logger.info("Playground service shutting down")
     shutdown_observability()
 
@@ -221,6 +302,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# HTTP metrics for Prometheus/Grafana
+app.add_middleware(MetricsMiddleware)
 
 
 # ==============================================================================
@@ -250,15 +334,43 @@ def readiness_check() -> ReadinessStatus:
     # Check observability
     checks["observability"] = "ready" if is_initialized() else "not_initialized"
 
-    # Check Redis (TODO: actual connection check)
-    redis_url = os.getenv("REDIS_URL")
-    checks["redis"] = "configured" if redis_url else "not_configured"
+    # Check storage backend
+    checks["storage"] = _storage_backend
+    if _storage_backend == "postgres":
+        checks["storage_status"] = "connected"
+    elif _storage_backend == "redis":
+        checks["storage_status"] = "connected"
+    else:
+        checks["storage_status"] = "in-memory"
 
     # Determine overall status
-    all_ready = all(v in ("ready", "configured", "not_configured") for v in checks.values())
+    all_ready = all(
+        v in ("ready", "connected", "in-memory", "postgres", "redis", "memory", "not_initialized") for v in checks.values()
+    )
     status_str = "ready" if all_ready else "not_ready"
 
     return ReadinessStatus(status=status_str, checks=checks)
+
+
+@app.get("/metrics")
+def prometheus_metrics() -> Response:
+    """
+    Prometheus metrics endpoint for Alloy/Grafana scraping.
+
+    Returns metrics in Prometheus text exposition format.
+    """
+    try:
+        from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, generate_latest
+
+        return Response(
+            content=generate_latest(REGISTRY),
+            media_type=CONTENT_TYPE_LATEST,
+        )
+    except ImportError:
+        return Response(
+            content="# prometheus_client not available\n",
+            media_type="text/plain",
+        )
 
 
 # ==============================================================================
@@ -270,7 +382,7 @@ def readiness_check() -> ReadinessStatus:
     "/api/playground/sessions",
     status_code=status.HTTP_201_CREATED,
 )
-def create_session(
+async def create_session(
     request: CreateSessionRequest,
     user: dict[str, Any] | None = Depends(verify_playground_auth),
 ) -> CreateSessionResponse:
@@ -287,26 +399,65 @@ def create_session(
         "playground.create_session",
         attributes={"session.name": request.name},
     ):
-        session_id = str(uuid.uuid4())
         config = request.config or SessionConfig()
+        user_id = user.get("user_id") if user else None
 
-        session = _create_session(session_id, request.name, config)
+        if _storage_backend != "memory" and _session_manager:
+            # Use persistent storage (Postgres or Redis)
+            from ..session import SessionConfig as StorageSessionConfig
 
-        logger.info(
-            "Session created",
-            extra={"session_id": session_id, "name": request.name},
-        )
+            storage_config = StorageSessionConfig(
+                model=config.model,
+                temperature=config.temperature,
+                max_tokens=config.max_tokens,
+            )
+            session = await _session_manager.create_session(
+                name=request.name,
+                user_id=user_id,
+                config=storage_config,
+            )
 
-        return CreateSessionResponse(
-            session_id=session_id,
-            name=request.name,
-            created_at=session["created_at"],
-            config=config,
-        )
+            logger.info(
+                f"Session created ({_storage_backend})",
+                extra={
+                    "session_id": session.session_id,
+                    "session_name": request.name,
+                    "backend": _storage_backend,
+                },
+            )
+
+            # Record session creation metric
+            record_session_created()
+
+            return CreateSessionResponse(
+                session_id=session.session_id,
+                name=session.name,
+                created_at=session.created_at,
+                config=config,
+            )
+        else:
+            # In-memory fallback
+            session_id = str(uuid.uuid4())
+            session_dict = _create_session_memory(session_id, request.name, config)
+
+            logger.info(
+                "Session created (in-memory)",
+                extra={"session_id": session_id, "session_name": request.name},
+            )
+
+            # Record session creation metric
+            record_session_created()
+
+            return CreateSessionResponse(
+                session_id=session_id,
+                name=request.name,
+                created_at=session_dict["created_at"],
+                config=config,
+            )
 
 
 @app.get("/api/playground/sessions")
-def list_sessions(
+async def list_sessions(
     user: dict[str, Any] | None = Depends(verify_playground_auth),
 ) -> ListSessionsResponse:
     """
@@ -315,20 +466,37 @@ def list_sessions(
     Returns:
         List of session summaries
     """
-    summaries = [
-        SessionSummary(
-            session_id=s["session_id"],
-            name=s["name"],
-            created_at=s["created_at"],
-            message_count=len(s["messages"]),
-        )
-        for s in _sessions.values()
-    ]
-    return ListSessionsResponse(sessions=summaries)
+    user_id: str | None = user.get("user_id") if user else None
+
+    if _storage_backend != "memory" and _session_manager:
+        # Use persistent storage (Postgres or Redis)
+        sessions = await _session_manager.list_sessions(user_id=user_id or "")
+        summaries = [
+            SessionSummary(
+                session_id=s.session_id,
+                name=s.name,
+                created_at=s.created_at,
+                message_count=len(s.messages),
+            )
+            for s in sessions
+        ]
+        return ListSessionsResponse(sessions=summaries, storage_backend=_storage_backend)
+    else:
+        # In-memory fallback
+        summaries = [
+            SessionSummary(
+                session_id=s["session_id"],
+                name=s["name"],
+                created_at=s["created_at"],
+                message_count=len(s["messages"]),
+            )
+            for s in _sessions_fallback.values()
+        ]
+        return ListSessionsResponse(sessions=summaries, storage_backend="memory")
 
 
 @app.get("/api/playground/sessions/{session_id}")
-def get_session(
+async def get_session(
     session_id: str,
     user: dict[str, Any] | None = Depends(verify_playground_auth),
 ) -> SessionDetails:
@@ -344,28 +512,60 @@ def get_session(
     Raises:
         HTTPException: 404 if session not found
     """
-    session = _get_session(session_id)
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Session '{session_id}' not found",
-        )
+    if _storage_backend != "memory" and _session_manager:
+        # Use persistent storage (Postgres or Redis)
+        session = await _session_manager.get_session(session_id)
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Session '{session_id}' not found",
+            )
 
-    return SessionDetails(
-        session_id=session["session_id"],
-        name=session["name"],
-        created_at=session["created_at"],
-        updated_at=session["updated_at"],
-        messages=[SessionMessage(**m) for m in session["messages"]],
-        config=session["config"],
-    )
+        return SessionDetails(
+            session_id=session.session_id,
+            name=session.name,
+            created_at=session.created_at,
+            updated_at=session.updated_at,
+            messages=[
+                SessionMessage(
+                    message_id=m.message_id,
+                    role=m.role,
+                    content=m.content,
+                    timestamp=m.timestamp,
+                    metadata=m.metadata,
+                )
+                for m in session.messages
+            ],
+            config=SessionConfig(
+                model=session.config.model,
+                temperature=session.config.temperature,
+                max_tokens=session.config.max_tokens,
+            ),
+        )
+    else:
+        # In-memory fallback
+        session_dict = _get_session_memory(session_id)
+        if not session_dict:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Session '{session_id}' not found",
+            )
+
+        return SessionDetails(
+            session_id=session_dict["session_id"],
+            name=session_dict["name"],
+            created_at=session_dict["created_at"],
+            updated_at=session_dict["updated_at"],
+            messages=[SessionMessage(**m) for m in session_dict["messages"]],
+            config=session_dict["config"],
+        )
 
 
 @app.delete(
     "/api/playground/sessions/{session_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_session(
+async def delete_session(
     session_id: str,
     user: dict[str, Any] | None = Depends(verify_playground_auth),
 ) -> None:
@@ -382,13 +582,34 @@ def delete_session(
         "playground.delete_session",
         attributes={"session.id": session_id},
     ):
-        if not _delete_session(session_id):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Session '{session_id}' not found",
+        if _storage_backend != "memory" and _session_manager:
+            # Use persistent storage (Postgres or Redis)
+            deleted = await _session_manager.delete_session(session_id)
+            if not deleted:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Session '{session_id}' not found",
+                )
+
+            logger.info(
+                f"Session deleted ({_storage_backend})",
+                extra={"session_id": session_id, "backend": _storage_backend},
             )
 
-        logger.info("Session deleted", extra={"session_id": session_id})
+            # Record session deletion metric
+            record_session_deleted()
+        else:
+            # In-memory fallback
+            if not _delete_session_memory(session_id):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Session '{session_id}' not found",
+                )
+
+            logger.info("Session deleted (in-memory)", extra={"session_id": session_id})
+
+            # Record session deletion metric
+            record_session_deleted()
 
 
 # ==============================================================================
@@ -397,7 +618,7 @@ def delete_session(
 
 
 @app.post("/api/playground/chat")
-def send_chat_message(
+async def send_chat_message(
     request: ChatRequest,
     user: dict[str, Any] | None = Depends(verify_playground_auth),
 ) -> ChatResponse:
@@ -422,13 +643,6 @@ def send_chat_message(
             "message.length": len(request.message),
         },
     ):
-        session = _get_session(request.session_id)
-        if not session:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Session '{request.session_id}' not found",
-            )
-
         if not request.message.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -438,32 +652,66 @@ def send_chat_message(
         now = datetime.now(UTC)
         message_id = str(uuid.uuid4())
 
-        # Add user message to history
-        user_msg = {
-            "message_id": str(uuid.uuid4()),
-            "role": "user",
-            "content": request.message,
-            "timestamp": now,
-            "metadata": {},
-        }
-        session["messages"].append(user_msg)
-
         # Generate response (mock for now - will integrate with LangGraph)
         response_content = f"I received your message: '{request.message}'. This is a placeholder response from the playground."
-
-        # Add assistant message to history
         response_timestamp = datetime.now(UTC)
-        assistant_msg = {
-            "message_id": message_id,
-            "role": "assistant",
-            "content": response_content,
-            "timestamp": response_timestamp,
-            "metadata": {},
-        }
-        session["messages"].append(assistant_msg)
-        session["updated_at"] = datetime.now(UTC)
 
-        # Add a log entry for observability
+        if _storage_backend != "memory" and _session_manager:
+            # Use persistent storage (Postgres or Redis)
+            # Verify session exists
+            session = await _session_manager.get_session(request.session_id)
+            if not session:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Session '{request.session_id}' not found",
+                )
+
+            # Add user message
+            await _session_manager.add_message(
+                session_id=request.session_id,
+                role="user",
+                content=request.message,
+                metadata={},
+            )
+
+            # Add assistant response
+            await _session_manager.add_message(
+                session_id=request.session_id,
+                role="assistant",
+                content=response_content,
+                metadata={},
+            )
+        else:
+            # In-memory fallback
+            session_dict = _get_session_memory(request.session_id)
+            if not session_dict:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Session '{request.session_id}' not found",
+                )
+
+            # Add user message to history
+            user_msg = {
+                "message_id": str(uuid.uuid4()),
+                "role": "user",
+                "content": request.message,
+                "timestamp": now,
+                "metadata": {},
+            }
+            session_dict["messages"].append(user_msg)
+
+            # Add assistant message to history
+            assistant_msg = {
+                "message_id": message_id,
+                "role": "assistant",
+                "content": response_content,
+                "timestamp": response_timestamp,
+                "metadata": {},
+            }
+            session_dict["messages"].append(assistant_msg)
+            session_dict["updated_at"] = datetime.now(UTC)
+
+        # Add a log entry for observability (kept in-memory for now)
         log_entry = LogEntry(
             timestamp=now,
             level=LogLevel.INFO,
@@ -477,8 +725,14 @@ def send_chat_message(
             extra={
                 "session_id": request.session_id,
                 "message_id": message_id,
+                "backend": _storage_backend,
             },
         )
+
+        # Record chat message metrics
+        record_chat_message("user")
+        latency = (response_timestamp - now).total_seconds()
+        record_chat_message("assistant", latency=latency)
 
         return ChatResponse(
             response=response_content,
@@ -520,8 +774,15 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
     - alert: Alert notification
     """
     # Validate session exists
-    session = _get_session(session_id)
-    if not session:
+    session_exists = False
+    if _storage_backend != "memory" and _session_manager:
+        session_obj = await _session_manager.get_session(session_id)
+        session_exists = session_obj is not None
+    else:
+        session_dict = _get_session_memory(session_id)
+        session_exists = session_dict is not None
+
+    if not session_exists:
         await websocket.close(code=4004, reason="Session not found")
         return
 
@@ -531,6 +792,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
     if session_id not in _websocket_connections:
         _websocket_connections[session_id] = []
     _websocket_connections[session_id].append(websocket)
+
+    # Record WebSocket connection metric
+    websocket_connected()
 
     try:
         # Send welcome message
@@ -593,6 +857,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
         # Unregister connection
         if session_id in _websocket_connections:
             _websocket_connections[session_id] = [ws for ws in _websocket_connections[session_id] if ws != websocket]
+
+        # Record WebSocket disconnection metric
+        websocket_disconnected()
 
 
 # ==============================================================================
@@ -686,7 +953,7 @@ def get_session_logs(
 
 
 @app.get("/api/playground/observability/metrics")
-def get_session_metrics(
+async def get_session_metrics(
     session_id: str = Query(..., description="Session ID"),
     user: dict[str, Any] | None = Depends(verify_playground_auth),
 ) -> MetricsSummary:
@@ -695,8 +962,14 @@ def get_session_metrics(
 
     Includes LLM metrics, tool metrics, and session stats.
     """
-    session = _get_session(session_id)
-    message_count = len(session["messages"]) if session else 0
+    # Get message count from appropriate storage backend
+    message_count = 0
+    if _storage_backend != "memory" and _session_manager:
+        session_obj = await _session_manager.get_session(session_id)
+        message_count = len(session_obj.messages) if session_obj else 0
+    else:
+        session_dict = _get_session_memory(session_id)
+        message_count = len(session_dict["messages"]) if session_dict else 0
 
     return MetricsSummary(
         llm=LLMMetrics(

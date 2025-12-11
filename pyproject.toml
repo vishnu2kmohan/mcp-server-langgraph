@@ -77,6 +77,12 @@ dependencies = [
     "tenacity>=9.1.2",  # Retry logic with exponential backoff
     "cachetools>=5.3.0",  # In-memory LRU cache for L1 caching (ADR-0028)
     "slowapi>=0.1.9",  # Rate limiting for FastAPI (ADR-0027)
+    # LLM Provider SDKs (required for LiteLLM multi-provider support)
+    "google-cloud-aiplatform>=1.38.0",  # Vertex AI SDK (default: Anthropic Claude on Vertex)
+    "anthropic>=0.46.0",  # Anthropic Claude direct API
+    "openai>=1.82.0",  # OpenAI models (GPT-4, o1, etc.)
+    "boto3>=1.35.0",  # AWS Bedrock (Claude, Titan, Mistral on AWS)
+    "azure-identity>=1.15.0",  # Azure OpenAI authentication
 ]
 
 [project.optional-dependencies]
@@ -119,6 +125,7 @@ dev = [
     # types-redis removed (2025-11-28) - redis 5.0+ includes inline type hints (py.typed)
     # types-redis was causing conflicts with redis 6.x inline types
     "types-requests",
+    "types-psutil",  # Type stubs for psutil (memory monitoring)
     "bandit>=1.7.6",
     # Security scanning (CodeQL parity - PR #121)
     "semgrep>=1.51.0",  # Static security analysis for Python (matches CodeQL detection capabilities)
@@ -133,6 +140,7 @@ dev = [
     "yamllint>=1.37.1",  # YAML linting for Kubernetes manifests and configs
     # Coverage tools (also available separately via coverage-tools extra)
     "coverage[toml]>=7.0.0",  # Coverage.py with TOML support
+    "packaging>=23.0",  # Version parsing for MCP SDK compatibility tests
     # CLI testing dependencies (duplicated from cli extra for test coverage)
     "click>=8.1.0,<8.2.0",  # Command-line interface framework (8.2+ removed _textwrap module)
     "jinja2>=3.1.0",  # Template engine for code generation
@@ -179,9 +187,12 @@ code-execution = [
 ]
 
 cloud = [
-    # Cloud provider SDKs for LiteLLM multi-provider support
-    "google-cloud-aiplatform>=1.38.0",  # Vertex AI (Google Cloud)
-    "boto3>=1.35.0",  # AWS Bedrock
+    # Additional cloud provider SDKs (optional)
+    # NOTE: Core LLM SDKs moved to main dependencies:
+    # - google-cloud-aiplatform (Vertex AI)
+    # - boto3 (AWS Bedrock)
+    # - anthropic, openai, azure-identity
+    # This group is now empty but retained for backwards compatibility
 ]
 
 # ==============================================================================
@@ -598,11 +609,24 @@ module = [
     "sentence_transformers.*",
     "cachetools.*",
     "redis.*",  # redis 6.x inline types are incomplete (from_url untyped, generic params issues)
+    "google.cloud.*",  # GCP libraries lack py.typed marker
 ]
 ignore_missing_imports = true
 # Disable additional strict checks for third-party libraries
 disallow_untyped_defs = false
 disallow_untyped_calls = false
+
+# GCP Cloud backend modules - allow unused type: ignore comments
+# These files use conditional imports for optional GCP dependencies.
+# In CI (without GCP packages), mypy reports attr-defined errors requiring ignores.
+# Locally (with GCP packages), the ignores are unused. Suppress this warning.
+[[tool.mypy.overrides]]
+module = [
+    "mcp_server_langgraph.observability.query.backends.cloudlogging",
+    "mcp_server_langgraph.observability.query.backends.cloudtrace",
+    "mcp_server_langgraph.observability.query.backends.cloudmonitoring",
+]
+warn_unused_ignores = false
 
 # Gradual strictness rollout - Phase 1: Core modules with full strict typing
 [[tool.mypy.overrides]]
@@ -693,7 +717,8 @@ filterwarnings = [
     "ignore::RuntimeWarning:litellm.llms.custom_httpx.async_client_cleanup",
     # Litellm uses deprecated Pydantic V1 class-based config (external library issue)
     # See: https://errors.pydantic.dev/2.12/migration/ - litellm needs to update
-    "ignore:Support for class-based `config` is deprecated.*:DeprecationWarning:litellm",
+    # Note: Uses PydanticDeprecatedSince20 which is a DeprecationWarning subclass
+    "ignore:Support for class-based `config` is deprecated.*:DeprecationWarning",
     # Internal warnings
     "ignore:coroutine.*was never awaited.*:RuntimeWarning:mcp_server_langgraph.resilience.circuit_breaker",
     "ignore:Pydantic serializer warnings.*:UserWarning:pydantic.main",
@@ -717,12 +742,14 @@ markers = [
     "mcp: MCP protocol tests",
     "llm: LLM API tests (expensive, requires API keys, skipped in CI)",
     "observability: OpenTelemetry/metrics/logging tests",
+    "metrics: Prometheus/OTel metrics instrumentation tests",
     "benchmark: Performance benchmark tests",
     "property: Property-based tests (hypothesis)",
     "scim: SCIM 2.0 provisioning tests",
     "contract: Contract tests (MCP protocol, OpenAPI)",
     "regression: Performance regression tests",
     "mutation: Mutation testing (slow, runs on schedule)",
+    "compliance: Generic compliance tests (metrics, auditing)",
     "gdpr: GDPR compliance tests (data subject rights)",
     "soc2: SOC 2 compliance tests (evidence collection, access reviews)",
     "sla: SLA monitoring tests (uptime, response time, error rate)",
@@ -748,6 +775,7 @@ markers = [
     "requires_kustomize: Tests requiring kustomize CLI tool",
     "requires_kubectl: Tests requiring kubectl CLI tool",
     "requires_helm: Tests requiring helm CLI tool",
+    "requires_full_infrastructure: Tests requiring full infrastructure (make test-infra-full-up)",
     "validation: Validation tests for deployments and configurations",
     "cli: CLI tool tests",
     "skip_isolation_check: Skip enforce_worker_isolation check (for tests using worker-scoped schemas)",
@@ -756,6 +784,7 @@ markers = [
     "websocket: WebSocket endpoint tests (streaming, real-time)",
     "builder: Visual workflow builder tests",
     "redis: Redis-backed storage tests (sessions, checkpoints)",
+    "postgres: PostgreSQL-backed storage tests (workflows, sessions, durable persistence)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

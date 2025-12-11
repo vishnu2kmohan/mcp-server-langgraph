@@ -1,0 +1,29 @@
+# OpenShift Security Context Patch for OpenTelemetry Collector
+# =============================================================
+# Configures OpenTelemetry Collector deployment for OpenShift restricted-v2 SCC.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        # runAsUser omitted - OpenShift assigns arbitrary UID
+        runAsGroup: 0  # Root group for file access
+        fsGroup: 0     # Root group for volume ownership
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: otel-collector
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            # runAsUser omitted - OpenShift assigns arbitrary UID
+            runAsGroup: 0
+            capabilities:
+              drop:
+                - ALL

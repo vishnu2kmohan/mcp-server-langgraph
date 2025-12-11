@@ -4,13 +4,20 @@
   path: /spec/template/spec/serviceAccountName
   value: keycloak-sa
 
-# Fix secret references to use preview-prefixed secret name (KEYCLOAK_ADMIN and KEYCLOAK_ADMIN_PASSWORD)
+# Fix secret references to use preview-prefixed secret name
+# After strategic merge with keycloak-patch.yaml, the env indices are:
+# 0: JAVA_OPTS_APPEND (value, not secretKeyRef)
+# 1: KC_DB_URL (value)
+# 2: KC_DB_USERNAME (secretKeyRef - already has preview- prefix from keycloak-patch.yaml)
+# 3: KC_DB_PASSWORD (secretKeyRef - already has preview- prefix from keycloak-patch.yaml)
+# 4: KEYCLOAK_ADMIN (secretKeyRef from base - needs prefix)
+# 5: KEYCLOAK_ADMIN_PASSWORD (secretKeyRef from base - needs prefix)
 - op: replace
-  path: /spec/template/spec/containers/0/env/3/valueFrom/secretKeyRef/name
+  path: /spec/template/spec/containers/0/env/4/valueFrom/secretKeyRef/name
   value: preview-mcp-server-langgraph-secrets
 
 - op: replace
-  path: /spec/template/spec/containers/0/env/4/valueFrom/secretKeyRef/name
+  path: /spec/template/spec/containers/0/env/5/valueFrom/secretKeyRef/name
   value: preview-mcp-server-langgraph-secrets
 
 # Remove init container - Keycloak will wait for DB internally

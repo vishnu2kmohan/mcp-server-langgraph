@@ -215,10 +215,24 @@ spec:
       serviceAccountName: mcp-server-langgraph
       containers:
       - name: keycloak
-        image: quay.io/keycloak/keycloak:23.0
+        # IMPORTANT: Use pre-optimized Keycloak image from GHCR
+        # Built via .github/workflows/build-keycloak-image.yaml from docker/Dockerfile.keycloak
+        # Enables readOnlyRootFilesystem: true (no JIT compilation at runtime)
+        image: ghcr.io/vishnu2kmohan/keycloak-optimized:26.4.2
+        args:
+        - start
+        - --optimized
+        - --http-enabled=true
+        - --http-port=8080
+        - --hostname-strict=false
+        - --health-enabled=true
+        - --metrics-enabled=true
         env:
         - name: KC_DB
           value: postgres
+        # KC_HTTP_RELATIVE_PATH for Traefik/Ingress gateway routing
+        - name: KC_HTTP_RELATIVE_PATH
+          value: /authn
         - name: KC_DB_URL
           value: jdbc:postgresql://127.0.0.1:5432/keycloak
         - name: KC_DB_USERNAME

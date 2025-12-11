@@ -1,0 +1,52 @@
+# Mimir Alertmanager Fallback Configuration
+# ==========================================
+# Default alertmanager configuration used when no tenant config exists.
+# This provides basic email/webhook routing for alerts.
+
+global:
+  # SMTP configuration (disabled by default in test)
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alertmanager@localhost'
+  smtp_require_tls: false
+
+  # Webhook timeout
+  http_config:
+    follow_redirects: true
+
+route:
+  # Default receiver
+  receiver: 'default-receiver'
+
+  # Group alerts by alertname and service
+  group_by: ['alertname', 'service']
+
+  # Wait time before sending first notification
+  group_wait: 30s
+
+  # Interval between notifications for same group
+  group_interval: 5m
+
+  # Interval before re-sending notification
+  repeat_interval: 4h
+
+  # Child routes (none in fallback)
+  routes: []
+
+receivers:
+  - name: 'default-receiver'
+    # Webhook receiver for test environment
+    webhook_configs:
+      - url: 'http://localhost:9999/alerts'
+        send_resolved: true
+        max_alerts: 10
+
+# Inhibition rules to suppress notifications
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']
+
+# Template configuration
+templates: []

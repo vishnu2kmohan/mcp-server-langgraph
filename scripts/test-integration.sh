@@ -206,59 +206,45 @@ if [ "$NO_CACHE" = true ]; then
 fi
 
 # Start infrastructure services
+# PARITY FIX (2025-12-10): Align with Makefile test-infra-up target
+# The Makefile uses simple 'docker compose up -d' without extra flags
+# This ensures local and CI behavior are identical
+#
+# NOTE (2025-12-11): Custom images (like keycloak-test) use GHCR registry images
+# in CI, with fallback to local build. See docker-compose.test.yml for details.
 log_info "Starting infrastructure services..."
 echo ""
 
-# Start services in background
-# CODEX FINDING FIX (2025-11-21): Add mcp-server-test for E2E Tests
-# ====================================================================
-# Added mcp-server-test service to enable end-to-end testing of:
-# - MCP protocol initialization
-# - Full user journey workflows
-# - API endpoint integration
-#
-# The MCP server depends on all infrastructure services being healthy
-# before it starts, ensuring proper initialization order.
-#
-# CODEX FINDING FIX (2025-11-24): Add --pull always to prevent stale images
-# Pull fresh base images first, then start services
-log_info "Pulling fresh base images to prevent stale cached images..."
-docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" pull --quiet \
-    postgres-test \
-    openfga-test \
-    keycloak-test \
-    redis-test \
-    qdrant-test 2>/dev/null || log_warning "Some images failed to pull (may use cache)"
-
-docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d --pull always \
-    "${BUILD_ARGS[@]}" \
-    postgres-test \
-    openfga-migrate-test \
-    openfga-test \
-    keycloak-test \
-    redis-test \
-    qdrant-test \
-    mcp-server-test
+if [ "$BUILD" = true ]; then
+    docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d --build
+else
+    docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d
+fi
 
 log_success "Services started"
 
 # Wait for services to be healthy
+# PARITY FIX (2025-12-10): Match Makefile test-e2e behavior - wait for ALL services
+# When no services are specified, wait_for_services.sh auto-discovers all services
+# with healthchecks from the compose file. This is more maintainable than explicit lists.
 log_info "Waiting for services to be healthy..."
-# Use smart wait utility instead of hardcoded sleep loops
-# Only wait for critical services to prevent optional services (observability) from blocking tests
-if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE" postgres-test keycloak-test openfga-test redis-test qdrant-test mcp-server-test; then
+if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE"; then
     log_success "All services healthy"
     echo ""
 
     # CODEX FINDING FIX (2025-11-24): Verify Keycloak realm is actually imported
     # Docker health check passes but realm may not be fully imported yet
+    #
+    # TIMEOUT FIX (2025-12-10): 150 iterations * 3s = 7.5 minutes total
+    # Keycloak initialization can take 3-5 minutes on slow runners.
+    # Matches e2e-tests.yaml workflow timeout for CI/local parity.
     log_info "Verifying Keycloak realm is fully imported..."
     KEYCLOAK_READY=false
-    for i in {1..30}; do
+    for i in {1..150}; do
         # Try to get a token using the test user credentials
         # This proves the realm, client, and user are all properly configured
         TOKEN_RESPONSE=$(curl -sf -X POST \
-            "http://localhost:9082/realms/master/protocol/openid-connect/token" \
+            "http://localhost:9082/authn/realms/default/protocol/openid-connect/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "grant_type=password" \
             -d "client_id=mcp-server" \
@@ -272,12 +258,12 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE" postgres-test keycloa
             break
         fi
         echo -n "."
-        sleep 2
+        sleep 3
     done
     echo ""
 
     if [ "$KEYCLOAK_READY" = false ]; then
-        log_warning "Keycloak realm may not be fully imported (auth test failed)"
+        log_warning "Keycloak realm may not be fully imported after 150 attempts (7.5 min)"
         log_info "Some tests requiring authentication may fail"
     fi
 

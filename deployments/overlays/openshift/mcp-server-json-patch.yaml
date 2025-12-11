@@ -1,0 +1,12 @@
+# JSON 6902 Patch: Remove runAsUser from MCP Server containers
+# OpenShift assigns arbitrary UIDs - explicit runAsUser would conflict
+- op: remove
+  path: /spec/template/spec/securityContext/runAsUser
+- op: remove
+  path: /spec/template/spec/containers/0/securityContext/runAsUser
+- op: remove
+  path: /spec/template/spec/initContainers/0/securityContext/runAsUser
+- op: remove
+  path: /spec/template/spec/initContainers/1/securityContext/runAsUser
+- op: remove
+  path: /spec/template/spec/initContainers/2/securityContext/runAsUser

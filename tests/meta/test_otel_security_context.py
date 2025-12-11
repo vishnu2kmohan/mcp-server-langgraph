@@ -12,7 +12,7 @@ The OTel collector deployment must have:
 - tmpfs volumes for writable directories (/tmp, /home/otelcol)
 
 Reference: Deploy to GKE Staging workflow failures with 5 HIGH Trivy findings
-Verified UID: 10001 (from official otel/opentelemetry-collector-contrib:0.137.0 image)
+Verified UID: 10001 (from official otel/opentelemetry-collector-contrib:0.141.0 image)
 """
 
 import subprocess

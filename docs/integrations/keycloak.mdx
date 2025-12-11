@@ -632,10 +632,13 @@ make run-streamable
 ### Testing Connectivity
 
 ```bash
-# Test Keycloak health
+# Test Keycloak health (standard path)
 curl http://localhost:8180/health/ready
 
-# Test JWKS endpoint
+# With KC_HTTP_RELATIVE_PATH=/authn (gateway routing)
+curl http://localhost:8180/authn/health/ready
+
+# Test JWKS endpoint (includes /authn prefix if configured)
 curl http://localhost:8180/realms/langgraph-agent/protocol/openid-connect/certs
 
 # Test token endpoint
@@ -745,15 +748,19 @@ For production, deploy Keycloak in clustered mode:
 ```yaml
 # docker-compose.prod.yml
 keycloak:
-  image: quay.io/keycloak/keycloak:23.0
+  # Use pre-optimized GHCR image for faster startup and readOnlyRootFilesystem support
+  image: ghcr.io/vishnu2kmohan/keycloak-optimized:26.4.2
   command: start --optimized
   environment:
     - KC_DB=postgres
     - KC_DB_URL_HOST=postgres-primary
     - KC_CACHE=ispn
     - KC_CACHE_STACK=kubernetes
+    - KC_HTTP_RELATIVE_PATH=/authn  # For Traefik/gateway routing
   replicas: 3
 ```
+
+**Note**: The GHCR optimized image (`ghcr.io/vishnu2kmohan/keycloak-optimized:26.4.2`) is built via GitHub Actions from `docker/Dockerfile.keycloak`. It pre-compiles Quarkus, enabling `--optimized` mode and `readOnlyRootFilesystem: true` for enhanced security.
 
 #### 2. Database Replication
 

@@ -19,6 +19,13 @@ from apscheduler.triggers.cron import CronTrigger
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
+from mcp_server_langgraph.compliance.metrics import (
+    record_access_review_item,
+    record_compliance_job,
+    record_compliance_report,
+    record_compliance_score,
+    record_evidence_item,
+)
 from mcp_server_langgraph.compliance.soc2.evidence import EvidenceCollector
 from mcp_server_langgraph.integrations.alerting import Alert, AlertCategory, AlertingService, AlertSeverity
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
@@ -200,6 +207,14 @@ class ComplianceScheduler:
 
                 compliance_score = (passed + (partial * 0.5)) / total * 100 if total > 0 else 0
 
+                # Record compliance metrics
+                record_compliance_score(compliance_score)
+                for evidence in evidence_items:
+                    record_evidence_item(
+                        status=evidence.status.value,
+                        control_category=evidence.control_category,
+                    )
+
                 # Collect all findings
                 findings = []
                 for evidence in evidence_items:
@@ -224,6 +239,7 @@ class ComplianceScheduler:
 
                 # Track metrics
                 metrics.successful_calls.add(1, {"operation": "daily_compliance_check"})
+                record_compliance_job("daily_check", "success")
 
                 # Alert if compliance score is low
                 if compliance_score < 80:
@@ -241,6 +257,7 @@ class ComplianceScheduler:
             except Exception as e:
                 logger.error(f"Daily compliance check failed: {e}", exc_info=True)
                 metrics.failed_calls.add(1, {"operation": "daily_compliance_check"})
+                record_compliance_job("daily_check", "failure")
 
                 await self._send_compliance_alert(
                     severity="critical",
@@ -338,7 +355,12 @@ class ComplianceScheduler:
                 # Send notification
                 await self._send_access_review_notification(report)
 
+                # Record access review metrics
+                for user in users_reviewed:
+                    record_access_review_item(status=user.review_status)
+
                 metrics.successful_calls.add(1, {"operation": "weekly_access_review"})
+                record_compliance_job("weekly_access_review", "success")
 
                 span.set_attribute("total_users", total_users)
                 span.set_attribute("inactive_users", inactive_users)
@@ -348,6 +370,7 @@ class ComplianceScheduler:
             except Exception as e:
                 logger.error(f"Weekly access review failed: {e}", exc_info=True)
                 metrics.failed_calls.add(1, {"operation": "weekly_access_review"})
+                record_compliance_job("weekly_access_review", "failure")
 
                 await self._send_compliance_alert(
                     severity="high",
@@ -387,7 +410,12 @@ class ComplianceScheduler:
                 # Send report to compliance team
                 await self._send_monthly_report_notification(report)
 
+                # Record compliance metrics
+                record_compliance_score(report.compliance_score)
+                record_compliance_report(report_type="monthly")
+
                 metrics.successful_calls.add(1, {"operation": "monthly_compliance_report"})
+                record_compliance_job("monthly_report", "success")
 
                 span.set_attribute("compliance_score", report.compliance_score)
                 span.set_attribute("total_controls", report.total_controls)
@@ -397,6 +425,7 @@ class ComplianceScheduler:
             except Exception as e:
                 logger.error(f"Monthly compliance report failed: {e}", exc_info=True)
                 metrics.failed_calls.add(1, {"operation": "monthly_compliance_report"})
+                record_compliance_job("monthly_report", "failure")
 
                 await self._send_compliance_alert(
                     severity="critical",

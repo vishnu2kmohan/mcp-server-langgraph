@@ -1,0 +1,136 @@
+# Grafana Mimir Configuration for MCP Server LangGraph Test Environment
+# ======================================================================
+# Replaces Prometheus for metrics storage and querying.
+# Runs in monolithic mode for simplicity in test/dev environments.
+#
+# Reference: https://grafana.com/docs/mimir/latest/
+#
+# Key Features:
+#   - 100% PromQL compatible
+#   - Built-in alerting (replaces Alertmanager)
+#   - Multi-tenant capable
+#   - Local storage for testing
+
+# Target configuration - monolithic mode for testing
+target: all
+
+# No auth for testing
+multitenancy_enabled: false
+
+# Activity tracker disabled (not needed for tests)
+activity_tracker:
+  filepath: ""
+
+# Server configuration
+server:
+  http_listen_port: 9009
+  grpc_listen_port: 9095
+  log_level: warn
+
+# Common storage for all components
+common:
+  storage:
+    backend: filesystem
+    filesystem:
+      dir: /tmp/mimir/data
+
+# Ingester configuration - single node
+ingester:
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+    replication_factor: 1
+
+# Ingester client configuration
+ingester_client:
+  grpc_client_config:
+    max_recv_msg_size: 104857600  # 100MB
+    max_send_msg_size: 104857600
+
+# Distributor configuration
+distributor:
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+
+# Compactor configuration
+compactor:
+  data_dir: /tmp/mimir/compactor
+  sharding_ring:
+    kvstore:
+      store: inmemory
+
+# Store gateway configuration
+store_gateway:
+  sharding_ring:
+    replication_factor: 1
+    kvstore:
+      store: inmemory
+
+# Blocks storage configuration - use /tmp for ephemeral storage
+blocks_storage:
+  backend: filesystem
+  filesystem:
+    dir: /tmp/mimir/blocks
+  tsdb:
+    dir: /tmp/mimir/tsdb
+  bucket_store:
+    sync_dir: /tmp/mimir/bucket-sync
+
+# Ruler configuration
+# The ruler must have rule_path set explicitly or it defaults to ./data-ruler/ which causes
+# permission errors. We use /tmp/mimir/evaldata which is created by mimir-init container
+# with correct ownership (UID 10001).
+# IMPORTANT: rule_path and ruler_storage.filesystem.dir must not share any prefix
+# Mimir does prefix-matching to detect overlap - "rule" is prefix of "rules" fails validation
+# Reference: https://github.com/grafana/mimir/discussions/3300
+ruler:
+  enable_api: true
+  rule_path: /tmp/mimir/evaldata  # Ruler evaluation data (no overlap with storage)
+  alertmanager_url: http://localhost:9009/alertmanager
+  ring:
+    kvstore:
+      store: inmemory
+
+# Ruler storage - must be COMPLETELY different path from ruler.rule_path (no prefix overlap)
+ruler_storage:
+  backend: filesystem
+  filesystem:
+    dir: /tmp/mimir/ruleconfigs
+
+# Alertmanager configuration (built-in)
+alertmanager:
+  data_dir: /tmp/mimir/alertmanager
+  enable_api: true
+  external_url: http://localhost:9009/alertmanager
+  fallback_config_file: /etc/mimir/alertmanager-fallback.yaml
+  sharding_ring:
+    replication_factor: 1
+    kvstore:
+      store: inmemory
+
+# Limits configuration
+limits:
+  # Ingestion limits
+  ingestion_rate: 100000
+  ingestion_burst_size: 200000
+  max_global_series_per_user: 1000000
+  max_global_series_per_metric: 100000
+
+  # Query limits
+  max_fetched_series_per_query: 100000
+  max_fetched_chunks_per_query: 2000000
+  max_query_lookback: 31d
+
+  # Ruler limits
+  ruler_max_rules_per_rule_group: 20
+  ruler_max_rule_groups_per_tenant: 70
+
+  # Compactor limits
+  compactor_blocks_retention_period: 168h  # 7 days for persistent storage
+
+# Runtime configuration
+runtime_config:
+  period: 10s

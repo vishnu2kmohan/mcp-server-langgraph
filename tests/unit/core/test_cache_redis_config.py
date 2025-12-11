@@ -132,7 +132,7 @@ class TestRedisConnectionPool:
     @patch("redis.asyncio.from_url")
     async def test_redis_connection_timeout_configured(self, mock_redis):
         """Redis connections should have timeout configuration"""
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)  # Container for configured methods
         mock_redis.return_value = mock_client
 
         settings = Settings(
@@ -288,7 +288,7 @@ class TestRedisResilience:
         # This test validates that we have a retry strategy
         # Implementation details depend on how Redis is used
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)  # Container for configured methods
         mock_redis.return_value = mock_client
 
         settings = Settings(
@@ -392,7 +392,7 @@ class TestRedisIntegration:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_llm.return_value = MagicMock()
-        mock_redis_client = AsyncMock()
+        mock_redis_client = AsyncMock(return_value=None)  # Container for configured methods
         mock_redis.return_value = mock_redis_client
 
         settings = Settings(

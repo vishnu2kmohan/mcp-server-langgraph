@@ -77,6 +77,7 @@ class ListSessionsResponse(BaseModel):
     """Response when listing sessions."""
 
     sessions: list[SessionSummary]
+    storage_backend: str | None = None  # "postgres", "redis", or "memory"
 
 
 # ==============================================================================

@@ -74,6 +74,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v6
 
+    # Cache Trivy DB to avoid repeated downloads (GitHub API rate limiting)
+    # The DB is ~50MB and refreshes daily; caching saves ~30s per scan
+    - name: Cache Trivy DB
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/trivy
+        key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          trivy-db-${{ runner.os }}-
+
     # Filesystem scan
     - name: Run Trivy filesystem scan
       if: matrix.scan-type == 'fs'
@@ -145,6 +155,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v6
 
+    # Restore cached Trivy DB from trivy-scan job
+    - name: Cache Trivy DB
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/trivy
+        key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          trivy-db-${{ runner.os }}-
+
     - name: Generate comprehensive report
       uses: aquasecurity/trivy-action@0.33.1
       with:
@@ -204,6 +223,15 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+
+    # Cache Trivy DB to avoid repeated downloads
+    - name: Cache Trivy DB
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/trivy
+        key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          trivy-db-${{ runner.os }}-
 
     - name: Build Docker image
       run: docker build -f docker/Dockerfile -t mcp-server-langgraph:scan .

@@ -366,6 +366,7 @@ def get_project_modules() -> set[str]:
         "validate_mintlify_docs",
         "fix_mdx_syntax",  # Script in scripts/ directory, not a package
         "hcl2",  # Optional import for Terraform parsing (try/except in tests)
+        "vertexai",  # Optional import for Vertex AI integration (try/except in tests)
         # Local scripts imported by tests (in scripts/ directory)
         "check_internal_links",  # Script for checking documentation links
         "check_mermaid_styling",  # Script for mermaid diagram validation
@@ -506,6 +507,7 @@ def test_dev_dependencies_are_importable():
             "infisical_python",  # imports as infisical_client
             "pydantic_ai",  # imports as pydantic_ai (normalized)
             "types_pyyaml",  # type stub, no runtime import
+            "types_psutil",  # type stub, no runtime import
             "types_requests",  # type stub, no runtime import
             "types_redis",  # type stub, no runtime import
             "openapi_spec_validator",  # Complex import structure
@@ -525,6 +527,7 @@ def test_dev_dependencies_are_importable():
             "opentelemetry_exporter_otlp_proto_grpc",  # imports as opentelemetry.exporter.otlp.proto.grpc
             "opentelemetry_exporter_otlp_proto_http",  # imports as opentelemetry.exporter.otlp.proto.http
             "langgraph_checkpoint_redis",  # imports as langgraph.checkpoint.redis
+            "azure_identity",  # imports as azure.identity (namespace package)
             # Optional dependencies (not always installed)
             "torch",  # Only in embeddings-local extra
             "sentence_transformers",  # Only in embeddings-local extra

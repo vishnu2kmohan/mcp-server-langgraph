@@ -18,25 +18,27 @@
 # SERVICES:
 #   - PostgreSQL: Database for OpenFGA and Keycloak
 #   - OpenFGA: Authorization service (http://localhost:8080)
-#   - Keycloak: SSO/authentication (http://localhost:8081)
+#   - Keycloak: SSO/authentication (http://localhost:8082)
 #   - Redis: Session storage (localhost:6379)
 #   - Redis (Sessions): Dedicated Redis for session data (localhost:6380)
-#   - Jaeger: Distributed tracing UI (http://localhost:16686)
-#   - Prometheus: Metrics collection (http://localhost:9090)
-#   - Grafana: Metrics visualization (http://localhost:3000)
 #   - Qdrant: Vector database for context loading (http://localhost:6333)
+#   - Agent: MCP Server application (http://localhost:8000)
+#
+# OBSERVABILITY:
+#   For observability (Grafana, Loki, Tempo, Mimir, Alloy), use docker-compose.test.yml
+#   which includes the full LGTM stack. Legacy services (Jaeger, Prometheus, Alertmanager)
+#   have been deprecated in favor of the LGTM stack.
 #
 # PORTS:
 #   5432  - PostgreSQL
 #   6379  - Redis (checkpoints)
 #   6380  - Redis (sessions)
-#   6333  - Qdrant
+#   6333  - Qdrant HTTP API
+#   6334  - Qdrant gRPC API
+#   8000  - MCP Server
 #   8080  - OpenFGA HTTP API
-#   8081  - Keycloak
-#   9090  - Prometheus
-#   3000  - Grafana
-#   16686 - Jaeger UI
-#   14268 - Jaeger collector
+#   8081  - OpenFGA gRPC API
+#   8082  - Keycloak
 
 services:
   # ==============================================================================
@@ -63,6 +65,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -100,6 +103,15 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
     networks:
       - mcp-network
 
@@ -139,6 +151,15 @@ services:
       timeout: 5s
       retries: 20
       start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
     networks:
       - mcp-network
 
@@ -159,6 +180,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -181,6 +203,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -213,6 +236,15 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
     networks:
       - mcp-network
 
@@ -272,17 +304,21 @@ services:
       - QDRANT_URL=http://qdrant:6333
 
       # Observability
-      - ENABLE_TELEMETRY=true
-      - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
+      # For full observability, use docker-compose.test.yml with LGTM stack
+      - ENABLE_TELEMETRY=false
       - PROMETHEUS_METRICS_ENABLED=true
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+      # OTEL endpoint configured in docker-compose.test.yml (Alloy collector)
+      # - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
     healthcheck:
+      # Use /health/live to avoid 307 redirect (/health -> /health/ due to sub-app mount)
       # wget is available in the API service image (built from our Dockerfile)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health/live"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 30s
+    restart: unless-stopped
+    init: true  # Proper process cleanup for Python app
     deploy:
       resources:
         limits:
@@ -297,123 +333,19 @@ services:
   # ==============================================================================
   # OBSERVABILITY SERVICES
   # ==============================================================================
-
-  jaeger:
-    image: jaegertracing/all-in-one:1.62.0
-    ports:
-      - "16686:16686"  # Jaeger UI
-      - "14268:14268"  # Jaeger collector HTTP
-      - "14250:14250"  # Jaeger collector gRPC
-      - "6831:6831/udp"  # Jaeger agent compact
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
-      - LOG_LEVEL=info
-    healthcheck:
-      # wget is available in the official Jaeger all-in-one image
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 256M
-    networks:
-      - mcp-network
-
-  prometheus:
-    image: prom/prometheus:v3.7.1
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=30d'
-      - '--web.enable-lifecycle'
-      - '--web.enable-admin-api'
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ../monitoring/prometheus/alerts:/etc/prometheus/alerts:ro
-      - ../monitoring/prometheus/rules:/etc/prometheus/rules:ro
-      - prometheus-data:/prometheus
-    healthcheck:
-      # wget is available in the official Prometheus image (prom/prometheus)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.2'
-          memory: 512M
-    networks:
-      - mcp-network
-
-  alertmanager:
-    image: prom/alertmanager:v0.28.1
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
-      - '--web.external-url=http://localhost:9093'
-      - '--cluster.advertise-address=0.0.0.0:9093'
-    ports:
-      - "9093:9093"
-    volumes:
-      - ../monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-      - alertmanager-data:/alertmanager
-    healthcheck:
-      # wget is available in the official Alertmanager image (prom/alertmanager)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - mcp-network
-
-  grafana:
-    image: grafana/grafana:12.2.0
-    depends_on:
-      prometheus:
-        condition: service_healthy
-    ports:
-      - "3001:3000"  # Changed to 3001 to avoid port conflict
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_INSTALL_PLUGINS=redis-datasource
-      - GF_SERVER_ROOT_URL=http://localhost:3001
-    volumes:
-      - grafana-data:/var/lib/grafana
-      # Datasource provisioning
-      - ../monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
-      # Dashboard provisioning
-      - ../monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
-      - ../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-    healthcheck:
-      # wget is available in the official Grafana image (grafana/grafana)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 128M
-    networks:
-      - mcp-network
+  # Legacy observability services (Jaeger, Prometheus, Alertmanager, Grafana) have
+  # been replaced by the LGTM stack in docker-compose.test.yml:
+  #
+  #   - Jaeger       → Tempo (distributed tracing)
+  #   - Prometheus   → Alloy + Mimir (metrics collection and storage)
+  #   - Alertmanager → Grafana Unified Alerting
+  #   - Grafana      → Grafana (with LGTM datasources)
+  #
+  # To run with full observability, use:
+  #   docker compose -f docker-compose.test.yml up -d
+  #
+  # Or combine this file with docker-compose.test.yml:
+  #   docker compose -f docker/docker-compose.yml -f docker-compose.test.yml up -d
 
 networks:
   mcp-network:
@@ -427,9 +359,5 @@ volumes:
     name: mcp-redis-data
   qdrant-data:
     name: mcp-qdrant-data
-  prometheus-data:
-    name: mcp-prometheus-data
-  alertmanager-data:
-    name: mcp-alertmanager-data
-  grafana-data:
-    name: mcp-grafana-data
+  # Legacy volumes (prometheus-data, alertmanager-data, grafana-data) removed
+  # Observability storage is managed by docker-compose.test.yml (LGTM stack)

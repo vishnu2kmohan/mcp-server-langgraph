@@ -5,7 +5,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Production Ready](https://img.shields.io/badge/production-ready-brightgreen.svg)](docs/deployment/production-checklist.mdx)
 [![Documentation](https://img.shields.io/badge/docs-mintlify-green.svg)](https://vishnu2kmohan.github.io/mcp-server-langgraph/)
-[![ADRs](https://img.shields.io/badge/ADRs-63-informational.svg)](adr/README.md)
+[![ADRs](https://img.shields.io/badge/ADRs-65-informational.svg)](adr/README.md)
 [![Use This Template](https://img.shields.io/badge/use-this%20template-blue.svg?logo=cookiecutter)](https://github.com/vishnu2kmohan/mcp-server-langgraph#-use-this-template)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?logo=docker&logoColor=white)](Dockerfile)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?logo=kubernetes&logoColor=white)](docs/deployment/kubernetes.mdx)

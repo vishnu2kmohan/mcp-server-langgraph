@@ -1,0 +1,32 @@
+# OpenShift Security Context Patch for Qdrant
+# ============================================
+# Configures Qdrant deployment for OpenShift restricted-v2 SCC.
+#
+# Qdrant unprivileged image runs as UID 1000, but OpenShift
+# will assign an arbitrary UID. Using GID 0 ensures volume access.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qdrant
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        # runAsUser omitted - OpenShift assigns arbitrary UID
+        runAsGroup: 0  # Root group for file access
+        fsGroup: 0     # Root group for volume ownership
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: qdrant
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            # runAsUser omitted - OpenShift assigns arbitrary UID
+            runAsGroup: 0
+            capabilities:
+              drop:
+                - ALL

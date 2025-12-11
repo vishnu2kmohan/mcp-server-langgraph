@@ -4,13 +4,15 @@ Integration tests for Docker test image asset exclusion (ADR-0053 compliance).
 Validates that the Docker test image correctly EXCLUDES directories per ADR-0053:
 - scripts/ directory must NOT be in Docker image
 - deployments/ directory must NOT be in Docker image
+- pyproject.toml must NOT be in Docker image (version via importlib.metadata)
 - Meta-tests requiring these directories run on the host, not in containers
 
 TDD: Updated to match ADR-0053 policy (meta-tests run on host).
 
 ADR-0053: Docker Image Contents Policy
-- Docker image contains: src/, tests/, pyproject.toml
-- Docker image excludes: scripts/, deployments/
+- Docker image contains: src/, tests/
+- Docker image excludes: scripts/, deployments/, pyproject.toml
+- pyproject.toml not needed at runtime (version read via importlib.metadata)
 - Meta-tests requiring excluded directories run on host via @pytest.mark.skipif
 """
 

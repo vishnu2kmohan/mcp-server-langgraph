@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
 from mcp_server_langgraph.compliance.gdpr.storage import AuditLogStore, ConversationStore
+from mcp_server_langgraph.compliance.metrics import record_gdpr_retention_cleanup
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
@@ -152,11 +153,16 @@ class DataRetentionService:
                     },
                 )
 
+                # Record GDPR retention cleanup metrics
+                record_gdpr_retention_cleanup(data_type="sessions", status="success", count=deleted_count)
+
             except Exception as e:
                 error_msg = f"Session cleanup failed: {e!s}"
                 result.errors.append(error_msg)
                 logger.error(error_msg, exc_info=True)
                 span.record_exception(e)
+                # Record GDPR retention cleanup metrics for failure
+                record_gdpr_retention_cleanup(data_type="sessions", status="failure", count=0)
 
             return result
 
@@ -193,10 +199,15 @@ class DataRetentionService:
                     extra={"deleted_count": deleted_count, "dry_run": self.dry_run},
                 )
 
+                # Record GDPR retention cleanup metrics
+                record_gdpr_retention_cleanup(data_type="conversations", status="success", count=deleted_count)
+
             except Exception as e:
                 error_msg = f"Conversation cleanup failed: {e!s}"
                 result.errors.append(error_msg)
                 logger.error(error_msg, exc_info=True)
+                # Record GDPR retention cleanup metrics for failure
+                record_gdpr_retention_cleanup(data_type="conversations", status="failure", count=0)
 
             return result
 
@@ -235,10 +246,15 @@ class DataRetentionService:
                     extra={"archived_count": archived_count, "dry_run": self.dry_run},
                 )
 
+                # Record GDPR retention cleanup metrics
+                record_gdpr_retention_cleanup(data_type="audit_logs", status="success", count=archived_count)
+
             except Exception as e:
                 error_msg = f"Audit log cleanup failed: {e!s}"
                 result.errors.append(error_msg)
                 logger.error(error_msg, exc_info=True)
+                # Record GDPR retention cleanup metrics for failure
+                record_gdpr_retention_cleanup(data_type="audit_logs", status="failure", count=0)
 
             return result
 

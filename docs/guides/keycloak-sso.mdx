@@ -53,7 +53,7 @@ sequenceDiagram
         ```yaml
         # docker-compose.yml
         keycloak:
-          image: quay.io/keycloak/keycloak:latest
+          image: quay.io/keycloak/keycloak:26.4.2
           environment:
             KEYCLOAK_ADMIN: admin
             KEYCLOAK_ADMIN_PASSWORD: admin
@@ -480,14 +480,17 @@ kubectl exec -i -n mcp-server-langgraph \
 #### Health Checks
 
 ```bash
-## Keycloak health
-curl https://sso.yourdomain.com/health
+## Keycloak health (with KC_HTTP_RELATIVE_PATH=/authn for gateway routing)
+curl https://sso.yourdomain.com/authn/health
 
 ## Readiness
-curl https://sso.yourdomain.com/health/ready
+curl https://sso.yourdomain.com/authn/health/ready
 
 ## Liveness
-curl https://sso.yourdomain.com/health/live
+curl https://sso.yourdomain.com/authn/health/live
+
+## Note: Health check paths include /authn prefix when KC_HTTP_RELATIVE_PATH=/authn is configured
+## For development (no gateway), use /health, /health/ready, /health/live
 ```
 #### Metrics
 
@@ -543,8 +546,10 @@ extraEnv:
     kubectl get pods -l app=keycloak
     kubectl logs -l app=keycloak --tail=100
 
-    # Test connectivity
-    curl http://keycloak:8080/health
+    # Test connectivity (with KC_HTTP_RELATIVE_PATH=/authn)
+    curl http://keycloak:8080/authn/health/ready
+    # Or without relative path:
+    curl http://keycloak:8080/health/ready
     ```
   </Accordion>
 

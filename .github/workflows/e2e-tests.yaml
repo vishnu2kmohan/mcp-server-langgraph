@@ -76,56 +76,18 @@ jobs:
 
     - name: Start test infrastructure
       run: |
+        # PARITY FIX (2025-12-10): Align with Makefile test-infra-up target
+        # The Makefile uses simple 'docker compose up -d --build' without extra flags
+        # This ensures local and CI behavior are identical
         echo "Starting test infrastructure (docker-compose.test.yml)..."
-        echo "Pulling fresh base images to prevent stale cached images..."
-        docker compose -f docker-compose.test.yml pull --ignore-pull-failures || true
-        echo "Building fresh Docker images with no cache (ensures latest code)..."
-        # CODEX FINDING FIX (2025-11-24): Use --no-cache in CI to guarantee fresh builds
-        # --pull always: Pull latest base images before building
-        # --build: Build custom images from source
-        # no-cache is handled by GitHub Actions' fresh runners
-        docker compose -f docker-compose.test.yml build --pull
-        docker compose -f docker-compose.test.yml up -d
+        docker compose -f docker-compose.test.yml up -d --build
 
-        echo "Waiting for all services to report healthy..."
-        echo "This may take up to 10 minutes for all services to initialize on slow runners..."
-
-        # Wait for all services to be healthy (max 10 minutes = 600 seconds)
-        # Keycloak needs 45s start_period + up to 40 retries * 5s = ~3 min worst case
-        # Multiple services (postgres, redis, qdrant, keycloak, openfga) = ~5-8 min total
-        # Increased timeout to 10 minutes to accommodate slower GitHub Actions runners
-        # (from audit: E2E tests had 64% failure rate with 7.5 min timeout)
-        for i in {1..200}; do
-          # Count healthy services by checking health status directly (docker compose ps --filter only supports status, not health)
-          HEALTHY=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health == "healthy") | .Service' | wc -l | tr -d ' ')
-          TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l | tr -d ' ')
-
-          echo "Attempt $i/200: $HEALTHY/$TOTAL services healthy"
-
-          # Show which services are not healthy yet (for debugging)
-          if [ "$HEALTHY" -ne "$TOTAL" ]; then
-            UNHEALTHY=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health != "healthy") | "\(.Service): \(.Health // "starting")"' | tr '\n' ', ' | sed 's/,$//')
-            if [ -n "$UNHEALTHY" ]; then
-              echo "  ⏳ Waiting for: $UNHEALTHY"
-            fi
-          fi
-
-          if [ "$HEALTHY" -eq "$TOTAL" ] && [ "$TOTAL" -gt 0 ]; then
-            echo "✅ All $TOTAL services are healthy!"
-            break
-          fi
-
-          if [ $i -eq 200 ]; then
-            echo "❌ Timeout waiting for services after 10 minutes. Current status:"
-            docker compose -f docker-compose.test.yml ps
-            echo ""
-            echo "Showing logs for all services:"
-            docker compose -f docker-compose.test.yml logs --tail=50
-            exit 1  # Fail explicitly instead of continuing
-          fi
-
-          sleep 3
-        done
+        echo ""
+        echo "Waiting for services to be healthy..."
+        # PARITY FIX (2025-12-10): Match Makefile test-e2e behavior - wait for ALL services
+        # When no services are specified, wait_for_services.sh auto-discovers all services
+        # with healthchecks from the compose file. This is more maintainable than explicit lists.
+        bash scripts/utils/wait_for_services.sh docker-compose.test.yml
 
         echo ""
         echo "Final service status:"
@@ -205,11 +167,19 @@ jobs:
         # CODEX FINDING FIX (2025-11-24): Verify realm is imported, not just port open
         # Previous issue: Keycloak health check passes but realm not yet imported
         # Test that we can actually get tokens for the test user (proves realm is ready)
-        for i in {1..30}; do
+        #
+        # FIX (2025-12-10): Use correct realm 'default' (not 'master') and '/authn' path prefix
+        # The test realm is 'default' (from tests/e2e/keycloak-test-realm.json)
+        # Keycloak has KC_HTTP_RELATIVE_PATH=/authn baked into the Docker image
+        #
+        # TIMEOUT FIX (2025-12-10): 150 iterations * 3s = 7.5 minutes total
+        # Keycloak initialization can take 3-5 minutes on slow GitHub runners.
+        # Meta test test_e2e_workflow_has_adequate_timeout requires >= 7 minutes.
+        for i in {1..150}; do
           # Try to get a token using the test user credentials
           # This proves the realm, client, and user are all properly configured
           TOKEN_RESPONSE=$(curl -sf -X POST \
-            "http://localhost:9082/realms/master/protocol/openid-connect/token" \
+            "http://localhost:9082/authn/realms/default/protocol/openid-connect/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "grant_type=password" \
             -d "client_id=mcp-server" \
@@ -221,14 +191,14 @@ jobs:
             echo "✓ Keycloak realm fully imported (user authentication works)"
             break
           fi
-          if [ $i -eq 30 ]; then
-            echo "❌ Keycloak realm not ready after 30 attempts"
+          if [ $i -eq 150 ]; then
+            echo "❌ Keycloak realm not ready after 150 attempts (7.5 minutes)"
             echo "Last response: $TOKEN_RESPONSE"
             docker compose -f docker-compose.test.yml logs keycloak-test
             exit 1
           fi
-          echo "Waiting for Keycloak realm import... (attempt $i/30)"
-          sleep 2
+          echo "Waiting for Keycloak realm import... (attempt $i/150)"
+          sleep 3
         done
 
         echo ""
@@ -245,9 +215,10 @@ jobs:
         OTEL_SDK_DISABLED: "true"
         # Keycloak client configuration for token introspection
         # Must match the secret in tests/e2e/keycloak-test-realm.json
+        # FIX (2025-12-10): Use realm 'default' (not 'master') and include /authn path
         KEYCLOAK_CLIENT_SECRET: "test-client-secret-for-e2e-tests"
-        KEYCLOAK_URL: "http://localhost:9082"
-        KEYCLOAK_REALM: "master"
+        KEYCLOAK_URL: "http://localhost:9082/authn"
+        KEYCLOAK_REALM: "default"
         KEYCLOAK_CLIENT_ID: "mcp-server"
 
     - name: Upload E2E coverage artifact

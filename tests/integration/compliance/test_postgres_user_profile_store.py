@@ -147,9 +147,10 @@ async def test_create_duplicate_user_profile_fails(store: PostgresUserProfileSto
 async def test_create_user_profile_with_minimal_data(store: PostgresUserProfileStore):
     """Test creating user profile with only required fields"""
     # Arrange
+    user_id = get_user_id("minimal")  # Worker-safe ID for parallel execution
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     minimal_profile = UserProfile(
-        user_id="test_minimal",
+        user_id=user_id,
         username="minimal",
         email="minimal@example.com",
         created_at=now,
@@ -161,7 +162,7 @@ async def test_create_user_profile_with_minimal_data(store: PostgresUserProfileS
 
     # Assert
     assert result is True
-    retrieved = await store.get("test_minimal")
+    retrieved = await store.get(user_id)
     assert retrieved is not None
     assert retrieved.full_name is None
     assert retrieved.metadata == {}
@@ -353,9 +354,10 @@ async def test_delete_user_profile_is_permanent(store: PostgresUserProfileStore,
 async def test_create_profile_with_special_characters(store: PostgresUserProfileStore):
     """Test creating profile with special characters in fields"""
     # Arrange
+    user_id = get_user_id("special_chars")  # Worker-safe ID for parallel execution
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     special_profile = UserProfile(
-        user_id="test_special_123",
+        user_id=user_id,
         username="test'user\"<>",
         email="test+tag@example.com",
         full_name="Test O'Brien",
@@ -371,7 +373,7 @@ async def test_create_profile_with_special_characters(store: PostgresUserProfile
     assert result is True
 
     # Verify special characters preserved
-    retrieved = await store.get("test_special_123")
+    retrieved = await store.get(user_id)
     assert retrieved is not None
     assert retrieved.username == special_profile.username
     assert retrieved.full_name == special_profile.full_name
@@ -383,9 +385,10 @@ async def test_create_profile_with_special_characters(store: PostgresUserProfile
 async def test_create_profile_with_unicode(store: PostgresUserProfileStore):
     """Test creating profile with Unicode characters"""
     # Arrange
+    user_id = get_user_id("unicode")  # Worker-safe ID for parallel execution
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     unicode_profile = UserProfile(
-        user_id="test_unicode_123",
+        user_id=user_id,
         username="用户123",
         email="test@例え.com",
         full_name="李明 (Lǐ Míng)",
@@ -401,7 +404,7 @@ async def test_create_profile_with_unicode(store: PostgresUserProfileStore):
     assert result is True
 
     # Verify Unicode preserved
-    retrieved = await store.get("test_unicode_123")
+    retrieved = await store.get(user_id)
     assert retrieved is not None
     assert retrieved.username == "用户123"
     assert retrieved.full_name == "李明 (Lǐ Míng)"
@@ -414,6 +417,7 @@ async def test_create_profile_with_unicode(store: PostgresUserProfileStore):
 async def test_metadata_nested_json(store: PostgresUserProfileStore):
     """Test storing complex nested JSON in metadata"""
     # Arrange
+    user_id = get_user_id("complex_json")  # Worker-safe ID for parallel execution
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     complex_metadata = {
         "preferences": {
@@ -429,7 +433,7 @@ async def test_metadata_nested_json(store: PostgresUserProfileStore):
     }
 
     profile = UserProfile(
-        user_id="test_complex_json",
+        user_id=user_id,
         username="complexuser",
         email="complex@example.com",
         created_at=now,
@@ -444,7 +448,7 @@ async def test_metadata_nested_json(store: PostgresUserProfileStore):
     assert result is True
 
     # Verify complex JSON preserved
-    retrieved = await store.get("test_complex_json")
+    retrieved = await store.get(user_id)
     assert retrieved is not None
     assert retrieved.metadata == complex_metadata
     assert retrieved.metadata["preferences"]["notifications"]["push"]["frequency"] == "daily"

@@ -6,8 +6,7 @@ featuring multi-LLM support, fine-grained authorization, and comprehensive obser
 """
 
 import sys
-import tomllib
-from pathlib import Path
+from importlib.metadata import version as _get_version
 from typing import TYPE_CHECKING
 
 # TYPE_CHECKING imports satisfy static analysis (CodeQL, mypy) while keeping lazy loading
@@ -16,14 +15,13 @@ if TYPE_CHECKING:
     from mcp_server_langgraph.core.agent import agent_graph as agent_graph
     from mcp_server_langgraph.observability.telemetry import tracer as tracer
 
-# Read version from pyproject.toml (single source of truth)
+# Read version from installed package metadata (standard Python pattern)
+# This allows Docker images to work without pyproject.toml in the runtime image
+# See: https://packaging.python.org/en/latest/guides/single-sourcing-package-version/
 try:
-    pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
-    with open(pyproject_path, "rb") as f:
-        pyproject_data = tomllib.load(f)
-    __version__ = pyproject_data["project"]["version"]
+    __version__ = _get_version("mcp-server-langgraph")
 except Exception:
-    # Fallback if reading fails
+    # Fallback if package metadata unavailable (e.g., running from source without install)
     __version__ = "2.8.0"
 
 # Core exports (lightweight - eagerly imported)

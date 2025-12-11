@@ -4,7 +4,7 @@ Configuration management with Infisical secrets integration
 
 from typing import Any
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from mcp_server_langgraph.secrets.manager import get_secrets_manager
@@ -45,7 +45,11 @@ class Settings(BaseSettings):
     hipaa_integrity_secret: str | None = None
 
     # OpenTelemetry
-    otlp_endpoint: str = "http://localhost:4317"
+    # Read from standard OTEL_EXPORTER_OTLP_ENDPOINT first, then OTLP_ENDPOINT for backwards compat
+    otlp_endpoint: str = Field(
+        default="http://localhost:4317",
+        validation_alias=AliasChoices("OTEL_EXPORTER_OTLP_ENDPOINT", "OTLP_ENDPOINT"),
+    )
     enable_console_export: bool = True
     enable_tracing: bool = True
     enable_metrics: bool = True

@@ -31,8 +31,8 @@ FROM python:${PYTHON_VERSION}-slim AS builder
 WORKDIR /build
 
 # Install build dependencies
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-infisical,sharing=private \
+    --mount=type=cache,target=/var/lib/apt,id=apt-lib-infisical,sharing=private \
     apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
@@ -41,8 +41,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ca-certificates
 
 # Install Rust toolchain
-RUN --mount=type=cache,target=/root/.cargo/registry \
-    --mount=type=cache,target=/root/.cargo/git \
+RUN --mount=type=cache,target=/root/.cargo/registry,id=cargo-registry-rustup,sharing=private \
+    --mount=type=cache,target=/root/.cargo/git,id=cargo-git-rustup,sharing=private \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     --default-toolchain stable \
     --profile minimal
@@ -61,10 +61,10 @@ ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 COPY requirements-infisical.txt .
 
 # Build wheels with caching
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=cache,target=/root/.cargo/registry \
-    --mount=type=cache,target=/root/.cargo/git \
-    --mount=type=cache,target=/root/.cache/cargo-build \
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-infisical,sharing=private \
+    --mount=type=cache,target=/root/.cargo/registry,id=cargo-registry-infisical,sharing=private \
+    --mount=type=cache,target=/root/.cargo/git,id=cargo-git-infisical,sharing=private \
+    --mount=type=cache,target=/root/.cache/cargo-build,id=cargo-build-infisical,sharing=private \
     mkdir -p /wheels && \
     uv pip wheel --no-cache --wheel-dir=/wheels -r requirements-infisical.txt
 

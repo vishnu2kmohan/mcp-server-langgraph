@@ -56,12 +56,16 @@ spec:
         imagePullPolicy: Always
         resources:
           limits:
+            cpu: 100m
+            memory: 64Mi
             ephemeral-storage: 500Mi
           requests:
+            cpu: 50m
+            memory: 32Mi
             ephemeral-storage: 100Mi
       containers:
       - name: openfga
-        image: openfga/openfga:v1.10.2
+        image: openfga/openfga:v1.11.2
         imagePullPolicy: Always
         command:
         - /openfga
