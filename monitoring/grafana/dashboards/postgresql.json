@@ -364,8 +364,8 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(pg_stat_statements_mean_exec_time_ms{job=\"postgres\"}[5m])",
-          "legendFormat": "Avg Query Time",
+          "expr": "rate(pg_stat_database_active_time_seconds_total{job=\"postgres\", datname!~\"template.*\"}[5m]) * 1000",
+          "legendFormat": "Avg Active Time (ms)",
           "refId": "A"
         }
       ],
@@ -421,8 +421,8 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "pg_postmaster_start_time_seconds{job=\"postgres\"} * 1000",
-          "legendFormat": "Start Time",
+          "expr": "process_start_time_seconds{job=\"postgres\"} * 1000",
+          "legendFormat": "Exporter Start Time",
           "refId": "A"
         }
       ],

@@ -111,3 +111,22 @@ class TestBuilderBusinessMetrics:
 
             metrics_text = response.text
             assert "builder_import" in metrics_text, "Builder should emit builder_import metrics"
+
+    @pytest.mark.unit
+    def test_builder_workflow_node_count_metric_exists(self) -> None:
+        """Test that builder_workflow_node_count metric is defined."""
+        from mcp_server_langgraph.builder.api import metrics
+
+        # Initialize metrics
+        metrics._init_metrics()
+
+        # Check that the metric is registered
+        assert metrics._builder_workflow_node_count is not None, "builder_workflow_node_count metric should be defined"
+
+    @pytest.mark.unit
+    def test_record_workflow_node_count(self) -> None:
+        """Test recording workflow node count."""
+        from mcp_server_langgraph.builder.api import metrics
+
+        # Should not raise
+        metrics.record_workflow_node_count(workflow_id="test-workflow", node_count=5)

@@ -20,6 +20,7 @@ _builder_code_generation_duration: Any = None
 _builder_validation_total: Any = None
 _builder_import_total: Any = None
 _builder_workflows_total: Any = None
+_builder_workflow_node_count: Any = None
 
 
 def _init_metrics() -> bool:
@@ -30,6 +31,7 @@ def _init_metrics() -> bool:
     global _builder_validation_total  # noqa: PLW0603
     global _builder_import_total  # noqa: PLW0603
     global _builder_workflows_total  # noqa: PLW0603
+    global _builder_workflow_node_count  # noqa: PLW0603
 
     if _metrics_available is not None:
         return _metrics_available
@@ -64,6 +66,12 @@ def _init_metrics() -> bool:
         _builder_workflows_total = Gauge(
             "builder_workflows_total",
             "Total number of stored workflows",
+        )
+
+        _builder_workflow_node_count = Gauge(
+            "builder_workflow_node_count",
+            "Number of nodes in a workflow",
+            ["workflow_id"],
         )
 
         _metrics_available = True
@@ -146,5 +154,23 @@ def set_workflows_count(count: int) -> None:
     try:
         if _builder_workflows_total:
             _builder_workflows_total.set(count)
+    except Exception:
+        pass
+
+
+def record_workflow_node_count(workflow_id: str, node_count: int) -> None:
+    """
+    Record the node count for a workflow.
+
+    Args:
+        workflow_id: Unique workflow identifier
+        node_count: Number of nodes in the workflow
+    """
+    if not _metrics_available:
+        return
+
+    try:
+        if _builder_workflow_node_count:
+            _builder_workflow_node_count.labels(workflow_id=workflow_id).set(node_count)
     except Exception:
         pass
