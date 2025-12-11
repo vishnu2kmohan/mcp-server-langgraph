@@ -39,7 +39,7 @@
       "title": "Overview Dashboard",
       "tooltip": "View Overview Dashboard",
       "type": "link",
-      "url": "/d/langgraph-agent/overview"
+      "url": "/d/langgraph-agent-overview/langgraph-agent-overview"
     },
     {
       "icon": "dashboard",

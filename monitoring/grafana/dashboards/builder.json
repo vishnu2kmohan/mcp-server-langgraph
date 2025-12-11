@@ -28,7 +28,7 @@
       "title": "LangGraph Agent",
       "tooltip": "View Agent Dashboard",
       "type": "link",
-      "url": "/d/langgraph-agent/langgraph-agent"
+      "url": "/d/langgraph-agent-overview/langgraph-agent-overview"
     },
     {
       "asDropdown": false,

@@ -285,10 +285,36 @@ prometheus.scrape "openfga" {
   scrape_timeout  = "10s"
 }
 
-// NOTE: Redis and PostgreSQL require exporters for Prometheus metrics
-// Redis: redis:6379 doesn't expose /metrics directly (needs redis-exporter)
-// PostgreSQL: postgres:5432 doesn't expose /metrics directly (needs postgres-exporter)
-// These are NOT scraped here - add exporters to docker-compose.test.yml if needed
+// =============================================================================
+// DATABASE EXPORTERS
+// =============================================================================
+// Redis and PostgreSQL don't expose /metrics directly - use dedicated exporters
+
+prometheus.scrape "redis" {
+  targets = [{
+    __address__ = "redis-exporter:9121",
+    service     = "redis-test",
+    job         = "redis",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "postgres" {
+  targets = [{
+    __address__ = "postgres-exporter:9187",
+    service     = "postgres-test",
+    job         = "postgres",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
 
 // =============================================================================
 // LGTM STACK SELF-MONITORING

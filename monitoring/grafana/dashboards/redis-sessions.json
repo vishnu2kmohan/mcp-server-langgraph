@@ -105,7 +105,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "up{job=\"redis-session\"}",
+          "expr": "up{job=\"redis\"}",
           "refId": "A",
           "legendFormat": "Redis Session Store Status"
         }
@@ -167,7 +167,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "up{job=\"redis-session\"}",
+          "expr": "up{job=\"redis\"}",
           "refId": "A"
         }
       ],
@@ -262,7 +262,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "redis_memory_used_bytes{job=\"redis-session\"} / redis_memory_max_bytes{job=\"redis-session\"}",
+          "expr": "redis_memory_used_bytes{job=\"redis\"} / redis_memory_max_bytes{job=\"redis\"}",
           "refId": "A",
           "legendFormat": "Memory Usage %"
         }
@@ -350,7 +350,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "redis_memory_used_bytes{job=\"redis-session\"}",
+          "expr": "redis_memory_used_bytes{job=\"redis\"}",
           "refId": "A",
           "legendFormat": "Used Memory"
         },
@@ -359,7 +359,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "redis_memory_max_bytes{job=\"redis-session\"}",
+          "expr": "redis_memory_max_bytes{job=\"redis\"}",
           "refId": "B",
           "legendFormat": "Max Memory"
         }
@@ -447,7 +447,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "redis_db_keys{job=\"redis-session\"}",
+          "expr": "redis_db_keys{job=\"redis\"}",
           "refId": "A",
           "legendFormat": "Total Keys (Sessions)"
         }
@@ -535,7 +535,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(redis_commands_processed_total{job=\"redis-session\"}[5m])",
+          "expr": "rate(redis_commands_processed_total{job=\"redis\"}[5m])",
           "refId": "A",
           "legendFormat": "Commands/sec"
         }
@@ -623,7 +623,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "redis_connected_clients{job=\"redis-session\"}",
+          "expr": "redis_connected_clients{job=\"redis\"}",
           "refId": "A",
           "legendFormat": "Connected Clients"
         }
@@ -807,7 +807,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "redis_evicted_keys_total{job=\"redis-session\"}",
+          "expr": "redis_evicted_keys_total{job=\"redis\"}",
           "refId": "A",
           "legendFormat": "Evicted Keys (Total)"
         },
@@ -816,7 +816,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(redis_evicted_keys_total{job=\"redis-session\"}[5m])",
+          "expr": "rate(redis_evicted_keys_total{job=\"redis\"}[5m])",
           "refId": "B",
           "legendFormat": "Eviction Rate"
         }
@@ -1111,7 +1111,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "redis_mem_fragmentation_ratio{job=\"redis-session\"}",
+          "expr": "redis_mem_fragmentation_ratio{job=\"redis\"}",
           "refId": "A",
           "legendFormat": "Fragmentation Ratio"
         }

@@ -187,6 +187,36 @@ services:
         aliases:
           - postgres
 
+  # PostgreSQL Exporter for Prometheus metrics
+  # Exposes pg_* metrics for the PostgreSQL dashboard
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    # RESILIENCE: Auto-restart on failure for observability infrastructure
+    restart: unless-stopped
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres:postgres@postgres-test:5432/postgres?sslmode=disable
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9187/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+        reservations:
+          cpus: '0.02'
+          memory: 32M
+    networks:
+      mcp-test-network:
+        aliases:
+          - postgres-exporter
+
   # ==============================================================================
   # DATABASE MIGRATIONS (Alembic)
   # ==============================================================================
@@ -570,6 +600,36 @@ services:
       mcp-test-network:
         aliases:
           - redis
+
+  # Redis Exporter for Prometheus metrics
+  # Exposes redis_* metrics for the Redis Sessions dashboard
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.67.0
+    # RESILIENCE: Auto-restart on failure for observability infrastructure
+    restart: unless-stopped
+    depends_on:
+      redis-test:
+        condition: service_healthy
+    environment:
+      - REDIS_ADDR=redis://redis-test:6379
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9121/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+        reservations:
+          cpus: '0.02'
+          memory: 32M
+    networks:
+      mcp-test-network:
+        aliases:
+          - redis-exporter
 
   # ==============================================================================
   # VECTOR DATABASE (for Anthropic Best Practices: Just-in-Time Context)

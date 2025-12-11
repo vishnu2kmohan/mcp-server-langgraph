@@ -39,7 +39,7 @@
       "title": "Security",
       "tooltip": "View Security Dashboard",
       "type": "link",
-      "url": "/d/security/security"
+      "url": "/d/langgraph-agent-security/langgraph-agent-security"
     }
   ],
   "panels": [

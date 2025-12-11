@@ -112,7 +112,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "pg_up{job=~\".*postgres.*\"}",
+          "expr": "pg_up{job=\"postgres\"}",
           "legendFormat": "Status",
           "refId": "A"
         }
@@ -177,7 +177,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "pg_stat_activity_count{job=~\".*postgres.*\", state=\"active\"}",
+          "expr": "pg_stat_activity_count{job=\"postgres\", state=\"active\"}",
           "legendFormat": "Active",
           "refId": "A"
         }
@@ -242,7 +242,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "(sum(pg_stat_activity_count{job=~\".*postgres.*\"}) / pg_settings_max_connections{job=~\".*postgres.*\"}) * 100",
+          "expr": "(sum(pg_stat_activity_count{job=\"postgres\"}) / pg_settings_max_connections{job=\"postgres\"}) * 100",
           "legendFormat": "Usage",
           "refId": "A"
         }
@@ -299,7 +299,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "pg_database_size_bytes{job=~\".*postgres.*\", datname!~\"template.*\"}",
+          "expr": "pg_database_size_bytes{job=\"postgres\", datname!~\"template.*\"}",
           "legendFormat": "{{datname}}",
           "refId": "A"
         }
@@ -364,7 +364,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(pg_stat_statements_mean_exec_time_ms{job=~\".*postgres.*\"}[5m])",
+          "expr": "rate(pg_stat_statements_mean_exec_time_ms{job=\"postgres\"}[5m])",
           "legendFormat": "Avg Query Time",
           "refId": "A"
         }
@@ -421,7 +421,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "pg_postmaster_start_time_seconds{job=~\".*postgres.*\"} * 1000",
+          "expr": "pg_postmaster_start_time_seconds{job=\"postgres\"} * 1000",
           "legendFormat": "Start Time",
           "refId": "A"
         }
@@ -522,7 +522,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "pg_stat_activity_count{job=~\".*postgres.*\"}",
+          "expr": "pg_stat_activity_count{job=\"postgres\"}",
           "legendFormat": "{{state}}",
           "refId": "A"
         }
@@ -614,7 +614,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(pg_stat_activity_count{job=~\".*postgres.*\"}) by (datname)",
+          "expr": "sum(pg_stat_activity_count{job=\"postgres\"}) by (datname)",
           "legendFormat": "{{datname}}",
           "refId": "A"
         },
@@ -623,7 +623,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "pg_settings_max_connections{job=~\".*postgres.*\"}",
+          "expr": "pg_settings_max_connections{job=\"postgres\"}",
           "legendFormat": "Max Connections",
           "refId": "B"
         }
@@ -724,7 +724,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(pg_stat_database_xact_commit{job=~\".*postgres.*\", datname!~\"template.*\"}[5m])",
+          "expr": "rate(pg_stat_database_xact_commit{job=\"postgres\", datname!~\"template.*\"}[5m])",
           "legendFormat": "{{datname}} commits",
           "refId": "A"
         },
@@ -733,7 +733,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(pg_stat_database_xact_rollback{job=~\".*postgres.*\", datname!~\"template.*\"}[5m])",
+          "expr": "rate(pg_stat_database_xact_rollback{job=\"postgres\", datname!~\"template.*\"}[5m])",
           "legendFormat": "{{datname}} rollbacks",
           "refId": "B"
         }
@@ -821,7 +821,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(pg_stat_database_tup_fetched{job=~\".*postgres.*\", datname!~\"template.*\"}[5m])",
+          "expr": "rate(pg_stat_database_tup_fetched{job=\"postgres\", datname!~\"template.*\"}[5m])",
           "legendFormat": "{{datname}} fetched",
           "refId": "A"
         },
@@ -830,7 +830,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(pg_stat_database_tup_inserted{job=~\".*postgres.*\", datname!~\"template.*\"}[5m])",
+          "expr": "rate(pg_stat_database_tup_inserted{job=\"postgres\", datname!~\"template.*\"}[5m])",
           "legendFormat": "{{datname}} inserted",
           "refId": "B"
         },
@@ -839,7 +839,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(pg_stat_database_tup_updated{job=~\".*postgres.*\", datname!~\"template.*\"}[5m])",
+          "expr": "rate(pg_stat_database_tup_updated{job=\"postgres\", datname!~\"template.*\"}[5m])",
           "legendFormat": "{{datname}} updated",
           "refId": "C"
         },
@@ -848,7 +848,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(pg_stat_database_tup_deleted{job=~\".*postgres.*\", datname!~\"template.*\"}[5m])",
+          "expr": "rate(pg_stat_database_tup_deleted{job=\"postgres\", datname!~\"template.*\"}[5m])",
           "legendFormat": "{{datname}} deleted",
           "refId": "D"
         }
@@ -926,7 +926,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "(sum(pg_stat_database_blks_hit{job=~\".*postgres.*\"}) / (sum(pg_stat_database_blks_hit{job=~\".*postgres.*\"}) + sum(pg_stat_database_blks_read{job=~\".*postgres.*\"}))) * 100",
+          "expr": "(sum(pg_stat_database_blks_hit{job=\"postgres\"}) / (sum(pg_stat_database_blks_hit{job=\"postgres\"}) + sum(pg_stat_database_blks_read{job=\"postgres\"}))) * 100",
           "legendFormat": "Cache Hit Ratio",
           "refId": "A"
         }
@@ -1014,7 +1014,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(pg_stat_database_blks_read{job=~\".*postgres.*\", datname!~\"template.*\"}[5m]) * 8192",
+          "expr": "rate(pg_stat_database_blks_read{job=\"postgres\", datname!~\"template.*\"}[5m]) * 8192",
           "legendFormat": "{{datname}} read",
           "refId": "A"
         },
@@ -1023,7 +1023,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(pg_stat_database_blks_hit{job=~\".*postgres.*\", datname!~\"template.*\"}[5m]) * 8192",
+          "expr": "rate(pg_stat_database_blks_hit{job=\"postgres\", datname!~\"template.*\"}[5m]) * 8192",
           "legendFormat": "{{datname}} hit",
           "refId": "B"
         }
@@ -1111,7 +1111,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "pg_stat_database_deadlocks{job=~\".*postgres.*\", datname!~\"template.*\"}",
+          "expr": "pg_stat_database_deadlocks{job=\"postgres\", datname!~\"template.*\"}",
           "legendFormat": "{{datname}}",
           "refId": "A"
         }
@@ -1212,7 +1212,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "pg_locks_count{job=~\".*postgres.*\"}",
+          "expr": "pg_locks_count{job=\"postgres\"}",
           "legendFormat": "{{mode}}",
           "refId": "A"
         }
@@ -1300,7 +1300,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(pg_stat_database_conflicts{job=~\".*postgres.*\", datname!~\"template.*\"}[5m])",
+          "expr": "rate(pg_stat_database_conflicts{job=\"postgres\", datname!~\"template.*\"}[5m])",
           "legendFormat": "{{datname}}",
           "refId": "A"
         }
