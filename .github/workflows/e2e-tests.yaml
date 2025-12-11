@@ -206,7 +206,9 @@ jobs:
         # CODEX FINDING FIX (2025-11-24): Verify realm is imported, not just port open
         # Previous issue: Keycloak health check passes but realm not yet imported
         # Test that we can actually get tokens for the test user (proves realm is ready)
-        for i in {1..30}; do
+        # 2025-12-11: Increased from 30 to 60 attempts (120s) for slower CI runners
+        #             Keycloak realm import can take 90+ seconds on resource-constrained runners
+        for i in {1..60}; do
           # Try to get a token using the test user credentials
           # This proves the realm, client, and user are all properly configured
           TOKEN_RESPONSE=$(curl -sf -X POST \
@@ -222,13 +224,13 @@ jobs:
             echo "✓ Keycloak realm fully imported (user authentication works)"
             break
           fi
-          if [ $i -eq 30 ]; then
-            echo "❌ Keycloak realm not ready after 30 attempts"
+          if [ $i -eq 60 ]; then
+            echo "❌ Keycloak realm not ready after 60 attempts (120 seconds)"
             echo "Last response: $TOKEN_RESPONSE"
             docker compose -f docker-compose.test.yml logs keycloak-test
             exit 1
           fi
-          echo "Waiting for Keycloak realm import... (attempt $i/30)"
+          echo "Waiting for Keycloak realm import... (attempt $i/60)"
           sleep 2
         done
 
