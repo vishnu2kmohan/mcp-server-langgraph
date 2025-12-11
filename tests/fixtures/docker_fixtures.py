@@ -295,26 +295,29 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
     if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
         pytest.skip("Keycloak test service not available - run 'make test-integration'")
 
-    # Best Practice: Use /health/ready endpoint on management port (9000)
-    # Reference: https://www.keycloak.org/observability/health
-    # Keycloak 26.x exposes health endpoints on port 9000 (management port)
-    # This is more reliable than /realms/master as it's purpose-built for health checks
-    # Retry with backoff since Keycloak HTTP server may take time to initialize after port opens
-    # This accounts for:
-    #   1. Database schema migration
-    #   2. Realm import from mcp-test-realm.json
-    #   3. JIT compilation of Java bytecode
-    keycloak_health_url = f"http://localhost:{test_infrastructure_ports['keycloak_management']}/health/ready"
+    # CRITICAL: Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn in docker-compose.test.yml
+    # This means ALL endpoints on the main HTTP port (9082) are served under /authn prefix
+    # The management port (9000/9900) should be unaffected, but testing shows it may not respond in CI
+    #
+    # Use the OpenID Connect well-known endpoint for health check - this is more reliable because:
+    # 1. It's the same endpoint used by CI workflow verification
+    # 2. It proves the realm is fully imported and ready
+    # 3. It works consistently with the /authn prefix
+    #
+    # Reference: https://www.keycloak.org/server/all-config (KC_HTTP_RELATIVE_PATH)
+    keycloak_wellknown_url = (
+        f"http://localhost:{test_infrastructure_ports['keycloak']}/authn/realms/mcp-test/.well-known/openid-configuration"
+    )
     keycloak_ready = False
     for attempt in range(30):  # 30 attempts * 2s = 60s max additional wait
-        if _check_http_health(keycloak_health_url, timeout=5):
+        if _check_http_health(keycloak_wellknown_url, timeout=5):
             keycloak_ready = True
             break
         time.sleep(2)
 
     if not keycloak_ready:
-        logging.error("Keycloak /health/ready endpoint not responding after 60s additional wait")
-        pytest.skip("Keycloak health check failed - /health/ready endpoint not responding (port 9900)")
+        logging.error("Keycloak OIDC endpoint not responding after 60s additional wait")
+        pytest.skip("Keycloak health check failed - OIDC well-known endpoint not responding (port 9082/authn)")
     logging.info("✓ Keycloak ready")
 
     # Qdrant

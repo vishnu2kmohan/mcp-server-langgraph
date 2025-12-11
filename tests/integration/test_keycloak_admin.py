@@ -20,7 +20,8 @@ from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig
 from tests.conftest import get_user_id
 
 # Test configuration - can be overridden via environment variables
-KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:9082")
+# CRITICAL: Include /authn prefix because Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
+KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:9082/authn")
 KEYCLOAK_TEST_REALM = os.getenv("KEYCLOAK_TEST_REALM", "test-realm")
 KEYCLOAK_TEST_CLIENT_ID = os.getenv("KEYCLOAK_TEST_CLIENT_ID", "test-client")
 KEYCLOAK_TEST_CLIENT_SECRET = os.getenv("KEYCLOAK_TEST_CLIENT_SECRET", "test-secret")  # gitleaks:allow
@@ -33,13 +34,22 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture(scope="module")
 def keycloak_available() -> bool:
-    """Check if Keycloak test instance is available"""
+    """Check if Keycloak test instance is available.
+
+    Uses the OIDC well-known endpoint for health check because:
+    1. It works with KC_HTTP_RELATIVE_PATH=/authn configuration
+    2. It proves the realm is fully imported and ready
+    3. It's more reliable than the management port health endpoint in CI
+    """
     import asyncio
 
     async def _check():
         try:
+            # Use OIDC well-known endpoint for health check (same as docker_fixtures.py)
+            # KEYCLOAK_TEST_URL already includes /authn prefix
+            wellknown_url = f"{KEYCLOAK_TEST_URL}/realms/{KEYCLOAK_TEST_REALM}/.well-known/openid-configuration"
             async with httpx.AsyncClient() as client:
-                response = await client.get(f"{KEYCLOAK_TEST_URL}/health/ready", timeout=5.0)
+                response = await client.get(wellknown_url, timeout=5.0)
                 return response.status_code == 200
         except (httpx.ConnectError, httpx.TimeoutException):
             return False

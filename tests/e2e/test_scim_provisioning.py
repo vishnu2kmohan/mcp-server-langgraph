@@ -25,7 +25,8 @@ httpx = pytest.importorskip("httpx", reason="httpx required for SCIM E2E tests")
 
 # Test configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
-KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:9082")
+# CRITICAL: Include /authn prefix because Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
+KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:9082/authn")
 SCIM_BASE_URL = f"{API_BASE_URL}/scim/v2"
 
 pytestmark = pytest.mark.e2e
