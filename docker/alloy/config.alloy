@@ -400,3 +400,47 @@ prometheus.scrape "mcp_services" {
   // Only scrape containers with metrics port exposed
   honor_labels = true
 }
+
+// =============================================================================
+// MCP APPLICATION SERVICES (Explicit targets for dashboard compatibility)
+// =============================================================================
+// These scrape targets use job labels that match the Grafana dashboards
+
+prometheus.scrape "langgraph_agent" {
+  targets = [{
+    __address__ = "mcp-server-test:8000",
+    service     = "mcp-server-test",
+    job         = "langgraph-agent",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "mcp_builder" {
+  targets = [{
+    __address__ = "builder-test:8001",
+    service     = "mcp-builder-test",
+    job         = "mcp-builder",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+prometheus.scrape "mcp_playground" {
+  targets = [{
+    __address__ = "playground-test:8002",
+    service     = "mcp-playground-test",
+    job         = "mcp-playground",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}

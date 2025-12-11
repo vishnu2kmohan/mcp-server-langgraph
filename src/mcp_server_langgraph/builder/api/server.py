@@ -15,16 +15,18 @@ Example:
 
 import os
 import tempfile
+import time
 import uuid
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, AsyncIterator, Literal
 
-from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 
+from mcp_server_langgraph.middleware import MetricsMiddleware
 from mcp_server_langgraph.observability.telemetry import (
     init_observability,
     is_initialized,
@@ -36,6 +38,7 @@ from mcp_server_langgraph.observability.telemetry import (
 from mcp_server_langgraph.utils.spa_static_files import create_spa_static_files
 
 from ..codegen import CodeGenerator, WorkflowDefinition
+from . import metrics as builder_metrics
 from ..storage import (
     PostgresWorkflowManager,
     RedisWorkflowManager,
@@ -353,6 +356,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# HTTP metrics for Prometheus/Grafana
+app.add_middleware(MetricsMiddleware)
+
 
 # ==============================================================================
 # Endpoints
@@ -389,6 +395,27 @@ def health_check() -> dict[str, str]:
     return {"status": "healthy"}
 
 
+@app.get("/metrics")
+def prometheus_metrics() -> Response:
+    """
+    Prometheus metrics endpoint for Alloy/Grafana scraping.
+
+    Returns metrics in Prometheus text exposition format.
+    """
+    try:
+        from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, generate_latest
+
+        return Response(
+            content=generate_latest(REGISTRY),
+            media_type=CONTENT_TYPE_LATEST,
+        )
+    except ImportError:
+        return Response(
+            content="# prometheus_client not available\n",
+            media_type="text/plain",
+        )
+
+
 @app.post("/api/builder/generate")
 async def generate_code(
     request: GenerateCodeRequest,
@@ -415,6 +442,8 @@ async def generate_code(
             }
         }
     """
+    start_time = time.perf_counter()
+
     with tracer.start_as_current_span(
         "builder.generate_code",
         attributes={
@@ -447,9 +476,17 @@ async def generate_code(
                 },
             )
 
+            # Record metrics
+            duration = time.perf_counter() - start_time
+            builder_metrics.record_code_generation("success", duration)
+
             return GenerateCodeResponse(code=code, formatted=True, warnings=warnings)
 
         except Exception as e:
+            # Record failure metrics
+            duration = time.perf_counter() - start_time
+            builder_metrics.record_code_generation("error", duration)
+
             logger.warning(f"Code generation failed: {e!s}")
             raise HTTPException(status_code=400, detail=f"Code generation failed: {e!s}")
 
@@ -535,9 +572,13 @@ async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflo
                 },
             )
 
+            # Record validation metrics
+            builder_metrics.record_validation("success", "valid" if is_valid else "invalid")
+
             return ValidateWorkflowResponse(valid=is_valid, errors=errors, warnings=warnings)
 
         except Exception as e:
+            builder_metrics.record_validation("error", "invalid")
             logger.warning(f"Workflow validation failed: {e!s}")
             return ValidateWorkflowResponse(valid=False, errors=[f"Validation error: {e!s}"])
 
@@ -923,6 +964,9 @@ async def import_workflow(
         # Validate
         validation = validate_import(workflow)
 
+        # Record success metrics
+        builder_metrics.record_import("success")
+
         return {
             "workflow": workflow,
             "validation": validation,
@@ -930,8 +974,10 @@ async def import_workflow(
         }
 
     except SyntaxError as e:
+        builder_metrics.record_import("error")
         raise HTTPException(status_code=400, detail=f"Invalid Python syntax: {e!s}")
     except Exception as e:
+        builder_metrics.record_import("error")
         raise HTTPException(status_code=500, detail=f"Import failed: {e!s}")
 
 

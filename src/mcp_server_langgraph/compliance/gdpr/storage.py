@@ -20,8 +20,11 @@ from abc import ABC, abstractmethod
 from datetime import datetime, UTC
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
 import contextlib
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from mcp_server_langgraph.compliance.metrics import record_audit_log, record_gdpr_anonymization
 
 # ============================================================================
 # Data Models
@@ -423,6 +426,9 @@ class InMemoryAuditLogStore(AuditLogStore):
             self.user_logs[entry.user_id] = []
         self.user_logs[entry.user_id].append(entry.log_id)
 
+        # Record audit log metrics
+        record_audit_log(event_type=entry.action)
+
         return entry.log_id
 
     async def get(self, log_id: str) -> AuditLogEntry | None:
@@ -468,6 +474,10 @@ class InMemoryAuditLogStore(AuditLogStore):
 
         # Move to anonymized tracking
         self.user_logs[anonymized_id] = self.user_logs.pop(user_id)
+
+        # Record GDPR anonymization metrics
+        if count > 0:
+            record_gdpr_anonymization(count=count, operation="audit_logs")
 
         return count
 

@@ -674,10 +674,29 @@
           },
           "expr": "rate(container_cpu_usage_seconds_total{pod=~\"keycloak-.*\"}[5m])",
           "refId": "A",
-          "legendFormat": "CPU Usage"
+          "legendFormat": "CPU Usage (K8s)"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "rate(jvm_gc_pause_seconds_sum{job=\"keycloak\"}[5m])",
+          "refId": "B",
+          "legendFormat": "GC CPU Time (Docker)"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "system_cpu_usage{job=\"keycloak\"} or vendor_system_cpu_utilization{job=\"keycloak\"}",
+          "refId": "C",
+          "legendFormat": "System CPU Usage (Docker)"
         }
       ],
       "title": "Keycloak CPU Usage",
+      "description": "CPU usage from K8s container metrics or JVM/System metrics (Docker). Note: Keycloak uses JVM metrics.",
       "type": "timeseries"
     },
     {
@@ -766,7 +785,25 @@
           },
           "expr": "container_memory_working_set_bytes{pod=~\"keycloak-.*\"}",
           "refId": "A",
-          "legendFormat": "Memory Usage"
+          "legendFormat": "Memory Usage (K8s)"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "sum(jvm_memory_used_bytes{job=\"keycloak\", area=\"heap\"})",
+          "refId": "B",
+          "legendFormat": "JVM Heap Used (Docker)"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "sum(jvm_memory_max_bytes{job=\"keycloak\", area=\"heap\"})",
+          "refId": "C",
+          "legendFormat": "JVM Heap Max (Docker)"
         },
         {
           "datasource": {
@@ -774,11 +811,21 @@
             "uid": "mimir"
           },
           "expr": "container_spec_memory_limit_bytes{pod=~\"keycloak-.*\"}",
-          "refId": "B",
-          "legendFormat": "Memory Limit"
+          "refId": "D",
+          "legendFormat": "Memory Limit (K8s)"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "sum(jvm_memory_used_bytes{job=\"keycloak\", area=\"nonheap\"})",
+          "refId": "E",
+          "legendFormat": "JVM Non-Heap Used (Docker)"
         }
       ],
       "title": "Keycloak Memory Usage",
+      "description": "Memory usage from K8s container metrics or JVM heap metrics (Docker). Note: Keycloak uses JVM metrics.",
       "type": "timeseries"
     }
   ],

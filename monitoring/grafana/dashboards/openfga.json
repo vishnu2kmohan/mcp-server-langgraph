@@ -186,7 +186,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "rate(authz_checks_total[5m])",
+          "expr": "rate(auth_authorization_checks_total[5m])",
           "legendFormat": "Total Checks",
           "refId": "A",
           "datasource": {
@@ -195,7 +195,7 @@
           }
         },
         {
-          "expr": "rate(authz_successes_total[5m])",
+          "expr": "rate(auth_authorization_checks_total{result=\"allowed\"}[5m])",
           "legendFormat": "Allowed",
           "refId": "B",
           "datasource": {
@@ -204,7 +204,7 @@
           }
         },
         {
-          "expr": "rate(authz_failures_total[5m])",
+          "expr": "rate(auth_authorization_checks_total{result=\"denied\"}[5m])",
           "legendFormat": "Denied",
           "refId": "C",
           "datasource": {
@@ -269,7 +269,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "rate(authz_failures_total[5m]) / (rate(authz_checks_total[5m]) + 0.0001)",
+          "expr": "rate(auth_authorization_checks_total{result=\"denied\"}[5m]) / (rate(auth_authorization_checks_total[5m]) + 0.0001)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -421,7 +421,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum(rate(authz_check_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(auth_authorization_duration_milliseconds_bucket[5m])) by (le))",
           "legendFormat": "p50",
           "refId": "A",
           "datasource": {
@@ -430,7 +430,7 @@
           }
         },
         {
-          "expr": "histogram_quantile(0.95, sum(rate(authz_check_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(auth_authorization_duration_milliseconds_bucket[5m])) by (le))",
           "legendFormat": "p95",
           "refId": "B",
           "datasource": {
@@ -439,7 +439,7 @@
           }
         },
         {
-          "expr": "histogram_quantile(0.99, sum(rate(authz_check_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(auth_authorization_duration_milliseconds_bucket[5m])) by (le))",
           "legendFormat": "p99",
           "refId": "C",
           "datasource": {
@@ -517,7 +517,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(rate(authz_checks_total[5m])) by (relation)",
+          "expr": "sum(rate(auth_authorization_checks_total[5m])) by (relation)",
           "legendFormat": "{{relation}}",
           "refId": "A",
           "datasource": {
@@ -596,7 +596,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "rate(openfga_tuples_written_total[5m])",
+          "expr": "rate(auth_openfga_tuples_written_total[5m])",
           "legendFormat": "Tuples Written",
           "refId": "A",
           "datasource": {
@@ -605,7 +605,7 @@
           }
         },
         {
-          "expr": "rate(openfga_tuples_deleted_total[5m])",
+          "expr": "rate(auth_openfga_tuples_deleted_total[5m])",
           "legendFormat": "Tuples Deleted",
           "refId": "B",
           "datasource": {
@@ -684,8 +684,8 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(rate(openfga_sync_operations_total[5m])) by (status)",
-          "legendFormat": "{{status}}",
+          "expr": "sum(rate(auth_openfga_sync_attempts_total[5m])) by (result)",
+          "legendFormat": "{{result}}",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -763,7 +763,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum(rate(openfga_sync_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(auth_openfga_sync_duration_milliseconds_bucket[5m])) by (le))",
           "legendFormat": "p50",
           "refId": "A",
           "datasource": {
@@ -772,7 +772,7 @@
           }
         },
         {
-          "expr": "histogram_quantile(0.95, sum(rate(openfga_sync_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(auth_openfga_sync_duration_milliseconds_bucket[5m])) by (le))",
           "legendFormat": "p95",
           "refId": "B",
           "datasource": {
@@ -781,7 +781,7 @@
           }
         },
         {
-          "expr": "histogram_quantile(0.99, sum(rate(openfga_sync_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(auth_openfga_sync_duration_milliseconds_bucket[5m])) by (le))",
           "legendFormat": "p99",
           "refId": "C",
           "datasource": {
@@ -859,7 +859,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(openfga_tuples_synced_total) by (role)",
+          "expr": "sum(auth_openfga_tuples_written_total) by (role)",
           "legendFormat": "{{role}}",
           "refId": "A",
           "datasource": {
@@ -937,7 +937,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(rate(role_mapping_applied_total[5m])) by (rule_type)",
+          "expr": "sum(rate(auth_role_mapping_operations_total[5m])) by (type)",
           "legendFormat": "{{rule_type}}",
           "refId": "A",
           "datasource": {

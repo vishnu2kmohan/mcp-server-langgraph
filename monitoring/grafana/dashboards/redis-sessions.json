@@ -904,7 +904,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(session_store_operations_total{operation=\"create\"}[5m])",
+          "expr": "rate(auth_session_created_total[5m])",
           "refId": "A",
           "legendFormat": "Create"
         },
@@ -913,7 +913,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(session_store_operations_total{operation=\"get\"}[5m])",
+          "expr": "rate(auth_session_retrieved_total[5m])",
           "refId": "B",
           "legendFormat": "Get"
         },
@@ -922,7 +922,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(session_store_operations_total{operation=\"delete\"}[5m])",
+          "expr": "rate(auth_session_revoked_total[5m])",
           "refId": "C",
           "legendFormat": "Delete"
         },
@@ -931,7 +931,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(session_store_operations_total{operation=\"refresh\"}[5m])",
+          "expr": "rate(auth_session_refreshed_total[5m])",
           "refId": "D",
           "legendFormat": "Refresh"
         }
@@ -1023,7 +1023,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(session_store_errors_total[5m])",
+          "expr": "sum(rate(auth_session_operations_duration_milliseconds_count{result!=\"success\"}[5m]))",
           "refId": "A",
           "legendFormat": "Error Rate"
         }

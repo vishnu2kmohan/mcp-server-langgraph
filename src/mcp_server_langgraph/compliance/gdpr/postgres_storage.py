@@ -38,6 +38,7 @@ from mcp_server_langgraph.compliance.gdpr.storage import (
     UserProfile,
     UserProfileStore,
 )
+from mcp_server_langgraph.compliance.metrics import record_audit_log, record_gdpr_anonymization
 
 # ============================================================================
 # PostgreSQL User Profile Store
@@ -714,6 +715,10 @@ class PostgresAuditLogStore(AuditLogStore):
                 entry.user_agent,
                 json.dumps(entry.metadata),
             )
+
+            # Record audit log metrics
+            record_audit_log(event_type=entry.action)
+
             return entry.log_id
 
     async def get(self, log_id: str) -> AuditLogEntry | None:
@@ -827,4 +832,10 @@ class PostgresAuditLogStore(AuditLogStore):
                 """,
                 user_id,
             )
-            return int(result.split()[-1])
+            count = int(result.split()[-1])
+
+            # Record GDPR anonymization metrics
+            if count > 0:
+                record_gdpr_anonymization(count=count, operation="audit_logs")
+
+            return count

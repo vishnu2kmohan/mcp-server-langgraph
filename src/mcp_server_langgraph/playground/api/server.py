@@ -35,9 +35,10 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import Any, AsyncIterator
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket, WebSocketDisconnect, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 
+from mcp_server_langgraph.middleware import MetricsMiddleware
 from mcp_server_langgraph.observability.telemetry import (
     init_observability,
     is_initialized,
@@ -85,6 +86,13 @@ from ..session import (
     create_postgres_engine,
     create_redis_pool,
     init_playground_database,
+)
+from .metrics import (
+    record_chat_message,
+    record_session_created,
+    record_session_deleted,
+    websocket_connected,
+    websocket_disconnected,
 )
 
 # Global session manager (initialized in lifespan)
@@ -295,6 +303,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# HTTP metrics for Prometheus/Grafana
+app.add_middleware(MetricsMiddleware)
+
 
 # ==============================================================================
 # Health Endpoints
@@ -339,6 +350,27 @@ def readiness_check() -> ReadinessStatus:
     status_str = "ready" if all_ready else "not_ready"
 
     return ReadinessStatus(status=status_str, checks=checks)
+
+
+@app.get("/metrics")
+def prometheus_metrics() -> Response:
+    """
+    Prometheus metrics endpoint for Alloy/Grafana scraping.
+
+    Returns metrics in Prometheus text exposition format.
+    """
+    try:
+        from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, generate_latest
+
+        return Response(
+            content=generate_latest(REGISTRY),
+            media_type=CONTENT_TYPE_LATEST,
+        )
+    except ImportError:
+        return Response(
+            content="# prometheus_client not available\n",
+            media_type="text/plain",
+        )
 
 
 # ==============================================================================
@@ -394,6 +426,9 @@ async def create_session(
                 },
             )
 
+            # Record session creation metric
+            record_session_created()
+
             return CreateSessionResponse(
                 session_id=session.session_id,
                 name=session.name,
@@ -409,6 +444,9 @@ async def create_session(
                 "Session created (in-memory)",
                 extra={"session_id": session_id, "session_name": request.name},
             )
+
+            # Record session creation metric
+            record_session_created()
 
             return CreateSessionResponse(
                 session_id=session_id,
@@ -557,6 +595,9 @@ async def delete_session(
                 f"Session deleted ({_storage_backend})",
                 extra={"session_id": session_id, "backend": _storage_backend},
             )
+
+            # Record session deletion metric
+            record_session_deleted()
         else:
             # In-memory fallback
             if not _delete_session_memory(session_id):
@@ -566,6 +607,9 @@ async def delete_session(
                 )
 
             logger.info("Session deleted (in-memory)", extra={"session_id": session_id})
+
+            # Record session deletion metric
+            record_session_deleted()
 
 
 # ==============================================================================
@@ -685,6 +729,11 @@ async def send_chat_message(
             },
         )
 
+        # Record chat message metrics
+        record_chat_message("user")
+        latency = (response_timestamp - now).total_seconds()
+        record_chat_message("assistant", latency=latency)
+
         return ChatResponse(
             response=response_content,
             message_id=message_id,
@@ -743,6 +792,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
     if session_id not in _websocket_connections:
         _websocket_connections[session_id] = []
     _websocket_connections[session_id].append(websocket)
+
+    # Record WebSocket connection metric
+    websocket_connected()
 
     try:
         # Send welcome message
@@ -805,6 +857,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
         # Unregister connection
         if session_id in _websocket_connections:
             _websocket_connections[session_id] = [ws for ws in _websocket_connections[session_id] if ws != websocket]
+
+        # Record WebSocket disconnection metric
+        websocket_disconnected()
 
 
 # ==============================================================================

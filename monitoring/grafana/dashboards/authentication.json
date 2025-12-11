@@ -207,7 +207,7 @@
           }
         },
         {
-          "expr": "rate(auth_login_success_total[5m])",
+          "expr": "rate(auth_login_attempts_total{result=\"success\"}[5m])",
           "legendFormat": "Successful Logins",
           "refId": "B",
           "datasource": {
@@ -216,7 +216,7 @@
           }
         },
         {
-          "expr": "rate(auth_login_failed_total[5m])",
+          "expr": "rate(auth_login_failures_total[5m])",
           "legendFormat": "Failed Logins",
           "refId": "C",
           "datasource": {
@@ -281,7 +281,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "rate(auth_login_failed_total[5m]) / (rate(auth_login_attempts_total[5m]) + 0.0001)",
+          "expr": "rate(auth_login_failures_total[5m]) / (rate(auth_login_attempts_total[5m]) + 0.0001)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -367,7 +367,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum(rate(auth_login_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(auth_login_duration_milliseconds_bucket[5m])) by (le))",
           "legendFormat": "p50",
           "refId": "A",
           "datasource": {
@@ -376,7 +376,7 @@
           }
         },
         {
-          "expr": "histogram_quantile(0.95, sum(rate(auth_login_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(auth_login_duration_milliseconds_bucket[5m])) by (le))",
           "legendFormat": "p95",
           "refId": "B",
           "datasource": {
@@ -385,7 +385,7 @@
           }
         },
         {
-          "expr": "histogram_quantile(0.99, sum(rate(auth_login_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(auth_login_duration_milliseconds_bucket[5m])) by (le))",
           "legendFormat": "p99",
           "refId": "C",
           "datasource": {
@@ -452,7 +452,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(session_active_count)",
+          "expr": "sum(auth_sessions_active)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -530,7 +530,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "rate(token_created_total[5m])",
+          "expr": "rate(auth_token_created_total[5m])",
           "legendFormat": "Tokens Created",
           "refId": "A",
           "datasource": {
@@ -539,7 +539,7 @@
           }
         },
         {
-          "expr": "rate(token_verified_total[5m])",
+          "expr": "rate(auth_token_verifications_total[5m])",
           "legendFormat": "Tokens Verified",
           "refId": "B",
           "datasource": {
@@ -548,7 +548,7 @@
           }
         },
         {
-          "expr": "rate(token_refreshed_total[5m])",
+          "expr": "rate(auth_token_refresh_attempts_total[5m])",
           "legendFormat": "Tokens Refreshed",
           "refId": "C",
           "datasource": {
@@ -557,7 +557,7 @@
           }
         },
         {
-          "expr": "rate(token_verification_failed_total[5m])",
+          "expr": "rate(auth_token_verifications_total{result=\"failure\"}[5m])",
           "legendFormat": "Verification Failures",
           "refId": "D",
           "datasource": {
@@ -636,7 +636,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "(jwks_cache_hits_total / (jwks_cache_hits_total + jwks_cache_misses_total)) * 100",
+          "expr": "(sum(auth_jwks_cache_operations_total{type=\"hit\"}) / (sum(auth_jwks_cache_operations_total{type=\"hit\"}) + sum(auth_jwks_cache_operations_total{type=\"miss\"}))) * 100",
           "legendFormat": "JWKS Cache Hit Rate",
           "refId": "A",
           "datasource": {
@@ -714,7 +714,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(rate(auth_login_failed_total[5m])) by (failure_reason)",
+          "expr": "sum(rate(auth_login_failures_total[5m])) by (failure_reason)",
           "legendFormat": "{{failure_reason}}",
           "refId": "A",
           "datasource": {
@@ -793,7 +793,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(rate(session_created_total[5m])) by (provider)",
+          "expr": "sum(rate(auth_session_created_total[5m])) by (provider)",
           "legendFormat": "Created - {{provider}}",
           "refId": "A",
           "datasource": {
@@ -802,7 +802,7 @@
           }
         },
         {
-          "expr": "sum(rate(session_retrieved_total[5m])) by (provider)",
+          "expr": "sum(rate(auth_session_retrieved_total[5m])) by (provider)",
           "legendFormat": "Retrieved - {{provider}}",
           "refId": "B",
           "datasource": {
@@ -811,7 +811,7 @@
           }
         },
         {
-          "expr": "sum(rate(session_refreshed_total[5m])) by (provider)",
+          "expr": "sum(rate(auth_session_refreshed_total[5m])) by (provider)",
           "legendFormat": "Refreshed - {{provider}}",
           "refId": "C",
           "datasource": {
@@ -820,7 +820,7 @@
           }
         },
         {
-          "expr": "sum(rate(session_revoked_total[5m])) by (provider)",
+          "expr": "sum(rate(auth_session_revoked_total[5m])) by (provider)",
           "legendFormat": "Revoked - {{provider}}",
           "refId": "D",
           "datasource": {
@@ -898,7 +898,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(rate(auth_provider_operations_total[5m])) by (provider, operation)",
+          "expr": "sum(rate(auth_provider_calls_total[5m])) by (provider, operation)",
           "legendFormat": "{{provider}} - {{operation}}",
           "refId": "A",
           "datasource": {

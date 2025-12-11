@@ -975,12 +975,12 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(tempo_distributor_spans_received_total{job=\"tempo\"}[5m]))",
-          "legendFormat": "Spans/sec",
+          "expr": "sum(rate(tempo_distributor_push_duration_seconds_count{job=\"tempo\"}[5m]))",
+          "legendFormat": "Pushes/sec",
           "refId": "A"
         }
       ],
-      "title": "Tempo Spans Received/sec",
+      "title": "Tempo Trace Pushes/sec",
       "type": "timeseries"
     },
     {
@@ -1066,8 +1066,8 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(tempo_distributor_bytes_received_total{job=\"tempo\"}[5m]))",
-          "legendFormat": "Ingestion Rate",
+          "expr": "sum(rate(tempo_ingester_flush_size_bytes_sum{job=\"tempo\"}[5m]))",
+          "legendFormat": "Flush Rate",
           "refId": "A"
         }
       ],
@@ -1157,8 +1157,8 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "histogram_quantile(0.95, sum(rate(tempo_query_frontend_queries_duration_seconds_bucket{job=\"tempo\"}[5m])) by (le))",
-          "legendFormat": "p95",
+          "expr": "histogram_quantile(0.95, sum(rate(tempo_query_frontend_queue_duration_seconds_bucket{job=\"tempo\"}[5m])) by (le))",
+          "legendFormat": "p95 Queue",
           "refId": "A"
         },
         {
@@ -1166,8 +1166,8 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "histogram_quantile(0.50, sum(rate(tempo_query_frontend_queries_duration_seconds_bucket{job=\"tempo\"}[5m])) by (le))",
-          "legendFormat": "p50",
+          "expr": "histogram_quantile(0.50, sum(rate(tempo_query_frontend_queue_duration_seconds_bucket{job=\"tempo\"}[5m])) by (le))",
+          "legendFormat": "p50 Queue",
           "refId": "B"
         }
       ],
@@ -1257,12 +1257,12 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "tempo_ingester_live_traces{job=\"tempo\"}",
-          "legendFormat": "Live Traces",
+          "expr": "tempo_ingester_flush_queue_length{job=\"tempo\"}",
+          "legendFormat": "Flush Queue Length",
           "refId": "A"
         }
       ],
-      "title": "Tempo Live Traces",
+      "title": "Tempo Ingester Queue",
       "type": "timeseries"
     },
     {
@@ -1738,8 +1738,8 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_accepted_metric_points{job=\"alloy\"}[5m]))",
-          "legendFormat": "Metrics",
+          "expr": "sum(rate(alloy_resources_machine_rx_bytes_total{job=\"alloy\"}[5m]))",
+          "legendFormat": "Network RX Bytes/s",
           "refId": "A"
         },
         {
@@ -1747,8 +1747,8 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_accepted_spans{job=\"alloy\"}[5m]))",
-          "legendFormat": "Spans",
+          "expr": "alloy_component_controller_running_components{job=\"alloy\"}",
+          "legendFormat": "Running Components",
           "refId": "B"
         },
         {
@@ -1756,12 +1756,12 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_accepted_log_records{job=\"alloy\"}[5m]))",
-          "legendFormat": "Logs",
+          "expr": "sum(rate(otelcol_exporter_loki_entries_processed{job=\"alloy\"}[5m]))",
+          "legendFormat": "Loki Entries/s",
           "refId": "C"
         }
       ],
-      "title": "Alloy OTLP Data Received/sec",
+      "title": "Alloy Telemetry Activity",
       "type": "timeseries"
     },
     {
@@ -1847,8 +1847,8 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_exporter_sent_metric_points{job=\"alloy\"}[5m]))",
-          "legendFormat": "Metrics to Mimir",
+          "expr": "sum(otelcol_exporter_queue_size{job=\"alloy\", data_type=\"metrics\"})",
+          "legendFormat": "Metrics Queue",
           "refId": "A"
         },
         {
@@ -1856,8 +1856,8 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_exporter_sent_spans{job=\"alloy\"}[5m]))",
-          "legendFormat": "Spans to Tempo",
+          "expr": "sum(otelcol_exporter_queue_size{job=\"alloy\", data_type=\"traces\"})",
+          "legendFormat": "Traces Queue",
           "refId": "B"
         },
         {
@@ -1865,12 +1865,12 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_exporter_sent_log_records{job=\"alloy\"}[5m]))",
-          "legendFormat": "Logs to Loki",
+          "expr": "sum(otelcol_exporter_queue_size{job=\"alloy\", data_type=\"logs\"})",
+          "legendFormat": "Logs Queue",
           "refId": "C"
         }
       ],
-      "title": "Alloy Data Exported/sec",
+      "title": "Alloy Exporter Queue Size",
       "type": "timeseries"
     },
     {
@@ -1956,8 +1956,8 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_refused_metric_points{job=\"alloy\"}[5m]))",
-          "legendFormat": "Refused Metrics",
+          "expr": "sum(rate(otelcol_exporter_loki_entries_failed{job=\"alloy\"}[5m]))",
+          "legendFormat": "Loki Failures/s",
           "refId": "A"
         },
         {
@@ -1965,8 +1965,8 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_refused_spans{job=\"alloy\"}[5m]))",
-          "legendFormat": "Refused Spans",
+          "expr": "alloy_config_load_failures_total{job=\"alloy\"}",
+          "legendFormat": "Config Load Failures",
           "refId": "B"
         },
         {
@@ -1974,12 +1974,12 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(otelcol_receiver_refused_log_records{job=\"alloy\"}[5m]))",
-          "legendFormat": "Refused Logs",
+          "expr": "sum(rate(alloy_component_evaluation_seconds_count{job=\"alloy\"}[5m]))",
+          "legendFormat": "Component Evaluations/s",
           "refId": "C"
         }
       ],
-      "title": "Alloy Refused Data/sec (Errors)",
+      "title": "Alloy Errors & Activity",
       "type": "timeseries"
     },
     {

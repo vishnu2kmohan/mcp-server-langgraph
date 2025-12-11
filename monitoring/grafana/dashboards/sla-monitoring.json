@@ -125,7 +125,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "(\n  (\n    # Uptime component (40% weight)\n    (\n      sum(up{job=\"mcp-server-langgraph\"})\n      / count(up{job=\"mcp-server-langgraph\"})\n      * 100\n    ) * 0.4\n  ) + (\n    # Response time component (30% weight)\n    (\n      (500 - histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"mcp-server-langgraph\"}[5m])) * 1000)\n      / 500 * 100\n    ) * 0.3\n  ) + (\n    # Error rate component (30% weight)\n    (\n      (1.0 - sum(rate(http_requests_total{job=\"mcp-server-langgraph\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m])) * 100)\n      / 1.0 * 100\n    ) * 0.3\n  )\n)",
+          "expr": "(\n  (\n    # Uptime component (40% weight)\n    (\n      sum(up{job=\"langgraph-agent\"})\n      / count(up{job=\"langgraph-agent\"})\n      * 100\n    ) * 0.4\n  ) + (\n    # Response time component (30% weight)\n    (\n      (500 - histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])) * 1000)\n      / 500 * 100\n    ) * 0.3\n  ) + (\n    # Error rate component (30% weight)\n    (\n      (1.0 - sum(rate(http_requests_total{job=\"langgraph-agent\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m])) * 100)\n      / 1.0 * 100\n    ) * 0.3\n  )\n)",
           "refId": "A"
         }
       ],
@@ -192,7 +192,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "(\n  sum(up{job=\"mcp-server-langgraph\"})\n  / count(up{job=\"mcp-server-langgraph\"})\n  * 100\n)",
+          "expr": "(\n  sum(up{job=\"langgraph-agent\"})\n  / count(up{job=\"langgraph-agent\"})\n  * 100\n)",
           "refId": "A"
         }
       ],
@@ -259,7 +259,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "histogram_quantile(\n  0.95,\n  rate(http_request_duration_seconds_bucket{job=\"mcp-server-langgraph\"}[5m])\n) * 1000",
+          "expr": "histogram_quantile(\n  0.95,\n  rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])\n) * 1000",
           "refId": "A"
         }
       ],
@@ -326,7 +326,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "(\n  sum(rate(http_requests_total{job=\"mcp-server-langgraph\",status=~\"5..\"}[5m]))\n  / sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m]))\n  * 100\n)",
+          "expr": "(\n  sum(rate(http_requests_total{job=\"langgraph-agent\",status=~\"5..\"}[5m]))\n  / sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))\n  * 100\n)",
           "refId": "A"
         }
       ],
@@ -440,7 +440,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "(\n  sum(up{job=\"mcp-server-langgraph\"})\n  / count(up{job=\"mcp-server-langgraph\"})\n  * 100\n)",
+          "expr": "(\n  sum(up{job=\"langgraph-agent\"})\n  / count(up{job=\"langgraph-agent\"})\n  * 100\n)",
           "legendFormat": "Uptime %",
           "refId": "A"
         }
@@ -508,7 +508,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "43.2 - (\n  (\n    (time() - (time() - time() % (30 * 24 * 3600)))\n    * (1 - (sum(up{job=\"mcp-server-langgraph\"}) / count(up{job=\"mcp-server-langgraph\"})))\n  ) / 60\n)",
+          "expr": "43.2 - (\n  (\n    (time() - (time() - time() % (30 * 24 * 3600)))\n    * (1 - (sum(up{job=\"langgraph-agent\"}) / count(up{job=\"langgraph-agent\"})))\n  ) / 60\n)",
           "refId": "A"
         }
       ],
@@ -621,7 +621,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"mcp-server-langgraph\"}[5m])) * 1000",
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])) * 1000",
           "legendFormat": "p50",
           "refId": "A"
         },
@@ -630,7 +630,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"mcp-server-langgraph\"}[5m])) * 1000",
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])) * 1000",
           "legendFormat": "p95 (SLA Target: 500ms)",
           "refId": "B"
         },
@@ -639,7 +639,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job=\"mcp-server-langgraph\"}[5m])) * 1000",
+          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])) * 1000",
           "legendFormat": "p99",
           "refId": "C"
         }
@@ -754,7 +754,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "(\n  sum(rate(http_requests_total{job=\"mcp-server-langgraph\",status=~\"5..\"}[5m]))\n  / sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m]))\n  * 100\n)",
+          "expr": "(\n  sum(rate(http_requests_total{job=\"langgraph-agent\",status=~\"5..\"}[5m]))\n  / sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))\n  * 100\n)",
           "legendFormat": "Error Rate %",
           "refId": "A"
         }
@@ -844,7 +844,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum by (status) (rate(http_requests_total{job=\"mcp-server-langgraph\",status=~\"5..\"}[5m]))",
+          "expr": "sum by (status) (rate(http_requests_total{job=\"langgraph-agent\",status=~\"5..\"}[5m]))",
           "legendFormat": "{{ status }}",
           "refId": "A"
         }
@@ -950,7 +950,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m]))",
+          "expr": "sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))",
           "legendFormat": "Current Throughput",
           "refId": "A"
         },
@@ -959,7 +959,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "avg_over_time(sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m]))[7d:1h])",
+          "expr": "avg_over_time(sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))[7d:1h])",
           "legendFormat": "7-Day Average",
           "refId": "B"
         },
@@ -968,7 +968,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "avg_over_time(sum(rate(http_requests_total{job=\"mcp-server-langgraph\"}[5m]))[7d:1h]) * 0.5",
+          "expr": "avg_over_time(sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))[7d:1h]) * 0.5",
           "legendFormat": "50% of Average (Alert Threshold)",
           "refId": "C"
         }
@@ -1299,7 +1299,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "rate(process_cpu_seconds_total{job=\"mcp-server-langgraph\"}[5m]) * 100",
+          "expr": "rate(process_cpu_seconds_total{job=\"langgraph-agent\"}[5m]) * 100",
           "legendFormat": "CPU Utilization",
           "refId": "A"
         }
@@ -1401,7 +1401,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "(\n  process_resident_memory_bytes{job=\"mcp-server-langgraph\"}\n  / node_memory_MemTotal_bytes\n  * 100\n)",
+          "expr": "(\n  process_resident_memory_bytes{job=\"langgraph-agent\"}\n  / node_memory_MemTotal_bytes\n  * 100\n)",
           "legendFormat": "Memory Utilization",
           "refId": "A"
         }
@@ -1515,7 +1515,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "(\n  sum(up{job=\"mcp-server-langgraph\"})\n  / count(up{job=\"mcp-server-langgraph\"})\n  * 100\n)",
+          "expr": "(\n  sum(up{job=\"langgraph-agent\"})\n  / count(up{job=\"langgraph-agent\"})\n  * 100\n)",
           "legendFormat": "Current Uptime",
           "refId": "A"
         },
@@ -1524,7 +1524,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "predict_linear(\n  sum(up{job=\"mcp-server-langgraph\"})\n  / count(up{job=\"mcp-server-langgraph\"})\n  * 100 [4h], 24 * 3600\n)",
+          "expr": "predict_linear(\n  sum(up{job=\"langgraph-agent\"})\n  / count(up{job=\"langgraph-agent\"})\n  * 100 [4h], 24 * 3600\n)",
           "legendFormat": "Predicted Uptime (24h)",
           "refId": "B"
         }

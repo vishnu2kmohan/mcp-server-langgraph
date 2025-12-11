@@ -413,7 +413,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "session_store_active_sessions",
+          "expr": "auth_sessions_active",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -726,7 +726,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "(\n  sum(up{job=\"mcp-server-langgraph\"})\n  / count(up{job=\"mcp-server-langgraph\"})\n  * 100\n)",
+          "expr": "(\n  sum(up{job=\"langgraph-agent\"})\n  / count(up{job=\"langgraph-agent\"})\n  * 100\n)",
           "legendFormat": "Uptime % (Target: 99.9%)",
           "refId": "A"
         }

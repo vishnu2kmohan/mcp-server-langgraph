@@ -79,7 +79,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(auth_failures_total[1m]))",
+          "expr": "sum(rate(auth_login_failures_total[1m]))",
           "refId": "A"
         }
       ],
@@ -143,7 +143,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(authz_failures_total[1m]))",
+          "expr": "sum(rate(auth_authorization_checks_total{result=\"denied\"}[1m]))",
           "refId": "A"
         }
       ],
@@ -207,7 +207,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(rate(jwt_validation_errors_total[1m]))",
+          "expr": "sum(rate(auth_token_verifications_total{result=~\"expired|invalid\"}[1m]))",
           "refId": "A"
         }
       ],
@@ -290,7 +290,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "(rate(auth_failures_total[1m]) > 10) OR on() vector(0)",
+          "expr": "(rate(auth_login_failures_total[1m]) > 10) OR on() vector(0)",
           "refId": "A"
         }
       ],
@@ -381,7 +381,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum by (reason) (rate(auth_failures_total[5m]))",
+          "expr": "sum by (reason) (rate(auth_login_failures_total[5m]))",
           "legendFormat": "{{reason}}",
           "refId": "A"
         }
@@ -473,7 +473,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum by (resource) (rate(authz_failures_total[5m]))",
+          "expr": "sum by (resource) (rate(auth_authorization_checks_total{result=\"denied\"}[5m]))",
           "legendFormat": "{{resource}}",
           "refId": "A"
         }
@@ -529,7 +529,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum by (user_id) (increase(auth_failures_total[1h]))",
+          "expr": "sum by (user_id) (increase(auth_login_failures_total[1h]))",
           "legendFormat": "{{user_id}}",
           "refId": "A"
         }
@@ -585,7 +585,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum by (source_ip) (increase(auth_failures_total[1h]))",
+          "expr": "sum by (source_ip) (increase(auth_login_failures_total[1h]))",
           "legendFormat": "{{source_ip}}",
           "refId": "A"
         }
@@ -689,7 +689,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "topk(10, sum by (user_id) (increase(auth_failures_total[24h])))",
+          "expr": "topk(10, sum by (user_id) (increase(auth_login_failures_total[24h])))",
           "format": "table",
           "instant": true,
           "refId": "A"

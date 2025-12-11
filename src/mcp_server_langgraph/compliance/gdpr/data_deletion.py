@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.session import SessionStore
 from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage
+from mcp_server_langgraph.compliance.metrics import record_gdpr_data_deletion
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 
@@ -196,11 +197,15 @@ class DataDeletionService:
                         "anonymized_items": anonymized_items,
                     },
                 )
+                # Record GDPR data deletion metrics for successful deletion
+                record_gdpr_data_deletion(operation="full", status="success")
             else:
                 logger.error(
                     "User account deletion completed with errors",
                     extra={"user_id": user_id, "errors": errors},
                 )
+                # Record GDPR data deletion metrics for failed deletion
+                record_gdpr_data_deletion(operation="full", status="failure")
 
             return result
 

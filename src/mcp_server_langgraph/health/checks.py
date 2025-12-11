@@ -1,11 +1,11 @@
 """
-Health check endpoints for Kubernetes probes
+Health check endpoints for Kubernetes probes and Prometheus metrics
 """
 
 from datetime import datetime, UTC
 from typing import Any
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -13,6 +13,74 @@ from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger
 from mcp_server_langgraph.secrets.manager import get_secrets_manager
+
+# Prometheus client for metrics exposition
+try:
+    from prometheus_client import (
+        CONTENT_TYPE_LATEST,
+        REGISTRY,
+        Counter,
+        Gauge,
+        Histogram,
+        generate_latest,
+    )
+
+    PROMETHEUS_CLIENT_AVAILABLE = True
+
+    # Application metrics for Grafana dashboards
+    # These match the expected metric names in langgraph-agent.json
+
+    # Request metrics
+    agent_requests_total = Counter(
+        name="agent_requests_total",
+        documentation="Total number of agent requests",
+        labelnames=["method", "endpoint", "status"],
+        registry=REGISTRY,
+    )
+
+    agent_response_duration_seconds = Histogram(
+        name="agent_response_duration_seconds",
+        documentation="Agent response time in seconds",
+        labelnames=["method", "endpoint"],
+        buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
+        registry=REGISTRY,
+    )
+
+    # Tool call metrics
+    agent_tool_calls_total = Counter(
+        name="agent_tool_calls_total",
+        documentation="Total number of tool calls",
+        labelnames=["tool_name", "status"],
+        registry=REGISTRY,
+    )
+
+    # Error metrics
+    agent_errors_total = Counter(
+        name="agent_errors_total",
+        documentation="Total number of agent errors",
+        labelnames=["error_type"],
+        registry=REGISTRY,
+    )
+
+    # Resource usage metrics (gauges for current values)
+    agent_memory_bytes = Gauge(
+        name="agent_memory_bytes",
+        documentation="Current memory usage in bytes",
+        labelnames=["type"],
+        registry=REGISTRY,
+    )
+
+    agent_active_sessions = Gauge(
+        name="agent_active_sessions",
+        documentation="Number of active agent sessions",
+        registry=REGISTRY,
+    )
+
+except ImportError:
+    PROMETHEUS_CLIENT_AVAILABLE = False
+    generate_latest = None  # type: ignore[assignment]
+    CONTENT_TYPE_LATEST = "text/plain"
+    REGISTRY = None  # type: ignore[assignment]
 
 app = FastAPI(title="MCP Server with LangGraph Health")
 
@@ -147,21 +215,47 @@ async def startup_check() -> JSONResponse | dict[str, Any]:
 
 
 @app.get("/metrics/prometheus")
-async def prometheus_metrics() -> dict[str, Any]:
+async def prometheus_metrics_legacy() -> Response:
+    """
+    Prometheus metrics endpoint (legacy path)
+
+    Exposes application metrics for scraping.
+    Redirects to /metrics for consistency.
+    """
+    return await prometheus_metrics()
+
+
+@app.get("/metrics")
+async def prometheus_metrics() -> Response:
     """
     Prometheus metrics endpoint
 
-    Exposes application metrics for scraping
+    Exposes application metrics for scraping by Alloy/Prometheus.
+    Returns metrics in Prometheus text exposition format.
     """
-    # This would integrate with OpenTelemetry's Prometheus exporter
-    # For now, return basic info
-    return {
-        "metrics": [
-            "# HELP langgraph_agent_info Application information",
-            "# TYPE langgraph_agent_info gauge",
-            f'langgraph_agent_info{{version="{settings.service_version}",service="{settings.service_name}"}} 1',
-        ]
-    }
+    import psutil
+
+    if not PROMETHEUS_CLIENT_AVAILABLE or generate_latest is None:
+        # Fallback if prometheus_client not installed
+        return Response(
+            content="# prometheus_client not available\n",
+            media_type="text/plain",
+        )
+
+    # Update memory gauge with current process memory
+    try:
+        process = psutil.Process()
+        memory_info = process.memory_info()
+        agent_memory_bytes.labels(type="rss").set(memory_info.rss)
+        agent_memory_bytes.labels(type="vms").set(memory_info.vms)
+    except Exception:
+        pass  # Don't fail metrics if psutil unavailable
+
+    # Generate and return Prometheus-format metrics
+    return Response(
+        content=generate_latest(REGISTRY),
+        media_type=CONTENT_TYPE_LATEST,
+    )
 
 
 if __name__ == "__main__":

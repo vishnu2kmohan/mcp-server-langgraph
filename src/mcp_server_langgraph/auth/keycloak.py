@@ -14,6 +14,11 @@ import httpx
 import jwt
 from pydantic import BaseModel, Field, field_validator
 
+from mcp_server_langgraph.auth.metrics import (
+    record_jwks_operation,
+    record_login_attempt,
+    record_token_verification,
+)
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
@@ -141,28 +146,39 @@ class TokenValidator:
         Returns:
             JWKS dictionary
         """
+        import time
+
         with tracer.start_as_current_span("keycloak.get_jwks"):
             # Check cache
             if not force_refresh and self._jwks_cache and self._jwks_cache_time:
                 if datetime.now(UTC) - self._jwks_cache_time < self._cache_ttl:
                     logger.debug("Using cached JWKS")
+                    record_jwks_operation("hit", "success")
                     return self._jwks_cache
 
+            # Cache miss - need to fetch
+            record_jwks_operation("miss", "success")
+
             # Fetch from Keycloak
+            start_time = time.perf_counter()
             async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
                 try:
                     response = await client.get(self.config.jwks_uri)
                     response.raise_for_status()
                     jwks = response.json()
+                    duration_ms = (time.perf_counter() - start_time) * 1000
 
                     # Cache the result
                     self._jwks_cache = jwks
                     self._jwks_cache_time = datetime.now(UTC)
 
+                    record_jwks_operation("refresh", "success", duration_ms)
                     logger.info("JWKS fetched and cached", extra={"keys_count": len(jwks.get("keys", []))})
                     return jwks  # type: ignore[no-any-return]
 
                 except httpx.HTTPError as e:
+                    duration_ms = (time.perf_counter() - start_time) * 1000
+                    record_jwks_operation("refresh", "failure", duration_ms)
                     logger.error(f"Failed to fetch JWKS: {e}", exc_info=True)
                     metrics.failed_calls.add(1, {"operation": "get_jwks"})
                     raise
@@ -181,6 +197,9 @@ class TokenValidator:
             jwt.InvalidTokenError: If token is invalid
             jwt.ExpiredSignatureError: If token is expired
         """
+        import time
+
+        start_time = time.perf_counter()
         with tracer.start_as_current_span("keycloak.verify_token") as span:
             try:
                 # Decode header to get key ID
@@ -233,6 +252,9 @@ class TokenValidator:
                 span.set_attribute("token.sub", payload.get("sub"))
                 span.set_attribute("token.preferred_username", payload.get("preferred_username"))
 
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_token_verification("success", duration_ms, provider="keycloak")
+
                 logger.info(
                     "Token verified successfully",
                     extra={"sub": payload.get("sub"), "username": payload.get("preferred_username")},
@@ -243,6 +265,8 @@ class TokenValidator:
                 return payload  # type: ignore[no-any-return]
 
             except jwt.ExpiredSignatureError:
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_token_verification("expired", duration_ms, provider="keycloak")
                 logger.warning("Token expired")
                 metrics.auth_failures.add(1, {"reason": "expired_token"})
                 raise
@@ -294,6 +318,10 @@ class KeycloakClient:
         Raises:
             httpx.HTTPError: If authentication fails
         """
+        import time
+
+        start_time = time.perf_counter()
+
         with tracer.start_as_current_span("keycloak.authenticate_user") as span:
             span.set_attribute("user.name", username)
 
@@ -314,12 +342,20 @@ class KeycloakClient:
 
                     tokens = response.json()
 
+                    # Record success metrics
+                    duration_ms = (time.perf_counter() - start_time) * 1000
+                    record_login_attempt("keycloak", "success", duration_ms)
+
                     logger.info("User authenticated successfully", extra={"username": username})
                     metrics.successful_calls.add(1, {"operation": "authenticate_user"})
 
                     return tokens  # type: ignore[no-any-return]
 
                 except httpx.HTTPStatusError as e:
+                    # Record failure metrics
+                    duration_ms = (time.perf_counter() - start_time) * 1000
+                    record_login_attempt("keycloak", "invalid_credentials", duration_ms)
+
                     logger.warning(
                         f"Authentication failed for {username}",
                         extra={"status_code": e.response.status_code, "detail": e.response.text},
@@ -327,6 +363,10 @@ class KeycloakClient:
                     metrics.auth_failures.add(1, {"reason": "invalid_credentials"})
                     raise
                 except httpx.HTTPError as e:
+                    # Record error metrics
+                    duration_ms = (time.perf_counter() - start_time) * 1000
+                    record_login_attempt("keycloak", "error", duration_ms)
+
                     logger.error(f"Authentication error: {e}", exc_info=True)
                     metrics.failed_calls.add(1, {"operation": "authenticate_user"})
                     raise
