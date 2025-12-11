@@ -260,8 +260,10 @@ prometheus.scrape "keycloak" {
     service     = "keycloak-test",
     job         = "keycloak",
   }]
-  // Keycloak 26.x exposes metrics on the management interface at /metrics
-  metrics_path = "/metrics"
+  // Keycloak 26.x exposes metrics on the management interface at /authn/metrics
+  // The path includes the KC_HTTP_RELATIVE_PATH prefix (/authn) which also
+  // applies to the management interface (http-management-relative-path)
+  metrics_path = "/authn/metrics"
   forward_to   = [prometheus.remote_write.mimir.receiver]
 
   scrape_interval = "15s"
@@ -270,11 +272,12 @@ prometheus.scrape "keycloak" {
 
 prometheus.scrape "openfga" {
   targets = [{
-    __address__ = "openfga:8080",
+    __address__ = "openfga:2112",
     service     = "openfga-test",
     job         = "openfga",
   }]
-  // OpenFGA exposes Prometheus metrics on the HTTP server
+  // OpenFGA exposes Prometheus metrics on dedicated metrics port 2112
+  // Reference: https://openfga.dev/docs/getting-started/setup-openfga/configure-openfga
   metrics_path = "/metrics"
   forward_to   = [prometheus.remote_write.mimir.receiver]
 
