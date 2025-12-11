@@ -636,8 +636,10 @@ services:
       - "13100:3100"  # Loki API (offset by 10000)
     volumes:
       - ./docker/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    # CRITICAL: Must set uid/gid=10001 (loki user) for tmpfs, otherwise Loki can't create directories
+    # Root cause: tmpfs mount replaces /loki entirely, so ownership must be set explicitly
     tmpfs:
-      - /loki:rw,noexec,nosuid,size=256m
+      - /loki:rw,noexec,nosuid,size=256m,uid=10001,gid=10001
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
       interval: 10s
