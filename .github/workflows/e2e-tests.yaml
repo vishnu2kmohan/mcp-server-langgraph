@@ -220,7 +220,8 @@ jobs:
         for i in {1..90}; do
           # Try to get a token using the test user credentials
           # This proves the realm, client, and user are all properly configured
-          TOKEN_RESPONSE=$(curl -sf -X POST \
+          # Note: Use -s (silent) without -f to capture error responses for debugging
+          TOKEN_RESPONSE=$(curl -s -X POST \
             "http://localhost:9082/realms/mcp-test/protocol/openid-connect/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "grant_type=password" \
@@ -236,6 +237,16 @@ jobs:
           if [ $i -eq 90 ]; then
             echo "❌ Keycloak realm not ready after 90 attempts (180 seconds)"
             echo "Last response: $TOKEN_RESPONSE"
+            # Show HTTP status code for debugging
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "http://localhost:9082/realms/mcp-test/protocol/openid-connect/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=password" \
+              -d "client_id=mcp-server" \
+              -d "client_secret=test-client-secret-for-e2e-tests" \
+              -d "username=alice" \
+              -d "password=alice123" 2>&1) || true
+            echo "HTTP Status: $HTTP_STATUS"
             docker compose -f docker-compose.test.yml logs keycloak-test
             exit 1
           fi
