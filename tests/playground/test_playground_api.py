@@ -400,7 +400,7 @@ class TestPlaygroundOpenFGAAuth:
     async def test_user_can_only_access_own_sessions(self) -> None:
         """Test that users can only access their own sessions via OpenFGA."""
         # Setup mock OpenFGA client
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)  # Container for configured methods
         mock_openfga.check_permission = AsyncMock(return_value=False)
 
         # When OpenFGA denies access, should return 403
@@ -415,7 +415,7 @@ class TestPlaygroundOpenFGAAuth:
     @pytest.mark.asyncio
     async def test_session_owner_has_full_access(self) -> None:
         """Test that session owner has full access via OpenFGA."""
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)  # Container for configured methods
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         result = await mock_openfga.check_permission(

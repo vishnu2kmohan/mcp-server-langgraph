@@ -165,7 +165,7 @@ class TestCriticalStartupValidation:
         from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 
         # Arrange: Create manager with None OpenFGA
-        mock_keycloak = AsyncMock()
+        mock_keycloak = AsyncMock(return_value=None)  # Container for configured methods
 
         # Act: Create manager
         try:

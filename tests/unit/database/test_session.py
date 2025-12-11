@@ -170,10 +170,10 @@ class TestGetAsyncSession:
     async def test_get_async_session_yields_session(self) -> None:
         """Test that get_async_session yields a session and commits on success."""
         mock_engine = MagicMock()
-        mock_session = AsyncMock()
-        mock_session.commit = AsyncMock()
-        mock_session.rollback = AsyncMock()
-        mock_session.close = AsyncMock()
+        mock_session = AsyncMock(return_value=None)  # Container for session methods
+        mock_session.commit = AsyncMock(return_value=None)
+        mock_session.rollback = AsyncMock(return_value=None)
+        mock_session.close = AsyncMock(return_value=None)
 
         mock_session_maker = MagicMock()
         mock_session_maker.return_value.__aenter__ = AsyncMock(return_value=mock_session)
@@ -199,10 +199,10 @@ class TestGetAsyncSession:
     async def test_get_async_session_rollback_on_exception(self) -> None:
         """Test that get_async_session rolls back on exception."""
         mock_engine = MagicMock()
-        mock_session = AsyncMock()
-        mock_session.commit = AsyncMock()
-        mock_session.rollback = AsyncMock()
-        mock_session.close = AsyncMock()
+        mock_session = AsyncMock(return_value=None)  # Container for session methods
+        mock_session.commit = AsyncMock(return_value=None)
+        mock_session.rollback = AsyncMock(return_value=None)
+        mock_session.close = AsyncMock(return_value=None)
 
         mock_session_maker = MagicMock()
         mock_session_maker.return_value.__aenter__ = AsyncMock(return_value=mock_session)
@@ -271,7 +271,7 @@ class TestCleanupDatabase:
     async def test_cleanup_database_disposes_engine(self) -> None:
         """Test that cleanup_database disposes the engine."""
         mock_engine = MagicMock()
-        mock_engine.dispose = AsyncMock()
+        mock_engine.dispose = AsyncMock(return_value=None)
 
         # Set up the global engine
         session_module._engine = mock_engine

@@ -200,7 +200,7 @@ class TestWebSearch:
 
         # Mock client context manager
         # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock(return_value=None)  # Container for configured methods
         mock_client_instance.post = AsyncMock(return_value=mock_response)
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -245,7 +245,7 @@ class TestWebSearch:
 
         # Mock client context manager
         # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock(return_value=None)  # Container for configured methods
         mock_client_instance.post = AsyncMock(return_value=mock_response)
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 

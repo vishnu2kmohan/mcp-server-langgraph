@@ -54,7 +54,7 @@ class TestMCPClient:
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)  # Container for configured methods
             mock_client.post = AsyncMock(return_value=mock_response)
             mock_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -87,7 +87,7 @@ class TestMCPClient:
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)  # Container for configured methods
             mock_client.post = AsyncMock(return_value=mock_response)
             mock_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -115,7 +115,7 @@ class TestMCPClient:
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)  # Container for configured methods
             mock_client.post = AsyncMock(return_value=mock_response)
             mock_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -157,7 +157,7 @@ class TestMCPClient:
             return mock_response
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)  # Container for configured methods
             mock_client.post = capture_post
             mock_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -192,7 +192,7 @@ class TestMCPClient:
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)  # Container for configured methods
             mock_client.post = AsyncMock(return_value=mock_response)
             mock_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -211,7 +211,7 @@ class TestMCPClient:
         from mcp_server_langgraph.playground.mcp.client import MCPClient, MCPConnectionError
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)  # Container for configured methods
             mock_client.post = AsyncMock(side_effect=ConnectionError("Server unavailable"))
             mock_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -241,13 +241,13 @@ class TestMCPStreamingClient:
             yield b'{"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"Hello "}]}}\n'
             yield b'{"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"World!"}]}}\n'
 
-        mock_response = AsyncMock()
+        mock_response = AsyncMock(return_value=None)  # Container for configured attrs
         mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/x-ndjson"}
         mock_response.aiter_lines = mock_stream
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)  # Container for configured methods
             mock_client.stream = MagicMock(
                 return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response), __aexit__=AsyncMock())
             )
@@ -273,14 +273,14 @@ class TestMCPStreamingClient:
         async def capture_stream(method: str, url: str, **kwargs: Any) -> Any:
             captured_headers.append(kwargs.get("headers", {}))
             # Return a mock response
-            mock_response = AsyncMock()
+            mock_response = AsyncMock(return_value=None)  # Container for configured attrs
             mock_response.status_code = 200
             mock_response.headers = {"content-type": "application/x-ndjson"}
             mock_response.aiter_lines = AsyncMock(return_value=iter([]))
             return mock_response
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)  # Container for configured methods
             mock_client.stream = MagicMock(return_value=AsyncMock(__aenter__=capture_stream, __aexit__=AsyncMock()))
             mock_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -309,7 +309,7 @@ class TestPlaygroundMCPIntegration:
         """Test that playground chat uses MCP agent_chat tool."""
         from mcp_server_langgraph.playground.mcp.integration import PlaygroundMCPBridge
 
-        mock_mcp_client = AsyncMock()
+        mock_mcp_client = AsyncMock(return_value=None)  # Container for configured methods
         mock_mcp_client.call_tool = AsyncMock(return_value=[{"type": "text", "text": "I can help with that!"}])
 
         bridge = PlaygroundMCPBridge(mcp_client=mock_mcp_client)
@@ -343,7 +343,7 @@ class TestPlaygroundMCPIntegration:
             yield {"content": [{"type": "text", "text": "Hello "}]}
             yield {"content": [{"type": "text", "text": "World!"}]}
 
-        mock_streaming_client = AsyncMock()
+        mock_streaming_client = AsyncMock(return_value=None)  # Container for configured methods
         mock_streaming_client.stream_tool_call = mock_stream
 
         bridge = PlaygroundMCPBridge(streaming_client=mock_streaming_client)
@@ -375,7 +375,7 @@ class TestPlaygroundMCPIntegration:
             captured_args.append(arguments)
             return [{"type": "text", "text": "OK"}]
 
-        mock_mcp_client = AsyncMock()
+        mock_mcp_client = AsyncMock(return_value=None)  # Container for configured methods
         mock_mcp_client.call_tool = capture_call
 
         bridge = PlaygroundMCPBridge(mcp_client=mock_mcp_client)
@@ -401,7 +401,7 @@ class TestPlaygroundMCPIntegration:
             PlaygroundMCPBridge,
         )
 
-        mock_mcp_client = AsyncMock()
+        mock_mcp_client = AsyncMock(return_value=None)  # Container for configured methods
         mock_mcp_client.call_tool = AsyncMock(side_effect=MCPPermissionError("Not authorized"))
 
         bridge = PlaygroundMCPBridge(mcp_client=mock_mcp_client)

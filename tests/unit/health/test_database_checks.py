@@ -260,11 +260,11 @@ class TestDatabaseValidation:
         # Mock PostgreSQL connections
         mock_postgres_conn = AsyncMock(spec=asyncpg.Connection)
         mock_postgres_conn.fetchval = AsyncMock(return_value=1)  # Database exists
-        mock_postgres_conn.close = AsyncMock()
+        mock_postgres_conn.close = AsyncMock(return_value=None)
 
         mock_db_conn = AsyncMock(spec=asyncpg.Connection)
         mock_db_conn.fetchval = AsyncMock(return_value=1)  # All tables exist
-        mock_db_conn.close = AsyncMock()
+        mock_db_conn.close = AsyncMock(return_value=None)
 
         with patch("asyncpg.connect") as mock_connect:
             mock_connect.side_effect = [mock_postgres_conn, mock_db_conn]
@@ -298,7 +298,7 @@ class TestDatabaseValidation:
         # Mock PostgreSQL connection
         mock_postgres_conn = AsyncMock(spec=asyncpg.Connection)
         mock_postgres_conn.fetchval = AsyncMock(return_value=None)  # Database doesn't exist
-        mock_postgres_conn.close = AsyncMock()
+        mock_postgres_conn.close = AsyncMock(return_value=None)
 
         with patch("asyncpg.connect", return_value=mock_postgres_conn):
             result = await validator.validate_database(db_info)
@@ -330,12 +330,12 @@ class TestDatabaseValidation:
         # Mock PostgreSQL connections
         mock_postgres_conn = AsyncMock(spec=asyncpg.Connection)
         mock_postgres_conn.fetchval = AsyncMock(return_value=1)  # Database exists
-        mock_postgres_conn.close = AsyncMock()
+        mock_postgres_conn.close = AsyncMock(return_value=None)
 
         mock_db_conn = AsyncMock(spec=asyncpg.Connection)
         # First call returns 1 (user_profiles exists), second call returns None (audit_logs missing)
         mock_db_conn.fetchval = AsyncMock(side_effect=[1, None])
-        mock_db_conn.close = AsyncMock()
+        mock_db_conn.close = AsyncMock(return_value=None)
 
         with patch("asyncpg.connect") as mock_connect:
             mock_connect.side_effect = [mock_postgres_conn, mock_db_conn]
@@ -370,12 +370,12 @@ class TestDatabaseValidation:
         # Mock PostgreSQL connections
         mock_postgres_conn = AsyncMock(spec=asyncpg.Connection)
         mock_postgres_conn.fetchval = AsyncMock(return_value=1)  # Database exists
-        mock_postgres_conn.close = AsyncMock()
+        mock_postgres_conn.close = AsyncMock(return_value=None)
 
         mock_db_conn = AsyncMock(spec=asyncpg.Connection)
         # Both tables missing
         mock_db_conn.fetchval = AsyncMock(return_value=None)
-        mock_db_conn.close = AsyncMock()
+        mock_db_conn.close = AsyncMock(return_value=None)
 
         with patch("asyncpg.connect") as mock_connect:
             mock_connect.side_effect = [mock_postgres_conn, mock_db_conn]

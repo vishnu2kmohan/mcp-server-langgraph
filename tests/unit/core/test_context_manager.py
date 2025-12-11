@@ -33,7 +33,7 @@ def context_manager():
     )
 
     # Mock the LLM to avoid actual API calls
-    manager.llm = AsyncMock()
+    manager.llm = AsyncMock(return_value=None)  # Container for configured methods
     manager.llm.ainvoke = AsyncMock(
         return_value=MagicMock(content="Summary: User asked about Python, assistant explained basics.")
     )

@@ -66,7 +66,7 @@ class TestConversationStoreAsync:
 
         This test will PASS after migrating to redis.asyncio.
         """
-        mock_async_redis = AsyncMock()
+        mock_async_redis = AsyncMock(return_value=None)  # Container for configured methods
 
         with patch("mcp_server_langgraph.core.storage.conversation_store.redis") as mock_redis_module:
             # Check if redis.asyncio is used (not sync redis)

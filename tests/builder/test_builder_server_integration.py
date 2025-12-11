@@ -197,7 +197,7 @@ class TestBuilderServerOpenFGAAuth:
     async def test_generate_code_checks_openfga_permission(self) -> None:
         """Test that code generation checks OpenFGA 'builder:execute' permission."""
         # Setup mock OpenFGA client
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)  # Container for configured methods
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # This test validates the integration pattern - actual implementation
@@ -209,7 +209,7 @@ class TestBuilderServerOpenFGAAuth:
     async def test_unauthorized_user_cannot_generate_code(self) -> None:
         """Test that user without 'builder:execute' permission cannot generate code."""
         # Setup mock OpenFGA client that denies permission
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)  # Container for configured methods
         mock_openfga.check_permission = AsyncMock(return_value=False)
 
         # When OpenFGA returns False, endpoint should return 403
