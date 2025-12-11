@@ -14,7 +14,10 @@
         "type": "dashboard"
       },
       {
-        "datasource": "Prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "mimir"
+        },
         "enable": true,
         "expr": "changes(compliance_report_generated_total[1h]) > 0",
         "iconColor": "blue",
@@ -71,7 +74,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "Overall SOC 2 compliance score (weighted: passed + partial*0.5)",
       "fieldConfig": {
         "defaults": {
@@ -123,7 +129,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "compliance_score",
           "refId": "A"
         }
@@ -132,7 +141,10 @@
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "Number of controls passed, failed, and partial",
       "fieldConfig": {
         "defaults": {
@@ -233,19 +245,28 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "evidence_items_total{status=\"success\"}",
           "legendFormat": "Passed",
           "refId": "A"
         },
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "evidence_items_total{status=\"failure\"}",
           "legendFormat": "Failed",
           "refId": "B"
         },
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "evidence_items_total{status=\"partial\"}",
           "legendFormat": "Partial",
           "refId": "C"
@@ -255,7 +276,10 @@
       "type": "piechart"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "Evidence items by control category",
       "fieldConfig": {
         "defaults": {
@@ -308,7 +332,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "sum by (control_category) (evidence_items_total)",
           "legendFormat": "{{ control_category }}",
           "refId": "A"
@@ -331,7 +358,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "CC6.1 - Access Control: Active sessions and MFA statistics",
       "fieldConfig": {
         "defaults": {
@@ -379,7 +409,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "session_store_active_sessions",
           "format": "table",
           "instant": true,
@@ -407,7 +440,10 @@
       "type": "table"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "CC6.6 - Audit Logs: Logging system status and retention",
       "fieldConfig": {
         "defaults": {
@@ -481,7 +517,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "rate(audit_logs_total[5m])",
           "legendFormat": "Audit Log Rate",
           "refId": "A"
@@ -491,7 +530,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "CC7.2 - System Monitoring: Prometheus/Grafana metrics collection rate",
       "fieldConfig": {
         "defaults": {
@@ -565,7 +607,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "rate(prometheus_tsdb_head_samples_appended_total[5m])",
           "legendFormat": "Metrics Collection Rate",
           "refId": "A"
@@ -588,7 +633,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "A1.2 - SLA Monitoring: Uptime percentage tracking",
       "fieldConfig": {
         "defaults": {
@@ -674,7 +722,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "(\n  sum(up{job=\"mcp-server-langgraph\"})\n  / count(up{job=\"mcp-server-langgraph\"})\n  * 100\n)",
           "legendFormat": "Uptime % (Target: 99.9%)",
           "refId": "A"
@@ -684,7 +735,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "A1.2 - Backup Verification: Last successful backup timestamp",
       "fieldConfig": {
         "defaults": {
@@ -747,7 +801,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "time() - last_successful_backup_timestamp",
           "refId": "A"
         }
@@ -769,7 +826,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "Evidence collection operations per second",
       "fieldConfig": {
         "defaults": {
@@ -843,7 +903,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "sum by (evidence_type) (rate(evidence_collection_operations_total[5m]))",
           "legendFormat": "{{ evidence_type }}",
           "refId": "A"
@@ -853,7 +916,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "Compliance reports generated over time",
       "fieldConfig": {
         "defaults": {
@@ -927,7 +993,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "increase(compliance_report_generated_total[1h])",
           "legendFormat": "{{ report_type }}",
           "refId": "A"
@@ -937,7 +1006,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "Compliance score trend over the last 30 days",
       "fieldConfig": {
         "defaults": {
@@ -1024,7 +1096,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "compliance_score",
           "legendFormat": "Compliance Score",
           "refId": "A"
@@ -1047,7 +1122,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "Access review operations and findings",
       "fieldConfig": {
         "defaults": {
@@ -1103,7 +1181,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "access_review_items_total",
           "format": "table",
           "instant": true,
@@ -1132,7 +1213,10 @@
       "type": "table"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "Inactive user accounts identified in access reviews",
       "fieldConfig": {
         "defaults": {
@@ -1181,7 +1265,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "inactive_user_accounts_total",
           "refId": "A"
         }
@@ -1203,7 +1290,10 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "description": "Scheduled compliance job execution status",
       "fieldConfig": {
         "defaults": {
@@ -1309,13 +1399,19 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "increase(compliance_job_executions_total{status=\"success\"}[1h])",
           "legendFormat": "Success - {{ job_type }}",
           "refId": "A"
         },
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "expr": "increase(compliance_job_executions_total{status=\"failure\"}[1h])",
           "legendFormat": "Failure - {{ job_type }}",
           "refId": "B"

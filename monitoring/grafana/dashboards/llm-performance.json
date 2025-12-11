@@ -32,7 +32,10 @@
   ],
   "panels": [
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -94,14 +97,21 @@
       "targets": [
         {
           "expr": "up{job=\"langgraph-agent\"}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Agent Service Status",
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -166,19 +176,30 @@
         {
           "expr": "rate(agent_calls_successful_total[5m])",
           "legendFormat": "Successful Calls",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "rate(agent_calls_failed_total[5m])",
           "legendFormat": "Failed Calls",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Agent Call Rate",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -228,14 +249,21 @@
       "targets": [
         {
           "expr": "rate(agent_calls_failed_total[5m]) / (rate(agent_calls_successful_total[5m]) + rate(agent_calls_failed_total[5m]) + 0.0001)",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Error Rate",
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -308,24 +336,39 @@
         {
           "expr": "histogram_quantile(0.50, sum(rate(agent_response_duration_bucket[5m])) by (le))",
           "legendFormat": "p50",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "histogram_quantile(0.95, sum(rate(agent_response_duration_bucket[5m])) by (le))",
           "legendFormat": "p95",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "histogram_quantile(0.99, sum(rate(agent_response_duration_bucket[5m])) by (le))",
           "legendFormat": "p99",
-          "refId": "C"
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Response Time Percentiles",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -377,14 +420,21 @@
       "targets": [
         {
           "expr": "sum(rate(agent_tool_calls_total[5m])) * 300",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Tool Calls (5m rate)",
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -449,19 +499,30 @@
         {
           "expr": "sum(rate(agent_calls_successful_total{operation=\"llm.invoke\"}[5m])) by (model)",
           "legendFormat": "{{model}} - Success",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "sum(rate(agent_calls_failed_total{operation=\"llm.invoke\"}[5m])) by (model)",
           "legendFormat": "{{model}} - Failed",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "LLM Invocations by Model",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -525,14 +586,21 @@
         {
           "expr": "sum(rate(agent_calls_successful_total{operation=\"llm.fallback\"}[5m])) by (model)",
           "legendFormat": "{{model}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Fallback Model Usage",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -596,14 +664,21 @@
         {
           "expr": "sum(rate(agent_tool_calls_total[5m])) by (tool)",
           "legendFormat": "{{tool}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Tool Usage Rate",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -670,13 +745,21 @@
           "expr": "sum(rate(agent_calls_successful_total[5m])) by (model)",
           "format": "table",
           "instant": true,
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "sum(rate(agent_calls_failed_total[5m])) by (model)",
           "format": "table",
           "instant": true,
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Model Performance Summary",
@@ -703,7 +786,10 @@
       "type": "table"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -769,7 +855,11 @@
         {
           "expr": "avg(rate(agent_response_duration_sum[5m]) / rate(agent_response_duration_count[5m])) by (operation)",
           "legendFormat": "{{operation}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Average Response Time by Operation",

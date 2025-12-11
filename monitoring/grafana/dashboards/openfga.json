@@ -44,7 +44,10 @@
   ],
   "panels": [
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -106,14 +109,21 @@
       "targets": [
         {
           "expr": "up{job=\"openfga\"}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "OpenFGA Service Status",
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -178,24 +188,39 @@
         {
           "expr": "rate(authz_checks_total[5m])",
           "legendFormat": "Total Checks",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "rate(authz_successes_total[5m])",
           "legendFormat": "Allowed",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "rate(authz_failures_total[5m])",
           "legendFormat": "Denied",
-          "refId": "C"
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Authorization Check Rate",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -245,14 +270,21 @@
       "targets": [
         {
           "expr": "rate(authz_failures_total[5m]) / (rate(authz_checks_total[5m]) + 0.0001)",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Authorization Denial Rate",
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -304,14 +336,21 @@
       "targets": [
         {
           "expr": "openfga_tuple_count",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Total Relationship Tuples",
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -384,24 +423,39 @@
         {
           "expr": "histogram_quantile(0.50, sum(rate(authz_check_duration_bucket[5m])) by (le))",
           "legendFormat": "p50",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "histogram_quantile(0.95, sum(rate(authz_check_duration_bucket[5m])) by (le))",
           "legendFormat": "p95",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "histogram_quantile(0.99, sum(rate(authz_check_duration_bucket[5m])) by (le))",
           "legendFormat": "p99",
-          "refId": "C"
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Authorization Check Latency Percentiles",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -465,14 +519,21 @@
         {
           "expr": "sum(rate(authz_checks_total[5m])) by (relation)",
           "legendFormat": "{{relation}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Authorization Checks by Relation",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -537,19 +598,30 @@
         {
           "expr": "rate(openfga_tuples_written_total[5m])",
           "legendFormat": "Tuples Written",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "rate(openfga_tuples_deleted_total[5m])",
           "legendFormat": "Tuples Deleted",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Tuple Write Operations Rate",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -614,14 +686,21 @@
         {
           "expr": "sum(rate(openfga_sync_operations_total[5m])) by (status)",
           "legendFormat": "{{status}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "OpenFGA Sync Operations",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -686,24 +765,39 @@
         {
           "expr": "histogram_quantile(0.50, sum(rate(openfga_sync_duration_bucket[5m])) by (le))",
           "legendFormat": "p50",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "histogram_quantile(0.95, sum(rate(openfga_sync_duration_bucket[5m])) by (le))",
           "legendFormat": "p95",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "histogram_quantile(0.99, sum(rate(openfga_sync_duration_bucket[5m])) by (le))",
           "legendFormat": "p99",
-          "refId": "C"
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Role Sync Latency Percentiles",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -767,14 +861,21 @@
         {
           "expr": "sum(openfga_tuples_synced_total) by (role)",
           "legendFormat": "{{role}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Synced Tuples by Role",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -838,7 +939,11 @@
         {
           "expr": "sum(rate(role_mapping_applied_total[5m])) by (rule_type)",
           "legendFormat": "{{rule_type}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Role Mapping Rules Applied by Type",

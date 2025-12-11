@@ -56,7 +56,10 @@
   ],
   "panels": [
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -118,14 +121,21 @@
       "targets": [
         {
           "expr": "up{job=\"langgraph-agent\"}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Auth Service Status",
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -190,24 +200,39 @@
         {
           "expr": "rate(auth_login_attempts_total[5m])",
           "legendFormat": "Login Attempts",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "rate(auth_login_success_total[5m])",
           "legendFormat": "Successful Logins",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "rate(auth_login_failed_total[5m])",
           "legendFormat": "Failed Logins",
-          "refId": "C"
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Login Activity Rate",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -257,14 +282,21 @@
       "targets": [
         {
           "expr": "rate(auth_login_failed_total[5m]) / (rate(auth_login_attempts_total[5m]) + 0.0001)",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Login Failure Rate",
       "type": "gauge"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -337,24 +369,39 @@
         {
           "expr": "histogram_quantile(0.50, sum(rate(auth_login_duration_bucket[5m])) by (le))",
           "legendFormat": "p50",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "histogram_quantile(0.95, sum(rate(auth_login_duration_bucket[5m])) by (le))",
           "legendFormat": "p95",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "histogram_quantile(0.99, sum(rate(auth_login_duration_bucket[5m])) by (le))",
           "legendFormat": "p99",
-          "refId": "C"
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Login Response Time Percentiles",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -406,14 +453,21 @@
       "targets": [
         {
           "expr": "sum(session_active_count)",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Active Sessions",
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -478,29 +532,48 @@
         {
           "expr": "rate(token_created_total[5m])",
           "legendFormat": "Tokens Created",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "rate(token_verified_total[5m])",
           "legendFormat": "Tokens Verified",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "rate(token_refreshed_total[5m])",
           "legendFormat": "Tokens Refreshed",
-          "refId": "C"
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "rate(token_verification_failed_total[5m])",
           "legendFormat": "Verification Failures",
-          "refId": "D"
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Token Operations Rate",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -565,14 +638,21 @@
         {
           "expr": "(jwks_cache_hits_total / (jwks_cache_hits_total + jwks_cache_misses_total)) * 100",
           "legendFormat": "JWKS Cache Hit Rate",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "JWKS Cache Performance",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -636,14 +716,21 @@
         {
           "expr": "sum(rate(auth_login_failed_total[5m])) by (failure_reason)",
           "legendFormat": "{{failure_reason}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Login Failures by Reason",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -708,29 +795,48 @@
         {
           "expr": "sum(rate(session_created_total[5m])) by (provider)",
           "legendFormat": "Created - {{provider}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "sum(rate(session_retrieved_total[5m])) by (provider)",
           "legendFormat": "Retrieved - {{provider}}",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "sum(rate(session_refreshed_total[5m])) by (provider)",
           "legendFormat": "Refreshed - {{provider}}",
-          "refId": "C"
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         },
         {
           "expr": "sum(rate(session_revoked_total[5m])) by (provider)",
           "legendFormat": "Revoked - {{provider}}",
-          "refId": "D"
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Session Lifecycle Operations",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -794,7 +900,11 @@
         {
           "expr": "sum(rate(auth_provider_operations_total[5m])) by (provider, operation)",
           "legendFormat": "{{provider}} - {{operation}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
         }
       ],
       "title": "Auth Provider Operations",
