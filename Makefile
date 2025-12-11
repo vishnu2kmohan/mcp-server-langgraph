@@ -1,4 +1,4 @@
-.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-builder-up test-builder-down test-playground-up test-playground-down test-infra-full-up test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-docker-image validate-all validate-workflows validate-pre-push test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build docs-deploy docs-validate docs-validate-mdx docs-validate-links docs-validate-version docs-validate-mintlify docs-fix-mdx docs-test docs-audit generate-reports pre-commit-setup git-hooks
+.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-up-build test-infra-down test-infra-logs test-builder-up test-builder-down test-playground-up test-playground-down test-e2e test-api test-mcp-server validate-openapi validate-deployments validate-docker-image validate-lgtm-config validate-all validate-workflows validate-pre-push test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build docs-deploy docs-validate docs-validate-version docs-validate-mintlify docs-fix-mdx docs-test docs-audit generate-reports pre-commit-setup git-hooks
 
 # Sequential-only targets (cannot be parallelized)
 .NOTPARALLEL: deploy-production deploy-staging deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
@@ -116,17 +116,17 @@ Testing:
 	@echo "  make test-all-quality-ci       All quality tests + coverage (CI mode)"
 	@echo ""
 	@echo "New Testing Features:"
-	@echo "  make test-infra-up            Start test infrastructure with API gateway"
-	@echo "  make test-infra-full-up       Start full infrastructure (incl. builder, playground)"
-	@echo "  make test-infra-down          Stop and clean test infrastructure"
+	@echo "  make test-infra-up            Start full test infrastructure (all services)"
+	@echo "  make test-infra-up-build      Rebuild and start test infrastructure"
+	@echo "  make test-infra-down          Stop test infrastructure (data persists)"
+	@echo "  make test-infra-clean-volumes Remove test infrastructure data volumes"
+	@echo "  make test-infra-reset         Stop and clean ALL data (down + clean-volumes)"
 	@echo "  make test-infra-logs          View test infrastructure logs"
 	@echo "  make test-gateway-status      Check gateway health and routes"
 	@echo "  make test-gateway-logs        View gateway (Traefik) logs"
 	@echo "  make test-e2e                 Run end-to-end tests (full user journeys)"
 	@echo "  make test-api                 Run API endpoint tests"
 	@echo "  make test-mcp-server          Run MCP server unit tests"
-	@echo "  make test-new                 Run all newly added tests"
-	@echo "  make test-quick-new           Quick check of new tests (parallel)"
 	@echo ""
 	@echo "Validation:"
 	@echo "  make validate-pre-push        🚀 Run comprehensive pre-push validation (CI-equivalent)"
@@ -269,10 +269,6 @@ test-integration:
 test-integration-services:
 	@echo "Starting integration test services only..."
 	./scripts/test-integration.sh --services
-
-test-integration-build:
-	@echo "Rebuilding and running integration tests..."
-	./scripts/test-integration.sh --build
 
 test-integration-debug:
 	@echo "Running integration tests (keep containers for debugging)..."
@@ -445,41 +441,74 @@ test-all-quality-ci: test-property-ci test-contract-ci test-regression-ci test-p
 
 # New Testing Infrastructure Targets
 
+# Consolidated test infrastructure (full stack with Builder, Playground, Observability)
+# Use this target for all test infrastructure needs - it includes everything
 test-infra-up:
-	@echo "Starting test infrastructure (docker-compose.test.yml)..."
+	@echo "Starting full test infrastructure (docker-compose.test.yml)..."
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d
-	@echo "✓ Test infrastructure started"
 	@echo ""
 	@echo "═══════════════════════════════════════════════════════════════"
-	@echo "  API Gateway: http://localhost (Traefik)"
+	@echo "✓ Full test infrastructure started!"
 	@echo "═══════════════════════════════════════════════════════════════"
 	@echo ""
-	@echo "Gateway Routes (via http://localhost):"
-	@echo "  /api        - MCP Server API"
-	@echo "  /build      - Visual Workflow Builder"
-	@echo "  /play       - Interactive Playground"
-	@echo "  /authn      - Keycloak (Authentication)"
-	@echo "  /authz      - OpenFGA (Authorization)"
-	@echo "  /vectors    - Qdrant (Vector Database)"
-	@echo "  /traces     - Jaeger (Distributed Tracing)"
-	@echo "  /logs       - Loki (Log Aggregation)"
-	@echo "  /metrics    - Prometheus (Metrics)"
-	@echo "  /alerts     - Alertmanager"
-	@echo "  /dashboards - Grafana (Unified Dashboards)"
-	@echo "  /gateway    - Traefik Dashboard"
+	@echo "┌─────────────────────────────────────────────────────────────┐"
+	@echo "│  API GATEWAY: http://localhost (Traefik)                   │"
+	@echo "└─────────────────────────────────────────────────────────────┘"
 	@echo ""
-	@echo "Direct Ports (legacy):"
-	@echo "  PostgreSQL: localhost:9432"
-	@echo "  Redis:      localhost:9379"
-	@echo "  OpenFGA:    http://localhost:9080"
-	@echo "  Keycloak:   http://localhost:9082"
-	@echo "  Qdrant:     http://localhost:9333"
+	@echo "Gateway Routes (recommended):"
+	@echo "  http://localhost/api        - MCP Server API"
+	@echo "  http://localhost/build      - Visual Workflow Builder"
+	@echo "  http://localhost/play       - Interactive Playground"
+	@echo "  http://localhost/authn      - Keycloak (Authentication)"
+	@echo "  http://localhost/authz      - OpenFGA (Authorization)"
+	@echo "  http://localhost/vectors    - Qdrant (Vector Database)"
+	@echo "  http://localhost/tempo      - Tempo (Distributed Tracing)"
+	@echo "  http://localhost/logs       - Loki (Log Aggregation)"
+	@echo "  http://localhost/mimir      - Mimir (Metrics Storage)"
+	@echo "  http://localhost/alloy      - Alloy (Unified Telemetry)"
+	@echo "  http://localhost/dashboards - Grafana (Unified Dashboards)"
+	@echo "  http://localhost/gateway    - Traefik Dashboard"
 	@echo ""
+	@echo "Direct Ports (legacy, for debugging):"
+	@echo "  PostgreSQL:   localhost:9432"
+	@echo "  Redis:        localhost:9379"
+	@echo "  OpenFGA:      http://localhost:9080"
+	@echo "  Keycloak:     http://localhost:9082"
+	@echo "  Qdrant:       http://localhost:9333"
+	@echo "  MCP Server:   http://localhost:8000"
+	@echo "  Builder:      http://localhost:9001"
+	@echo "  Playground:   http://localhost:9002"
+	@echo "  Tempo:        http://localhost:13200"
+	@echo "  Grafana:      http://localhost:13001"
+	@echo "  Loki:         http://localhost:13100"
+	@echo "  Mimir:        http://localhost:19009"
+	@echo "  Alloy:        http://localhost:12345"
+	@echo ""
+
+test-infra-up-build:
+	@echo "Rebuilding and starting full test infrastructure..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d --build
+	@echo "✓ Full test infrastructure rebuilt and started!"
 
 test-infra-down:
 	@echo "Stopping test infrastructure..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml down -v --remove-orphans
-	@echo "✓ Test infrastructure stopped and cleaned"
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml down --remove-orphans
+	@echo "✓ Test infrastructure stopped"
+	@echo "Note: Data persists in Docker volumes. Use 'make test-infra-clean-volumes' to remove."
+
+test-infra-clean-volumes:
+	@echo "Removing test infrastructure volumes..."
+	docker volume rm mcp-server-langgraph_postgres-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_redis-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_qdrant-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_loki-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_tempo-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_mimir-data 2>/dev/null || true
+	docker volume rm mcp-server-langgraph_grafana-data 2>/dev/null || true
+	@echo "✓ Test volumes cleaned"
+
+test-infra-reset: test-infra-down test-infra-clean-volumes
+	@echo "✓ Test infrastructure reset (all data removed)"
 
 test-infra-logs:
 	@echo "Showing test infrastructure logs..."
@@ -500,8 +529,8 @@ test-gateway-logs:
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml logs -f traefik-gateway
 
 test-loki-logs:
-	@echo "Showing Loki logs..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml logs -f loki-test promtail-test
+	@echo "Showing Loki and Alloy logs..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml logs -f loki-test alloy-test
 
 test-builder-up:
 	@echo "Starting builder service (unified API + React frontend)..."
@@ -540,45 +569,6 @@ test-playground-down:
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml stop playground-test
 	@echo "✓ Playground stopped"
 
-test-infra-full-up: test-infra-up test-builder-up test-playground-up
-	@echo ""
-	@echo "═══════════════════════════════════════════════════════════════"
-	@echo "✓ Full test infrastructure started!"
-	@echo "═══════════════════════════════════════════════════════════════"
-	@echo ""
-	@echo "┌─────────────────────────────────────────────────────────────┐"
-	@echo "│  API GATEWAY: http://localhost (Traefik)                   │"
-	@echo "└─────────────────────────────────────────────────────────────┘"
-	@echo ""
-	@echo "Gateway Routes (recommended):"
-	@echo "  http://localhost/api        - MCP Server API"
-	@echo "  http://localhost/build      - Visual Workflow Builder"
-	@echo "  http://localhost/play       - Interactive Playground"
-	@echo "  http://localhost/authn      - Keycloak (Authentication)"
-	@echo "  http://localhost/authz      - OpenFGA (Authorization)"
-	@echo "  http://localhost/vectors    - Qdrant (Vector Database)"
-	@echo "  http://localhost/traces     - Jaeger (Distributed Tracing)"
-	@echo "  http://localhost/logs       - Loki (Log Aggregation)"
-	@echo "  http://localhost/metrics    - Prometheus (Metrics)"
-	@echo "  http://localhost/alerts     - Alertmanager"
-	@echo "  http://localhost/dashboards - Grafana (Unified Dashboards)"
-	@echo "  http://localhost/gateway    - Traefik Dashboard"
-	@echo ""
-	@echo "Direct Ports (legacy, for debugging):"
-	@echo "  PostgreSQL:   localhost:9432"
-	@echo "  Redis:        localhost:9379"
-	@echo "  OpenFGA:      http://localhost:9080"
-	@echo "  Keycloak:     http://localhost:9082"
-	@echo "  Qdrant:       http://localhost:9333"
-	@echo "  MCP Server:   http://localhost:8000"
-	@echo "  Builder:      http://localhost:9001"
-	@echo "  Playground:   http://localhost:9002"
-	@echo "  Jaeger:       http://localhost:19686"
-	@echo "  Prometheus:   http://localhost:19090"
-	@echo "  Grafana:      http://localhost:13001"
-	@echo "  Loki:         http://localhost:13100"
-	@echo ""
-
 test-e2e:
 	@echo "Running end-to-end tests (parallel execution, requires test infrastructure)..."
 	@echo "Ensuring test infrastructure is running..."
@@ -598,20 +588,8 @@ test-api:
 
 test-mcp-server:
 	@echo "Running MCP server unit tests (parallel execution)..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto tests/unit/test_mcp_stdio_server.py tests/test_mcp_streamable.py -v
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto tests/unit/mcp/test_mcp_stdio_server.py tests/integration/test_mcp_streamable.py -v
 	@echo "✓ MCP server tests complete"
-
-test-new:
-	@echo "Running newly added tests (parallel execution)..."
-	@echo ""
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto tests/api/ tests/unit/test_mcp_stdio_server.py -v
-	@echo ""
-	@echo "✓ All new tests complete"
-
-test-quick-new:
-	@echo "Quick check of newly added tests (parallel, no verbose)..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto tests/api/ tests/unit/test_mcp_stdio_server.py
-	@echo "✓ Quick test complete"
 
 # Validation
 validate-openapi:
@@ -628,6 +606,21 @@ validate-docker-compose:
 	@echo "Validating Docker Compose configuration..."
 	$(DOCKER_COMPOSE) -f docker-compose.yml config --quiet
 	@echo "✓ Docker Compose valid"
+
+validate-lgtm-config:  ## Validate Grafana LGTM stack configurations (Mimir, Loki)
+	@echo "Validating LGTM stack configurations..."
+	@echo "  Validating Mimir config..."
+	@docker run --rm -v $(PWD)/docker/mimir:/etc/mimir grafana/mimir:3.0.1 \
+		-config.file=/etc/mimir/mimir-config.yaml -print.config > /dev/null 2>&1 && \
+		echo "  ✓ Mimir config valid" || \
+		(echo "  ✗ Mimir config invalid - run with verbose output for details:" && \
+		 echo "    docker run --rm -v \$$(pwd)/docker/mimir:/etc/mimir grafana/mimir:3.0.1 -config.file=/etc/mimir/mimir-config.yaml -print.config" && \
+		 exit 1)
+	@echo "  Validating Loki config (YAML syntax)..."
+	@$(UV_RUN) python -c "import yaml; yaml.safe_load(open('docker/loki/loki-config.yaml'))" && \
+		echo "  ✓ Loki config YAML valid" || \
+		(echo "  ✗ Loki config YAML invalid" && exit 1)
+	@echo "✓ LGTM configurations valid"
 
 validate-docker-image:
 	@echo "Validating Docker test image freshness..."
@@ -654,7 +647,7 @@ validate-kustomize:
 	wait $$pid1 $$pid2 $$pid3
 	@echo "✓ All Kustomize overlays valid"
 
-validate-all: validate-deployments validate-docker-compose validate-docker-image validate-helm validate-kustomize
+validate-all: validate-deployments validate-docker-compose validate-lgtm-config validate-docker-image validate-helm validate-kustomize
 	@echo "✓ All deployment validations passed"
 
 validate-docs:  ## Verify Claude Code documentation accuracy (prevents drift)
@@ -900,10 +893,13 @@ validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 ## validate-pre-push-full: Comprehensive pre-push validation with integration tests
-validate-pre-push-full:  ## Comprehensive pre-push validation with Docker integration tests (8-12 min)
+## Use cases: Pre-release audit, major refactoring, CI debugging
+validate-pre-push-full:  ## Comprehensive CI-equivalent validation with Docker (8-12 min)
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "🔍 Running comprehensive pre-push validation (FULL - CI-equivalent)"
+	@echo "🎯 CI-EQUIVALENT VALIDATION (FULL)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "Use cases: Pre-release audit, major refactoring, CI debugging"
 	@echo ""
 	@$(MAKE) _validate-pre-push-phases-1-2
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

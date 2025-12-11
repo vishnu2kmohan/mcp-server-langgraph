@@ -327,29 +327,77 @@ jobs:
       with:
         version: 'v3.14.0'
 
+    # Cache Helm dependencies to avoid rate limiting from GitHub-hosted chart repos
+    # See: https://github.com/openfga/helm-charts (redirects to GitHub Releases)
+    - name: Cache Helm Dependencies
+      if: matrix.python-version == '3.12'
+      uses: actions/cache@v4
+      with:
+        path: |
+          deployments/helm/mcp-server-langgraph/charts
+          ~/.cache/helm
+        key: helm-deps-${{ hashFiles('deployments/helm/mcp-server-langgraph/Chart.lock') }}
+        restore-keys: |
+          helm-deps-
+
     - name: Build Helm chart dependencies
       if: matrix.python-version == '3.12'
       run: |
         set -euo pipefail
         # Build Helm chart dependencies for tests in tests/deployment/test_helm_templates.py
+        # CRITICAL: Validate ALL expected charts are present, not just "some exist"
+        # This prevents CI failures from corrupted partial caches
+        EXPECTED_CHARTS=7  # openfga, postgresql, redis, keycloak, grafana, jaeger, kube-prometheus-stack
+
         if command -v helm &> /dev/null; then
-          echo "🔨 Adding Helm repositories..."
-          helm repo add openfga https://openfga.github.io/helm-charts || true
-          helm repo add bitnami https://charts.bitnami.com/bitnami || true
-          helm repo add jaegertracing https://jaegertracing.github.io/helm-charts || true
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
-          helm repo update
+          REBUILD_NEEDED=false
 
-          echo "🔨 Building Helm chart dependencies..."
-          helm dependency build deployments/helm/mcp-server-langgraph
-
-          # Verify dependencies were downloaded
-          if [ ! -d "deployments/helm/mcp-server-langgraph/charts" ] || [ -z "$(ls -A deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null)" ]; then
-            echo "❌ Helm dependency build failed - charts directory is empty"
-            exit 1
+          # Check if cached dependencies exist and are COMPLETE (not just present)
+          if [ -d "deployments/helm/mcp-server-langgraph/charts" ]; then
+            ACTUAL_CHARTS=$(ls deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null | wc -l || echo "0")
+            if [ "$ACTUAL_CHARTS" -eq "$EXPECTED_CHARTS" ]; then
+              echo "✅ Using cached Helm dependencies ($ACTUAL_CHARTS/$EXPECTED_CHARTS charts)"
+              ls -la deployments/helm/mcp-server-langgraph/charts/
+            else
+              echo "⚠️ Cache incomplete: found $ACTUAL_CHARTS charts, expected $EXPECTED_CHARTS"
+              echo "🔄 Clearing incomplete cache and rebuilding..."
+              rm -rf deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null || true
+              REBUILD_NEEDED=true
+            fi
+          else
+            REBUILD_NEEDED=true
           fi
-          echo "✓ Helm dependencies built successfully"
-          ls -la deployments/helm/mcp-server-langgraph/charts/
+
+          if [ "$REBUILD_NEEDED" = true ]; then
+            echo "🔨 Adding Helm repositories..."
+            helm repo add openfga https://openfga.github.io/helm-charts || true
+            helm repo add bitnami https://charts.bitnami.com/bitnami || true
+            helm repo add jaegertracing https://jaegertracing.github.io/helm-charts || true
+            helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
+            helm repo update
+
+            echo "🔨 Building Helm chart dependencies..."
+            # Retry logic for transient failures (GitHub rate limiting)
+            for i in 1 2 3; do
+              if helm dependency build deployments/helm/mcp-server-langgraph; then
+                break
+              fi
+              echo "⚠️ Helm dependency build failed, retry $i/3..."
+              sleep $((i * 10))
+            done
+
+            # Verify ALL dependencies were downloaded
+            ACTUAL_CHARTS=$(ls deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null | wc -l || echo "0")
+            if [ "$ACTUAL_CHARTS" -ne "$EXPECTED_CHARTS" ]; then
+              echo "❌ Helm dependency build incomplete: $ACTUAL_CHARTS/$EXPECTED_CHARTS charts"
+              echo "Expected: openfga, postgresql, redis, keycloak, grafana, jaeger, kube-prometheus-stack"
+              echo "Actual charts:"
+              ls -1 deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null || echo "  (none found)"
+              exit 1
+            fi
+            echo "✓ Helm dependencies built successfully ($ACTUAL_CHARTS charts)"
+            ls -la deployments/helm/mcp-server-langgraph/charts/
+          fi
         else
           echo "⚠️ Helm not installed, skipping dependency build (Helm tests may be skipped)"
         fi
@@ -679,7 +727,7 @@ jobs:
     - name: Install Trivy
       if: matrix.needs_trivy
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.50.0
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.68.1
         trivy --version
 
     - name: Setup Node.js

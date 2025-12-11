@@ -24,7 +24,7 @@ spec:
           annotations:
             summary: "LangGraph Agent service is down"
             description: "The LangGraph Agent service has been down for more than 2 minutes."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/service-down.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/service-down.md"
             dashboard_url: "https://grafana.example.com/d/langgraph-agent/overview"
 
         - alert: HighErrorRate
@@ -41,7 +41,7 @@ spec:
           annotations:
             summary: "High error rate detected (>10%)"
             description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/high-error-rate.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/high-error-rate.md"
 
         - alert: AuthenticationFailureSpike
           expr: |
@@ -53,7 +53,7 @@ spec:
           annotations:
             summary: "Authentication failure spike detected"
             description: "More than 10 authentication failures per second over the last 2 minutes. Possible attack."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/auth-spike.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/auth-spike.md"
 
         - alert: AuthorizationFailureSpike
           expr: |
@@ -65,7 +65,7 @@ spec:
           annotations:
             summary: "Authorization failure spike detected"
             description: "More than 5 authorization failures per second over the last 5 minutes."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/authz-spike.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/authz-spike.md"
 
     # High Priority - Performance Degradation
     - name: langgraph_agent.performance
@@ -83,7 +83,7 @@ spec:
           annotations:
             summary: "High response time detected (p95 > 5s)"
             description: "95th percentile response time is {{ $value }}ms over the last 5 minutes."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/high-latency.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/high-latency.md"
 
         - alert: SlowLLMResponses
           expr: |
@@ -97,7 +97,7 @@ spec:
           annotations:
             summary: "Slow LLM responses detected (p95 > 10s)"
             description: "95th percentile LLM response time is {{ $value }}ms."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/slow-llm.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/slow-llm.md"
 
         - alert: HighMemoryUsage
           expr: |
@@ -113,7 +113,7 @@ spec:
           annotations:
             summary: "High memory usage detected (>85%)"
             description: "Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/high-memory.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/high-memory.md"
 
         - alert: HighCPUUsage
           expr: |
@@ -129,7 +129,7 @@ spec:
           annotations:
             summary: "High CPU usage detected (>80%)"
             description: "Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its CPU limit."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/high-cpu.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/high-cpu.md"
 
     # Medium Priority - Availability
     - name: langgraph_agent.availability
@@ -145,7 +145,7 @@ spec:
           annotations:
             summary: "Pod restarting frequently"
             description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/pod-restarts.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/pod-restarts.md"
 
         - alert: InsufficientReplicas
           expr: |
@@ -157,7 +157,7 @@ spec:
           annotations:
             summary: "Insufficient replicas running"
             description: "Only {{ $value }} replicas are available. Expected at least 2 for HA."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/insufficient-replicas.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/insufficient-replicas.md"
 
         - alert: HealthCheckFailing
           expr: |
@@ -169,7 +169,7 @@ spec:
           annotations:
             summary: "Health check failing"
             description: "Health check endpoint is not responding."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/health-check-failing.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/health-check-failing.md"
 
     # Medium Priority - Dependencies
     - name: langgraph_agent.dependencies
@@ -185,7 +185,7 @@ spec:
           annotations:
             summary: "OpenFGA connection failing"
             description: "Unable to connect to OpenFGA service. Authorization checks may fail."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/openfga-down.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/openfga-down.md"
 
         - alert: KeycloakDown
           expr: |
@@ -197,7 +197,7 @@ spec:
           annotations:
             summary: "Keycloak service is down"
             description: "Keycloak SSO service is unavailable. Authentication will fail."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/keycloak-down.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/keycloak-down.md"
 
         - alert: KeycloakHighLatency
           expr: |
@@ -211,7 +211,7 @@ spec:
           annotations:
             summary: "Keycloak high latency detected (p95 > 2s)"
             description: "95th percentile Keycloak response time is {{ $value }}ms."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/keycloak-slow.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/keycloak-slow.md"
 
         - alert: KeycloakTokenRefreshFailures
           expr: |
@@ -223,7 +223,7 @@ spec:
           annotations:
             summary: "Keycloak token refresh failures"
             description: "{{ $value }} token refresh failures per second."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/keycloak-token-refresh.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/keycloak-token-refresh.md"
 
         - alert: RedisSessionStoreDown
           expr: |
@@ -235,7 +235,7 @@ spec:
           annotations:
             summary: "Redis session store is down"
             description: "Redis session store is unavailable. Session management will fail."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/redis-down.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/redis-down.md"
 
         - alert: RedisHighMemoryUsage
           expr: |
@@ -251,7 +251,7 @@ spec:
           annotations:
             summary: "Redis memory usage critical (>90%)"
             description: "Redis is using {{ $value | humanizePercentage }} of allocated memory. Sessions may be evicted."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/redis-memory.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/redis-memory.md"
 
         - alert: RedisConnectionPoolExhausted
           expr: |
@@ -266,7 +266,7 @@ spec:
           annotations:
             summary: "Redis connection pool exhausted (>95%)"
             description: "Redis connection pool is {{ $value | humanizePercentage }} utilized."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/redis-pool.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/redis-pool.md"
 
         - alert: SessionStoreErrors
           expr: |
@@ -278,7 +278,7 @@ spec:
           annotations:
             summary: "Session store errors detected"
             description: "{{ $value }} session store errors per second."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/session-errors.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/session-errors.md"
 
         - alert: SessionTTLViolations
           expr: |
@@ -290,7 +290,7 @@ spec:
           annotations:
             summary: "Session TTL violations detected"
             description: "Sessions are expiring before expected TTL. Check session configuration."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/session-ttl.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/session-ttl.md"
 
         - alert: LLMProviderErrors
           expr: |
@@ -302,7 +302,7 @@ spec:
           annotations:
             summary: "LLM provider errors detected"
             description: "{{ $value }} errors per second from LLM provider {{ $labels.provider }}."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/llm-provider-errors.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/llm-provider-errors.md"
 
         - alert: InfisicalConnectionFailing
           expr: |
@@ -314,7 +314,7 @@ spec:
           annotations:
             summary: "Infisical connection failing"
             description: "Unable to fetch secrets from Infisical. Using cached/fallback values."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/infisical-down.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infisical-down.md"
 
     # Low Priority - Capacity Planning
     - name: langgraph_agent.capacity
@@ -330,7 +330,7 @@ spec:
           annotations:
             summary: "High request rate detected"
             description: "Request rate is {{ $value }} requests/second. Consider scaling up."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/scale-up.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/scale-up.md"
 
         - alert: LowRequestRate
           expr: |
@@ -342,7 +342,7 @@ spec:
           annotations:
             summary: "Low request rate detected"
             description: "Request rate is {{ $value }} requests/second. Consider scaling down."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/scale-down.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/scale-down.md"
 
         - alert: DiskSpaceRunningLow
           expr: |
@@ -358,7 +358,7 @@ spec:
           annotations:
             summary: "Disk space running low (<15%)"
             description: "Only {{ $value | humanizePercentage }} disk space remaining on {{ $labels.instance }}."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/low-disk-space.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/low-disk-space.md"
 
     # Security Alerts
     - name: langgraph_agent.security
@@ -374,7 +374,7 @@ spec:
           annotations:
             summary: "Unauthorized access attempts detected"
             description: "{{ $value }} failed authentication attempts per second (reason: {{ $labels.reason }})."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/unauthorized-access.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/unauthorized-access.md"
 
         - alert: SuspiciousActivityPattern
           expr: |
@@ -386,7 +386,7 @@ spec:
           annotations:
             summary: "Suspicious activity pattern detected"
             description: "High rate of authorization failures may indicate enumeration attack."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/suspicious-activity.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/suspicious-activity.md"
 
         - alert: TokenValidationFailures
           expr: |
@@ -398,4 +398,4 @@ spec:
           annotations:
             summary: "Token validation failures detected"
             description: "{{ $value }} JWT validation errors per second."
-            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/token-validation-failures.md"
+            runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/token-validation-failures.md"

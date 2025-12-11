@@ -101,7 +101,7 @@ def create_mock_openfga_client(authorized: bool = True) -> AsyncMock:
         - tests/api/test_service_principals_endpoints.py (fixed: 4 tests)
         - Root cause: Missing dependency override for get_openfga_client
     """
-    mock_client = AsyncMock()
+    mock_client = AsyncMock(return_value=None)  # Container for configured methods
     mock_client.check_permission = AsyncMock(return_value=authorized)
     return mock_client
 
@@ -426,7 +426,7 @@ def create_behavioral_agent_graph(
         }
 
     # Setup checkpointer (needed for some tests)
-    checkpointer = AsyncMock()
+    checkpointer = AsyncMock(return_value=None)  # Container for checkpointer methods
     mock.checkpointer = checkpointer
 
     return mock
@@ -473,7 +473,7 @@ def create_behavioral_llm_provider(
     """
     import asyncio
 
-    mock = AsyncMock()
+    mock = AsyncMock(return_value=None)  # Container for configured methods
 
     async def invoke_with_latency(*args, **kwargs):
         if latency_ms > 0:
@@ -526,7 +526,7 @@ def create_behavioral_checkpointer(*, has_checkpoint: bool = True, checkpoint_da
     """
     from unittest.mock import MagicMock
 
-    mock = AsyncMock()
+    mock = AsyncMock(return_value=None)  # Container for checkpointer methods
 
     if has_checkpoint:
         checkpoint = MagicMock()
@@ -535,7 +535,7 @@ def create_behavioral_checkpointer(*, has_checkpoint: bool = True, checkpoint_da
     else:
         mock.aget.return_value = None
 
-    mock.aput = AsyncMock()  # Saving always succeeds
+    mock.aput = AsyncMock(return_value=None)  # Saving always succeeds
 
     return mock
 

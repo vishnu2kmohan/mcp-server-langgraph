@@ -63,7 +63,7 @@ class TestAgentTypeCompliance:
             ["uv", "run", "--frozen", "mypy", str(agent_file), "--no-error-summary"],
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=60,  # Increased from 30s to handle xdist resource contention
             env=env,
         )
 

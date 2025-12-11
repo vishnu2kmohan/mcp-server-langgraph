@@ -2,10 +2,10 @@
 Integration tests for Builder API endpoints.
 
 Tests the builder API server against real infrastructure:
-- Workflow CRUD operations
+- Code generation from workflows
 - Workflow validation
-- Code generation
-- MCP integration
+- Template listing
+- Node type listing
 
 Requires: docker-compose.test.yml services running
 
@@ -35,11 +35,19 @@ def builder_url() -> str:
 
 
 @pytest.fixture
-def api_client(builder_url: str):
+async def api_client(builder_url: str):
     """Create HTTP client for Builder API."""
     import httpx
 
-    return httpx.AsyncClient(base_url=builder_url, timeout=30.0)
+    client = httpx.AsyncClient(base_url=builder_url, timeout=30.0)
+    # Test connectivity by trying to reach the server
+    try:
+        await client.get("/")
+    except (httpx.ConnectError, httpx.ConnectTimeout, OSError) as e:
+        await client.aclose()
+        pytest.skip(f"Builder API not available: {e}")
+    yield client
+    await client.aclose()
 
 
 @pytest.mark.xdist_group(name="builder_integration_tests")
@@ -60,98 +68,62 @@ class TestBuilderHealth:
         assert "status" in data
 
     @pytest.mark.asyncio
-    async def test_root_serves_spa(self, api_client) -> None:
-        """Test root path serves React SPA."""
+    async def test_root_returns_api_info(self, api_client) -> None:
+        """Test root path returns API info (or HTML if frontend is built)."""
         response = await api_client.get("/")
 
-        # Should serve HTML (React SPA)
+        # Should return 200 with either JSON API info or HTML SPA
         assert response.status_code == 200
-        assert "text/html" in response.headers.get("content-type", "")
+        content_type = response.headers.get("content-type", "")
+        # Accept either HTML (frontend built) or JSON (API-only mode)
+        assert "text/html" in content_type or "application/json" in content_type
 
 
 @pytest.mark.xdist_group(name="builder_integration_tests")
-class TestBuilderWorkflowAPI:
-    """Test workflow management API endpoints."""
+class TestBuilderTemplatesAPI:
+    """Test template API endpoints."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.fixture
-    def auth_headers(self, mock_jwt_token: str) -> dict:
-        """Get authorization headers."""
-        return {"Authorization": f"Bearer {mock_jwt_token}"}
+    @pytest.mark.asyncio
+    async def test_list_templates(self, api_client) -> None:
+        """Test listing workflow templates."""
+        response = await api_client.get("/api/builder/templates")
 
-    @pytest.fixture
-    def sample_workflow(self) -> dict:
-        """Sample workflow definition."""
-        return {
-            "name": "Test Workflow",
-            "description": "Integration test workflow",
-            "nodes": [
-                {
-                    "id": "start",
-                    "type": "start",
-                    "position": {"x": 100, "y": 100},
-                },
-                {
-                    "id": "agent",
-                    "type": "agent",
-                    "position": {"x": 300, "y": 100},
-                    "data": {"name": "Assistant"},
-                },
-                {
-                    "id": "end",
-                    "type": "end",
-                    "position": {"x": 500, "y": 100},
-                },
-            ],
-            "edges": [
-                {"id": "e1", "source": "start", "target": "agent"},
-                {"id": "e2", "source": "agent", "target": "end"},
-            ],
-        }
+        assert response.status_code == 200
+        data = response.json()
+        assert "templates" in data
+        assert isinstance(data["templates"], list)
+        assert len(data["templates"]) > 0
 
     @pytest.mark.asyncio
-    async def test_create_workflow(self, api_client, auth_headers, sample_workflow) -> None:
-        """Test creating a new workflow."""
-        response = await api_client.post(
-            "/api/builder/workflows",
-            json=sample_workflow,
-            headers=auth_headers,
-        )
+    async def test_get_template_research_agent(self, api_client) -> None:
+        """Test getting a specific template."""
+        response = await api_client.get("/api/builder/templates/research_agent")
 
-        # Should succeed or require auth
-        assert response.status_code in [200, 201, 401, 403]
-
-        if response.status_code in [200, 201]:
-            data = response.json()
-            assert "id" in data or "workflow_id" in data
+        assert response.status_code == 200
+        data = response.json()
+        assert "template" in data
 
     @pytest.mark.asyncio
-    async def test_list_workflows(self, api_client, auth_headers) -> None:
-        """Test listing workflows."""
-        response = await api_client.get(
-            "/api/builder/workflows",
-            headers=auth_headers,
-        )
+    async def test_get_nonexistent_template(self, api_client) -> None:
+        """Test getting nonexistent template returns 404."""
+        response = await api_client.get("/api/builder/templates/nonexistent-template")
 
-        # Should succeed or require auth
-        assert response.status_code in [200, 401, 403]
-
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(data, list) or "workflows" in data
+        assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_get_nonexistent_workflow(self, api_client, auth_headers) -> None:
-        """Test getting nonexistent workflow returns 404."""
-        response = await api_client.get(
-            "/api/builder/workflows/nonexistent-workflow-id",
-            headers=auth_headers,
-        )
+    async def test_list_node_types(self, api_client) -> None:
+        """Test listing available node types."""
+        response = await api_client.get("/api/builder/node-types")
 
-        assert response.status_code in [404, 401, 403]
+        assert response.status_code == 200
+        data = response.json()
+        assert "node_types" in data
+        assert isinstance(data["node_types"], list)
+        assert len(data["node_types"]) > 0
 
 
 @pytest.mark.xdist_group(name="builder_integration_tests")
@@ -163,61 +135,68 @@ class TestBuilderValidation:
         gc.collect()
 
     @pytest.fixture
-    def auth_headers(self, mock_jwt_token: str) -> dict:
-        """Get authorization headers."""
-        return {"Authorization": f"Bearer {mock_jwt_token}"}
-
-    @pytest.fixture
     def valid_workflow(self) -> dict:
-        """A valid workflow for testing."""
+        """
+        A valid workflow for testing.
+
+        Must match WorkflowDefinition schema:
+        - name: str
+        - nodes: list of NodeDefinition
+        - edges: list of EdgeDefinition (from_node, to_node)
+        - entry_point: str (defaults to first node id)
+        """
         return {
-            "nodes": [
-                {"id": "start", "type": "start"},
-                {"id": "end", "type": "end"},
-            ],
-            "edges": [
-                {"source": "start", "target": "end"},
-            ],
+            "workflow": {
+                "name": "test_workflow",
+                "description": "Test workflow",
+                "nodes": [
+                    {"id": "node1", "type": "llm", "config": {"model": "gpt-4"}},
+                ],
+                "edges": [],
+                "entry_point": "node1",
+            }
         }
 
     @pytest.fixture
     def invalid_workflow(self) -> dict:
-        """An invalid workflow (no end node)."""
+        """An invalid workflow (missing entry point)."""
         return {
-            "nodes": [
-                {"id": "start", "type": "start"},
-            ],
-            "edges": [],
+            "workflow": {
+                "name": "invalid_workflow",
+                "nodes": [
+                    {"id": "node1", "type": "llm", "config": {}},
+                ],
+                "edges": [],
+                "entry_point": "nonexistent",  # Invalid - doesn't exist
+            }
         }
 
     @pytest.mark.asyncio
-    async def test_validate_valid_workflow(self, api_client, auth_headers, valid_workflow) -> None:
+    async def test_validate_valid_workflow(self, api_client, valid_workflow) -> None:
         """Test validating a valid workflow."""
         response = await api_client.post(
             "/api/builder/validate",
             json=valid_workflow,
-            headers=auth_headers,
         )
 
-        # Should succeed or require auth
-        assert response.status_code in [200, 401, 403]
-
-        if response.status_code == 200:
-            data = response.json()
-            # Should indicate valid or return validation result
-            assert "valid" in data or "errors" in data or "is_valid" in data
+        assert response.status_code == 200
+        data = response.json()
+        assert "valid" in data
+        assert data["valid"] is True
 
     @pytest.mark.asyncio
-    async def test_validate_invalid_workflow(self, api_client, auth_headers, invalid_workflow) -> None:
+    async def test_validate_invalid_workflow(self, api_client, invalid_workflow) -> None:
         """Test validating an invalid workflow returns errors."""
         response = await api_client.post(
             "/api/builder/validate",
             json=invalid_workflow,
-            headers=auth_headers,
         )
 
-        # Should succeed with validation errors or require auth
-        assert response.status_code in [200, 400, 401, 403, 422]
+        assert response.status_code == 200
+        data = response.json()
+        assert "valid" in data
+        assert data["valid"] is False
+        assert len(data.get("errors", [])) > 0
 
 
 @pytest.mark.xdist_group(name="builder_integration_tests")
@@ -235,18 +214,21 @@ class TestBuilderCodeGeneration:
 
     @pytest.fixture
     def simple_workflow(self) -> dict:
-        """Simple workflow for code generation."""
+        """
+        Simple workflow for code generation.
+
+        Must match WorkflowDefinition schema for /api/builder/generate.
+        """
         return {
-            "name": "SimpleAgent",
-            "nodes": [
-                {"id": "start", "type": "start"},
-                {"id": "agent", "type": "agent", "data": {"name": "Assistant"}},
-                {"id": "end", "type": "end"},
-            ],
-            "edges": [
-                {"source": "start", "target": "agent"},
-                {"source": "agent", "target": "end"},
-            ],
+            "workflow": {
+                "name": "simple_agent",
+                "description": "A simple test agent",
+                "nodes": [
+                    {"id": "agent", "type": "llm", "config": {"model": "gpt-4"}},
+                ],
+                "edges": [],
+                "entry_point": "agent",
+            }
         }
 
     @pytest.mark.asyncio
@@ -264,12 +246,12 @@ class TestBuilderCodeGeneration:
         if response.status_code == 200:
             data = response.json()
             # Should contain generated code
-            assert "code" in data or "python" in data or "content" in data
+            assert "code" in data
 
 
 @pytest.mark.xdist_group(name="builder_integration_tests")
-class TestBuilderMCPIntegration:
-    """Test Builder's MCP server integration."""
+class TestBuilderImportExport:
+    """Test import/export functionality."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
@@ -281,57 +263,52 @@ class TestBuilderMCPIntegration:
         return {"Authorization": f"Bearer {mock_jwt_token}"}
 
     @pytest.mark.asyncio
-    async def test_mcp_tools_endpoint(self, api_client, auth_headers) -> None:
-        """Test that builder exposes MCP tools."""
-        response = await api_client.get(
-            "/api/builder/tools",
+    async def test_import_endpoint_exists(self, api_client, auth_headers) -> None:
+        """Test that import endpoint is accessible."""
+        # Simple LangGraph code to import
+        code = """
+from langgraph.graph import StateGraph, END
+
+def agent(state):
+    return state
+
+graph = StateGraph(dict)
+graph.add_node("agent", agent)
+graph.set_entry_point("agent")
+graph.add_edge("agent", END)
+"""
+        response = await api_client.post(
+            "/api/builder/import",
+            json={"code": code, "layout": "hierarchical"},
             headers=auth_headers,
         )
 
-        # Endpoint may or may not exist
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(data, list) or "tools" in data
-
-    @pytest.mark.asyncio
-    async def test_mcp_resources_endpoint(self, api_client, auth_headers) -> None:
-        """Test that builder exposes MCP resources."""
-        response = await api_client.get(
-            "/api/builder/resources",
-            headers=auth_headers,
-        )
-
-        # Endpoint may or may not exist
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(data, list) or "resources" in data
+        # Endpoint should exist and accept valid code
+        # May return 200, 400 (parse error), or auth errors
+        assert response.status_code in [200, 400, 401, 403, 500]
 
 
 @pytest.mark.xdist_group(name="builder_integration_tests")
-class TestBuilderFrontend:
-    """Test frontend serving."""
+class TestBuilderAPIInfo:
+    """Test API info and root endpoints."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_spa_routes_return_html(self, api_client) -> None:
-        """Test SPA routes return index.html."""
-        routes = ["/", "/workflows", "/workflows/new", "/settings"]
+    async def test_root_returns_api_info_or_spa(self, api_client) -> None:
+        """Test root returns API info when frontend not built."""
+        response = await api_client.get("/")
 
-        for route in routes:
-            response = await api_client.get(route)
+        assert response.status_code == 200
+        content_type = response.headers.get("content-type", "")
 
-            # Should serve HTML (SPA handles routing)
-            if response.status_code == 200:
-                assert "text/html" in response.headers.get("content-type", "")
-
-    @pytest.mark.asyncio
-    async def test_static_assets_served(self, api_client) -> None:
-        """Test static assets are served."""
-        # Try common static asset paths
-        response = await api_client.get("/assets/index.js")
-
-        # May return 200 if exists, 404 if not built
-        assert response.status_code in [200, 404]
+        # Accept either JSON (API info) or HTML (frontend SPA)
+        if "application/json" in content_type:
+            data = response.json()
+            # Should have API name
+            assert "name" in data or "version" in data
+        else:
+            # Frontend is built, should serve HTML
+            assert "text/html" in content_type

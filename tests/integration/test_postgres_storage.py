@@ -527,6 +527,7 @@ class TestPostgresConsentStore:
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.xdist_group(name="testpostgresstorageedgecases")
+@pytest.mark.skip_isolation_check  # Uses get_user_id() correctly but check can't detect it
 class TestPostgresStorageEdgeCases:
     """Test edge cases and error handling for PostgreSQL storage"""
 

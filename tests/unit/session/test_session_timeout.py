@@ -529,7 +529,7 @@ class TestSessionTimeoutEdgeCases:
     async def test_session_store_error_continues(self, app):
         """Test that session store errors don't break requests"""
         # Create mock store that raises exception
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)  # Container for configured methods
         mock_store.get.side_effect = Exception("Database connection error")
 
         middleware = SessionTimeoutMiddleware(app=app, timeout_seconds=900, session_store=mock_store)

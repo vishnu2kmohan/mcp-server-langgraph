@@ -1,0 +1,6 @@
+# JSON 6902 Patch: Remove runAsUser from Redis container
+# OpenShift assigns arbitrary UIDs - explicit runAsUser would conflict
+- op: remove
+  path: /spec/template/spec/securityContext/runAsUser
+- op: remove
+  path: /spec/template/spec/containers/0/securityContext/runAsUser

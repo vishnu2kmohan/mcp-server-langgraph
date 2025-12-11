@@ -1,0 +1,189 @@
+name: Build Builder Image
+
+# ==============================================================================
+# Builder Image Build Workflow
+# ==============================================================================
+#
+# This workflow builds and pushes the Visual Workflow Builder image that
+# combines a React frontend with a FastAPI backend in a single container.
+#
+# Triggers:
+# - Push to main (when Dockerfile.builder or frontend changes)
+# - Manual dispatch (for ad-hoc builds)
+# - Weekly schedule (to get security updates)
+#
+# The image is pushed to:
+# - Preview/Dev: ghcr.io/vishnu2kmohan/mcp-builder (GHCR)
+# - Production: Promoted from GHCR to cloud-specific registries
+# ==============================================================================
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker/Dockerfile.builder'
+      - 'src/mcp_server_langgraph/builder/**'
+      - '.github/workflows/build-builder-image.yaml'
+
+  # Weekly rebuild to pick up base image security updates
+  schedule:
+    - cron: '0 7 * * 1'  # Every Monday at 7 AM UTC
+
+  workflow_dispatch:
+    inputs:
+      push_to_production:
+        description: 'Also push to production registry'
+        type: boolean
+        default: false
+
+concurrency:
+  group: build-builder-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
+
+permissions:
+  contents: read
+  packages: write  # Required for pushing to GHCR
+  security-events: write  # Required for SARIF upload to GitHub Security tab
+
+jobs:
+  build-and-push:
+    name: Build Builder Image
+    runs-on: ubuntu-latest
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    timeout-minutes: 30
+
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Validate Dockerfile exists
+        run: |
+          if [ ! -f docker/Dockerfile.builder ]; then
+            echo "::error::Dockerfile.builder not found"
+            exit 1
+          fi
+          echo "✅ Dockerfile.builder found"
+
+      # Authenticate to GitHub Container Registry using GITHUB_TOKEN
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: ./.github/actions/setup-docker-buildx
+
+      # Generate image metadata (tags, labels)
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-builder
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+            type=ref,event=branch
+          labels: |
+            org.opencontainers.image.title=MCP Builder
+            org.opencontainers.image.description=Visual Workflow Builder for MCP Server LangGraph
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      # Build and push to GHCR
+      - name: Build and push Builder image
+        id: build
+        uses: docker/build-push-action@v6.18.0
+        with:
+          context: .
+          file: docker/Dockerfile.builder
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-builder:latest
+          cache-to: |
+            type=inline
+          provenance: true
+          sbom: true
+
+      - name: Output image info
+        run: |
+          echo "## Builder Image Built Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Digest:** ${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.meta.outputs.tags }}' | tr ',' '\n' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+
+  # Verify the built image works
+  verify-image:
+    name: Verify Image
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # Authenticate to GHCR for pulling the image
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull and verify image
+        run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-builder:latest"
+
+          echo "Pulling image: $IMAGE"
+          docker pull "$IMAGE"
+
+          echo ""
+          echo "Verifying health endpoint is accessible..."
+          # Start container in background
+          docker run -d --name builder-test -p 8001:8001 "$IMAGE"
+
+          # Wait for startup
+          sleep 10
+
+          # Check health endpoint
+          curl --fail --retry 3 --retry-delay 2 http://localhost:8001/api/builder/health || {
+            echo "Health check failed, showing logs:"
+            docker logs builder-test
+            exit 1
+          }
+
+          echo ""
+          echo "✅ Image verification passed"
+
+          # Cleanup
+          docker stop builder-test
+          docker rm builder-test
+
+      - name: Security scan with Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: 'ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-builder:latest'
+          format: 'sarif'
+          output: 'trivy-builder-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: 'trivy-builder-results.sarif'

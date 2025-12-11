@@ -29,11 +29,14 @@ FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS builder
 
 # Build-time configuration
 # These settings are baked into the optimized image
+# Note: KC_HTTP_ENABLED is a runtime option (set via command or env at runtime)
 ENV KC_DB=postgres
-ENV KC_HTTP_ENABLED=true
 ENV KC_HEALTH_ENABLED=true
 ENV KC_METRICS_ENABLED=true
 ENV KC_FEATURES=token-exchange,admin-fine-grained-authz
+# Subpath for API gateway routing (build-time option)
+# Production uses /authn; tests can override if needed via runtime args
+ENV KC_HTTP_RELATIVE_PATH=/authn
 
 # Set working directory
 WORKDIR /opt/keycloak

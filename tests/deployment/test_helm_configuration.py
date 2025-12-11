@@ -382,9 +382,10 @@ def test_external_secrets_keys_match_helm_template():
 # Test 6: Namespace Consistency (Prevents Issue #11)
 def test_overlay_namespaces_have_patches():
     """
-    Test that each overlay either defines its own namespace or patches it.
+    Test that each overlay either defines its own namespace, patches it, or inherits from base.
 
     This prevents namespace confusion between environments.
+    Overlays that include ../../base inherit the namespace from base/namespace.yaml.
     """
     overlays_path = Path(__file__).parent.parent.parent / "deployments" / "overlays"
 
@@ -402,6 +403,10 @@ def test_overlay_namespaces_have_patches():
         resources = kustomization.get("resources", [])
         patches = kustomization.get("patches", [])
 
+        # Check if overlay inherits namespace from base
+        # Base includes namespace.yaml, so overlays including ../../base get namespace automatically
+        inherits_from_base = any("../../base" in str(r) or "../base" in str(r) for r in resources)
+
         # Check if namespace.yaml is in resources
         has_namespace_resource = any("namespace.yaml" in str(r) for r in resources)
 
@@ -413,11 +418,12 @@ def test_overlay_namespaces_have_patches():
                     has_namespace_patch = True
                     break
 
-        # Either should be true (resources or patches)
-        assert has_namespace_resource or has_namespace_patch, (
-            f"Overlay '{overlay_dir.name}' should include namespace.yaml in resources or patches.\n"
+        # Overlay must either: inherit from base, have own namespace, or patch namespace
+        assert inherits_from_base or has_namespace_resource or has_namespace_patch, (
+            f"Overlay '{overlay_dir.name}' should include base (which provides namespace), "
+            f"define namespace.yaml in resources, or patch namespace.\n"
             f"Found: resources={resources}, patches={[p.get('path') if isinstance(p, dict) else p for p in patches]}\n"
-            f"Create {overlay_dir}/namespace.yaml and add to kustomization resources or patches."
+            f"Either add ../../base to resources or create {overlay_dir}/namespace.yaml."
         )
 
 

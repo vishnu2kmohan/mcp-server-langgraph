@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2025-12-10
-**Total ADRs**: 64
+**Last Updated**: 2025-12-09
+**Total ADRs**: 65
 
 ## Overview
 
@@ -34,6 +34,7 @@ Each ADR follows this structure:
 | [ADR-0037](adr-0037-identity-federation.md) | 37. Identity Federation Architecture | Accepted | 2025-01-28 |
 | [ADR-0038](adr-0038-scim-implementation.md) | 38. SCIM 2.0 Implementation Approach | Accepted | 2025-01-28 |
 | [ADR-0039](adr-0039-openfga-permission-inheritance.md) | 39. OpenFGA Permission Inheritance for Service Principals | Accepted | 2025-01-28 |
+| [ADR-0068](adr-0068-gateway-level-authentication.md) | Gateway-Level Authentication with Traefik ForwardAuth | Unknown | Unknown |
 
 ### Core Architecture
 
@@ -58,7 +59,6 @@ Each ADR follows this structure:
 | [ADR-0042](adr-0042-dependency-injection-configuration-fixes.md) | 42. Dependency Injection Configuration Fixes | Accepted | 2025-01-28 |
 | [ADR-0050](adr-0050-dependency-singleton-pattern-justification.md) | 50. Dependency Singleton Pattern Justification | Accepted | 2025-11-10 |
 | [ADR-0061](adr-0061-fastapi-web-framework.md) | 61. FastAPI as Web Framework | Accepted | 2025-11-29 |
-| [ADR-0067](adr-0067-mcp-2025-11-25-upgrade.md) | MCP Specification Upgrade to 2025-11-25 | Accepted | Unknown |
 
 ### Data & Storage
 
@@ -80,6 +80,12 @@ Each ADR follows this structure:
 | [ADR-0063](adr-0063-mintlify-documentation-platform.md) | 63. Mintlify as Documentation Platform | Accepted | 2025-11-29 |
 | [ADR-0064](adr-0064-pre-commit-hooks-strategy.md) | 64. Pre-commit Hooks Strategy | Accepted | 2025-11-29 |
 | [ADR-0065](adr-0065-ruff-code-quality.md) | 65. Ruff for Code Quality | Accepted | 2025-11-29 |
+
+### Infrastructure
+
+| ADR | Title | Status | Date |
+|-----|-------|--------|------|
+| [ADR-0067](adr-0067-grafana-lgtm-stack-migration.md) | 67. Grafana LGTM Stack Migration | Accepted | 2025-12-07 |
 
 ### Infrastructure & Deployment
 

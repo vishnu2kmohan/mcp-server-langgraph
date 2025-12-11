@@ -85,14 +85,14 @@ def minimal_workflow():
 
 
 # ==============================================================================
-# Test Root Endpoint
+# Test API Info Endpoint
 # ==============================================================================
 
 
-def test_root_endpoint_returns_api_information(client):
-    """Test GET / returns API information."""
+def test_api_info_endpoint_returns_api_information(client):
+    """Test GET /api/builder returns API information."""
     # Act
-    response = client.get("/")
+    response = client.get("/api/builder")
 
     # Assert
     assert response.status_code == status.HTTP_200_OK

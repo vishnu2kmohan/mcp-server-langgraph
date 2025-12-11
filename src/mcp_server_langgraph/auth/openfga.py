@@ -110,6 +110,32 @@ class OpenFGAClient:
             self._initialized = True
             logger.info("OpenFGA SDK client initialized", extra={"api_url": self.config.api_url})
 
+    async def close(self) -> None:
+        """
+        Close the OpenFGA client and release resources.
+
+        This properly closes the underlying aiohttp ClientSession to prevent
+        "Unclosed client session" warnings during garbage collection.
+        """
+        if self._client is not None:
+            try:
+                # OpenFgaClient has a close method that closes the aiohttp session
+                await self._client.close()
+                logger.debug("OpenFGA SDK client closed")
+            except Exception as e:
+                logger.warning(f"Error closing OpenFGA client: {e}")
+            finally:
+                self._client = None
+                self._initialized = False
+
+    async def __aenter__(self) -> "OpenFGAClient":
+        """Async context manager entry."""
+        return self
+
+    async def __aexit__(self, exc_type: type | None, exc_val: Exception | None, exc_tb: object | None) -> None:
+        """Async context manager exit - ensures proper cleanup."""
+        await self.close()
+
     @property
     def client(self) -> OpenFgaClient:
         """

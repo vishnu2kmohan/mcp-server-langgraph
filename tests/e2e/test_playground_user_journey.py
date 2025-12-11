@@ -129,7 +129,9 @@ class TestPlaygroundSessionJourney:
                 headers=auth_headers,
             )
             assert list_response.status_code == 200
-            sessions = list_response.json()
+            # API returns {"sessions": [...]} wrapped response
+            response_data = list_response.json()
+            sessions = response_data.get("sessions", response_data) if isinstance(response_data, dict) else response_data
             session_ids = [s.get("session_id") or s.get("id") for s in sessions]
             assert session_id in session_ids
 
@@ -372,8 +374,10 @@ class TestPlaygroundWebSocketJourney:
                 # Should receive at least acknowledgment
                 # Note: Auth may prevent actual chat
 
-        except websockets.exceptions.InvalidStatusCode as e:
-            # Auth error expected without valid token
-            assert e.status_code in [401, 403, 404]
+        except websockets.exceptions.InvalidStatus as e:
+            # Auth error expected without valid token (websockets 14+)
+            # Use response.status_code for new API, fall back to status_code for legacy
+            status = e.response.status_code if hasattr(e, "response") else getattr(e, "status_code", 0)
+            assert status in [401, 403, 404]
         except ConnectionRefusedError:
             pytest.skip("Playground server not running")

@@ -2,6 +2,36 @@
 
 This directory contains pre-built Grafana dashboards for monitoring the MCP Server with LangGraph.
 
+## Folder Structure (v2.2.0)
+
+Dashboards are organized into logical folders for easier navigation:
+
+```
+dashboards/
+├── Overview/              # Main overview dashboard
+│   └── langgraph-agent.json
+├── Application/           # Application-specific dashboards
+│   ├── builder.json
+│   ├── playground.json
+│   └── llm-performance.json
+├── Auth/                  # Authentication & Authorization
+│   ├── authentication.json
+│   ├── openfga.json
+│   ├── keycloak.json
+│   └── security.json
+├── Infrastructure/        # Infrastructure monitoring
+│   ├── lgtm-stack.json
+│   ├── postgresql.json
+│   ├── redis-sessions.json
+│   ├── qdrant.json
+│   └── traefik.json
+└── Compliance/            # Compliance & SLA
+    ├── sla-monitoring.json
+    └── soc2-compliance.json (includes GDPR metrics)
+```
+
+The folder structure is provisioned via `foldersFromFilesStructure: true` in `dashboards.yml`.
+
 ## Dashboards
 
 ### 1. `authentication.json` - Authentication Dashboard (NEW in v2.1.0)
@@ -98,9 +128,9 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 - Performance troubleshooting
 - Monthly/quarterly SLA reporting
 
-### 5. `soc2-compliance.json` - SOC 2 Compliance Dashboard (NEW in v2.1.0)
+### 5. `soc2-compliance.json` - SOC 2 & GDPR Compliance Dashboard (Updated v2.2.0)
 
-**Automated SOC 2 evidence collection and compliance reporting:**
+**Automated SOC 2 evidence collection and GDPR compliance reporting:**
 
 - **Overall Compliance Score** - Weighted score (passed + partial*0.5)
 - **Control Status Distribution** - Pie chart of passed/failed/partial controls
@@ -117,8 +147,16 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 - **Inactive User Accounts** - Security audit findings
 - **Compliance Job Executions** - Automated scheduler status
 
+**GDPR Compliance Metrics (NEW in v2.2.0):**
+- **Data Anonymization Operations** - Rate of PII anonymization
+- **Data Export Requests (SAR)** - Subject access request fulfillment
+- **Data Deletion Requests** - Right to erasure operations (24h)
+- **Retention Cleanup** - Automated retention policy enforcement (24h)
+- **GDPR Operations Over Time** - Time series of all GDPR operations
+
 **Use Cases:**
 - SOC 2 Type II audit preparation
+- GDPR compliance monitoring
 - Continuous compliance monitoring
 - Evidence collection automation
 - Trust Services Criteria validation
@@ -204,6 +242,118 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 - Connection pool tuning
 - Eviction policy validation
 
+### 10. `builder.json` - Workflow Builder Dashboard (NEW in v2.2.0)
+
+**Workflow creation and node management metrics:**
+
+- **Service Status** - Builder service availability
+- **Workflow Creation Rate** - Workflows created per second
+- **Node Count by Workflow** - Average nodes per workflow
+- **Build Duration Percentiles** - p50, p95, p99 for workflow builds
+- **Validation Errors** - Schema validation failures
+- **Active Workflows** - Currently active workflow count
+
+**Use Cases:**
+- Workflow builder performance monitoring
+- Build time optimization
+- Error tracking and debugging
+- Capacity planning
+
+### 11. `playground.json` - Interactive Playground Dashboard (NEW in v2.2.0)
+
+**Interactive testing and experimentation metrics:**
+
+- **Service Status** - Playground service availability
+- **LLM Token Usage** - Tokens consumed by model
+- **Tool Call Rate** - Tool invocations per second
+- **Tool Duration Percentiles** - p50, p95, p99 for tool execution
+- **Trace Count** - OpenTelemetry traces generated
+- **Span Count** - Trace spans by operation
+- **Session Duration** - Average playground session length
+
+**Use Cases:**
+- LLM experimentation monitoring
+- Tool performance analysis
+- Usage pattern insights
+- Cost estimation (token tracking)
+
+### 12. `qdrant.json` - Qdrant Vector Database Dashboard (NEW in v2.2.0)
+
+**Vector search and embedding storage metrics:**
+
+- **Service Status** - Qdrant service availability
+- **Collection Count** - Number of vector collections
+- **Vector Count** - Total vectors stored
+- **Search Latency** - Query response time percentiles
+- **Indexing Rate** - Vectors indexed per second
+- **Memory Usage** - RAM consumption for vectors
+- **Disk Usage** - Storage utilization
+
+**Use Cases:**
+- Vector database health monitoring
+- Search performance optimization
+- Capacity planning for embeddings
+- Index efficiency tracking
+
+### 13. `traefik.json` - Traefik Ingress Dashboard (NEW in v2.2.0)
+
+**Reverse proxy and load balancer metrics:**
+
+- **Service Status** - Traefik availability
+- **Request Rate** - Requests per second by entrypoint
+- **Error Rate** - 4xx and 5xx responses
+- **Response Time** - Latency percentiles by service
+- **Active Connections** - Current connection count
+- **TLS Certificates** - Certificate expiry monitoring
+- **Backend Health** - Upstream service status
+
+**Use Cases:**
+- Ingress traffic monitoring
+- Load balancer health
+- SSL/TLS certificate management
+- Service routing analysis
+
+### 14. `lgtm-stack.json` - LGTM Observability Stack Dashboard (NEW in v2.2.0)
+
+**Grafana LGTM stack component monitoring:**
+
+- **Loki Status** - Log aggregation service health
+- **Tempo Status** - Distributed tracing service health
+- **Mimir Status** - Metrics storage service health
+- **Alloy Status** - OpenTelemetry collector health
+- **Log Ingestion Rate** - Logs ingested per second
+- **Trace Ingestion Rate** - Traces received per second
+- **Metric Series Count** - Active time series in Mimir
+- **Query Latency** - Query performance by component
+
+**Use Cases:**
+- Observability infrastructure monitoring
+- Capacity planning for telemetry
+- Performance troubleshooting
+- Data ingestion health
+
+### 15. `postgresql.json` - PostgreSQL Database Dashboard (NEW in v2.2.0)
+
+**PostgreSQL database performance and health metrics:**
+
+- **Service Status** - PostgreSQL availability
+- **Connection Pool** - Active/idle connections
+- **Query Rate** - Queries per second by type (SELECT, INSERT, UPDATE, DELETE)
+- **Query Latency** - Response time percentiles
+- **Cache Hit Ratio** - Buffer cache effectiveness
+- **Replication Lag** - Replica synchronization delay
+- **Table Sizes** - Disk usage by table
+- **Index Usage** - Index hit rates
+- **Deadlocks** - Deadlock detection count
+- **Transaction Rate** - Commits and rollbacks per second
+
+**Use Cases:**
+- Database performance monitoring
+- Query optimization insights
+- Capacity planning
+- Replication health tracking
+- Connection pool tuning
+
 ## Installation
 
 ### Option 1: Import via Grafana UI
@@ -217,17 +367,23 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 ### Option 2: Provision via ConfigMap (Kubernetes)
 
 ```bash
-# Create ConfigMap with all dashboards (v2.1.0)
+# Create ConfigMap with all dashboards (v2.2.0)
 kubectl create configmap grafana-dashboards \
-  --from-file=authentication.json \
-  --from-file=openfga.json \
-  --from-file=llm-performance.json \
-  --from-file=sla-monitoring.json \
-  --from-file=soc2-compliance.json \
-  --from-file=langgraph-agent.json \
-  --from-file=security.json \
-  --from-file=keycloak.json \
-  --from-file=redis-sessions.json \
+  --from-file=Overview/langgraph-agent.json \
+  --from-file=Application/builder.json \
+  --from-file=Application/playground.json \
+  --from-file=Application/llm-performance.json \
+  --from-file=Auth/authentication.json \
+  --from-file=Auth/openfga.json \
+  --from-file=Auth/keycloak.json \
+  --from-file=Auth/security.json \
+  --from-file=Infrastructure/lgtm-stack.json \
+  --from-file=Infrastructure/postgresql.json \
+  --from-file=Infrastructure/redis-sessions.json \
+  --from-file=Infrastructure/qdrant.json \
+  --from-file=Infrastructure/traefik.json \
+  --from-file=Compliance/sla-monitoring.json \
+  --from-file=Compliance/soc2-compliance.json \
   -n monitoring
 
 # Add to Grafana deployment
@@ -358,6 +514,18 @@ Ensure these metrics are exported by the application:
 - `agent_response_duration_sum` - Total response time
 - `agent_response_duration_count` - Request count
 
+### Authentication Metrics (NEW in v2.2.0)
+- `auth_login_attempts_total` - Login attempts by result (success/failure)
+- `auth_login_failures_total` - Login failures by reason
+- `auth_login_duration_seconds_bucket` - Login duration histogram
+- `auth_token_verifications_total` - Token verifications by result
+- `auth_token_refresh_total` - Token refresh operations
+- `auth_jwks_cache_operations_total` - JWKS cache operations by type (hit/miss/refresh)
+- `auth_sessions_active` - Currently active sessions gauge
+
+### Authorization Metrics (NEW in v2.2.0)
+- `auth_authorization_checks_total` - Authorization checks by result and resource type
+
 ### Security Metrics
 - `auth_failures_total` - Authentication failures
 - `authz_failures_total` - Authorization failures
@@ -388,11 +556,41 @@ Ensure these metrics are exported by the application:
 - `session_store_operations_total` - Session operations by type
 - `session_store_errors_total` - Session operation errors
 
-### Resource Metrics (from kube-state-metrics)
-- `container_memory_working_set_bytes`
-- `container_spec_memory_limit_bytes`
-- `container_cpu_usage_seconds_total`
-- `container_spec_cpu_quota`
+### Compliance & GDPR Metrics (NEW in v2.2.0)
+- `compliance_score` - Overall compliance score gauge
+- `evidence_items_total` - Collected evidence items by category
+- `audit_logs_total` - Audit log entries
+- `access_review_items_total` - Access review findings
+- `compliance_job_executions_total` - Compliance job runs by status
+- `compliance_report_generated_total` - Reports generated by type
+- `gdpr_anonymization_total` - Data anonymization operations
+- `gdpr_data_export_total` - Subject access request fulfillments
+- `gdpr_data_deletion_total` - Right to erasure operations
+- `gdpr_retention_cleanup_total` - Retention policy cleanups
+
+### LLM Metrics (NEW in v2.2.0)
+- `llm_tokens_total` - Token usage by model and type
+- `llm_requests_total` - LLM requests by provider and status
+- `llm_request_duration_seconds_bucket` - LLM request latency histogram
+
+### Playground Metrics (NEW in v2.2.0)
+- `playground_llm_tokens_total` - Tokens consumed in playground
+- `playground_tool_calls_total` - Tool invocations in playground
+- `playground_tool_duration_seconds_bucket` - Tool execution time histogram
+- `playground_traces_total` - Traces generated
+- `playground_spans_total` - Spans by operation type
+
+### Builder Metrics (NEW in v2.2.0)
+- `builder_workflow_node_count` - Nodes per workflow gauge
+
+### Process Metrics (from prometheus_client)
+- `process_resident_memory_bytes` - Process memory usage
+- `process_virtual_memory_bytes` - Virtual memory size
+- `process_cpu_seconds_total` - CPU time consumed
+- `process_open_fds` - Open file descriptors
+- `process_max_fds` - Maximum file descriptors
+
+### Resource Metrics (Kubernetes - optional)
 - `kube_pod_container_status_restarts_total`
 - `kube_deployment_status_replicas_available`
 

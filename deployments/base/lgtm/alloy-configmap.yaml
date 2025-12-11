@@ -1,0 +1,169 @@
+# Alloy ConfigMap for Kubernetes LGTM Stack
+# ==========================================
+# Configuration adapted from docker/alloy/config.alloy for Kubernetes
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-config
+  labels:
+    app: alloy
+    component: observability
+data:
+  config.alloy: |
+    // Grafana Alloy Configuration for Kubernetes LGTM Stack
+    // ======================================================
+    // Unified telemetry collector:
+    //   - Logs -> Loki
+    //   - Metrics -> Mimir (Prometheus-compatible)
+    //   - Traces -> Tempo
+    //
+    // Reference: docker/alloy/config.alloy (adapted for Kubernetes)
+
+    // =============================================================================
+    // LOGGING CONFIGURATION
+    // =============================================================================
+
+    logging {
+      level  = "warn"
+      format = "logfmt"
+    }
+
+    // =============================================================================
+    // OTLP RECEIVER (OpenTelemetry Protocol)
+    // =============================================================================
+    // Receives traces, metrics, and logs from applications via OTLP
+
+    otelcol.receiver.otlp "default" {
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+      http {
+        endpoint = "0.0.0.0:4318"
+      }
+
+      output {
+        metrics = [otelcol.processor.batch.default.input]
+        logs    = [otelcol.processor.batch.default.input]
+        traces  = [otelcol.processor.batch.default.input]
+      }
+    }
+
+    // =============================================================================
+    // OTLP BATCH PROCESSOR
+    // =============================================================================
+
+    otelcol.processor.batch "default" {
+      output {
+        metrics = [otelcol.exporter.prometheus.mimir.input]
+        logs    = [otelcol.exporter.loki.default.input]
+        traces  = [otelcol.exporter.otlp.tempo.input]
+      }
+    }
+
+    // =============================================================================
+    // OTLP EXPORTERS
+    // =============================================================================
+
+    // Export traces to Tempo
+    otelcol.exporter.otlp "tempo" {
+      client {
+        endpoint = "tempo:4317"
+        tls {
+          insecure = true
+        }
+      }
+    }
+
+    // Export metrics to Mimir (Prometheus remote write)
+    otelcol.exporter.prometheus "mimir" {
+      forward_to = [prometheus.remote_write.mimir.receiver]
+    }
+
+    // Export OTLP logs to Loki
+    otelcol.exporter.loki "default" {
+      forward_to = [loki.write.loki.receiver]
+    }
+
+    // =============================================================================
+    // PROMETHEUS REMOTE WRITE TO MIMIR
+    // =============================================================================
+
+    prometheus.remote_write "mimir" {
+      endpoint {
+        url = "http://mimir:9009/api/v1/push"
+      }
+    }
+
+    // =============================================================================
+    // KUBERNETES DISCOVERY
+    // =============================================================================
+
+    discovery.kubernetes "pods" {
+      role = "pod"
+    }
+
+    discovery.relabel "kubernetes_pods" {
+      targets = discovery.kubernetes.pods.targets
+
+      // Keep only running pods
+      rule {
+        source_labels = ["__meta_kubernetes_pod_phase"]
+        regex         = "Pending|Succeeded|Failed"
+        action        = "drop"
+      }
+
+      // Use pod namespace as label
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
+
+      // Use pod name as label
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
+
+      // Use container name as label
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        target_label  = "container"
+      }
+
+      // Extract app label
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app"]
+        target_label  = "app"
+      }
+
+      // Extract component label
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_component"]
+        target_label  = "component"
+      }
+    }
+
+    // =============================================================================
+    // LOKI OUTPUT
+    // =============================================================================
+
+    loki.write "loki" {
+      endpoint {
+        url = "http://loki:3100/loki/api/v1/push"
+      }
+    }
+
+    // =============================================================================
+    // PROMETHEUS SCRAPE (for pod metrics)
+    // =============================================================================
+
+    prometheus.scrape "kubernetes_pods" {
+      targets    = discovery.relabel.kubernetes_pods.output
+      forward_to = [prometheus.remote_write.mimir.receiver]
+
+      scrape_interval = "15s"
+      scrape_timeout  = "10s"
+
+      honor_labels = true
+    }

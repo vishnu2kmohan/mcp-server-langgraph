@@ -10,6 +10,11 @@
 # Test Infrastructure Credentials
 # ============================================================================
 
+# Test environment configuration (.env.test)
+# Contains test-only JWT secrets and Keycloak credentials
+# All values clearly marked as test credentials (contain "test" in values)
+.env.test
+
 # Docker Compose - Local development/testing only
 # Contains hardcoded postgres/postgres credentials for local Docker services
 docker-compose*.yml

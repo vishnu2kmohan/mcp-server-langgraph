@@ -1,19 +1,21 @@
 """
-Test Docker environment configuration for integration tests.
+Test Docker environment configuration following ADR-0053.
 
-These tests validate that the Docker test environment is properly configured
-with all required directories and dependencies. This prevents test collection
-errors when running tests in Docker containers.
+Per ADR-0053 (Codex Integration Test Findings):
+- scripts/ and deployments/ are NOT copied to Docker images
+- Meta-tests requiring these directories run on the host, not in container
+- Docker images only contain src/ and tests/ for integration tests
+- pyproject.toml is NOT copied (version read via importlib.metadata)
 
-Regression Prevention:
-- Ensures scripts/ directory is available in Docker (for test imports)
-- Ensures deployments/ directory is available (for infrastructure tests)
-- Validates Dockerfile.test has required COPY directives
+These tests validate:
+1. Host environment has required directories (scripts/, deployments/)
+2. Dockerfile.test does NOT copy excluded directories
+3. Dockerfile.test only copies what's needed for integration tests
 
-Related Issues:
-- FileNotFoundError: '/app/deployments/overlays' (2025-11-14)
-- ModuleNotFoundError: No module named 'scripts' (2025-11-14)
-- ModuleNotFoundError: No module named 'fix_mdx_syntax' (2025-11-14)
+References:
+- ADR-0053: Codex Integration Test Findings
+- tests/meta/test_precommit_docker_image_validation.py
+- scripts/validators/validate_docker_image_contents.py
 """
 
 import gc
@@ -40,29 +42,32 @@ def project_root():
 
 
 @pytest.mark.xdist_group(name="testdockerenvironmentsetup")
-class TestDockerEnvironmentSetup:
-    """Test that Docker environment has required directories."""
+class TestHostEnvironmentSetup:
+    """Test that host environment has required directories for meta-tests.
+
+    Per ADR-0053: Meta-tests run on the host (not in Docker) because they need
+    access to scripts/, deployments/, and other repo directories not in Docker images.
+    """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_scripts_directory_exists(self, project_root):
+    def test_scripts_directory_exists_on_host(self, project_root):
         """
-        Test that scripts/ directory exists and is accessible.
+        Test that scripts/ directory exists on host for meta-tests.
 
-        Required for:
-        - tests/test_mdx_validation.py (imports from scripts/)
-        - tests/unit/documentation/* (imports from scripts/validators/)
+        Per ADR-0053: scripts/ is NOT copied to Docker image.
+        Meta-tests that import from scripts/ run on the host.
         """
         scripts_dir = project_root / "scripts"
         assert scripts_dir.exists(), (
-            f"scripts/ directory not found at {scripts_dir}. Ensure Dockerfile.test includes 'COPY scripts/ ./scripts/'"
+            f"scripts/ directory not found at {scripts_dir}. Required on host for meta-tests (NOT in Docker per ADR-0053)."
         )
         assert scripts_dir.is_dir(), f"{scripts_dir} exists but is not a directory"
 
-    def test_scripts_is_importable(self, project_root):
-        """Test that scripts can be imported as a module."""
+    def test_scripts_is_importable_on_host(self, project_root):
+        """Test that scripts can be imported as a module on host."""
         scripts_dir = project_root / "scripts"
 
         # scripts/__init__.py should exist
@@ -71,47 +76,46 @@ class TestDockerEnvironmentSetup:
             f"scripts/__init__.py not found. scripts/ directory exists at {scripts_dir} but is not a Python package."
         )
 
-    def test_scripts_validators_exists(self, project_root):
-        """Test that scripts/validators/ subdirectory exists."""
+    def test_scripts_validators_exists_on_host(self, project_root):
+        """Test that scripts/validators/ subdirectory exists on host."""
         validators_dir = project_root / "scripts" / "validators"
         assert validators_dir.exists(), (
-            f"scripts/validators/ not found at {validators_dir}. Required for documentation test imports."
+            f"scripts/validators/ not found at {validators_dir}. "
+            "Required on host for documentation validation (NOT in Docker per ADR-0053)."
         )
 
-    def test_deployments_directory_exists(self, project_root):
+    def test_deployments_directory_exists_on_host(self, project_root):
         """
-        Test that deployments/ directory exists and is accessible.
+        Test that deployments/ directory exists on host for meta-tests.
 
-        Required for:
-        - tests/regression/test_pod_deployment_regression.py
+        Per ADR-0053: deployments/ is NOT copied to Docker image.
+        Deployment validation tests run on the host with full repo context.
         """
         deployments_dir = project_root / "deployments"
         assert deployments_dir.exists(), (
             f"deployments/ directory not found at {deployments_dir}. "
-            "Ensure Dockerfile.test includes 'COPY deployments/ ./deployments/'"
+            "Required on host for deployment tests (NOT in Docker per ADR-0053)."
         )
         assert deployments_dir.is_dir(), f"{deployments_dir} exists but is not a directory"
 
-    def test_deployments_overlays_exists(self, project_root):
-        """Test that deployments/overlays/ subdirectory exists."""
+    def test_deployments_overlays_exists_on_host(self, project_root):
+        """Test that deployments/overlays/ subdirectory exists on host."""
         overlays_dir = project_root / "deployments" / "overlays"
         assert overlays_dir.exists(), (
-            f"deployments/overlays/ not found at {overlays_dir}. Required for Kubernetes deployment regression tests."
+            f"deployments/overlays/ not found at {overlays_dir}. "
+            "Required on host for Kubernetes deployment tests (NOT in Docker per ADR-0053)."
         )
-
-    @pytest.mark.skipif(os.getenv("TESTING") != "true", reason="Only in Docker test environment")
-    def test_docker_working_directory_is_app(self):
-        """Test that Docker container uses /app as working directory."""
-        cwd = Path.cwd()
-        # In Docker, we expect to be in /app
-        # This is informational - doesn't fail if not in Docker
-        if str(cwd) == "/app":
-            assert True, "Running in Docker test environment"
 
 
 @pytest.mark.xdist_group(name="testdockerfiletestconfiguration")
 class TestDockerfileTestConfiguration:
-    """Test that Dockerfile.test is properly configured."""
+    """Test that Dockerfile.test follows ADR-0053 design.
+
+    Per ADR-0053:
+    - Docker images only contain src/ and tests/
+    - scripts/, deployments/, pyproject.toml are NOT copied
+    - Meta-tests run on host with full repo context
+    """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -122,93 +126,135 @@ class TestDockerfileTestConfiguration:
         dockerfile = project_root / "docker" / "Dockerfile.test"
         assert dockerfile.exists(), "docker/Dockerfile.test not found"
 
-    def test_dockerfile_test_copies_scripts(self, project_root):
+    def test_dockerfile_test_copies_src(self, project_root):
         """
-        Test that Dockerfile.test includes COPY directive for scripts/.
+        Test that Dockerfile.test includes COPY directive for src/.
 
-        Regression test for: ModuleNotFoundError: No module named 'scripts'
+        Per ADR-0053: src/ is required in Docker image for integration tests.
         """
         dockerfile = project_root / "docker" / "Dockerfile.test"
         content = dockerfile.read_text()
 
-        # Check for COPY scripts/ directive
-        assert "COPY scripts/" in content, (
-            "Dockerfile.test missing 'COPY scripts/ ./scripts/' directive. "
-            "This causes import errors in tests that depend on scripts/ module."
+        # Check for COPY src/ directive
+        assert "COPY src/" in content or "COPY --chown" in content and "src/" in content, (
+            "Dockerfile.test missing 'COPY src/' directive. src/ is required for integration tests per ADR-0053."
         )
 
-    def test_dockerfile_test_copies_deployments(self, project_root):
+    def test_dockerfile_test_copies_tests(self, project_root):
         """
-        Test that Dockerfile.test includes COPY directive for deployments/.
+        Test that Dockerfile.test includes COPY directive for tests/.
 
-        Regression test for: FileNotFoundError: '/app/deployments/overlays'
+        Per ADR-0053: tests/ is required in Docker image for integration tests.
         """
         dockerfile = project_root / "docker" / "Dockerfile.test"
         content = dockerfile.read_text()
 
-        # Check for COPY deployments/ directive
-        assert "COPY deployments/" in content, (
-            "Dockerfile.test missing 'COPY deployments/ ./deployments/' directive. "
-            "This causes FileNotFoundError in pod deployment regression tests."
+        # Check for COPY tests/ directive
+        assert "COPY tests/" in content or "COPY --chown" in content and "tests/" in content, (
+            "Dockerfile.test missing 'COPY tests/' directive. tests/ is required for integration tests per ADR-0053."
         )
 
-    def test_dockerfile_test_copies_in_correct_order(self, project_root):
+    def test_dockerfile_test_does_not_copy_scripts(self, project_root):
         """
-        Test that COPY directives come after pyproject.toml but before pip install.
+        Test that Dockerfile.test does NOT copy scripts/ directory.
 
-        Ensures dependencies are available before installing packages.
+        Per ADR-0053: scripts/ must NOT be in Docker image.
+        Meta-tests that need scripts/ run on the host.
         """
         dockerfile = project_root / "docker" / "Dockerfile.test"
         content = dockerfile.read_text()
+
+        # scripts/ should NOT be copied
+        assert "COPY scripts/" not in content, (
+            "Dockerfile.test should NOT copy scripts/ directory. "
+            "Per ADR-0053: scripts/ must NOT be in Docker image. "
+            "Meta-tests run on host with full repo context."
+        )
+
+    def test_dockerfile_test_does_not_copy_deployments(self, project_root):
+        """
+        Test that Dockerfile.test does NOT copy deployments/ directory.
+
+        Per ADR-0053: deployments/ must NOT be in Docker image.
+        Deployment validation tests run on the host.
+        """
+        dockerfile = project_root / "docker" / "Dockerfile.test"
+        content = dockerfile.read_text()
+
+        # deployments/ should NOT be copied
+        assert "COPY deployments/" not in content, (
+            "Dockerfile.test should NOT copy deployments/ directory. "
+            "Per ADR-0053: deployments/ must NOT be in Docker image. "
+            "Deployment tests run on host with full repo context."
+        )
+
+    def test_dockerfile_test_does_not_copy_pyproject_toml(self, project_root):
+        """
+        Test that Dockerfile.test does NOT copy pyproject.toml to runtime.
+
+        Per ADR-0053: pyproject.toml must NOT be in final Docker image.
+        Version is read via importlib.metadata at runtime.
+
+        Note: pyproject.toml may be copied in build stages for dependency
+        installation, but should not be in the final runtime image.
+        """
+        dockerfile = project_root / "docker" / "Dockerfile.test"
+        content = dockerfile.read_text()
+
+        # Look for pyproject.toml COPY in final stage (after last FROM)
         lines = content.split("\n")
+        last_from_idx = -1
+        for i, line in enumerate(lines):
+            if line.strip().startswith("FROM"):
+                last_from_idx = i
 
-        # Find line numbers
-        pyproject_line = next((i for i, line in enumerate(lines) if "COPY pyproject.toml" in line), -1)
-        scripts_line = next((i for i, line in enumerate(lines) if "COPY scripts/" in line), -1)
-        deployments_line = next((i for i, line in enumerate(lines) if "COPY deployments/" in line), -1)
-        pip_install_line = next((i for i, line in enumerate(lines) if "pip install" in line or "uv pip install" in line), -1)
+        if last_from_idx >= 0:
+            # Check if pyproject.toml is copied in final stage
+            # Allow it in earlier stages for dependency installation
+            has_pyproject_in_final = False
+            for line in lines[last_from_idx:]:
+                if "COPY" in line and "pyproject.toml" in line and not line.strip().startswith("#"):
+                    has_pyproject_in_final = True
+                    break
 
-        # Validate order
-        assert pyproject_line > 0, "pyproject.toml not found in Dockerfile.test"
-        assert scripts_line > pyproject_line, "scripts/ should be copied after pyproject.toml"
-        assert deployments_line > pyproject_line, "deployments/ should be copied after pyproject.toml"
+            assert not has_pyproject_in_final, (
+                "Dockerfile.test should NOT copy pyproject.toml to final stage. "
+                "Per ADR-0053: version is read via importlib.metadata at runtime."
+            )
 
-        if pip_install_line > 0:
-            assert scripts_line < pip_install_line, "scripts/ should be copied before pip install"
-            assert deployments_line < pip_install_line, "deployments/ should be copied before pip install"
+    @pytest.mark.skipif(os.getenv("TESTING") != "true", reason="Only in Docker test environment")
+    def test_docker_working_directory_is_app(self):
+        """Test that Docker container uses /app as working directory."""
+        cwd = Path.cwd()
+        # In Docker, we expect to be in /app
+        if str(cwd) == "/app":
+            assert True, "Running in Docker test environment"
 
 
 @pytest.mark.xdist_group(name="testdockerimageassets")
 class TestDockerImageAssets:
-    """Meta-tests validating Docker image contents.
+    """Meta-tests validating Docker image contents per ADR-0053.
 
-    These tests run on the host machine to validate the structure and contents
-    of Docker images. They are NOT integration tests that run inside Docker.
+    These tests run on the host machine to validate Dockerfile configuration.
+    They ensure compliance with ADR-0053 design decisions.
     """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.skipif(os.getenv("SKIP_DOCKER_BUILD_TESTS") == "true", reason="Docker build tests disabled")
-    def test_docker_test_image_has_scripts(self):
+    def test_adr_0053_design_documented(self, project_root):
         """
-        Integration test: Verify built Docker test image contains scripts/ directory.
+        Verify ADR-0053 exists and documents Docker image design.
 
-        This test requires Docker to be available and will build the test image
-        to verify scripts/ directory is included.
+        ADR-0053 is the authoritative source for what should/shouldn't
+        be in Docker images.
         """
-        pytest.skip("Integration test - requires Docker build (expensive)")
-
-    @pytest.mark.skipif(os.getenv("SKIP_DOCKER_BUILD_TESTS") == "true", reason="Docker build tests disabled")
-    def test_docker_test_image_has_deployments(self):
-        """
-        Integration test: Verify built Docker test image contains deployments/ directory.
-
-        This test requires Docker to be available and will build the test image
-        to verify deployments/ directory is included.
-        """
-        pytest.skip("Integration test - requires Docker build (expensive)")
+        adr_path = project_root / "docs-internal" / "ADR-0053-codex-findings-validation.md"
+        assert adr_path.exists(), (
+            "ADR-0053 not found. This ADR documents the design decision that "
+            "scripts/, deployments/, and pyproject.toml should NOT be in Docker images."
+        )
 
 
 if __name__ == "__main__":

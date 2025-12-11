@@ -35,11 +35,19 @@ def playground_url() -> str:
 
 
 @pytest.fixture
-def api_client(playground_url: str):
+async def api_client(playground_url: str):
     """Create HTTP client for Playground API."""
     import httpx
 
-    return httpx.AsyncClient(base_url=playground_url, timeout=30.0)
+    client = httpx.AsyncClient(base_url=playground_url, timeout=30.0)
+    # Test connectivity by trying to reach the server
+    try:
+        await client.get("/")
+    except (httpx.ConnectError, httpx.ConnectTimeout, OSError) as e:
+        await client.aclose()
+        pytest.skip(f"Playground API not available: {e}")
+    yield client
+    await client.aclose()
 
 
 @pytest.mark.xdist_group(name="playground_integration_tests")
@@ -236,6 +244,7 @@ class TestPlaygroundWebSocket:
     async def test_websocket_endpoint_exists(self, playground_url: str) -> None:
         """Test WebSocket endpoint is accessible."""
         import websockets
+        from websockets.exceptions import InvalidStatus
 
         ws_url = playground_url.replace("http://", "ws://")
 
@@ -246,9 +255,11 @@ class TestPlaygroundWebSocket:
             ) as _ws:
                 # Connection should succeed or fail with auth error
                 pass
-        except websockets.exceptions.InvalidStatusCode as e:
+        except InvalidStatus as e:
             # Auth error (401, 403) or not found (404) is expected
-            assert e.status_code in [401, 403, 404]
+            # websockets 14.0+: use response.status_code
+            status = e.response.status_code if hasattr(e, "response") else getattr(e, "status_code", 0)
+            assert status in [401, 403, 404]
         except Exception:
             # Connection refused means server not running - that's OK
             pass

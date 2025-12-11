@@ -875,6 +875,31 @@ repos:
       See ADR-0042 for details on these critical production bugs.
 
       '
+  - id: validate-grafana-dashboards
+    name: Validate Grafana Dashboard Best Practices
+    entry: uv run --frozen python -u scripts/validation/validate_grafana_dashboards.py
+    language: system
+    files: ^(monitoring/grafana/dashboards/.*\.json|deployments/helm/.*/dashboards/.*\.json)$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: "Validates Grafana dashboards against best practices:\n\n\
+      Checks:\n\
+      1. JSON validity and required fields (uid, title, schemaVersion >= 36)\n\
+      2. 24-column grid compliance (no overflow)\n\
+      3. graphTooltip configuration (shared crosshair)\n\
+      4. Dashboard description (>= 50 chars recommended)\n\
+      5. Navigation links with includeVars/keepTime\n\
+      6. Panel descriptions for context\n\
+      7. Collapsible row structure\n\
+      8. timepicker refresh_intervals\n\n\
+      Prevents:\n\
+      - Grid overflow layout issues\n\
+      - Missing descriptions that hinder troubleshooting\n\
+      - Navigation links losing time context\n\n\
+      Created: 2025-12-11 (Grafana dashboard audit)\n\
+      See: scripts/validation/validate_grafana_dashboards.py\n"
   - id: validate-test-fixtures
     name: Validate Test Fixtures for Common Issues
     entry: uv run --frozen python -u scripts/validators/validate_test_fixtures.py
@@ -1206,6 +1231,41 @@ repos:
       Regression prevention for Codex Finding #1 (P0 Blocker)
 
       '
+  - id: validate-helm-chart-deps
+    name: Validate Helm Chart Dependencies Complete
+    entry: >
+      bash -c 'if ! command -v helm >/dev/null 2>&1; then
+      echo "SKIP: helm not installed, cannot validate chart dependencies.";
+      exit 0; fi;
+      CHART_DIR="deployments/helm/mcp-server-langgraph";
+      EXPECTED_CHARTS=7;
+      if [ ! -d "$CHART_DIR/charts" ]; then
+      echo "ERROR: charts/ directory not found. Run: helm dependency build $CHART_DIR";
+      exit 1; fi;
+      ACTUAL_CHARTS=$(ls "$CHART_DIR/charts/"*.tgz 2>/dev/null | wc -l);
+      if [ "$ACTUAL_CHARTS" -ne "$EXPECTED_CHARTS" ]; then
+      echo "ERROR: Helm chart dependencies incomplete: $ACTUAL_CHARTS/$EXPECTED_CHARTS";
+      echo "Expected: openfga, postgresql, redis, keycloak, grafana, jaeger, kube-prometheus-stack";
+      echo "Run: helm dependency build $CHART_DIR";
+      exit 1; fi;
+      echo "✅ All $ACTUAL_CHARTS Helm chart dependencies present"'
+    language: system
+    files: ^deployments/helm/.*\.(yaml|yml)$
+    pass_filenames: false
+    stages:
+    - pre-push
+    description: 'Validates ALL Helm chart dependencies are downloaded.
+
+      CI PARITY FIX (2025-12-11): Prevents corrupted partial cache issues.
+
+      Checks that charts/ contains all 7 expected charts (openfga, postgresql,
+      redis, keycloak, grafana, jaeger, kube-prometheus-stack).
+
+      Run helm dependency build deployments/helm/mcp-server-langgraph to fix.
+
+      See: .claude/plans/purrfect-dazzling-breeze.md for root cause analysis.
+
+      '
   - id: validate-cloud-overlays
     name: Validate Cloud Overlays Build Successfully
     entry: >
@@ -1277,10 +1337,10 @@ repos:
     entry: uv run --frozen python -u scripts/validators/check_async_mock_configuration.py
     language: system
     files: ^tests/.*test_.*\.py$
-    pass_filenames: true
+    pass_filenames: false
     always_run: false
     stages:
-    - manual
+    - pre-commit
     description: 'Validates that all AsyncMock instances have explicit return_value or side_effect configuration.
 
 

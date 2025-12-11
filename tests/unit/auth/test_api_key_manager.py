@@ -873,7 +873,7 @@ class TestRedisAPICacheConfiguration:
             mock_settings.redis_ssl = False
 
             with patch("redis.asyncio.from_url") as mock_redis_from_url:
-                mock_redis_client = AsyncMock()
+                mock_redis_client = AsyncMock(return_value=None)  # Container for configured methods
                 mock_redis_from_url.return_value = mock_redis_client
 
                 # Act - get manager instance
@@ -1015,9 +1015,9 @@ class TestRedisAPICacheConfiguration:
             mock_settings.redis_ssl = False
 
             with patch("redis.asyncio.from_url") as mock_from_url:
-                mock_redis = AsyncMock()
+                mock_redis = AsyncMock(return_value=None)  # Container for configured methods
                 mock_redis.get.return_value = None  # Cache miss first time
-                mock_redis.setex = AsyncMock()
+                mock_redis.setex = AsyncMock(return_value=None)  # Configured return value
                 mock_from_url.return_value = mock_redis
 
                 manager = get_api_key_manager(keycloak=mock_keycloak_client)

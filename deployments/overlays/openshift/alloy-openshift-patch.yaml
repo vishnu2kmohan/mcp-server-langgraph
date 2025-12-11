@@ -1,0 +1,21 @@
+# Alloy Deployment - OpenShift security context
+# ==============================================
+# Configure Alloy for OpenShift restricted-v2 SCC
+# OpenShift assigns arbitrary UIDs via SCC (Security Context Constraints)
+# All processes must belong to GID 0 (root group) for file access
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alloy
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsUser: null
+        runAsGroup: 0
+        fsGroup: 0
+      containers:
+        - name: alloy
+          securityContext:
+            runAsUser: null
+            runAsGroup: 0

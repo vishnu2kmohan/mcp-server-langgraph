@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
 from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage
+from mcp_server_langgraph.compliance.metrics import record_gdpr_data_export
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 
@@ -87,6 +88,25 @@ class DataExportService:
         Returns:
             Complete user data export
         """
+        export = await self._gather_user_data(user_id, username, email)
+
+        # Record GDPR data export metrics for direct JSON export
+        record_gdpr_data_export(format="json", status="success")
+
+        return export
+
+    async def _gather_user_data(self, user_id: str, username: str, email: str) -> UserDataExport:
+        """
+        Internal method to gather all user data without recording metrics.
+
+        Args:
+            user_id: User identifier
+            username: Username
+            email: User email
+
+        Returns:
+            Complete user data export
+        """
         with tracer.start_as_current_span("data_export.export_user_data") as span:
             span.set_attribute("user_id", user_id)
 
@@ -148,7 +168,8 @@ class DataExportService:
             span.set_attribute("user_id", user_id)
             span.set_attribute("format", format)
 
-            export = await self.export_user_data(user_id, username, email)
+            # Use internal method to avoid double-counting metrics
+            export = await self._gather_user_data(user_id, username, email)
 
             if format == "json":
                 # JSON export (machine-readable)
@@ -168,6 +189,9 @@ class DataExportService:
                 "Portable data export completed",
                 extra={"user_id": user_id, "format": format, "size_bytes": len(data)},
             )
+
+            # Record GDPR data export metrics with actual format
+            record_gdpr_data_export(format=format, status="success")
 
             return data, content_type
 

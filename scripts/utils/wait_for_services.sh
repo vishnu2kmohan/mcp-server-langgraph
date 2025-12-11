@@ -118,16 +118,47 @@ check_docker_compose() {
 }
 
 # Get list of services with healthchecks from compose file
+# Only returns services that have healthchecks ENABLED (not disabled)
+# Services with "healthcheck: disable: true" are skipped
 get_services_with_healthchecks() {
     local compose_file="$1"
     local docker_compose_cmd="$2"
 
-    # Use docker compose config to get parsed YAML, then extract services with healthchecks
-    # This works even if services don't have explicit healthcheck sections
-    $docker_compose_cmd -f "$compose_file" config --services 2>/dev/null || {
-        log_error "Failed to read services from $compose_file"
-        return 1
-    }
+    # Check if jq is available (required for JSON parsing)
+    if ! command -v jq >/dev/null 2>&1; then
+        log_warning "jq not found, falling back to all services (healthcheck filtering unavailable)"
+        $docker_compose_cmd -f "$compose_file" config --services 2>/dev/null || {
+            log_error "Failed to read services from $compose_file"
+            return 1
+        }
+        return 0
+    fi
+
+    # Get compose config as JSON and filter to services with enabled healthchecks
+    # Filters (using separate selects for bash compatibility):
+    #   1. healthcheck must exist
+    #   2. healthcheck.test must exist (defines the check command)
+    #   3. healthcheck.disable must NOT be true
+    # This ensures we only wait for services that actually have health monitoring
+    local filtered_services
+    filtered_services=$($docker_compose_cmd -f "$compose_file" config --format json 2>/dev/null | \
+        jq -r '.services | to_entries[] |
+               select(.value.healthcheck) |
+               select(.value.healthcheck.test) |
+               select((.value.healthcheck.disable // false) == false) |
+               .key' 2>/dev/null)
+
+    if [ $? -ne 0 ] || [ -z "$filtered_services" ]; then
+        # If JSON parsing fails or no services with healthchecks, try fallback
+        log_warning "No services with enabled healthchecks found, checking for any running services"
+        $docker_compose_cmd -f "$compose_file" ps --services --status running 2>/dev/null || {
+            log_error "Failed to read services from $compose_file"
+            return 1
+        }
+        return 0
+    fi
+
+    echo "$filtered_services"
 }
 
 # Check if a service is healthy

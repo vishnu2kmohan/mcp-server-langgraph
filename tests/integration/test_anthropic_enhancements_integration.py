@@ -44,8 +44,12 @@ def mock_settings():
 
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="integration_anthropic_enhancements_integration_tests")
+@pytest.mark.skipif(
+    not (os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or os.getenv("GOOGLE_API_KEY")),
+    reason="Google credentials not set - requires GOOGLE_APPLICATION_CREDENTIALS (Vertex AI) or GOOGLE_API_KEY (Gemini)",
+)
 class TestDynamicContextIntegration:
-    """Test dynamic context loading integration"""
+    """Test dynamic context loading integration - requires Google embeddings"""
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""

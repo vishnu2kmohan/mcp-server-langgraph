@@ -77,10 +77,14 @@ jobs:
 
       - name: Validate manifests with kubeconform
         run: |
-          wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          # Use gh CLI for authenticated download (avoids GitHub rate limiting)
+          gh release download --repo yannh/kubeconform \
+            --pattern "kubeconform-linux-amd64.tar.gz"
           tar xf kubeconform-linux-amd64.tar.gz
           kubectl kustomize deployments/overlays/preview-gke | ./kubeconform -strict -summary -ignore-missing-schemas
           echo "✅ Manifest validation passed"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       # Render complete Kustomize manifests for security scanning
       # This ensures Trivy sees the full configuration (base + overlays merged)

@@ -51,7 +51,7 @@ def test_settings():
 @pytest.fixture
 def mock_llm():
     """Create a mock LLM for testing."""
-    llm = AsyncMock()
+    llm = AsyncMock(return_value=None)  # Container for configured methods
     llm.ainvoke = AsyncMock(return_value=MagicMock(content="This is a helpful response about Python."))
     llm.invoke = MagicMock(return_value=MagicMock(content="This is a helpful response."))
     return llm

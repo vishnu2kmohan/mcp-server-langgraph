@@ -26,6 +26,7 @@ except ImportError:
     redis = None  # type: ignore[assignment]
     REDIS_AVAILABLE = False
 
+from mcp_server_langgraph.auth.metrics import record_session_operation
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 
@@ -283,6 +284,10 @@ class InMemorySessionStore(SessionStore):
         ttl_seconds: int | None = None,
     ) -> str:
         """Create new session"""
+        import time
+
+        start_time = time.perf_counter()
+
         with tracer.start_as_current_span("session.create") as span:
             span.set_attribute("user.id", user_id)
 
@@ -316,6 +321,10 @@ class InMemorySessionStore(SessionStore):
                 self.user_sessions[user_id] = []
             self.user_sessions[user_id].append(session_id)
 
+            # Record session creation metrics
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            record_session_operation("create", "memory", "success", duration_ms)
+
             from mcp_server_langgraph.core.security import sanitize_for_logging
 
             logger.info(
@@ -327,10 +336,17 @@ class InMemorySessionStore(SessionStore):
 
     async def get(self, session_id: str) -> SessionData | None:
         """Get session with expiration check"""
+        import time
+
+        start_time = time.perf_counter()
+
         with tracer.start_as_current_span("session.get") as span:
             span.set_attribute("session.id", session_id)
 
             if session_id not in self.sessions:
+                # Record miss
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_session_operation("retrieve", "memory", "not_found", duration_ms)
                 return None
 
             session = self.sessions[session_id]
@@ -340,11 +356,17 @@ class InMemorySessionStore(SessionStore):
             if datetime.now(UTC) > expires_at:
                 # Session expired
                 await self.delete(session_id)
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_session_operation("retrieve", "memory", "expired", duration_ms)
                 return None
 
             # Update last accessed time (sliding window)
             if self.sliding_window:
                 session.last_accessed = datetime.now(UTC).isoformat()
+
+            # Record success
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            record_session_operation("retrieve", "memory", "success", duration_ms)
 
             return session
 
@@ -377,7 +399,13 @@ class InMemorySessionStore(SessionStore):
 
     async def delete(self, session_id: str) -> bool:
         """Delete session"""
+        import time
+
+        start_time = time.perf_counter()
+
         if session_id not in self.sessions:
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            record_session_operation("revoke", "memory", "not_found", duration_ms)
             return False
 
         session = self.sessions.pop(session_id)
@@ -391,6 +419,10 @@ class InMemorySessionStore(SessionStore):
                     del self.user_sessions[user_id]
             except ValueError:
                 pass
+
+        # Record session deletion metrics
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        record_session_operation("revoke", "memory", "success", duration_ms)
 
         logger.info(f"Session deleted: {session_id}")
         return True
@@ -537,6 +569,10 @@ class RedisSessionStore(SessionStore):
         ttl_seconds: int | None = None,
     ) -> str:
         """Create new session in Redis"""
+        import time
+
+        start_time = time.perf_counter()
+
         with tracer.start_as_current_span("session.create") as span:
             span.set_attribute("user.id", user_id)
 
@@ -577,6 +613,10 @@ class RedisSessionStore(SessionStore):
             await self.redis.rpush(user_sessions_key, session_id)
             await self.redis.expire(user_sessions_key, ttl + 3600)  # Extra hour
 
+            # Record session creation metrics
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            record_session_operation("create", "redis", "success", duration_ms)
+
             from mcp_server_langgraph.core.security import sanitize_for_logging
 
             logger.info(
@@ -588,6 +628,10 @@ class RedisSessionStore(SessionStore):
 
     async def get(self, session_id: str) -> SessionData | None:
         """Get session from Redis"""
+        import time
+
+        start_time = time.perf_counter()
+
         with tracer.start_as_current_span("session.get") as span:
             span.set_attribute("session.id", session_id)
 
@@ -595,6 +639,9 @@ class RedisSessionStore(SessionStore):
             data = await self.redis.hgetall(session_key)
 
             if not data:
+                # Record not_found metrics
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_session_operation("retrieve", "redis", "not_found", duration_ms)
                 return None
 
             # Convert Redis data to SessionData (Pydantic validates automatically)
@@ -619,6 +666,10 @@ class RedisSessionStore(SessionStore):
             # Update last accessed (sliding window)
             if self.sliding_window:
                 await self.redis.hset(session_key, "last_accessed", datetime.now(UTC).isoformat())
+
+            # Record success metrics
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            record_session_operation("retrieve", "redis", "success", duration_ms)
 
             return session
 
@@ -667,6 +718,10 @@ class RedisSessionStore(SessionStore):
 
     async def delete(self, session_id: str) -> bool:
         """Delete session from Redis"""
+        import time
+
+        start_time = time.perf_counter()
+
         session_key = f"session:{session_id}"
 
         # Get user_id before deleting
@@ -679,6 +734,11 @@ class RedisSessionStore(SessionStore):
             # Remove from user sessions list
             user_sessions_key = f"user_sessions:{user_id}"
             await self.redis.lrem(user_sessions_key, 0, session_id)
+
+        # Record session deletion metrics
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        result = "success" if deleted else "not_found"
+        record_session_operation("revoke", "redis", result, duration_ms)
 
         logger.info(f"Session deleted from Redis: {session_id}")
         return bool(deleted)

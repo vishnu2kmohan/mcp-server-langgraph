@@ -12,6 +12,12 @@
 #   - Keycloak for authentication (federated OIDC/OAuth2/SAML, LDAP/AD)
 #   - OpenFGA for fine-grained authorization (ReBAC)
 #
+# OPENSHIFT COMPATIBILITY:
+#   - Uses numeric UID (1001) in USER directive
+#   - Files owned by UID:0 (root group) for arbitrary UID support
+#   - Group permissions set with g=u for OpenShift restricted SCC
+#   - See: https://developers.redhat.com/blog/2020/10/26/adapting-docker-and-kubernetes-containers-to-run-on-red-hat-openshift-container-platform
+#
 # USAGE:
 #   docker build -f docker/Dockerfile.builder -t builder .
 #   docker run -p 8001:8001 \
@@ -27,6 +33,8 @@
 #   - https://docs.astral.sh/uv/guides/integration/docker/
 #   - https://hynek.me/articles/docker-uv/
 #   - 12-factor app: https://12factor.net/
+
+ARG PYTHON_VERSION=3.12
 
 # ==============================================================================
 # Stage 1: Build React Frontend
@@ -49,21 +57,11 @@ COPY src/mcp_server_langgraph/builder/frontend/ ./
 RUN npm run build
 
 # ==============================================================================
-# Stage 2: Python Runtime with FastAPI + SPAStaticFiles
+# Stage 2: Python Builder - Install dependencies in isolated stage
 # ==============================================================================
-FROM python:3.12-slim AS runtime
+FROM python:${PYTHON_VERSION}-slim AS python-builder
 
 WORKDIR /app
-
-# Install minimal system dependencies
-# curl: health checks
-# ca-certificates: HTTPS for auth providers
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
 
 # Install uv - Fast Python package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
@@ -74,40 +72,57 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never \
     UV_PROJECT_ENVIRONMENT=/app/.venv
 
-# Copy dependency files
+# Copy dependency files and source code
+# NOTE: uv sync needs src/ because pyproject.toml uses "packages = [..., from = 'src']"
 COPY pyproject.toml uv.lock ./
-
-# Install Python dependencies first (without the project itself)
-# --frozen: Use lockfile exactly, fail if out of sync
-# --no-dev: Skip development dependencies
-# --no-install-project: Skip installing the project (src/ not yet copied)
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-project
-
-# Copy source code
 COPY src/ ./src/
 
-# Install the project now that src/ is available
-RUN --mount=type=cache,target=/root/.cache/uv \
+# Install Python dependencies (production only, no dev extras)
+# --frozen: Use lockfile exactly, fail if out of sync
+# --no-dev: Skip development dependencies
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-builder,sharing=private \
     uv sync --frozen --no-dev
+
+# ==============================================================================
+# Stage 3: Runtime - Minimal runtime image
+# ==============================================================================
+FROM python:${PYTHON_VERSION}-slim AS runtime
+
+WORKDIR /app
+
+# Install minimal system dependencies and create user BEFORE copying files
+# This avoids expensive post-copy chown layer duplication
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-builder,sharing=private \
+    --mount=type=cache,target=/var/lib/apt,id=apt-lib-builder,sharing=private \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -u 1001 -g 0 -d /app -s /sbin/nologin appuser \
+    && mkdir -p /app && chown 1001:0 /app && chmod g=u /app
+
+# Copy virtual environment from builder with correct ownership
+# Using --chown avoids expensive post-copy chown layer
+COPY --from=python-builder --chown=1001:0 /app/.venv /app/.venv
+
+# Copy source code with correct ownership
+# Note: pyproject.toml not needed at runtime - version is read via importlib.metadata
+COPY --chown=1001:0 src/ ./src/
 
 # Copy built frontend from stage 1
 # Place in builder/frontend/dist to match SPAStaticFiles path expectations
-COPY --from=frontend-builder /frontend/dist ./src/mcp_server_langgraph/builder/frontend/dist/
+COPY --from=frontend-builder --chown=1001:0 /frontend/dist ./src/mcp_server_langgraph/builder/frontend/dist/
 
-# Create non-root user for security (DS002 compliance)
-RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
+# Drop privileges - use numeric UID for OpenShift compatibility
+USER 1001
 
 # Add venv to PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Environment configuration (12-factor: config via env vars)
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    HOME=/app
 
 # Expose API port
 EXPOSE 8001
@@ -116,6 +131,10 @@ EXPOSE 8001
 # Matches /api/builder/health endpoint (no auth required)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl --fail http://localhost:8001/api/builder/health || exit 1
+
+# OpenShift / Kubernetes labels
+LABEL io.openshift.tags="mcp,langgraph,builder,react"
+LABEL io.k8s.description="Visual Workflow Builder for MCP Server LangGraph"
 
 # Run the unified server
 # --host 0.0.0.0: Bind to all interfaces (required for container networking)

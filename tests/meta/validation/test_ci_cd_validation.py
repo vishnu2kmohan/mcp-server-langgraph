@@ -304,6 +304,11 @@ class TestGitHubActionsWorkflows:
         Root Cause: 100 iterations * 3s = 5 minutes insufficient for slow GitHub runners
         Fix: Increased to 150 iterations * 3s = 7.5 minutes
         Prevention: This test validates timeout is adequate (>= 7 minutes)
+
+        FIX (2025-12-10): Find the MAXIMUM timeout among all health check loops,
+        not just the first one. Multiple services (OpenFGA, Qdrant, MCP Server,
+        Keycloak) have their own verification loops with different timeouts.
+        Keycloak is the slowest (realm import) and should have the longest timeout.
         """
         e2e_workflow = None
         for workflow_file in workflow_files:
@@ -317,23 +322,41 @@ class TestGitHubActionsWorkflows:
         with open(e2e_workflow) as f:
             content = f.read()
 
-        # Look for health check loop pattern
-        # Pattern: for i in {1..N}; do
-        match = re.search(r"for\s+i\s+in\s+\{1\.\.(\d+)\}", content)
+        # Find ALL health check loops and their sleep values
+        # Pattern: for i in {1..N}; do ... sleep M
+        # We need to find each loop's iteration count and corresponding sleep value
+        #
+        # Use finditer to find all matches, then for each match, find the nearest
+        # sleep statement within the same loop context (next ~200 chars)
+        loop_pattern = re.compile(r"for\s+i\s+in\s+\{1\.\.(\d+)\}")
+        matches = list(loop_pattern.finditer(content))
 
-        if not match:
+        if not matches:
             pytest.skip("Health check loop not found in E2E workflow")
 
-        iterations = int(match.group(1))
-        sleep_match = re.search(r"sleep\s+(\d+)", content)
-        sleep_seconds = int(sleep_match.group(1)) if sleep_match else 3  # default to 3
+        # Find the maximum timeout among all loops
+        max_timeout_seconds = 0
+        max_iterations = 0
+        max_sleep = 0
 
-        total_timeout_seconds = iterations * sleep_seconds
-        total_timeout_minutes = total_timeout_seconds / 60
+        for match in matches:
+            iterations = int(match.group(1))
+            # Look for sleep in the next ~500 chars after the loop start
+            loop_context = content[match.end() : match.end() + 500]
+            sleep_match = re.search(r"sleep\s+(\d+)", loop_context)
+            sleep_seconds = int(sleep_match.group(1)) if sleep_match else 3
+
+            total_timeout = iterations * sleep_seconds
+            if total_timeout > max_timeout_seconds:
+                max_timeout_seconds = total_timeout
+                max_iterations = iterations
+                max_sleep = sleep_seconds
+
+        total_timeout_minutes = max_timeout_seconds / 60
 
         assert total_timeout_minutes >= 7, (
             f"E2E workflow health check timeout is too short:\n"
-            f"- Current: {iterations} iterations * {sleep_seconds}s = "
+            f"- Maximum found: {max_iterations} iterations * {max_sleep}s = "
             f"{total_timeout_minutes:.1f} minutes\n"
             f"- Minimum recommended: 7 minutes (to accommodate slow GitHub runners)\n"
             f"\nKeycloak initialization can take 3-5 minutes on slow runners.\n"

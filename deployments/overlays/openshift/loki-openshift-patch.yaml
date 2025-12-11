@@ -1,0 +1,31 @@
+# Loki StatefulSet - OpenShift security context
+# ==============================================
+# Configure Loki for OpenShift restricted-v2 SCC
+# OpenShift assigns arbitrary UIDs via SCC (Security Context Constraints)
+# All processes must belong to GID 0 (root group) for file access
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: loki
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsUser: null
+        runAsGroup: 0
+        fsGroup: 0
+      initContainers:
+        - name: init-permissions
+          securityContext:
+            runAsUser: null
+            runAsNonRoot: true
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      containers:
+        - name: loki
+          securityContext:
+            runAsUser: null
+            runAsGroup: 0

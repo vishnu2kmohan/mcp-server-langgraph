@@ -13,6 +13,10 @@ title = "MCP Server LangGraph - Gitleaks Configuration"
 
   # Exclude documentation directories with code examples
   paths = [
+    # Test environment configuration (test-only credentials, safe to commit)
+    # Contains JWT_SECRET_KEY, KEYCLOAK_CLIENT_SECRET with "test" indicators
+    '''\.env\.test''',
+
     # Documentation examples (NOT real secrets - just showing what NOT to do)
     '''\.openai/''',
     '''docs/''',

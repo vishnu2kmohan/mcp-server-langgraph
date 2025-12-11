@@ -1,0 +1,42 @@
+# OpenShift Security Context Patch for Redis
+# ===========================================
+# Configures Redis StatefulSet for OpenShift restricted-v2 SCC.
+#
+# Redis Alpine image runs as UID 999, but OpenShift will assign
+# an arbitrary UID. fsGroup: 0 ensures data directory access.
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-session
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        # runAsUser omitted - OpenShift assigns arbitrary UID
+        runAsGroup: 0  # Root group for file access
+        fsGroup: 0     # Root group for volume ownership
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: redis
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            # runAsUser omitted - OpenShift assigns arbitrary UID
+            runAsGroup: 0
+            capabilities:
+              drop:
+                - ALL
+          # OpenShift CPU ratio compliance: max 4.0 ratio (limit/request)
+          # Base: 100m request / 500m limit = 5.0 ratio (violates 4.0 max)
+          # Fixed: 125m request / 500m limit = 4.0 ratio (compliant)
+          resources:
+            requests:
+              cpu: 125m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

@@ -368,7 +368,7 @@ class TestResourceSubscriptions:
             provider=provider,
         )
 
-        callback = AsyncMock()
+        callback = AsyncMock()  # noqa: async-mock-config
         handler.subscribe(
             uri="playground://session/abc/logs",
             callback=callback,

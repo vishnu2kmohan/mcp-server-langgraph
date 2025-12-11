@@ -25,18 +25,30 @@
 #   - No hard-coded container names (allows multiple isolated test stacks)
 #
 # GATEWAY ROUTES (via Traefik on port 80):
-#   /api        - MCP Server API
-#   /build      - Visual Workflow Builder
-#   /play       - Interactive Playground
-#   /authn      - Keycloak (Authentication)
-#   /authz      - OpenFGA (Authorization)
-#   /vectors    - Qdrant (Vector Database)
-#   /traces     - Jaeger (Distributed Tracing)
-#   /logs       - Loki (Log Aggregation)
-#   /metrics    - Prometheus (Metrics)
-#   /alerts     - Alertmanager
-#   /dashboards - Grafana (Unified Dashboards)
-#   /gateway    - Traefik Dashboard
+#   /_oauth     - OAuth callback (traefik-forward-auth)
+#   /mcp        - MCP Server API [protected]
+#   /build      - Visual Workflow Builder [protected]
+#   /play       - Interactive Playground [protected]
+#   /authn      - Keycloak (Authentication) [public]
+#   /authz      - OpenFGA API [protected]
+#   /playground - OpenFGA Playground UI [protected]
+#   /vectors    - Qdrant API [internal]
+#   /dashboard  - Qdrant Web UI [protected]
+#   /traces     - Tempo (Tracing) [internal]
+#   /logs       - Loki (Logs) [internal]
+#   /metrics    - Mimir (Metrics) [internal]
+#   /telemetry  - Alloy (Telemetry Collector) [protected]
+#   /dashboards - Grafana (Dashboards) [protected]
+#   /gateway    - Traefik Dashboard [protected]
+#
+# AUTHENTICATION (ADR-0054):
+#   Protected routes require Keycloak authentication via traefik-forward-auth.
+#   Public routes: /authn/*, health endpoints
+#   Internal routes: Observability backends (access via Grafana dashboards)
+#
+# GRAFANA LGTM STACK:
+#   Grafana (Dashboards) + Loki (Logs) + Tempo (Traces) + Mimir (Metrics)
+#   Alloy is the unified collector that replaces Prometheus, Promtail, and OTEL Collector
 #
 # DIRECT PORTS (legacy, for direct access):
 #   9432  - PostgreSQL (test, offset +4000 from standard 5432)
@@ -64,22 +76,29 @@ services:
   # API GATEWAY (Traefik)
   # ==============================================================================
   # Single entry point for all web services with path-based routing
-  # Dashboard available at http://localhost/gateway or :8080
+  # Dashboard available at http://localhost/gateway or http://localhost:8080
 
   traefik-gateway:
-    image: traefik:v3.2
+    image: traefik:v3.6.4
+    # RESILIENCE: Auto-restart on failure for critical gateway infrastructure
+    restart: unless-stopped
     command:
       # API and Dashboard
       - "--api.dashboard=true"
       - "--api.insecure=true"
-      # Health endpoint (required for healthcheck)
-      - "--ping=true"
       # Docker provider
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=mcp-test-network"
       # Entrypoints
       - "--entrypoints.web.address=:80"
+      # Prometheus metrics (for Grafana dashboards)
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.addEntryPointsLabels=true"
+      - "--metrics.prometheus.addRoutersLabels=true"
+      - "--metrics.prometheus.addServicesLabels=true"
+      # Health check (required for traefik healthcheck --ping)
+      - "--ping=true"
       # Logging
       - "--log.level=INFO"
       - "--accesslog=true"
@@ -106,14 +125,27 @@ services:
       mcp-test-network:
         aliases:
           - gateway
+          # 'traefik-gateway' alias for Alloy Prometheus scrape target
+          - traefik-gateway
+          # 'localhost' alias enables traefik-forward-auth to resolve OIDC issuer URL
+          # (http://localhost/authn/realms/default) to traefik-gateway instead of 127.0.0.1.
+          # This is required because extra_hosts: localhost:host-gateway doesn't work reliably
+          # (default 127.0.0.1 localhost entry in /etc/hosts takes precedence).
+          - localhost
     labels:
       - "traefik.enable=true"
-      # Dashboard route: /gateway
-      - "traefik.http.routers.traefik-dashboard.rule=PathPrefix(`/gateway`)"
-      - "traefik.http.routers.traefik-dashboard.entrypoints=web"
-      - "traefik.http.routers.traefik-dashboard.service=api@internal"
-      - "traefik.http.middlewares.gateway-strip.stripprefix.prefixes=/gateway"
-      - "traefik.http.routers.traefik-dashboard.middlewares=gateway-strip"
+      # Route: /gateway/* -> Traefik Dashboard [PROTECTED]
+      # Traefik dashboard requires both /api and /dashboard paths internally.
+      # We use replacepathregex to rewrite /gateway/api -> /api and /gateway/dashboard -> /dashboard
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.gateway.rule=PathPrefix(`/gateway`)"
+      - "traefik.http.routers.gateway.entrypoints=web"
+      - "traefik.http.routers.gateway.service=api@internal"
+      - "traefik.http.routers.gateway.priority=20"
+      - "traefik.http.middlewares.gateway-rewrite.replacepathregex.regex=^/gateway/(.*)"
+      - "traefik.http.middlewares.gateway-rewrite.replacepathregex.replacement=/$${1}"
+      # Middleware chain: forward-auth first, then rewrite
+      - "traefik.http.routers.gateway.middlewares=forward-auth@docker,gateway-rewrite"
 
   # ==============================================================================
   # DATABASE SERVICES
@@ -132,31 +164,110 @@ services:
       - "9432:5432"  # Offset port to avoid conflicts with dev environment
     volumes:
       # Mount migration scripts for database initialization
-      - ./migrations:/docker-entrypoint-initdb.d:ro
-    # No persistent volumes - ephemeral storage for test isolation
-    # OpenAI Codex Finding Fix (2025-11-20): Increased from 256m to 512m
-    # Reason: Multiple worker schemas (test_worker_gw0, gw1, gw2...) need more space
-    # Previous: 256MB caused OOM with 4+ parallel workers
-    # Current: 512MB supports 8+ workers safely
-    tmpfs:
-      - /var/lib/postgresql/data:rw,noexec,nosuid,size=512m
+      - ./migrations:/docker-entrypoint-initdb.d/01-migrations:ro
+      # Mount test database initialization script
+      - ./docker/postgres/init-test-databases.sh:/docker-entrypoint-initdb.d/00-init-databases.sh:ro
+      # Persistent data volume
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 3s  # Codex Fix: interval must be >= timeout
       timeout: 3s
       retries: 20  # Increased from 10 to allow more time for migrations (60s max)
-    # Note: deploy.resources.limits not supported in GitHub Actions
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
     networks:
       mcp-test-network:
         aliases:
           - postgres
+
+  # PostgreSQL Exporter for Prometheus metrics
+  # Exposes pg_* metrics for the PostgreSQL dashboard
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    # RESILIENCE: Auto-restart on failure for observability infrastructure
+    restart: unless-stopped
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres:postgres@postgres-test:5432/postgres?sslmode=disable
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9187/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+        reservations:
+          cpus: '0.02'
+          memory: 32M
+    networks:
+      mcp-test-network:
+        aliases:
+          - postgres-exporter
+
+  # ==============================================================================
+  # DATABASE MIGRATIONS (Alembic)
+  # ==============================================================================
+  # Standardized on Alembic for all PostgreSQL schema migrations
+  # This runs AFTER postgres-test is healthy and BEFORE mcp-server-test starts
+  # Pattern matches openfga-migrate-test for consistency
+
+  alembic-migrate-test:
+    # IMAGE STRATEGY (2025-12-11):
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest)
+    #   Built by .github/workflows/build-alembic-image.yaml
+    # - Local: Build with `docker compose build alembic-migrate-test`
+    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest for push
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.alembic
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:local
+    # Run Alembic upgrade to apply all migrations to mcp_test database
+    command: alembic upgrade head
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    environment:
+      # Alembic uses these to construct DATABASE_URL
+      - TESTING=true
+      - POSTGRES_HOST=postgres-test
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=mcp_test
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
+    networks:
+      - mcp-test-network
+    restart: "no"  # Run once and exit
 
   # ==============================================================================
   # AUTHORIZATION SERVICES
   # ==============================================================================
 
   openfga-migrate-test:
-    image: openfga/openfga:v1.10.2
+    image: openfga/openfga:v1.11.2
     command: migrate --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable'
     depends_on:
       postgres-test:
@@ -164,12 +275,20 @@ services:
     environment:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
     networks:
       - mcp-test-network
     restart: "no"  # Run once and exit
 
   openfga-test:
-    image: openfga/openfga:v1.10.2
+    image: openfga/openfga:v1.11.2
     command: run --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable'
     depends_on:
       postgres-test:
@@ -179,12 +298,13 @@ services:
     ports:
       - "9080:8080"  # HTTP API
       - "9081:8081"  # gRPC API
+      - "9003:3000"  # Playground UI (default port 3000)
     environment:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable
       - OPENFGA_LOG_FORMAT=json
       - OPENFGA_LOG_LEVEL=warn  # Reduced logging for tests
-      - OPENFGA_PLAYGROUND_ENABLED=false
+      - OPENFGA_PLAYGROUND_ENABLED=true  # Enable playground UI on port 3000
       - TESTING=true
     healthcheck:
       test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
@@ -192,31 +312,66 @@ services:
       timeout: 3s
       retries: 15
       start_period: 5s
-    # Note: deploy.resources.limits not supported in GitHub Actions
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
     networks:
       mcp-test-network:
         aliases:
           - openfga
     labels:
       - "traefik.enable=true"
-      # Route: /authz/* -> openfga:8080 (Authorization)
-      - "traefik.http.routers.openfga.rule=PathPrefix(`/authz`)"
-      - "traefik.http.routers.openfga.entrypoints=web"
-      - "traefik.http.routers.openfga.priority=10"
-      - "traefik.http.services.openfga.loadbalancer.server.port=8080"
+      # Route: /authz/* -> openfga:8080 (Authorization API)
+      # API endpoints are at /stores, /health, etc. accessed via /authz/stores, /authz/health
+      - "traefik.http.routers.openfga-api.rule=PathPrefix(`/authz`)"
+      - "traefik.http.routers.openfga-api.entrypoints=web"
+      - "traefik.http.routers.openfga-api.priority=10"
+      - "traefik.http.services.openfga-api.loadbalancer.server.port=8080"
       - "traefik.http.middlewares.openfga-strip.stripprefix.prefixes=/authz"
-      - "traefik.http.routers.openfga.middlewares=openfga-strip"
+      - "traefik.http.routers.openfga-api.middlewares=openfga-strip"
+      # Route: /playground/* -> openfga:3000 (OpenFGA Playground UI) [PROTECTED]
+      # OpenFGA Playground runs on port 3000 (separate from API on 8080)
+      # Access at http://localhost/playground or direct at http://localhost:9003/playground
+      # Priority 11 to take precedence over MCP Playground (PathPrefix /play matches /playground)
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.openfga-playground.rule=PathPrefix(`/playground`)"
+      - "traefik.http.routers.openfga-playground.entrypoints=web"
+      - "traefik.http.routers.openfga-playground.priority=11"
+      - "traefik.http.routers.openfga-playground.service=openfga-playground"
+      - "traefik.http.routers.openfga-playground.middlewares=forward-auth@docker"
+      - "traefik.http.services.openfga-playground.loadbalancer.server.port=3000"
 
   # ==============================================================================
   # AUTHENTICATION SERVICES
   # ==============================================================================
 
   keycloak-test:
-    image: quay.io/keycloak/keycloak:26.4.2
-    # Keycloak 26.x requires files named <realm-name>-realm.json for --import-realm
-    # Issue #36284 was fixed in Keycloak 26.2.0, so we use the standard naming convention
-    # See: https://www.keycloak.org/server/importExport
-    command: start-dev --import-realm
+    # Use pre-optimized Keycloak image (no JIT compilation at startup)
+    # This matches production behavior and speeds up container startup
+    #
+    # IMAGE STRATEGY (2025-12-11):
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest)
+    #   Built by .github/workflows/build-keycloak-image.yaml
+    # - Local: Build with `docker compose build keycloak-test`
+    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest for push
+    #
+    # The GHCR image is pushed with tags: latest, 26.4.2, 26.4.2-<sha>
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.keycloak
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:local
+    # --optimized skips Quarkus augmentation (done at build time)
+    # --import-realm imports the test realm on first start
+    # --http-enabled=true must be explicit for production mode (Keycloak 26+)
+    command: start --optimized --import-realm --http-enabled=true
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -226,35 +381,40 @@ services:
     volumes:
       # Import test realm with pre-configured client and users
       # This eliminates the need for manual setup and prevents E2E test auth failures
-      # File MUST be named <realm-name>-realm.json per Keycloak import convention
-      - ./tests/e2e/mcp-test-realm.json:/opt/keycloak/data/import/mcp-test-realm.json:ro
+      - ./tests/e2e/keycloak-test-realm.json:/opt/keycloak/data/import/realm.json:ro
     environment:
       # Admin credentials
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
 
       # Database configuration - uses dedicated keycloak_test database for isolation
-      - KC_DB=postgres
+      # Note: KC_DB=postgres is baked into the optimized image (docker/Dockerfile.keycloak)
       - KC_DB_URL=jdbc:postgresql://postgres-test:5432/keycloak_test
       - KC_DB_USERNAME=postgres
       - KC_DB_PASSWORD=postgres
 
-      # Development/test settings
-      - KC_HTTP_ENABLED=true
+      # Runtime settings (not baked into build)
+      # NOTE: KC_HOSTNAME is intentionally NOT set. Keycloak will return the issuer
+      # based on the request hostname, allowing forward-auth to use the internal
+      # Docker hostname (keycloak-test:8080) while browsers use localhost.
+      # See: https://www.keycloak.org/server/hostname
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
 
-      # Subpath configuration for gateway routing
-      - KC_HTTP_RELATIVE_PATH=/authn
+      # Note: KC_HTTP_RELATIVE_PATH=/authn is baked into the optimized image (build-time option)
 
-      # Health and management settings (Best Practice: Official Keycloak documentation)
-      - KC_HEALTH_ENABLED=true          # Enable health endpoints
+      # Health and management settings
+      # Note: KC_HEALTH_ENABLED=true and KC_METRICS_ENABLED=true are baked into the optimized image
       - KC_MANAGEMENT_ENABLED=true      # Enable management port (9000)
-      - KC_METRICS_ENABLED=false        # Disabled for test speed
-      - KC_LOG_LEVEL=info               # INFO to see realm import logs
+      - KC_LOG_LEVEL=warn               # Reduced logging
 
       # Test-specific
       - TESTING=true
+
+      # JVM memory settings to prevent OOM
+      # Keycloak 26.x defaults to -XX:MaxRAMPercentage=70 which can exceed container limits
+      # Explicit heap limits ensure predictable memory usage
+      - JAVA_OPTS_APPEND=-Xms512m -Xmx768m -XX:MaxMetaspaceSize=192m
     healthcheck:
       # Best Practice: Use /health/ready endpoint on management port 9000
       # Reference: https://www.keycloak.org/observability/health
@@ -263,10 +423,16 @@ services:
       test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/9000' && timeout 5 bash -c 'echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n\" > /dev/tcp/localhost/9000' || exit 1"]
       interval: 5s
       timeout: 5s
-      retries: 40
-      start_period: 90s  # Accounts for DB migration + realm import + JIT compilation (increased for CI with PostgreSQL)
-    # Note: deploy.resources.limits not supported in GitHub Actions
-    # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+      retries: 30
+      start_period: 60s  # Per ADR-0053: Keycloak requires at least 60s to initialize
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1280M
+        reservations:
+          cpus: '0.25'
+          memory: 640M
     networks:
       mcp-test-network:
         aliases:
@@ -282,18 +448,161 @@ services:
       # NO strip - Keycloak configured for /authn subpath
 
   # ==============================================================================
+  # KEYCLOAK ADMIN INITIALIZATION
+  # ==============================================================================
+  # This service runs once after Keycloak is healthy to fix the admin user's
+  # required actions. The KEYCLOAK_ADMIN env var creates an admin user with
+  # UPDATE_PASSWORD required action, which prevents password grant for Admin API.
+  # This service uses kcadm.sh to clear the required actions.
+
+  keycloak-init-test:
+    # Reuse keycloak-test image (avoid duplicate builds) to have access to kcadm.sh
+    # NOTE: Uses same GHCR image as keycloak-test for consistency
+    # Both image: and build: are specified. Docker Compose will:
+    # 1. Pull from GHCR if available (CI)
+    # 2. Fall back to building from docker/Dockerfile.keycloak (local)
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.keycloak
+    # Override entrypoint and command to run the init script
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "Waiting for Keycloak to be fully ready..."
+        # Wait for Keycloak HTTP endpoint to be available
+        for i in {1..60}; do
+          if /opt/keycloak/bin/kcadm.sh config credentials \
+            --server http://keycloak-test:8080/authn \
+            --realm master \
+            --user admin \
+            --password admin 2>/dev/null; then
+            echo "Keycloak Admin CLI connected successfully"
+            break
+          fi
+          echo "Waiting for Keycloak... attempt $$i/60"
+          sleep 2
+        done
+
+        # Get admin user ID
+        ADMIN_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master -q username=admin --fields id 2>/dev/null | grep -o '"id" : "[^"]*"' | head -1 | cut -d'"' -f4)
+
+        if [ -n "$$ADMIN_ID" ]; then
+          echo "Found admin user ID: $$ADMIN_ID"
+          # Clear required actions for admin user
+          /opt/keycloak/bin/kcadm.sh update users/$$ADMIN_ID -r master -s 'requiredActions=[]' 2>/dev/null
+          echo "Cleared required actions for admin user"
+        else
+          echo "Could not find admin user - may already be configured correctly"
+        fi
+
+        echo "Keycloak initialization complete"
+    depends_on:
+      keycloak-test:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      - mcp-test-network
+    restart: "no"  # Run once and exit
+
+  # ==============================================================================
+  # GATEWAY AUTHENTICATION (traefik-forward-auth)
+  # ==============================================================================
+  # Centralized authentication proxy for Traefik ForwardAuth middleware
+  # Handles OIDC flow with Keycloak for all protected routes
+  # Reference: ADR-0054 - Gateway-Level Authentication
+
+  traefik-forward-auth:
+    image: thomseddon/traefik-forward-auth:2
+    # RESILIENCE: Auto-restart on failure for critical auth infrastructure
+    # The forward-auth service is stateless and can safely restart
+    restart: unless-stopped
+    depends_on:
+      keycloak-test:
+        condition: service_healthy
+      traefik-gateway:
+        condition: service_healthy
+    # NOTE: traefik-gateway has 'localhost' as a network alias (see traefik-gateway service),
+    # so forward-auth can resolve http://localhost/authn/... to traefik-gateway internally.
+    # This ensures OIDC issuer URL matches what browser sees (localhost) while working
+    # within Docker networking.
+    environment:
+      # OIDC Provider Configuration (Keycloak)
+      # Forward-auth fetches OIDC config from http://localhost/authn/... which is routed
+      # through the Traefik gateway to Keycloak. This ensures the OIDC issuer and
+      # authorization_endpoint URLs use localhost (browser-accessible) instead of
+      # internal Docker hostnames like keycloak-test.
+      - DEFAULT_PROVIDER=oidc
+      - PROVIDERS_OIDC_ISSUER_URL=http://localhost/authn/realms/default
+      - PROVIDERS_OIDC_CLIENT_ID=mcp-server
+      - PROVIDERS_OIDC_CLIENT_SECRET=test-client-secret-for-e2e-tests
+      # Cookie and Session Configuration
+      - SECRET=test-forward-auth-secret-change-in-production
+      - COOKIE_DOMAIN=localhost
+      - INSECURE_COOKIE=true  # Required for HTTP (no TLS in test)
+      - AUTH_HOST=localhost
+      - URL_PATH=/_oauth
+      # Session lifetime in seconds (default 43200 = 12 hours)
+      - LIFETIME=3600
+      # Logout Configuration
+      # /_oauth/logout redirects to Keycloak logout for complete SSO logout
+      - LOGOUT_REDIRECT=http://localhost/authn/realms/default/protocol/openid-connect/logout?post_logout_redirect_uri=http%3A%2F%2Flocalhost%2Fauthn%2Frealms%2Fdefault%2Faccount&client_id=mcp-server
+      # Logging
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      # Test mode
+      - TESTING=true
+    healthcheck:
+      # traefik-forward-auth is a scratch container with no shell utilities
+      # Traefik handles availability detection via Docker provider
+      disable: true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    networks:
+      mcp-test-network:
+        aliases:
+          - forward-auth
+    labels:
+      - "traefik.enable=true"
+      # Define the ForwardAuth middleware that other services will use
+      - "traefik.http.middlewares.forward-auth.forwardauth.address=http://traefik-forward-auth:4181"
+      - "traefik.http.middlewares.forward-auth.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User,X-Auth-User,X-Auth-Email"
+      # OAuth callback route (handles redirect from Keycloak)
+      # IMPORTANT: The /_oauth route MUST use the forward-auth middleware, NOT direct service routing.
+      # traefik-forward-auth intercepts /_oauth via X-Forwarded-Uri header in middleware mode.
+      # Without this, the OAuth callback fails because forward-auth doesn't see the code/state params.
+      - "traefik.http.routers.forward-auth.rule=PathPrefix(`/_oauth`)"
+      - "traefik.http.routers.forward-auth.entrypoints=web"
+      - "traefik.http.routers.forward-auth.priority=100"
+      - "traefik.http.routers.forward-auth.middlewares=forward-auth@docker"
+      - "traefik.http.services.forward-auth.loadbalancer.server.port=4181"
+
+  # ==============================================================================
   # CACHE & SESSION STORAGE
   # ==============================================================================
 
   redis-test:
     # Redis 7.2 to match Memorystore (terraform/environments/gcp-preview/main.tf: redis_version = "REDIS_7_2")
     image: redis:7.2-alpine
-    command: redis-server --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru --save ""
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
     ports:
       - "9379:6379"
-    # No volumes - ephemeral storage
-    tmpfs:
-      - /data:rw,noexec,nosuid,size=128m
+    volumes:
+      - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s  # Codex Fix: interval must be >= timeout
@@ -312,18 +621,50 @@ services:
         aliases:
           - redis
 
+  # Redis Exporter for Prometheus metrics
+  # Exposes redis_* metrics for the Redis Sessions dashboard
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.67.0-alpine
+    # RESILIENCE: Auto-restart on failure for observability infrastructure
+    restart: unless-stopped
+    depends_on:
+      redis-test:
+        condition: service_healthy
+    environment:
+      - REDIS_ADDR=redis://redis-test:6379
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9121/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+        reservations:
+          cpus: '0.02'
+          memory: 32M
+    networks:
+      mcp-test-network:
+        aliases:
+          - redis-exporter
+
   # ==============================================================================
   # VECTOR DATABASE (for Anthropic Best Practices: Just-in-Time Context)
   # ==============================================================================
 
   qdrant-test:
-    image: qdrant/qdrant:v1.15.5
+    # Use unprivileged image for non-root execution (Kubernetes-compatible)
+    image: qdrant/qdrant:v1.15.5-unprivileged
+    # Qdrant unprivileged runs as UID 1000
+    user: "1000"
     ports:
       - "9333:6333"  # HTTP API
       - "9334:6334"  # gRPC API
-    # No volumes - ephemeral storage
-    tmpfs:
-      - /qdrant/storage:rw,noexec,nosuid,size=256m
+    volumes:
+      - qdrant-data:/qdrant/storage
     environment:
       - QDRANT_ALLOW_RECOVERY_MODE=true
       - QDRANT__LOG_LEVEL=WARN  # Reduced logging
@@ -350,13 +691,21 @@ services:
           - qdrant
     labels:
       - "traefik.enable=true"
-      # Route: /vectors/* -> qdrant:6333 (Vector Database)
+      # Route: /vectors/* -> qdrant:6333 (Vector Database API)
       - "traefik.http.routers.qdrant.rule=PathPrefix(`/vectors`)"
       - "traefik.http.routers.qdrant.entrypoints=web"
       - "traefik.http.routers.qdrant.priority=10"
       - "traefik.http.services.qdrant.loadbalancer.server.port=6333"
       - "traefik.http.middlewares.qdrant-strip.stripprefix.prefixes=/vectors"
       - "traefik.http.routers.qdrant.middlewares=qdrant-strip"
+      # Route: /dashboard/* -> qdrant:6333/dashboard/* (Qdrant Web UI)
+      # Qdrant dashboard uses hardcoded absolute paths (/dashboard/*) for assets.
+      # Access via http://localhost/dashboard or http://localhost/vectors/dashboard
+      # Note: /dashboard (no 's') won't conflict with Grafana's /dashboards (priority 11)
+      - "traefik.http.routers.qdrant-dashboard.rule=PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.qdrant-dashboard.entrypoints=web"
+      - "traefik.http.routers.qdrant-dashboard.priority=10"
+      - "traefik.http.routers.qdrant-dashboard.service=qdrant"
 
   # ==============================================================================
   # MCP SERVER (for E2E tests)
@@ -367,19 +716,31 @@ services:
     # =========================================================
     # Enables end-to-end testing of MCP protocol and full user journeys
     # Addresses Bucket 4: E2E MCP journeys missing service dependencies
+    #
+    # IMAGE STRATEGY (2025-12-11):
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest)
+    #   Built by .github/workflows/ci.yaml docker-build job (test variant)
+    # - Local: Build with `docker compose build mcp-server-test`
+    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest for push
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest
     build:
       context: .
       dockerfile: docker/Dockerfile.test
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-local
     command: >
       sh -c "
       echo 'Waiting for dependencies to be ready...' &&
       sleep 5 &&
       echo 'Starting MCP server...' &&
-      uv run uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000
+      uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000
       "
     depends_on:
       postgres-test:
         condition: service_healthy
+      alembic-migrate-test:
+        condition: service_completed_successfully
       keycloak-test:
         condition: service_healthy
       openfga-test:
@@ -390,52 +751,29 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"  # HTTP API
+    # 12-Factor: Config from .env.test file (checked into git)
+    # Override locally with .env.test.local (gitignored) or shell environment
+    env_file:
+      - .env.test
     environment:
-      # Application settings
-      - ENVIRONMENT=test
-      - TESTING=true
-      - LOG_LEVEL=INFO
-      - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
-
-      # Database
+      # Docker networking values (must reference container names)
+      # These override values from .env.test because they require compose-level resolution
+      # Note: Values below take precedence over .env.test per Docker Compose rules
       - POSTGRES_HOST=postgres-test
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=gdpr_test
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-
-      # Authentication
-      - AUTH_PROVIDER=keycloak
-      # Use Docker internal network for reliable CI/CD (host.docker.internal doesn't work in GitHub Actions)
-      # IMPORTANT: Must use KEYCLOAK_SERVER_URL (not KEYCLOAK_URL) to match Settings field name
-      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080
-      - KEYCLOAK_REALM=mcp-test
-      - KEYCLOAK_CLIENT_ID=mcp-server
-      - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-
-      # Authorization
+      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       - OPENFGA_API_URL=http://openfga-test:8080
-
-      # Cache & Sessions
       - REDIS_URL=redis://redis-test:6379/1
       - REDIS_SESSION_URL=redis://redis-test:6379/0
-
-      # Vector DB
+      - CHECKPOINT_REDIS_URL=redis://redis-test:6379/1
       - QDRANT_URL=http://qdrant-test:6333
-
-      # Observability
-      - OTEL_SDK_DISABLED=false
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-test:4318
-      - OTEL_SERVICE_NAME=mcp-server-test
-
-      # GDPR
-      - GDPR_STORAGE_BACKEND=postgres
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      # Use /health/live to avoid 307 redirect (/health -> /health/ due to sub-app mount)
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
       interval: 5s
       timeout: 5s
       retries: 20
+    init: true  # Proper process cleanup for Python app
     deploy:
       resources:
         limits:
@@ -450,144 +788,46 @@ services:
           - mcp-server
     labels:
       - "traefik.enable=true"
-      # Route: /api/* -> mcp-server:8000 (MCP Server API)
-      - "traefik.http.routers.mcp-api.rule=PathPrefix(`/api`)"
+      # Route: /mcp/* -> mcp-server:8000 (MCP Server API)
+      - "traefik.http.routers.mcp-api.rule=PathPrefix(`/mcp`)"
       - "traefik.http.routers.mcp-api.entrypoints=web"
       - "traefik.http.routers.mcp-api.priority=10"
       - "traefik.http.services.mcp-api.loadbalancer.server.port=8000"
-      - "traefik.http.middlewares.mcp-strip.stripprefix.prefixes=/api"
-      - "traefik.http.routers.mcp-api.middlewares=mcp-strip"
+      - "traefik.http.middlewares.mcp-strip.stripprefix.prefixes=/mcp"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.mcp-api.middlewares=forward-auth@docker,mcp-strip"
 
   # ==============================================================================
-  # OBSERVABILITY SERVICES
+  # OBSERVABILITY SERVICES (Grafana LGTM Stack)
   # ==============================================================================
-
-  jaeger-test:
-    image: jaegertracing/all-in-one:1.62.0
-    ports:
-      - "19686:16686"  # Jaeger UI (offset by 3000)
-      - "17268:14268"  # Jaeger collector HTTP
-      - "17250:14250"  # Jaeger collector gRPC
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
-      - LOG_LEVEL=warn
-      - SPAN_STORAGE_TYPE=memory
-      # Subpath configuration for gateway routing
-      - QUERY_BASE_PATH=/traces
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "16686"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          cpus: '0.05'
-          memory: 128M
-    networks:
-      mcp-test-network:
-        aliases:
-          - jaeger
-    labels:
-      - "traefik.enable=true"
-      # Route: /traces/* -> jaeger:16686 (Distributed Tracing)
-      # Jaeger handles subpath via QUERY_BASE_PATH
-      - "traefik.http.routers.jaeger.rule=PathPrefix(`/traces`)"
-      - "traefik.http.routers.jaeger.entrypoints=web"
-      - "traefik.http.routers.jaeger.priority=10"
-      - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
-      # NO strip - Jaeger configured for /traces subpath
-
-  prometheus-test:
-    image: prom/prometheus:v3.7.1
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=1d'  # Shorter retention for testing
-      - '--web.enable-lifecycle'
-      # Subpath configuration for gateway routing
-      - '--web.external-url=/metrics/'
-      - '--web.route-prefix=/metrics/'
-    ports:
-      - "19090:9090"  # Prometheus UI (offset by 10000)
-    volumes:
-      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    healthcheck:
-      # wget is available in the official Prometheus image (prom/prometheus)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/metrics/-/healthy"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 256M
-    networks:
-      mcp-test-network:
-        aliases:
-          - prometheus
-    labels:
-      - "traefik.enable=true"
-      # Route: /metrics/* -> prometheus:9090 (Metrics)
-      # Prometheus handles subpath via --web.external-url
-      - "traefik.http.routers.prometheus.rule=PathPrefix(`/metrics`)"
-      - "traefik.http.routers.prometheus.entrypoints=web"
-      - "traefik.http.routers.prometheus.priority=10"
-      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
-      # NO strip - Prometheus configured for /metrics subpath
-
-  alertmanager-test:
-    image: prom/alertmanager:v0.28.1
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
-      # Subpath configuration for gateway routing
-      - '--web.external-url=/alerts/'
-      - '--web.route-prefix=/alerts/'
-    ports:
-      - "19093:9093"  # AlertManager UI (offset by 10000)
-    volumes:
-      - ./monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-    healthcheck:
-      # wget is available in the official Alertmanager image (prom/alertmanager)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/alerts/-/healthy"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          cpus: '0.05'
-          memory: 128M
-    networks:
-      mcp-test-network:
-        aliases:
-          - alertmanager
-    labels:
-      - "traefik.enable=true"
-      # Route: /alerts/* -> alertmanager:9093 (Alerting)
-      # Alertmanager handles subpath via --web.external-url
-      - "traefik.http.routers.alertmanager.rule=PathPrefix(`/alerts`)"
-      - "traefik.http.routers.alertmanager.entrypoints=web"
-      - "traefik.http.routers.alertmanager.priority=10"
-      - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
-      # NO strip - Alertmanager configured for /alerts subpath
+  # Unified observability with Grafana Loki, Tempo, Mimir, and Alloy
+  #
+  # Architecture:
+  #   Applications -> Alloy (OTLP receiver) -> Tempo (traces) / Mimir (metrics)
+  #   Docker logs -> Alloy (log scraper) -> Loki (logs)
+  #   Grafana (unified UI for all telemetry + alerting)
+  #
+  # Removed (replaced by LGTM stack):
+  #   - Jaeger (replaced by Tempo)
+  #   - Prometheus (replaced by Alloy + Mimir)
+  #   - Alertmanager (replaced by Grafana Unified Alerting)
+  #   - Promtail (replaced by Alloy)
+  #
+  # See: docker/alloy/alloy-config.alloy for unified telemetry collection config
 
   grafana-test:
     image: grafana/grafana:12.2.0
     depends_on:
-      prometheus-test:
+      grafana-init:
+        condition: service_completed_successfully
+      alloy-test:
         condition: service_healthy
+      loki-test:
+        condition: service_started  # Loki has healthcheck disabled (distroless image)
+      tempo-test:
+        condition: service_healthy
+      mimir-test:
+        condition: service_started  # Mimir has healthcheck disabled (distroless)
     ports:
       - "13001:3000"  # Grafana UI (offset by 10000 from prod's 3001)
     environment:
@@ -597,16 +837,36 @@ services:
       # Subpath configuration for gateway routing
       - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/dashboards/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      # Database configuration - prevent "database is locked" errors during concurrent provisioning
+      # Reference: https://community.grafana.com/t/database-is-locked/87028
+      # Reference: https://github.com/prometheus-community/helm-charts/issues/4542
+      - GF_DATABASE_WAL=true
+      - GF_DATABASE_CACHE_MODE=shared
+      - GF_DATABASE_LOCKING_ATTEMPT_TIMEOUT_SEC=30
+      # Disable migration locking - prevents lock contention during startup with provisioning
+      # This is safe for single-instance test environments
+      - GF_DATABASE_MIGRATION_LOCKING=false
+      # Unified alerting configuration
+      - GF_ALERTING_ENABLED=true
+      - GF_UNIFIED_ALERTING_ENABLED=true
+      # Use Mimir as external Alertmanager
+      - GF_UNIFIED_ALERTING_ALERTMANAGERS_DISCOVER=false
+      - GF_UNIFIED_ALERTING_ALERTMANAGER_URL=http://mimir:9009/alertmanager
+      # Enable Prometheus metrics endpoint for LGTM self-monitoring
+      - GF_METRICS_ENABLED=true
     volumes:
+      - grafana-data:/var/lib/grafana  # Named volume prevents SQLite locking issues
       - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       - ./monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/alerting.yml:/etc/grafana/provisioning/alerting/alerting.yml:ro
     healthcheck:
       # wget is available in the official Grafana image (grafana/grafana)
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 15
+      start_period: 60s  # Give Grafana time to initialize database and download plugins
     deploy:
       resources:
         limits:
@@ -621,36 +881,152 @@ services:
           - grafana
     labels:
       - "traefik.enable=true"
-      # Route: /dashboards/* -> grafana:3000 (Unified Dashboards)
+      # Route: /dashboards/* -> grafana:3000 (Unified Dashboards) [PROTECTED]
       # Grafana handles subpath via GF_SERVER_SERVE_FROM_SUB_PATH
+      # Authentication via forward-auth middleware (ADR-0054)
       - "traefik.http.routers.grafana.rule=PathPrefix(`/dashboards`)"
       - "traefik.http.routers.grafana.entrypoints=web"
-      - "traefik.http.routers.grafana.priority=10"
+      # Priority 11 to take precedence over qdrant-dashboard (PathPrefix /dashboard)
+      # since /dashboards starts with /dashboard
+      - "traefik.http.routers.grafana.priority=11"
+      - "traefik.http.routers.grafana.middlewares=forward-auth@docker"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
       # NO strip - Grafana configured for /dashboards subpath
 
   # ==============================================================================
-  # LOGGING SERVICES (Loki + Promtail)
+  # LGTM INIT CONTAINERS (Volume Permission Setup)
   # ==============================================================================
-  # Centralized log aggregation with Grafana Loki
+  # Init containers run as root to set correct ownership on Docker volumes
+  # Required because LGTM containers run as non-root (UID 10001) while
+  # Docker named volumes are created with root ownership by default.
+  # Pattern from: https://github.com/grafana/loki/blob/main/production/docker/docker-compose.yaml
+
+  # Init containers use busybox (has sh) since LGTM images are distroless (no shell)
+  # Pattern from: https://github.com/grafana/loki/blob/main/production/docker/docker-compose.yaml
+
+  loki-init:
+    image: busybox:1.37
+    user: root
+    restart: "no"  # One-shot init container - run once and exit
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /tmp/loki/chunks /tmp/loki/rules /tmp/loki/ruler /tmp/loki/compactor
+        chown -R 10001:10001 /tmp/loki
+        echo "Loki volume permissions set (UID 10001)"
+    volumes:
+      - loki-data:/tmp/loki
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 32M
+        reservations:
+          cpus: '0.01'
+          memory: 8M
+    networks:
+      - mcp-test-network
+
+  tempo-init:
+    image: busybox:1.37
+    user: root
+    restart: "no"  # One-shot init container - run once and exit
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /tmp/tempo/traces /tmp/tempo/wal /tmp/tempo/blocks
+        chown -R 10001:10001 /tmp/tempo
+        echo "Tempo volume permissions set (UID 10001)"
+    volumes:
+      - tempo-data:/tmp/tempo
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 32M
+        reservations:
+          cpus: '0.01'
+          memory: 8M
+    networks:
+      - mcp-test-network
+
+  mimir-init:
+    image: busybox:1.37
+    user: root
+    restart: "no"  # One-shot init container - run once and exit
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /tmp/mimir/data /tmp/mimir/tsdb /tmp/mimir/evaldata /tmp/mimir/ruleconfigs
+        chown -R 10001:10001 /tmp/mimir
+        echo "Mimir volume permissions set (UID 10001)"
+    volumes:
+      - mimir-data:/tmp/mimir
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 32M
+        reservations:
+          cpus: '0.01'
+          memory: 8M
+    networks:
+      - mcp-test-network
+
+  grafana-init:
+    image: busybox:1.37
+    user: root
+    restart: "no"  # One-shot init container - run once and exit
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /var/lib/grafana/plugins /var/lib/grafana/provisioning/alerting
+        chown -R 472:0 /var/lib/grafana
+        echo "Grafana volume permissions set (UID 472)"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 32M
+        reservations:
+          cpus: '0.01'
+          memory: 8M
+    networks:
+      - mcp-test-network
+
+  # ==============================================================================
+  # LOG STORAGE (Loki)
+  # ==============================================================================
+  # Grafana Loki for centralized log storage and querying
+  # Logs collected by Alloy and stored in Loki
   # Logs accessible at /logs or via Grafana Explore
 
   loki-test:
-    image: grafana/loki:3.0.0
-    command: -config.file=/etc/loki/local-config.yaml
+    image: grafana/loki:3.6.2
+    # Loki runs as UID 10001 in the official image (non-root for security)
+    # Init container (loki-init) sets volume permissions before startup
+    user: "10001"
+    depends_on:
+      loki-init:
+        condition: service_completed_successfully
+    command: -config.file=/etc/loki/local-config.yaml -target=all
     ports:
       - "13100:3100"  # Loki API (offset by 10000)
     volumes:
       - ./docker/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
-    # CRITICAL: Must set uid/gid=10001 (loki user) for tmpfs, otherwise Loki can't create directories
-    # Root cause: tmpfs mount replaces /loki entirely, so ownership must be set explicitly
-    tmpfs:
-      - /loki:rw,noexec,nosuid,size=256m,uid=10001,gid=10001
+      - loki-data:/tmp/loki
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      # NOTE: Loki 3.6.2 uses distroless image with no shell utilities (no bash, wget, curl)
+      # Healthcheck disabled; service is still accessible on port 3100
+      # Dependent services use condition: service_started instead of service_healthy
+      # See: https://github.com/grafana/loki/issues/18890
+      disable: true
     deploy:
       resources:
         limits:
@@ -673,28 +1049,168 @@ services:
       - "traefik.http.middlewares.loki-strip.stripprefix.prefixes=/logs"
       - "traefik.http.routers.loki.middlewares=loki-strip"
 
-  promtail-test:
-    image: grafana/promtail:3.0.0
-    command: -config.file=/etc/promtail/config.yaml
-    volumes:
-      - ./docker/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro  # Read Docker logs
+  # Note: Promtail removed - Alloy handles log collection from Docker containers
+  # See: docker/alloy/alloy-config.alloy (loki.source.docker block)
+
+  # ==============================================================================
+  # DISTRIBUTED TRACING (Tempo)
+  # ==============================================================================
+  # Grafana Tempo for distributed trace storage and querying
+  # Traces accessible at /traces or via Grafana Explore
+
+  tempo-test:
+    image: grafana/tempo:2.9.0
+    # Tempo runs as UID 10001 in the official image (non-root for security)
+    # Init container (tempo-init) sets volume permissions before startup
+    user: "10001"
     depends_on:
-      loki-test:
-        condition: service_healthy
-    # Note: Promtail image doesn't have wget/curl, so we remove the healthcheck.
-    # Promtail's health is not critical for tests - Loki handles log ingestion.
-    # The service will be counted as "running" (not "healthy") but that's acceptable.
+      tempo-init:
+        condition: service_completed_successfully
+    command: ["-config.file=/etc/tempo/tempo-config.yaml"]
+    ports:
+      - "13200:3200"  # Tempo API (offset by 10000)
+      - "14317:4317"  # OTLP gRPC (offset by 10000)
+      - "14318:4318"  # OTLP HTTP (offset by 10000)
+    volumes:
+      - ./docker/tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
+      - tempo-data:/tmp/tempo
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3200/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: 128M
+          cpus: '0.5'
+          memory: 512M
         reservations:
-          cpus: '0.05'
-          memory: 64M
+          cpus: '0.1'
+          memory: 256M
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - tempo
+    labels:
+      - "traefik.enable=true"
+      # Route: /traces/* -> tempo:3200 (Distributed Tracing)
+      - "traefik.http.routers.tempo.rule=PathPrefix(`/traces`)"
+      - "traefik.http.routers.tempo.entrypoints=web"
+      - "traefik.http.routers.tempo.priority=10"
+      - "traefik.http.services.tempo.loadbalancer.server.port=3200"
+      - "traefik.http.middlewares.tempo-strip.stripprefix.prefixes=/traces"
+      - "traefik.http.routers.tempo.middlewares=tempo-strip"
+
+  # ==============================================================================
+  # METRICS STORAGE (Mimir)
+  # ==============================================================================
+  # Grafana Mimir for long-term metrics storage
+  # Metrics accessible via Grafana Explore
+
+  mimir-test:
+    image: grafana/mimir:3.0.1
+    # Mimir runs as UID 10001 in the official image (non-root for security)
+    # Init container (mimir-init) sets volume permissions before startup
+    user: "10001"
+    depends_on:
+      mimir-init:
+        condition: service_completed_successfully
+    command: ["-config.file=/etc/mimir/mimir-config.yaml"]
+    ports:
+      - "19009:9009"  # Mimir API (offset by 10000)
+    volumes:
+      - ./docker/mimir/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
+      - ./docker/mimir/alertmanager-fallback.yaml:/etc/mimir/alertmanager-fallback.yaml:ro
+      # Ruler storage is configured in mimir-config.yaml to use /tmp/mimir/ruler
+      # which is created by mimir-init with correct permissions (UID 10001)
+      - mimir-data:/tmp/mimir
+    # NOTE: Mimir uses distroless image with no wget/curl
+    # See: https://github.com/grafana/mimir/issues/9034
+    # Healthcheck disabled; service is still accessible on port 9009
+    healthcheck:
+      disable: true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      mcp-test-network:
+        aliases:
+          - mimir
+    labels:
+      - "traefik.enable=true"
+      # Route: /metrics/* -> mimir:9009 (Metrics Storage)
+      - "traefik.http.routers.mimir.rule=PathPrefix(`/metrics`)"
+      - "traefik.http.routers.mimir.entrypoints=web"
+      - "traefik.http.routers.mimir.priority=10"
+      - "traefik.http.services.mimir.loadbalancer.server.port=9009"
+      - "traefik.http.middlewares.mimir-strip.stripprefix.prefixes=/metrics"
+      - "traefik.http.routers.mimir.middlewares=mimir-strip"
+
+  # ==============================================================================
+  # UNIFIED TELEMETRY COLLECTOR (Alloy)
+  # ==============================================================================
+  # Grafana Alloy - unified collector replacing Prometheus, Promtail, and OTEL Collector
+  # Collects metrics, logs, and traces; forwards to Mimir, Loki, and Tempo
+  # Reference: https://grafana.com/docs/alloy/latest/
+
+  alloy-test:
+    image: grafana/alloy:v1.12.0
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --stability.level=generally-available
+    depends_on:
+      loki-test:
+        condition: service_started  # Loki has healthcheck disabled (distroless image)
+      tempo-test:
+        condition: service_healthy
+      mimir-test:
+        condition: service_started  # Mimir has healthcheck disabled (distroless)
+    ports:
+      - "12345:12345"  # Alloy UI/API
+      - "4317:4317"    # OTLP gRPC (applications send here)
+      - "4318:4318"    # OTLP HTTP (applications send here)
+    volumes:
+      - ./docker/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # For Docker log collection
+    environment:
+      - ALLOY_DEPLOY_MODE=compose
+    healthcheck:
+      # Alloy exposes /-/ready endpoint for readiness checks
+      # NOTE: grafana/alloy image doesn't have wget/curl, use bash TCP check
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/localhost/12345' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      mcp-test-network:
+        aliases:
+          - alloy
+    labels:
+      - "traefik.enable=true"
+      # Route: /telemetry/* -> alloy:12345 (Telemetry Collector UI)
+      - "traefik.http.routers.alloy.rule=PathPrefix(`/telemetry`)"
+      - "traefik.http.routers.alloy.entrypoints=web"
+      - "traefik.http.routers.alloy.priority=10"
+      - "traefik.http.services.alloy.loadbalancer.server.port=12345"
+      - "traefik.http.middlewares.alloy-strip.stripprefix.prefixes=/telemetry"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.alloy.middlewares=forward-auth@docker,alloy-strip"
 
   # ==============================================================================
   # VISUAL WORKFLOW BUILDER
@@ -703,9 +1219,18 @@ services:
   # Auth: Keycloak + OpenFGA (same as mcp-server-test)
 
   builder-test:
+    # IMAGE STRATEGY (2025-12-11):
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest)
+    #   Built by .github/workflows/build-builder-image.yaml
+    # - Local: Build with `docker compose build builder-test`
+    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest for push
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.builder
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:local
     depends_on:
       mcp-server-test:
         condition: service_healthy
@@ -713,37 +1238,20 @@ services:
         condition: service_healthy
       openfga-test:
         condition: service_healthy
-      jaeger-test:
-        condition: service_healthy
+      alloy-test:
+        condition: service_started  # Alloy healthcheck can be flaky due to Loki timestamp rejections
     ports:
       - "9001:8001"  # Test port (offset +1000 from dev port 8001)
+    # 12-Factor: Config from .env.test file (checked into git)
+    env_file:
+      - .env.test
     environment:
-      # Application settings
-      - ENVIRONMENT=test
-      - TESTING=true
-      - LOG_LEVEL=INFO
-      - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
-
-      # Base path for gateway routing
+      # Docker networking values and service-specific overrides
       - BASE_PATH=/build
-
-      # Authentication (Keycloak)
-      - AUTH_PROVIDER=keycloak
-      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080
-      - KEYCLOAK_REALM=mcp-test
-      - KEYCLOAK_CLIENT_ID=mcp-server
-      - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-
-      # Authorization (OpenFGA)
+      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       - OPENFGA_API_URL=http://openfga-test:8080
-
-      # MCP Server integration
       - MCP_SERVER_URL=http://mcp-server-test:8000
-
-      # Observability (OpenTelemetry)
-      - OTEL_SDK_DISABLED=false
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-test:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=mcp-builder-test
       - LOG_FORMAT=json
     healthcheck:
@@ -751,6 +1259,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    init: true  # Proper process cleanup for Python app
     deploy:
       resources:
         limits:
@@ -771,7 +1280,8 @@ services:
       - "traefik.http.routers.builder.priority=10"
       - "traefik.http.services.builder.loadbalancer.server.port=8001"
       - "traefik.http.middlewares.builder-strip.stripprefix.prefixes=/build"
-      - "traefik.http.routers.builder.middlewares=builder-strip"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.builder.middlewares=forward-auth@docker,builder-strip"
 
   # ==============================================================================
   # INTERACTIVE PLAYGROUND
@@ -780,9 +1290,18 @@ services:
   # Auth: Keycloak + OpenFGA (same as mcp-server-test)
 
   playground-test:
+    # IMAGE STRATEGY (2025-12-11):
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest)
+    #   Built by .github/workflows/build-playground-image.yaml
+    # - Local: Build with `docker compose build playground-test`
+    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest for push
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.playground
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:local
     depends_on:
       mcp-server-test:
         condition: service_healthy
@@ -792,40 +1311,22 @@ services:
         condition: service_healthy
       redis-test:
         condition: service_healthy
-      jaeger-test:
-        condition: service_healthy
+      alloy-test:
+        condition: service_started  # Alloy healthcheck can be flaky due to Loki timestamp rejections
     ports:
       - "9002:8002"  # Test port (offset +1000 from dev port 8002)
+    # 12-Factor: Config from .env.test file (checked into git)
+    env_file:
+      - .env.test
     environment:
-      # Application settings
-      - ENVIRONMENT=test
-      - TESTING=true
-      - LOG_LEVEL=INFO
-      - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
-
-      # Base path for gateway routing
+      # Docker networking values and service-specific overrides
       - BASE_PATH=/play
-
-      # Authentication (Keycloak)
-      - AUTH_PROVIDER=keycloak
-      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080
-      - KEYCLOAK_REALM=mcp-test
-      - KEYCLOAK_CLIENT_ID=mcp-server
-      - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-
-      # Authorization (OpenFGA)
+      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       - OPENFGA_API_URL=http://openfga-test:8080
-
-      # MCP Server integration
       - MCP_SERVER_URL=http://mcp-server-test:8000
-
-      # Session storage (Redis DB 2 for playground sessions)
+      # Session storage (Redis DB 2 for playground sessions - different from mcp-server)
       - REDIS_URL=redis://redis-test:6379/2
-
-      # Observability (OpenTelemetry)
-      - OTEL_SDK_DISABLED=false
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-test:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=mcp-playground-test
       - LOG_FORMAT=json
     healthcheck:
@@ -833,6 +1334,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    init: true  # Proper process cleanup for Python app
     deploy:
       resources:
         limits:
@@ -854,16 +1356,32 @@ services:
       - "traefik.http.routers.playground.priority=10"
       - "traefik.http.services.playground.loadbalancer.server.port=8002"
       - "traefik.http.middlewares.playground-strip.stripprefix.prefixes=/play"
-      - "traefik.http.routers.playground.middlewares=playground-strip"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.playground.middlewares=forward-auth@docker,playground-strip"
 
 networks:
   mcp-test-network:
     driver: bridge
     name: mcp-test-network
 
-# Note: No volumes section - all storage is ephemeral via tmpfs
-# This ensures:
-#   1. Fast startup/teardown
-#   2. Complete test isolation (no state persists between runs)
-#   3. Parallel test execution (multiple compose stacks can run)
-#   4. Clean slate for each test run
+# ==============================================================================
+# NAMED VOLUMES FOR DATA PERSISTENCE
+# ==============================================================================
+# These volumes persist data across container restarts.
+# Use `make test-infra-clean-volumes` to reset all data.
+
+volumes:
+  # Database persistence
+  postgres-data:
+
+  # Cache persistence
+  redis-data:
+
+  # Vector DB persistence
+  qdrant-data:
+
+  # LGTM Stack persistence
+  loki-data:
+  tempo-data:
+  mimir-data:
+  grafana-data:

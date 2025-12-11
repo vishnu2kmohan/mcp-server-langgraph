@@ -507,7 +507,8 @@
               "architecture/adr-0036-hybrid-session-model",
               "architecture/adr-0037-identity-federation",
               "architecture/adr-0038-scim-implementation",
-              "architecture/adr-0039-openfga-permission-inheritance"
+              "architecture/adr-0039-openfga-permission-inheritance",
+              "architecture/adr-0068-gateway-level-authentication"
             ]
           },
           {
@@ -524,7 +525,7 @@
               "architecture/adr-0040-gcp-gke-autopilot-deployment",
               "architecture/adr-0041-postgresql-gdpr-storage",
               "architecture/adr-0051-memorystore-redis-externalname-service",
-              "architecture/adr-0067-mcp-2025-11-25-upgrade"
+              "architecture/adr-0067-grafana-lgtm-stack-migration"
             ]
           },
           {

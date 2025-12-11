@@ -234,7 +234,8 @@ class TestMypyEnforcement:
             ],
             capture_output=True,
             text=True,
-            timeout=60,
+            # CI runners without cache take longer; increase timeout for CI
+            timeout=120 if os.getenv("CI") else 60,
             env=env,
         )
 

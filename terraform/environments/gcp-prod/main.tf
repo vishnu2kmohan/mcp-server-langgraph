@@ -265,7 +265,7 @@ module "cloudsql" {
   # Network (private IP only)
   vpc_network_self_link                 = module.vpc.network_self_link
   enable_public_ip                      = false
-  require_ssl                           = true
+  ssl_mode                              = "ENCRYPTED_ONLY" # Enforce SSL (replaces deprecated require_ssl)
   private_service_connection_dependency = module.vpc.private_service_connection_status
 
   # Backups

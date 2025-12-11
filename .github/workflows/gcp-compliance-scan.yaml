@@ -135,11 +135,15 @@ jobs:
 
       - name: Validate with kubeconform
         run: |
-          wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          # Use gh CLI for authenticated download (avoids GitHub rate limiting)
+          gh release download --repo yannh/kubeconform \
+            --pattern "kubeconform-linux-amd64.tar.gz"
           tar xf kubeconform-linux-amd64.tar.gz
 
           kubectl kustomize deployments/overlays/production-gke \
             | ./kubeconform -strict -summary -ignore-missing-schemas
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   # ============================================================================
   # CIS Benchmark Check

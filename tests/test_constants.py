@@ -7,13 +7,13 @@ across all test environments (local, Docker, CI/CD).
 OpenAI Codex Finding (2025-11-16):
 - Integration tests failed due to JWT secret mismatch
 - conftest.py used "test-secret-key"
-- docker-compose.test.yml used "test-secret-key-for-integration-tests"
+- docker-compose.test.yml used "test-jwt-secret-key-for-e2e-testing-only"
 - CI workflows used "test-secret-key-for-ci"
 - Auth middleware validated with settings.jwt_secret_key, causing token rejection
 
 Solution:
 - Centralized test constants in tests/constants.py
-- All test fixtures, Docker configs, and CI workflows use same constant
+- All test fixtures, Docker configs, CI workflows, and .env.test use same constant
 - This test validates consistency is maintained
 """
 
@@ -58,48 +58,83 @@ def test_mock_jwt_token_uses_constant():
     assert "TEST_JWT_SECRET" in fixture_code, "mock_jwt_token fixture must use TEST_JWT_SECRET constant"
 
 
-def test_docker_compose_uses_correct_jwt_secret():
-    """Verify docker-compose.test.yml uses the correct JWT secret."""
+def test_env_test_file_uses_correct_jwt_secret():
+    """Verify .env.test file uses the correct JWT secret (12-factor config source)."""
     from tests import constants
 
-    docker_compose_path = Path(__file__).parent.parent / "docker" / "docker-compose.test.yml"
+    env_test_path = Path(__file__).parent.parent / ".env.test"
 
-    if not docker_compose_path.exists():
-        pytest.skip(f"docker-compose.test.yml not found at {docker_compose_path}")
+    if not env_test_path.exists():
+        pytest.skip(f".env.test not found at {env_test_path}")
+
+    env_content = env_test_path.read_text()
+
+    # Look for JWT_SECRET_KEY in .env.test
+    jwt_match = re.search(r"^JWT_SECRET_KEY=(.+)$", env_content, re.MULTILINE)
+
+    assert jwt_match is not None, ".env.test must define JWT_SECRET_KEY"
+
+    jwt_secret = jwt_match.group(1).strip().strip('"').strip("'")
+
+    assert jwt_secret == constants.TEST_JWT_SECRET, (
+        f".env.test uses JWT_SECRET_KEY='{jwt_secret}', but tests/constants.py defines "
+        f"TEST_JWT_SECRET='{constants.TEST_JWT_SECRET}'. These must match."
+    )
+
+
+def test_docker_compose_uses_env_test_file():
+    """Verify docker-compose.test.yml uses .env.test via env_file directive."""
+    from tests import constants
+
+    # Try multiple possible locations for docker-compose.test.yml
+    possible_paths = [
+        Path(__file__).parent.parent / "docker-compose.test.yml",  # Root level
+        Path(__file__).parent.parent / "docker" / "docker-compose.test.yml",  # Docker subdir
+    ]
+
+    docker_compose_path = None
+    for path in possible_paths:
+        if path.exists():
+            docker_compose_path = path
+            break
+
+    if docker_compose_path is None:
+        pytest.skip("docker-compose.test.yml not found in expected locations")
 
     with open(docker_compose_path) as f:
         compose_config = yaml.safe_load(f)
 
-    # Find the test service environment
-    test_service = None
-    for service_name, service_config in compose_config.get("services", {}).items():
-        if "test" in service_name.lower() and "environment" in service_config:
-            env_vars = service_config["environment"]
+    # Find test services that use env_file
+    services_with_env_file = []
+    services_with_jwt_in_environment = []
 
-            # Handle both list and dict format
+    for service_name, service_config in compose_config.get("services", {}).items():
+        if "test" in service_name.lower():
+            # Check if service uses env_file
+            env_files = service_config.get("env_file", [])
+            if isinstance(env_files, str):
+                env_files = [env_files]
+            if ".env.test" in env_files:
+                services_with_env_file.append(service_name)
+
+            # Check for JWT_SECRET_KEY in environment block (should NOT be there for 12-factor)
+            env_vars = service_config.get("environment", [])
             if isinstance(env_vars, list):
                 for env_var in env_vars:
                     if "JWT_SECRET_KEY=" in env_var:
                         jwt_secret = env_var.split("=", 1)[1]
+                        # If JWT is in environment block, verify it matches (backwards compat)
                         assert jwt_secret == constants.TEST_JWT_SECRET, (
                             f"docker-compose.test.yml service '{service_name}' uses "
                             f"JWT_SECRET_KEY='{jwt_secret}', but tests/constants.py defines "
                             f"TEST_JWT_SECRET='{constants.TEST_JWT_SECRET}'. These must match."
                         )
-                        test_service = service_name
-            elif isinstance(env_vars, dict):
-                if "JWT_SECRET_KEY" in env_vars:
-                    jwt_secret = env_vars["JWT_SECRET_KEY"]
-                    assert jwt_secret == constants.TEST_JWT_SECRET, (
-                        f"docker-compose.test.yml service '{service_name}' uses "
-                        f"JWT_SECRET_KEY='{jwt_secret}', but tests/constants.py defines "
-                        f"TEST_JWT_SECRET='{constants.TEST_JWT_SECRET}'. These must match."
-                    )
-                    test_service = service_name
+                        services_with_jwt_in_environment.append(service_name)
 
-    # Verify we found at least one test service with JWT config
-    if test_service is None:
-        pytest.skip("No test service with JWT_SECRET_KEY found in docker-compose.test.yml")
+    # Verify at least mcp-server-test uses env_file pattern
+    assert "mcp-server-test" in services_with_env_file, (
+        "mcp-server-test should use env_file: .env.test for 12-factor compliance"
+    )
 
 
 def test_github_workflows_use_correct_jwt_secret():

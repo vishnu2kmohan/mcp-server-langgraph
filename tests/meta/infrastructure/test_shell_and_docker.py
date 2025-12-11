@@ -188,6 +188,11 @@ class TestDockerComposeHealthChecks:
         for service_name, service_config in compose_config.get("services", {}).items():
             if "healthcheck" in service_config:
                 healthcheck = service_config["healthcheck"]
+
+                # Skip services with disabled healthchecks (e.g., distroless images like Mimir)
+                if healthcheck.get("disable"):
+                    continue
+
                 services_with_healthchecks.append(service_name)
 
                 # Validate health check has required fields

@@ -469,8 +469,9 @@ class TestEndToEndToolImprovements:
             * 50
         )  # Make it long enough to test truncation
 
-        mock_graph = mocker.Mock()
-        mock_graph.ainvoke = mocker.AsyncMock(return_value={"messages": [AIMessage(content=agent_response)]})
+        # Create async mock for graph - ainvoke must be AsyncMock for await
+        mock_graph = mocker.AsyncMock()
+        mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=agent_response)]}
         mocker.patch(
             "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
             return_value=mock_graph,

@@ -517,6 +517,47 @@ def get_api_key_id(suffix: str = "") -> str:
     return f"{base_id}_{suffix}" if suffix else base_id
 
 
+def get_log_id(suffix: str = "") -> str:
+    """
+    Generate worker-safe log ID for pytest-xdist parallel execution.
+
+    This helper prevents ID pollution when running tests in parallel with pytest-xdist.
+    Each xdist worker gets a unique ID namespace, preventing state contamination across workers.
+
+    **Why This Exists:**
+    Hardcoded IDs like "test_log_123" cause UniqueViolationError in PostgreSQL because multiple
+    workers share the same infrastructure. When worker gw0 creates a log entry with "test_log_123"
+    and worker gw1 also uses "test_log_123", they interfere with each other.
+
+    **Worker Isolation Strategy:**
+    - Worker gw0: test_gw0_<suffix>
+    - Worker gw1: test_gw1_<suffix>
+    - Worker gw2: test_gw2_<suffix>
+    - Non-xdist: test_gw0_<suffix> (default)
+
+    Args:
+        suffix: Suffix for test-specific ID differentiation
+                (e.g., get_log_id("audit") → "test_gw0_audit")
+
+    Returns:
+        Worker-isolated log ID (e.g., "test_gw0_audit")
+
+    Usage:
+        def test_log_entry(self):
+            log_id = get_log_id("entry")  # ✅ Worker-safe
+            # NOT: log_id = "test_log_123"  # ❌ Hardcoded - causes UniqueViolationError
+
+    References:
+        - tests/meta/test_id_pollution_prevention.py (validates this pattern)
+        - scripts/validate_test_ids.py (pre-commit enforcement)
+        - Pre-commit hook: validate-test-ids
+    """
+    _isolation_helpers_used.add("get_log_id")
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    base_id = f"test_{worker_id}"
+    return f"{base_id}_{suffix}" if suffix else base_id
+
+
 @pytest.fixture(autouse=True)
 def enforce_worker_isolation(request):
     """
@@ -773,7 +814,7 @@ def test_app_settings(test_infrastructure_ports):
         openfga_model_id=None,
         # Keycloak settings
         keycloak_server_url=f"http://localhost:{test_infrastructure_ports['keycloak']}",
-        keycloak_realm="master",  # Use master realm for tests
+        keycloak_realm="default",  # Use default realm for tests
         keycloak_client_id="admin-cli",
         keycloak_admin_username="admin",
         keycloak_admin_password="admin",

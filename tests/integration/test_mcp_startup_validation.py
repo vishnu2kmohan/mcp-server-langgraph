@@ -138,7 +138,7 @@ class TestEndToEndDependencyWiring:
 
         # Arrange: Mock Keycloak, None OpenFGA
         mock_keycloak = AsyncMock(spec=KeycloakClient)
-        mock_keycloak.create_client = AsyncMock()  # Explicit method configuration
+        mock_keycloak.create_client = AsyncMock(return_value=None)  # Explicit method configuration
 
         manager = ServicePrincipalManager(
             keycloak_client=mock_keycloak,

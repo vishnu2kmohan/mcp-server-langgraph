@@ -23,6 +23,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+
 from mcp_server_langgraph.monitoring.budget_monitor import AlertLevel, BudgetMonitor, BudgetPeriod
 
 pytestmark = pytest.mark.unit
@@ -470,20 +471,38 @@ class TestWebhookAlerts:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_send_webhook_alert_posts_to_webhook_url(self):
-        """Test _send_webhook_alert() sends HTTP POST to webhook URL."""
+        """Test _send_webhook_alert() sends HTTP POST to webhook URL.
+
+        Uses spec=httpx.Response for proper mock isolation under xdist.
+        The response.raise_for_status() is synchronous in httpx, so we use MagicMock.
+
+        XDIST FIX: Mock the entire httpx module's AsyncClient class, not just the
+        return value. The async context manager must return the mock client instance
+        that we control, not a separate MagicMock instance.
+        """
+        import httpx
+
         # Arrange
         monitor = BudgetMonitor(webhook_url="https://hooks.slack.com/services/ABC123")
 
-        mock_response = MagicMock()
+        # Mock response - raise_for_status is sync in httpx
+        mock_response = MagicMock(spec=httpx.Response)
         mock_response.raise_for_status = MagicMock()
 
-        # Create a mock client that supports async context manager
-        mock_client = AsyncMock()
-        mock_client.post.return_value = mock_response
-        mock_client.__aenter__.return_value = mock_client
-        mock_client.__aexit__.return_value = None
+        # Create a mock that will be returned from the context manager
+        # The key is to make AsyncClient() return an object whose __aenter__
+        # returns our controllable mock_client
+        mock_client = MagicMock(spec=httpx.AsyncClient)
+        mock_client.post = AsyncMock(return_value=mock_response)
 
-        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", return_value=mock_client):
+        # Create the mock for AsyncClient class itself
+        mock_async_client_class = MagicMock()
+        mock_async_client_instance = MagicMock()
+        mock_async_client_instance.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_async_client_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_async_client_class.return_value = mock_async_client_instance
+
+        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", mock_async_client_class):
             # Act
             await monitor._send_webhook_alert(
                 level="critical", message="Budget exceeded", budget_id="budget_001", utilization=95.0
@@ -506,10 +525,10 @@ class TestWebhookAlerts:
         # Arrange
         monitor = BudgetMonitor()  # No webhook URL
 
-        # Create a mock client
-        mock_client = AsyncMock()
-        mock_client.__aenter__.return_value = mock_client
-        mock_client.__aexit__.return_value = None
+        # Create mock client with proper async context manager protocol
+        mock_client = MagicMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
 
         with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", return_value=mock_client) as mock_class:
             # Act
@@ -523,22 +542,32 @@ class TestWebhookAlerts:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_send_webhook_alert_includes_timestamp(self):
-        """Test _send_webhook_alert() includes ISO 8601 timestamp in payload."""
+        """Test _send_webhook_alert() includes ISO 8601 timestamp in payload.
+
+        Uses AsyncMock with proper context manager protocol for xdist isolation.
+        """
         # Arrange
         monitor = BudgetMonitor(webhook_url="https://example.com/webhook")
 
+        # Mock response - raise_for_status is sync in httpx
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
 
         before = datetime.now(UTC)
 
-        # Create a mock client that supports async context manager
-        mock_client = AsyncMock()
-        mock_client.post.return_value = mock_response
-        mock_client.__aenter__.return_value = mock_client
-        mock_client.__aexit__.return_value = None
+        # Create mock client with proper async context manager protocol
+        # The post method is async, so it must be AsyncMock
+        mock_post = AsyncMock(return_value=mock_response)
+        mock_client = MagicMock()
+        mock_client.post = mock_post
 
-        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", return_value=mock_client):
+        # AsyncClient is used as async context manager: async with httpx.AsyncClient() as client
+        # The __aenter__ returns the client object, __aexit__ handles cleanup
+        mock_async_client_class = MagicMock()
+        mock_async_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_async_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", mock_async_client_class):
             # Act
             await monitor._send_webhook_alert(
                 level="warning", message="Budget alert", budget_id="budget_001", utilization=80.0
@@ -546,7 +575,8 @@ class TestWebhookAlerts:
 
             # Assert
             after = datetime.now(UTC)
-            payload = mock_client.post.call_args[1]["json"]
+            mock_post.assert_called_once()
+            payload = mock_post.call_args[1]["json"]
             timestamp_str = payload["timestamp"]
             timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
             assert before <= timestamp <= after

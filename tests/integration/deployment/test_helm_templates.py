@@ -266,6 +266,58 @@ class TestHelmDependencies:
 
         assert len(template_files) > 0, "No template files found in templates directory"
 
+    def test_all_chart_dependencies_present(self):
+        """Test that all Chart.yaml dependencies are downloaded.
+
+        CI PARITY FIX (2025-12-11):
+        This test prevents corrupted partial Helm caches from causing CI failures.
+        It verifies that ALL dependencies declared in Chart.yaml are present in charts/.
+
+        If this test fails:
+        1. Run: helm dependency build deployments/helm/mcp-server-langgraph
+        2. Commit any changes to Chart.lock
+        3. CI cache will be invalidated on next run
+
+        See: .claude/plans/purrfect-dazzling-breeze.md for root cause analysis.
+        """
+        chart_yaml = CHART_PATH / "Chart.yaml"
+        if not chart_yaml.exists():
+            pytest.skip("Chart.yaml not found")
+
+        # Parse Chart.yaml to get expected dependencies
+        chart_data = yaml.safe_load(chart_yaml.read_text())
+        dependencies = chart_data.get("dependencies", [])
+        expected_count = len(dependencies)
+
+        if expected_count == 0:
+            pytest.skip("No dependencies declared in Chart.yaml")
+
+        # Get expected dependency names for better error messages
+        expected_names = [dep.get("name", "unknown") for dep in dependencies]
+
+        # Count actual downloaded charts
+        charts_dir = CHART_PATH / "charts"
+        if not charts_dir.exists():
+            pytest.fail(
+                f"Charts directory does not exist. Expected {expected_count} dependencies.\n"
+                f"Run: helm dependency build deployments/helm/mcp-server-langgraph\n"
+                f"Expected charts: {', '.join(expected_names)}"
+            )
+
+        actual_charts = list(charts_dir.glob("*.tgz"))
+        actual_count = len(actual_charts)
+
+        # Extract chart names from filenames (e.g., "redis-18.1.0.tgz" -> "redis")
+        actual_names = [chart.stem.rsplit("-", 1)[0] for chart in actual_charts]
+
+        assert actual_count == expected_count, (
+            f"Helm chart dependencies incomplete: {actual_count}/{expected_count}\n"
+            f"Expected: {', '.join(sorted(expected_names))}\n"
+            f"Found: {', '.join(sorted(actual_names))}\n"
+            f"Missing: {', '.join(set(expected_names) - set(actual_names))}\n"
+            f"Run: helm dependency build deployments/helm/mcp-server-langgraph"
+        )
+
 
 @pytest.mark.requires_helm
 @pytest.mark.xdist_group(name="testhelmtemplatewithvalues")

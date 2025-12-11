@@ -126,7 +126,7 @@ ehthumbs.db
 Thumbs.db
 
 # Docker
-.dockerignore
+# NOTE: .dockerignore IS committed (critical for CI disk space optimization)
 docker-compose.override.yml
 
 # Docker runtime artifacts

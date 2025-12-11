@@ -59,6 +59,10 @@ spec:
         - name: themes
           mountPath: /opt/keycloak/themes
         env:
+        # JVM memory settings for preview (1Gi limit)
+        # Matches docker-compose.test.yml settings for similar resource limits
+        - name: JAVA_OPTS_APPEND
+          value: "-Xms512m -Xmx768m -XX:MaxMetaspaceSize=192m"
         - name: KC_DB_URL
           value: jdbc:postgresql://127.0.0.1:5432/keycloak
         - name: KC_DB_USERNAME

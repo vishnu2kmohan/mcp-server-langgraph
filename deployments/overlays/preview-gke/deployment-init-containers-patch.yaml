@@ -19,6 +19,15 @@ spec:
           capabilities:
             drop: ["ALL"]
           readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+            ephemeral-storage: 500Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+            ephemeral-storage: 1Gi
         args:
         - |
           until nc -z preview-openfga 8080; do
@@ -35,6 +44,15 @@ spec:
           capabilities:
             drop: ["ALL"]
           readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+            ephemeral-storage: 500Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+            ephemeral-storage: 1Gi
         args:
         - |
           until nc -z preview-keycloak 8080; do
@@ -51,6 +69,15 @@ spec:
           capabilities:
             drop: ["ALL"]
           readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+            ephemeral-storage: 500Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+            ephemeral-storage: 1Gi
         args:
         - |
           until nc -z preview-redis-session 6378; do

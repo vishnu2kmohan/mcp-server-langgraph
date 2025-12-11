@@ -1,5 +1,15 @@
 # Prometheus Configuration for MCP Server LangGraph
 # =================================================
+#
+# DEPRECATED: This file is no longer used by docker/docker-compose.yml.
+# The Prometheus service has been replaced by the LGTM stack (Grafana, Loki, Tempo, Mimir, Alloy).
+#
+# For observability configuration, see:
+#   - docker-compose.test.yml (LGTM stack services)
+#   - docker/alloy/config.alloy (Alloy collector configuration)
+#   - deployments/base/lgtm/ (Kubernetes LGTM manifests)
+#
+# This file is preserved for reference and backward compatibility.
 
 global:
   scrape_interval: 15s

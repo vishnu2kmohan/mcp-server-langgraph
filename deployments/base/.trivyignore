@@ -4,56 +4,50 @@
 # configurations. It serves as the authoritative source for security decisions
 # that apply across all environments.
 #
-# IMPORTANT: Base deployments currently have readOnlyRootFilesystem: true for
-# all services. This file documents the INTENDED exception for Keycloak when
-# it is deployed to production environments.
+# IMPORTANT: As of 2025-12-08, Keycloak base deployment uses --optimized mode
+# with readOnlyRootFilesystem: true. This suppression is retained for legacy
+# overlays that may still require the exception.
 #
 # Review frequency: Quarterly
-# Last reviewed: 2025-11-23
-# Next review: 2026-02-23
+# Last reviewed: 2025-12-08
+# Next review: 2026-03-08
 
 # ==============================================================================
 # AVD-KSV-0014: Containers should run with readOnlyRootFilesystem
 # ==============================================================================
 #
-# Current Status:
-# - Base Keycloak deployment: readOnlyRootFilesystem: true (with emptyDir volumes)
-# - Staging-gke overlay: readOnlyRootFilesystem: false (ACTIVE DEPLOYMENT)
-# - Production-gke overlay: readOnlyRootFilesystem: true (not currently deployed)
+# Current Status (Updated 2025-12-08):
+# - Base Keycloak deployment: readOnlyRootFilesystem: true (with --optimized mode)
+# - Preview-gke overlay: May override to false if using stock Keycloak image
+# - Production-gke overlay: readOnlyRootFilesystem: true (uses optimized image)
 #
-# This documentation applies to environments that require readOnlyRootFilesystem: false
+# RESOLUTION: The base deployment now uses Keycloak's --optimized mode which
+# pre-compiles Quarkus at build time (via docker/Dockerfile.keycloak), eliminating
+# the need for JIT compilation at runtime. This allows readOnlyRootFilesystem: true.
 #
-# Affected Component: Keycloak identity provider
+# This suppression is retained for:
+# 1. Legacy overlays that may still use stock Keycloak image without --optimized
+# 2. Development environments that need JIT for faster iteration
 #
-# Justification:
-# Keycloak uses the Quarkus framework which performs Just-In-Time (JIT) compilation
-# at runtime to optimize performance. JIT compilation requires write access to the
-# filesystem to generate and load dynamic bytecode, making readOnlyRootFilesystem
-# incompatible with Keycloak's runtime requirements.
+# Affected Component: Keycloak identity provider (in non-optimized configurations)
 #
-# Note: The base deployment attempts to work around this with emptyDir volumes, but
-# this is NOT sufficient for Quarkus JIT. Only preview-gke (with readOnlyRootFilesystem: false)
-# is confirmed working.
+# Historical Context:
+# Keycloak uses the Quarkus framework which can perform Just-In-Time (JIT)
+# compilation at runtime. When running without --optimized flag, JIT requires
+# write access to the filesystem, making readOnlyRootFilesystem incompatible.
 #
-# Alternative Considered: Native Image (GraalVM)
-# Keycloak does not officially support GraalVM native images as a production
-# deployment option. While native images would eliminate JIT compilation and allow
-# readOnlyRootFilesystem, this approach is not recommended by the Keycloak project
-# due to limitations with:
-# - Dynamic class loading for extensions/providers
-# - Reflection-heavy frameworks (Hibernate, RESTEasy)
-# - Runtime configuration changes
-# - Custom theme and provider deployments
+# Solution Implemented:
+# - Build-time optimization: docker/Dockerfile.keycloak runs `kc.sh build`
+# - Runtime flag: keycloak-deployment.yaml uses `start --optimized`
+# - EmptyDir volumes: Provide writable paths for runtime data only
+# - Result: readOnlyRootFilesystem: true is now enabled in base deployment
 #
 # References:
+# - Keycloak Optimized Mode: https://www.keycloak.org/server/containers
+# - docker/Dockerfile.keycloak: Pre-built Quarkus artifacts
 # - Keycloak Issue #10150: https://github.com/keycloak/keycloak/issues/10150
-# - Quarkus JIT Requirements: Requires writable /tmp and work directories
-# - WebSearch Research (2025-11-20): Confirmed native image not production-ready
 #
-# Compensating Security Controls:
-# To mitigate the risk of running with readOnlyRootFilesystem: false, the following
-# security hardening measures are implemented in keycloak-deployment.yaml:
-#
+# Security Controls (all deployments):
 # 1. Pod Security Context:
 #    - runAsNonRoot: true (prevents root execution)
 #    - runAsUser: 10000 (non-privileged UID)
@@ -63,48 +57,30 @@
 #
 # 2. Container Security Context:
 #    - allowPrivilegeEscalation: false (prevents privilege escalation)
-#    - readOnlyRootFilesystem: false (documented exception)
+#    - readOnlyRootFilesystem: true (enabled with --optimized mode)
 #    - runAsNonRoot: true (container-level enforcement)
 #    - runAsUser: 10000 (non-privileged UID)
 #    - capabilities.drop: ALL (removes all Linux capabilities)
 #    - runAsGroup: 10000 (non-privileged GID)
 #
 # 3. EmptyDir Volume Isolation:
-#    Writable paths are isolated to ephemeral emptyDir volumes that are
-#    destroyed when the pod terminates, preventing persistent filesystem
-#    modifications:
-#    - /tmp (temporary files for JIT compilation)
+#    Writable paths are isolated to ephemeral emptyDir volumes:
+#    - /tmp (temporary files)
 #    - /var/tmp (additional temporary storage)
 #    - /opt/keycloak/data/tmp (Keycloak cache directory)
 #    - /opt/keycloak/data (Keycloak work directory)
 #    - /opt/keycloak/providers (custom provider JARs)
 #    - /opt/keycloak/themes (custom themes)
 #
-# 4. Network Security:
-#    - NetworkPolicy restricts ingress/egress
-#    - TLS termination at ingress layer
-#    - Internal-only database communication
-#
-# 5. Resource Limits:
-#    - CPU: 500m request, 2000m limit
-#    - Memory: 1Gi request, 2Gi limit
-#    - Ephemeral Storage: 500Mi request, 1Gi limit
-#    - Prevents resource exhaustion attacks
-#
-# 6. Pod Anti-Affinity:
-#    - Distributes Keycloak replicas across nodes
-#    - Reduces blast radius of node compromise
-#
 # Risk Assessment:
-# - Likelihood: LOW (multiple compensating controls)
-# - Impact: MEDIUM (identity compromise affects all services)
-# - Residual Risk: LOW (acceptable for production deployment)
+# - Base deployment: NO EXCEPTION NEEDED (readOnlyRootFilesystem: true)
+# - Legacy overlays: LOW residual risk with compensating controls
 #
 # Approval: Security Architecture Team
-# Date: 2025-11-20
-# Next Review: 2026-02-20 (or when Keycloak adds native image support)
+# Date: 2025-12-08
+# Next Review: 2026-03-08
 
-exp:2026-02-20 AVD-KSV-0014
+exp:2026-03-08 AVD-KSV-0014
 
 # ==============================================================================
 # AVD-KSV-0109: ConfigMaps should not store secrets
@@ -128,6 +104,38 @@ exp:2026-02-20 AVD-KSV-0014
 # Owner: @platform-team
 # ==============================================================================
 AVD-KSV-0109: configmap.yaml
+
+# ==============================================================================
+# AVD-KSV-0047: Role permits privilege escalation from node proxy
+# ==============================================================================
+# Finding: ClusterRole 'alloy' permits nodes/proxy access
+# Severity: HIGH
+#
+# Affected Component: Alloy ClusterRole (lgtm/alloy-deployment.yaml)
+#
+# Justification:
+# Grafana Alloy (unified telemetry collector) requires access to nodes/proxy
+# and nodes/metrics to scrape Kubernetes node-level metrics. This is a standard
+# requirement for any Prometheus-compatible metrics collector in Kubernetes.
+#
+# The ClusterRole follows the principle of least privilege by:
+# 1. Only granting read-only verbs: get, list, watch
+# 2. Limiting access to metrics endpoints only
+# 3. No write permissions to any resources
+#
+# Alternatives Considered:
+# - Not scraping node metrics: Would significantly reduce observability
+# - Using ServiceMonitors: Requires Prometheus Operator which may not be available
+#
+# Risk Assessment: ACCEPTABLE
+# - Read-only access to node metrics poses minimal security risk
+# - Standard pattern used by Prometheus, Victoria Metrics, and other collectors
+# - No ability to modify nodes or escalate privileges
+#
+# Review: 2026-06-08 (semi-annually)
+# Owner: @platform-team
+# ==============================================================================
+AVD-KSV-0047: lgtm/alloy-deployment.yaml
 
 # ==============================================================================
 # Future Suppressions

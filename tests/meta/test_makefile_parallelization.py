@@ -73,27 +73,6 @@ class TestMakefileParallelization:
         assert "-n auto" in pytest_args, f"test-mcp-server should use '-n auto' for parallel execution\nFound: {pytest_args}"
 
     @pytest.mark.meta
-    def test_test_new_uses_parallel_execution(self):
-        """
-        test-new should use -n auto for parallel execution.
-
-        GIVEN: The test-new target in Makefile
-        WHEN: Reading the Makefile
-        THEN: test-new should include -n auto flag
-        """
-        makefile = Path("Makefile")
-        content = makefile.read_text()
-
-        # Find test-new target
-        pattern = r"test-new:.*?\n\t.*?\$\(PYTEST\)([^\n]+)"
-        match = re.search(pattern, content, re.DOTALL)
-
-        assert match, "test-new target not found in Makefile"
-
-        pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, f"test-new should use '-n auto' for parallel execution\nFound: {pytest_args}"
-
-    @pytest.mark.meta
     def test_test_precommit_validation_uses_parallel_execution(self):
         """
         test-precommit-validation should use -n auto for parallel execution.
@@ -142,7 +121,7 @@ class TestMakefileParallelization:
         """
         Parallelized targets should mention 'parallel' in their echo messages for clarity.
 
-        GIVEN: Parallelized test targets (test-ci, test-mcp-server, test-new, etc.)
+        GIVEN: Parallelized test targets (test-ci, test-mcp-server, etc.)
         WHEN: Reading their echo messages
         THEN: Should mention 'parallel execution' or similar for user awareness
         """
@@ -152,7 +131,6 @@ class TestMakefileParallelization:
         targets_to_check = [
             "test-ci",
             "test-mcp-server",
-            "test-new",
             "test-precommit-validation",
             "test-e2e",
         ]

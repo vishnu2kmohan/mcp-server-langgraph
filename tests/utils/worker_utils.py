@@ -243,7 +243,7 @@ def get_worker_resource_summary() -> dict:
             'fixed_ports': {
                 'postgres': 9432,
                 'redis_checkpoints': 9379,
-                'redis_sessions': 9380,
+                'redis_sessions': 9379,  # Same as checkpoints - consolidated Redis
                 'qdrant': 9333,
                 'qdrant_grpc': 9334,
                 'openfga_http': 9080,
@@ -262,11 +262,12 @@ def get_worker_resource_summary() -> dict:
         "redis_db": get_worker_redis_db(),
         "openfga_store": get_worker_openfga_store(),
         # Fixed ports - all workers share the same infrastructure
-        # Isolation is achieved through logical separation, not separate instances
+        # NOTE: docker-compose.test.yml uses a SINGLE Redis instance for both checkpoints and sessions
+        # Port 9379 is the consolidated Redis port (logical isolation via DB indices)
         "fixed_ports": {
             "postgres": 9432,
             "redis_checkpoints": 9379,
-            "redis_sessions": 9380,
+            "redis_sessions": 9379,  # Same as checkpoints - consolidated Redis instance
             "qdrant": 9333,
             "qdrant_grpc": 9334,
             "openfga_http": 9080,

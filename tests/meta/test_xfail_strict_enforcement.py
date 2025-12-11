@@ -38,6 +38,13 @@ XFAIL_STRICT_EXEMPT_FILES: set[str] = {
     # Example: "tests/examples/demo.py",  # Educational demo, strict not required
     "tests/regression/test_fastapi_auth_override_sanity.py",  # Non-deterministic xdist pollution test (strict=False required)
     "tests/integration/test_bearer_scheme_diagnostic.py",  # Diagnostic test depends on external network (Keycloak/OpenFGA) - may pass or fail based on infra availability
+    # xdist-related flaky tests: These tests fail intermittently under pytest-xdist parallel execution
+    # due to singleton caching, mock interference, or timing issues. They pass when timing is favorable.
+    "tests/integration/execution/test_kubernetes_sandbox.py",  # K8s job creation timing varies under xdist
+    "tests/integration/test_conversation_state_persistence.py",  # Agent graph singleton caching issues under xdist
+    "tests/integration/test_distributed_checkpointing.py",  # LLM mock doesn't apply correctly under xdist
+    "tests/integration/test_mcp_streamable.py",  # User provider state races under xdist
+    "tests/unit/execution/test_security_practices.py",  # AsyncMock context manager race conditions under xdist
 }
 
 

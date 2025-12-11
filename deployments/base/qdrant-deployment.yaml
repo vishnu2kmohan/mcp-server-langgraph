@@ -27,7 +27,7 @@ spec:
         runAsGroup: 10000
       containers:
       - name: qdrant
-        image: qdrant/qdrant:v1.15.5
+        image: qdrant/qdrant:v1.15.5-unprivileged
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
@@ -51,6 +51,10 @@ spec:
           value: '6334'
         - name: QDRANT__LOG_LEVEL
           value: INFO
+        # Enable recovery mode to allow Qdrant to recover from corrupted data
+        # Matches docker-compose.test.yml configuration
+        - name: QDRANT_ALLOW_RECOVERY_MODE
+          value: 'true'
         volumeMounts:
         - name: tmp
           mountPath: /tmp
