@@ -431,7 +431,7 @@
               }
             ]
           },
-          "unit": "percentunit"
+          "unit": "bytes"
         },
         "overrides": []
       },
@@ -464,8 +464,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "container_memory_working_set_bytes{pod=~\"langgraph-agent-.*\"} / container_spec_memory_limit_bytes{pod=~\"langgraph-agent-.*\"}",
-          "legendFormat": "{{pod}}",
+          "expr": "process_resident_memory_bytes{job=\"langgraph-agent\"}",
+          "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ],
@@ -555,8 +555,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "rate(container_cpu_usage_seconds_total{pod=~\"langgraph-agent-.*\"}[5m]) / container_spec_cpu_quota{pod=~\"langgraph-agent-.*\"}",
-          "legendFormat": "{{pod}}",
+          "expr": "rate(process_cpu_seconds_total{job=\"langgraph-agent\"}[5m])",
+          "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ],

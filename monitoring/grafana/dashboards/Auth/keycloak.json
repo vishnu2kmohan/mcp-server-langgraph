@@ -686,9 +686,9 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "rate(container_cpu_usage_seconds_total{pod=~\"keycloak-.*\"}[5m])",
+          "expr": "rate(process_cpu_seconds_total{job=\"keycloak\"}[5m])",
           "refId": "A",
-          "legendFormat": "CPU Usage (K8s)"
+          "legendFormat": "Process CPU"
         },
         {
           "datasource": {
@@ -800,9 +800,9 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "container_memory_working_set_bytes{pod=~\"keycloak-.*\"}",
+          "expr": "process_resident_memory_bytes{job=\"keycloak\"}",
           "refId": "A",
-          "legendFormat": "Memory Usage (K8s)"
+          "legendFormat": "Process Memory"
         },
         {
           "datasource": {
@@ -827,9 +827,9 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "container_spec_memory_limit_bytes{pod=~\"keycloak-.*\"}",
+          "expr": "process_virtual_memory_max_bytes{job=\"keycloak\"}",
           "refId": "D",
-          "legendFormat": "Memory Limit (K8s)"
+          "legendFormat": "Virtual Memory Max"
         },
         {
           "datasource": {

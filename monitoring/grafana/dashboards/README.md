@@ -583,11 +583,14 @@ Ensure these metrics are exported by the application:
 ### Builder Metrics (NEW in v2.2.0)
 - `builder_workflow_node_count` - Nodes per workflow gauge
 
-### Resource Metrics (from kube-state-metrics)
-- `container_memory_working_set_bytes`
-- `container_spec_memory_limit_bytes`
-- `container_cpu_usage_seconds_total`
-- `container_spec_cpu_quota`
+### Process Metrics (from prometheus_client)
+- `process_resident_memory_bytes` - Process memory usage
+- `process_virtual_memory_bytes` - Virtual memory size
+- `process_cpu_seconds_total` - CPU time consumed
+- `process_open_fds` - Open file descriptors
+- `process_max_fds` - Maximum file descriptors
+
+### Resource Metrics (Kubernetes - optional)
 - `kube_pod_container_status_restarts_total`
 - `kube_deployment_status_replicas_available`
 
