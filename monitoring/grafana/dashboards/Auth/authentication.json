@@ -24,10 +24,34 @@
       "keepTime": true,
       "tags": [],
       "targetBlank": true,
-      "title": "Overview",
-      "tooltip": "View Overview Dashboard",
+      "title": "Keycloak SSO",
+      "tooltip": "View Keycloak SSO Dashboard",
       "type": "link",
-      "url": "/d/langgraph-agent-overview/langgraph-agent-overview"
+      "url": "/d/keycloak-monitoring/keycloak-monitoring"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Redis Sessions",
+      "tooltip": "View Redis Sessions Dashboard",
+      "type": "link",
+      "url": "/d/redis-sessions-monitoring/redis-sessions-monitoring"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Security",
+      "tooltip": "View Security Dashboard",
+      "type": "link",
+      "url": "/d/langgraph-agent-security/langgraph-agent-security"
     }
   ],
   "panels": [
@@ -104,7 +128,7 @@
           }
         }
       ],
-      "title": "Agent Service Status",
+      "title": "Auth Service Status",
       "type": "gauge"
     },
     {
@@ -174,8 +198,8 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "rate(agent_calls_successful_total[5m])",
-          "legendFormat": "Successful Calls",
+          "expr": "rate(auth_login_attempts_total[5m])",
+          "legendFormat": "Login Attempts",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -183,16 +207,25 @@
           }
         },
         {
-          "expr": "rate(agent_calls_failed_total[5m])",
-          "legendFormat": "Failed Calls",
+          "expr": "rate(auth_login_attempts_total{result=\"success\"}[5m])",
+          "legendFormat": "Successful Logins",
           "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
+        },
+        {
+          "expr": "rate(auth_login_failures_total[5m])",
+          "legendFormat": "Failed Logins",
+          "refId": "C",
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           }
         }
       ],
-      "title": "Agent Call Rate",
+      "title": "Login Activity Rate",
       "type": "timeseries"
     },
     {
@@ -248,7 +281,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "rate(agent_calls_failed_total[5m]) / (rate(agent_calls_successful_total[5m]) + rate(agent_calls_failed_total[5m]) + 0.0001)",
+          "expr": "rate(auth_login_failures_total[5m]) / (rate(auth_login_attempts_total[5m]) + 0.0001)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -256,7 +289,7 @@
           }
         }
       ],
-      "title": "Error Rate",
+      "title": "Login Failure Rate",
       "type": "gauge"
     },
     {
@@ -300,11 +333,11 @@
               },
               {
                 "color": "yellow",
-                "value": 2000
+                "value": 500
               },
               {
                 "color": "red",
-                "value": 5000
+                "value": 1000
               }
             ]
           },
@@ -334,7 +367,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum(rate(agent_response_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(auth_login_duration_seconds_bucket[5m])) by (le)) * 1000",
           "legendFormat": "p50",
           "refId": "A",
           "datasource": {
@@ -343,7 +376,7 @@
           }
         },
         {
-          "expr": "histogram_quantile(0.95, sum(rate(agent_response_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(auth_login_duration_seconds_bucket[5m])) by (le)) * 1000",
           "legendFormat": "p95",
           "refId": "B",
           "datasource": {
@@ -352,7 +385,7 @@
           }
         },
         {
-          "expr": "histogram_quantile(0.99, sum(rate(agent_response_duration_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(auth_login_duration_seconds_bucket[5m])) by (le)) * 1000",
           "legendFormat": "p99",
           "refId": "C",
           "datasource": {
@@ -361,7 +394,7 @@
           }
         }
       ],
-      "title": "Response Time Percentiles",
+      "title": "Login Response Time Percentiles",
       "type": "timeseries"
     },
     {
@@ -384,11 +417,11 @@
               },
               {
                 "color": "yellow",
-                "value": 100
+                "value": 1000
               },
               {
                 "color": "red",
-                "value": 500
+                "value": 5000
               }
             ]
           },
@@ -419,7 +452,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(rate(agent_tool_calls_total[5m])) * 300",
+          "expr": "sum(auth_sessions_active)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -427,7 +460,7 @@
           }
         }
       ],
-      "title": "Tool Calls (5m rate)",
+      "title": "Active Sessions",
       "type": "stat"
     },
     {
@@ -476,7 +509,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 10,
         "x": 4,
         "y": 8
       },
@@ -497,8 +530,8 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(rate(agent_calls_successful_total{operation=\"llm.invoke\"}[5m])) by (model)",
-          "legendFormat": "{{model}} - Success",
+          "expr": "rate(auth_token_created_total[5m])",
+          "legendFormat": "Tokens Created",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -506,16 +539,34 @@
           }
         },
         {
-          "expr": "sum(rate(agent_calls_failed_total{operation=\"llm.invoke\"}[5m])) by (model)",
-          "legendFormat": "{{model}} - Failed",
+          "expr": "rate(auth_token_verifications_total[5m])",
+          "legendFormat": "Tokens Verified",
           "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
+        },
+        {
+          "expr": "rate(auth_token_refresh_total[5m])",
+          "legendFormat": "Tokens Refreshed",
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
+        },
+        {
+          "expr": "rate(auth_token_verifications_total{result=\"failure\"}[5m])",
+          "legendFormat": "Verification Failures",
+          "refId": "D",
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           }
         }
       ],
-      "title": "LLM Invocations by Model",
+      "title": "Token Operations Rate",
       "type": "timeseries"
     },
     {
@@ -559,19 +610,20 @@
               }
             ]
           },
-          "unit": "reqps"
+          "unit": "percent"
         }
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 16,
+        "w": 7,
+        "x": 14,
         "y": 8
       },
       "id": 7,
       "options": {
         "legend": {
           "calcs": [
+            "mean",
             "last"
           ],
           "displayMode": "table",
@@ -584,8 +636,8 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(rate(agent_calls_successful_total{operation=\"llm.fallback\"}[5m])) by (model)",
-          "legendFormat": "{{model}}",
+          "expr": "(sum(auth_jwks_cache_operations_total{type=\"hit\"}) / (sum(auth_jwks_cache_operations_total{type=\"hit\"}) + sum(auth_jwks_cache_operations_total{type=\"miss\"}))) * 100",
+          "legendFormat": "JWKS Cache Hit Rate",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -593,7 +645,7 @@
           }
         }
       ],
-      "title": "Fallback Model Usage",
+      "title": "JWKS Cache Performance",
       "type": "timeseries"
     },
     {
@@ -642,9 +694,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 16
+        "w": 8,
+        "x": 21,
+        "y": 8
       },
       "id": 8,
       "options": {
@@ -662,8 +714,8 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(rate(agent_tool_calls_total[5m])) by (tool)",
-          "legendFormat": "{{tool}}",
+          "expr": "sum(rate(auth_login_failures_total[5m])) by (failure_reason)",
+          "legendFormat": "{{failure_reason}}",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -671,7 +723,7 @@
           }
         }
       ],
-      "title": "Tool Usage Rate",
+      "title": "Login Failures by Reason",
       "type": "timeseries"
     },
     {
@@ -682,11 +734,28 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "custom": {
-            "align": "auto",
-            "displayMode": "auto"
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true
           },
           "mappings": [],
           "thresholds": {
@@ -695,56 +764,37 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 0.01
-              },
-              {
-                "color": "red",
-                "value": 0.05
               }
             ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Error Rate"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percentunit"
-              }
-            ]
-          }
-        ]
+          },
+          "unit": "reqps"
+        }
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
+        "w": 15,
+        "x": 0,
         "y": 16
       },
       "id": 9,
       "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
           ],
-          "show": false
+          "displayMode": "table",
+          "placement": "bottom"
         },
-        "showHeader": true
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(rate(agent_calls_successful_total[5m])) by (model)",
-          "format": "table",
-          "instant": true,
+          "expr": "sum(rate(auth_session_created_total[5m])) by (provider)",
+          "legendFormat": "Created - {{provider}}",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -752,38 +802,35 @@
           }
         },
         {
-          "expr": "sum(rate(agent_calls_failed_total[5m])) by (model)",
-          "format": "table",
-          "instant": true,
+          "expr": "sum(rate(auth_session_retrieved_total[5m])) by (provider)",
+          "legendFormat": "Retrieved - {{provider}}",
           "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
+        },
+        {
+          "expr": "sum(rate(auth_session_refreshed_total[5m])) by (provider)",
+          "legendFormat": "Refreshed - {{provider}}",
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          }
+        },
+        {
+          "expr": "sum(rate(auth_session_revoked_total[5m])) by (provider)",
+          "legendFormat": "Revoked - {{provider}}",
+          "refId": "D",
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           }
         }
       ],
-      "title": "Model Performance Summary",
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {},
-            "renameByName": {
-              "Value #A": "Success Rate",
-              "Value #B": "Error Rate",
-              "model": "Model"
-            }
-          }
-        }
-      ],
-      "type": "table"
+      "title": "Session Lifecycle Operations",
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -831,17 +878,15 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 24
+        "w": 14,
+        "x": 15,
+        "y": 16
       },
       "id": 10,
       "options": {
         "legend": {
           "calcs": [
-            "last",
-            "max",
-            "mean"
+            "last"
           ],
           "displayMode": "table",
           "placement": "bottom"
@@ -853,8 +898,8 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "avg(rate(agent_response_duration_sum[5m]) / rate(agent_response_duration_count[5m])) by (operation)",
-          "legendFormat": "{{operation}}",
+          "expr": "sum(rate(auth_provider_calls_total[5m])) by (provider, operation)",
+          "legendFormat": "{{provider}} - {{operation}}",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -862,7 +907,7 @@
           }
         }
       ],
-      "title": "Average Response Time by Operation",
+      "title": "Auth Provider Operations",
       "type": "timeseries"
     }
   ],
@@ -870,9 +915,8 @@
   "schemaVersion": 36,
   "style": "dark",
   "tags": [
-    "llm",
-    "performance",
-    "agent",
+    "authentication",
+    "security",
     "langgraph-agent"
   ],
   "templating": {
@@ -897,7 +941,7 @@
     ]
   },
   "timezone": "",
-  "title": "LLM Performance - MCP Server with LangGraph",
-  "uid": "llm-performance",
+  "title": "Authentication - MCP Server with LangGraph",
+  "uid": "authentication",
   "version": 1
 }

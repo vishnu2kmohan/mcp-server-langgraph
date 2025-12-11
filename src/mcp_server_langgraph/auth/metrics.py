@@ -167,25 +167,40 @@ auth_session_limit_reached = meter.create_counter(
 
 
 # Helper functions for common metric patterns
+# These functions record both OpenTelemetry and Prometheus metrics
+# to ensure metrics appear in both OTLP and /metrics endpoints
 
 
 def record_login_attempt(provider: str, result: str, duration_ms: float) -> None:
-    """Record login attempt with all relevant metrics"""
+    """Record login attempt with all relevant metrics (OTEL + Prometheus)"""
+    # OpenTelemetry metrics (via OTLP)
     auth_login_attempts.add(1, {"provider": provider, "result": result})
     auth_login_duration.record(duration_ms, {"provider": provider})
 
     if result != "success":
         auth_login_failures.add(1, {"provider": provider, "reason": result})
 
+    # Prometheus metrics (via /metrics endpoint)
+    from mcp_server_langgraph.auth import prometheus_metrics
+
+    prometheus_metrics.record_login_attempt(provider, result, duration_ms / 1000)
+
 
 def record_token_verification(result: str, duration_ms: float, provider: str = "unknown") -> None:
-    """Record token verification metrics"""
+    """Record token verification metrics (OTEL + Prometheus)"""
+    # OpenTelemetry metrics
     auth_token_verifications.add(1, {"result": result, "provider": provider})
     auth_token_verify_duration.record(duration_ms, {"provider": provider})
 
+    # Prometheus metrics
+    from mcp_server_langgraph.auth import prometheus_metrics
+
+    prometheus_metrics.record_token_verification(result, provider)
+
 
 def record_session_operation(operation: str, backend: str, result: str, duration_ms: float) -> None:
-    """Record session operation metrics"""
+    """Record session operation metrics (OTEL + Prometheus)"""
+    # OpenTelemetry metrics
     if operation == "create":
         auth_session_created.add(1, {"backend": backend, "result": result})
         if result == "success":
@@ -201,9 +216,19 @@ def record_session_operation(operation: str, backend: str, result: str, duration
 
     auth_session_operations_duration.record(duration_ms, {"operation": operation, "backend": backend})
 
+    # Prometheus metrics (only for successful create/revoke operations)
+    from mcp_server_langgraph.auth import prometheus_metrics
+
+    if result == "success":
+        if operation == "create":
+            prometheus_metrics.record_session_created(backend)
+        elif operation == "revoke":
+            prometheus_metrics.record_session_revoked(backend)
+
 
 def record_jwks_operation(operation: str, result: str, duration_ms: float | None = None) -> None:
-    """Record JWKS cache operation metrics"""
+    """Record JWKS cache operation metrics (OTEL + Prometheus)"""
+    # OpenTelemetry metrics
     if operation in ["hit", "miss"]:
         auth_jwks_cache_operations.add(1, {"type": operation})
     elif operation == "refresh":
@@ -211,6 +236,12 @@ def record_jwks_operation(operation: str, result: str, duration_ms: float | None
 
     if duration_ms is not None:
         auth_jwks_fetch_duration.record(duration_ms)
+
+    # Prometheus metrics
+    from mcp_server_langgraph.auth import prometheus_metrics
+
+    if operation in ["hit", "miss", "refresh"]:
+        prometheus_metrics.record_jwks_cache_operation(operation)
 
 
 def record_openfga_sync(result: str, duration_ms: float, tuple_count: int) -> None:
@@ -230,3 +261,16 @@ def record_role_mapping(mapping_type: str, rules_count: int, tuples_count: int, 
     auth_role_mapping_rules_applied.record(rules_count)
     auth_role_mapping_tuples_generated.record(tuples_count)
     auth_role_mapping_duration.record(duration_ms)
+
+
+def record_authorization_check(result: str, resource_type: str = "unknown", duration_ms: float | None = None) -> None:
+    """Record authorization check metrics (OTEL + Prometheus)"""
+    # OpenTelemetry metrics
+    auth_authz_checks.add(1, {"result": result})
+    if duration_ms is not None:
+        auth_authz_duration.record(duration_ms)
+
+    # Prometheus metrics
+    from mcp_server_langgraph.auth import prometheus_metrics
+
+    prometheus_metrics.record_authorization_check(result, resource_type, duration_ms / 1000 if duration_ms else None)

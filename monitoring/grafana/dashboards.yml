@@ -1,16 +1,20 @@
 apiVersion: 1
 
 # Dashboard provider configuration for Grafana
-# All dashboards are in the main dashboards directory
-# Folder organization is handled via dashboard metadata, not file paths
+# Dashboards are organized into folders matching the file system structure:
+#   - Overview/       : Main overview dashboard
+#   - Application/    : Builder, Playground, LLM Performance
+#   - Auth/           : Authentication, OpenFGA, Keycloak, Security
+#   - Infrastructure/ : LGTM Stack, PostgreSQL, Redis, Qdrant, Traefik
+#   - Compliance/     : SLA Monitoring, SOC2 Compliance (includes GDPR)
 providers:
   - name: 'MCP Server LangGraph Dashboards'
     orgId: 1
-    folder: 'LangGraph Agent'
+    folder: ''
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10
     allowUiUpdates: true
     options:
       path: /etc/grafana/provisioning/dashboards
-      foldersFromFilesStructure: false
+      foldersFromFilesStructure: true

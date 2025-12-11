@@ -54,6 +54,21 @@ try:
         registry=REGISTRY,
     )
 
+    # Agent call success/failure metrics (for LLM Performance dashboard)
+    agent_calls_successful_total = Counter(
+        name="agent_calls_successful_total",
+        documentation="Total number of successful agent calls",
+        labelnames=["agent_type", "model"],
+        registry=REGISTRY,
+    )
+
+    agent_calls_failed_total = Counter(
+        name="agent_calls_failed_total",
+        documentation="Total number of failed agent calls",
+        labelnames=["agent_type", "model", "error_type"],
+        registry=REGISTRY,
+    )
+
     # Error metrics
     agent_errors_total = Counter(
         name="agent_errors_total",
@@ -81,6 +96,47 @@ except ImportError:
     generate_latest = None  # type: ignore[assignment]
     CONTENT_TYPE_LATEST = "text/plain"
     REGISTRY = None  # type: ignore[assignment]
+
+
+# =============================================================================
+# Agent Metrics Helper Functions
+# =============================================================================
+
+
+def record_agent_call_success(agent_type: str = "default", model: str = "unknown") -> None:
+    """
+    Record a successful agent call.
+
+    Args:
+        agent_type: Type of agent (e.g., "default", "custom")
+        model: LLM model used (e.g., "gpt-4o", "claude-3-opus")
+    """
+    if not PROMETHEUS_CLIENT_AVAILABLE:
+        return
+
+    try:
+        agent_calls_successful_total.labels(agent_type=agent_type, model=model).inc()
+    except Exception:
+        pass  # Silently ignore metric recording errors
+
+
+def record_agent_call_failure(agent_type: str = "default", model: str = "unknown", error_type: str = "unknown") -> None:
+    """
+    Record a failed agent call.
+
+    Args:
+        agent_type: Type of agent (e.g., "default", "custom")
+        model: LLM model used (e.g., "gpt-4o", "claude-3-opus")
+        error_type: Type of error (e.g., "timeout", "rate_limit", "api_error")
+    """
+    if not PROMETHEUS_CLIENT_AVAILABLE:
+        return
+
+    try:
+        agent_calls_failed_total.labels(agent_type=agent_type, model=model, error_type=error_type).inc()
+    except Exception:
+        pass
+
 
 app = FastAPI(title="MCP Server with LangGraph Health")
 
