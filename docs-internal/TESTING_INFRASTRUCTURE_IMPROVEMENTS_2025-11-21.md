@@ -160,7 +160,7 @@ tests/
 ├── e2e/                        # E2E helpers only
 │   ├── helpers.py
 │   ├── real_clients.py
-│   └── mcp-test-realm.json
+│   └── mcp-test.json
 ```
 
 **After**:
@@ -170,7 +170,7 @@ tests/
 │   ├── test_full_user_journey.py  # Main E2E journey tests
 │   ├── helpers.py              # E2E test helpers
 │   ├── real_clients.py         # Real client implementations
-│   └── mcp-test-realm.json
+│   └── mcp-test.json
 ```
 
 **Benefits**:

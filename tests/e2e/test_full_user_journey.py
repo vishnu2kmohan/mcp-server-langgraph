@@ -59,11 +59,11 @@ async def test_user_credentials():
     """
     Test user credentials for E2E tests.
 
-    Uses pre-configured user from tests/e2e/mcp-test-realm.json.
+    Uses pre-configured user from tests/e2e/mcp-test.json.
     User is imported when Keycloak container starts.
 
     Credentials:
-    - username: alice (from mcp-test-realm.json)
+    - username: alice (from mcp-test.json)
     - password: alice123 (configured in realm import)
     - email: alice@example.com
 
