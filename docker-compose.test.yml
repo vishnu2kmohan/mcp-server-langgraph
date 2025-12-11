@@ -788,6 +788,8 @@ services:
       # Use Mimir as external Alertmanager
       - GF_UNIFIED_ALERTING_ALERTMANAGERS_DISCOVER=false
       - GF_UNIFIED_ALERTING_ALERTMANAGER_URL=http://mimir:9009/alertmanager
+      # Enable Prometheus metrics endpoint for LGTM self-monitoring
+      - GF_METRICS_ENABLED=true
     volumes:
       - grafana-data:/var/lib/grafana  # Named volume prevents SQLite locking issues
       - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
