@@ -236,12 +236,126 @@ jobs:
           echo "✅ Mirrored ${{ matrix.description }}"
 
   # ============================================================================
+  # MIRROR HELM CHARTS: Mirror Helm charts to GHCR OCI registry
+  # ============================================================================
+  # Helm 3.8+ supports OCI registries for chart storage.
+  # This mirrors charts from GitHub Pages (rate-limited) to GHCR (unlimited).
+  # ============================================================================
+  mirror-helm-charts:
+    name: Mirror Helm Charts
+    runs-on: ubuntu-latest
+    needs: mirror-tier1
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # OpenFGA Helm chart - hosted on GitHub Pages (rate-limited)
+          - repo: https://openfga.github.io/helm-charts
+            chart: openfga
+            version: "0.2.49"
+            description: OpenFGA Helm chart
+          # Bitnami charts are hosted on their own CDN (less likely to rate limit)
+          # but included for supply chain security
+          - repo: https://charts.bitnami.com/bitnami
+            chart: postgresql
+            version: "18.1.11"
+            description: PostgreSQL Helm chart
+          - repo: https://charts.bitnami.com/bitnami
+            chart: redis
+            version: "24.0.0"
+            description: Redis Helm chart
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.14.0'
+
+      - name: Login to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Check if chart needs update
+        id: check
+        run: |
+          CHART_REF="oci://ghcr.io/${{ env.GHCR_OWNER }}/charts/${{ matrix.chart }}"
+
+          # Check if chart exists in GHCR
+          if helm show chart "${CHART_REF}:${{ matrix.version }}" > /dev/null 2>&1; then
+            if [ "${{ github.event.inputs.force_mirror }}" = "true" ]; then
+              echo "Force mirror requested, will update"
+              echo "needs_update=true" >> $GITHUB_OUTPUT
+            else
+              echo "Chart already exists: ${CHART_REF}:${{ matrix.version }}"
+              echo "needs_update=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "Chart does not exist, will mirror"
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Add Helm repository
+        if: steps.check.outputs.needs_update == 'true'
+        run: |
+          REPO_NAME=$(echo "${{ matrix.repo }}" | sed 's|https://||; s|/.*||; s|\..*||')
+          helm repo add "${REPO_NAME}" "${{ matrix.repo }}" || true
+          helm repo update
+
+      - name: Pull chart from source
+        if: steps.check.outputs.needs_update == 'true'
+        run: |
+          # Pull chart as .tgz file with retry logic
+          for i in 1 2 3; do
+            if helm pull "${{ matrix.chart }}" --repo "${{ matrix.repo }}" --version "${{ matrix.version }}"; then
+              break
+            fi
+            echo "⚠️ Helm pull failed (attempt $i/3), retrying in $((i * 10))s..."
+            sleep $((i * 10))
+          done
+
+          # Verify chart was downloaded
+          if [ ! -f "${{ matrix.chart }}-${{ matrix.version }}.tgz" ]; then
+            echo "❌ Failed to download chart after 3 attempts"
+            exit 1
+          fi
+          echo "✅ Downloaded ${{ matrix.chart }}-${{ matrix.version }}.tgz"
+
+      - name: Push chart to GHCR
+        if: steps.check.outputs.needs_update == 'true'
+        run: |
+          CHART_FILE="${{ matrix.chart }}-${{ matrix.version }}.tgz"
+          TARGET="oci://ghcr.io/${{ env.GHCR_OWNER }}/charts"
+
+          echo "Pushing: $CHART_FILE -> $TARGET"
+          helm push "$CHART_FILE" "$TARGET"
+
+          echo "✅ Successfully mirrored ${{ matrix.description }}"
+
+      - name: Summary
+        run: |
+          echo "## ${{ matrix.description }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Source:** \`${{ matrix.repo }}/${{ matrix.chart }}:${{ matrix.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** \`oci://ghcr.io/${{ env.GHCR_OWNER }}/charts/${{ matrix.chart }}:${{ matrix.version }}\`" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check.outputs.needs_update }}" = "true" ]; then
+            echo "**Status:** ✅ Mirrored" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Status:** ⏭️ Skipped (already exists)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ============================================================================
   # SUMMARY: Generate final report
   # ============================================================================
   summary:
     name: Generate Summary
     runs-on: ubuntu-latest
-    needs: [mirror-tier1, mirror-tier2]
+    needs: [mirror-tier1, mirror-tier2, mirror-helm-charts]
     if: always() && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
 
     steps:
@@ -262,6 +376,14 @@ jobs:
           echo "| busybox:1.36 | ghcr.io/${{ env.GHCR_OWNER }}/busybox:1.36 |" >> $GITHUB_STEP_SUMMARY
           echo "| redis:7-alpine | ghcr.io/${{ env.GHCR_OWNER }}/redis:7-alpine |" >> $GITHUB_STEP_SUMMARY
           echo "| postgres:15-alpine | ghcr.io/${{ env.GHCR_OWNER }}/postgres:15-alpine |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Mirrored Helm Charts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Chart | OCI Path |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| openfga:0.2.49 | oci://ghcr.io/${{ env.GHCR_OWNER }}/charts/openfga:0.2.49 |" >> $GITHUB_STEP_SUMMARY
+          echo "| postgresql:18.1.11 | oci://ghcr.io/${{ env.GHCR_OWNER }}/charts/postgresql:18.1.11 |" >> $GITHUB_STEP_SUMMARY
+          echo "| redis:24.0.0 | oci://ghcr.io/${{ env.GHCR_OWNER }}/charts/redis:24.0.0 |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

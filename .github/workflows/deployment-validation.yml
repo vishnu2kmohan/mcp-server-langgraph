@@ -29,20 +29,53 @@ jobs:
         with:
           version: 'v3.14.0'
 
+      # Cache Helm dependencies to avoid rate limiting from GitHub-hosted chart repos
+      # See: https://github.com/openfga/helm-charts (redirects to GitHub Releases)
+      - name: Cache Helm Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            deployments/helm/mcp-server-langgraph/charts
+            ~/.cache/helm
+          key: helm-deps-${{ hashFiles('deployments/helm/mcp-server-langgraph/Chart.lock') }}
+          restore-keys: |
+            helm-deps-
+
       - name: Add Helm repositories and update dependencies
         run: |
-          echo "Adding Helm chart repositories..."
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm repo add openfga https://openfga.github.io/helm-charts
-          helm repo add codecentric https://codecentric.github.io/helm-charts
-          helm repo add grafana https://grafana.github.io/helm-charts
-          helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm repo update
+          set -euo pipefail
+          # Check if cached dependencies exist and are valid
+          if [ -d "deployments/helm/mcp-server-langgraph/charts" ] && \
+             [ -n "$(ls -A deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null)" ]; then
+            echo "✅ Using cached Helm dependencies"
+            ls -la deployments/helm/mcp-server-langgraph/charts/
+          else
+            echo "Adding Helm chart repositories..."
+            helm repo add bitnami https://charts.bitnami.com/bitnami
+            helm repo add openfga https://openfga.github.io/helm-charts
+            helm repo add codecentric https://codecentric.github.io/helm-charts
+            helm repo add grafana https://grafana.github.io/helm-charts
+            helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+            helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+            helm repo update
 
-          echo "Updating Helm chart dependencies..."
-          helm dependency update deployments/helm/mcp-server-langgraph
-          echo "✅ Helm dependencies updated successfully"
+            echo "Updating Helm chart dependencies..."
+            # Retry logic for transient failures (GitHub rate limiting)
+            for i in 1 2 3; do
+              if helm dependency update deployments/helm/mcp-server-langgraph; then
+                break
+              fi
+              echo "⚠️ Helm dependency update failed, retry $i/3..."
+              sleep $((i * 10))
+            done
+
+            # Verify dependencies were downloaded
+            if [ ! -d "deployments/helm/mcp-server-langgraph/charts" ] || [ -z "$(ls -A deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null)" ]; then
+              echo "❌ Helm dependency update failed - charts directory is empty"
+              exit 1
+            fi
+            echo "✅ Helm dependencies updated successfully"
+          fi
 
       - name: Validate Helm dependencies
         run: |
@@ -156,10 +189,16 @@ jobs:
       - name: Install kubeconform
         run: |
           KUBECONFORM_VERSION=0.6.4
-          wget -q "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          # Use gh CLI for authenticated download (avoids GitHub rate limiting)
+          gh release download "v${KUBECONFORM_VERSION}" \
+            --repo yannh/kubeconform \
+            --pattern "kubeconform-linux-amd64.tar.gz" \
+            --output kubeconform-linux-amd64.tar.gz
           tar xf kubeconform-linux-amd64.tar.gz
           sudo mv kubeconform /usr/local/bin/
           kubeconform -v
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Validate manifests against Kubernetes schemas
         run: |

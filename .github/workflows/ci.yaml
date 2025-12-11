@@ -327,29 +327,56 @@ jobs:
       with:
         version: 'v3.14.0'
 
+    # Cache Helm dependencies to avoid rate limiting from GitHub-hosted chart repos
+    # See: https://github.com/openfga/helm-charts (redirects to GitHub Releases)
+    - name: Cache Helm Dependencies
+      if: matrix.python-version == '3.12'
+      uses: actions/cache@v4
+      with:
+        path: |
+          deployments/helm/mcp-server-langgraph/charts
+          ~/.cache/helm
+        key: helm-deps-${{ hashFiles('deployments/helm/mcp-server-langgraph/Chart.lock') }}
+        restore-keys: |
+          helm-deps-
+
     - name: Build Helm chart dependencies
       if: matrix.python-version == '3.12'
       run: |
         set -euo pipefail
         # Build Helm chart dependencies for tests in tests/deployment/test_helm_templates.py
         if command -v helm &> /dev/null; then
-          echo "🔨 Adding Helm repositories..."
-          helm repo add openfga https://openfga.github.io/helm-charts || true
-          helm repo add bitnami https://charts.bitnami.com/bitnami || true
-          helm repo add jaegertracing https://jaegertracing.github.io/helm-charts || true
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
-          helm repo update
+          # Check if cached dependencies exist and are valid
+          if [ -d "deployments/helm/mcp-server-langgraph/charts" ] && \
+             [ -n "$(ls -A deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null)" ]; then
+            echo "✅ Using cached Helm dependencies"
+            ls -la deployments/helm/mcp-server-langgraph/charts/
+          else
+            echo "🔨 Adding Helm repositories..."
+            helm repo add openfga https://openfga.github.io/helm-charts || true
+            helm repo add bitnami https://charts.bitnami.com/bitnami || true
+            helm repo add jaegertracing https://jaegertracing.github.io/helm-charts || true
+            helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
+            helm repo update
 
-          echo "🔨 Building Helm chart dependencies..."
-          helm dependency build deployments/helm/mcp-server-langgraph
+            echo "🔨 Building Helm chart dependencies..."
+            # Retry logic for transient failures (GitHub rate limiting)
+            for i in 1 2 3; do
+              if helm dependency build deployments/helm/mcp-server-langgraph; then
+                break
+              fi
+              echo "⚠️ Helm dependency build failed, retry $i/3..."
+              sleep $((i * 10))
+            done
 
-          # Verify dependencies were downloaded
-          if [ ! -d "deployments/helm/mcp-server-langgraph/charts" ] || [ -z "$(ls -A deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null)" ]; then
-            echo "❌ Helm dependency build failed - charts directory is empty"
-            exit 1
+            # Verify dependencies were downloaded
+            if [ ! -d "deployments/helm/mcp-server-langgraph/charts" ] || [ -z "$(ls -A deployments/helm/mcp-server-langgraph/charts/*.tgz 2>/dev/null)" ]; then
+              echo "❌ Helm dependency build failed - charts directory is empty"
+              exit 1
+            fi
+            echo "✓ Helm dependencies built successfully"
+            ls -la deployments/helm/mcp-server-langgraph/charts/
           fi
-          echo "✓ Helm dependencies built successfully"
-          ls -la deployments/helm/mcp-server-langgraph/charts/
         else
           echo "⚠️ Helm not installed, skipping dependency build (Helm tests may be skipped)"
         fi
