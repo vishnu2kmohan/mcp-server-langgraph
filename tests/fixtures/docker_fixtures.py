@@ -302,7 +302,7 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
     # Retry with backoff since Keycloak HTTP server may take time to initialize after port opens
     # This accounts for:
     #   1. Database schema migration
-    #   2. Realm import from mcp-test.json
+    #   2. Realm import from mcp-test-realm.json
     #   3. JIT compilation of Java bytecode
     keycloak_health_url = f"http://localhost:{test_infrastructure_ports['keycloak_management']}/health/ready"
     keycloak_ready = False

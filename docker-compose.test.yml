@@ -213,11 +213,10 @@ services:
 
   keycloak-test:
     image: quay.io/keycloak/keycloak:26.4.2
-    # WORKAROUND: Keycloak 26.x has a regression (issue #36284) where files named
-    # <realm-name>-realm.json fail to import. Solution: rename to mcp-test.json (not -realm.json)
-    # Also disable organization feature as defense-in-depth.
-    # See: https://github.com/keycloak/keycloak/issues/36284
-    command: start-dev --import-realm --features-disabled=organization
+    # Keycloak 26.x requires files named <realm-name>-realm.json for --import-realm
+    # Issue #36284 was fixed in Keycloak 26.2.0, so we use the standard naming convention
+    # See: https://www.keycloak.org/server/importExport
+    command: start-dev --import-realm
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -227,8 +226,8 @@ services:
     volumes:
       # Import test realm with pre-configured client and users
       # This eliminates the need for manual setup and prevents E2E test auth failures
-      # NOTE: File named mcp-test.json (not mcp-test-realm.json) to avoid Keycloak 26 import bug
-      - ./tests/e2e/mcp-test.json:/opt/keycloak/data/import/mcp-test.json:ro
+      # File MUST be named <realm-name>-realm.json per Keycloak import convention
+      - ./tests/e2e/mcp-test-realm.json:/opt/keycloak/data/import/mcp-test-realm.json:ro
     environment:
       # Admin credentials
       - KEYCLOAK_ADMIN=admin
@@ -252,7 +251,7 @@ services:
       - KC_HEALTH_ENABLED=true          # Enable health endpoints
       - KC_MANAGEMENT_ENABLED=true      # Enable management port (9000)
       - KC_METRICS_ENABLED=false        # Disabled for test speed
-      - KC_LOG_LEVEL=warn               # Reduced logging
+      - KC_LOG_LEVEL=info               # INFO to see realm import logs
 
       # Test-specific
       - TESTING=true
