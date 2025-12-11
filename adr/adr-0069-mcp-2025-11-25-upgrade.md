@@ -1,10 +1,4 @@
----
-title: 'ADR-0067: MCP Specification Upgrade to 2025-11-25'
-description: 'Architecture decision for upgrading MCP specification from 2025-06-18 to 2025-11-25, implementing Tasks, enhanced Sampling, and improved error handling'
-icon: 'arrow-up-right-dots'
----
-
-# ADR-0067: MCP Specification Upgrade to 2025-11-25
+# ADR-0069: MCP Specification Upgrade to 2025-11-25
 
 ## Status
 

@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2025-12-09
-**Total ADRs**: 65
+**Last Updated**: 2025-12-11
+**Total ADRs**: 66
 
 ## Overview
 
@@ -59,6 +59,7 @@ Each ADR follows this structure:
 | [ADR-0042](adr-0042-dependency-injection-configuration-fixes.md) | 42. Dependency Injection Configuration Fixes | Accepted | 2025-01-28 |
 | [ADR-0050](adr-0050-dependency-singleton-pattern-justification.md) | 50. Dependency Singleton Pattern Justification | Accepted | 2025-11-10 |
 | [ADR-0061](adr-0061-fastapi-web-framework.md) | 61. FastAPI as Web Framework | Accepted | 2025-11-29 |
+| [ADR-0069](adr-0069-mcp-2025-11-25-upgrade.md) | MCP Specification Upgrade to 2025-11-25 | Accepted | Unknown |
 
 ### Data & Storage
 
