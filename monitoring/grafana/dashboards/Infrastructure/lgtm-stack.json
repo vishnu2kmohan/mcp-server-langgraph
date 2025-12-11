@@ -38,7 +38,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -105,7 +105,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "up{job=\"loki\"}",
           "legendFormat": "Status",
@@ -118,7 +118,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -185,7 +185,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "up{job=\"grafana\"}",
           "legendFormat": "Status",
@@ -198,7 +198,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -265,7 +265,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "up{job=\"tempo\"}",
           "legendFormat": "Status",
@@ -278,7 +278,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -345,7 +345,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "up{job=\"mimir\"}",
           "legendFormat": "Status",
@@ -358,7 +358,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -425,7 +425,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "up{job=\"alloy\"}",
           "legendFormat": "Status",
@@ -438,7 +438,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -492,7 +492,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "count(up{job=~\"loki|tempo|mimir|alloy|grafana\"} == 1) / count(up{job=~\"loki|tempo|mimir|alloy|grafana\"}) * 100",
           "legendFormat": "Health",
@@ -518,7 +518,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -596,7 +596,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(loki_request_duration_seconds_count{job=\"loki\"}[5m])) by (route)",
           "legendFormat": "{{route}}",
@@ -609,7 +609,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -687,7 +687,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket{job=\"loki\"}[5m])) by (le, route))",
           "legendFormat": "{{route}} p99",
@@ -700,7 +700,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -778,7 +778,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(loki_distributor_bytes_received_total{job=\"loki\"}[5m]))",
           "legendFormat": "Ingestion Rate",
@@ -791,7 +791,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -869,7 +869,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(loki_ingester_streams_created_total{job=\"loki\"}) - sum(loki_ingester_streams_removed_total{job=\"loki\"})",
           "legendFormat": "Active Streams",
@@ -895,7 +895,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -973,7 +973,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(tempo_distributor_push_duration_seconds_count{job=\"tempo\"}[5m]))",
           "legendFormat": "Pushes/sec",
@@ -986,7 +986,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1064,7 +1064,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(tempo_ingester_flush_size_bytes_sum{job=\"tempo\"}[5m]))",
           "legendFormat": "Flush Rate",
@@ -1077,7 +1077,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1155,7 +1155,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.95, sum(rate(tempo_query_frontend_queue_duration_seconds_bucket{job=\"tempo\"}[5m])) by (le))",
           "legendFormat": "p95 Queue",
@@ -1164,7 +1164,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.50, sum(rate(tempo_query_frontend_queue_duration_seconds_bucket{job=\"tempo\"}[5m])) by (le))",
           "legendFormat": "p50 Queue",
@@ -1177,7 +1177,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1255,7 +1255,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "tempo_ingester_flush_queue_length{job=\"tempo\"}",
           "legendFormat": "Flush Queue Length",
@@ -1281,7 +1281,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1359,7 +1359,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(cortex_ingester_active_series{job=\"mimir\"})",
           "legendFormat": "Active Series",
@@ -1372,7 +1372,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1450,7 +1450,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(cortex_distributor_samples_in_total{job=\"mimir\"}[5m]))",
           "legendFormat": "Samples/sec",
@@ -1463,7 +1463,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1541,7 +1541,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, sum(rate(cortex_request_duration_seconds_bucket{job=\"mimir\", route=~\".*query.*\"}[5m])) by (le))",
           "legendFormat": "Query p99",
@@ -1554,7 +1554,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1632,7 +1632,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(cortex_request_duration_seconds_count{job=\"mimir\"}[5m])) by (route)",
           "legendFormat": "{{route}}",
@@ -1658,7 +1658,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1736,7 +1736,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(alloy_resources_machine_rx_bytes_total{job=\"alloy\"}[5m]))",
           "legendFormat": "Network RX Bytes/s",
@@ -1745,7 +1745,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "alloy_component_controller_running_components{job=\"alloy\"}",
           "legendFormat": "Running Components",
@@ -1754,7 +1754,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(otelcol_exporter_loki_entries_processed{job=\"alloy\"}[5m]))",
           "legendFormat": "Loki Entries/s",
@@ -1767,7 +1767,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1845,7 +1845,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(otelcol_exporter_queue_size{job=\"alloy\", data_type=\"metrics\"})",
           "legendFormat": "Metrics Queue",
@@ -1854,7 +1854,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(otelcol_exporter_queue_size{job=\"alloy\", data_type=\"traces\"})",
           "legendFormat": "Traces Queue",
@@ -1863,7 +1863,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(otelcol_exporter_queue_size{job=\"alloy\", data_type=\"logs\"})",
           "legendFormat": "Logs Queue",
@@ -1876,7 +1876,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1954,7 +1954,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(otelcol_exporter_loki_entries_failed{job=\"alloy\"}[5m]))",
           "legendFormat": "Loki Failures/s",
@@ -1963,7 +1963,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "alloy_config_load_failures_total{job=\"alloy\"}",
           "legendFormat": "Config Load Failures",
@@ -1972,7 +1972,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(alloy_component_evaluation_seconds_count{job=\"alloy\"}[5m]))",
           "legendFormat": "Component Evaluations/s",
@@ -1985,7 +1985,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2063,7 +2063,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "otelcol_processor_batch_batch_size_trigger_send{job=\"alloy\"}",
           "legendFormat": "Batch Sends",
@@ -2087,7 +2087,27 @@
     "mcp-server"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Mimir",
+          "value": "mimir"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",

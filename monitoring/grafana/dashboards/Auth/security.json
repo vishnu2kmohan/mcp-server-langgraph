@@ -25,7 +25,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -77,7 +77,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(auth_login_failures_total[1m]))",
           "refId": "A"
@@ -89,7 +89,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -141,7 +141,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(auth_authorization_checks_total{result=\"denied\"}[1m]))",
           "refId": "A"
@@ -153,7 +153,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -205,7 +205,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(auth_token_verifications_total{result=~\"expired|invalid\"}[1m]))",
           "refId": "A"
@@ -217,7 +217,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -288,7 +288,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "(rate(auth_login_failures_total[1m]) > 10) OR on() vector(0)",
           "refId": "A"
@@ -300,7 +300,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -364,7 +364,10 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": ["sum", "max"],
+          "calcs": [
+            "sum",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -379,7 +382,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum by (reason) (rate(auth_login_failures_total[5m]))",
           "legendFormat": "{{reason}}",
@@ -392,7 +395,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -456,7 +459,10 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": ["sum", "max"],
+          "calcs": [
+            "sum",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -471,7 +477,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum by (resource) (rate(auth_authorization_checks_total{result=\"denied\"}[5m]))",
           "legendFormat": "{{resource}}",
@@ -484,7 +490,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -514,7 +520,10 @@
           "displayMode": "table",
           "placement": "right",
           "showLegend": true,
-          "values": ["value", "percent"]
+          "values": [
+            "value",
+            "percent"
+          ]
         },
         "pieType": "pie",
         "tooltip": {
@@ -527,7 +536,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum by (user_id) (increase(auth_login_failures_total[1h]))",
           "legendFormat": "{{user_id}}",
@@ -540,7 +549,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -570,7 +579,10 @@
           "displayMode": "table",
           "placement": "right",
           "showLegend": true,
-          "values": ["value", "percent"]
+          "values": [
+            "value",
+            "percent"
+          ]
         },
         "pieType": "pie",
         "tooltip": {
@@ -583,7 +595,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum by (source_ip) (increase(auth_login_failures_total[1h]))",
           "legendFormat": "{{source_ip}}",
@@ -596,7 +608,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -671,7 +683,9 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": false
         },
         "showHeader": true,
@@ -687,7 +701,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "topk(10, sum by (user_id) (increase(auth_login_failures_total[24h])))",
           "format": "table",
@@ -714,9 +728,33 @@
   "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["langgraph", "security", "auth"],
+  "tags": [
+    "langgraph",
+    "security",
+    "auth"
+  ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Mimir",
+          "value": "mimir"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",

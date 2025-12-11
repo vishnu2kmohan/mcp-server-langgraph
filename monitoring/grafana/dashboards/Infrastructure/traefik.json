@@ -38,7 +38,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -92,7 +92,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -103,7 +105,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "up{job=~\".*traefik.*\"}",
           "legendFormat": "Status",
@@ -116,7 +118,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -149,7 +151,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -160,7 +164,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(traefik_open_connections{job=~\".*traefik.*\"})",
           "legendFormat": "Connections",
@@ -173,7 +177,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -206,7 +210,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -217,7 +223,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(traefik_entrypoint_requests_total{job=~\".*traefik.*\"}[5m]))",
           "legendFormat": "RPS",
@@ -230,7 +236,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -271,7 +277,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["mean"],
+          "calcs": [
+            "mean"
+          ],
           "fields": "",
           "values": false
         },
@@ -282,7 +290,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.95, sum(rate(traefik_entrypoint_request_duration_seconds_bucket{job=~\".*traefik.*\"}[5m])) by (le)) * 1000",
           "legendFormat": "P95 Latency",
@@ -295,7 +303,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -338,7 +346,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -349,7 +359,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "(sum(rate(traefik_entrypoint_requests_total{job=~\".*traefik.*\", code=~\"5..\"}[5m])) / sum(rate(traefik_entrypoint_requests_total{job=~\".*traefik.*\"}[5m]))) * 100",
           "legendFormat": "Error Rate",
@@ -362,7 +372,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -395,7 +405,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -406,7 +418,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "traefik_config_reloads_total{job=~\".*traefik.*\"}",
           "legendFormat": "Reloads",
@@ -432,7 +444,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -492,7 +504,10 @@
       "id": 10,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -507,7 +522,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(traefik_entrypoint_requests_total{job=~\".*traefik.*\"}[5m])) by (entrypoint)",
           "legendFormat": "{{entrypoint}}",
@@ -520,7 +535,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -580,7 +595,10 @@
       "id": 11,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -595,7 +613,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(traefik_entrypoint_requests_total{job=~\".*traefik.*\"}[5m])) by (code)",
           "legendFormat": "{{code}}",
@@ -621,7 +639,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -681,7 +699,10 @@
       "id": 20,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -696,7 +717,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(traefik_router_requests_total{job=~\".*traefik.*\"}[5m])) by (router)",
           "legendFormat": "{{router}}",
@@ -709,7 +730,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -769,7 +790,10 @@
       "id": 21,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -784,7 +808,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.50, sum(rate(traefik_router_request_duration_seconds_bucket{job=~\".*traefik.*\"}[5m])) by (le, router))",
           "legendFormat": "{{router}} p50",
@@ -793,7 +817,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.95, sum(rate(traefik_router_request_duration_seconds_bucket{job=~\".*traefik.*\"}[5m])) by (le, router))",
           "legendFormat": "{{router}} p95",
@@ -819,7 +843,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -879,7 +903,10 @@
       "id": 30,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -894,7 +921,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(traefik_service_requests_total{job=~\".*traefik.*\"}[5m])) by (service)",
           "legendFormat": "{{service}}",
@@ -907,7 +934,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -961,7 +988,9 @@
         "justifyMode": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -972,7 +1001,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "traefik_service_server_up{job=~\".*traefik.*\"}",
           "legendFormat": "{{service}}",
@@ -985,7 +1014,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1045,7 +1074,10 @@
       "id": 32,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1060,7 +1092,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(traefik_service_retries_total{job=~\".*traefik.*\"}[5m])) by (service)",
           "legendFormat": "{{service}}",
@@ -1073,7 +1105,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1133,7 +1165,10 @@
       "id": 33,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1148,7 +1183,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket{job=~\".*traefik.*\"}[5m])) by (le, service))",
           "legendFormat": "{{service}}",
@@ -1174,7 +1209,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1234,7 +1269,10 @@
       "id": 40,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1249,7 +1287,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(traefik_entrypoint_requests_tls_total{job=~\".*traefik.*\"}[5m])) by (tls_version)",
           "legendFormat": "{{tls_version}}",
@@ -1262,7 +1300,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1303,7 +1341,9 @@
         "justifyMode": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -1314,7 +1354,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "traefik_tls_certs_not_after{job=~\".*traefik.*\"} * 1000",
           "legendFormat": "{{cn}}",
@@ -1340,7 +1380,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1400,7 +1440,10 @@
       "id": 50,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1415,7 +1458,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(traefik_entrypoint_requests_bytes_total{job=~\".*traefik.*\"}[5m])) by (entrypoint)",
           "legendFormat": "{{entrypoint}} in",
@@ -1424,7 +1467,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(traefik_entrypoint_responses_bytes_total{job=~\".*traefik.*\"}[5m])) by (entrypoint)",
           "legendFormat": "{{entrypoint}} out",
@@ -1437,7 +1480,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1497,7 +1540,10 @@
       "id": 51,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1512,7 +1558,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(traefik_service_requests_bytes_total{job=~\".*traefik.*\"}[5m])) by (service)",
           "legendFormat": "{{service}} in",
@@ -1521,7 +1567,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(traefik_service_responses_bytes_total{job=~\".*traefik.*\"}[5m])) by (service)",
           "legendFormat": "{{service}} out",
@@ -1535,16 +1581,51 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["traefik", "api-gateway", "mcp-server"],
+  "tags": [
+    "traefik",
+    "api-gateway",
+    "mcp-server"
+  ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Mimir",
+          "value": "mimir"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
     "to": "now"
   },
   "timepicker": {
-    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
   },
   "timezone": "browser",
   "title": "Traefik API Gateway Monitoring",

@@ -46,7 +46,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -112,7 +112,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         }
       ],
@@ -122,7 +122,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -191,7 +191,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         },
         {
@@ -200,7 +200,7 @@
           "refId": "B",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         },
         {
@@ -209,7 +209,7 @@
           "refId": "C",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         }
       ],
@@ -219,7 +219,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -273,7 +273,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         }
       ],
@@ -283,7 +283,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -339,7 +339,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         }
       ],
@@ -349,7 +349,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -426,7 +426,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         },
         {
@@ -435,7 +435,7 @@
           "refId": "B",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         },
         {
@@ -444,7 +444,7 @@
           "refId": "C",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         }
       ],
@@ -454,7 +454,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -522,7 +522,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         }
       ],
@@ -532,7 +532,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -601,7 +601,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         },
         {
@@ -610,7 +610,7 @@
           "refId": "B",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         }
       ],
@@ -620,7 +620,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -689,7 +689,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         }
       ],
@@ -699,7 +699,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -768,7 +768,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         },
         {
@@ -777,7 +777,7 @@
           "refId": "B",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         },
         {
@@ -786,7 +786,7 @@
           "refId": "C",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         }
       ],
@@ -796,7 +796,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -864,7 +864,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         }
       ],
@@ -874,7 +874,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -942,7 +942,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           }
         }
       ],
@@ -960,7 +960,27 @@
     "langgraph-agent"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Mimir",
+          "value": "mimir"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",

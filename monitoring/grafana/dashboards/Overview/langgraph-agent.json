@@ -25,7 +25,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -73,7 +73,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "up{job=\"langgraph-agent\"}",
           "refId": "A"
@@ -85,7 +85,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -145,7 +145,10 @@
       "id": 2,
       "options": {
         "legend": {
-          "calcs": ["mean", "lastNotNull"],
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -160,7 +163,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "rate(agent_tool_calls_total[5m])",
           "legendFormat": "{{tool}}",
@@ -173,7 +176,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -233,7 +236,10 @@
       "id": 3,
       "options": {
         "legend": {
-          "calcs": ["mean", "lastNotNull"],
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -248,7 +254,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "rate(agent_calls_failed_total[5m]) / (rate(agent_calls_successful_total[5m]) + rate(agent_calls_failed_total[5m]))",
           "legendFormat": "Error Rate",
@@ -261,7 +267,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -329,7 +335,10 @@
       "id": 4,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -344,7 +353,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.50, rate(agent_response_duration_bucket[5m]))",
           "legendFormat": "p50",
@@ -353,7 +362,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.95, rate(agent_response_duration_bucket[5m]))",
           "legendFormat": "p95",
@@ -362,7 +371,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, rate(agent_response_duration_bucket[5m]))",
           "legendFormat": "p99",
@@ -375,7 +384,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -435,7 +444,10 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": ["mean", "lastNotNull"],
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -450,7 +462,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "container_memory_working_set_bytes{pod=~\"langgraph-agent-.*\"} / container_spec_memory_limit_bytes{pod=~\"langgraph-agent-.*\"}",
           "legendFormat": "{{pod}}",
@@ -463,7 +475,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -523,7 +535,10 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": ["mean", "lastNotNull"],
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -538,7 +553,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "rate(container_cpu_usage_seconds_total{pod=~\"langgraph-agent-.*\"}[5m]) / container_spec_cpu_quota{pod=~\"langgraph-agent-.*\"}",
           "legendFormat": "{{pod}}",
@@ -551,7 +566,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -642,7 +657,9 @@
       "id": 7,
       "options": {
         "legend": {
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -657,7 +674,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "increase(agent_calls_successful_total[5m])",
           "legendFormat": "Successful",
@@ -666,7 +683,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "increase(agent_calls_failed_total[5m])",
           "legendFormat": "Failed",
@@ -692,7 +709,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "description": "HTTP request rate by endpoint and method",
       "fieldConfig": {
@@ -753,7 +770,10 @@
       "id": 9,
       "options": {
         "legend": {
-          "calcs": ["mean", "lastNotNull"],
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -768,7 +788,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m])) by (method, endpoint)",
           "legendFormat": "{{method}} {{endpoint}}",
@@ -781,7 +801,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "description": "HTTP error rate (4xx and 5xx responses)",
       "fieldConfig": {
@@ -881,7 +901,10 @@
       "id": 10,
       "options": {
         "legend": {
-          "calcs": ["mean", "lastNotNull"],
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -896,7 +919,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(http_requests_total{job=\"langgraph-agent\", status=~\"4..\"}[5m])) / sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))",
           "legendFormat": "4xx",
@@ -905,7 +928,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(http_requests_total{job=\"langgraph-agent\", status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"langgraph-agent\"}[5m]))",
           "legendFormat": "5xx",
@@ -918,7 +941,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "mimir"
+        "uid": "${datasource}"
       },
       "description": "HTTP request duration percentiles",
       "fieldConfig": {
@@ -987,7 +1010,10 @@
       "id": 11,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1002,7 +1028,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])) by (le))",
           "legendFormat": "p50",
@@ -1011,7 +1037,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])) by (le))",
           "legendFormat": "p95",
@@ -1020,7 +1046,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=\"langgraph-agent\"}[5m])) by (le))",
           "legendFormat": "p99",
@@ -1034,9 +1060,33 @@
   "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["langgraph", "mcp", "agent"],
+  "tags": [
+    "langgraph",
+    "mcp",
+    "agent"
+  ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Mimir",
+          "value": "mimir"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
