@@ -56,6 +56,19 @@
   ],
   "panels": [
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 11,
+      "panels": [],
+      "title": "Service Health",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -102,7 +115,7 @@
         "h": 4,
         "w": 4,
         "x": 0,
-        "y": 0
+        "y": 1
       },
       "id": 1,
       "options": {
@@ -179,7 +192,7 @@
         "h": 8,
         "w": 10,
         "x": 4,
-        "y": 0
+        "y": 1
       },
       "id": 2,
       "options": {
@@ -226,7 +239,8 @@
         }
       ],
       "title": "Login Activity Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Login attempts per second. High rates may indicate brute force attempts."
     },
     {
       "datasource": {
@@ -263,7 +277,7 @@
         "h": 4,
         "w": 5,
         "x": 14,
-        "y": 0
+        "y": 1
       },
       "id": 3,
       "options": {
@@ -290,7 +304,8 @@
         }
       ],
       "title": "Login Failure Rate",
-      "type": "gauge"
+      "type": "gauge",
+      "description": "Percentage of failed login attempts. High rates may indicate security issues."
     },
     {
       "datasource": {
@@ -348,7 +363,7 @@
         "h": 8,
         "w": 10,
         "x": 19,
-        "y": 0
+        "y": 1
       },
       "id": 4,
       "options": {
@@ -432,7 +447,7 @@
         "h": 4,
         "w": 4,
         "x": 0,
-        "y": 4
+        "y": 5
       },
       "id": 5,
       "options": {
@@ -461,7 +476,8 @@
         }
       ],
       "title": "Active Sessions",
-      "type": "stat"
+      "type": "stat",
+      "description": "Current number of active user sessions. Compare with baseline for anomalies."
     },
     {
       "datasource": {
@@ -511,7 +527,7 @@
         "h": 8,
         "w": 10,
         "x": 4,
-        "y": 8
+        "y": 9
       },
       "id": 6,
       "options": {
@@ -617,7 +633,7 @@
         "h": 8,
         "w": 7,
         "x": 14,
-        "y": 8
+        "y": 9
       },
       "id": 7,
       "options": {
@@ -646,7 +662,8 @@
         }
       ],
       "title": "JWKS Cache Performance",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "JWKS cache hit rate. Low hit rate increases latency and external calls."
     },
     {
       "datasource": {
@@ -696,7 +713,7 @@
         "h": 8,
         "w": 8,
         "x": 21,
-        "y": 8
+        "y": 9
       },
       "id": 8,
       "options": {
@@ -724,7 +741,8 @@
         }
       ],
       "title": "Login Failures by Reason",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Breakdown of failure types (invalid credentials, locked, expired)."
     },
     {
       "datasource": {
@@ -774,7 +792,7 @@
         "h": 8,
         "w": 15,
         "x": 0,
-        "y": 16
+        "y": 17
       },
       "id": 9,
       "options": {
@@ -830,7 +848,8 @@
         }
       ],
       "title": "Session Lifecycle Operations",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Session create, retrieve, refresh, revoke rates."
     },
     {
       "datasource": {
@@ -880,7 +899,7 @@
         "h": 8,
         "w": 14,
         "x": 15,
-        "y": 16
+        "y": 17
       },
       "id": 10,
       "options": {
@@ -908,7 +927,8 @@
         }
       ],
       "title": "Auth Provider Operations",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Operations grouped by auth provider type."
     }
   ],
   "refresh": "10s",

@@ -187,7 +187,8 @@
         }
       ],
       "title": "Active Connections",
-      "type": "stat"
+      "type": "stat",
+      "description": "Current connection count."
     },
     {
       "datasource": {
@@ -1149,7 +1150,8 @@
         }
       ],
       "title": "Deadlocks",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Deadlock detection count. Should be zero."
     },
     {
       "collapsed": false,

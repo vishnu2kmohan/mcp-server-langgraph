@@ -113,7 +113,8 @@
         }
       ],
       "title": "Loki Status",
-      "type": "stat"
+      "type": "stat",
+      "description": "Log aggregation service health."
     },
     {
       "datasource": {
@@ -273,7 +274,8 @@
         }
       ],
       "title": "Tempo Status",
-      "type": "stat"
+      "type": "stat",
+      "description": "Distributed tracing service health."
     },
     {
       "datasource": {
@@ -353,7 +355,8 @@
         }
       ],
       "title": "Mimir Status",
-      "type": "stat"
+      "type": "stat",
+      "description": "Metrics storage service health."
     },
     {
       "datasource": {
@@ -433,7 +436,8 @@
         }
       ],
       "title": "Alloy Status",
-      "type": "stat"
+      "type": "stat",
+      "description": "OpenTelemetry collector health."
     },
     {
       "datasource": {

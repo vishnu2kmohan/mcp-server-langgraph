@@ -130,7 +130,8 @@
         }
       ],
       "title": "Builder Service Status",
-      "type": "stat"
+      "type": "stat",
+      "description": "Workflow builder service availability."
     },
     {
       "datasource": {
@@ -173,7 +174,8 @@
         }
       ],
       "title": "Request Rate",
-      "type": "stat"
+      "type": "stat",
+      "description": "Requests per second by tool/endpoint. Sudden drops may indicate issues."
     },
     {
       "datasource": {
@@ -232,7 +234,8 @@
         }
       ],
       "title": "Error Rate",
-      "type": "stat"
+      "type": "stat",
+      "description": "Percentage of failed requests. Target: <1%. Investigate if consistently above threshold."
     },
     {
       "datasource": {

@@ -80,7 +80,8 @@
         }
       ],
       "title": "Service Status",
-      "type": "gauge"
+      "type": "gauge",
+      "description": "Shows service availability. Green (1) = UP, Red (0) = DOWN. Check logs if service is down."
     },
     {
       "datasource": {
@@ -171,7 +172,8 @@
         }
       ],
       "title": "Request Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Requests per second by tool/endpoint. Sudden drops may indicate issues."
     },
     {
       "datasource": {
@@ -262,7 +264,8 @@
         }
       ],
       "title": "Error Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Percentage of failed requests. Target: <1%. Investigate if consistently above threshold."
     },
     {
       "datasource": {
@@ -379,7 +382,8 @@
         }
       ],
       "title": "Response Time Percentiles",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "p50/p95/p99 latency. p95 should be <500ms for good UX. p99 >5s needs investigation."
     },
     {
       "datasource": {
@@ -470,7 +474,8 @@
         }
       ],
       "title": "Memory Usage",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Process memory consumption in bytes. Monitor for memory leaks over time."
     },
     {
       "datasource": {
@@ -561,7 +566,8 @@
         }
       ],
       "title": "CPU Usage",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "CPU utilization rate. Sustained >80% indicates need for scaling."
     },
     {
       "datasource": {
@@ -691,7 +697,8 @@
         }
       ],
       "title": "Request Success/Failure Count",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Cumulative successful vs failed requests. Green = success, Red = failure."
     },
     {
       "collapsed": false,

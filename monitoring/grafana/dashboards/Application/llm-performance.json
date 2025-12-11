@@ -105,7 +105,8 @@
         }
       ],
       "title": "Agent Service Status",
-      "type": "gauge"
+      "type": "gauge",
+      "description": "LLM agent service availability."
     },
     {
       "datasource": {
@@ -193,7 +194,8 @@
         }
       ],
       "title": "Agent Call Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Successful and failed agent calls per second."
     },
     {
       "datasource": {
@@ -257,7 +259,8 @@
         }
       ],
       "title": "Error Rate",
-      "type": "gauge"
+      "type": "gauge",
+      "description": "Percentage of failed requests. Target: <1%. Investigate if consistently above threshold."
     },
     {
       "datasource": {
@@ -362,7 +365,8 @@
         }
       ],
       "title": "Response Time Percentiles",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "p50/p95/p99 latency. p95 should be <500ms for good UX. p99 >5s needs investigation."
     },
     {
       "datasource": {
@@ -516,7 +520,8 @@
         }
       ],
       "title": "LLM Invocations by Model",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Success/failure rates per LLM model."
     },
     {
       "datasource": {
@@ -594,7 +599,8 @@
         }
       ],
       "title": "Fallback Model Usage",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Automatic fallback activation tracking."
     },
     {
       "datasource": {
@@ -672,7 +678,8 @@
         }
       ],
       "title": "Tool Usage Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Tool invocations by tool name."
     },
     {
       "datasource": {
@@ -783,7 +790,8 @@
           }
         }
       ],
-      "type": "table"
+      "type": "table",
+      "description": "Table comparing model statistics."
     },
     {
       "datasource": {
@@ -863,7 +871,8 @@
         }
       ],
       "title": "Average Response Time by Operation",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Latency breakdown by operation type."
     },
     {
       "collapsed": false,

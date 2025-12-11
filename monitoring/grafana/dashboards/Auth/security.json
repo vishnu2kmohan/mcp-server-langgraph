@@ -295,7 +295,8 @@
         }
       ],
       "title": "Security Status",
-      "type": "gauge"
+      "type": "gauge",
+      "description": "Overall security posture gauge. Red indicates active issues."
     },
     {
       "datasource": {
@@ -390,7 +391,8 @@
         }
       ],
       "title": "Authentication Failures by Reason",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Breakdown by failure type (invalid password, locked, expired)."
     },
     {
       "datasource": {
@@ -485,7 +487,8 @@
         }
       ],
       "title": "Authorization Failures by Resource",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Access denied patterns by resource type."
     },
     {
       "datasource": {

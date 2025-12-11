@@ -111,7 +111,8 @@
         }
       ],
       "title": "Keycloak Service Status",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Keycloak SSO service health. Check container logs if unavailable."
     },
     {
       "datasource": {

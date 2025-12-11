@@ -92,7 +92,11 @@ class TestPrometheusAuthMetricsRecording:
         from mcp_server_langgraph.auth import prometheus_metrics
 
         # Should not raise
-        prometheus_metrics.record_login_attempt(provider="keycloak", result="invalid_credentials", duration_seconds=0.1)
+        prometheus_metrics.record_login_attempt(
+            provider="keycloak",
+            result="invalid_credentials",  # gitleaks:allow - test value, not actual credential
+            duration_seconds=0.1,
+        )
 
     def test_record_token_verification_success(self) -> None:
         """Test recording a successful token verification."""
