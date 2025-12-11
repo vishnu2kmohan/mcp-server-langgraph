@@ -213,7 +213,10 @@ services:
 
   keycloak-test:
     image: quay.io/keycloak/keycloak:26.4.2
-    command: start-dev --import-realm
+    # WORKAROUND: Keycloak 26.x has a regression (issue #36284) where files named *-realm.json
+    # fail to import when the organization feature is enabled. Disable organization feature.
+    # See: https://github.com/keycloak/keycloak/issues/36284
+    command: start-dev --import-realm --features-disabled=organization
     depends_on:
       postgres-test:
         condition: service_healthy
