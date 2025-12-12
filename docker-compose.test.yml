@@ -771,6 +771,11 @@ services:
       - CHECKPOINT_REDIS_URL=redis://redis-test:6379/1
       - QDRANT_URL=http://qdrant-test:6333
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
+      # GCP credentials for Vertex AI (mounted from host for local development)
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/.config/gcloud/application_default_credentials.json
+    volumes:
+      # Mount GCP ADC credentials for Vertex AI (local development only)
+      - ~/.config/gcloud/application_default_credentials.json:/app/.config/gcloud/application_default_credentials.json:ro
     healthcheck:
       # Use /health/live to avoid 307 redirect (/health -> /health/ due to sub-app mount)
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
@@ -1364,8 +1369,9 @@ services:
       - "traefik.http.routers.playground.priority=10"
       - "traefik.http.services.playground.loadbalancer.server.port=8002"
       - "traefik.http.middlewares.playground-strip.stripprefix.prefixes=/chat"
-      # Authentication via forward-auth middleware (ADR-0054)
-      - "traefik.http.routers.playground.middlewares=forward-auth@docker,playground-strip"
+      # NOTE: Playground has its own auth integration (login form + Keycloak),
+      # so we don't use forward-auth here. forward-auth is for apps without auth.
+      - "traefik.http.routers.playground.middlewares=playground-strip"
 
 networks:
   mcp-test-network:

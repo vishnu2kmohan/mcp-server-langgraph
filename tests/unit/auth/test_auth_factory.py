@@ -39,6 +39,7 @@ def mock_settings():
     settings.keycloak_client_secret = "test-secret"
     settings.keycloak_admin_username = "admin"
     settings.keycloak_admin_password = "admin-password"
+    settings.keycloak_admin_realm = "master"  # Admin API realm
     settings.keycloak_verify_ssl = True
     settings.keycloak_timeout = 10
     # Redis settings

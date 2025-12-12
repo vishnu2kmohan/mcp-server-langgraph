@@ -383,6 +383,211 @@ class TestPlaygroundKeycloakAuth:
 
 
 # ==============================================================================
+# Auth Endpoints Tests (Login, Logout, Refresh, Me)
+# ==============================================================================
+
+
+@pytest.mark.xdist_group(name="playground_api")
+class TestPlaygroundAuthEndpoints:
+    """Test playground authentication endpoints (login, logout, refresh, me)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_login_endpoint_exists(self) -> None:
+        """Test that POST /api/playground/auth/login endpoint exists."""
+        from mcp_server_langgraph.playground.api.server import app
+
+        client = TestClient(app)
+        # Should return 422 (validation error) or 401/500 (auth error), not 404
+        response = client.post(
+            "/api/playground/auth/login",
+            json={"username": "test", "password": "test"},
+        )
+
+        # 404 would mean endpoint doesn't exist
+        assert response.status_code != 404
+
+    @pytest.mark.unit
+    def test_login_with_invalid_credentials_returns_401(self) -> None:
+        """Test that login with invalid credentials returns 401."""
+        from mcp_server_langgraph.playground.api.server import app
+
+        with patch("mcp_server_langgraph.playground.api.server.get_user_provider") as mock_provider_factory:
+            mock_provider = AsyncMock()  # noqa: async-mock-config
+            # Simulate failed authentication
+            mock_auth_response = AsyncMock()  # noqa: async-mock-config
+            mock_auth_response.authorized = False
+            mock_auth_response.reason = "authentication_failed"
+            mock_auth_response.error = None
+            mock_provider.authenticate = AsyncMock(return_value=mock_auth_response)
+            mock_provider_factory.return_value = mock_provider
+
+            client = TestClient(app)
+            response = client.post(
+                "/api/playground/auth/login",
+                json={"username": "invalid", "password": "wrong"},
+            )
+
+            assert response.status_code == 401
+
+    @pytest.mark.unit
+    def test_login_with_valid_credentials_returns_tokens(self) -> None:
+        """Test that login with valid credentials returns tokens."""
+        from mcp_server_langgraph.playground.api.server import app
+
+        with patch("mcp_server_langgraph.playground.api.server.get_user_provider") as mock_provider_factory:
+            mock_provider = AsyncMock()  # noqa: async-mock-config
+            # Simulate successful authentication
+            mock_auth_response = AsyncMock()  # noqa: async-mock-config
+            mock_auth_response.authorized = True
+            mock_auth_response.username = "alice"
+            mock_auth_response.user_id = "user:alice"
+            mock_auth_response.email = "alice@example.com"
+            mock_auth_response.roles = ["user"]
+            mock_auth_response.access_token = "test-access-token"
+            mock_auth_response.refresh_token = "test-refresh-token"
+            mock_auth_response.expires_in = 300
+            mock_provider.authenticate = AsyncMock(return_value=mock_auth_response)
+            mock_provider_factory.return_value = mock_provider
+
+            client = TestClient(app)
+            response = client.post(
+                "/api/playground/auth/login",
+                json={"username": "alice", "password": "alice123"},
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert "user" in data
+            assert "tokens" in data
+            assert data["user"]["username"] == "alice"
+            assert data["tokens"]["access_token"] == "test-access-token"
+
+    @pytest.mark.unit
+    def test_logout_endpoint_returns_success(self) -> None:
+        """Test that POST /api/playground/auth/logout returns success."""
+        from mcp_server_langgraph.playground.api.server import app
+
+        client = TestClient(app)
+        response = client.post("/api/playground/auth/logout")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+
+    @pytest.mark.unit
+    def test_me_endpoint_requires_auth(self) -> None:
+        """Test that GET /api/playground/auth/me requires authentication."""
+        from mcp_server_langgraph.playground.api.server import app
+
+        client = TestClient(app)
+        response = client.get("/api/playground/auth/me")
+
+        assert response.status_code == 401
+
+    @pytest.mark.unit
+    def test_me_endpoint_returns_user_info_with_valid_token(self) -> None:
+        """Test that GET /api/playground/auth/me returns user info with valid token."""
+        from mcp_server_langgraph.playground.api.server import app
+
+        with patch("mcp_server_langgraph.playground.api.server.get_user_provider") as mock_provider_factory:
+            mock_provider = AsyncMock()  # noqa: async-mock-config
+            # Simulate valid token
+            mock_verification = AsyncMock()  # noqa: async-mock-config
+            mock_verification.valid = True
+            mock_verification.payload = {
+                "sub": "user:alice",
+                "preferred_username": "alice",
+                "email": "alice@example.com",
+            }
+            mock_provider.verify_token = AsyncMock(return_value=mock_verification)
+            mock_provider.get_user_by_username = AsyncMock(return_value=None)
+            mock_provider_factory.return_value = mock_provider
+
+            client = TestClient(app)
+            response = client.get(
+                "/api/playground/auth/me",
+                headers={"Authorization": "Bearer test-token"},
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["username"] == "alice"
+
+
+# ==============================================================================
+# MCP Servers Endpoint Tests
+# ==============================================================================
+
+
+@pytest.mark.xdist_group(name="playground_api")
+class TestPlaygroundMCPServersEndpoint:
+    """Test playground MCP servers listing endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_list_mcp_servers_returns_servers(self) -> None:
+        """Test that GET /api/playground/mcp/servers returns server list."""
+        from mcp_server_langgraph.playground.api.server import app
+
+        with patch.dict(os.environ, {"ENVIRONMENT": "development"}):
+            client = TestClient(app)
+            response = client.get("/api/playground/mcp/servers")
+
+            assert response.status_code == 200
+            data = response.json()
+            assert "servers" in data
+            assert "total" in data
+            assert data["total"] >= 1
+
+    @pytest.mark.unit
+    def test_list_mcp_servers_includes_default_server(self) -> None:
+        """Test that MCP servers list includes the default LangGraph server."""
+        from mcp_server_langgraph.playground.api.server import app
+
+        with patch.dict(os.environ, {"ENVIRONMENT": "development"}):
+            client = TestClient(app)
+            response = client.get("/api/playground/mcp/servers")
+
+            assert response.status_code == 200
+            data = response.json()
+            servers = data["servers"]
+
+            # Should have at least one default server
+            default_servers = [s for s in servers if s.get("is_default")]
+            assert len(default_servers) >= 1
+            assert default_servers[0]["name"] == "LangGraph Agent Server"
+
+    @pytest.mark.unit
+    def test_list_mcp_servers_uses_env_var_url(self) -> None:
+        """Test that MCP server URL is read from environment variable."""
+        from mcp_server_langgraph.playground.api.server import app
+
+        with patch.dict(
+            os.environ,
+            {
+                "ENVIRONMENT": "development",
+                "MCP_SERVER_URL": "http://custom-mcp:9000",
+            },
+        ):
+            client = TestClient(app)
+            response = client.get("/api/playground/mcp/servers")
+
+            assert response.status_code == 200
+            data = response.json()
+            servers = data["servers"]
+
+            default_server = next(s for s in servers if s.get("is_default"))
+            assert default_server["url"] == "http://custom-mcp:9000"
+
+
+# ==============================================================================
 # Authorization Tests
 # ==============================================================================
 

@@ -52,6 +52,8 @@ from mcp_server_langgraph.observability.telemetry import (
 from .models import (
     Alert,
     AlertsResponse,
+    AuthTokens,
+    AuthUser,
     ChatRequest,
     ChatResponse,
     CreateSessionRequest,
@@ -60,9 +62,14 @@ from .models import (
     LLMMetrics,
     LogEntry,
     LogLevel,
+    LoginRequest,
+    LoginResponse,
     LogsResponse,
+    MCPServerInfo,
+    MCPServersResponse,
     MetricsSummary,
     ReadinessStatus,
+    RefreshTokenRequest,
     SessionConfig,
     SessionDetails,
     SessionMessage,
@@ -73,6 +80,9 @@ from .models import (
     TraceInfo,
     TracesResponse,
 )
+from mcp_server_langgraph.auth.factory import create_user_provider
+from mcp_server_langgraph.auth.user_provider import UserProvider
+from mcp_server_langgraph.core.config import Settings
 
 # ==============================================================================
 # Session Storage (Postgres, Redis, or in-memory fallback)
@@ -96,9 +106,13 @@ from .metrics import (
     websocket_connected,
     websocket_disconnected,
 )
+from ..mcp.integration import PlaygroundMCPBridge, ChatError
 
 # Global session manager (initialized in lifespan)
 _session_manager: PostgresSessionManager | RedisSessionManager | None = None
+
+# Global MCP bridge (initialized in lifespan)
+_mcp_bridge: PlaygroundMCPBridge | None = None
 
 # In-memory fallback for development/testing without persistence
 _sessions_fallback: dict[str, dict[str, Any]] = {}
@@ -146,6 +160,23 @@ def _delete_session_memory(session_id: str) -> bool:
 # Security & Authentication
 # ==============================================================================
 
+# Global auth provider (initialized in lifespan)
+_user_provider: UserProvider | None = None
+_settings: Settings | None = None
+
+
+def get_user_provider() -> UserProvider:
+    """Get the configured user provider for authentication."""
+    global _user_provider, _settings
+    if _user_provider is None:
+        _settings = Settings()
+        _user_provider = create_user_provider(_settings)
+        logger.info(
+            "Auth provider initialized",
+            extra={"provider": type(_user_provider).__name__},
+        )
+    return _user_provider
+
 
 def verify_playground_auth(authorization: str = Header(None)) -> dict[str, Any] | None:
     """
@@ -165,12 +196,35 @@ def verify_playground_auth(authorization: str = Header(None)) -> dict[str, Any] 
     Raises:
         HTTPException: 401 if not authenticated in production
     """
+    import base64
+    import json
+
     environment = os.getenv("ENVIRONMENT", "development")
 
-    # Development mode - allow unauthenticated access
-    if environment == "development":
-        if not authorization:
-            logger.debug("Playground accessed without auth in development mode")
+    # Development/Test mode - extract user from JWT if available, otherwise use dev-user
+    if environment in ("development", "test"):
+        if authorization and authorization.startswith("Bearer "):
+            try:
+                token = authorization[7:]
+                # Decode JWT payload without verification (just to extract user info)
+                # JWT format: header.payload.signature (base64url encoded)
+                parts = token.split(".")
+                if len(parts) >= 2:
+                    # Add padding if needed for base64 decoding
+                    payload_b64 = parts[1]
+                    padding = 4 - len(payload_b64) % 4
+                    if padding != 4:
+                        payload_b64 += "=" * padding
+                    payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+                    # Extract username from JWT claims
+                    username = payload.get("preferred_username") or payload.get("username") or payload.get("sub")
+                    roles = payload.get("realm_access", {}).get("roles", ["user"])
+                    logger.debug(f"Extracted user from JWT: {username}")
+                    return {"user_id": username, "roles": roles}
+            except Exception as e:
+                logger.debug(f"Failed to decode JWT, using dev-user: {e}")
+        # No token or decoding failed - use dev-user
+        logger.debug(f"Playground accessed without auth in {environment} mode")
         return {"user_id": "dev-user", "roles": ["user"]}
 
     # Production mode - require authentication
@@ -214,7 +268,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     connects to Postgres or Redis for session storage (priority: Postgres > Redis > Memory),
     gracefully shuts down on termination.
     """
-    global _session_manager, _storage_backend
+    global _session_manager, _storage_backend, _mcp_bridge
 
     # STARTUP - Observability
     if not is_initialized():
@@ -277,6 +331,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             "Using in-memory session storage (data will be lost on restart)",
             extra={"backend": "memory"},
         )
+
+    # STARTUP - MCP Bridge for agent communication
+    mcp_server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000")
+    try:
+        _mcp_bridge = PlaygroundMCPBridge(mcp_url=mcp_server_url)
+        logger.info(
+            "Playground MCP bridge initialized",
+            extra={"mcp_url": mcp_server_url},
+        )
+    except Exception as e:
+        logger.warning(f"Failed to initialize MCP bridge: {e}")
+        _mcp_bridge = None
 
     yield  # Application runs here
 
@@ -373,6 +439,272 @@ def prometheus_metrics() -> Response:
             content="# prometheus_client not available\n",
             media_type="text/plain",
         )
+
+
+# ==============================================================================
+# Authentication Endpoints (Keycloak OIDC)
+# ==============================================================================
+
+
+@app.post("/api/playground/auth/login")
+async def login(request: LoginRequest) -> LoginResponse:
+    """
+    Authenticate user via Keycloak.
+
+    Uses the configured auth provider (Keycloak in production).
+
+    Args:
+        request: Login request with username and password
+
+    Returns:
+        LoginResponse with user info and tokens
+
+    Raises:
+        HTTPException: 401 if authentication fails
+    """
+    with tracer.start_as_current_span(
+        "playground.auth.login",
+        attributes={"username": request.username},
+    ):
+        try:
+            provider = get_user_provider()
+            result = await provider.authenticate(request.username, request.password)
+
+            if not result.authorized:
+                error_msg = result.reason or result.error or "Authentication failed"
+                logger.warning(
+                    "Login failed",
+                    extra={"username": request.username, "error": error_msg},
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=error_msg,
+                )
+
+            # Calculate expiration timestamp (milliseconds)
+            import time
+
+            expires_at = int((time.time() + (result.expires_in or 300)) * 1000)
+
+            logger.info(
+                "User logged in",
+                extra={"username": request.username, "user_id": result.user_id},
+            )
+
+            return LoginResponse(
+                user=AuthUser(
+                    id=result.user_id or "",
+                    username=result.username or request.username,
+                    email=result.email,
+                    roles=result.roles,
+                ),
+                tokens=AuthTokens(
+                    access_token=result.access_token or "",
+                    refresh_token=result.refresh_token,
+                    expires_at=expires_at,
+                ),
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Login error: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Authentication service error",
+            )
+
+
+@app.post("/api/playground/auth/refresh")
+async def refresh_token_endpoint(request: RefreshTokenRequest) -> AuthTokens:
+    """
+    Refresh authentication tokens.
+
+    Args:
+        request: Request with refresh token
+
+    Returns:
+        New AuthTokens
+
+    Raises:
+        HTTPException: 401 if refresh fails
+    """
+    import time
+
+    with tracer.start_as_current_span("playground.auth.refresh"):
+        try:
+            provider = get_user_provider()
+
+            # Access the underlying client's refresh_token method
+            if hasattr(provider, "client") and hasattr(provider.client, "refresh_token"):
+                tokens = await provider.client.refresh_token(request.refresh_token)
+            else:
+                # Fallback for providers without refresh support
+                raise HTTPException(
+                    status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                    detail="Token refresh not supported by this provider",
+                )
+
+            expires_at = int((time.time() + tokens.get("expires_in", 300)) * 1000)
+
+            return AuthTokens(
+                access_token=tokens.get("access_token", ""),
+                refresh_token=tokens.get("refresh_token"),
+                expires_at=expires_at,
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Token refresh error: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token refresh failed",
+            )
+
+
+@app.post("/api/playground/auth/logout")
+async def logout(authorization: str = Header(None)) -> dict[str, bool]:
+    """
+    Logout user and invalidate tokens.
+
+    Args:
+        authorization: Bearer token to invalidate
+
+    Returns:
+        Success status
+    """
+    with tracer.start_as_current_span("playground.auth.logout"):
+        try:
+            if authorization and authorization.startswith("Bearer "):
+                token = authorization[7:]
+                provider = get_user_provider()
+                if hasattr(provider, "logout"):
+                    await provider.logout(token)
+
+            logger.info("User logged out")
+            return {"success": True}
+        except Exception as e:
+            logger.warning(f"Logout error (non-fatal): {e}")
+            return {"success": True}  # Logout should always succeed from user perspective
+
+
+@app.get("/api/playground/auth/me")
+async def get_current_user(
+    authorization: str = Header(None),
+) -> AuthUser:
+    """
+    Get current authenticated user info.
+
+    Args:
+        authorization: Bearer token
+
+    Returns:
+        Current user info
+
+    Raises:
+        HTTPException: 401 if not authenticated
+    """
+    with tracer.start_as_current_span("playground.auth.me"):
+        if not authorization or not authorization.startswith("Bearer "):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        token = authorization[7:]
+        try:
+            provider = get_user_provider()
+            result = await provider.verify_token(token)
+
+            if not result.valid:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid or expired token",
+                )
+
+            # Extract user info from token payload
+            payload = result.payload or {}
+            # Keycloak tokens have 'sub' for user ID, 'preferred_username' for username
+            username = payload.get("preferred_username") or payload.get("sub", "")
+            user_id = payload.get("sub", "")
+
+            # Try to get full user data from provider
+            user_data = await provider.get_user_by_username(username)
+            if user_data:
+                return AuthUser(
+                    id=user_data.user_id,
+                    username=user_data.username,
+                    email=user_data.email,
+                    roles=user_data.roles,
+                )
+
+            # Fallback to token payload if user lookup fails
+            return AuthUser(
+                id=user_id,
+                username=username,
+                email=payload.get("email"),
+                roles=payload.get("realm_access", {}).get("roles", ["user"]),
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Token validation error: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token validation failed",
+            )
+
+
+# ==============================================================================
+# MCP Server Configuration Endpoints
+# ==============================================================================
+
+
+@app.get("/api/playground/mcp/servers")
+def list_mcp_servers(
+    user: dict[str, Any] | None = Depends(verify_playground_auth),
+) -> MCPServersResponse:
+    """
+    List available MCP servers for playground connections.
+
+    Returns configured MCP server endpoints that clients can connect to.
+    The primary/default server is listed first.
+    """
+    servers = []
+
+    # Get MCP server URL from environment or use default
+    mcp_server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8001")
+
+    # Primary MCP server (the one running our agent)
+    servers.append(
+        MCPServerInfo(
+            id="default",
+            name="LangGraph Agent Server",
+            url=mcp_server_url,
+            description="Primary MCP server with LangGraph agent capabilities",
+            is_default=True,
+        )
+    )
+
+    # Additional servers can be configured via MCP_ADDITIONAL_SERVERS env var
+    # Format: "name1:url1,name2:url2"
+    additional = os.getenv("MCP_ADDITIONAL_SERVERS", "")
+    if additional:
+        for server_config in additional.split(","):
+            if ":" in server_config:
+                parts = server_config.strip().split(":", 1)
+                if len(parts) == 2:
+                    name, url = parts
+                    servers.append(
+                        MCPServerInfo(
+                            id=name.lower().replace(" ", "-"),
+                            name=name,
+                            url=url,
+                            is_default=False,
+                        )
+                    )
+
+    return MCPServersResponse(servers=servers, total=len(servers))
 
 
 # ==============================================================================
@@ -622,6 +954,7 @@ async def delete_session(
 @app.post("/api/playground/chat")
 async def send_chat_message(
     request: ChatRequest,
+    authorization: str = Header(None),
     user: dict[str, Any] | None = Depends(verify_playground_auth),
 ) -> ChatResponse:
     """
@@ -653,9 +986,45 @@ async def send_chat_message(
 
         now = datetime.now(UTC)
         message_id = str(uuid.uuid4())
+        user_id = user.get("user_id", "anonymous") if user else "anonymous"
 
-        # Generate response (mock for now - will integrate with LangGraph)
-        response_content = f"I received your message: '{request.message}'. This is a placeholder response from the playground."
+        # Extract JWT token from Authorization header
+        token = ""
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization[7:]
+
+        # Get response from MCP agent via bridge
+        response_content = ""
+        if _mcp_bridge:
+            try:
+                # Call the MCP agent_chat tool
+                mcp_response = await _mcp_bridge.send_chat_message(
+                    session_id=request.session_id,
+                    message=request.message,
+                    token=token,
+                    user_id=user_id,
+                    response_format="detailed",
+                )
+                response_content = mcp_response.content
+                if mcp_response.message_id:
+                    message_id = mcp_response.message_id
+            except ChatError as e:
+                logger.warning(
+                    f"MCP bridge error, using fallback: {e}",
+                    extra={"session_id": request.session_id},
+                )
+                response_content = f"I received your message: '{request.message}'. (Agent temporarily unavailable)"
+            except Exception as e:
+                logger.error(
+                    f"Unexpected MCP bridge error: {e}",
+                    extra={"session_id": request.session_id},
+                    exc_info=True,
+                )
+                response_content = f"I received your message: '{request.message}'. (Agent temporarily unavailable)"
+        else:
+            # No bridge configured - use placeholder
+            response_content = f"I received your message: '{request.message}'. (MCP bridge not configured)"
+
         response_timestamp = datetime.now(UTC)
 
         if _storage_backend != "memory" and _session_manager:
@@ -1066,6 +1435,10 @@ _frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
 # Only mount if frontend is built (graceful degradation for API-only mode)
 _spa_handler = create_spa_static_files(str(_frontend_dist), caching=True)
 if _spa_handler is not None:
+    # Mount at /chat for assets referenced with /chat/ prefix (from vite base: '/chat/')
+    # This enables direct access at localhost:9002 where assets are at /chat/assets/*
+    app.mount("/chat", _spa_handler, name="spa-chat")
+    # Mount at / for Traefik access (where /chat prefix is stripped)
     app.mount("/", _spa_handler, name="spa")
 
 

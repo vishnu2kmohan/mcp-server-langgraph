@@ -10,7 +10,7 @@
  * @deprecated Import from '@mcp-server-langgraph/shared-frontend' instead
  */
 
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Re-export base types from shared library
 export {
@@ -20,11 +20,7 @@ export {
 } from '../../../../shared/frontend/src/hooks/useAccessibility';
 
 // Import shared implementations
-import {
-  useAnnounce as useSharedAnnounce,
-  useFocusTrap as useSharedFocusTrap,
-  useAccessibility as useSharedAccessibility,
-} from '../../../../shared/frontend/src/hooks/useAccessibility';
+import { useAnnounce as useSharedAnnounce } from '../../../../shared/frontend/src/hooks/useAccessibility';
 
 // ==============================================================================
 // useFocusTrap - Backward-compatible wrapper

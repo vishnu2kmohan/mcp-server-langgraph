@@ -4,12 +4,18 @@
  * Provides export and import functionality for session history.
  */
 
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 import clsx from 'clsx';
 import { useSessionExport, type SessionData } from '../../hooks/useSessionExport';
+import type { SessionSummary } from '../../api/types';
+
+/**
+ * Base session info that both SessionData and SessionSummary share
+ */
+type SessionInput = SessionData | SessionSummary;
 
 export interface SessionExportButtonsProps {
-  sessions: SessionData[];
+  sessions: SessionInput[];
   onImport: (sessions: SessionData[]) => void;
   variant?: 'default' | 'compact';
   className?: string;
@@ -49,10 +55,29 @@ export function SessionExportButtons({
     useSessionExport();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleExport = useCallback(() => {
-    if (sessions.length === 0) return;
+  // Convert SessionInput[] to SessionData[] for export
+  const exportableSessions = useMemo((): SessionData[] => {
+    return sessions.map((session): SessionData => {
+      // Check if it's already SessionData (has 'title' and 'messages')
+      if ('title' in session && 'messages' in session) {
+        return session as SessionData;
+      }
+      // Otherwise it's SessionSummary - convert it
+      const summary = session as SessionSummary;
+      return {
+        id: summary.id,
+        title: summary.name,
+        messages: [], // Summary doesn't have full messages
+        createdAt: summary.createdAt,
+        updatedAt: summary.updatedAt,
+      };
+    });
+  }, [sessions]);
 
-    const url = createDownloadUrl(sessions, { includeMetadata: true });
+  const handleExport = useCallback(() => {
+    if (exportableSessions.length === 0) return;
+
+    const url = createDownloadUrl(exportableSessions, { includeMetadata: true });
     const filename = generateFilename();
 
     // Create temporary link and trigger download
@@ -65,7 +90,7 @@ export function SessionExportButtons({
 
     // Clean up the blob URL
     setTimeout(() => revokeDownloadUrl(url), 100);
-  }, [sessions, createDownloadUrl, generateFilename, revokeDownloadUrl]);
+  }, [exportableSessions, createDownloadUrl, generateFilename, revokeDownloadUrl]);
 
   const handleImportClick = useCallback(() => {
     fileInputRef.current?.click();

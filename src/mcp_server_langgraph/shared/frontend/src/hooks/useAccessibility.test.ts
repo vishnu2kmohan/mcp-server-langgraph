@@ -167,6 +167,8 @@ describe('useSkipLink', () => {
     const target = document.createElement('main');
     target.id = 'test-target';
     target.tabIndex = -1;
+    // Mock scrollIntoView since jsdom doesn't implement it
+    target.scrollIntoView = vi.fn();
     document.body.appendChild(target);
 
     const mockEvent = {
@@ -179,6 +181,7 @@ describe('useSkipLink', () => {
 
     expect(mockEvent.preventDefault).toHaveBeenCalled();
     expect(document.activeElement).toBe(target);
+    expect(target.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
 
     document.body.removeChild(target);
   });

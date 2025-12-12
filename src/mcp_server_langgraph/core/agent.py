@@ -654,8 +654,8 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
         messages_list = list(messages)
 
         # Add refinement context if this is a refinement attempt
-        refinement_attempts = state.get("refinement_attempts", 0)
-        if refinement_attempts > 0 and state.get("verification_feedback"):  # type: ignore[operator]
+        refinement_attempts = state.get("refinement_attempts") or 0
+        if refinement_attempts > 0 and state.get("verification_feedback"):
             refinement_prompt = SystemMessage(
                 content=f"<refinement_guidance>\n"
                 f"Previous response had issues. Please refine based on this feedback:\n"

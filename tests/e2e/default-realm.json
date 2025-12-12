@@ -105,7 +105,8 @@
       ],
       "realmRoles": [
         "offline_access",
-        "uma_authorization"
+        "uma_authorization",
+        "user"
       ],
       "clientRoles": {
         "account": [
@@ -130,7 +131,8 @@
       ],
       "realmRoles": [
         "offline_access",
-        "uma_authorization"
+        "uma_authorization",
+        "user"
       ],
       "clientRoles": {
         "account": [
@@ -153,12 +155,31 @@
         "description": "UMA authorization",
         "composite": false,
         "clientRole": false
+      },
+      {
+        "name": "user",
+        "description": "Standard user role for tool access",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "premium",
+        "description": "Premium user role with enhanced access",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "admin",
+        "description": "Administrator role with full access",
+        "composite": false,
+        "clientRole": false
       }
     ]
   },
   "defaultRoles": [
     "offline_access",
-    "uma_authorization"
+    "uma_authorization",
+    "user"
   ],
   "requiredCredentials": [
     "password"

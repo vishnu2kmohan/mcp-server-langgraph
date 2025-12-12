@@ -90,6 +90,7 @@ def create_user_provider(settings: Settings, openfga_client: OpenFGAClient | Non
         keycloak_config = KeycloakConfig(
             server_url=settings.keycloak_server_url,
             realm=settings.keycloak_realm,
+            admin_realm=settings.keycloak_admin_realm,
             client_id=settings.keycloak_client_id,
             client_secret=settings.keycloak_client_secret,
             admin_username=settings.keycloak_admin_username,

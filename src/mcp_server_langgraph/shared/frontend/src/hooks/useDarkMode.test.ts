@@ -5,52 +5,10 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { useDarkMode } from './useDarkMode';
 
 describe('useDarkMode', () => {
-  const originalLocalStorage = global.localStorage;
-  const originalMatchMedia = global.matchMedia;
-
-  beforeEach(() => {
-    // Mock localStorage
-    const store: Record<string, string> = {};
-    global.localStorage = {
-      getItem: vi.fn((key: string) => store[key] || null),
-      setItem: vi.fn((key: string, value: string) => {
-        store[key] = value;
-      }),
-      removeItem: vi.fn((key: string) => {
-        delete store[key];
-      }),
-      clear: vi.fn(() => {
-        Object.keys(store).forEach((key) => delete store[key]);
-      }),
-      length: 0,
-      key: vi.fn(),
-    };
-
-    // Mock matchMedia
-    global.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
-
-    // Mock document.documentElement
-    document.documentElement.classList.remove('dark');
-  });
-
-  afterEach(() => {
-    global.localStorage = originalLocalStorage;
-    global.matchMedia = originalMatchMedia;
-  });
-
   describe('initial state', () => {
     it('returns isDark as false by default', () => {
       const { result } = renderHook(() => useDarkMode());
@@ -69,12 +27,16 @@ describe('useDarkMode', () => {
     });
 
     it('respects system preference when no localStorage value', () => {
-      global.matchMedia = vi.fn().mockImplementation((query: string) => ({
-        matches: query === '(prefers-color-scheme: dark)',
-        media: query,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }));
+      // Mock matchMedia to return dark preference
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: vi.fn().mockImplementation((query: string) => ({
+          matches: query === '(prefers-color-scheme: dark)',
+          media: query,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        })),
+      });
 
       const { result } = renderHook(() => useDarkMode());
       expect(result.current.isDark).toBe(true);
@@ -233,43 +195,76 @@ describe('useDarkMode', () => {
   });
 
   describe('system preference changes', () => {
-    it('updates when system preference changes and no stored preference', () => {
+    it('does not update when system preference changes after explicit preference stored', () => {
+      // The hook stores the theme on mount, so system preference changes won't override
       let mediaQueryCallback: ((e: MediaQueryListEvent) => void) | null = null;
 
-      global.matchMedia = vi.fn().mockImplementation((query: string) => ({
-        matches: false,
-        media: query,
-        addEventListener: vi.fn((event: string, callback: (e: MediaQueryListEvent) => void) => {
-          if (event === 'change') {
-            mediaQueryCallback = callback;
-          }
-        }),
-        removeEventListener: vi.fn(),
-      }));
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: vi.fn().mockImplementation((query: string) => ({
+          matches: false,
+          media: query,
+          addEventListener: vi.fn((event: string, callback: (e: MediaQueryListEvent) => void) => {
+            if (event === 'change') {
+              mediaQueryCallback = callback;
+            }
+          }),
+          removeEventListener: vi.fn(),
+        })),
+      });
 
       const { result } = renderHook(() => useDarkMode());
 
       expect(result.current.isDark).toBe(false);
 
-      // Simulate system preference change
+      // Simulate system preference change - should NOT update because localStorage has value
       if (mediaQueryCallback) {
         act(() => {
           mediaQueryCallback!({ matches: true } as MediaQueryListEvent);
         });
 
-        expect(result.current.isDark).toBe(true);
+        // Should still be false because user preference (stored on mount) takes precedence
+        expect(result.current.isDark).toBe(false);
       }
+    });
+
+    it('listens for system preference changes', () => {
+      const addEventListenerMock = vi.fn();
+      const removeEventListenerMock = vi.fn();
+
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: vi.fn().mockImplementation((query: string) => ({
+          matches: false,
+          media: query,
+          addEventListener: addEventListenerMock,
+          removeEventListener: removeEventListenerMock,
+        })),
+      });
+
+      const { unmount } = renderHook(() => useDarkMode());
+
+      // Verify listener was added for prefers-color-scheme
+      expect(addEventListenerMock).toHaveBeenCalledWith('change', expect.any(Function));
+
+      unmount();
+
+      // Verify listener was removed on cleanup
+      expect(removeEventListenerMock).toHaveBeenCalledWith('change', expect.any(Function));
     });
   });
 
   describe('reduced motion preference', () => {
     it('exposes prefersReducedMotion', () => {
-      global.matchMedia = vi.fn().mockImplementation((query: string) => ({
-        matches: query === '(prefers-reduced-motion: reduce)',
-        media: query,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }));
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: vi.fn().mockImplementation((query: string) => ({
+          matches: query === '(prefers-reduced-motion: reduce)',
+          media: query,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        })),
+      });
 
       const { result } = renderHook(() => useDarkMode());
       expect(result.current.prefersReducedMotion).toBe(true);

@@ -15,7 +15,7 @@ Privacy features:
 """
 
 from datetime import UTC, datetime
-from typing import Literal
+from typing import Any, Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Query, status
@@ -318,7 +318,7 @@ async def get_aggregate_metrics(
     summary="Get Dashboard Data",
     description="Get all metrics data for admin dashboard",
 )
-async def get_dashboard() -> dict:
+async def get_dashboard() -> dict[str, Any]:
     """
     Get dashboard data for admin UI.
 

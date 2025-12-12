@@ -98,11 +98,11 @@ export function useMCPTools(): UseMCPToolsResult {
     async (
       message: string,
       onChunk: (content: string) => void,
-      conversationId?: string
+      threadId?: string
     ): Promise<void> => {
       await streamToolCall(
         'agent_chat',
-        { message, conversation_id: conversationId },
+        { message, thread_id: threadId },
         (chunk) => {
           if (chunk.type === 'chunk' && chunk.content) {
             onChunk(chunk.content);

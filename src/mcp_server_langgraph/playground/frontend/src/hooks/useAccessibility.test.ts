@@ -63,7 +63,13 @@ describe('useAccessibility', () => {
     });
 
     it('should_create_live_region', () => {
-      renderHook(() => useAnnounce());
+      const { result } = renderHook(() => useAnnounce());
+
+      // Live region is created lazily when announce is first called
+      act(() => {
+        result.current.announce('Test');
+      });
+
       const liveRegion = document.querySelector('[aria-live="polite"]');
       expect(liveRegion).toBeTruthy();
     });
@@ -81,6 +87,11 @@ describe('useAccessibility', () => {
 
     it('should_support_assertive_mode', async () => {
       const { result } = renderHook(() => useAnnounce('assertive'));
+
+      // Live region is created lazily when announce is first called
+      act(() => {
+        result.current.announce('Test assertive');
+      });
 
       const liveRegion = document.querySelector('[aria-live="assertive"]');
       expect(liveRegion).toBeTruthy();

@@ -136,7 +136,7 @@ describe('MCPClient', () => {
             type: 'object',
             properties: {
               message: { type: 'string' },
-              conversation_id: { type: 'string' },
+              thread_id: { type: 'string' },
             },
             required: ['message'],
           },
@@ -188,7 +188,7 @@ describe('MCPClient', () => {
       // WHEN: Calling a tool
       const result = await client.callTool('agent_chat', {
         message: 'Hello',
-        conversation_id: 'conv-123',
+        thread_id: 'thread-123',
       });
 
       // THEN: Should return tool result

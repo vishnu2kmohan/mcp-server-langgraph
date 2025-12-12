@@ -147,11 +147,15 @@ class PlaygroundMCPBridge:
         ) as _span:
             try:
                 # Build MCP tool call arguments
+                # Construct user-owned thread_id for fallback authorization
+                # Format: {username}_{session_id} matches fallback auth pattern
+                user_id_normalized = user_id.split(":")[-1] if ":" in user_id else user_id
+                thread_id = f"{user_id_normalized}_{session_id}"
                 arguments = {
                     "message": message,
                     "token": token,
                     "user_id": user_id,
-                    "thread_id": session_id,
+                    "thread_id": thread_id,
                     "response_format": response_format,
                 }
 
@@ -237,11 +241,15 @@ class PlaygroundMCPBridge:
         ):
             try:
                 # Build MCP tool call arguments
+                # Construct user-owned thread_id for fallback authorization
+                # Format: {username}_{session_id} matches fallback auth pattern
+                user_id_normalized = user_id.split(":")[-1] if ":" in user_id else user_id
+                thread_id = f"{user_id_normalized}_{session_id}"
                 arguments = {
                     "message": message,
                     "token": token,
                     "user_id": user_id,
-                    "thread_id": session_id,
+                    "thread_id": thread_id,
                     "response_format": response_format,
                 }
 

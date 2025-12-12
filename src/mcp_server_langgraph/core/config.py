@@ -298,6 +298,7 @@ class Settings(BaseSettings):
     keycloak_realm: str = "langgraph-agent"
     keycloak_client_id: str = "langgraph-client"
     keycloak_client_secret: str | None = None
+    keycloak_admin_realm: str = "master"  # Admin API uses master realm for admin-cli client
     keycloak_admin_username: str = "admin"
     keycloak_admin_password: str | None = None
     keycloak_verify_ssl: bool = True

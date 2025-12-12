@@ -2,6 +2,7 @@
 Pydantic models for Playground API requests and responses.
 
 Provides type-safe request/response models for:
+- Authentication (Keycloak integration)
 - Session management
 - Chat messages
 - Observability data (traces, logs, metrics, alerts)
@@ -12,6 +13,48 @@ from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
+
+
+# ==============================================================================
+# Authentication Models
+# ==============================================================================
+
+
+class LoginRequest(BaseModel):
+    """Login request with username and password."""
+
+    username: str = Field(..., min_length=1, description="Username")
+    password: str = Field(..., min_length=1, description="Password")
+
+
+class AuthUser(BaseModel):
+    """Authenticated user information."""
+
+    id: str = Field(..., description="User ID")
+    username: str = Field(..., description="Username")
+    email: str | None = Field(default=None, description="Email address")
+    roles: list[str] = Field(default_factory=list, description="User roles")
+
+
+class AuthTokens(BaseModel):
+    """Authentication tokens."""
+
+    access_token: str = Field(..., description="JWT access token")
+    refresh_token: str | None = Field(default=None, description="Refresh token")
+    expires_at: int = Field(..., description="Expiration timestamp (ms)")
+
+
+class LoginResponse(BaseModel):
+    """Login response with user info and tokens."""
+
+    user: AuthUser = Field(..., description="Authenticated user")
+    tokens: AuthTokens = Field(..., description="Auth tokens")
+
+
+class RefreshTokenRequest(BaseModel):
+    """Request to refresh authentication token."""
+
+    refresh_token: str = Field(..., description="Refresh token")
 
 
 # ==============================================================================
@@ -325,6 +368,28 @@ class WebSocketAlertEvent(WebSocketMessage):
 
     type: str = "alert"
     alert: Alert
+
+
+# ==============================================================================
+# MCP Server Models
+# ==============================================================================
+
+
+class MCPServerInfo(BaseModel):
+    """Information about an available MCP server."""
+
+    id: str = Field(..., description="Server identifier")
+    name: str = Field(..., description="Display name")
+    url: str = Field(..., description="Server URL")
+    description: str | None = Field(default=None, description="Server description")
+    is_default: bool = Field(default=False, description="Whether this is the default server")
+
+
+class MCPServersResponse(BaseModel):
+    """Response listing available MCP servers."""
+
+    servers: list[MCPServerInfo] = Field(default_factory=list, description="Available MCP servers")
+    total: int = Field(..., description="Total count")
 
 
 # ==============================================================================
