@@ -12,6 +12,8 @@ import React, {
   useReducer,
   useCallback,
   useMemo,
+  useEffect,
+  useRef,
   ReactNode,
 } from 'react';
 import { createMCPClient, MCPClient } from '../api/mcp-client';
@@ -317,6 +319,38 @@ export function MCPHostProvider({ children }: MCPHostProviderProps): React.React
     },
     []
   );
+
+  // Track if we've attempted auto-connect to avoid duplicate attempts
+  const hasAttemptedAutoConnect = useRef(false);
+
+  // Auto-connect to default MCP server on mount
+  // Uses /mcp which routes to the MCP StreamableHTTP server via Traefik
+  // Skipped in test environment to avoid interference with unit tests
+  useEffect(() => {
+    // Skip auto-connect in test environment
+    if (import.meta.env.MODE === 'test') {
+      return;
+    }
+
+    if (hasAttemptedAutoConnect.current) {
+      return;
+    }
+    hasAttemptedAutoConnect.current = true;
+
+    // Determine MCP server URL based on current location
+    // In production (behind Traefik): use relative /mcp path
+    // In development (Vite dev server): use absolute localhost:8001
+    const mcpServerUrl =
+      window.location.port === '5174'
+        ? 'http://localhost:8001/mcp' // Vite dev server
+        : '/mcp'; // Production (Traefik proxies /mcp to MCP server)
+
+    // Auto-connect to default server, but don't fail if it's not available
+    addServer('default', mcpServerUrl, { primary: true }).catch((error) => {
+      console.warn('Auto-connect to default MCP server failed:', error.message);
+      // Don't propagate - user can manually add servers
+    });
+  }, [addServer]);
 
   // Aggregate tools from all connected servers
   const allTools = useMemo(() => {
