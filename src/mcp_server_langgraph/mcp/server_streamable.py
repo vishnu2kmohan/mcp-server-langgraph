@@ -34,6 +34,21 @@ from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.core.security import sanitize_for_logging
+from mcp_server_langgraph.mcp.elicitation import (
+    ElicitationAction,
+    ElicitationHandler,
+    ElicitationSchema,
+)
+from mcp_server_langgraph.mcp.resources import (
+    create_playground_resource_handler,
+)
+from mcp_server_langgraph.mcp.sampling import (
+    ModelPreferences,
+    SamplingHandler,
+    SamplingMessage,
+    SamplingMessageContent,
+    SamplingRateLimiter,
+)
 from mcp_server_langgraph.middleware.rate_limiter import custom_rate_limit_exceeded_handler, limiter
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import format_response
@@ -344,6 +359,12 @@ class MCPAgentStreamableServer:
         # Initialize auth using factory (respects settings.auth_provider)
         self.auth = create_auth_middleware(self.settings, openfga_client=self.openfga)
 
+        # Initialize MCP protocol handlers (2025-11-25 spec)
+        self.elicitation_handler = ElicitationHandler()
+        self.sampling_handler = SamplingHandler()
+        self.sampling_rate_limiter = SamplingRateLimiter(max_requests_per_minute=10)
+        self.resource_handler = create_playground_resource_handler()
+
         self._setup_handlers()
 
     def _create_openfga_client(self) -> OpenFGAClient | None:
@@ -387,6 +408,147 @@ class MCPAgentStreamableServer:
         This wraps the internal MCP handler to avoid accessing private SDK attributes.
         """
         return await self._list_resources_handler()  # type: ignore[no-any-return]
+
+    # =========================================================================
+    # MCP 2025-11-25 Protocol Handlers
+    # =========================================================================
+
+    def list_prompts_public(self) -> list[dict[str, Any]]:
+        """
+        List available prompts (workflow templates).
+
+        Returns:
+            List of prompt definitions
+        """
+        # Return static list of available prompts
+        return [
+            {
+                "name": "code_review",
+                "description": "Review code for issues and improvements",
+                "arguments": [
+                    {"name": "code", "description": "Code to review", "required": True},
+                    {"name": "language", "description": "Programming language", "required": False},
+                ],
+            },
+            {
+                "name": "summarize_conversation",
+                "description": "Summarize the current conversation",
+                "arguments": [],
+            },
+            {
+                "name": "debug_error",
+                "description": "Debug an error message",
+                "arguments": [
+                    {"name": "error", "description": "Error message to debug", "required": True},
+                    {"name": "context", "description": "Additional context", "required": False},
+                ],
+            },
+        ]
+
+    def get_pending_elicitations(self) -> list[dict[str, Any]]:
+        """
+        Get pending elicitations for MCP clients.
+
+        Returns:
+            List of pending elicitation requests
+        """
+        elicitations = self.elicitation_handler.list_pending()
+        return [e.to_jsonrpc() for e in elicitations]
+
+    def get_pending_sampling_requests(self) -> list[dict[str, Any]]:
+        """
+        Get pending sampling requests for MCP clients.
+
+        Returns:
+            List of pending sampling requests
+        """
+        requests = self.sampling_handler.list_pending()
+        return [r.to_jsonrpc() for r in requests]
+
+    async def handle_elicitation_response(
+        self,
+        elicitation_id: str,
+        action: str,
+        content: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Handle elicitation response from MCP client.
+
+        Args:
+            elicitation_id: ID of the elicitation
+            action: "accept", "decline", or "cancel"
+            content: Response content (for accept)
+
+        Returns:
+            Response confirmation
+        """
+        elicitation_action = ElicitationAction(action)
+        response = self.elicitation_handler.respond(
+            elicitation_id=elicitation_id,
+            action=elicitation_action,
+            content=content,
+        )
+        return {
+            "success": True,
+            "action": response.action.value,
+            "elicitation_id": elicitation_id,
+        }
+
+    async def handle_sampling_response(
+        self,
+        request_id: str,
+        action: str,
+        response_content: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Handle sampling response from MCP client.
+
+        Args:
+            request_id: ID of the sampling request
+            action: "approve" or "reject"
+            response_content: LLM response content (for approve)
+
+        Returns:
+            Response confirmation
+        """
+        if action == "reject":
+            self.sampling_handler.reject_request(request_id, reason="Rejected by client")
+            return {"success": True, "action": "rejected", "request_id": request_id}
+
+        if action == "approve" and response_content:
+            from mcp_server_langgraph.mcp.sampling import SamplingResponse
+
+            response = SamplingResponse(
+                role="assistant",
+                content=SamplingMessageContent(
+                    type="text",
+                    text=response_content.get("text", ""),
+                ),
+                model=response_content.get("model", "unknown"),
+                stopReason=response_content.get("stopReason", "endTurn"),
+            )
+            self.sampling_handler.complete_request(request_id, response)
+            return {"success": True, "action": "completed", "request_id": request_id}
+
+        return {"success": False, "error": "Invalid action or missing response content"}
+
+    def list_resource_templates_public(self) -> list[dict[str, Any]]:
+        """
+        List available resource templates.
+
+        Returns:
+            List of resource template definitions
+        """
+        templates = self.resource_handler.list_templates()
+        return [
+            {
+                "uriTemplate": t.uriTemplate,
+                "name": t.name,
+                "description": t.description,
+                "mimeType": t.mimeType,
+            }
+            for t in templates
+        ]
 
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers and store references for public API"""
@@ -1374,12 +1536,18 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                     "jsonrpc": "2.0",
                     "id": message_id,
                     "result": {
-                        "protocolVersion": "2024-11-05",
-                        "serverInfo": {"name": "langgraph-agent", "version": mcp_server.settings.service_version},
+                        "protocolVersion": "2025-11-25",
+                        "serverInfo": {
+                            "name": "langgraph-agent",
+                            "version": mcp_server.settings.service_version,
+                            "description": "AI Agent with fine-grained authorization, LangGraph workflows, and multi-LLM support",
+                        },
                         "capabilities": {
                             "tools": {"listChanged": False},
-                            "resources": {"listChanged": False},
-                            "prompts": {},
+                            "resources": {"listChanged": False, "subscribe": True},
+                            "prompts": {"listChanged": False},
+                            "elicitation": {},  # Server can request user input
+                            "sampling": {},  # Server can request LLM completions
                             "logging": {},
                         },
                     },
@@ -1438,19 +1606,235 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                 params = message.get("params", {})
                 resource_uri = params.get("uri")
 
-                # Handle resource read (implement based on your needs)
+                mcp_server = get_mcp_server()
+                try:
+                    content = await mcp_server.resource_handler.read_resource(resource_uri)
+                    response = {
+                        "jsonrpc": "2.0",
+                        "id": message_id,
+                        "result": {"contents": [content.model_dump()]},
+                    }
+                except ValueError:
+                    # Resource not found, return placeholder
+                    response = {
+                        "jsonrpc": "2.0",
+                        "id": message_id,
+                        "result": {
+                            "contents": [
+                                {
+                                    "uri": resource_uri,
+                                    "mimeType": "application/json",
+                                    "text": json.dumps({"config": "placeholder"}),
+                                }
+                            ]
+                        },
+                    }
+                return JSONResponse(response)
+
+            # =========================================================================
+            # MCP 2025-11-25 Protocol Methods
+            # =========================================================================
+
+            elif method == "prompts/list":
+                # List available prompts (workflow templates)
+                mcp_server = get_mcp_server()
+                prompts = mcp_server.list_prompts_public()
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": message_id,
+                    "result": {"prompts": prompts},
+                }
+                return JSONResponse(response)
+
+            elif method == "prompts/get":
+                # Get a specific prompt with arguments filled in
+                params = message.get("params", {})
+                prompt_name = params.get("name")
+                prompt_arguments = params.get("arguments", {})
+
+                # Generate prompt messages based on name
+                if prompt_name == "code_review":
+                    code = prompt_arguments.get("code", "")
+                    language = prompt_arguments.get("language", "unknown")
+                    messages = [
+                        {
+                            "role": "user",
+                            "content": {
+                                "type": "text",
+                                "text": f"Please review the following {language} code:\n\n```{language}\n{code}\n```",
+                            },
+                        }
+                    ]
+                elif prompt_name == "summarize_conversation":
+                    messages = [
+                        {
+                            "role": "user",
+                            "content": {
+                                "type": "text",
+                                "text": "Please summarize the current conversation, highlighting key points and decisions.",
+                            },
+                        }
+                    ]
+                elif prompt_name == "debug_error":
+                    error = prompt_arguments.get("error", "")
+                    context = prompt_arguments.get("context", "")
+                    messages = [
+                        {
+                            "role": "user",
+                            "content": {
+                                "type": "text",
+                                "text": f"Please help debug this error:\n\nError: {error}\n\nContext: {context}",
+                            },
+                        }
+                    ]
+                else:
+                    raise HTTPException(status_code=400, detail=f"Unknown prompt: {prompt_name}")
+
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": message_id,
+                    "result": {"messages": messages},
+                }
+                return JSONResponse(response)
+
+            elif method == "elicitation/create":
+                # Server requesting user input (typically initiated by server, not client)
+                # This endpoint allows the server to create elicitation requests
+                params = message.get("params", {})
+                elicitation_message = params.get("message", "")
+                schema_data = params.get("requestedSchema", {})
+
+                mcp_server = get_mcp_server()
+                schema = ElicitationSchema(**schema_data)
+                elicitation = mcp_server.elicitation_handler.create_elicitation(
+                    message=elicitation_message,
+                    schema=schema,
+                )
+
                 response = {
                     "jsonrpc": "2.0",
                     "id": message_id,
                     "result": {
-                        "contents": [
-                            {
-                                "uri": resource_uri,
-                                "mimeType": "application/json",
-                                "text": json.dumps({"config": "placeholder"}),
-                            }
-                        ]
+                        "id": elicitation.id,
+                        "message": elicitation.message,
+                        "status": elicitation.status,
                     },
+                }
+                return JSONResponse(response)
+
+            elif method == "elicitation/respond":
+                # Client responding to an elicitation
+                params = message.get("params", {})
+                elicitation_id = params.get("id")
+                action = params.get("action")
+                content = params.get("content")
+
+                mcp_server = get_mcp_server()
+                elicitation_result = await mcp_server.handle_elicitation_response(
+                    elicitation_id=elicitation_id,
+                    action=action,
+                    content=content,
+                )
+
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": message_id,
+                    "result": elicitation_result,
+                }
+                return JSONResponse(response)
+
+            elif method == "elicitation/list":
+                # List pending elicitations
+                mcp_server = get_mcp_server()
+                elicitations = mcp_server.get_pending_elicitations()
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": message_id,
+                    "result": {"elicitations": elicitations},
+                }
+                return JSONResponse(response)
+
+            elif method == "sampling/createMessage":
+                # Server requesting LLM completion from client
+                params = message.get("params", {})
+                messages_data = params.get("messages", [])
+                model_prefs = params.get("modelPreferences", {})
+                system_prompt = params.get("systemPrompt")
+                max_tokens = params.get("maxTokens", 1000)
+
+                mcp_server = get_mcp_server()
+
+                # Convert message data to SamplingMessage objects
+                sampling_messages: list[SamplingMessage] = [
+                    SamplingMessage(
+                        role=m.get("role", "user"),
+                        content=SamplingMessageContent(
+                            type=m.get("content", {}).get("type", "text"),
+                            text=m.get("content", {}).get("text"),
+                        ),
+                    )
+                    for m in messages_data
+                ]
+
+                # Create sampling request
+                sampling_request = mcp_server.sampling_handler.create_request(
+                    messages=sampling_messages,
+                    model_preferences=ModelPreferences(**model_prefs) if model_prefs else None,
+                    system_prompt=system_prompt,
+                    max_tokens=max_tokens,
+                )
+
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": message_id,
+                    "result": {
+                        "id": sampling_request.id,
+                        "status": sampling_request.status,
+                        "request_id": sampling_request.request_id,
+                    },
+                }
+                return JSONResponse(response)
+
+            elif method == "sampling/respond":
+                # Client responding to a sampling request
+                params = message.get("params", {})
+                request_id = params.get("id")
+                action = params.get("action")
+                response_content = params.get("response")
+
+                mcp_server = get_mcp_server()
+                sampling_result = await mcp_server.handle_sampling_response(
+                    request_id=request_id,
+                    action=action,
+                    response_content=response_content,
+                )
+
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": message_id,
+                    "result": sampling_result,
+                }
+                return JSONResponse(response)
+
+            elif method == "sampling/list":
+                # List pending sampling requests
+                mcp_server = get_mcp_server()
+                requests = mcp_server.get_pending_sampling_requests()
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": message_id,
+                    "result": {"requests": requests},
+                }
+                return JSONResponse(response)
+
+            elif method == "resources/templates/list":
+                # List resource templates
+                mcp_server = get_mcp_server()
+                templates = mcp_server.list_resource_templates_public()
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": message_id,
+                    "result": {"resourceTemplates": templates},
                 }
                 return JSONResponse(response)
 

@@ -20,12 +20,11 @@ from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig
 from tests.conftest import get_user_id
 
 # Test configuration - can be overridden via environment variables
-# Note: Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn, so all paths need /authn prefix
+# CRITICAL: Include /authn prefix because Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
 KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:9082/authn")
-KEYCLOAK_HEALTH_URL = os.getenv("KEYCLOAK_HEALTH_URL", "http://localhost:9900/authn/health/ready")
-KEYCLOAK_TEST_REALM = os.getenv("KEYCLOAK_TEST_REALM", "default")  # Use default realm
-KEYCLOAK_TEST_CLIENT_ID = os.getenv("KEYCLOAK_TEST_CLIENT_ID", "mcp-server")  # Match docker-compose.test.yml
-KEYCLOAK_TEST_CLIENT_SECRET = os.getenv("KEYCLOAK_TEST_CLIENT_SECRET", "test-client-secret-for-e2e-tests")  # gitleaks:allow
+KEYCLOAK_TEST_REALM = os.getenv("KEYCLOAK_TEST_REALM", "test-realm")
+KEYCLOAK_TEST_CLIENT_ID = os.getenv("KEYCLOAK_TEST_CLIENT_ID", "test-client")
+KEYCLOAK_TEST_CLIENT_SECRET = os.getenv("KEYCLOAK_TEST_CLIENT_SECRET", "test-secret")  # gitleaks:allow
 KEYCLOAK_ADMIN_USER = os.getenv("KEYCLOAK_ADMIN_USER", "admin")
 KEYCLOAK_ADMIN_PASSWORD = os.getenv("KEYCLOAK_ADMIN_PASSWORD", "admin")
 
@@ -37,15 +36,20 @@ pytestmark = pytest.mark.integration
 def keycloak_available() -> bool:
     """Check if Keycloak test instance is available.
 
-    Uses the management port health endpoint (9900) with /authn prefix.
-    Keycloak 26+ exposes health endpoints on separate management port.
+    Uses the OIDC well-known endpoint for health check because:
+    1. It works with KC_HTTP_RELATIVE_PATH=/authn configuration
+    2. It proves the realm is fully imported and ready
+    3. It's more reliable than the management port health endpoint in CI
     """
     import asyncio
 
     async def _check():
         try:
+            # Use OIDC well-known endpoint for health check (same as docker_fixtures.py)
+            # KEYCLOAK_TEST_URL already includes /authn prefix
+            wellknown_url = f"{KEYCLOAK_TEST_URL}/realms/{KEYCLOAK_TEST_REALM}/.well-known/openid-configuration"
             async with httpx.AsyncClient() as client:
-                response = await client.get(KEYCLOAK_HEALTH_URL, timeout=5.0)
+                response = await client.get(wellknown_url, timeout=5.0)
                 return response.status_code == 200
         except (httpx.ConnectError, httpx.TimeoutException):
             return False
@@ -68,7 +72,6 @@ def keycloak_config() -> KeycloakConfig:
     return KeycloakConfig(
         server_url=KEYCLOAK_TEST_URL,
         realm=KEYCLOAK_TEST_REALM,
-        admin_realm="default",  # Admin user is in default realm
         client_id=KEYCLOAK_TEST_CLIENT_ID,
         client_secret=KEYCLOAK_TEST_CLIENT_SECRET,
         admin_username=KEYCLOAK_ADMIN_USER,
@@ -106,7 +109,6 @@ def unique_client_id() -> str:
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="keycloak_integration")
-@pytest.mark.skip_isolation_check  # Uses unique_username fixture for UUID-based isolation
 class TestKeycloakUserAdminAPIs:
     """Integration tests for Keycloak User Admin APIs (TDD RED phase)"""
 
@@ -158,14 +160,11 @@ class TestKeycloakUserAdminAPIs:
         self, keycloak_client: KeycloakClient, unique_username: str, skip_if_no_keycloak: None
     ):
         """Test setting user password with real Keycloak"""
-        # Create user with all required fields for Keycloak user profile
+        # Create user
         user_config = {
             "username": unique_username,
             "email": f"{unique_username}@example.com",
-            "emailVerified": True,
             "enabled": True,
-            "firstName": "Test",
-            "lastName": "User",
         }
 
         user_id = await keycloak_client.create_user(user_config)
@@ -257,7 +256,6 @@ class TestKeycloakUserAdminAPIs:
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="keycloak_integration")
-@pytest.mark.skip_isolation_check  # Uses unique_group_name fixture for UUID-based isolation
 class TestKeycloakGroupAdminAPIs:
     """Integration tests for Keycloak Group Admin APIs (TDD RED phase)"""
 
@@ -378,7 +376,6 @@ class TestKeycloakGroupAdminAPIs:
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="keycloak_integration")
-@pytest.mark.skip_isolation_check  # Uses unique_client_id fixture for UUID-based isolation
 class TestKeycloakClientAdminAPIs:
     """Integration tests for Keycloak Client Admin APIs (TDD RED phase)"""
 
@@ -449,12 +446,9 @@ class TestKeycloakClientAdminAPIs:
 
             await keycloak_client.update_client_attributes(client_uuid, new_attributes)
 
-            # Verify attributes updated (Keycloak may add extra system attributes)
+            # Verify attributes updated
             client = await keycloak_client.get_client(client_uuid)
-            actual_attrs = client["attributes"]
-            for key, value in new_attributes.items():
-                assert key in actual_attrs, f"Expected attribute '{key}' not found"
-                assert actual_attrs[key] == value, f"Attribute '{key}' mismatch"
+            assert client["attributes"] == new_attributes
 
         finally:
             # Cleanup
@@ -491,7 +485,6 @@ class TestKeycloakClientAdminAPIs:
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="keycloak_integration")
-@pytest.mark.skip_isolation_check  # Uses unique_* fixtures for UUID-based isolation
 class TestKeycloakEndToEndWorkflows:
     """End-to-end integration tests for complete SCIM workflows"""
 

@@ -187,6 +187,7 @@ class TestMypyEnforcement:
                 f"\nINFO: Mypy configuration could benefit from recommended flags:\n{recommended_flags}\nCurrent args: {args}"
             )
 
+    @pytest.mark.timeout(180)  # Override global 60s timeout - mypy needs 120s+ in CI
     def test_mypy_passes_on_current_codebase(self):
         """Verify mypy type checking passes on current codebase.
 

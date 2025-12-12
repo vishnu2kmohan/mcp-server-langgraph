@@ -109,7 +109,7 @@ class TestE2EOrganization:
         References:
         - tests/e2e/helpers.py - E2E test helper functions
         - tests/e2e/real_clients.py - Real client implementations
-        - tests/e2e/keycloak-test-realm.json - Keycloak test configuration
+        - tests/e2e/mcp-test-realm.json - Keycloak test configuration
         """
         e2e_dir = Path(__file__).parent.parent / "e2e"
 
@@ -119,7 +119,7 @@ class TestE2EOrganization:
         real_clients_file = e2e_dir / "real_clients.py"
         assert real_clients_file.exists(), f"E2E real clients file not found at {real_clients_file}"
 
-        keycloak_config = e2e_dir / "keycloak-test-realm.json"
+        keycloak_config = e2e_dir / "mcp-test-realm.json"
         assert keycloak_config.exists(), f"Keycloak test realm config not found at {keycloak_config}"
 
     def test_no_e2e_journeys_in_integration_directory(self):

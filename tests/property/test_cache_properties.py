@@ -11,6 +11,7 @@ Tests cache invariants and edge cases:
 
 import asyncio
 import gc
+import os
 import time
 from unittest.mock import Mock, patch
 
@@ -20,7 +21,11 @@ from hypothesis import strategies as st
 
 from mcp_server_langgraph.core.cache import CACHE_TTLS, CacheLayer, CacheService, cached, generate_cache_key
 
-pytestmark = pytest.mark.unit
+# Disable OTEL during property tests to prevent metric reader thread interference
+# This prevents timeout issues during xdist parallel execution
+os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+
+pytestmark = [pytest.mark.unit, pytest.mark.timeout(120)]  # 2 min timeout for property tests
 
 
 @pytest.mark.xdist_group(name="property_cache_properties_tests")

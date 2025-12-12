@@ -31,7 +31,7 @@ dependencies = [
     "langchain-core>=1.1.0",  # Updated from 1.0.4 for security fixes
     "langsmith>=0.4.49",  # Updated 2025-11-28: Many improvements
     "litellm>=1.80.5",  # Updated 2025-11-28: Minor updates, Gemini 3 Pro support
-    "mcp>=1.22.0",  # Updated 2025-11-28: Significant new MCP features (+4 minor versions)
+    "mcp>=1.23.3",  # Updated 2025-12-10: MCP spec 2025-11-25 support (Tasks, Sampling with Tools, Icons, XAA)
     "PyJWT>=2.10.1",
     "cryptography>=46.0.3",
     "bcrypt>=5.0.0",  # Password hashing for InMemoryUserProvider (production security)
@@ -146,6 +146,7 @@ dev = [
     "jinja2>=3.1.0",  # Template engine for code generation
     "rich>=13.0.0",  # Rich text and beautiful formatting in the terminal
     "websockets>=12.0",  # Required for E2E test imports (also in playground extra)
+    "packaging>=21.0",  # Version parsing for MCP SDK version tests
 ]
 
 secrets = [
@@ -785,6 +786,7 @@ markers = [
     "builder: Visual workflow builder tests",
     "redis: Redis-backed storage tests (sessions, checkpoints)",
     "postgres: PostgreSQL-backed storage tests (workflows, sessions, durable persistence)",
+    "requires_full_infrastructure: Tests requiring full Docker infrastructure (builder, playground, observability stack)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

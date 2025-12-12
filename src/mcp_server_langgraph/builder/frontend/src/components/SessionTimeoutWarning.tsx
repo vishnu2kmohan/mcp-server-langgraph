@@ -9,7 +9,7 @@
  * - ARIA accessibility
  */
 
-import React from 'react';
+// React 17+ with JSX transform doesn't require React import
 import { AlertTriangle, Clock, RefreshCw } from 'lucide-react';
 import { useSessionTimeout } from '../hooks/useSessionTimeout';
 
@@ -37,7 +37,8 @@ export function SessionTimeoutWarning({
   className = '',
 }: SessionTimeoutWarningProps) {
   const {
-    remainingTime,
+    // remainingTime is tracked but not directly displayed (formattedTime is used instead)
+    remainingTime: _remainingTime,
     isWarning,
     isExpired,
     refreshSession,

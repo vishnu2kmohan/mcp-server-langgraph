@@ -490,6 +490,7 @@
               "architecture/adr-0002-openfga-authorization",
               "architecture/adr-0003-dual-observability",
               "architecture/adr-0004-mcp-streamable-http",
+              "architecture/adr-0069-mcp-2025-11-25-upgrade",
               "architecture/adr-0005-pydantic-ai-integration",
               "architecture/adr-0010-langgraph-functional-api"
             ]

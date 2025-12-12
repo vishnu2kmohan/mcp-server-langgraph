@@ -38,23 +38,23 @@ def repo_root() -> Path:
 
 def test_keycloak_realm_import_file_exists(repo_root: Path):
     """
-    Verify that keycloak-test-realm.json exists in tests/e2e/.
+    Verify that mcp-test-realm.json exists in tests/e2e/.
 
     This file should contain the realm configuration with pre-configured
     client and test users for E2E testing.
     """
-    realm_file = repo_root / "tests" / "e2e" / "keycloak-test-realm.json"
+    realm_file = repo_root / "tests" / "e2e" / "mcp-test-realm.json"
 
     assert realm_file.exists(), (
         f"Keycloak realm import file not found: {realm_file}\n"
         "\n"
-        "Expected file: tests/e2e/keycloak-test-realm.json\n"
+        "Expected file: tests/e2e/mcp-test-realm.json\n"
         "This file should contain:\n"
-        "  - Realm: default\n"
+        "  - Realm: mcp-test (NOT master - --import-realm only creates new realms)\n"
         "  - Client: mcp-server (publicClient, directAccessGrants enabled)\n"
         "  - User: alice with password alice123\n"
         "\n"
-        "Fix: Create tests/e2e/keycloak-test-realm.json with realm configuration"
+        "Fix: Create tests/e2e/mcp-test-realm.json with realm configuration"
     )
 
     # Verify it's valid JSON
@@ -77,7 +77,7 @@ def test_realm_json_has_mcp_server_client(repo_root: Path):
     - publicClient: true
     - directAccessGrantsEnabled: true (for password grant flow)
     """
-    realm_file = repo_root / "tests" / "e2e" / "keycloak-test-realm.json"
+    realm_file = repo_root / "tests" / "e2e" / "mcp-test-realm.json"
 
     with open(realm_file) as f:
         realm_config = json.load(f)
@@ -133,7 +133,7 @@ def test_realm_json_has_test_users(repo_root: Path):
     - enabled: true
     - credentials: password = alice123
     """
-    realm_file = repo_root / "tests" / "e2e" / "keycloak-test-realm.json"
+    realm_file = repo_root / "tests" / "e2e" / "mcp-test-realm.json"
 
     with open(realm_file) as f:
         realm_config = json.load(f)
@@ -220,12 +220,12 @@ def test_docker_compose_imports_realm(repo_root: Path):
     for volume in volumes:
         if isinstance(volume, str):
             # Simple string format
-            if "keycloak-test-realm.json" in volume and "/opt/keycloak/data/import" in volume:
+            if "mcp-test-realm.json" in volume and "/opt/keycloak/data/import" in volume:
                 realm_volume_found = True
                 break
         elif isinstance(volume, dict):
             # Dict format with source/target
-            if volume.get("source") and "keycloak-test-realm.json" in str(volume.get("source")):
+            if volume.get("source") and "mcp-test-realm.json" in str(volume.get("source")):
                 realm_volume_found = True
                 break
 
@@ -233,7 +233,7 @@ def test_docker_compose_imports_realm(repo_root: Path):
         "Volume mount for realm import not found in keycloak-test service.\n"
         "\n"
         "Expected volume mount:\n"
-        "  ./tests/e2e/keycloak-test-realm.json:/opt/keycloak/data/import/realm.json\n"
+        "  ./tests/e2e/mcp-test-realm.json:/opt/keycloak/data/import/mcp-test-realm.json\n"
         "\n"
         f"Current volumes: {volumes}\n"
         "\n"
@@ -241,7 +241,7 @@ def test_docker_compose_imports_realm(repo_root: Path):
         "services:\n"
         "  keycloak-test:\n"
         "    volumes:\n"
-        "      - ./tests/e2e/keycloak-test-realm.json:/opt/keycloak/data/import/realm.json:ro"
+        "      - ./tests/e2e/mcp-test-realm.json:/opt/keycloak/data/import/mcp-test-realm.json:ro"
     )
 
     # Check for import-realm command

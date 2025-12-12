@@ -45,7 +45,7 @@ def client():
         init_observability(settings=settings, enable_file_logging=False)
 
     # Populate test users if using InMemoryUserProvider
-    # (matches users in tests/e2e/keycloak-test-realm.json for consistency)
+    # (matches users in tests/e2e/mcp-test-realm.json for consistency)
     #
     # IMPORTANT: Use worker-safe IDs for pytest-xdist parallel execution
     # to prevent state pollution between workers sharing the same infrastructure

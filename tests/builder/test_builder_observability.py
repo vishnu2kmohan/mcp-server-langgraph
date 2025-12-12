@@ -150,15 +150,18 @@ class TestBuilderMetrics:
         # Note: May need to be added as part of implementation
         response = client.get("/metrics")
 
-        # If metrics endpoint exists, it should return 200 with text/plain
-        # If not implemented yet, this documents the requirement
+        # If metrics endpoint exists, it should return 200 with text/plain or prometheus format
+        # If not implemented yet (404 or SPA fallback returning text/html), this documents the requirement
         content_type = response.headers.get("content-type", "")
-        if response.status_code == 200 and "text/plain" in content_type:
-            # Metrics endpoint is properly implemented
-            assert True
+        is_prometheus_format = "text/plain" in content_type or "text/openmetrics" in content_type
+
+        if response.status_code == 200 and is_prometheus_format:
+            # Metrics endpoint exists and returns proper format
+            pass
         else:
-            # Metrics endpoint not yet implemented (SPA fallback returns HTML)
-            pytest.skip("Metrics endpoint not yet implemented")
+            # Document that metrics endpoint needs to be added
+            # Note: SPA catch-all may return 200 with text/html for unimplemented endpoints
+            pytest.skip("Metrics endpoint not yet implemented (returns HTML from SPA catch-all)")
 
     @pytest.mark.unit
     def test_code_generation_increments_counter(self) -> None:
@@ -253,7 +256,8 @@ class TestBuilderHealthWithObservability:
         # Check if readiness endpoint exists
         response = client.get("/api/builder/health/ready")
 
-        # Check if this is a JSON response (not SPA fallback HTML)
+        # Check if the response is a proper JSON API response
+        # SPA catch-all may return 200 with text/html for unimplemented endpoints
         content_type = response.headers.get("content-type", "")
         is_json_response = "application/json" in content_type
 
@@ -261,10 +265,10 @@ class TestBuilderHealthWithObservability:
             data = response.json()
             # Readiness should consider observability exporters
             assert "status" in data or "ready" in data
-        elif response.status_code == 404 or not is_json_response:
+        else:
             # Document that enhanced health endpoints need to be added
-            # (SPA fallback returns HTML for unknown routes)
-            pytest.skip("Readiness endpoint not yet implemented")
+            # Note: SPA catch-all returns 200 with text/html for unimplemented endpoints
+            pytest.skip("Readiness endpoint not yet implemented (returns HTML from SPA catch-all)")
 
 
 @pytest.mark.xdist_group(name="builder_observability")

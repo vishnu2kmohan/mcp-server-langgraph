@@ -10,11 +10,16 @@ References:
 """
 
 import gc
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+
+# Disable OTEL during plugin guard tests to prevent metric reader thread interference
+# This prevents timeout issues during xdist parallel execution when spawning subprocesses
+os.environ.setdefault("OTEL_SDK_DISABLED", "true")
 
 pytestmark = pytest.mark.meta
 
@@ -22,6 +27,13 @@ pytestmark = pytest.mark.meta
 @pytest.mark.xdist_group(name="testpluginclimodeguards")
 class TestPluginCLIModeGuards:
     """Validate that pytest plugins don't interfere with CLI informational modes"""
+
+    @staticmethod
+    def _get_subprocess_env() -> dict:
+        """Get environment for subprocess calls with OTEL disabled."""
+        env = os.environ.copy()
+        env["OTEL_SDK_DISABLED"] = "true"
+        return env
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -41,6 +53,7 @@ class TestPluginCLIModeGuards:
             capture_output=True,
             timeout=30,
             cwd=Path(__file__).parent.parent.parent,
+            env=self._get_subprocess_env(),
         )
 
         # Should not mention fixture violations
@@ -63,6 +76,7 @@ class TestPluginCLIModeGuards:
             capture_output=True,
             timeout=30,
             cwd=Path(__file__).parent.parent.parent,
+            env=self._get_subprocess_env(),
         )
 
         # Should not mention fixture violations
@@ -85,6 +99,7 @@ class TestPluginCLIModeGuards:
             capture_output=True,
             timeout=30,
             cwd=Path(__file__).parent.parent.parent,
+            env=self._get_subprocess_env(),
         )
 
         # Should not mention fixture violations
@@ -111,6 +126,7 @@ class TestPluginCLIModeGuards:
             capture_output=True,
             timeout=90,  # Increased from 30s - pytest_sessionfinish litellm cleanup can be slow
             cwd=Path(__file__).parent.parent.parent,
+            env=self._get_subprocess_env(),
         )
 
         # Should not mention fixture violations
@@ -137,6 +153,7 @@ class TestPluginCLIModeGuards:
             capture_output=True,
             timeout=90,  # Increased from 10s - pytest collection can trigger litellm cleanup hooks
             cwd=Path(__file__).parent.parent.parent,
+            env=self._get_subprocess_env(),
         )
 
         # Should not mention fixture violations

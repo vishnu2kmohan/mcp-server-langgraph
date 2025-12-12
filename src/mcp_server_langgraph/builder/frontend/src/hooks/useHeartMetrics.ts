@@ -95,7 +95,7 @@ export function useHeartMetrics(options: HeartMetricsOptions = {}): HeartMetrics
   // Check if tracking should be disabled
   const isTrackingEnabled = enabled && !(respectDoNotTrack && isDoNotTrack());
 
-  // Initialize session ID properly
+  // Initialize session ID (using useState for proper React state management)
   const [sessionId] = useState<string>(() => {
     if (typeof window === 'undefined') return generateSessionId();
     const stored = sessionStorage.getItem(SESSION_KEY);
@@ -207,7 +207,7 @@ export function useHeartMetrics(options: HeartMetricsOptions = {}): HeartMetrics
   }, [isTrackingEnabled, trackEvent]);
 
   // Track task completion
-  const trackTaskComplete = useCallback((taskId: string, metadata?: Record<string, any>) => {
+  const trackTaskComplete = useCallback((taskId: string, _metadata?: Record<string, any>) => {
     if (!isTrackingEnabled) return;
 
     setTasks((prev) => {
