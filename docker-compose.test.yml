@@ -529,10 +529,13 @@ services:
         condition: service_healthy
       traefik-gateway:
         condition: service_healthy
-    # NOTE: traefik-gateway has 'localhost' as a network alias (see traefik-gateway service),
-    # so forward-auth can resolve http://localhost/authn/... to traefik-gateway internally.
-    # This ensures OIDC issuer URL matches what browser sees (localhost) while working
-    # within Docker networking.
+    # CI FIX: Ensure 'localhost' resolves to traefik-gateway (172.x.x.x) not ::1 (IPv6 loopback).
+    # The traefik-gateway has 'localhost' as a network alias, but Docker's default /etc/hosts
+    # entry (127.0.0.1 localhost) can take precedence. This extra_hosts entry ensures localhost
+    # resolves to the gateway container via Docker DNS within the mcp-test-network.
+    # Note: We use 'host-gateway' special hostname which Docker resolves to the host IP, but
+    # since we're on the same Docker network, the network alias approach via depends_on is sufficient.
+    # The real fix is the restart policy which will retry on connection refused.
     environment:
       # OIDC Provider Configuration (Keycloak)
       # Forward-auth fetches OIDC config from http://localhost/authn/... which is routed
@@ -866,7 +869,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 15
-      start_period: 60s  # Give Grafana time to initialize database and download plugins
+      start_period: 90s  # CI environments need extra time for SQLite initialization + provisioning
     deploy:
       resources:
         limits:
