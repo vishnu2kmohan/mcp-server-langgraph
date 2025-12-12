@@ -13,10 +13,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { createTestMCPStore } from './mcpStore';
 import type {
-  MCPStore,
   MCPTool,
-  MCPResource,
-  MCPPrompt,
   PendingElicitation,
   PendingSamplingRequest,
 } from '../types/mcp';

@@ -14,7 +14,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { createTestWorkflowStore } from './workflowStore';
-import type { WorkflowStore, WorkflowNodeType } from '../types/workflow';
+// Types imported for documentation, actual usage through store methods
 
 // Mock fetch
 const mockFetch = vi.fn() as Mock;

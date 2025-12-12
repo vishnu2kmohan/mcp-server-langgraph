@@ -13,10 +13,8 @@ import type {
   SessionStore,
   SessionState,
   Session,
-  SessionSummary,
   SessionConfig,
   ChatMessage,
-  DEFAULT_SESSION_CONFIG,
 } from '../types/session';
 
 /**

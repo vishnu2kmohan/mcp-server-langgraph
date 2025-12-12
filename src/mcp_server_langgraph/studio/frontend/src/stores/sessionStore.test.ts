@@ -12,7 +12,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { createTestSessionStore } from './sessionStore';
-import type { SessionStore, ChatMessage, SessionSummary, Session } from '../types/session';
+import type { ChatMessage, Session } from '../types/session';
 
 // Mock fetch
 const mockFetch = vi.fn() as Mock;

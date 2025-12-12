@@ -15,7 +15,6 @@ import type {
   MCPStore,
   MCPState,
   ServerEntry,
-  MCPServerConnection,
   MCPConnectionStatus,
   MCPTool,
   MCPResource,
@@ -243,7 +242,7 @@ const createMCPStore: StateCreator<MCPStore> = (set, get) => ({
   /**
    * Respond to elicitation
    */
-  respondToElicitation: (id: string, action: ElicitationAction, content?: Record<string, unknown>) => {
+  respondToElicitation: (id: string, _action: ElicitationAction, _content?: Record<string, unknown>) => {
     // In a real implementation, this would send the response to the server
     // For now, just remove from pending
     set((state) => ({
@@ -263,7 +262,7 @@ const createMCPStore: StateCreator<MCPStore> = (set, get) => ({
   /**
    * Respond to sampling
    */
-  respondToSampling: (id: string, approved: boolean, result?: unknown) => {
+  respondToSampling: (id: string, _approved: boolean, _result?: unknown) => {
     // In a real implementation, this would send the response to the server
     // For now, just remove from pending
     set((state) => ({

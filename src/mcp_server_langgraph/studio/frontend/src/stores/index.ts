@@ -10,3 +10,7 @@ export { useAuthStore } from './authStore';
 export { useWorkflowStore } from './workflowStore';
 export { useSessionStore } from './sessionStore';
 export { useMCPStore } from './mcpStore';
+export { usePersonaStore } from './personaStore';
+
+// Export types
+export type { Persona } from './personaStore';

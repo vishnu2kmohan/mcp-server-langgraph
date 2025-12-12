@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
-import { createTestAuthStore, derivePersona, initialAuthState } from './authStore';
+import { createTestAuthStore, derivePersona } from './authStore';
 import type { AuthStore } from '../types/auth';
 
 // Mock fetch
