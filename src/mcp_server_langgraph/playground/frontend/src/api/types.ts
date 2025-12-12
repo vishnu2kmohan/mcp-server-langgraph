@@ -59,6 +59,29 @@ export interface ChatMessage {
   isStreaming?: boolean;
   toolCalls?: ToolCall[];
   usage?: TokenUsage;
+  // P4: Agent Transparency
+  agentMetadata?: AgentMetadata;
+}
+
+/**
+ * Agent Transparency Metadata (P4)
+ * Exposes agent reasoning and confidence to users.
+ */
+export interface AgentMetadata {
+  /** Routing confidence score (0-1) */
+  confidence?: number;
+  /** Agent's reasoning about the request */
+  reasoning?: string;
+  /** Response format used */
+  responseFormat?: 'concise' | 'detailed';
+  /** Verification score for the response */
+  verificationScore?: number;
+  /** Number of refinement attempts */
+  refinementAttempts?: number;
+  /** Context tokens before compaction */
+  contextTokensBefore?: number;
+  /** Context tokens after compaction */
+  contextTokensAfter?: number;
 }
 
 export interface ToolCall {

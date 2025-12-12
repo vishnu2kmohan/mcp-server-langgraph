@@ -59,7 +59,8 @@ describe('ToolBrowser', () => {
     const searchInput = screen.getByPlaceholderText('Search tools...');
     fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
 
-    expect(screen.getByText('No tools match your search.')).toBeInTheDocument();
+    expect(screen.getByText('No matching tools')).toBeInTheDocument();
+    expect(screen.getByText(/No tools match "nonexistent"/)).toBeInTheDocument();
   });
 
   it('should_call_onToolSelect_when_tool_clicked', () => {

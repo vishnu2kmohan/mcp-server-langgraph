@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import clsx from 'clsx';
 import type { ChatMessage as ChatMessageType } from '../../api/types';
+import { AgentInfoBadge } from './AgentInfoBadge';
 
 function formatTime(dateString: string): string {
   const date = new Date(dateString);
@@ -68,6 +69,11 @@ export function ChatMessage({
           >
             {formatTime(message.timestamp)}
           </div>
+        )}
+
+        {/* P4: Agent Transparency - Show metadata for assistant messages */}
+        {!isUser && message.agentMetadata && (
+          <AgentInfoBadge metadata={message.agentMetadata} />
         )}
       </article>
     </div>

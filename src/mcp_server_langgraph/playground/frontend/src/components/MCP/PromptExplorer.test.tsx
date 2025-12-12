@@ -69,7 +69,8 @@ describe('PromptExplorer', () => {
     const searchInput = screen.getByPlaceholderText('Search prompts...');
     fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
 
-    expect(screen.getByText('No prompts match your search.')).toBeInTheDocument();
+    expect(screen.getByText('No matching prompts')).toBeInTheDocument();
+    expect(screen.getByText(/No prompts match "nonexistent"/)).toBeInTheDocument();
   });
 
   it('should_call_onPromptSelect_when_prompt_clicked', () => {

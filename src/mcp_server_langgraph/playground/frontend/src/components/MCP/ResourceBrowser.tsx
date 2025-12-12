@@ -7,7 +7,20 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import clsx from 'clsx';
 import { useMCPResources } from '../../hooks/useMCPResources';
+import { EmptyState } from '../Common';
 import type { MCPResource } from '../../api/mcp-types';
+
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+      />
+    </svg>
+  );
+}
 
 export interface ResourceBrowserProps {
   className?: string;
@@ -101,13 +114,28 @@ export function ResourceBrowser({ className, onResourceSelect }: ResourceBrowser
       {/* Resource list */}
       <div className="flex-1 overflow-y-auto p-2 space-y-2">
         {filteredResources.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-dark-textMuted">
-            {resources.length === 0 ? (
-              <p>No resources available. Connect to an MCP server.</p>
-            ) : (
-              <p>No resources match your search.</p>
-            )}
-          </div>
+          resources.length === 0 ? (
+            <EmptyState
+              icon={<ResourceIcon className="w-12 h-12" />}
+              title="No resources available"
+              description="Connect to an MCP server to browse files, data, and other resources."
+              suggestions={[
+                "Add an MCP server connection",
+                "Check server resource configuration",
+                "Verify resource permissions"
+              ]}
+              variant="compact"
+            />
+          ) : (
+            <EmptyState
+              icon={<SearchIcon className="w-10 h-10" />}
+              title="No matching resources"
+              description={`No resources match "${searchQuery}"`}
+              actionLabel="Clear Search"
+              onAction={() => setSearchQuery('')}
+              variant="compact"
+            />
+          )
         ) : (
           filteredResources.map((resource) => (
             <ResourceCard

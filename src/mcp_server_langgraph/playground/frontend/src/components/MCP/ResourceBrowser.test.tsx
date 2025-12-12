@@ -63,7 +63,8 @@ describe('ResourceBrowser', () => {
     const searchInput = screen.getByPlaceholderText('Search resources...');
     fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
 
-    expect(screen.getByText('No resources match your search.')).toBeInTheDocument();
+    expect(screen.getByText('No matching resources')).toBeInTheDocument();
+    expect(screen.getByText(/No resources match "nonexistent"/)).toBeInTheDocument();
   });
 
   it('should_call_onResourceSelect_when_resource_clicked', () => {

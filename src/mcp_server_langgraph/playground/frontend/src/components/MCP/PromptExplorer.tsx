@@ -7,7 +7,20 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import clsx from 'clsx';
 import { useMCPPrompts } from '../../hooks/useMCPPrompts';
+import { EmptyState } from '../Common';
 import type { MCPPrompt, MCPPromptArgument } from '../../api/mcp-types';
+
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+      />
+    </svg>
+  );
+}
 
 export interface PromptExplorerProps {
   className?: string;
@@ -116,13 +129,28 @@ export function PromptExplorer({ className, onPromptSelect, onPromptResult }: Pr
       {/* Prompt list */}
       <div className="flex-1 overflow-y-auto p-2 space-y-2">
         {filteredPrompts.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-dark-textMuted">
-            {prompts.length === 0 ? (
-              <p>No prompts available. Connect to an MCP server.</p>
-            ) : (
-              <p>No prompts match your search.</p>
-            )}
-          </div>
+          prompts.length === 0 ? (
+            <EmptyState
+              icon={<PromptIcon className="w-12 h-12" />}
+              title="No prompts available"
+              description="Connect to an MCP server to access pre-built prompt templates."
+              suggestions={[
+                "Add an MCP server connection",
+                "Check server prompt configuration",
+                "Explore server capabilities"
+              ]}
+              variant="compact"
+            />
+          ) : (
+            <EmptyState
+              icon={<SearchIcon className="w-10 h-10" />}
+              title="No matching prompts"
+              description={`No prompts match "${searchQuery}"`}
+              actionLabel="Clear Search"
+              onAction={() => setSearchQuery('')}
+              variant="compact"
+            />
+          )
         ) : (
           filteredPrompts.map((prompt) => (
             <PromptCard
