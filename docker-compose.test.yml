@@ -821,6 +821,9 @@ services:
 
   grafana-test:
     image: grafana/grafana:12.2.0
+    # RESILIENCE: Auto-restart on failure for observability infrastructure
+    # Helps recover from transient SQLite locking issues during provisioning
+    restart: unless-stopped
     depends_on:
       grafana-init:
         condition: service_completed_successfully
@@ -846,7 +849,7 @@ services:
       # Reference: https://github.com/prometheus-community/helm-charts/issues/4542
       - GF_DATABASE_WAL=true
       - GF_DATABASE_CACHE_MODE=shared
-      - GF_DATABASE_LOCKING_ATTEMPT_TIMEOUT_SEC=30
+      - GF_DATABASE_LOCKING_ATTEMPT_TIMEOUT_SEC=60
       # Disable migration locking - prevents lock contention during startup with provisioning
       # This is safe for single-instance test environments
       - GF_DATABASE_MIGRATION_LOCKING=false
@@ -869,8 +872,8 @@ services:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
       interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 90s  # CI environments need extra time for SQLite initialization + provisioning
+      retries: 20
+      start_period: 120s  # CI environments need extra time for SQLite initialization + provisioning
     deploy:
       resources:
         limits:
