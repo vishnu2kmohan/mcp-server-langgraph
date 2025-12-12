@@ -9,6 +9,7 @@ import { useDarkMode } from '../../hooks/useDarkMode';
 import { useMCPHost } from '../../contexts/MCPHostContext';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { LoginForm } from '../Auth';
+import { ConnectionStatusIndicator } from '../MCP/ConnectionStatusIndicator';
 
 // Icons as SVG components
 function SunIcon({ className }: { className?: string }) {
@@ -65,25 +66,9 @@ function UserIcon({ className }: { className?: string }) {
   );
 }
 
-function ConnectionDot({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    connected: 'bg-success-500',
-    connecting: 'bg-warning-500 animate-pulse',
-    disconnected: 'bg-gray-400',
-    error: 'bg-error-500',
-  };
-
-  return (
-    <span
-      className={`inline-block w-2 h-2 rounded-full ${colors[status] || colors.disconnected}`}
-      aria-hidden="true"
-    />
-  );
-}
-
 export function Header(): React.ReactElement {
   const { isDark, toggle } = useDarkMode();
-  const { servers, pendingElicitations } = useMCPHost();
+  const { pendingElicitations } = useMCPHost();
   const { user, isAuthenticated, isLoading: isAuthLoading, error: authError, login, logout, clearError } = useAuthContext();
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -105,14 +90,6 @@ export function Header(): React.ReactElement {
     clearError();
   }, [clearError]);
 
-  // Get overall connection status
-  const connectedCount = Array.from(servers.values()).filter(
-    (s) => s.status === 'connected'
-  ).length;
-  const totalCount = servers.size;
-  const overallStatus =
-    connectedCount > 0 ? 'connected' : totalCount > 0 ? 'error' : 'disconnected';
-
   const alertCount = pendingElicitations.length;
 
   return (
@@ -130,16 +107,7 @@ export function Header(): React.ReactElement {
       {/* Right: Status and Controls */}
       <div className="flex items-center gap-4">
         {/* Connection Status */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-textSecondary">
-          <ConnectionDot status={overallStatus} />
-          <span>
-            {overallStatus === 'connected'
-              ? `Connected (${connectedCount})`
-              : overallStatus === 'error'
-              ? 'Connection Error'
-              : 'Disconnected'}
-          </span>
-        </div>
+        <ConnectionStatusIndicator />
 
         {/* Alert Badge */}
         {alertCount > 0 && (

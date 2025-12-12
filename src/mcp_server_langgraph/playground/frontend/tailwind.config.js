@@ -60,8 +60,11 @@ export default {
           border: '#334155',
           text: '#f1f5f9',
           textSecondary: '#cbd5e1',
-          textMuted: '#94a3b8',
-          muted: '#94a3b8',
+          // Improved contrast for accessibility (WCAG AA compliance)
+          textMuted: '#a1b2c3', // Lighter than #94a3b8 for better contrast
+          muted: '#a1b2c3',
+          // Additional accessible hover colors
+          hover: '#2d3d52',
         },
       },
       fontFamily: {

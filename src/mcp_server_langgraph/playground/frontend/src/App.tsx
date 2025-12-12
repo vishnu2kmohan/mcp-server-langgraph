@@ -9,13 +9,16 @@ import React, { useState, useCallback } from 'react';
 import { MCPHostProvider } from './contexts/MCPHostContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { Header, Sidebar } from './components/Layout';
-import { SessionList, CreateSessionModal } from './components/Sessions';
+import { SessionList, CreateSessionModal, SessionExportButtons } from './components/Sessions';
 import { ChatInterface } from './components/Chat';
 import { ObservabilityTabs } from './components/Observability';
 import { ElicitationDialog, SamplingDialog } from './components/MCP';
 import { useMCPElicitation } from './hooks/useMCPElicitation';
 import { useMCPSampling } from './hooks/useMCPSampling';
 import { useSession } from './hooks/useSession';
+import { useSidebarState } from './hooks/useSidebarState';
+import { useDarkMode } from './hooks/useDarkMode';
+import { useServiceWorker } from './hooks/useServiceWorker';
 
 function AppContent(): React.ReactElement {
   // Session management
@@ -27,6 +30,15 @@ function AppContent(): React.ReactElement {
     selectSession,
     deleteSession,
   } = useSession({ autoLoad: true });
+
+  // Sidebar state with localStorage persistence
+  const { isCollapsed: isSidebarCollapsed, toggle: toggleSidebar } = useSidebarState();
+
+  // Dark mode with keyboard shortcut (Ctrl+Shift+T)
+  useDarkMode({ enableKeyboardShortcut: true });
+
+  // Service worker for offline support
+  const { isOffline, hasUpdate, updateServiceWorker } = useServiceWorker();
 
   // Modal state for creating new sessions
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -72,15 +84,49 @@ function AppContent(): React.ReactElement {
     [deleteSession]
   );
 
+  // Import sessions handler
+  const handleImportSessions = useCallback(
+    (importedSessions: Array<{ id: string; title: string; messages: unknown[] }>) => {
+      // For now, just log - full implementation would merge with existing sessions
+      console.log('Imported sessions:', importedSessions);
+      // TODO: Implement session import via useSession hook when backend supports it
+    },
+    []
+  );
+
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-dark-bg">
+      {/* Offline Banner */}
+      {isOffline && (
+        <div className="bg-warning-500 text-white px-4 py-2 text-center text-sm">
+          You are currently offline. Some features may be unavailable.
+        </div>
+      )}
+
+      {/* Update Available Banner */}
+      {hasUpdate && (
+        <div className="bg-primary-500 text-white px-4 py-2 text-center text-sm flex items-center justify-center gap-4">
+          <span>A new version is available.</span>
+          <button
+            onClick={updateServiceWorker}
+            className="px-3 py-1 bg-white text-primary-600 rounded text-sm font-medium hover:bg-primary-50"
+          >
+            Update Now
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <Header />
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar with Sessions */}
-        <Sidebar>
+        <Sidebar
+          title="Sessions"
+          collapsed={isSidebarCollapsed}
+          onToggle={toggleSidebar}
+        >
           {/* New Session Button */}
           <button
             onClick={() => setIsCreateModalOpen(true)}
@@ -95,6 +141,14 @@ function AppContent(): React.ReactElement {
             onSelect={handleSelectSession}
             onDelete={handleDeleteSession}
           />
+          {/* Export/Import Controls */}
+          <div className="mt-2 pt-2 border-t border-gray-200 dark:border-dark-border">
+            <SessionExportButtons
+              sessions={sessions}
+              onImport={handleImportSessions}
+              variant="compact"
+            />
+          </div>
         </Sidebar>
 
         {/* Main Content Area */}

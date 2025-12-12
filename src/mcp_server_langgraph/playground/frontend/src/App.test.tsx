@@ -35,6 +35,7 @@ vi.mock('./components/Layout', () => ({
 vi.mock('./components/Sessions', () => ({
   SessionList: () => <div data-testid="session-list">Sessions</div>,
   CreateSessionModal: () => null,
+  SessionExportButtons: () => <div data-testid="session-export-buttons">Export</div>,
 }));
 
 vi.mock('./hooks/useSession', () => ({
@@ -78,6 +79,35 @@ vi.mock('./hooks/useMCPSampling', () => ({
     pendingSamplingRequest: null,
     approveSampling: vi.fn(),
     rejectSampling: vi.fn(),
+  }),
+}));
+
+vi.mock('./hooks/useSidebarState', () => ({
+  useSidebarState: () => ({
+    isCollapsed: false,
+    toggle: vi.fn(),
+    setCollapsed: vi.fn(),
+    sections: {},
+    toggleSection: vi.fn(),
+    setSectionCollapsed: vi.fn(),
+  }),
+}));
+
+vi.mock('./hooks/useDarkMode', () => ({
+  useDarkMode: () => ({
+    isDark: false,
+    toggle: vi.fn(),
+    setDark: vi.fn(),
+  }),
+}));
+
+vi.mock('./hooks/useServiceWorker', () => ({
+  useServiceWorker: () => ({
+    isSupported: true,
+    isRegistered: false,
+    isOffline: false,
+    hasUpdate: false,
+    updateServiceWorker: vi.fn(),
   }),
 }));
 

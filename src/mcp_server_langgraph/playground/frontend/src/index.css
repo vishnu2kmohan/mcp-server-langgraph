@@ -81,10 +81,10 @@
     @apply bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-lg shadow-sm;
   }
 
-  /* Tab styles */
+  /* Tab styles - improved contrast for accessibility */
   .tab {
-    @apply px-4 py-2 text-sm font-medium text-gray-500 dark:text-dark-textMuted;
-    @apply hover:text-gray-700 dark:hover:text-dark-text;
+    @apply px-4 py-2 text-sm font-medium text-gray-600 dark:text-dark-textMuted;
+    @apply hover:text-gray-800 dark:hover:text-dark-text;
     @apply border-b-2 border-transparent;
     @apply transition-colors duration-150;
   }
@@ -144,11 +144,11 @@
     @apply focus-visible:ring-error-500;
   }
 
-  /* Input styles */
+  /* Input styles - improved placeholder contrast */
   .input {
     @apply w-full px-3 py-2 rounded-md border border-gray-300 dark:border-dark-border;
     @apply bg-white dark:bg-dark-surface text-gray-900 dark:text-dark-text;
-    @apply placeholder-gray-400 dark:placeholder-dark-textMuted;
+    @apply placeholder-gray-500 dark:placeholder-dark-textMuted;
     @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
     @apply disabled:bg-gray-100 dark:disabled:bg-dark-bg disabled:cursor-not-allowed;
   }
@@ -179,9 +179,9 @@
     @apply bg-error-500;
   }
 
-  /* Log level colors */
+  /* Log level colors - improved contrast */
   .log-debug {
-    @apply text-gray-500;
+    @apply text-gray-600 dark:text-dark-textMuted;
   }
 
   .log-info {

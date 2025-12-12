@@ -41,6 +41,11 @@ vi.mock('../Auth', () => ({
   LoginForm: () => null,
 }));
 
+// Mock ConnectionStatusIndicator component
+vi.mock('../MCP/ConnectionStatusIndicator', () => ({
+  ConnectionStatusIndicator: () => <span>Connected</span>,
+}));
+
 describe('Header', () => {
   beforeEach(() => {
     vi.clearAllMocks();

@@ -71,10 +71,10 @@ export function EmptyState({
         {icon || <DefaultIcon className="w-12 h-12" />}
       </div>
 
-      {/* Title */}
-      <h3 className="text-lg font-medium text-gray-700 dark:text-dark-textSecondary mb-2">
+      {/* Title - using p element to avoid heading order issues */}
+      <p className="text-lg font-medium text-gray-700 dark:text-dark-textSecondary mb-2">
         {title}
-      </h3>
+      </p>
 
       {/* Description */}
       {description && (
