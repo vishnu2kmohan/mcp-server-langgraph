@@ -1,5 +1,8 @@
 /**
  * useDarkMode Tests
+ *
+ * Tests the re-exported hook from shared frontend library.
+ * Primary tests are in: src/mcp_server_langgraph/shared/frontend/src/hooks/useDarkMode.test.ts
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';

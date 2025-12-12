@@ -1,14 +1,38 @@
 /**
  * useAccessibility Hook
  *
+ * Re-exports from shared frontend library with backward-compatible API.
+ * See: src/mcp_server_langgraph/shared/frontend/src/hooks/useAccessibility.ts
+ *
  * Provides accessibility utilities including focus trapping,
  * screen reader announcements, and keyboard navigation.
+ *
+ * @deprecated Import from '@mcp-server-langgraph/shared-frontend' instead
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+
+// Re-export base types from shared library
+export {
+  useSkipLink,
+  type UseSkipLinkResult,
+  type UseAccessibilityOptions,
+} from '../../../../shared/frontend/src/hooks/useAccessibility';
+
+// Import shared implementations
+import {
+  useAnnounce as useSharedAnnounce,
+  useFocusTrap as useSharedFocusTrap,
+  useAccessibility as useSharedAccessibility,
+} from '../../../../shared/frontend/src/hooks/useAccessibility';
+
+// ==============================================================================
+// useFocusTrap - Backward-compatible wrapper
+// ==============================================================================
 
 /**
  * Focus trap hook for modal dialogs
+ * @deprecated Use useFocusTrap from shared instead with different API
  */
 export function useFocusTrap(
   containerRef: React.RefObject<HTMLElement | null>,
@@ -31,13 +55,11 @@ export function useFocusTrap(
       if (e.key !== 'Tab') return;
 
       if (e.shiftKey) {
-        // Shift + Tab
         if (document.activeElement === firstFocusable) {
           e.preventDefault();
           lastFocusable?.focus();
         }
       } else {
-        // Tab
         if (document.activeElement === lastFocusable) {
           e.preventDefault();
           firstFocusable?.focus();
@@ -50,54 +72,31 @@ export function useFocusTrap(
   }, [containerRef, enabled]);
 }
 
+// ==============================================================================
+// useAnnounce - Backward-compatible wrapper
+// ==============================================================================
+
 /**
  * Screen reader announcement hook
  */
 export function useAnnounce(
   politeness: 'polite' | 'assertive' = 'polite'
 ): { announce: (message: string) => void } {
-  const liveRegionRef = useRef<HTMLDivElement | null>(null);
+  const shared = useSharedAnnounce();
 
-  // Create live region on mount
-  useEffect(() => {
-    const liveRegion = document.createElement('div');
-    liveRegion.setAttribute('aria-live', politeness);
-    liveRegion.setAttribute('aria-atomic', 'true');
-    liveRegion.setAttribute('role', 'status');
-    liveRegion.style.cssText = `
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    `;
-    document.body.appendChild(liveRegion);
-    liveRegionRef.current = liveRegion;
-
-    return () => {
-      document.body.removeChild(liveRegion);
-    };
-  }, [politeness]);
-
-  const announce = useCallback((message: string) => {
-    if (liveRegionRef.current) {
-      liveRegionRef.current.textContent = message;
-
-      // Clear after delay to allow re-announcement of same message
-      setTimeout(() => {
-        if (liveRegionRef.current) {
-          liveRegionRef.current.textContent = '';
-        }
-      }, 1000);
-    }
-  }, []);
+  const announce = useCallback(
+    (message: string) => {
+      shared.announce(message, politeness);
+    },
+    [shared, politeness]
+  );
 
   return { announce };
 }
+
+// ==============================================================================
+// useAccessibility - Combined utilities (backward-compatible wrapper)
+// ==============================================================================
 
 /**
  * Combined accessibility hook
@@ -111,7 +110,7 @@ export function useAccessibility(): {
 } {
   const focusTrapRef = useRef<HTMLElement | null>(null);
   const [isFocusTrapEnabled, setIsFocusTrapEnabled] = useState(false);
-  const { announce } = useAnnounce();
+  const shared = useSharedAnnounce();
 
   useFocusTrap(focusTrapRef, isFocusTrapEnabled);
 
@@ -123,6 +122,13 @@ export function useAccessibility(): {
     setIsFocusTrapEnabled(false);
   }, []);
 
+  const announce = useCallback(
+    (message: string) => {
+      shared.announce(message, 'polite');
+    },
+    [shared]
+  );
+
   return {
     announce,
     focusTrapRef,
@@ -131,6 +137,10 @@ export function useAccessibility(): {
     disableFocusTrap,
   };
 }
+
+// ==============================================================================
+// useKeyboardNavigation - Playground-specific (not in shared)
+// ==============================================================================
 
 /**
  * Keyboard navigation hook for lists
@@ -180,42 +190,5 @@ export function useKeyboardNavigation<T>(
     activeIndex,
     setActiveIndex,
     handleKeyDown,
-  };
-}
-
-/**
- * Skip link target hook
- */
-export function useSkipLink(targetId: string): {
-  skipLinkProps: {
-    href: string;
-    onClick: (e: React.MouseEvent) => void;
-  };
-  targetProps: {
-    id: string;
-    tabIndex: number;
-  };
-} {
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      const target = document.getElementById(targetId);
-      if (target) {
-        target.focus();
-        target.scrollIntoView({ behavior: 'smooth' });
-      }
-    },
-    [targetId]
-  );
-
-  return {
-    skipLinkProps: {
-      href: `#${targetId}`,
-      onClick: handleClick,
-    },
-    targetProps: {
-      id: targetId,
-      tabIndex: -1,
-    },
   };
 }

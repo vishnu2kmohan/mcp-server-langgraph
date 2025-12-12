@@ -1,0 +1,40 @@
+{
+  "name": "@mcp-server-langgraph/shared-frontend",
+  "version": "1.0.0",
+  "description": "Shared frontend components, hooks, and design tokens for MCP Server LangGraph",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./hooks": "./src/hooks/index.ts",
+    "./styles": "./src/styles/index.ts",
+    "./components": "./src/components/index.ts",
+    "./api": "./src/api/index.ts"
+  },
+  "scripts": {
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext ts,tsx"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.1.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "keywords": [
+    "mcp",
+    "langgraph",
+    "react",
+    "design-system",
+    "shared-components"
+  ],
+  "license": "MIT"
+}
