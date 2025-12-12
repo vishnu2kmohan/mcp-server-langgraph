@@ -25,6 +25,18 @@ import { FeedbackButton, type FeedbackData, NPSSurvey } from './components/Feedb
 import { WelcomeModal, useOnboarding } from './components/Onboarding';
 import { useNPSSurvey } from './hooks/useNPSSurvey';
 import { HeartMetricsProvider, useHeartMetrics } from '../../../shared/frontend/src/hooks/useHeartMetrics';
+import { useFTUXAnalytics } from '../../../shared/frontend/src/hooks/useFTUXAnalytics';
+import {
+  ErrorRecovery,
+  FeatureHint,
+  useFeatureDiscovery,
+  HelpPanel,
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
+} from '../../../shared/frontend/src/components';
+import { HelpCircle } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
 import { Toaster, toast } from 'sonner';
@@ -61,20 +73,16 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   };
 
   render(): ReactNode {
-    if (this.state.hasError) {
+    if (this.state.hasError && this.state.error) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md p-8 bg-white rounded-lg shadow-lg text-center">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h2>
-            <p className="text-gray-600 mb-4">
-              {this.state.error?.message || 'An unexpected error occurred'}
-            </p>
-            <button
-              onClick={this.handleReset}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Try Again
-            </button>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+          <div className="max-w-lg w-full">
+            <ErrorRecovery
+              error={this.state.error}
+              onRetry={this.handleReset}
+              variant="inline"
+              docsLink="https://github.com/your-org/mcp-server-langgraph#troubleshooting"
+            />
           </div>
         </div>
       );
@@ -192,6 +200,58 @@ function AppContent() {
     },
     [heartMetrics]
   );
+
+  // ==============================================================================
+  // FTUX Analytics
+  // ==============================================================================
+
+  const ftuxAnalytics = useFTUXAnalytics({ totalOnboardingSteps: 4 });
+  const [isHelpPanelOpen, setIsHelpPanelOpen] = useState(false);
+
+  // Feature hints for progressive disclosure
+  const featureHints = [
+    {
+      featureId: 'generate-code',
+      title: 'Generate Python Code',
+      description: 'Click "Generate Code" to convert your workflow into production-ready Python code.',
+    },
+    {
+      featureId: 'keyboard-shortcuts',
+      title: 'Keyboard Shortcuts',
+      description: 'Press Ctrl+S to save, Ctrl+Z to undo, Ctrl+Y to redo. Press ? for all shortcuts.',
+    },
+    {
+      featureId: 'node-config',
+      title: 'Configure Nodes',
+      description: 'Double-click any node to configure its settings and behavior.',
+    },
+  ];
+
+  const { currentHint, dismissHint } = useFeatureDiscovery(featureHints);
+
+  // Help panel content
+  const helpSections = [
+    { id: 'basics', title: 'Getting Started', icon: '📚' },
+    { id: 'nodes', title: 'Nodes', icon: '🔧' },
+    { id: 'export', title: 'Exporting', icon: '📤' },
+  ];
+
+  const helpArticles = [
+    { id: 'h1', title: 'Creating Your First Workflow', content: 'Drag nodes from the left sidebar onto the canvas. Connect them by dragging from one node handle to another.', category: 'basics' },
+    { id: 'h2', title: 'Understanding Node Types', content: 'Tool nodes execute functions, LLM nodes call language models, Conditional nodes route based on conditions, Approval nodes require human input.', category: 'nodes' },
+    { id: 'h3', title: 'Generating Python Code', content: 'Click the "Generate Code" button to convert your visual workflow into production-ready Python code using LangGraph.', category: 'export' },
+    { id: 'h4', title: 'Exporting Your Workflow', content: 'Use "Save to File" to download your Python code, or "Export JSON" to save the workflow structure.', category: 'export' },
+  ];
+
+  const keyboardShortcuts = [
+    { keys: ['Ctrl', 'S'], description: 'Save workflow' },
+    { keys: ['Ctrl', 'G'], description: 'Generate code' },
+    { keys: ['Ctrl', 'Z'], description: 'Undo' },
+    { keys: ['Ctrl', 'Y'], description: 'Redo' },
+    { keys: ['Delete'], description: 'Delete selected nodes' },
+    { keys: ['Ctrl', 'Shift', 'T'], description: 'Toggle dark mode' },
+    { keys: ['?'], description: 'Show keyboard shortcuts' },
+  ];
 
   // Handle onboarding completion
   const handleOnboardingComplete = useCallback(() => {
@@ -605,6 +665,18 @@ function AppContent() {
             >
               <Settings size={20} />
             </button>
+            <button
+              onClick={() => setIsHelpPanelOpen(true)}
+              className={`p-2 rounded-lg transition-colors ${
+                isDarkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title="Help"
+              aria-label="Help"
+            >
+              <HelpCircle size={20} />
+            </button>
           </div>
         </div>
       </header>
@@ -952,6 +1024,31 @@ function AppContent() {
           onComplete={handleOnboardingComplete}
           onSkip={handleOnboardingSkip}
         />
+      )}
+
+      {/* Help Panel (FTUX) */}
+      <HelpPanel
+        isOpen={isHelpPanelOpen}
+        onClose={() => setIsHelpPanelOpen(false)}
+        articles={helpArticles}
+        sections={helpSections}
+        keyboardShortcuts={keyboardShortcuts}
+      />
+
+      {/* Feature Hints (FTUX Progressive Disclosure) */}
+      {currentHint && hasCompletedOnboarding && (
+        <div className="fixed bottom-4 left-4 z-40 max-w-sm">
+          <FeatureHint
+            featureId={currentHint.featureId}
+            title={currentHint.title}
+            description={currentHint.description}
+            onAction={() => {
+              ftuxAnalytics.trackHintActionTaken(currentHint.featureId, 'try_it');
+              dismissHint(currentHint.featureId);
+            }}
+            actionLabel="Got it!"
+          />
+        </div>
       )}
     </div>
   );
