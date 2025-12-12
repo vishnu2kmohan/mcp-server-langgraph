@@ -16,6 +16,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { Download, Save, Code2, FileJson, Loader2, AlertCircle, AlertTriangle, CheckCircle2, Undo2, Redo2, Sun, Moon, Trash2, Settings } from 'lucide-react';
 import { useDarkMode } from './hooks/useDarkMode';
+import { useAccessibility, useSkipToContent } from './hooks/useAccessibility';
 import { useWorkflowValidation } from './hooks/useWorkflowValidation';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { NodeConfigModal } from './components/NodeConfigModal';
@@ -158,6 +159,13 @@ function AppContent() {
   // ==============================================================================
 
   const { isDarkMode, toggle: toggleDarkMode } = useDarkMode();
+
+  // ==============================================================================
+  // Accessibility
+  // ==============================================================================
+
+  const { skipLinkProps } = useSkipToContent('main-canvas');
+  const { announce } = useAccessibility();
 
   // ==============================================================================
   // Workflow Validation
@@ -479,6 +487,8 @@ function AppContent() {
 
   return (
     <div className={`h-screen flex flex-col ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Skip to main content link for accessibility */}
+      <a {...skipLinkProps}>Skip to main content</a>
       <Toaster position="top-right" richColors closeButton />
       {/* Header */}
       <header className={`px-6 py-4 border-b ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
@@ -628,7 +638,7 @@ function AppContent() {
         </aside>
 
         {/* Main Canvas */}
-        <div className="flex-1 relative">
+        <div id="main-canvas" tabIndex={-1} className="flex-1 relative" role="main" aria-label="Workflow canvas">
           <ReactFlow
             nodes={nodes}
             edges={edges}

@@ -13,11 +13,10 @@
  * @deprecated Import from '@mcp-server-langgraph/shared-frontend' instead
  */
 
-import { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 
-// Re-export from shared library
+// Re-export from shared library (note: useFocusTrap is overridden below)
 export {
-  useFocusTrap,
   useAnnounce,
   useSkipLink,
   type UseFocusTrapResult,
@@ -31,6 +30,10 @@ import {
   useAnnounce as useSharedAnnounce,
   useAccessibility as useSharedAccessibility,
 } from '../../../../shared/frontend/src/hooks/useAccessibility';
+
+// Re-export the object-based useFocusTrap for tests that need it
+// (the simple useFocusTrap(ref, enabled) below is for component use)
+export { useFocusTrap as useFocusTrapObject } from '../../../../shared/frontend/src/hooks/useAccessibility';
 
 // ==============================================================================
 // Backward-compatible Type Aliases
@@ -62,6 +65,55 @@ export interface AccessibilityResult {
   focusTrap: FocusTrapResult;
   prefersReducedMotion: boolean;
   prefersHighContrast: boolean;
+}
+
+// ==============================================================================
+// useFocusTrap - Simple focus trap for modals (backward-compatible API)
+// ==============================================================================
+
+/**
+ * Focus trap hook for modal dialogs
+ * Traps focus within a container element when enabled.
+ *
+ * @param containerRef - Ref to the container element
+ * @param enabled - Whether the focus trap is active
+ */
+export function useFocusTrap(
+  containerRef: React.RefObject<HTMLElement | null>,
+  enabled: boolean
+): void {
+  useEffect(() => {
+    if (!enabled || !containerRef.current) return;
+
+    const container = containerRef.current;
+    const focusableElements = container.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+
+    // Focus first element on mount
+    firstFocusable?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstFocusable) {
+          e.preventDefault();
+          lastFocusable?.focus();
+        }
+      } else {
+        if (document.activeElement === lastFocusable) {
+          e.preventDefault();
+          firstFocusable?.focus();
+        }
+      }
+    };
+
+    container.addEventListener('keydown', handleKeyDown);
+    return () => container.removeEventListener('keydown', handleKeyDown);
+  }, [containerRef, enabled]);
 }
 
 // ==============================================================================

@@ -9,6 +9,10 @@ import { renderHook, act } from '@testing-library/react';
 import { useDarkMode } from './useDarkMode';
 
 describe('useDarkMode Hook', () => {
+  // Store original globals to restore after tests
+  let originalMatchMedia: typeof window.matchMedia;
+  let originalLocalStorage: Storage;
+
   // Mock localStorage
   const localStorageMock = (() => {
     let store: Record<string, string> = {};
@@ -20,6 +24,13 @@ describe('useDarkMode Hook', () => {
       clear: () => {
         store = {};
       },
+      removeItem: vi.fn((key: string) => {
+        delete store[key];
+      }),
+      get length() {
+        return Object.keys(store).length;
+      },
+      key: vi.fn((index: number) => Object.keys(store)[index] || null),
     };
   })();
 
@@ -36,6 +47,10 @@ describe('useDarkMode Hook', () => {
   }));
 
   beforeEach(() => {
+    // Save original values
+    originalMatchMedia = window.matchMedia;
+    originalLocalStorage = window.localStorage;
+
     // Reset matchMedia to return light mode by default
     matchMediaMock.mockImplementation((query: string) => ({
       matches: false,
@@ -48,8 +63,14 @@ describe('useDarkMode Hook', () => {
       dispatchEvent: vi.fn(),
     }));
 
-    vi.stubGlobal('localStorage', localStorageMock);
-    vi.stubGlobal('matchMedia', matchMediaMock);
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      writable: true,
+    });
+    Object.defineProperty(window, 'matchMedia', {
+      value: matchMediaMock,
+      writable: true,
+    });
     localStorageMock.clear();
     localStorageMock.getItem.mockClear();
     localStorageMock.setItem.mockClear();
@@ -57,7 +78,15 @@ describe('useDarkMode Hook', () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    // Restore original globals from setup.ts
+    Object.defineProperty(window, 'matchMedia', {
+      value: originalMatchMedia,
+      writable: true,
+    });
+    Object.defineProperty(window, 'localStorage', {
+      value: originalLocalStorage,
+      writable: true,
+    });
   });
 
   // ==============================================================================

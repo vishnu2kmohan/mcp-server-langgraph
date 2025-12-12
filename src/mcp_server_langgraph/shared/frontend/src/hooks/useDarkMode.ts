@@ -77,8 +77,8 @@ function getInitialTheme(): boolean {
   if (stored === 'dark') return true;
   if (stored === 'light') return false;
 
-  // Fall back to system preference
-  if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+  // Fall back to system preference - use optional chaining to handle test environments
+  if (window.matchMedia?.('(prefers-color-scheme: dark)')?.matches) {
     return true;
   }
 
@@ -92,7 +92,7 @@ function getReducedMotionPreference(): boolean {
   if (typeof window === 'undefined') {
     return false;
   }
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
 }
 
 /**

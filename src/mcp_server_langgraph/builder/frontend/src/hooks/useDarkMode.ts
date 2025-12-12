@@ -8,6 +8,8 @@
  */
 
 // Re-export from shared library
+import { useDarkMode as useDarkModeShared } from '../../../../shared/frontend/src/hooks/useDarkMode';
+
 export {
   useDarkMode,
   type UseDarkModeOptions,
@@ -21,4 +23,4 @@ export type DarkModeResult = {
   setDarkMode: (value: boolean) => void;
 };
 
-export default useDarkMode;
+export default useDarkModeShared;

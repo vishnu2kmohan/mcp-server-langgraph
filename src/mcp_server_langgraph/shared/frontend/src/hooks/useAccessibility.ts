@@ -338,15 +338,15 @@ export function useAccessibility(
   const { skipLinkProps, targetProps: skipLinkTargetProps } =
     useSkipLink(skipLinkTargetId);
 
-  // Preference detection
+  // Preference detection - use optional chaining throughout to handle test environments
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
   });
 
   const [prefersHighContrast, setPrefersHighContrast] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return window.matchMedia?.('(prefers-contrast: more)').matches ?? false;
+    return window.matchMedia?.('(prefers-contrast: more)')?.matches ?? false;
   });
 
   // Listen for preference changes

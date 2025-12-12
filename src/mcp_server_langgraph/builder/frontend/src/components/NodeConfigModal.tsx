@@ -8,9 +8,10 @@
  * - Save/Cancel actions
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Settings } from 'lucide-react';
 import type { Node } from 'reactflow';
+import { useFocusTrap } from '../hooks/useAccessibility';
 
 // ==============================================================================
 // Types
@@ -105,6 +106,10 @@ export function NodeConfigModal({ isOpen, node, onSave, onClose }: NodeConfigMod
   const [label, setLabel] = useState('');
   const [config, setConfig] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<FormErrors>({});
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap for accessibility - trap focus within modal when open
+  useFocusTrap(modalRef, isOpen);
 
   // Reset form when node changes
   useEffect(() => {
@@ -190,7 +195,11 @@ export function NodeConfigModal({ isOpen, node, onSave, onClose }: NodeConfigMod
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+      <div
+        ref={modalRef}
+        data-testid="modal-container"
+        className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-2">

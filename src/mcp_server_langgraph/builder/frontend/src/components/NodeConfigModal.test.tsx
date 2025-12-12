@@ -324,4 +324,120 @@ describe('NodeConfigModal Component', () => {
       expect(screen.getByLabelText(/condition/i)).toBeInTheDocument();
     });
   });
+
+  // ==============================================================================
+  // Accessibility - Focus Trap Tests
+  // ==============================================================================
+
+  describe('Focus Trap', () => {
+    it('traps focus within modal when open', async () => {
+      const user = userEvent.setup();
+      render(
+        <NodeConfigModal
+          isOpen={true}
+          node={mockNode}
+          onSave={mockOnSave}
+          onClose={mockOnClose}
+        />
+      );
+
+      // Get all focusable elements in the modal
+      const closeButton = screen.getByRole('button', { name: /close/i });
+      const labelInput = screen.getByLabelText(/label/i);
+      const cancelButton = screen.getByRole('button', { name: /cancel/i });
+      const saveButton = screen.getByRole('button', { name: /save/i });
+
+      // Focus should start on the first focusable element (close button)
+      await waitFor(() => {
+        expect(document.activeElement).toBe(closeButton);
+      });
+
+      // Tab through all elements
+      await user.tab();
+      expect(document.activeElement).toBe(labelInput);
+    });
+
+    it('focuses first element when modal opens', async () => {
+      render(
+        <NodeConfigModal
+          isOpen={true}
+          node={mockNode}
+          onSave={mockOnSave}
+          onClose={mockOnClose}
+        />
+      );
+
+      // The close button is the first focusable element
+      const closeButton = screen.getByRole('button', { name: /close/i });
+
+      await waitFor(() => {
+        expect(document.activeElement).toBe(closeButton);
+      });
+    });
+
+    it('wraps focus from last to first element on Tab', async () => {
+      const user = userEvent.setup();
+      render(
+        <NodeConfigModal
+          isOpen={true}
+          node={mockNode}
+          onSave={mockOnSave}
+          onClose={mockOnClose}
+        />
+      );
+
+      // Get the save button (last focusable element) and close button (first)
+      const saveButton = screen.getByRole('button', { name: /save/i });
+      const closeButton = screen.getByRole('button', { name: /close/i });
+
+      // Focus the save button directly
+      saveButton.focus();
+      expect(document.activeElement).toBe(saveButton);
+
+      // Tab should wrap to the first element (close button)
+      await user.tab();
+      await waitFor(() => {
+        expect(document.activeElement).toBe(closeButton);
+      });
+    });
+
+    it('wraps focus from first to last element on Shift+Tab', async () => {
+      const user = userEvent.setup();
+      render(
+        <NodeConfigModal
+          isOpen={true}
+          node={mockNode}
+          onSave={mockOnSave}
+          onClose={mockOnClose}
+        />
+      );
+
+      // Get the close button (first focusable element) and save button (last)
+      const closeButton = screen.getByRole('button', { name: /close/i });
+      const saveButton = screen.getByRole('button', { name: /save/i });
+
+      // Focus the close button
+      closeButton.focus();
+      expect(document.activeElement).toBe(closeButton);
+
+      // Shift+Tab should wrap to the last element (save button)
+      await user.keyboard('{Shift>}{Tab}{/Shift}');
+      await waitFor(() => {
+        expect(document.activeElement).toBe(saveButton);
+      });
+    });
+
+    it('has modal container with data-testid for focus trap', () => {
+      render(
+        <NodeConfigModal
+          isOpen={true}
+          node={mockNode}
+          onSave={mockOnSave}
+          onClose={mockOnClose}
+        />
+      );
+
+      expect(screen.getByTestId('modal-container')).toBeInTheDocument();
+    });
+  });
 });
