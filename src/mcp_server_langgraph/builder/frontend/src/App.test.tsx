@@ -126,6 +126,51 @@ vi.mock('sonner', () => ({
 // Import toast for assertions
 import { toast } from 'sonner';
 
+// Mock useAccessibility hook
+vi.mock('./hooks/useAccessibility', () => ({
+  useAccessibility: () => ({
+    announce: {
+      announce: vi.fn(),
+      announcePolite: vi.fn(),
+      announceAssertive: vi.fn(),
+    },
+    focusTrap: {
+      containerRef: { current: null },
+      isActive: false,
+      activate: vi.fn(),
+      deactivate: vi.fn(),
+    },
+    prefersReducedMotion: false,
+    prefersHighContrast: false,
+  }),
+  useSkipToContent: () => ({
+    skipLinkProps: {
+      href: '#main-canvas',
+      className: 'skip-link',
+      onClick: vi.fn(),
+    },
+  }),
+  useFocusTrap: vi.fn(),
+  useAnnounce: () => ({
+    announce: vi.fn(),
+    announcePolite: vi.fn(),
+    announceAssertive: vi.fn(),
+  }),
+  useFocusTrapObject: () => ({
+    containerRef: { current: null },
+    isActive: false,
+    activate: vi.fn(),
+    deactivate: vi.fn(),
+  }),
+  useSkipLink: () => ({
+    skipLinkProps: {
+      href: '#main-canvas',
+      className: 'skip-link',
+      onClick: vi.fn(),
+    },
+  }),
+}));
+
 describe('App Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();

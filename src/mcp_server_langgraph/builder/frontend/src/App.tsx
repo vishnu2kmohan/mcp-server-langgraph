@@ -20,8 +20,10 @@ import { useAccessibility, useSkipToContent } from './hooks/useAccessibility';
 import { useWorkflowValidation } from './hooks/useWorkflowValidation';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { NodeConfigModal } from './components/NodeConfigModal';
-import { FeedbackButton, type FeedbackData } from './components/Feedback';
+import { SettingsModal } from './components/SettingsModal';
+import { FeedbackButton, type FeedbackData, NPSSurvey } from './components/Feedback';
 import { WelcomeModal, useOnboarding } from './components/Onboarding';
+import { useNPSSurvey } from './hooks/useNPSSurvey';
 import { HeartMetricsProvider, useHeartMetrics } from '../../../shared/frontend/src/hooks/useHeartMetrics';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
@@ -157,6 +159,9 @@ function AppContent() {
   // Selected nodes for deletion
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
 
+  // Settings modal state
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   // ==============================================================================
   // Dark Mode
   // ==============================================================================
@@ -169,6 +174,7 @@ function AppContent() {
 
   const heartMetrics = useHeartMetrics();
   const { hasCompletedOnboarding, completeOnboarding } = useOnboarding();
+  const { shouldShowNPS, recordCodeExport, recordWorkflowSave, dismissNPS, submitNPS } = useNPSSurvey();
 
   // Track feature usage
   const trackFeature = useCallback(
@@ -197,6 +203,15 @@ function AppContent() {
     completeOnboarding();
     heartMetrics.trackOnboardingStep('skipped');
   }, [completeOnboarding, heartMetrics]);
+
+  // Handle NPS survey submission
+  const handleNPSSubmit = useCallback(
+    (score: number) => {
+      submitNPS(score);
+      heartMetrics.recordSatisfaction(score);
+    },
+    [submitNPS, heartMetrics]
+  );
 
   // ==============================================================================
   // Accessibility
@@ -285,6 +300,7 @@ function AppContent() {
       toast.success(
         `Deleted ${nodesToDelete.length} node${nodesToDelete.length > 1 ? 's' : ''}`
       );
+      announce.announce(`${nodesToDelete.length} node${nodesToDelete.length > 1 ? 's' : ''} deleted`);
 
       if (protectedNodeAttempted) {
         toast.info('Start node was preserved (required)');
@@ -292,7 +308,7 @@ function AppContent() {
     }
 
     setContextMenu(null);
-  }, [selectedNodeIds, setNodes, setEdges, takeSnapshot]);
+  }, [selectedNodeIds, setNodes, setEdges, takeSnapshot, announce.announce]);
 
   // Delete specific node by ID
   const deleteNode = useCallback(
@@ -308,9 +324,10 @@ function AppContent() {
         eds.filter((e) => e.source !== nodeId && e.target !== nodeId)
       );
       toast.success('Node deleted');
+      announce.announce('Node deleted from canvas');
       setContextMenu(null);
     },
-    [setNodes, setEdges, takeSnapshot]
+    [setNodes, setEdges, takeSnapshot, announce.announce]
   );
 
   // Close context menu when clicking outside
@@ -371,8 +388,9 @@ function AppContent() {
       };
 
       setNodes((nds) => [...nds, newNode]);
+      announce.announce(`${nodeType} node added to canvas`);
     },
-    [setNodes, takeSnapshot, trackFeature]
+    [setNodes, takeSnapshot, trackFeature, announce.announce]
   );
 
   // ==============================================================================
@@ -418,10 +436,13 @@ function AppContent() {
       setGeneratedCode(response.data.code);
       setShowCodePanel(true);
       toast.success('Code generated successfully!');
+      announce.announce('Python code generated successfully');
       heartMetrics.trackTaskComplete('generate_code');
+      recordCodeExport();
     } catch (error) {
       console.error('Code generation failed:', error);
       toast.error('Code generation failed. See console for details.');
+      announce.announce('Code generation failed');
       heartMetrics.trackTaskError('generate_code', String(error));
     } finally {
       setIsGenerating(false);
@@ -468,10 +489,13 @@ function AppContent() {
       });
 
       toast.success(`Workflow saved to src/agents/${workflowName}.py`);
+      announce.announce(`Workflow saved to ${workflowName}.py`);
       heartMetrics.trackTaskComplete('save_workflow');
+      recordWorkflowSave();
     } catch (error) {
       console.error('Save failed:', error);
       toast.error('Save failed. See console for details.');
+      announce.announce('Workflow save failed');
       heartMetrics.trackTaskError('save_workflow', String(error));
     } finally {
       setIsSaving(false);
@@ -568,6 +592,18 @@ function AppContent() {
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className={`p-2 rounded-lg transition-colors ${
+                isDarkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title="Settings"
+              aria-label="Settings"
+            >
+              <Settings size={20} />
             </button>
           </div>
         </div>
@@ -894,8 +930,21 @@ function AppContent() {
         onClose={() => setIsConfigModalOpen(false)}
       />
 
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
+
       {/* Feedback Button (HEART Happiness) */}
       <FeedbackButton onSubmit={handleFeedbackSubmit} position="bottom-right" />
+
+      {/* NPS Survey (HEART Happiness) */}
+      {shouldShowNPS && (
+        <div className="fixed bottom-20 right-4 z-50">
+          <NPSSurvey onSubmit={handleNPSSubmit} onDismiss={dismissNPS} />
+        </div>
+      )}
 
       {/* Welcome Modal (HEART Adoption) */}
       {!hasCompletedOnboarding && (
