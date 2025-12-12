@@ -27,3 +27,12 @@ export type {
   AdoptionMetrics,
   RetentionMetrics,
 } from './useHeartMetrics';
+
+export { useFTUXAnalytics } from './useFTUXAnalytics';
+export type {
+  FTUXAnalyticsOptions,
+  UseFTUXAnalyticsResult,
+  MetricsSummary,
+  HintAction,
+  TourSkip,
+} from './useFTUXAnalytics';
