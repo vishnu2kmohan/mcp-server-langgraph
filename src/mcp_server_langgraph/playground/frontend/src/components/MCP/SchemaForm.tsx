@@ -83,7 +83,7 @@ export function SchemaForm({
               {isRequired && <span className="text-error-500 ml-1">*</span>}
             </label>
 
-            {/* Enum - Select */}
+            {/* Enum - Select (SEP-1330: enumNames support) */}
             {property.enum ? (
               <select
                 id={inputId}
@@ -98,11 +98,15 @@ export function SchemaForm({
                   'focus:outline-none focus:ring-2 focus:ring-primary-500'
                 )}
               >
-                {property.enum.map((option) => (
-                  <option key={String(option)} value={String(option)}>
-                    {String(option)}
-                  </option>
-                ))}
+                {property.enum.map((option, idx) => {
+                  // SEP-1330: Use enumNames for human-readable labels if available
+                  const displayLabel = property.enumNames?.[idx] ?? String(option);
+                  return (
+                    <option key={String(option)} value={String(option)}>
+                      {displayLabel}
+                    </option>
+                  );
+                })}
               </select>
             ) : property.type === 'boolean' ? (
               /* Boolean - Checkbox */

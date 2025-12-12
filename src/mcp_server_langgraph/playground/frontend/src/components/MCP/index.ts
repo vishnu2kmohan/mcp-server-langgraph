@@ -28,3 +28,6 @@ export type { ResourceBrowserProps } from './ResourceBrowser';
 
 export { PromptExplorer } from './PromptExplorer';
 export type { PromptExplorerProps } from './PromptExplorer';
+
+export { TaskList } from './TaskList';
+export type { TaskListProps } from './TaskList';

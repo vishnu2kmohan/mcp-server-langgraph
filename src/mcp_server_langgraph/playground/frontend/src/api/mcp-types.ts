@@ -216,6 +216,9 @@ export interface PendingElicitation {
   message: string;
   requestedSchema: JSONSchema;
   createdAt: string;
+  // SEP-1036: URL mode for OAuth credential collection
+  mode?: 'inline' | 'url';
+  url?: string;  // Required when mode='url'
 }
 
 // =============================================================================
@@ -282,6 +285,47 @@ export interface PendingSamplingRequest {
   systemPrompt?: string;
   maxTokens: number;
   createdAt: string;
+  // SEP-1577: Tool definitions for agentic loops
+  tools?: SamplingTool[];
+  toolChoice?: ToolChoice;
+}
+
+// =============================================================================
+// MCP Tasks Types (SEP-1686: Durable Request Tracking)
+// =============================================================================
+
+export type MCPTaskState = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+
+export interface MCPTask {
+  id: string;
+  method: string;
+  state: MCPTaskState;
+  progress?: number;  // 0-100
+  progressMessage?: string;
+  result?: unknown;
+  error?: JSONRPCError;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskCreateResult {
+  taskId: string;
+}
+
+export interface TaskGetParams {
+  taskId: string;
+}
+
+export interface TaskGetResult {
+  task: MCPTask;
+}
+
+export interface TaskListResult {
+  tasks: MCPTask[];
+}
+
+export interface TaskCancelParams {
+  taskId: string;
 }
 
 // =============================================================================
@@ -446,6 +490,11 @@ export const MCP_METHODS = {
 
   // Completion
   COMPLETION_COMPLETE: 'completion/complete',
+
+  // Tasks (SEP-1686)
+  TASKS_LIST: 'tasks/list',
+  TASKS_GET: 'tasks/get',
+  TASKS_CANCEL: 'tasks/cancel',
 } as const;
 
 // =============================================================================

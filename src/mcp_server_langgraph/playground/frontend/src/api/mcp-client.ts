@@ -24,6 +24,13 @@ import type {
   MCPStreamChunk,
   MCPConnectionStatus,
   MCPRequestOptions,
+  // P2: New types for full compliance
+  MCPTask,
+  TaskListResult,
+  TaskGetResult,
+  MCPRoot,
+  RootsListResult,
+  MCPLogLevel,
 } from './mcp-types';
 
 // =============================================================================
@@ -88,6 +95,27 @@ export interface MCPClient {
     approved: boolean,
     result?: unknown
   ): Promise<void>;
+
+  // Tasks (SEP-1686: Durable Request Tracking)
+  listTasks(): Promise<MCPTask[]>;
+  getTask(taskId: string): Promise<MCPTask>;
+  cancelTask(taskId: string): Promise<void>;
+
+  // Roots
+  listRoots(): Promise<MCPRoot[]>;
+
+  // Resource Subscriptions
+  subscribeResource(uri: string): Promise<void>;
+  unsubscribeResource(uri: string): Promise<void>;
+
+  // Logging
+  setLogLevel(level: MCPLogLevel): Promise<void>;
+
+  // Completion (autocomplete)
+  complete(
+    ref: { type: 'ref/prompt' | 'ref/resource'; name?: string; uri?: string },
+    argument: { name: string; value: string }
+  ): Promise<{ completion: { values: string[]; total?: number; hasMore?: boolean } }>;
 }
 
 // =============================================================================
@@ -341,6 +369,64 @@ class MCPClientImpl implements MCPClient {
       action: approved ? 'approve' : 'reject',
       response: approved ? result : undefined,
     });
+  }
+
+  // ===========================================================================
+  // Tasks (SEP-1686)
+  // ===========================================================================
+
+  async listTasks(): Promise<MCPTask[]> {
+    const result = await this.sendRequest<TaskListResult>('tasks/list', {});
+    return result.tasks;
+  }
+
+  async getTask(taskId: string): Promise<MCPTask> {
+    const result = await this.sendRequest<TaskGetResult>('tasks/get', { taskId });
+    return result.task;
+  }
+
+  async cancelTask(taskId: string): Promise<void> {
+    await this.sendRequest('tasks/cancel', { taskId });
+  }
+
+  // ===========================================================================
+  // Roots
+  // ===========================================================================
+
+  async listRoots(): Promise<MCPRoot[]> {
+    const result = await this.sendRequest<RootsListResult>('roots/list', {});
+    return result.roots;
+  }
+
+  // ===========================================================================
+  // Resource Subscriptions
+  // ===========================================================================
+
+  async subscribeResource(uri: string): Promise<void> {
+    await this.sendRequest('resources/subscribe', { uri });
+  }
+
+  async unsubscribeResource(uri: string): Promise<void> {
+    await this.sendRequest('resources/unsubscribe', { uri });
+  }
+
+  // ===========================================================================
+  // Logging
+  // ===========================================================================
+
+  async setLogLevel(level: MCPLogLevel): Promise<void> {
+    await this.sendRequest('logging/setLevel', { level });
+  }
+
+  // ===========================================================================
+  // Completion (Autocomplete)
+  // ===========================================================================
+
+  async complete(
+    ref: { type: 'ref/prompt' | 'ref/resource'; name?: string; uri?: string },
+    argument: { name: string; value: string }
+  ): Promise<{ completion: { values: string[]; total?: number; hasMore?: boolean } }> {
+    return this.sendRequest('completion/complete', { ref, argument });
   }
 
   // ===========================================================================

@@ -7,7 +7,7 @@
 
 import React, { useId, useEffect } from 'react';
 import clsx from 'clsx';
-import type { PendingSamplingRequest, SamplingMessage, ModelHint } from '../../api/mcp-types';
+import type { PendingSamplingRequest, SamplingMessage, ModelHint, SamplingTool } from '../../api/mcp-types';
 
 export interface SamplingDialogProps {
   request: PendingSamplingRequest | null;
@@ -132,6 +132,47 @@ export function SamplingDialog({
               ))}
             </div>
           </div>
+
+          {/* SEP-1577: Tools */}
+          {request.tools && request.tools.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-dark-textSecondary mb-1">
+                Available Tools
+                {request.toolChoice && (
+                  <span className="ml-2 text-xs font-normal text-gray-500">
+                    (Mode: {request.toolChoice.type}
+                    {request.toolChoice.type === 'tool' && request.toolChoice.name &&
+                      ` - ${request.toolChoice.name}`})
+                  </span>
+                )}
+              </h3>
+              <div className="space-y-2">
+                {request.tools.map((tool: SamplingTool, idx: number) => (
+                  <div
+                    key={idx}
+                    className="p-2 bg-gray-50 dark:bg-dark-bg rounded-lg border border-gray-200 dark:border-dark-border"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-800 dark:text-dark-text">
+                        {tool.name}
+                      </span>
+                      {request.toolChoice?.type === 'tool' &&
+                       request.toolChoice.name === tool.name && (
+                        <span className="px-1.5 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded">
+                          Required
+                        </span>
+                      )}
+                    </div>
+                    {tool.description && (
+                      <p className="text-xs text-gray-500 dark:text-dark-textMuted mt-1">
+                        {tool.description}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Max Tokens */}
           <div className="mb-6 flex items-center justify-between text-sm">
