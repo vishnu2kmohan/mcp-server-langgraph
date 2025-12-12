@@ -28,7 +28,7 @@
 #   /_oauth     - OAuth callback (traefik-forward-auth)
 #   /mcp        - MCP Server API [protected]
 #   /build      - Visual Workflow Builder [protected]
-#   /play       - Interactive Playground [protected]
+#   /chat       - Interactive Playground [protected]
 #   /authn      - Keycloak (Authentication) [public]
 #   /authz      - OpenFGA API [protected]
 #   /playground - OpenFGA Playground UI [protected]
@@ -337,7 +337,7 @@ services:
       # Route: /playground/* -> openfga:3000 (OpenFGA Playground UI) [PROTECTED]
       # OpenFGA Playground runs on port 3000 (separate from API on 8080)
       # Access at http://localhost/playground or direct at http://localhost:9003/playground
-      # Priority 11 to take precedence over MCP Playground (PathPrefix /play matches /playground)
+      # Priority 11 (higher than MCP Playground at /chat which uses priority 10)
       # Authentication via forward-auth middleware (ADR-0054)
       - "traefik.http.routers.openfga-playground.rule=PathPrefix(`/playground`)"
       - "traefik.http.routers.openfga-playground.entrypoints=web"
@@ -1327,7 +1327,7 @@ services:
       - .env.test
     environment:
       # Docker networking values and service-specific overrides
-      - BASE_PATH=/play
+      - BASE_PATH=/chat
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       - OPENFGA_API_URL=http://openfga-test:8080
       - MCP_SERVER_URL=http://mcp-server-test:8000
@@ -1356,13 +1356,14 @@ services:
           - playground
     labels:
       - "traefik.enable=true"
-      # Route: /play/* -> playground:8002 (Interactive Playground)
+      # Route: /chat/* -> playground:8002 (Interactive Playground)
+      # NOTE: Using /chat instead of /play to avoid confusion with OpenFGA /playground
       # WebSocket support is automatic in Traefik
-      - "traefik.http.routers.playground.rule=PathPrefix(`/play`)"
+      - "traefik.http.routers.playground.rule=PathPrefix(`/chat`)"
       - "traefik.http.routers.playground.entrypoints=web"
       - "traefik.http.routers.playground.priority=10"
       - "traefik.http.services.playground.loadbalancer.server.port=8002"
-      - "traefik.http.middlewares.playground-strip.stripprefix.prefixes=/play"
+      - "traefik.http.middlewares.playground-strip.stripprefix.prefixes=/chat"
       # Authentication via forward-auth middleware (ADR-0054)
       - "traefik.http.routers.playground.middlewares=forward-auth@docker,playground-strip"
 

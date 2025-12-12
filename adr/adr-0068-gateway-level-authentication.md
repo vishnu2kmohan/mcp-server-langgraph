@@ -54,7 +54,7 @@ Implement **gateway-level authentication** using Traefik's ForwardAuth middlewar
 | Category | Routes | Auth Required |
 |----------|--------|---------------|
 | **Public** | `/authn/*` (Keycloak), `*/health*`, `*/ready*` | No |
-| **Protected - Apps** | `/mcp/*`, `/build/*`, `/play/*` | Yes |
+| **Protected - Apps** | `/mcp/*`, `/build/*`, `/chat/*` | Yes |
 | **Protected - Observability** | `/dashboards/*`, `/telemetry/*`, `/gateway/*` | Yes |
 | **Internal Only** | `/traces/*`, `/logs/*`, `/metrics/*`, `/vectors/*` | Network isolation |
 

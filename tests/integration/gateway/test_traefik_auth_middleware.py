@@ -141,7 +141,7 @@ class TestProtectedRoutes:
         [
             "/mcp/",  # MCP Server API
             "/build/",  # Visual Workflow Builder
-            "/play/",  # Interactive Playground
+            "/chat/",  # Interactive Playground
             "/dashboards/",  # Grafana
             "/playground",  # OpenFGA Playground
         ],
