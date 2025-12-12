@@ -22,3 +22,9 @@ export type { ToolBrowserProps } from './ToolBrowser';
 
 export { ToolCard } from './ToolCard';
 export type { ToolCardProps } from './ToolCard';
+
+export { ResourceBrowser } from './ResourceBrowser';
+export type { ResourceBrowserProps } from './ResourceBrowser';
+
+export { PromptExplorer } from './PromptExplorer';
+export type { PromptExplorerProps } from './PromptExplorer';
