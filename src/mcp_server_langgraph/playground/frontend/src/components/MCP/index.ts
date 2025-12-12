@@ -16,3 +16,9 @@ export type { SamplingDialogProps } from './SamplingDialog';
 
 export { ServerManager } from './ServerManager';
 export type { ServerManagerProps } from './ServerManager';
+
+export { ToolBrowser } from './ToolBrowser';
+export type { ToolBrowserProps } from './ToolBrowser';
+
+export { ToolCard } from './ToolCard';
+export type { ToolCardProps } from './ToolCard';
