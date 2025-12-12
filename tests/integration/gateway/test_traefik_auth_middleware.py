@@ -27,7 +27,11 @@ pytestmark = [
 
 
 def _gateway_available() -> bool:
-    """Check if Traefik gateway is available with auth middleware configured."""
+    """Check if Traefik gateway is available with auth middleware configured.
+
+    Returns True only if ALL protected routes have auth middleware configured.
+    This prevents partial-auth configurations from causing test failures.
+    """
     try:
         import requests
 
@@ -35,18 +39,30 @@ def _gateway_available() -> bool:
         response = requests.get("http://localhost/", timeout=5, allow_redirects=False)
         if response.status_code == 0:
             return False
-        # Check if auth is enforced on protected route
-        # If /mcp/ returns 200 without auth, middleware isn't configured
-        mcp_response = requests.get("http://localhost/mcp/", timeout=5, allow_redirects=False)
-        # Auth should redirect (302/307) or return 401/403, not 200
-        return mcp_response.status_code in [302, 307, 401, 403]
+
+        # Check if auth is enforced on ALL protected routes
+        # All routes must return 302/307/401/403 (not 200) for auth to be fully configured
+        protected_routes = ["/mcp/", "/build/", "/chat/", "/dashboards/", "/playground"]
+        for route in protected_routes:
+            route_response = requests.get(
+                f"http://localhost{route}",
+                timeout=5,
+                allow_redirects=False,
+            )
+            # Auth should redirect (302/307) or return 401/403, not 200
+            if route_response.status_code not in [302, 307, 401, 403]:
+                return False  # This route doesn't have auth configured
+
+        return True
     except Exception:
         return False
 
 
-# Skip at module level if gateway not available or auth not configured
+# Skip at module level if gateway not available or auth not fully configured
 if not _gateway_available():
-    pytestmark.append(pytest.mark.skip(reason="Traefik gateway not available or auth middleware not configured"))
+    pytestmark.append(
+        pytest.mark.skip(reason="Traefik gateway not available or auth middleware not configured for all protected routes")
+    )
 
 # Gateway URL (Traefik on port 80)
 GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost")

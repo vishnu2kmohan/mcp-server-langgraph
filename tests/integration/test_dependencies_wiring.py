@@ -26,8 +26,17 @@ pytestmark = pytest.mark.integration
 class TestKeycloakClientWiring:
     """Test that Keycloak client gets all required config from settings"""
 
+    def setup_method(self):
+        """Reset singleton before each test"""
+        import mcp_server_langgraph.core.dependencies as deps
+
+        deps._keycloak_client = None
+
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC and reset singleton to prevent mock accumulation in xdist workers"""
+        import mcp_server_langgraph.core.dependencies as deps
+
+        deps._keycloak_client = None
         gc.collect()
 
     def test_keycloak_client_receives_admin_credentials(self):
@@ -45,6 +54,7 @@ class TestKeycloakClientWiring:
         with patch("mcp_server_langgraph.core.dependencies.settings") as mock_settings:
             mock_settings.keycloak_server_url = "http://localhost:8082"
             mock_settings.keycloak_realm = "test-realm"
+            mock_settings.keycloak_admin_realm = "master"
             mock_settings.keycloak_client_id = "test-client"
             mock_settings.keycloak_client_secret = "test-secret"
             mock_settings.keycloak_admin_username = "admin"

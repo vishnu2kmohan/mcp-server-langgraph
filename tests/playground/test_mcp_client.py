@@ -322,13 +322,14 @@ class TestPlaygroundMCPIntegration:
         )
 
         assert response.content == "I can help with that!"
+        # thread_id is namespaced by user_id (user_id + "_" + session_id)
         mock_mcp_client.call_tool.assert_called_once_with(
             "agent_chat",
             {
                 "message": "Hello",
                 "token": "test-jwt",
                 "user_id": "alice",
-                "thread_id": "session-123",
+                "thread_id": "alice_session-123",
                 "response_format": "detailed",
             },
         )
