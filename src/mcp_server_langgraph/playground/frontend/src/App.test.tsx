@@ -30,6 +30,21 @@ vi.mock('./components/Layout', () => ({
 
 vi.mock('./components/Sessions', () => ({
   SessionList: () => <div data-testid="session-list">Sessions</div>,
+  CreateSessionModal: () => null,
+}));
+
+vi.mock('./hooks/useSession', () => ({
+  useSession: () => ({
+    sessions: [],
+    activeSession: null,
+    isLoading: false,
+    error: null,
+    loadSessions: vi.fn(),
+    createSession: vi.fn(),
+    selectSession: vi.fn(),
+    deleteSession: vi.fn(),
+    clearActiveSession: vi.fn(),
+  }),
 }));
 
 vi.mock('./components/Chat', () => ({

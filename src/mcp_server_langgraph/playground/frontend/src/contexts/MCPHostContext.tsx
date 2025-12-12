@@ -300,11 +300,33 @@ export function MCPHostProvider({ children }: MCPHostProviderProps): React.React
   }, []);
 
   const respondToElicitation = useCallback(
-    (id: string, _action: ElicitationAction, _content?: Record<string, unknown>) => {
-      // TODO: Send response to server (action and content will be used when implemented)
-      dispatch({ type: 'REMOVE_ELICITATION', payload: { id } });
+    async (id: string, action: ElicitationAction, content?: Record<string, unknown>) => {
+      // Find the elicitation to get its serverId
+      const elicitation = state.pendingElicitations.find((e) => e.id === id);
+      if (!elicitation) {
+        console.warn(`Elicitation ${id} not found`);
+        return;
+      }
+
+      // Get the client for this server
+      const client = state.servers.get(elicitation.serverId)?.client;
+      if (!client) {
+        console.warn(`Client for server ${elicitation.serverId} not found`);
+        dispatch({ type: 'REMOVE_ELICITATION', payload: { id } });
+        return;
+      }
+
+      try {
+        // Send the response to the server
+        await client.respondToElicitation(id, action, content);
+      } catch (error) {
+        console.error('Failed to send elicitation response:', error);
+      } finally {
+        // Remove from queue regardless of success/failure
+        dispatch({ type: 'REMOVE_ELICITATION', payload: { id } });
+      }
     },
-    []
+    [state.pendingElicitations, state.servers]
   );
 
   // Sampling handlers
@@ -313,11 +335,33 @@ export function MCPHostProvider({ children }: MCPHostProviderProps): React.React
   }, []);
 
   const respondToSampling = useCallback(
-    (id: string, _approved: boolean, _result?: unknown) => {
-      // TODO: Send response to server (approved and result will be used when implemented)
-      dispatch({ type: 'REMOVE_SAMPLING_REQUEST', payload: { id } });
+    async (id: string, approved: boolean, result?: unknown) => {
+      // Find the sampling request to get its serverId
+      const request = state.pendingSamplingRequests.find((r) => r.id === id);
+      if (!request) {
+        console.warn(`Sampling request ${id} not found`);
+        return;
+      }
+
+      // Get the client for this server
+      const client = state.servers.get(request.serverId)?.client;
+      if (!client) {
+        console.warn(`Client for server ${request.serverId} not found`);
+        dispatch({ type: 'REMOVE_SAMPLING_REQUEST', payload: { id } });
+        return;
+      }
+
+      try {
+        // Send the response to the server
+        await client.respondToSampling(id, approved, result);
+      } catch (error) {
+        console.error('Failed to send sampling response:', error);
+      } finally {
+        // Remove from queue regardless of success/failure
+        dispatch({ type: 'REMOVE_SAMPLING_REQUEST', payload: { id } });
+      }
     },
-    []
+    [state.pendingSamplingRequests, state.servers]
   );
 
   // Track if we've attempted auto-connect to avoid duplicate attempts

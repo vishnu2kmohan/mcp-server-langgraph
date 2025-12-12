@@ -6,6 +6,20 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Sidebar } from './Sidebar';
 
+// Mock useMCPHost since Sidebar now uses it for ServerManager
+vi.mock('../../contexts/MCPHostContext', () => ({
+  useMCPHost: () => ({
+    servers: new Map(),
+    addServer: vi.fn(),
+    removeServer: vi.fn(),
+  }),
+}));
+
+// Mock ServerManager component
+vi.mock('../MCP/ServerManager', () => ({
+  ServerManager: () => <div data-testid="server-manager">ServerManager</div>,
+}));
+
 describe('Sidebar', () => {
   it('should_render_children', () => {
     render(
@@ -48,7 +62,13 @@ describe('Sidebar', () => {
   });
 
   it('should_render_title_when_provided', () => {
-    render(<Sidebar title="Sessions">Content</Sidebar>);
-    expect(screen.getByText('Sessions')).toBeInTheDocument();
+    render(<Sidebar title="My Sidebar">Content</Sidebar>);
+    expect(screen.getByText('My Sidebar')).toBeInTheDocument();
+  });
+
+  it('should_render_server_manager_section', () => {
+    render(<Sidebar>Content</Sidebar>);
+    expect(screen.getByText('MCP Servers')).toBeInTheDocument();
+    expect(screen.getByTestId('server-manager')).toBeInTheDocument();
   });
 });

@@ -74,6 +74,20 @@ export interface MCPClient {
   // Prompts
   listPrompts(): Promise<MCPPrompt[]>;
   getPrompt(name: string, args?: Record<string, string>): Promise<PromptGetResult>;
+
+  // Elicitation (MCP 2025-11-25)
+  respondToElicitation(
+    elicitationId: string,
+    action: 'accept' | 'decline' | 'cancel',
+    content?: Record<string, unknown>
+  ): Promise<void>;
+
+  // Sampling (MCP 2025-11-25)
+  respondToSampling(
+    requestId: string,
+    approved: boolean,
+    result?: unknown
+  ): Promise<void>;
 }
 
 // =============================================================================
@@ -294,6 +308,38 @@ class MCPClientImpl implements MCPClient {
     return this.sendRequest<PromptGetResult>('prompts/get', {
       name,
       arguments: args,
+    });
+  }
+
+  // ===========================================================================
+  // Elicitation (MCP 2025-11-25)
+  // ===========================================================================
+
+  async respondToElicitation(
+    elicitationId: string,
+    action: 'accept' | 'decline' | 'cancel',
+    content?: Record<string, unknown>
+  ): Promise<void> {
+    await this.sendRequest('elicitation/respond', {
+      elicitation_id: elicitationId,
+      action,
+      content: action === 'accept' ? content : undefined,
+    });
+  }
+
+  // ===========================================================================
+  // Sampling (MCP 2025-11-25)
+  // ===========================================================================
+
+  async respondToSampling(
+    requestId: string,
+    approved: boolean,
+    result?: unknown
+  ): Promise<void> {
+    await this.sendRequest('sampling/respond', {
+      request_id: requestId,
+      action: approved ? 'approve' : 'reject',
+      response: approved ? result : undefined,
     });
   }
 
