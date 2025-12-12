@@ -74,4 +74,40 @@ describe('useDarkMode', () => {
     renderHook(() => useDarkMode());
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
+
+  it('should_toggle_on_keyboard_shortcut', () => {
+    localStorageMock.getItem.mockReturnValue(null);
+    const { result } = renderHook(() => useDarkMode({ enableKeyboardShortcut: true }));
+
+    expect(result.current.isDark).toBe(false);
+
+    // Simulate Ctrl+Shift+T
+    act(() => {
+      const event = new KeyboardEvent('keydown', {
+        key: 't',
+        ctrlKey: true,
+        shiftKey: true,
+      });
+      document.dispatchEvent(event);
+    });
+
+    expect(result.current.isDark).toBe(true);
+  });
+
+  it('should_not_toggle_without_keyboard_shortcut_enabled', () => {
+    localStorageMock.getItem.mockReturnValue(null);
+    const { result } = renderHook(() => useDarkMode({ enableKeyboardShortcut: false }));
+
+    // Simulate Ctrl+Shift+T
+    act(() => {
+      const event = new KeyboardEvent('keydown', {
+        key: 't',
+        ctrlKey: true,
+        shiftKey: true,
+      });
+      document.dispatchEvent(event);
+    });
+
+    expect(result.current.isDark).toBe(false);
+  });
 });

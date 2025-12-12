@@ -1,14 +1,18 @@
 /**
  * useDarkMode Hook
  *
- * Manages dark mode preference with localStorage persistence
- * and system preference detection.
+ * Manages dark mode preference with localStorage persistence,
+ * system preference detection, and keyboard shortcut support.
  */
 
 import { useState, useEffect, useCallback } from 'react';
 
 const STORAGE_KEY = 'theme';
 const DARK_CLASS = 'dark';
+
+export interface UseDarkModeOptions {
+  enableKeyboardShortcut?: boolean;
+}
 
 export interface UseDarkModeResult {
   isDark: boolean;
@@ -41,7 +45,8 @@ function applyTheme(isDark: boolean): void {
   }
 }
 
-export function useDarkMode(): UseDarkModeResult {
+export function useDarkMode(options: UseDarkModeOptions = {}): UseDarkModeResult {
+  const { enableKeyboardShortcut = false } = options;
   const [isDark, setIsDark] = useState<boolean>(getInitialTheme);
 
   // Apply theme on mount and when it changes
@@ -74,6 +79,30 @@ export function useDarkMode(): UseDarkModeResult {
   const setDark = useCallback((value: boolean) => {
     setIsDark(value);
   }, []);
+
+  // Keyboard shortcut: Ctrl+Shift+T to toggle
+  useEffect(() => {
+    if (!enableKeyboardShortcut) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 't') {
+        // Don't trigger when typing in inputs
+        const target = event.target as HTMLElement;
+        const isInput =
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable;
+
+        if (!isInput) {
+          event.preventDefault();
+          setIsDark((prev) => !prev);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [enableKeyboardShortcut]);
 
   return {
     isDark,
