@@ -1,6 +1,6 @@
 {
-  "id": "mcp-test",
-  "realm": "mcp-test",
+  "id": "default",
+  "realm": "default",
   "enabled": true,
   "displayName": "MCP Server LangGraph - Test Realm",
   "accessTokenLifespan": 3600,
