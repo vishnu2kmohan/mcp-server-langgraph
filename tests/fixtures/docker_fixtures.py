@@ -306,7 +306,7 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
     #
     # Reference: https://www.keycloak.org/server/all-config (KC_HTTP_RELATIVE_PATH)
     keycloak_wellknown_url = (
-        f"http://localhost:{test_infrastructure_ports['keycloak']}/authn/realms/mcp-test/.well-known/openid-configuration"
+        f"http://localhost:{test_infrastructure_ports['keycloak']}/authn/realms/default/.well-known/openid-configuration"
     )
     keycloak_ready = False
     for attempt in range(30):  # 30 attempts * 2s = 60s max additional wait
