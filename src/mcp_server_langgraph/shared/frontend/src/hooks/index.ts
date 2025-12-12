@@ -15,3 +15,15 @@ export type {
   UseAnnounceResult,
   UseSkipLinkResult,
 } from './useAccessibility';
+
+export { useHeartMetrics, HeartMetricsProvider } from './useHeartMetrics';
+export type {
+  HeartMetrics,
+  HeartMetricsContextValue,
+  HeartMetricsProviderProps,
+  TaskMetrics,
+  EngagementMetrics,
+  HappinessMetrics,
+  AdoptionMetrics,
+  RetentionMetrics,
+} from './useHeartMetrics';

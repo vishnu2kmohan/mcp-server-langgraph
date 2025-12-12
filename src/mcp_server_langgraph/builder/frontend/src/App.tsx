@@ -20,6 +20,9 @@ import { useAccessibility, useSkipToContent } from './hooks/useAccessibility';
 import { useWorkflowValidation } from './hooks/useWorkflowValidation';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { NodeConfigModal } from './components/NodeConfigModal';
+import { FeedbackButton, type FeedbackData } from './components/Feedback';
+import { WelcomeModal, useOnboarding } from './components/Onboarding';
+import { HeartMetricsProvider, useHeartMetrics } from '../../../shared/frontend/src/hooks/useHeartMetrics';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
 import { Toaster, toast } from 'sonner';
@@ -159,6 +162,41 @@ function AppContent() {
   // ==============================================================================
 
   const { isDarkMode, toggle: toggleDarkMode } = useDarkMode();
+
+  // ==============================================================================
+  // HEART Metrics
+  // ==============================================================================
+
+  const heartMetrics = useHeartMetrics();
+  const { hasCompletedOnboarding, completeOnboarding } = useOnboarding();
+
+  // Track feature usage
+  const trackFeature = useCallback(
+    (featureName: string) => {
+      heartMetrics.trackFeatureUsed(featureName);
+    },
+    [heartMetrics]
+  );
+
+  // Handle feedback submission
+  const handleFeedbackSubmit = useCallback(
+    (feedback: FeedbackData) => {
+      heartMetrics.recordSatisfaction(feedback.rating);
+      console.log('Feedback received:', feedback);
+    },
+    [heartMetrics]
+  );
+
+  // Handle onboarding completion
+  const handleOnboardingComplete = useCallback(() => {
+    completeOnboarding();
+    heartMetrics.trackOnboardingStep('completed');
+  }, [completeOnboarding, heartMetrics]);
+
+  const handleOnboardingSkip = useCallback(() => {
+    completeOnboarding();
+    heartMetrics.trackOnboardingStep('skipped');
+  }, [completeOnboarding, heartMetrics]);
 
   // ==============================================================================
   // Accessibility
@@ -308,6 +346,7 @@ function AppContent() {
     (nodeType: string) => {
       // Take snapshot before making changes for undo support
       takeSnapshot();
+      trackFeature(`add_node_${nodeType}`);
 
       const id = `node_${Date.now()}`;
       const newNode: WorkflowNode = {
@@ -333,7 +372,7 @@ function AppContent() {
 
       setNodes((nds) => [...nds, newNode]);
     },
-    [setNodes, takeSnapshot]
+    [setNodes, takeSnapshot, trackFeature]
   );
 
   // ==============================================================================
@@ -343,6 +382,8 @@ function AppContent() {
   const generateCode = async () => {
     if (isGenerating) return;
     setIsGenerating(true);
+    heartMetrics.trackTaskStart('generate_code');
+    trackFeature('code_generation');
 
     try {
       // Build workflow definition
@@ -377,9 +418,11 @@ function AppContent() {
       setGeneratedCode(response.data.code);
       setShowCodePanel(true);
       toast.success('Code generated successfully!');
+      heartMetrics.trackTaskComplete('generate_code');
     } catch (error) {
       console.error('Code generation failed:', error);
       toast.error('Code generation failed. See console for details.');
+      heartMetrics.trackTaskError('generate_code', String(error));
     } finally {
       setIsGenerating(false);
     }
@@ -398,6 +441,8 @@ function AppContent() {
   const saveToFile = async () => {
     if (isSaving) return;
     setIsSaving(true);
+    heartMetrics.trackTaskStart('save_workflow');
+    trackFeature('save_workflow');
 
     try {
       const workflow = {
@@ -423,9 +468,11 @@ function AppContent() {
       });
 
       toast.success(`Workflow saved to src/agents/${workflowName}.py`);
+      heartMetrics.trackTaskComplete('save_workflow');
     } catch (error) {
       console.error('Save failed:', error);
       toast.error('Save failed. See console for details.');
+      heartMetrics.trackTaskError('save_workflow', String(error));
     } finally {
       setIsSaving(false);
     }
@@ -846,18 +893,31 @@ function AppContent() {
         onSave={handleNodeConfigSave}
         onClose={() => setIsConfigModalOpen(false)}
       />
+
+      {/* Feedback Button (HEART Happiness) */}
+      <FeedbackButton onSubmit={handleFeedbackSubmit} position="bottom-right" />
+
+      {/* Welcome Modal (HEART Adoption) */}
+      {!hasCompletedOnboarding && (
+        <WelcomeModal
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
+        />
+      )}
     </div>
   );
 }
 
 // ==============================================================================
-// Main App Component with Error Boundary
+// Main App Component with Error Boundary and HEART Metrics
 // ==============================================================================
 
 function App() {
   return (
     <ErrorBoundary>
-      <AppContent />
+      <HeartMetricsProvider>
+        <AppContent />
+      </HeartMetricsProvider>
     </ErrorBoundary>
   );
 }
