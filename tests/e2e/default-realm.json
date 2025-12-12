@@ -21,11 +21,15 @@
       "serviceAccountsEnabled": true,
       "protocol": "openid-connect",
       "redirectUris": [
-        "http://localhost:*",
-        "http://127.0.0.1:*"
+        "http://localhost/*",
+        "http://localhost:*/*",
+        "http://127.0.0.1/*",
+        "http://127.0.0.1:*/*"
       ],
       "webOrigins": [
+        "http://localhost",
         "http://localhost:*",
+        "http://127.0.0.1",
         "http://127.0.0.1:*"
       ],
       "defaultClientScopes": [
