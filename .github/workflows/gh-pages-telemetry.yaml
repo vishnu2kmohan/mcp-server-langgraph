@@ -95,7 +95,7 @@ jobs:
 
       - name: Download coverage HTML from CI
         if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v6.0.0
         with:
           name: coverage-html
           path: coverage-html/
@@ -105,7 +105,7 @@ jobs:
 
       - name: Download coverage JSON from CI
         if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v6.0.0
         with:
           name: coverage-json
           path: .
@@ -115,7 +115,7 @@ jobs:
 
       - name: Download test durations from CI
         if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v6.0.0
         with:
           name: test-durations-py3.12
           path: .
@@ -227,12 +227,12 @@ jobs:
         continue-on-error: true
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
       - name: Download test output
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v6.0.0
         with:
           name: test-output
           path: .
@@ -697,12 +697,12 @@ jobs:
           fetch-depth: 0  # Full git history for DORA metrics
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
       - name: Download trends for flakiness analysis
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v6.0.0
         with:
           name: trends-data
           path: trends/
@@ -802,7 +802,7 @@ jobs:
           path: gh-pages
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v6.0.0
         with:
           path: artifacts
 

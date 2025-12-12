@@ -87,7 +87,7 @@ jobs:
         extras: 'dev'
 
     - name: Download previous coverage data
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v6.0.0
       with:
         name: coverage-history
         path: .coverage-history
@@ -96,7 +96,7 @@ jobs:
     # For workflow_run (main branch): Download coverage from CI instead of running tests
     - name: Download coverage from CI (workflow_run)
       if: github.event_name == 'workflow_run'
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v6.0.0
       with:
         name: coverage-json
         path: .
