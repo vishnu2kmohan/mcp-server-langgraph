@@ -33,12 +33,14 @@ import os
 import uuid
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, AsyncIterator
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from mcp_server_langgraph.middleware import MetricsMiddleware
+from mcp_server_langgraph.utils.spa_static_files import create_spa_static_files
 from mcp_server_langgraph.observability.telemetry import (
     init_observability,
     is_initialized,
@@ -1051,6 +1053,20 @@ def get_active_alerts(
     Supports both an Alerts Panel and bell icon notification UX.
     """
     return AlertsResponse(alerts=_active_alerts, total=len(_active_alerts))
+
+
+# ==============================================================================
+# SPA Static Files Mount (React Frontend)
+# ==============================================================================
+# Mount AFTER all API routes - SPAStaticFiles is a catch-all for client-side routing
+
+# Calculate frontend dist path relative to this module
+_frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+
+# Only mount if frontend is built (graceful degradation for API-only mode)
+_spa_handler = create_spa_static_files(str(_frontend_dist), caching=True)
+if _spa_handler is not None:
+    app.mount("/", _spa_handler, name="spa")
 
 
 # ==============================================================================
