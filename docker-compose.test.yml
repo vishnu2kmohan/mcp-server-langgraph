@@ -381,7 +381,8 @@ services:
     volumes:
       # Import test realm with pre-configured client and users
       # This eliminates the need for manual setup and prevents E2E test auth failures
-      - ./tests/e2e/mcp-test-realm.json:/opt/keycloak/data/import/mcp-test-realm.json:ro
+      # NOTE: Filename must match realm name for Keycloak 26.x --import-realm
+      - ./tests/e2e/default-realm.json:/opt/keycloak/data/import/default-realm.json:ro
     environment:
       # Admin credentials
       - KEYCLOAK_ADMIN=admin
