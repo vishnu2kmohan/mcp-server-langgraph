@@ -830,7 +830,8 @@ pytest tests/integration/test_kubernetes_health_probes.py -v
 
 **Fix Applied**:
 1. Added `mcp-server-test` service to `docker-compose.test.yml` (lines 274-354)
-2. Configured Keycloak confidential client in `tests/e2e/mcp-test-realm.json`
+2. Configured Keycloak confidential client in `tests/e2e/default-realm.json`
+   (NOTE: Keycloak 26.x --import-realm requires filename to match realm name "default")
 3. Updated `scripts/test-integration.sh` to start MCP server (line 220)
 
 **Validation**: Check MCP server starts correctly:
