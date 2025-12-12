@@ -7,6 +7,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { MCPHostProvider } from './contexts/MCPHostContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { Header, Sidebar } from './components/Layout';
 import { SessionList, CreateSessionModal } from './components/Sessions';
 import { ChatInterface } from './components/Chat';
@@ -135,8 +136,10 @@ function AppContent(): React.ReactElement {
 
 export function App(): React.ReactElement {
   return (
-    <MCPHostProvider>
-      <AppContent />
-    </MCPHostProvider>
+    <AuthProvider>
+      <MCPHostProvider>
+        <AppContent />
+      </MCPHostProvider>
+    </AuthProvider>
   );
 }

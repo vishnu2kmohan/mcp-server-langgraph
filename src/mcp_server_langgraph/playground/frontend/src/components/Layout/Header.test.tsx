@@ -23,6 +23,24 @@ vi.mock('../../contexts/MCPHostContext', () => ({
   })),
 }));
 
+// Mock useAuthContext
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuthContext: vi.fn(() => ({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    error: null,
+    login: vi.fn(),
+    logout: vi.fn(),
+    clearError: vi.fn(),
+  })),
+}));
+
+// Mock LoginForm component
+vi.mock('../Auth', () => ({
+  LoginForm: () => null,
+}));
+
 describe('Header', () => {
   beforeEach(() => {
     vi.clearAllMocks();

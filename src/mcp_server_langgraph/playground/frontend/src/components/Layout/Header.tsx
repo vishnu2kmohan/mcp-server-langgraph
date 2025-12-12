@@ -1,12 +1,14 @@
 /**
  * Header Component
  *
- * Application header with title, dark mode toggle, and connection status.
+ * Application header with title, dark mode toggle, connection status, and auth controls.
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { useMCPHost } from '../../contexts/MCPHostContext';
+import { useAuthContext } from '../../contexts/AuthContext';
+import { LoginForm } from '../Auth';
 
 // Icons as SVG components
 function SunIcon({ className }: { className?: string }) {
@@ -45,6 +47,24 @@ function MoonIcon({ className }: { className?: string }) {
   );
 }
 
+function UserIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+      />
+    </svg>
+  );
+}
+
 function ConnectionDot({ status }: { status: string }) {
   const colors: Record<string, string> = {
     connected: 'bg-success-500',
@@ -64,6 +84,26 @@ function ConnectionDot({ status }: { status: string }) {
 export function Header(): React.ReactElement {
   const { isDark, toggle } = useDarkMode();
   const { servers, pendingElicitations } = useMCPHost();
+  const { user, isAuthenticated, isLoading: isAuthLoading, error: authError, login, logout, clearError } = useAuthContext();
+
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const handleLogin = useCallback(
+    async (username: string, password: string) => {
+      await login({ username, password });
+    },
+    [login]
+  );
+
+  const handleOpenLogin = useCallback(() => {
+    clearError();
+    setIsLoginModalOpen(true);
+  }, [clearError]);
+
+  const handleCloseLogin = useCallback(() => {
+    setIsLoginModalOpen(false);
+    clearError();
+  }, [clearError]);
 
   // Get overall connection status
   const connectedCount = Array.from(servers.values()).filter(
@@ -120,7 +160,45 @@ export function Header(): React.ReactElement {
             <MoonIcon className="w-5 h-5" />
           )}
         </button>
+
+        {/* Auth Controls */}
+        <div className="flex items-center gap-2 pl-2 border-l border-gray-200 dark:border-dark-border">
+          {isAuthLoading ? (
+            <span className="text-sm text-gray-500 dark:text-dark-textMuted">Loading...</span>
+          ) : isAuthenticated && user ? (
+            <>
+              <div className="flex items-center gap-2">
+                <UserIcon className="w-5 h-5 text-gray-600 dark:text-dark-textSecondary" />
+                <span className="text-sm text-gray-700 dark:text-dark-textSecondary">
+                  {user.username}
+                </span>
+              </div>
+              <button
+                onClick={() => logout()}
+                className="btn btn-ghost text-sm"
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleOpenLogin}
+              className="btn btn-primary text-sm"
+            >
+              Sign In
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Login Modal */}
+      <LoginForm
+        isOpen={isLoginModalOpen}
+        onClose={handleCloseLogin}
+        onLogin={handleLogin}
+        isLoading={isAuthLoading}
+        error={authError}
+      />
     </header>
   );
 }

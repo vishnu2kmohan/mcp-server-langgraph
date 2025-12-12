@@ -210,3 +210,37 @@ export interface ConnectionState {
   lastConnected?: string;
   reconnectAttempts?: number;
 }
+
+// =============================================================================
+// Authentication Types
+// =============================================================================
+
+export interface AuthUser {
+  id: string;
+  username: string;
+  email?: string;
+  roles: string[];
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt: number;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  user: AuthUser;
+  tokens: AuthTokens;
+}
+
+export interface AuthState {
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+}

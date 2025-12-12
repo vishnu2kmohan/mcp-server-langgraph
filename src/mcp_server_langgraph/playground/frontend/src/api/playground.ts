@@ -14,6 +14,9 @@ import type {
   LogLevel,
   Alert,
   MetricsSummary,
+  LoginRequest,
+  LoginResponse,
+  AuthUser,
 } from './types';
 import { PlaygroundAPIError } from './types';
 
@@ -81,6 +84,22 @@ export class PlaygroundAPI {
 
   setAuthToken(token: string | null): void {
     this.authToken = token;
+  }
+
+  async login(request: LoginRequest): Promise<LoginResponse> {
+    return this.post<LoginResponse>('/auth/login', request);
+  }
+
+  async logout(): Promise<void> {
+    await this.post<void>('/auth/logout', {});
+  }
+
+  async refreshToken(refreshToken: string): Promise<LoginResponse> {
+    return this.post<LoginResponse>('/auth/refresh', { refreshToken });
+  }
+
+  async getCurrentUser(): Promise<AuthUser> {
+    return this.get<AuthUser>('/auth/me');
   }
 
   // ===========================================================================

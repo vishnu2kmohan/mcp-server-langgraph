@@ -21,6 +21,10 @@ vi.mock('./contexts/MCPHostContext', () => ({
   }),
 }));
 
+vi.mock('./contexts/AuthContext', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 vi.mock('./components/Layout', () => ({
   Header: () => <header data-testid="header">Header</header>,
   Sidebar: ({ children }: { children: React.ReactNode }) => (
