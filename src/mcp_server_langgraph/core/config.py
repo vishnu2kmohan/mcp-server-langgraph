@@ -7,7 +7,7 @@ from typing import Any
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from mcp_server_langgraph.secrets.manager import get_secrets_manager
+from mcp_server_langgraph.secret_providers.manager import get_secrets_manager
 
 # Import version from package __init__.py (single source of truth)
 try:

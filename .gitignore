@@ -94,8 +94,8 @@ ultimate_fix.sh
 .env.*.local
 !.env.example
 
-# Secrets
-secrets/
+# Secrets (root-level only, not src packages)
+/secrets/
 *.pem
 *.key
 *.crt

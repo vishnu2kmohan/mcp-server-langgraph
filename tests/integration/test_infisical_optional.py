@@ -30,7 +30,7 @@ class TestInfisicalOptionalDependency:
 
         with patch.dict("sys.modules", {"infisical_client": None}):
             # This should not raise an error
-            from mcp_server_langgraph.secrets.manager import SecretsManager
+            from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
             # Should initialize with fallback mode (client=None)
             mgr = SecretsManager()
@@ -38,7 +38,7 @@ class TestInfisicalOptionalDependency:
 
     def test_get_secret_fallback_to_env(self, monkeypatch):
         """Verify get_secret falls back to environment variables"""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         # Create manager without Infisical (credentials not provided)
         mgr = SecretsManager(client_id=None, client_secret=None)
@@ -53,7 +53,7 @@ class TestInfisicalOptionalDependency:
 
     def test_get_secret_with_fallback_parameter(self):
         """Verify get_secret uses fallback parameter when secret not found"""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         # Create manager without Infisical
         mgr = SecretsManager(client_id=None, client_secret=None)
@@ -64,7 +64,7 @@ class TestInfisicalOptionalDependency:
 
     def test_get_secret_returns_none_when_not_found(self):
         """Verify get_secret returns None when secret not found and no fallback"""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         # Create manager without Infisical
         mgr = SecretsManager(client_id=None, client_secret=None)
@@ -75,7 +75,7 @@ class TestInfisicalOptionalDependency:
 
     def test_get_all_secrets_empty_without_infisical(self):
         """Verify get_all_secrets returns empty dict without Infisical"""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         # Create manager without Infisical
         mgr = SecretsManager(client_id=None, client_secret=None)
@@ -86,7 +86,7 @@ class TestInfisicalOptionalDependency:
 
     def test_create_secret_fails_gracefully(self):
         """Verify create_secret returns False without Infisical"""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         # Create manager without Infisical
         mgr = SecretsManager(client_id=None, client_secret=None)
@@ -97,7 +97,7 @@ class TestInfisicalOptionalDependency:
 
     def test_update_secret_fails_gracefully(self):
         """Verify update_secret returns False without Infisical"""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         # Create manager without Infisical
         mgr = SecretsManager(client_id=None, client_secret=None)
@@ -108,7 +108,7 @@ class TestInfisicalOptionalDependency:
 
     def test_delete_secret_fails_gracefully(self):
         """Verify delete_secret returns False without Infisical"""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         # Create manager without Infisical
         mgr = SecretsManager(client_id=None, client_secret=None)
@@ -207,7 +207,7 @@ class TestInfisicalLogging:
 
     def test_warning_logged_on_fallback(self, caplog):
         """Verify warning is logged when falling back to environment variables"""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         # Create manager without credentials
         with caplog.at_level("WARNING"):
@@ -218,7 +218,7 @@ class TestInfisicalLogging:
 
     def test_info_logged_on_env_fallback(self, caplog, monkeypatch):
         """Verify info is logged when using environment variable fallback"""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         mgr = SecretsManager(client_id=None, client_secret=None)
         monkeypatch.setenv("TEST_KEY", "test-value")
@@ -251,7 +251,7 @@ class TestInfisicalIntegration:
 
     def test_infisical_available_when_installed(self, skip_if_no_infisical):
         """Verify Infisical works when installed (requires credentials)"""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         # This test only runs if Infisical is installed
         # It still requires credentials to actually connect

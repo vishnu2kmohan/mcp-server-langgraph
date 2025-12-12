@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger
-from mcp_server_langgraph.secrets.manager import get_secrets_manager
+from mcp_server_langgraph.secret_providers.manager import get_secrets_manager
 
 # Prometheus client for metrics exposition
 try:

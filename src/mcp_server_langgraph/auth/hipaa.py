@@ -100,7 +100,7 @@ class HIPAAControls:
         if not integrity_secret:
             import os
 
-            from mcp_server_langgraph.secrets.manager import get_secrets_manager
+            from mcp_server_langgraph.secret_providers.manager import get_secrets_manager
 
             secrets_mgr = get_secrets_manager()
             integrity_secret = secrets_mgr.get_secret("HIPAA_INTEGRITY_SECRET", fallback=os.getenv("HIPAA_INTEGRITY_SECRET"))

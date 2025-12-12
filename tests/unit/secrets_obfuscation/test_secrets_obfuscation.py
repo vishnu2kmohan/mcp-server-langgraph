@@ -29,7 +29,7 @@ pytestmark = pytest.mark.unit
 INFISICAL_AVAILABLE = find_spec("infisical_client") is not None
 
 # Check if SecretString is available
-SECRET_STRING_AVAILABLE = find_spec("mcp_server_langgraph.secrets.manager") is not None
+SECRET_STRING_AVAILABLE = find_spec("mcp_server_langgraph.secret_providers.manager") is not None
 
 
 @pytest.mark.unit
@@ -45,7 +45,7 @@ class TestSecretString:
 
     def test_str_returns_redacted(self):
         """Test that __str__ returns redacted placeholder, not actual value."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         secret = SecretString("my-super-secret-api-key-12345")
         result = str(secret)
@@ -56,7 +56,7 @@ class TestSecretString:
 
     def test_repr_returns_redacted(self):
         """Test that __repr__ returns redacted representation."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         secret = SecretString("password123")
         result = repr(secret)
@@ -66,7 +66,7 @@ class TestSecretString:
 
     def test_get_secret_value_returns_actual_value(self):
         """Test that get_secret_value() returns the actual secret."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         original_value = "my-actual-secret-value"
         secret = SecretString(original_value)
@@ -75,7 +75,7 @@ class TestSecretString:
 
     def test_secret_not_in_format_string(self):
         """Test that secrets are safe in f-strings and format()."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         secret = SecretString("api_key_abc123")
         log_message = f"Using secret: {secret}"
@@ -85,7 +85,7 @@ class TestSecretString:
 
     def test_secret_not_in_exception_message(self):
         """Test that secrets don't leak in exception messages."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         secret = SecretString("jwt_token_xyz")
 
@@ -98,7 +98,7 @@ class TestSecretString:
 
     def test_empty_secret_string(self):
         """Test SecretString with empty value."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         secret = SecretString("")
         assert secret.get_secret_value() == ""
@@ -106,7 +106,7 @@ class TestSecretString:
 
     def test_secret_equality_check(self):
         """Test that equality comparison works on actual values."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         secret1 = SecretString("same-value")
         secret2 = SecretString("same-value")
@@ -118,7 +118,7 @@ class TestSecretString:
 
     def test_secret_hash_consistency(self):
         """Test that hash is consistent for same values."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         secret1 = SecretString("hash-test-value")
         secret2 = SecretString("hash-test-value")
@@ -131,7 +131,7 @@ class TestSecretString:
 
     def test_secret_in_set(self):
         """Test that SecretString works correctly in sets."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         secret1 = SecretString("set-value")
         secret2 = SecretString("set-value")
@@ -144,7 +144,7 @@ class TestSecretString:
 
     def test_secret_as_dict_key(self):
         """Test that SecretString can be used as a dictionary key."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         secret_key = SecretString("dict-key-value")
         data = {secret_key: "some-data"}
@@ -155,7 +155,7 @@ class TestSecretString:
 
     def test_secret_equality_with_non_secret(self):
         """Test that SecretString is not equal to non-SecretString values."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         secret = SecretString("test-value")
 
@@ -168,7 +168,7 @@ class TestSecretString:
 
     def test_secret_string_with_special_characters(self):
         """Test SecretString with special characters."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         special_value = "password!@#$%^&*()_+-=[]{}|;':\",./<>?"
         secret = SecretString(special_value)
@@ -179,7 +179,7 @@ class TestSecretString:
 
     def test_secret_string_with_unicode(self):
         """Test SecretString with unicode characters."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         unicode_value = "密码🔒日本語العربية"
         secret = SecretString(unicode_value)
@@ -190,7 +190,7 @@ class TestSecretString:
 
     def test_secret_string_with_newlines(self):
         """Test SecretString with newline characters."""
-        from mcp_server_langgraph.secrets.manager import SecretString
+        from mcp_server_langgraph.secret_providers.manager import SecretString
 
         multiline_value = "line1\nline2\nline3"
         secret = SecretString(multiline_value)
@@ -211,10 +211,10 @@ class TestSecretsManagerObfuscation:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secret_providers.manager.InfisicalClient")
     def test_str_does_not_expose_client_secret(self, mock_client):
         """Test that __str__ does not expose client_secret."""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         manager = SecretsManager(
             site_url="https://app.infisical.com",
@@ -231,10 +231,10 @@ class TestSecretsManagerObfuscation:
         # Should include safe info
         assert "test-project" in result or "SecretsManager" in result
 
-    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secret_providers.manager.InfisicalClient")
     def test_repr_does_not_expose_secrets(self, mock_client):
         """Test that __repr__ does not expose sensitive data."""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         manager = SecretsManager(
             site_url="https://app.infisical.com",
@@ -251,10 +251,10 @@ class TestSecretsManagerObfuscation:
         # Note: "SecretsManager" class name contains "secret" but that's the class name, not a secret value
         assert "my-client-secret" not in result.lower()
 
-    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secret_providers.manager.InfisicalClient")
     def test_secrets_not_in_exception_traceback(self, mock_client):
         """Test that secrets don't leak in exception tracebacks."""
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         manager = SecretsManager(
             client_id="test-id",
@@ -466,7 +466,7 @@ class TestConfigSecretsLeakage:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secret_providers.manager.InfisicalClient")
     def test_infisical_error_does_not_expose_credentials(self, mock_client):
         """Test that Infisical connection errors don't expose credentials."""
         # Simulate an error that might contain credentials
@@ -474,7 +474,7 @@ class TestConfigSecretsLeakage:
             "Connection failed: invalid credentials client_id=test client_secret=super_secret_value"
         )
 
-        from mcp_server_langgraph.secrets.manager import SecretsManager
+        from mcp_server_langgraph.secret_providers.manager import SecretsManager
 
         # This should not raise, and should not log the secret
         manager = SecretsManager(
