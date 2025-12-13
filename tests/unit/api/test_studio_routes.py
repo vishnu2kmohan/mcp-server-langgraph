@@ -46,33 +46,35 @@ def mock_workflow_data() -> dict[str, Any]:
 
 
 @pytest.fixture
-def app_with_studio_router(mock_current_user: dict[str, Any]) -> FastAPI:
-    """Create FastAPI app with studio router mounted."""
+def client(mock_current_user: dict[str, Any]) -> TestClient:
+    """Create test client with mocked authentication.
+
+    Creates a fresh FastAPI app with studio router and auth override for each test.
+    This ensures proper isolation in pytest-xdist parallel execution.
+    """
     from mcp_server_langgraph.api.studio import WorkflowService, router as studio_router
+    from mcp_server_langgraph.auth.middleware import get_current_user
 
     # Clear in-memory storage before each test
     WorkflowService._workflows.clear()
     WorkflowService._counter = 0
 
+    # Create fresh app for this test
     app = FastAPI()
     app.include_router(studio_router)
 
-    # Override authentication dependency with async function
-    from mcp_server_langgraph.auth.middleware import get_current_user
-
+    # Override authentication dependency
     async def mock_get_current_user() -> dict[str, Any]:
-        """Return mock user for tests."""
         return mock_current_user
 
     app.dependency_overrides[get_current_user] = mock_get_current_user
 
-    return app
+    # Use context manager for proper cleanup
+    with TestClient(app) as test_client:
+        yield test_client
 
-
-@pytest.fixture
-def client(app_with_studio_router: FastAPI) -> TestClient:
-    """Create test client."""
-    return TestClient(app_with_studio_router)
+    # Clean up dependency overrides
+    app.dependency_overrides.clear()
 
 
 @pytest.mark.unit
