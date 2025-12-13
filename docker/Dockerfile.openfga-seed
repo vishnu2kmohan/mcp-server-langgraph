@@ -1,0 +1,26 @@
+# OpenFGA Seeding Dockerfile
+# ===========================
+# Minimal image for seeding OpenFGA with authorization model and tuples
+#
+# Usage:
+#   Runs automatically as part of docker-compose.test.yml after openfga-test is healthy
+#
+# Reference: ADR-0068 - Gateway-Level Authentication
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install httpx for HTTP requests
+RUN pip install --no-cache-dir httpx==0.28.1
+
+# Copy the seeding script and config files (single source of truth)
+COPY scripts/docker/seed_openfga.py /app/seed_openfga.py
+COPY config/openfga/model.json /app/config/openfga/model.json
+COPY config/openfga/sample-tuples.json /app/config/openfga/sample-tuples.json
+
+# Make script executable
+RUN chmod +x /app/seed_openfga.py
+
+# Run the seeding script
+CMD ["python", "/app/seed_openfga.py"]

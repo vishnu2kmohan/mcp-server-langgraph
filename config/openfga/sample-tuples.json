@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "OpenFGA Relationship Tuples for Test Infrastructure (ADR-0068)",
+  "metadata": {
+    "purpose": "Single source of truth for test user permissions",
+    "users": {
+      "admin": "Super user with owner/admin access to all resources",
+      "alice": "Standard user with viewer access (org admin)",
+      "bob": "Basic user with viewer access (no playground access)"
+    },
+    "updated": "2025-12-13"
+  },
+  "tuples": [
+    {
+      "_comment": "Organization memberships",
+      "user": "user:alice",
+      "relation": "member",
+      "object": "organization:acme"
+    },
+    {
+      "user": "user:bob",
+      "relation": "member",
+      "object": "organization:acme"
+    },
+    {
+      "user": "user:admin",
+      "relation": "member",
+      "object": "organization:acme"
+    },
+    {
+      "user": "user:alice",
+      "relation": "admin",
+      "object": "organization:acme"
+    },
+    {
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "organization:acme"
+    },
+    {
+      "_comment": "Tool permissions",
+      "user": "user:alice",
+      "relation": "executor",
+      "object": "tool:chat"
+    },
+    {
+      "user": "user:bob",
+      "relation": "executor",
+      "object": "tool:chat"
+    },
+    {
+      "user": "user:admin",
+      "relation": "executor",
+      "object": "tool:chat"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "tool:chat"
+    },
+    {
+      "_comment": "Conversation ownership",
+      "user": "user:alice",
+      "relation": "owner",
+      "object": "conversation:thread_1"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "conversation:thread_1"
+    },
+    {
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "conversation:thread_1"
+    },
+    {
+      "_comment": "Role assignments",
+      "user": "user:alice",
+      "relation": "assignee",
+      "object": "role:premium"
+    },
+    {
+      "user": "user:bob",
+      "relation": "assignee",
+      "object": "role:standard"
+    },
+    {
+      "user": "user:admin",
+      "relation": "assignee",
+      "object": "role:premium"
+    },
+    {
+      "_comment": "Vector Store permissions (ADR-0068)",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "vector_store:default"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "vector_store:default"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "vector_store:default"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "vector_store:default"
+    },
+    {
+      "_comment": "OpenFGA Playground (authz) permissions (ADR-0068) - bob intentionally excluded",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "authz:playground"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "authz:playground"
+    }
+  ]
+}

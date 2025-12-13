@@ -116,10 +116,12 @@ CI-built images are pulled from GHCR for faster E2E tests:
 | Service | GHCR Image | CI Workflow | Fallback |
 |---------|------------|-------------|----------|
 | keycloak-test | `ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest` | `build-keycloak-image.yaml` | `docker/Dockerfile.keycloak` |
-| mcp-server-test | `ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest` | `ci.yaml` (docker-build job) | `docker/Dockerfile.test` |
+| mcp-server-test | `ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest` | `ci.yaml` (docker-build job) | `docker/Dockerfile` (target: final-test) |
 | builder-test | `ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest` | `build-builder-image.yaml` | `docker/Dockerfile.builder` |
 | playground-test | `ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest` | `build-playground-image.yaml` | `docker/Dockerfile.playground` |
 | alembic-migrate-test | `ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest` | `build-alembic-image.yaml` | `docker/Dockerfile.alembic` |
+| openfga-seed-test | `ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed:latest` | `build-openfga-seed-image.yaml` | `docker/Dockerfile.openfga-seed` |
+| authz-proxy-test | `ghcr.io/vishnu2kmohan/mcp-server-langgraph-authz-proxy:latest` | `build-authz-proxy-image.yaml` | `docker/Dockerfile.authz-proxy` |
 
 All images are built weekly on Monday 7 AM UTC to pick up security updates.
 

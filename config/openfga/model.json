@@ -1,0 +1,229 @@
+{
+  "$schema": "https://openfga.dev/schema/v1.1",
+  "schema_version": "1.1",
+  "description": "MCP Server LangGraph Authorization Model (ADR-0068)",
+  "type_definitions": [
+    {
+      "type": "user",
+      "relations": {},
+      "metadata": {
+        "relations": {}
+      }
+    },
+    {
+      "type": "organization",
+      "relations": {
+        "member": {
+          "this": {}
+        },
+        "admin": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "member": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "tool",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "executor": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}},
+              {
+                "tupleToUserset": {
+                  "tupleset": {"relation": "organization"},
+                  "computedUserset": {"relation": "member"}
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "executor": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "conversation",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}}
+            ]
+          }
+        },
+        "editor": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "editor": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "role",
+      "relations": {
+        "assignee": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "assignee": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "service_principal",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "acts_as": {
+          "this": {}
+        },
+        "viewer": {
+          "computedUserset": {"relation": "owner"}
+        },
+        "editor": {
+          "computedUserset": {"relation": "owner"}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "acts_as": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "vector_store",
+      "description": "Qdrant vector database collections (ADR-0068)",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "editor": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}}
+            ]
+          }
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "editor"}},
+              {
+                "tupleToUserset": {
+                  "tupleset": {"relation": "organization"},
+                  "computedUserset": {"relation": "member"}
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "editor": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "authz",
+      "description": "OpenFGA Playground access control (ADR-0068)",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    }
+  ]
+}

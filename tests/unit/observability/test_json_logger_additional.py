@@ -114,12 +114,12 @@ class TestTraceContextEdgeCases:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_invalid_span_context(self, monkeypatch):
-        """Test handling of invalid span context"""
-        # Enable OTEL for this test
-        if "OTEL_SDK_DISABLED" in monkeypatch._setitem:
-            monkeypatch.delenv("OTEL_SDK_DISABLED", raising=False)
+    def test_invalid_span_context(self):
+        """Test handling of invalid span context.
 
+        When span_context.is_valid is False, trace_id and span_id should
+        not be included in the log output.
+        """
         formatter = CustomJSONFormatter(service_name="test")
         record = logging.LogRecord(
             name="test",
@@ -137,7 +137,8 @@ class TestTraceContextEdgeCases:
         mock_span_context.is_valid = False  # Invalid context
         mock_span.get_span_context.return_value = mock_span_context
 
-        with patch("opentelemetry.trace.get_current_span", return_value=mock_span):
+        # Patch where trace is used, not where it's defined
+        with patch("mcp_server_langgraph.observability.json_logger.trace.get_current_span", return_value=mock_span):
             formatted = formatter.format(record)
             log_data = json.loads(formatted)
 
@@ -162,7 +163,8 @@ class TestTraceContextEdgeCases:
         mock_span = Mock()
         mock_span.get_span_context.return_value = None
 
-        with patch("opentelemetry.trace.get_current_span", return_value=mock_span):
+        # Patch where trace is used, not where it's defined
+        with patch("mcp_server_langgraph.observability.json_logger.trace.get_current_span", return_value=mock_span):
             formatted = formatter.format(record)
             log_data = json.loads(formatted)
 
@@ -182,7 +184,8 @@ class TestTraceContextEdgeCases:
             exc_info=None,
         )
 
-        with patch("opentelemetry.trace.get_current_span", return_value=None):
+        # Patch where trace is used, not where it's defined
+        with patch("mcp_server_langgraph.observability.json_logger.trace.get_current_span", return_value=None):
             formatted = formatter.format(record)
             log_data = json.loads(formatted)
 

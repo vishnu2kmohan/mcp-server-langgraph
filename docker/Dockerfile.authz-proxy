@@ -1,0 +1,60 @@
+# OpenFGA Playground Auth Proxy Dockerfile
+# =========================================
+# Protects OpenFGA Playground with Keycloak + OpenFGA authorization
+#
+# Features:
+# - Keycloak JWT validation
+# - OpenFGA permission checking (admin on authz:playground)
+# - Request proxying to OpenFGA Playground
+#
+# Reference: ADR-0068 - Gateway-Level Authentication
+
+# Build stage: Install dependencies
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+
+# Install uv for fast dependency management
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Enable bytecode compilation for faster startup
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+# Install dependencies (using frozen lockfile for reproducibility)
+COPY pyproject.toml uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --no-dev
+
+# Copy source code
+COPY src/ ./src/
+COPY config/ ./config/
+
+# Install project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+
+# Runtime stage: Minimal image
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+# Copy virtual environment from builder
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/config /app/config
+
+# Set PATH to use virtual environment
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app/src" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Expose authz-proxy port
+EXPOSE 8003
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8003/api/authz-proxy/health || exit 1
+
+# Run the authz-proxy server
+CMD ["uvicorn", "mcp_server_langgraph.authz_proxy.server:app", "--host", "0.0.0.0", "--port", "8003"]

@@ -430,10 +430,10 @@ class TestOpenFGAUtilityFunctions:
         # Verify write was called
         mock_instance.write.assert_called_once()
 
-        # Verify we wrote tuples (sample data has 10 tuples)
+        # Verify we wrote tuples (sample data has 21 tuples as of ADR-0068 update)
         call_args = mock_instance.write.call_args[0][0]
         assert isinstance(call_args, ClientWriteRequest)
-        assert len(call_args.writes) == 10
+        assert len(call_args.writes) == 21
 
 
 @pytest.mark.integration

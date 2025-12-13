@@ -791,7 +791,14 @@ markers = [
     "builder: Visual workflow builder tests",
     "redis: Redis-backed storage tests (sessions, checkpoints)",
     "postgres: PostgreSQL-backed storage tests (workflows, sessions, durable persistence)",
+    "qdrant: Qdrant vector database tests (collections, search, upsert)",
+    "core: Core module tests (config, feature flags, caching)",
     "requires_full_infrastructure: Tests requiring full Docker infrastructure (builder, playground, observability stack)",
+    "journey: User journey tests (complete user workflows with HEART metrics)",
+    "unified_api: Unified API v1 endpoint tests",
+    "admin_journey: Admin user journey tests (user management, audit logs)",
+    "power_user_journey: Power user journey tests (premium features, advanced workflows)",
+    "standard_user_journey: Standard user journey tests (basic features, tier limits)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

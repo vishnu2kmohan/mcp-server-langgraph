@@ -9,6 +9,36 @@
   "ssoSessionMaxLifespan": 36000,
   "clients": [
     {
+      "clientId": "grafana",
+      "name": "Grafana Dashboards",
+      "description": "OAuth2 client for Grafana dashboard access with Keycloak SSO",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "test-grafana-secret",
+      "directAccessGrantsEnabled": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "http://localhost/dashboards/*",
+        "http://localhost:13001/*"
+      ],
+      "webOrigins": [
+        "http://localhost"
+      ],
+      "defaultClientScopes": [
+        "openid",
+        "email",
+        "profile",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ]
+    },
+    {
       "clientId": "mcp-server",
       "name": "MCP Server Test Client",
       "enabled": true,
@@ -89,6 +119,33 @@
     }
   ],
   "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "offline_access",
+        "uma_authorization",
+        "user",
+        "admin"
+      ],
+      "clientRoles": {
+        "account": [
+          "view-profile",
+          "manage-account"
+        ]
+      }
+    },
     {
       "username": "alice",
       "enabled": true,

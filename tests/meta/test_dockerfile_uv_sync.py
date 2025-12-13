@@ -11,6 +11,11 @@ References:
 - https://docs.astral.sh/uv/guides/integration/docker/
 - https://hynek.me/articles/docker-uv/
 - ADR: Consistent uv sync usage across environments
+
+Note: As of 2025-12, we use a single multi-variant Dockerfile (docker/Dockerfile)
+with build targets (final-base, final-full, final-test) instead of separate
+Dockerfile.test. This simplifies maintenance and ensures consistency between
+local and CI builds.
 """
 
 import gc
@@ -44,9 +49,18 @@ def main_dockerfile(project_root):
 
 
 @pytest.fixture(scope="module")
-def test_dockerfile(project_root):
-    """Read the test Dockerfile content."""
-    dockerfile_path = project_root / "docker" / "Dockerfile.test"
+def test_dockerfile_content(project_root):
+    """Read the main Dockerfile and extract test-related sections.
+
+    The test variant is defined in docker/Dockerfile as:
+    - build-test stage: Builds test dependencies
+    - final-test stage: Final test image
+
+    This fixture returns the full Dockerfile content, as the test variant
+    sections share common patterns (uv sync, frozen flag, etc.) with the
+    overall Dockerfile structure.
+    """
+    dockerfile_path = project_root / "docker" / "Dockerfile"
     return dockerfile_path.read_text()
 
 
@@ -124,29 +138,31 @@ class TestDockerfileUvSyncConsistency:
         assert "UV_COMPILE_BYTECODE" in main_dockerfile, "Dockerfile should set UV_COMPILE_BYTECODE=1 for faster startup."
         assert "UV_LINK_MODE" in main_dockerfile, "Dockerfile should set UV_LINK_MODE=copy for portable builds."
 
-    def test_test_dockerfile_uses_uv_sync(self, test_dockerfile):
+    def test_test_dockerfile_uses_uv_sync(self, test_dockerfile_content):
         """
-        Verify test Dockerfile uses 'uv sync' instead of 'uv export' + 'uv pip install'.
+        Verify test Dockerfile (build-test stage) uses 'uv sync' instead of 'uv export' + 'uv pip install'.
+
+        The test variant is defined as the build-test stage in docker/Dockerfile.
         """
         # Should NOT use uv export
-        assert "uv export" not in test_dockerfile, (
-            "Dockerfile.test should NOT use 'uv export'. Use 'uv sync --frozen --extra dev' for consistency."
+        assert "uv export" not in test_dockerfile_content, (
+            "Dockerfile should NOT use 'uv export'. Use 'uv sync --frozen --extra dev' for consistency."
         )
 
         # Should use uv sync
-        assert "uv sync" in test_dockerfile, "Dockerfile.test should use 'uv sync --frozen' for dependency installation."
+        assert "uv sync" in test_dockerfile_content, "Dockerfile should use 'uv sync --frozen' for dependency installation."
 
-    def test_test_dockerfile_uses_frozen_flag(self, test_dockerfile):
-        """Verify test Dockerfile uses --frozen flag with uv sync."""
+    def test_test_dockerfile_uses_frozen_flag(self, test_dockerfile_content):
+        """Verify test Dockerfile (build-test stage) uses --frozen flag with uv sync."""
         uv_sync_pattern = re.compile(r"uv\s+sync\s+[^#\n]*--frozen")
-        assert uv_sync_pattern.search(test_dockerfile), (
-            "Dockerfile.test should use 'uv sync --frozen' to ensure lockfile is used exactly."
+        assert uv_sync_pattern.search(test_dockerfile_content), (
+            "Dockerfile should use 'uv sync --frozen' to ensure lockfile is used exactly."
         )
 
-    def test_test_dockerfile_no_uv_pip_install(self, test_dockerfile):
+    def test_test_dockerfile_no_uv_pip_install(self, test_dockerfile_content):
         """Verify test Dockerfile does not use 'uv pip install'."""
-        assert "uv pip install" not in test_dockerfile, (
-            "Dockerfile.test should NOT use 'uv pip install'. Use 'uv sync --frozen' which respects the lockfile."
+        assert "uv pip install" not in test_dockerfile_content, (
+            "Dockerfile should NOT use 'uv pip install'. Use 'uv sync --frozen' which respects the lockfile."
         )
 
 
@@ -168,14 +184,14 @@ class TestDockerfileUvSyncExtras:
         # This is a simplified check - the actual pattern may vary
         assert "--no-dev" in main_dockerfile, "Production variants should use '--no-dev' flag to exclude dev dependencies."
 
-    def test_test_dockerfile_has_dev_extra(self, test_dockerfile):
+    def test_test_dockerfile_has_dev_extra(self, test_dockerfile_content):
         """
-        Verify test Dockerfile includes --extra dev for test dependencies.
+        Verify test Dockerfile (build-test stage) includes --extra dev for test dependencies.
 
         Test images need dev dependencies for running pytest, etc.
         """
-        assert "--extra dev" in test_dockerfile or "--all-extras" in test_dockerfile, (
-            "Dockerfile.test should include '--extra dev' for test dependencies."
+        assert "--extra dev" in test_dockerfile_content or "--all-extras" in test_dockerfile_content, (
+            "Dockerfile should include '--extra dev' for test dependencies."
         )
 
 

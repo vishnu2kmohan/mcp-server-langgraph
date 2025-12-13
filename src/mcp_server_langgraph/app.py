@@ -28,6 +28,7 @@ from mcp_server_langgraph.api import (
     service_principals_router,
     studio_router,
 )
+from mcp_server_langgraph.api.v1 import v1_router
 from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
 from mcp_server_langgraph.api.error_handlers import register_exception_handlers
 from mcp_server_langgraph.api.health import run_startup_validation_async
@@ -102,6 +103,16 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
+            # Expose rate limit and pagination headers to browser clients
+            expose_headers=[
+                "X-RateLimit-Limit",
+                "X-RateLimit-Remaining",
+                "X-RateLimit-Reset",
+                "Retry-After",
+                "Link",  # RFC 5988 pagination links
+                "X-Total-Count",
+                "X-Request-ID",
+            ],
         )
         try:
             logger.info(f"CORS enabled for origins: {cors_origins}")
@@ -138,6 +149,9 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
     app.include_router(gdpr_router)
     app.include_router(scim_router)
     app.include_router(studio_router)
+
+    # Unified v1 API (BFF architecture)
+    app.include_router(v1_router, prefix="/api/v1")
 
     try:
         logger.info("FastAPI application created with all routers mounted")

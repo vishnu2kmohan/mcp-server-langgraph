@@ -126,10 +126,10 @@ CONTRIBUTING.md
 CODE_OF_CONDUCT.md
 
 # ==============================================================================
-# Tests - NOT excluded (needed by Dockerfile.test)
+# Tests - NOT excluded (needed by docker/Dockerfile final-test target)
 # Only exclude test artifacts, not the tests/ directory itself
 # ==============================================================================
-# tests/  # NOT excluded - needed by Dockerfile.test
+# tests/  # NOT excluded - needed by docker/Dockerfile final-test target
 .pytest_cache/
 .hypothesis/
 htmlcov/
@@ -238,6 +238,9 @@ tmp/
 # ==============================================================================
 .claude/
 scripts/
+# Exception: OpenFGA seeding script (used by docker/Dockerfile.openfga-seed)
+!scripts/docker/
+!scripts/docker/seed_openfga.py
 examples/
 notebooks/
 *.ipynb

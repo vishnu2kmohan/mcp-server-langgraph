@@ -12,8 +12,19 @@
 
 [![Main Pipeline](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml)
 [![Security Scan](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml)
+[![Integration Tests](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/integration-tests.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/integration-tests.yaml)
+[![E2E Tests](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/e2e-tests.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/e2e-tests.yaml)
 [![Coverage](https://vishnu2kmohan.github.io/mcp-server-langgraph/badges/coverage.svg)](https://vishnu2kmohan.github.io/mcp-server-langgraph/coverage/)
 [![Tests](https://vishnu2kmohan.github.io/mcp-server-langgraph/badges/tests.svg)](https://vishnu2kmohan.github.io/mcp-server-langgraph/)
+
+**Docker Images**:
+[![MCP Server](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/vishnu2kmohan/mcp-server-langgraph/pkgs/container/mcp-server-langgraph)
+[![Builder](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-builder-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-builder-image.yaml)
+[![Playground](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-playground-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-playground-image.yaml)
+[![Keycloak](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-keycloak-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-keycloak-image.yaml)
+[![Alembic](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-alembic-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-alembic-image.yaml)
+[![OpenFGA Seed](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-openfga-seed-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-openfga-seed-image.yaml)
+[![Authz Proxy](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-authz-proxy-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-authz-proxy-image.yaml)
 
 > **Full CI/CD status & all badges**: [docs/ci-cd/badges.mdx](docs/ci-cd/badges.mdx) | **Telemetry Dashboard**: [vishnu2kmohan.github.io/mcp-server-langgraph](https://vishnu2kmohan.github.io/mcp-server-langgraph/)
 

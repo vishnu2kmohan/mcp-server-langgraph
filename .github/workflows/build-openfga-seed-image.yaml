@@ -1,0 +1,234 @@
+name: Build OpenFGA Seed Image
+
+# ==============================================================================
+# OpenFGA Seed Image Build Workflow
+# ==============================================================================
+#
+# This workflow builds and pushes the OpenFGA seeding image.
+# This is a minimal image (~50MB) used for seeding OpenFGA with:
+# - Authorization model (config/openfga/model.json)
+# - Sample relationship tuples (config/openfga/sample-tuples.json)
+#
+# Triggers:
+# - Push to main (when Dockerfile.openfga-seed or config/openfga/* changes)
+# - Manual dispatch (for ad-hoc builds)
+# - Weekly schedule (to get security updates)
+#
+# The image is pushed to:
+# - Preview/Dev: ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed (GHCR)
+# - Production: Promoted from GHCR to cloud-specific registries
+#
+# Note: This is a run-once container (no health endpoint).
+# Verification is done by checking OpenFGA stores and models after seeding.
+#
+# Reference: ADR-0068 - Gateway-Level Authentication
+# ==============================================================================
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker/Dockerfile.openfga-seed'
+      - 'scripts/docker/seed_openfga.py'
+      - 'config/openfga/**'
+      - '.github/workflows/build-openfga-seed-image.yaml'
+
+  # Weekly rebuild to pick up base image security updates
+  schedule:
+    - cron: '0 7 * * 1'  # Every Monday at 7 AM UTC
+
+  workflow_dispatch:
+    inputs:
+      push_to_production:
+        description: 'Also push to production registry'
+        type: boolean
+        default: false
+
+concurrency:
+  group: build-openfga-seed-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
+
+permissions:
+  contents: read
+  packages: write  # Required for pushing to GHCR
+  security-events: write  # Required for SARIF upload to GitHub Security tab
+
+jobs:
+  build-and-push:
+    name: Build OpenFGA Seed Image
+    runs-on: ubuntu-latest
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    timeout-minutes: 20
+
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Validate required files exist
+        run: |
+          if [ ! -f docker/Dockerfile.openfga-seed ]; then
+            echo "::error::Dockerfile.openfga-seed not found"
+            exit 1
+          fi
+          echo "✅ Dockerfile.openfga-seed found"
+
+          if [ ! -f scripts/docker/seed_openfga.py ]; then
+            echo "::error::seed_openfga.py not found"
+            exit 1
+          fi
+          echo "✅ seed_openfga.py found"
+
+          if [ ! -f config/openfga/model.json ]; then
+            echo "::error::config/openfga/model.json not found"
+            exit 1
+          fi
+          echo "✅ config/openfga/model.json found"
+
+          if [ ! -f config/openfga/sample-tuples.json ]; then
+            echo "::error::config/openfga/sample-tuples.json not found"
+            exit 1
+          fi
+          echo "✅ config/openfga/sample-tuples.json found"
+
+      # Authenticate to GitHub Container Registry using GITHUB_TOKEN
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: ./.github/actions/setup-docker-buildx
+
+      # Generate image metadata (tags, labels)
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-openfga-seed
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+            type=ref,event=branch
+          labels: |
+            org.opencontainers.image.title=MCP OpenFGA Seed
+            org.opencontainers.image.description=OpenFGA authorization model and tuple seeder for MCP Server LangGraph
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      # Build and push to GHCR
+      - name: Build and push OpenFGA Seed image
+        id: build
+        uses: docker/build-push-action@v6.18.0
+        with:
+          context: .
+          file: docker/Dockerfile.openfga-seed
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-openfga-seed:latest
+          cache-to: |
+            type=inline
+          provenance: true
+          sbom: true
+
+      - name: Output image info
+        run: |
+          echo "## OpenFGA Seed Image Built Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Digest:** ${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.meta.outputs.tags }}' | tr ',' '\n' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+
+  # Verify the built image works
+  verify-image:
+    name: Verify Image
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    timeout-minutes: 10
+
+    services:
+      # Start OpenFGA for seeding verification
+      openfga:
+        image: openfga/openfga:latest
+        env:
+          OPENFGA_DATASTORE_ENGINE: memory
+          OPENFGA_AUTHN_METHOD: preshared
+          OPENFGA_AUTHN_PRESHARED_KEYS: test-openfga-preshared-key
+        ports:
+          - 8080:8080
+          - 3000:3000
+        options: >-
+          --health-cmd "wget -qO- http://localhost:8080/healthz || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # Authenticate to GHCR for pulling the image
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull and verify image
+        run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-openfga-seed:latest"
+
+          echo "Pulling image: $IMAGE"
+          docker pull "$IMAGE"
+
+          echo ""
+          echo "Running OpenFGA seeding..."
+          docker run --rm \
+            --network host \
+            -e OPENFGA_API_URL=http://localhost:8080 \
+            -e OPENFGA_PRESHARED_KEY=test-openfga-preshared-key \
+            "$IMAGE" || {
+              echo "OpenFGA seeding failed"
+              exit 1
+            }
+
+          echo ""
+          echo "Verifying store was created..."
+          STORES=$(curl -s -H "Authorization: Bearer test-openfga-preshared-key" http://localhost:8080/stores)
+          if echo "$STORES" | grep -q "mcp-server-langgraph-test"; then
+            echo "✅ Store created successfully"
+          else
+            echo "Store not found in response: $STORES"
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ Image verification passed - OpenFGA seeding successful"
+
+      - name: Security scan with Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: 'ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-openfga-seed:latest'
+          format: 'sarif'
+          output: 'trivy-openfga-seed-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: 'trivy-openfga-seed-results.sarif'

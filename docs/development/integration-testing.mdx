@@ -358,13 +358,18 @@ Test services configuration:
 - No volumes (clean state every run)
 - Isolated network
 
-#### Dockerfile.test
+#### Test Image (final-test target)
 
-Test runner image:
+The test image is built from `docker/Dockerfile` with `--target final-test`:
 - Python 3.12
-- Test dependencies only
-- Environment pre-configured
-- Fast builds with caching
+- Test dependencies only (`--extra dev`)
+- Environment pre-configured (`TESTING=true`)
+- Fast builds with multi-stage caching
+
+```bash
+# Build locally:
+docker build --target final-test -t mcp-server-langgraph:test -f docker/Dockerfile .
+```
 
 #### Test Environment Variables
 

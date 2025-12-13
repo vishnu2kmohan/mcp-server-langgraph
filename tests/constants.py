@@ -112,8 +112,9 @@ TEST_KEYCLOAK_PORT = 9082  # +1002 from standard 8080
 
 # Application Service Ports
 TEST_MCP_SERVER_PORT = 8000  # Main MCP server
-TEST_BUILDER_API_PORT = 9001  # +1000 from dev port 8001
-TEST_PLAYGROUND_API_PORT = 9002  # +1000 from dev port 8002
+TEST_UNIFIED_API_PORT = 8000  # Unified API (alias for MCP server - all /api/v1/* routes)
+TEST_BUILDER_API_PORT = 9001  # +1000 from dev port 8001 (deprecated, use TEST_UNIFIED_API_PORT)
+TEST_PLAYGROUND_API_PORT = 9002  # +1000 from dev port 8002 (deprecated, use TEST_UNIFIED_API_PORT)
 
 # Observability Ports (Grafana LGTM Stack)
 # Jaeger replaced by Tempo, Prometheus/Alertmanager replaced by Mimir + Alloy

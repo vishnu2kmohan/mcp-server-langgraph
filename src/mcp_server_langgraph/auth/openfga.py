@@ -6,12 +6,24 @@ Enhanced with resilience patterns (ADR-0026):
 - Retry logic with exponential backoff
 - Timeout enforcement (5s for auth operations)
 - Bulkhead isolation (50 concurrent auth checks max)
+
+Authentication (ADR-0068):
+- Preshared key authentication for API access
+- All API requests require: Authorization: Bearer <preshared-key>
+
+Configuration:
+- Authorization model loaded from config/openfga/model.json
+- Model is configuration, not code (separation of concerns)
 """
 
+import json
+import os
+from pathlib import Path
 from typing import Any
 
 from openfga_sdk import ClientConfiguration, OpenFgaClient
 from openfga_sdk.client.models import ClientCheckRequest, ClientTuple, ClientWriteRequest
+from openfga_sdk.credentials import CredentialConfiguration, Credentials
 from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.core.exceptions import OpenFGAError, OpenFGATimeoutError, OpenFGAUnavailableError
@@ -29,12 +41,24 @@ class OpenFGAConfig(BaseModel):
     api_url: str = Field(default="http://localhost:8080", description="OpenFGA server API URL")
     store_id: str | None = Field(default=None, description="Authorization store ID")
     model_id: str | None = Field(default=None, description="Authorization model ID")
+    preshared_key: str | None = Field(
+        default=None,
+        description="Preshared key for API authentication (ADR-0068). "
+        "If set, all API requests will include Authorization: Bearer <key>",
+    )
 
     model_config = ConfigDict(
         frozen=False,
         validate_assignment=True,
         str_strip_whitespace=True,
-        json_schema_extra={"example": {"api_url": "http://localhost:8080", "store_id": "01H...", "model_id": "01H..."}},
+        json_schema_extra={
+            "example": {
+                "api_url": "http://localhost:8080",
+                "store_id": "01H...",
+                "model_id": "01H...",
+                "preshared_key": "test-openfga-preshared-key",
+            }
+        },
     )
 
     def to_dict(self) -> dict[str, Any]:
@@ -61,6 +85,7 @@ class OpenFGAClient:
         api_url: str | None = None,
         store_id: str | None = None,
         model_id: str | None = None,
+        preshared_key: str | None = None,
     ):
         """
         Initialize OpenFGA client (lazy async initialization pattern)
@@ -76,22 +101,34 @@ class OpenFGAClient:
             api_url: OpenFGA server URL (legacy, use config instead)
             store_id: Authorization store ID (legacy, use config instead)
             model_id: Authorization model ID (legacy, use config instead)
+            preshared_key: Preshared key for API auth (legacy, use config instead)
         """
         # Support both new config-based and legacy parameter-based initialization
         if config is None:
-            config = OpenFGAConfig(api_url=api_url or "http://localhost:8080", store_id=store_id, model_id=model_id)
+            # Check environment variable for preshared key if not provided
+            env_preshared_key = preshared_key or os.getenv("OPENFGA_PRESHARED_KEY")
+            config = OpenFGAConfig(
+                api_url=api_url or "http://localhost:8080",
+                store_id=store_id,
+                model_id=model_id,
+                preshared_key=env_preshared_key,
+            )
 
         self.config = config
         self.api_url = config.api_url
         self.store_id = config.store_id
         self.model_id = config.model_id
+        self.preshared_key = config.preshared_key
 
         # Lazy initialization: Store configuration, don't create OpenFgaClient yet
         # This prevents creating aiohttp resources which require an event loop
         self._client: OpenFgaClient | None = None
         self._initialized = False
 
-        logger.info("OpenFGA client wrapper created (lazy init)", extra={"api_url": config.api_url})
+        logger.info(
+            "OpenFGA client wrapper created (lazy init)",
+            extra={"api_url": config.api_url, "auth_enabled": config.preshared_key is not None},
+        )
 
     async def _ensure_initialized(self) -> None:
         """
@@ -99,16 +136,30 @@ class OpenFGAClient:
 
         This method creates the actual OpenFgaClient on first async call.
         Called by all async methods before performing operations.
+
+        If preshared_key is configured, credentials are added for API authentication (ADR-0068).
         """
         if not self._initialized:
+            # Build credentials if preshared key is configured
+            credentials = None
+            if self.config.preshared_key:
+                credentials = Credentials(
+                    method="api_token",
+                    configuration=CredentialConfiguration(api_token=self.config.preshared_key),
+                )
+
             configuration = ClientConfiguration(
                 api_url=self.config.api_url,
                 store_id=self.config.store_id,
                 authorization_model_id=self.config.model_id,
+                credentials=credentials,
             )
             self._client = OpenFgaClient(configuration)
             self._initialized = True
-            logger.info("OpenFGA SDK client initialized", extra={"api_url": self.config.api_url})
+            logger.info(
+                "OpenFGA SDK client initialized",
+                extra={"api_url": self.config.api_url, "auth_enabled": credentials is not None},
+            )
 
     async def close(self) -> None:
         """
@@ -558,113 +609,98 @@ def _extract_users_from_expansion(expansion: dict[str, Any]) -> list[str]:
 
 class OpenFGAAuthorizationModel:
     """
-    Authorization model definition for the agent system
+    Authorization model loader for the agent system.
 
-    Defines types, relations, and permissions for the system.
+    Loads model definition from configuration file (config/openfga/model.json).
+    This separates configuration from code, following best practices.
+
+    Types defined in the model:
+    - user: Individual users
+    - organization: Organizations that users belong to
+    - tool: AI tools (chat, search, etc.)
+    - conversation: Conversation threads
+    - role: Roles that grant permissions
+    - service_principal: Service accounts for machine-to-machine auth (ADR-0033)
+    - vector_store: Qdrant vector database collections (ADR-0068)
+    - authz: OpenFGA Playground access control (ADR-0068)
     """
 
-    @staticmethod
-    def get_model_definition() -> dict[str, Any]:
-        """
-        Get the authorization model definition
+    # Default model file path (relative to project root)
+    DEFAULT_MODEL_PATH = "config/openfga/model.json"
 
-        This defines:
-        - user: Individual users
-        - organization: Organizations that users belong to
-        - tool: AI tools (chat, search, etc.)
-        - conversation: Conversation threads
-        - role: Roles that grant permissions
-        - service_principal: Service accounts for machine-to-machine auth (ADR-0033)
+    # Cache for loaded model
+    _cached_model: dict[str, Any] | None = None
 
-        Relations:
-        - member: User is a member of organization
-        - owner: User owns a resource
-        - viewer: User can view a resource
-        - executor: User can execute a tool
-        - admin: User has admin privileges
-        - acts_as: Service principal acts as user (permission inheritance, ADR-0039)
+    @classmethod
+    def get_model_definition(cls, model_path: str | Path | None = None) -> dict[str, Any]:
         """
-        return {
-            "schema_version": "1.1",
-            "type_definitions": [
-                {"type": "user", "relations": {}, "metadata": {"relations": {}}},
-                {
-                    "type": "organization",
-                    "relations": {"member": {"this": {}}, "admin": {"this": {}}},
-                    "metadata": {
-                        "relations": {
-                            "member": {"directly_related_user_types": [{"type": "user"}]},
-                            "admin": {"directly_related_user_types": [{"type": "user"}]},
-                        }
-                    },
-                },
-                {
-                    "type": "tool",
-                    "relations": {
-                        "owner": {"this": {}},
-                        "executor": {
-                            "union": {
-                                "child": [
-                                    {"this": {}},
-                                    {"computedUserset": {"relation": "owner"}},
-                                    {
-                                        "tupleToUserset": {
-                                            "tupleset": {"relation": "organization"},
-                                            "computedUserset": {"relation": "member"},
-                                        }
-                                    },
-                                ]
-                            }
-                        },
-                        "organization": {"this": {}},
-                    },
-                    "metadata": {
-                        "relations": {
-                            "owner": {"directly_related_user_types": [{"type": "user"}]},
-                            "executor": {"directly_related_user_types": [{"type": "user"}]},
-                            "organization": {"directly_related_user_types": [{"type": "organization"}]},
-                        }
-                    },
-                },
-                {
-                    "type": "conversation",
-                    "relations": {
-                        "owner": {"this": {}},
-                        "viewer": {"union": {"child": [{"this": {}}, {"computedUserset": {"relation": "owner"}}]}},
-                        "editor": {"union": {"child": [{"this": {}}, {"computedUserset": {"relation": "owner"}}]}},
-                    },
-                    "metadata": {
-                        "relations": {
-                            "owner": {"directly_related_user_types": [{"type": "user"}]},
-                            "viewer": {"directly_related_user_types": [{"type": "user"}]},
-                            "editor": {"directly_related_user_types": [{"type": "user"}]},
-                        }
-                    },
-                },
-                {
-                    "type": "role",
-                    "relations": {"assignee": {"this": {}}},
-                    "metadata": {"relations": {"assignee": {"directly_related_user_types": [{"type": "user"}]}}},
-                },
-                {
-                    "type": "service_principal",
-                    "relations": {
-                        "owner": {"this": {}},
-                        "acts_as": {"this": {}},
-                        "viewer": {"computedUserset": {"relation": "owner"}},
-                        "editor": {"computedUserset": {"relation": "owner"}},
-                    },
-                    "metadata": {
-                        "relations": {
-                            "owner": {"directly_related_user_types": [{"type": "user"}]},
-                            "acts_as": {"directly_related_user_types": [{"type": "user"}]},
-                            "viewer": {"directly_related_user_types": [{"type": "user"}]},
-                            "editor": {"directly_related_user_types": [{"type": "user"}]},
-                        }
-                    },
-                },
-            ],
-        }
+        Load the authorization model from configuration file.
+
+        Model is cached after first load to avoid repeated file I/O.
+
+        Args:
+            model_path: Path to model JSON file. If None, uses DEFAULT_MODEL_PATH.
+                       Can be overridden via OPENFGA_MODEL_PATH environment variable.
+
+        Returns:
+            Authorization model definition as dict.
+
+        Raises:
+            FileNotFoundError: If model file does not exist.
+            json.JSONDecodeError: If model file is not valid JSON.
+        """
+        # Return cached model if available
+        if cls._cached_model is not None:
+            return cls._cached_model
+
+        # Determine model path
+        if model_path is None:
+            model_path = os.getenv("OPENFGA_MODEL_PATH", cls.DEFAULT_MODEL_PATH)
+
+        model_path = Path(model_path)
+
+        # Try multiple locations for the model file
+        search_paths = [
+            model_path,  # Absolute or relative as provided
+            Path(__file__).parent.parent.parent.parent / model_path,  # From project root
+            Path.cwd() / model_path,  # From current working directory
+        ]
+
+        for path in search_paths:
+            if path.exists():
+                logger.info(f"Loading OpenFGA model from: {path}")
+                with open(path) as f:
+                    cls._cached_model = json.load(f)
+                return cls._cached_model
+
+        # If no file found, log available search paths and raise error
+        logger.error(
+            f"OpenFGA model file not found. Searched: {[str(p) for p in search_paths]}",
+            extra={"search_paths": [str(p) for p in search_paths]},
+        )
+        raise FileNotFoundError(
+            f"OpenFGA model file not found at {model_path}. Searched paths: {[str(p) for p in search_paths]}"
+        )
+
+    @classmethod
+    def clear_cache(cls) -> None:
+        """Clear the cached model (useful for testing)."""
+        cls._cached_model = None
+
+    @classmethod
+    def get_type_names(cls) -> list[str]:
+        """Get list of type names defined in the model."""
+        model = cls.get_model_definition()
+        return [t.get("type", "") for t in model.get("type_definitions", [])]
+
+    @classmethod
+    def get_relations_for_type(cls, type_name: str) -> list[str]:
+        """Get list of relations defined for a specific type."""
+        model = cls.get_model_definition()
+        for type_def in model.get("type_definitions", []):
+            if type_def.get("type") == type_name:
+                return list(type_def.get("relations", {}).keys())
+        return []
 
 
 async def initialize_openfga_store(client: OpenFGAClient) -> str:
@@ -708,29 +744,86 @@ async def initialize_openfga_store(client: OpenFGAClient) -> str:
             raise
 
 
-async def seed_sample_data(client: OpenFGAClient) -> None:
+def load_sample_tuples(tuples_path: str | Path | None = None) -> list[dict[str, str]]:
     """
-    Seed sample relationship data for testing
+    Load sample relationship tuples from config file.
+
+    This function loads tuples from config/openfga/sample-tuples.json,
+    which is the single source of truth for test user permissions.
+
+    Args:
+        tuples_path: Path to tuples config file. If None, uses default path
+                    or OPENFGA_TUPLES_PATH environment variable.
+
+    Returns:
+        List of tuple dicts with user, relation, object keys.
+
+    Raises:
+        FileNotFoundError: If tuples config file does not exist.
+        json.JSONDecodeError: If tuples config file is not valid JSON.
     """
-    sample_tuples = [
-        # Organization memberships
-        {"user": "user:alice", "relation": "member", "object": "organization:acme"},
-        {"user": "user:bob", "relation": "member", "object": "organization:acme"},
-        {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
-        # Tool permissions
-        {"user": "user:alice", "relation": "executor", "object": "tool:chat"},
-        {"user": "user:bob", "relation": "executor", "object": "tool:chat"},
-        {"user": "organization:acme", "relation": "organization", "object": "tool:chat"},
-        # Conversation ownership
-        {"user": "user:alice", "relation": "owner", "object": "conversation:thread_1"},
-        {"user": "user:bob", "relation": "viewer", "object": "conversation:thread_1"},
-        # Role assignments
-        {"user": "user:alice", "relation": "assignee", "object": "role:premium"},
-        {"user": "user:bob", "relation": "assignee", "object": "role:standard"},
+    # Determine tuples path
+    if tuples_path is None:
+        tuples_path = os.getenv("OPENFGA_TUPLES_PATH", "config/openfga/sample-tuples.json")
+
+    tuples_path = Path(tuples_path)
+
+    # Try multiple locations for the tuples file
+    search_paths = [
+        tuples_path,  # Absolute or relative as provided
+        Path(__file__).parent.parent.parent.parent / tuples_path,  # From project root
+        Path.cwd() / tuples_path,  # From current working directory
     ]
 
+    for path in search_paths:
+        if path.exists():
+            logger.info(f"Loading OpenFGA sample tuples from: {path}")
+            with open(path) as f:
+                config = json.load(f)
+
+            raw_tuples = config.get("tuples", [])
+
+            # Filter out _comment keys and keep only user/relation/object
+            tuples = []
+            for t in raw_tuples:
+                tuples.append(
+                    {
+                        "user": t["user"],
+                        "relation": t["relation"],
+                        "object": t["object"],
+                    }
+                )
+
+            return tuples
+
+    # If no file found, log available search paths and raise error
+    logger.error(
+        f"OpenFGA sample tuples file not found. Searched: {[str(p) for p in search_paths]}",
+        extra={"search_paths": [str(p) for p in search_paths]},
+    )
+    raise FileNotFoundError(
+        f"OpenFGA sample tuples file not found at {tuples_path}. Searched paths: {[str(p) for p in search_paths]}"
+    )
+
+
+async def seed_sample_data(client: OpenFGAClient, tuples_path: str | Path | None = None) -> None:
+    """
+    Seed sample relationship data for testing from config file.
+
+    This function loads tuples from config/openfga/sample-tuples.json
+    (single source of truth) and writes them to OpenFGA.
+
+    Args:
+        client: OpenFGA client instance.
+        tuples_path: Optional path to tuples config file.
+
+    Raises:
+        FileNotFoundError: If tuples config file does not exist.
+    """
+    sample_tuples = load_sample_tuples(tuples_path)
+
     await client.write_tuples(sample_tuples)
-    logger.info("Sample OpenFGA data seeded")
+    logger.info("Sample OpenFGA data seeded", extra={"tuple_count": len(sample_tuples)})
 
 
 async def check_permission(

@@ -187,6 +187,47 @@ class FeatureFlags(BaseSettings):
         description="Maximum input length in characters",
     )
 
+    # UI Features (Unified Studio/BFF)
+    enable_workflows_feature: bool = Field(
+        default=True,
+        description="Enable workflow builder UI feature",
+    )
+
+    enable_sessions_feature: bool = Field(
+        default=True,
+        description="Enable chat sessions UI feature",
+    )
+
+    enable_cost_dashboard: bool = Field(
+        default=True,
+        description="Enable cost dashboard for admins",
+    )
+
+    enable_cost_dashboard_users: bool = Field(
+        default=False,
+        description="Enable cost dashboard for regular users (not just admins)",
+    )
+
+    enable_observability_ui: bool = Field(
+        default=True,
+        description="Enable observability/trace UI feature",
+    )
+
+    enable_code_export: bool = Field(
+        default=True,
+        description="Enable code export feature in workflow builder",
+    )
+
+    enable_ai_suggestions: bool = Field(
+        default=True,
+        description="Enable AI-powered suggestions in UI",
+    )
+
+    enable_mcp_websocket: bool = Field(
+        default=False,
+        description="Enable MCP 2025-11-25 WebSocket protocol (experimental)",
+    )
+
     # Experimental Features
     enable_experimental_features: bool = Field(
         default=False,
@@ -252,6 +293,42 @@ class FeatureFlags(BaseSettings):
             return False
 
         return self.is_feature_enabled(feature_name)
+
+    def get_ui_features_for_role(self, role: str) -> dict[str, bool]:
+        """
+        Get UI feature availability based on user role.
+
+        Admins get access to all features. Regular users get filtered access
+        based on feature flags (e.g., cost_dashboard_users controls whether
+        non-admins can see the cost dashboard).
+
+        Args:
+            role: User role (e.g., 'admin', 'user', 'viewer')
+
+        Returns:
+            Dictionary mapping feature names to their enabled status for this role.
+
+        Example:
+            >>> flags.get_ui_features_for_role('admin')
+            {'workflows': True, 'sessions': True, 'cost_dashboard': True, ...}
+
+            >>> flags.get_ui_features_for_role('user')
+            {'workflows': True, 'sessions': True, 'cost_dashboard': False, ...}
+        """
+        is_admin = role.lower() == "admin"
+
+        return {
+            "workflows": self.enable_workflows_feature,
+            "sessions": self.enable_sessions_feature,
+            # Cost dashboard: admins always see it; users only if enable_cost_dashboard_users
+            "cost_dashboard": (
+                self.enable_cost_dashboard if is_admin else (self.enable_cost_dashboard and self.enable_cost_dashboard_users)
+            ),
+            "observability": self.enable_observability_ui,
+            "code_export": self.enable_code_export,
+            "ai_suggestions": self.enable_ai_suggestions,
+            "mcp_websocket": self.enable_mcp_websocket,
+        }
 
 
 # Global feature flags instance

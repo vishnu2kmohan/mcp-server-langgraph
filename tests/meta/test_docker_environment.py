@@ -9,8 +9,13 @@ Per ADR-0053 (Codex Integration Test Findings):
 
 These tests validate:
 1. Host environment has required directories (scripts/, deployments/)
-2. Dockerfile.test does NOT copy excluded directories
-3. Dockerfile.test only copies what's needed for integration tests
+2. Docker test variant (final-test target) does NOT copy excluded directories
+3. Docker test variant only copies what's needed for integration tests
+
+Note: As of 2025-12, we use a single multi-variant Dockerfile (docker/Dockerfile)
+with build targets (final-base, final-full, final-test) instead of a separate
+Dockerfile.test. This simplifies maintenance and ensures consistency between
+local and CI builds.
 
 References:
 - ADR-0053: Codex Integration Test Findings
@@ -109,118 +114,132 @@ class TestHostEnvironmentSetup:
 
 @pytest.mark.xdist_group(name="testdockerfiletestconfiguration")
 class TestDockerfileTestConfiguration:
-    """Test that Dockerfile.test follows ADR-0053 design.
+    """Test that Docker test variant (final-test target) follows ADR-0053 design.
 
     Per ADR-0053:
     - Docker images only contain src/ and tests/
     - scripts/, deployments/, pyproject.toml are NOT copied
     - Meta-tests run on host with full repo context
+
+    Note: As of 2025-12, we use docker/Dockerfile with --target final-test
+    instead of a separate Dockerfile.test.
     """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_dockerfile_test_exists(self, project_root):
-        """Test that docker/Dockerfile.test exists."""
-        dockerfile = project_root / "docker" / "Dockerfile.test"
-        assert dockerfile.exists(), "docker/Dockerfile.test not found"
+    def test_dockerfile_exists_in_docker_directory(self, project_root):
+        """Test that docker/Dockerfile exists."""
+        dockerfile = project_root / "docker" / "Dockerfile"
+        assert dockerfile.exists(), "docker/Dockerfile not found"
+
+    def test_dockerfile_has_final_test_target(self, project_root):
+        """Test that docker/Dockerfile has a final-test target."""
+        dockerfile = project_root / "docker" / "Dockerfile"
+        content = dockerfile.read_text()
+
+        assert "AS final-test" in content, (
+            "docker/Dockerfile must have 'final-test' target for test builds. Build with: docker build --target final-test"
+        )
 
     def test_dockerfile_test_copies_src(self, project_root):
         """
-        Test that Dockerfile.test includes COPY directive for src/.
+        Test that Dockerfile final-test stage includes COPY directive for src/.
 
         Per ADR-0053: src/ is required in Docker image for integration tests.
         """
-        dockerfile = project_root / "docker" / "Dockerfile.test"
+        dockerfile = project_root / "docker" / "Dockerfile"
         content = dockerfile.read_text()
 
-        # Check for COPY src/ directive
-        assert "COPY src/" in content or "COPY --chown" in content and "src/" in content, (
-            "Dockerfile.test missing 'COPY src/' directive. src/ is required for integration tests per ADR-0053."
+        # Check for COPY src/ directive (may have --chown)
+        assert "COPY" in content and "src/" in content, (
+            "Dockerfile missing 'COPY src/' directive. src/ is required for integration tests per ADR-0053."
         )
 
     def test_dockerfile_test_copies_tests(self, project_root):
         """
-        Test that Dockerfile.test includes COPY directive for tests/.
+        Test that Dockerfile final-test stage includes COPY directive for tests/.
 
         Per ADR-0053: tests/ is required in Docker image for integration tests.
         """
-        dockerfile = project_root / "docker" / "Dockerfile.test"
+        dockerfile = project_root / "docker" / "Dockerfile"
         content = dockerfile.read_text()
 
-        # Check for COPY tests/ directive
-        assert "COPY tests/" in content or "COPY --chown" in content and "tests/" in content, (
-            "Dockerfile.test missing 'COPY tests/' directive. tests/ is required for integration tests per ADR-0053."
+        # Check for COPY tests/ directive (may have --chown)
+        assert "COPY" in content and "tests/" in content, (
+            "Dockerfile missing 'COPY tests/' directive. tests/ is required for integration tests per ADR-0053."
         )
 
     def test_dockerfile_test_does_not_copy_scripts(self, project_root):
         """
-        Test that Dockerfile.test does NOT copy scripts/ directory.
+        Test that Dockerfile does NOT copy scripts/ directory.
 
         Per ADR-0053: scripts/ must NOT be in Docker image.
         Meta-tests that need scripts/ run on the host.
         """
-        dockerfile = project_root / "docker" / "Dockerfile.test"
+        dockerfile = project_root / "docker" / "Dockerfile"
         content = dockerfile.read_text()
 
         # scripts/ should NOT be copied
         assert "COPY scripts/" not in content, (
-            "Dockerfile.test should NOT copy scripts/ directory. "
+            "Dockerfile should NOT copy scripts/ directory. "
             "Per ADR-0053: scripts/ must NOT be in Docker image. "
             "Meta-tests run on host with full repo context."
         )
 
     def test_dockerfile_test_does_not_copy_deployments(self, project_root):
         """
-        Test that Dockerfile.test does NOT copy deployments/ directory.
+        Test that Dockerfile does NOT copy deployments/ directory.
 
         Per ADR-0053: deployments/ must NOT be in Docker image.
         Deployment validation tests run on the host.
         """
-        dockerfile = project_root / "docker" / "Dockerfile.test"
+        dockerfile = project_root / "docker" / "Dockerfile"
         content = dockerfile.read_text()
 
         # deployments/ should NOT be copied
         assert "COPY deployments/" not in content, (
-            "Dockerfile.test should NOT copy deployments/ directory. "
+            "Dockerfile should NOT copy deployments/ directory. "
             "Per ADR-0053: deployments/ must NOT be in Docker image. "
             "Deployment tests run on host with full repo context."
         )
 
-    def test_dockerfile_test_does_not_copy_pyproject_toml(self, project_root):
+    def test_dockerfile_final_test_does_not_copy_pyproject_toml(self, project_root):
         """
-        Test that Dockerfile.test does NOT copy pyproject.toml to runtime.
+        Test that Dockerfile final-test stage does NOT copy pyproject.toml.
 
         Per ADR-0053: pyproject.toml must NOT be in final Docker image.
         Version is read via importlib.metadata at runtime.
 
-        Note: pyproject.toml may be copied in build stages for dependency
-        installation, but should not be in the final runtime image.
+        Note: pyproject.toml is copied in build stages (base-builder) for
+        dependency installation, but should not be in the final-test stage.
         """
-        dockerfile = project_root / "docker" / "Dockerfile.test"
+        dockerfile = project_root / "docker" / "Dockerfile"
         content = dockerfile.read_text()
 
-        # Look for pyproject.toml COPY in final stage (after last FROM)
+        # Find the final-test stage and check it doesn't copy pyproject.toml
         lines = content.split("\n")
-        last_from_idx = -1
-        for i, line in enumerate(lines):
-            if line.strip().startswith("FROM"):
-                last_from_idx = i
+        in_final_test = False
+        has_pyproject_in_final_test = False
 
-        if last_from_idx >= 0:
-            # Check if pyproject.toml is copied in final stage
-            # Allow it in earlier stages for dependency installation
-            has_pyproject_in_final = False
-            for line in lines[last_from_idx:]:
-                if "COPY" in line and "pyproject.toml" in line and not line.strip().startswith("#"):
-                    has_pyproject_in_final = True
-                    break
+        for line in lines:
+            stripped = line.strip()
+            # Track when we enter final-test stage
+            if "FROM" in stripped and "final-test" in stripped:
+                in_final_test = True
+            # Track when we leave final-test stage (another FROM)
+            elif in_final_test and stripped.startswith("FROM"):
+                in_final_test = False
+            # Check for pyproject.toml copy in final-test stage
+            if in_final_test and "COPY" in stripped and "pyproject.toml" in stripped and not stripped.startswith("#"):
+                has_pyproject_in_final_test = True
+                break
 
-            assert not has_pyproject_in_final, (
-                "Dockerfile.test should NOT copy pyproject.toml to final stage. "
-                "Per ADR-0053: version is read via importlib.metadata at runtime."
-            )
+        assert not has_pyproject_in_final_test, (
+            "Dockerfile final-test stage should NOT copy pyproject.toml. "
+            "Per ADR-0053: version is read via importlib.metadata at runtime."
+        )
 
     @pytest.mark.skipif(os.getenv("TESTING") != "true", reason="Only in Docker test environment")
     def test_docker_working_directory_is_app(self):

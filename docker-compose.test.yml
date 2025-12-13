@@ -307,6 +307,13 @@ services:
       - OPENFGA_LOG_FORMAT=json
       - OPENFGA_LOG_LEVEL=warn  # Reduced logging for tests
       - OPENFGA_PLAYGROUND_ENABLED=true  # Enable playground UI on port 3000
+      # ======================================================================
+      # Preshared Key Authentication (ADR-0068)
+      # ======================================================================
+      # All API requests (except /health) require Bearer token with preshared key
+      # Applications must include: Authorization: Bearer <preshared-key>
+      - OPENFGA_AUTHN_METHOD=preshared
+      - OPENFGA_AUTHN_PRESHARED_KEYS=${OPENFGA_PRESHARED_KEY:-test-openfga-preshared-key}
       - TESTING=true
     healthcheck:
       test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
@@ -330,23 +337,52 @@ services:
       - "traefik.enable=true"
       # Route: /authz/* -> openfga:8080 (Authorization API)
       # API endpoints are at /stores, /health, etc. accessed via /authz/stores, /authz/health
+      # NOTE: OpenFGA API now requires preshared key (ADR-0068)
       - "traefik.http.routers.openfga-api.rule=PathPrefix(`/authz`)"
       - "traefik.http.routers.openfga-api.entrypoints=web"
       - "traefik.http.routers.openfga-api.priority=10"
       - "traefik.http.services.openfga-api.loadbalancer.server.port=8080"
       - "traefik.http.middlewares.openfga-strip.stripprefix.prefixes=/authz"
       - "traefik.http.routers.openfga-api.middlewares=openfga-strip"
-      # Route: /playground/* -> openfga:3000 (OpenFGA Playground UI) [PROTECTED]
-      # OpenFGA Playground runs on port 3000 (separate from API on 8080)
-      # Access at http://localhost/playground or direct at http://localhost:9003/playground
-      # Priority 11 (higher than MCP Playground at /chat which uses priority 10)
-      # Authentication via forward-auth middleware (ADR-0054)
-      - "traefik.http.routers.openfga-playground.rule=PathPrefix(`/playground`)"
-      - "traefik.http.routers.openfga-playground.entrypoints=web"
-      - "traefik.http.routers.openfga-playground.priority=11"
-      - "traefik.http.routers.openfga-playground.service=openfga-playground"
-      - "traefik.http.routers.openfga-playground.middlewares=forward-auth@docker"
-      - "traefik.http.services.openfga-playground.loadbalancer.server.port=3000"
+      # NOTE: OpenFGA Playground route moved to authz-proxy-test service (ADR-0068)
+      # The authz-proxy handles Keycloak JWT validation and OpenFGA permission checks
+      # before proxying to OpenFGA Playground at port 3000
+
+  # ==============================================================================
+  # OPENFGA SEEDING (Authorization Model + Relationship Tuples)
+  # ==============================================================================
+  # This service runs AFTER openfga-test is healthy to seed:
+  # 1. Authorization model from config/openfga/model.json
+  # 2. Relationship tuples for test users (admin, alice, bob)
+  # 3. Permissions for vector_store and authz:playground
+  #
+  # Reference: ADR-0068 - Gateway-Level Authentication
+
+  openfga-seed-test:
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.openfga-seed
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed:latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed:local
+    depends_on:
+      openfga-test:
+        condition: service_healthy
+    environment:
+      - OPENFGA_API_URL=http://openfga-test:8080
+      - OPENFGA_PRESHARED_KEY=${OPENFGA_PRESHARED_KEY:-test-openfga-preshared-key}
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    networks:
+      - mcp-test-network
+    restart: "no"  # Run once and exit
 
   # ==============================================================================
   # AUTHENTICATION SERVICES
@@ -723,15 +759,17 @@ services:
     # Enables end-to-end testing of MCP protocol and full user journeys
     # Addresses Bucket 4: E2E MCP journeys missing service dependencies
     #
-    # IMAGE STRATEGY (2025-12-11):
+    # IMAGE STRATEGY (2025-12-13):
     # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest)
     #   Built by .github/workflows/ci.yaml docker-build job (test variant)
     # - Local: Build with `docker compose build mcp-server-test`
+    #   Uses same Dockerfile + target as CI for local/CI parity
     #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest for push
     image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest
     build:
       context: .
-      dockerfile: docker/Dockerfile.test
+      dockerfile: docker/Dockerfile
+      target: final-test
       tags:
         - ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest
         - ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-local
@@ -749,8 +787,8 @@ services:
         condition: service_completed_successfully
       keycloak-test:
         condition: service_healthy
-      openfga-test:
-        condition: service_healthy
+      openfga-seed-test:
+        condition: service_completed_successfully  # Wait for tuples to be seeded
       redis-test:
         condition: service_healthy
       qdrant-test:
@@ -765,6 +803,11 @@ services:
       # Docker networking values (must reference container names)
       # These override values from .env.test because they require compose-level resolution
       # Note: Values below take precedence over .env.test per Docker Compose rules
+      #
+      # TESTING=true: Skip startup validation (matches Dockerfile.test behavior)
+      # This prevents startup validation from blocking the server while dependencies
+      # are being checked. Docker Compose health checks already ensure dependencies.
+      - TESTING=true
       - POSTGRES_HOST=postgres-test
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       - OPENFGA_API_URL=http://openfga-test:8080
@@ -834,6 +877,8 @@ services:
     depends_on:
       grafana-init:
         condition: service_completed_successfully
+      keycloak-test:
+        condition: service_healthy  # Required for OAuth2 SSO
       alloy-test:
         condition: service_healthy
       loki-test:
@@ -868,6 +913,31 @@ services:
       - GF_UNIFIED_ALERTING_ALERTMANAGER_URL=http://mimir:9009/alertmanager
       # Enable Prometheus metrics endpoint for LGTM self-monitoring
       - GF_METRICS_ENABLED=true
+      # ======================================================================
+      # OAuth2/OIDC Configuration (Keycloak SSO - ADR-0068)
+      # ======================================================================
+      # Native Grafana OAuth2 replaces traefik-forward-auth for dashboard access
+      # Users authenticate via Keycloak, roles mapped from JWT claims
+      - GF_AUTH_GENERIC_OAUTH_ENABLED=true
+      - GF_AUTH_GENERIC_OAUTH_NAME=Keycloak
+      - GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP=true
+      - GF_AUTH_GENERIC_OAUTH_CLIENT_ID=grafana
+      - GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=test-grafana-secret
+      - GF_AUTH_GENERIC_OAUTH_SCOPES=openid email profile roles
+      # Auth URL uses localhost (browser-accessible) for redirect
+      - GF_AUTH_GENERIC_OAUTH_AUTH_URL=http://localhost/authn/realms/default/protocol/openid-connect/auth
+      # Token/API URLs use internal Docker hostname (server-to-server)
+      - GF_AUTH_GENERIC_OAUTH_TOKEN_URL=http://keycloak-test:8080/authn/realms/default/protocol/openid-connect/token
+      - GF_AUTH_GENERIC_OAUTH_API_URL=http://keycloak-test:8080/authn/realms/default/protocol/openid-connect/userinfo
+      # Role mapping: admin realm role -> Grafana Admin, otherwise Viewer
+      - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(realm_access.roles[*], 'admin') && 'Admin' || 'Viewer'
+      - GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_PATH=email
+      - GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH=preferred_username
+      - GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH=name
+      # Auto-login redirects unauthenticated users to Keycloak
+      - GF_AUTH_OAUTH_AUTO_LOGIN=true
+      # Disable other auth methods to enforce SSO
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
     volumes:
       - grafana-data:/var/lib/grafana  # Named volume prevents SQLite locking issues
       - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
@@ -895,15 +965,15 @@ services:
           - grafana
     labels:
       - "traefik.enable=true"
-      # Route: /dashboards/* -> grafana:3000 (Unified Dashboards) [PROTECTED]
+      # Route: /dashboards/* -> grafana:3000 (Unified Dashboards)
       # Grafana handles subpath via GF_SERVER_SERVE_FROM_SUB_PATH
-      # Authentication via forward-auth middleware (ADR-0054)
+      # Authentication: Native OAuth2 with Keycloak (ADR-0068)
+      # NOTE: No forward-auth middleware - Grafana handles OAuth2 natively
       - "traefik.http.routers.grafana.rule=PathPrefix(`/dashboards`)"
       - "traefik.http.routers.grafana.entrypoints=web"
       # Priority 11 to take precedence over qdrant-dashboard (PathPrefix /dashboard)
       # since /dashboards starts with /dashboard
       - "traefik.http.routers.grafana.priority=11"
-      - "traefik.http.routers.grafana.middlewares=forward-auth@docker"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
       # NO strip - Grafana configured for /dashboards subpath
 
@@ -1250,8 +1320,8 @@ services:
         condition: service_healthy
       keycloak-test:
         condition: service_healthy
-      openfga-test:
-        condition: service_healthy
+      openfga-seed-test:
+        condition: service_completed_successfully  # Wait for tuples to be seeded
       alloy-test:
         condition: service_started  # Alloy healthcheck can be flaky due to Loki timestamp rejections
     ports:
@@ -1328,8 +1398,8 @@ services:
         condition: service_healthy
       keycloak-test:
         condition: service_healthy
-      openfga-test:
-        condition: service_healthy
+      openfga-seed-test:
+        condition: service_completed_successfully  # Wait for tuples to be seeded
       redis-test:
         condition: service_healthy
       alloy-test:
@@ -1388,6 +1458,74 @@ services:
       - "traefik.http.routers.studio-chat.service=playground"
       - "traefik.http.middlewares.studio-chat-strip.stripprefix.prefixes=/studio/chat"
       - "traefik.http.routers.studio-chat.middlewares=studio-chat-strip"
+
+  # ==============================================================================
+  # OPENFGA PLAYGROUND AUTH PROXY (ADR-0068)
+  # ==============================================================================
+  # Protects OpenFGA Playground with Keycloak + OpenFGA authorization
+  # Users must have 'admin' permission on 'authz:playground' to access
+  #
+  # Authentication flow:
+  # 1. User accesses /playground with JWT token
+  # 2. authz-proxy validates JWT via Keycloak JWKS
+  # 3. authz-proxy checks OpenFGA for admin permission
+  # 4. If authorized, request is proxied to OpenFGA Playground
+
+  authz-proxy-test:
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-authz-proxy:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.authz-proxy
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-authz-proxy:latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-authz-proxy:local
+    depends_on:
+      keycloak-test:
+        condition: service_healthy
+      openfga-seed-test:
+        condition: service_completed_successfully  # Wait for tuples to be seeded
+    ports:
+      - "9004:8003"  # Auth proxy port (offset +1001 from internal port)
+    env_file:
+      - .env.test
+    environment:
+      # Docker networking values
+      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
+      - OPENFGA_API_URL=http://openfga-test:8080
+      - OPENFGA_PRESHARED_KEY=${OPENFGA_PRESHARED_KEY:-test-openfga-preshared-key}
+      - OPENFGA_PLAYGROUND_URL=http://openfga-test:3000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
+      - OTEL_SERVICE_NAME=authz-proxy-test
+      - LOG_FORMAT=json
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/api/authz-proxy/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    init: true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
+    networks:
+      mcp-test-network:
+        aliases:
+          - authz-proxy
+    labels:
+      - "traefik.enable=true"
+      # Route: /playground/* -> authz-proxy:8003 -> OpenFGA Playground
+      # Replaces direct access with authenticated+authorized proxy
+      - "traefik.http.routers.openfga-playground.rule=PathPrefix(`/playground`)"
+      - "traefik.http.routers.openfga-playground.entrypoints=web"
+      - "traefik.http.routers.openfga-playground.priority=12"
+      - "traefik.http.services.openfga-playground.loadbalancer.server.port=8003"
+      - "traefik.http.middlewares.openfga-playground-strip.stripprefix.prefixes=/playground"
+      - "traefik.http.routers.openfga-playground.middlewares=openfga-playground-strip"
+      # NOTE: No forward-auth - authz-proxy handles JWT validation and OpenFGA permission checks
 
 networks:
   mcp-test-network:
