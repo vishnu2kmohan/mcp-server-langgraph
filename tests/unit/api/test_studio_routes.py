@@ -52,11 +52,14 @@ def client(mock_current_user: dict[str, Any]) -> TestClient:
     Creates a fresh FastAPI app with studio router and auth override for each test.
     This ensures proper isolation in pytest-xdist parallel execution.
 
-    CRITICAL: Must override both bearer_scheme AND get_current_user to prevent
-    singleton pollution between xdist workers. See tests/PYTEST_XDIST_BEST_PRACTICES.md
+    Uses middleware to set request.state.user, which get_current_user checks first.
+    This approach is more reliable than dependency overrides for xdist isolation.
     """
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.requests import Request
+    from starlette.responses import Response
+
     from mcp_server_langgraph.api.studio import WorkflowService, router as studio_router
-    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
 
     # Clear in-memory storage before each test
     WorkflowService._workflows.clear()
@@ -65,25 +68,22 @@ def client(mock_current_user: dict[str, Any]) -> TestClient:
     # Create fresh app for this test
     app = FastAPI()
 
-    # Override authentication dependencies BEFORE including router
-    # CRITICAL: Must override bearer_scheme to prevent singleton pollution
-    app.dependency_overrides[bearer_scheme] = lambda: None
+    # Add middleware that sets request.state.user BEFORE any request processing
+    # This bypasses the authentication dependency entirely
+    class MockAuthMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request: Request, call_next: Any) -> Response:
+            # Set user in request state - get_current_user checks this first
+            request.state.user = mock_current_user
+            return await call_next(request)
 
-    # Override get_current_user with async function
-    async def mock_get_current_user() -> dict[str, Any]:
-        return mock_current_user
+    app.add_middleware(MockAuthMiddleware)
 
-    app.dependency_overrides[get_current_user] = mock_get_current_user
-
-    # Include router AFTER setting overrides
+    # Include router
     app.include_router(studio_router)
 
     # Use context manager for proper cleanup
     with TestClient(app) as test_client:
         yield test_client
-
-    # Clean up dependency overrides
-    app.dependency_overrides.clear()
 
 
 @pytest.mark.unit
