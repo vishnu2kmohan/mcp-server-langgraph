@@ -37,6 +37,16 @@ export function SaveAsWorkflowButton({ sessionId, disabled = false }: SaveAsWork
     }
   }, [success]);
 
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const handleSaveAsWorkflow = async () => {
     if (disabled || isLoading) return;
 

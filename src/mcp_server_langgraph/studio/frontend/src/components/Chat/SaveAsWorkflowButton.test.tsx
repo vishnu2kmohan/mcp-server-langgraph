@@ -10,8 +10,8 @@
  * - Error handling
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { SaveAsWorkflowButton } from './SaveAsWorkflowButton';
 
 // Mock fetch
@@ -20,6 +20,7 @@ global.fetch = vi.fn();
 describe('SaveAsWorkflowButton', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers(); // Ensure real timers are used by default
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({
@@ -27,6 +28,10 @@ describe('SaveAsWorkflowButton', () => {
         name: 'My Workflow'
       }),
     });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers(); // Clean up timers after each test
   });
 
   describe('Rendering', () => {
@@ -151,17 +156,20 @@ describe('SaveAsWorkflowButton', () => {
 
       render(<SaveAsWorkflowButton sessionId="session-123" />);
 
-      fireEvent.click(screen.getByRole('button'));
-
-      await waitFor(() => {
-        expect(screen.getByText(/Workflow Created/i)).toBeInTheDocument();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button'));
+        // Let the fetch promise resolve
+        await Promise.resolve();
+        await Promise.resolve();
       });
 
-      vi.advanceTimersByTime(5000);
+      expect(screen.getByText(/Workflow Created/i)).toBeInTheDocument();
 
-      await waitFor(() => {
-        expect(screen.queryByText(/Workflow Created/i)).not.toBeInTheDocument();
+      await act(async () => {
+        vi.advanceTimersByTime(5000);
       });
+
+      expect(screen.queryByText(/Workflow Created/i)).not.toBeInTheDocument();
 
       vi.useRealTimers();
     });
@@ -177,10 +185,12 @@ describe('SaveAsWorkflowButton', () => {
 
       render(<SaveAsWorkflowButton sessionId="session-123" />);
 
-      fireEvent.click(screen.getByRole('button'));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button'));
+      });
 
       await waitFor(() => {
-        expect(screen.getByText(/Failed/i)).toBeInTheDocument();
+        expect(screen.getByText(/Failed to Create Workflow/i)).toBeInTheDocument();
       });
     });
 
@@ -192,7 +202,9 @@ describe('SaveAsWorkflowButton', () => {
 
       render(<SaveAsWorkflowButton sessionId="session-123" />);
 
-      fireEvent.click(screen.getByRole('button'));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button'));
+      });
 
       await waitFor(() => {
         expect(screen.getByText(/Custom error message/i)).toBeInTheDocument();
@@ -208,7 +220,9 @@ describe('SaveAsWorkflowButton', () => {
       render(<SaveAsWorkflowButton sessionId="session-123" />);
 
       const button = screen.getByRole('button');
-      fireEvent.click(button);
+      await act(async () => {
+        fireEvent.click(button);
+      });
 
       await waitFor(() => {
         expect(button).not.toBeDisabled();
@@ -234,14 +248,18 @@ describe('SaveAsWorkflowButton', () => {
       render(<SaveAsWorkflowButton sessionId="session-123" />);
 
       // First click fails
-      fireEvent.click(screen.getByRole('button'));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button'));
+      });
 
       await waitFor(() => {
-        expect(screen.getByText(/Failed/i)).toBeInTheDocument();
+        expect(screen.getByText(/Failed to Create Workflow/i)).toBeInTheDocument();
       });
 
       // Second click succeeds
-      fireEvent.click(screen.getByRole('button'));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button'));
+      });
 
       await waitFor(() => {
         expect(screen.getByText(/Workflow Created/i)).toBeInTheDocument();
@@ -255,7 +273,9 @@ describe('SaveAsWorkflowButton', () => {
 
       render(<SaveAsWorkflowButton sessionId="session-123" />);
 
-      fireEvent.click(screen.getByRole('button'));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button'));
+      });
 
       await waitFor(() => {
         expect(screen.getByText(/Network error/i)).toBeInTheDocument();

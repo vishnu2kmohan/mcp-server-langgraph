@@ -72,7 +72,7 @@ export function CostPage() {
       }
 
       const modelData: CostByModel = await modelResponse.json();
-      setModelCosts(modelData.models);
+      setModelCosts(modelData.models || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load cost data');
     } finally {

@@ -81,9 +81,9 @@ describe('ObservabilityPage', () => {
 
       fireEvent.click(screen.getByText('Logs'));
 
-      // Should show logs content
+      // Should show logs coming soon content
       await waitFor(() => {
-        expect(screen.getByText('Session started')).toBeInTheDocument();
+        expect(screen.getByText('Logs Coming Soon')).toBeInTheDocument();
       }, { timeout: 1000 });
     });
   });
@@ -161,7 +161,7 @@ describe('ObservabilityPage', () => {
   });
 
   describe('Logs Tab', () => {
-    it('should display coming soon badge for logs', async () => {
+    it('should display coming soon message for logs', async () => {
       render(<ObservabilityPage />);
 
       await waitFor(() => {
@@ -171,13 +171,13 @@ describe('ObservabilityPage', () => {
       fireEvent.click(screen.getByText('Logs'));
 
       await waitFor(() => {
-        expect(screen.getByText(/Coming Soon/i)).toBeInTheDocument();
+        expect(screen.getByText('Logs Coming Soon')).toBeInTheDocument();
       }, { timeout: 1000 });
     });
   });
 
   describe('Metrics Tab', () => {
-    it('should display coming soon badge for metrics', async () => {
+    it('should display coming soon message for metrics', async () => {
       render(<ObservabilityPage />);
 
       await waitFor(() => {
@@ -187,7 +187,7 @@ describe('ObservabilityPage', () => {
       fireEvent.click(screen.getByText('Metrics'));
 
       await waitFor(() => {
-        expect(screen.getByText(/Coming Soon/i)).toBeInTheDocument();
+        expect(screen.getByText('Metrics Coming Soon')).toBeInTheDocument();
       }, { timeout: 1000 });
     });
   });

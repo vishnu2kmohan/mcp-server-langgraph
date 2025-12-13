@@ -224,19 +224,34 @@ describe('CostPage', () => {
 
     it('should retry fetching data when retry button is clicked', async () => {
       let callCount = 0;
-      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url: string) => {
         callCount++;
+        // First call fails
         if (callCount === 1) {
           return Promise.resolve({ ok: false, statusText: 'Error' });
         }
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            total_cost: 125.50,
-            total_tokens: 500000,
-            period: 'week',
-          }),
-        });
+        // Subsequent calls succeed with proper API responses
+        if (url.includes('/api/v1/cost/summary')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({
+              total_cost: 125.50,
+              total_tokens: 500000,
+              period: 'week',
+            }),
+          });
+        }
+        if (url.includes('/api/v1/cost/by-model')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({
+              models: [
+                { model: 'gpt-4', cost: 75.00, tokens: 200000 },
+              ],
+            }),
+          });
+        }
+        return Promise.resolve({ ok: false });
       });
 
       render(<CostPage />);

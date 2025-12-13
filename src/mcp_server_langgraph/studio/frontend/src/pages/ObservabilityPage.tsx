@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Activity, FileText, BarChart3, RefreshCw, Filter, Clock } from 'lucide-react';
+import { Activity, FileText, BarChart3, RefreshCw, Clock } from 'lucide-react';
 
 type ObservabilityTab = 'traces' | 'logs' | 'metrics';
 
