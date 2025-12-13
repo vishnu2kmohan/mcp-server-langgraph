@@ -611,6 +611,9 @@ module = [
     "cachetools.*",
     "redis.*",  # redis 6.x inline types are incomplete (from_url untyped, generic params issues)
     "google.cloud.*",  # GCP libraries lack py.typed marker
+    "hvac.*",  # HashiCorp Vault client lacks type stubs
+    "boto3.*",  # AWS SDK lacks py.typed marker
+    "azure.*",  # Azure SDK lacks py.typed marker
 ]
 ignore_missing_imports = true
 # Disable additional strict checks for third-party libraries
