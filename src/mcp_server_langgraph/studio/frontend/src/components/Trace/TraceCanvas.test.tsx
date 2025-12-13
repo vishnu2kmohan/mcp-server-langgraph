@@ -11,30 +11,17 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { TraceCanvas } from './TraceCanvas';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { ReactFlowProvider } from 'reactflow';
+import * as useTraceWebSocketModule from '../../hooks/useTraceWebSocket';
+import * as useTraceToReactFlowModule from '../../hooks/useTraceToReactFlow';
 
 // Mock the hooks
-vi.mock('../../hooks/useTraceWebSocket', () => ({
-  useTraceWebSocket: vi.fn(() => ({
-    spans: [],
-    events: [],
-    isConnected: false,
-    connect: vi.fn(),
-    disconnect: vi.fn(),
-    clearTraces: vi.fn(),
-  })),
-}));
-
-vi.mock('../../hooks/useTraceToReactFlow', () => ({
-  useTraceToReactFlow: vi.fn(() => ({
-    nodes: [],
-    edges: [],
-  })),
-}));
+vi.mock('../../hooks/useTraceWebSocket');
+vi.mock('../../hooks/useTraceToReactFlow');
 
 // Mock ResizeObserver
 class ResizeObserverMock {
@@ -62,15 +49,25 @@ const renderWithProviders = (component: React.ReactNode) => {
   );
 };
 
-describe('TraceCanvas', () => {
-  let mockUseTraceWebSocket: ReturnType<typeof vi.fn>;
-  let mockUseTraceToReactFlow: ReturnType<typeof vi.fn>;
+// Type-safe mock references
+const mockUseTraceWebSocket = vi.mocked(useTraceWebSocketModule.useTraceWebSocket);
+const mockUseTraceToReactFlow = vi.mocked(useTraceToReactFlowModule.useTraceToReactFlow);
 
-  beforeEach(async () => {
-    const webSocketModule = await import('../../hooks/useTraceWebSocket');
-    const reactFlowModule = await import('../../hooks/useTraceToReactFlow');
-    mockUseTraceWebSocket = webSocketModule.useTraceWebSocket as ReturnType<typeof vi.fn>;
-    mockUseTraceToReactFlow = reactFlowModule.useTraceToReactFlow as ReturnType<typeof vi.fn>;
+describe('TraceCanvas', () => {
+  beforeEach(() => {
+    // Set default mock return values
+    mockUseTraceWebSocket.mockReturnValue({
+      spans: [],
+      events: [],
+      isConnected: false,
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      clearTraces: vi.fn(),
+    });
+    mockUseTraceToReactFlow.mockReturnValue({
+      nodes: [],
+      edges: [],
+    });
   });
 
   afterEach(() => {

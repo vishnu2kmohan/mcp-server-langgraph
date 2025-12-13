@@ -142,6 +142,20 @@ Execute Python code securely with comprehensive validation and sandboxing:
 
 **See**: [Implementation Summary](docs-internal/code-execution-implementation-summary.md) | [Anthropic MCP Guide](https://www.anthropic.com/engineering/code-execution-with-mcp)
 
+### 🔗 Unified API v1 (NEW)
+
+Consolidated Backend-for-Frontend (BFF) architecture under `/api/v1/*`:
+
+- **12 Routers**: Workflows, Sessions, Chat, Cost, Observability, Features, Templates, Admin, Vectors, MCP WebSocket
+- **Cursor-Based Pagination**: Stable pagination with RFC 5988 Link headers
+- **PostgreSQL Full-Text Search**: Fast search across workflows, sessions, templates
+- **Rate Limit Headers**: X-RateLimit-* headers on all responses
+- **UI Feature Flags**: Role-based feature visibility (7 configurable flags)
+- **Real-time Trace Visualization**: React Flow-based agent trace canvas
+- **Workflow Bootstrap**: Create workflows from chat session traces
+
+**See**: [API Migration Guide](docs/guides/api-migration-guide.md) | [CHANGELOG](CHANGELOG.md#unreleased)
+
 ### 🎯 Core Capabilities
 - **Multi-LLM Support**: 100+ providers via LiteLLM (Anthropic, OpenAI, Google, Azure, Bedrock, Ollama) + open-source models (Llama, Qwen, Mistral)
 - **MCP Protocol**: Standard stdio & StreamableHTTP transports for AI agent exposure

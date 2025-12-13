@@ -42,7 +42,7 @@ def _gateway_available() -> bool:
 
         # Check if auth is enforced on ALL protected routes
         # All routes must return 302/307/401/403 (not 200) for auth to be fully configured
-        protected_routes = ["/mcp/", "/build/", "/chat/", "/dashboards/", "/playground"]
+        protected_routes = ["/mcp/", "/build/", "/chat/", "/dashboards/", "/playground", "/vectors/", "/dashboard/"]
         for route in protected_routes:
             route_response = requests.get(
                 f"http://localhost{route}",
@@ -160,6 +160,8 @@ class TestProtectedRoutes:
             "/chat/",  # Interactive Playground
             "/dashboards/",  # Grafana
             "/playground",  # OpenFGA Playground
+            "/vectors/",  # Qdrant Vector Database API
+            "/dashboard/",  # Qdrant Dashboard
         ],
     )
     def test_protected_route_requires_auth(self, protected_route: str):

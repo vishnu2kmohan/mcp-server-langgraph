@@ -27,10 +27,10 @@
 # GATEWAY ROUTES (via Traefik on port 80):
 #   /_oauth           - OAuth callback (traefik-forward-auth)
 #   /mcp              - MCP Server API [protected]
-#   /studio/workflows - Visual Workflow Builder [protected] (NEW)
-#   /studio/chat      - Interactive Playground [protected] (NEW)
-#   /build            - Legacy route -> /studio/workflows [protected]
-#   /chat             - Legacy route -> /studio/chat [protected]
+#   /studio/*         - Unified Studio Frontend [protected]
+#                       - /studio/workflows - Visual Workflow Builder
+#                       - /studio/chat      - Interactive Chat
+#                       - /studio/sessions  - Session Management
 #   /authn            - Keycloak (Authentication) [public]
 #   /authz            - OpenFGA API [protected]
 #   /playground       - OpenFGA Playground UI [protected]
@@ -739,7 +739,8 @@ services:
       - "traefik.http.routers.qdrant.priority=10"
       - "traefik.http.services.qdrant.loadbalancer.server.port=6333"
       - "traefik.http.middlewares.qdrant-strip.stripprefix.prefixes=/vectors"
-      - "traefik.http.routers.qdrant.middlewares=qdrant-strip"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.qdrant.middlewares=forward-auth@docker,qdrant-strip"
       # Route: /dashboard/* -> qdrant:6333/dashboard/* (Qdrant Web UI)
       # Qdrant dashboard uses hardcoded absolute paths (/dashboard/*) for assets.
       # Access via http://localhost/dashboard or http://localhost/vectors/dashboard
@@ -748,6 +749,8 @@ services:
       - "traefik.http.routers.qdrant-dashboard.entrypoints=web"
       - "traefik.http.routers.qdrant-dashboard.priority=10"
       - "traefik.http.routers.qdrant-dashboard.service=qdrant"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.qdrant-dashboard.middlewares=forward-auth@docker"
 
   # ==============================================================================
   # MCP SERVER (for E2E tests)
@@ -850,6 +853,16 @@ services:
       - "traefik.http.middlewares.mcp-strip.stripprefix.prefixes=/mcp"
       # Authentication via forward-auth middleware (ADR-0054)
       - "traefik.http.routers.mcp-api.middlewares=forward-auth@docker,mcp-strip"
+      # Route: /studio/* -> mcp-server:8000/studio/* (Unified Studio Frontend)
+      # SPA routing handled by SPAStaticFiles in FastAPI (fallback to index.html)
+      # Frontend served from src/mcp_server_langgraph/studio/frontend/dist
+      - "traefik.http.routers.studio.rule=PathPrefix(`/studio`)"
+      - "traefik.http.routers.studio.entrypoints=web"
+      - "traefik.http.routers.studio.priority=10"
+      - "traefik.http.routers.studio.service=mcp-api"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.studio.middlewares=forward-auth@docker"
+      # NO strip - FastAPI serves /studio/* directly
 
   # ==============================================================================
   # OBSERVABILITY SERVICES (Grafana LGTM Stack)
@@ -892,7 +905,8 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
+      # Allow OAuth users to be auto-provisioned (required for SSO)
+      - GF_USERS_ALLOW_SIGN_UP=true
       # Subpath configuration for gateway routing
       - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/dashboards/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
@@ -934,6 +948,11 @@ services:
       - GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_PATH=email
       - GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH=preferred_username
       - GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH=name
+      # Fix for "user not found" error during OAuth user sync (Grafana issue #79836)
+      # This allows Grafana to look up users by email without strict verification
+      - GF_AUTH_OAUTH_ALLOW_INSECURE_EMAIL_LOOKUP=true
+      # Use PKCE for enhanced OAuth2 security
+      - GF_AUTH_GENERIC_OAUTH_USE_PKCE=true
       # Auto-login redirects unauthenticated users to Keycloak
       - GF_AUTH_OAUTH_AUTO_LOGIN=true
       # Disable other auth methods to enforce SSO
@@ -1297,167 +1316,29 @@ services:
       - "traefik.http.routers.alloy.middlewares=forward-auth@docker,alloy-strip"
 
   # ==============================================================================
-  # VISUAL WORKFLOW BUILDER
+  # VISUAL WORKFLOW BUILDER - DEPRECATED (2025-12-13)
   # ==============================================================================
-  # Unified builder service (API + React frontend via SPAStaticFiles)
-  # Auth: Keycloak + OpenFGA (same as mcp-server-test)
-
-  builder-test:
-    # IMAGE STRATEGY (2025-12-11):
-    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest)
-    #   Built by .github/workflows/build-builder-image.yaml
-    # - Local: Build with `docker compose build builder-test`
-    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest for push
-    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.builder
-      tags:
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:latest
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-builder:local
-    depends_on:
-      mcp-server-test:
-        condition: service_healthy
-      keycloak-test:
-        condition: service_healthy
-      openfga-seed-test:
-        condition: service_completed_successfully  # Wait for tuples to be seeded
-      alloy-test:
-        condition: service_started  # Alloy healthcheck can be flaky due to Loki timestamp rejections
-    ports:
-      - "9001:8001"  # Test port (offset +1000 from dev port 8001)
-    # 12-Factor: Config from .env.test file (checked into git)
-    env_file:
-      - .env.test
-    environment:
-      # Docker networking values and service-specific overrides
-      - BASE_PATH=/build
-      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
-      - OPENFGA_API_URL=http://openfga-test:8080
-      - MCP_SERVER_URL=http://mcp-server-test:8000
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
-      - OTEL_SERVICE_NAME=mcp-builder-test
-      - LOG_FORMAT=json
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/api/builder/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    init: true  # Proper process cleanup for Python app
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 256M
-    networks:
-      mcp-test-network:
-        aliases:
-          - builder
-    labels:
-      - "traefik.enable=true"
-      # Route: /build/* -> builder:8001 (Visual Workflow Builder) [LEGACY - redirects to /studio/workflows]
-      - "traefik.http.routers.builder.rule=PathPrefix(`/build`)"
-      - "traefik.http.routers.builder.entrypoints=web"
-      - "traefik.http.routers.builder.priority=10"
-      - "traefik.http.services.builder.loadbalancer.server.port=8001"
-      - "traefik.http.middlewares.builder-strip.stripprefix.prefixes=/build"
-      # Authentication via forward-auth middleware (ADR-0054)
-      - "traefik.http.routers.builder.middlewares=forward-auth@docker,builder-strip"
-      # Route: /studio/workflows/* -> builder:8001 (New unified Studio route)
-      - "traefik.http.routers.studio-workflows.rule=PathPrefix(`/studio/workflows`)"
-      - "traefik.http.routers.studio-workflows.entrypoints=web"
-      - "traefik.http.routers.studio-workflows.priority=11"
-      - "traefik.http.routers.studio-workflows.service=builder"
-      - "traefik.http.middlewares.studio-workflows-strip.stripprefix.prefixes=/studio/workflows"
-      - "traefik.http.routers.studio-workflows.middlewares=forward-auth@docker,studio-workflows-strip"
+  # NOTE: Builder service has been consolidated into the unified Studio frontend.
+  # The builder/frontend directory and Dockerfile.builder have been removed.
+  # Workflow functionality is now available at:
+  #   - /api/v1/workflows/* - Unified API endpoints
+  #   - /studio/* - Studio frontend (React + Redux Toolkit)
+  #
+  # See: docs/guides/api-migration-guide.md for migration details
+  # See: CHANGELOG.md [Unreleased] for full consolidation details
 
   # ==============================================================================
-  # INTERACTIVE PLAYGROUND
+  # INTERACTIVE PLAYGROUND - DEPRECATED (2025-12-13)
   # ==============================================================================
-  # Interactive testing environment with in-context observability
-  # Auth: Keycloak + OpenFGA (same as mcp-server-test)
-
-  playground-test:
-    # IMAGE STRATEGY (2025-12-11):
-    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest)
-    #   Built by .github/workflows/build-playground-image.yaml
-    # - Local: Build with `docker compose build playground-test`
-    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest for push
-    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.playground
-      tags:
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:latest
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-playground:local
-    depends_on:
-      mcp-server-test:
-        condition: service_healthy
-      keycloak-test:
-        condition: service_healthy
-      openfga-seed-test:
-        condition: service_completed_successfully  # Wait for tuples to be seeded
-      redis-test:
-        condition: service_healthy
-      alloy-test:
-        condition: service_started  # Alloy healthcheck can be flaky due to Loki timestamp rejections
-    ports:
-      - "9002:8002"  # Test port (offset +1000 from dev port 8002)
-    # 12-Factor: Config from .env.test file (checked into git)
-    env_file:
-      - .env.test
-    environment:
-      # Docker networking values and service-specific overrides
-      - BASE_PATH=/chat
-      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
-      - OPENFGA_API_URL=http://openfga-test:8080
-      - MCP_SERVER_URL=http://mcp-server-test:8000
-      # Session storage (Redis DB 2 for playground sessions - different from mcp-server)
-      - REDIS_URL=redis://redis-test:6379/2
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
-      - OTEL_SERVICE_NAME=mcp-playground-test
-      - LOG_FORMAT=json
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/api/playground/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    init: true  # Proper process cleanup for Python app
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 256M
-    networks:
-      mcp-test-network:
-        aliases:
-          - playground
-    labels:
-      - "traefik.enable=true"
-      # Route: /chat/* -> playground:8002 (Interactive Playground) [LEGACY - redirects to /studio/chat]
-      # NOTE: Using /chat instead of /play to avoid confusion with OpenFGA /playground
-      # WebSocket support is automatic in Traefik
-      - "traefik.http.routers.playground.rule=PathPrefix(`/chat`)"
-      - "traefik.http.routers.playground.entrypoints=web"
-      - "traefik.http.routers.playground.priority=10"
-      - "traefik.http.services.playground.loadbalancer.server.port=8002"
-      - "traefik.http.middlewares.playground-strip.stripprefix.prefixes=/chat"
-      # NOTE: Playground has its own auth integration (login form + Keycloak),
-      # so we don't use forward-auth here. forward-auth is for apps without auth.
-      - "traefik.http.routers.playground.middlewares=playground-strip"
-      # Route: /studio/chat/* -> playground:8002 (New unified Studio route)
-      - "traefik.http.routers.studio-chat.rule=PathPrefix(`/studio/chat`)"
-      - "traefik.http.routers.studio-chat.entrypoints=web"
-      - "traefik.http.routers.studio-chat.priority=11"
-      - "traefik.http.routers.studio-chat.service=playground"
-      - "traefik.http.middlewares.studio-chat-strip.stripprefix.prefixes=/studio/chat"
-      - "traefik.http.routers.studio-chat.middlewares=studio-chat-strip"
+  # NOTE: Playground service has been consolidated into the unified Studio frontend.
+  # The playground/frontend directory and Dockerfile.playground have been removed.
+  # Session/chat functionality is now available at:
+  #   - /api/v1/sessions/* - Unified API endpoints
+  #   - /api/v1/chat/* - Chat API with streaming
+  #   - /studio/* - Studio frontend (React + Redux Toolkit)
+  #
+  # See: docs/guides/api-migration-guide.md for migration details
+  # See: CHANGELOG.md [Unreleased] for full consolidation details
 
   # ==============================================================================
   # OPENFGA PLAYGROUND AUTH PROXY (ADR-0068)

@@ -34,12 +34,13 @@ pytestmark = [
 
 
 def _keycloak_available() -> bool:
-    """Check if Keycloak is available."""
+    """Check if Keycloak is available via gateway."""
     try:
         import requests
 
+        # Use gateway URL (port 80) with /authn prefix - consistent with integration tests
         response = requests.get(
-            "http://localhost:9082/authn/realms/default/.well-known/openid-configuration",
+            "http://localhost/authn/realms/default/.well-known/openid-configuration",
             timeout=5,
         )
         return response.status_code == 200
@@ -52,8 +53,9 @@ def _openfga_available() -> bool:
     try:
         import requests
 
+        # OpenFGA uses /healthz for health checks (not /health)
         response = requests.get(
-            "http://localhost:9080/health",
+            "http://localhost:9080/healthz",
             timeout=5,
         )
         return response.status_code == 200
@@ -65,8 +67,8 @@ def _openfga_available() -> bool:
 if not _keycloak_available() or not _openfga_available():
     pytestmark.append(pytest.mark.skip(reason="Auth infrastructure not available for E2E tests"))
 
-# URLs and credentials
-KEYCLOAK_URL = os.getenv("KEYCLOAK_SERVER_URL", "http://localhost:9082/authn")
+# URLs and credentials - use gateway URLs consistent with integration tests
+KEYCLOAK_URL = os.getenv("KEYCLOAK_SERVER_URL", "http://localhost/authn")
 OPENFGA_URL = os.getenv("OPENFGA_URL", "http://localhost:9080")
 OPENFGA_PRESHARED_KEY = os.getenv("OPENFGA_PRESHARED_KEY", "test-openfga-preshared-key")
 

@@ -9,7 +9,7 @@
  * - Type safety
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { store, RootState, AppDispatch } from './index';
 import { api } from '../api';
 
@@ -42,7 +42,7 @@ describe('Redux Store', () => {
       const state = store.getState();
       expect(state.ui).toBeDefined();
       expect(state.ui.sidebarOpen).toBe(true);
-      expect(state.ui.theme).toBe('light');
+      expect(state.ui.theme).toBe('system');
       expect(state.ui.notifications).toEqual([]);
     });
 

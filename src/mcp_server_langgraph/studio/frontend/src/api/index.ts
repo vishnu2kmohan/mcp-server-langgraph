@@ -145,7 +145,7 @@ export const api = createApi({
 
     getWorkflow: builder.query<Workflow, string>({
       query: (id) => `/workflows/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Workflow', id }],
+      providesTags: (_result, _error, id) => [{ type: 'Workflow', id }],
     }),
 
     createWorkflow: builder.mutation<
@@ -169,7 +169,7 @@ export const api = createApi({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: (result, error, { id }) => [
+      invalidatesTags: (_result, _error, { id }) => [
         { type: 'Workflow', id },
         { type: 'Workflow', id: 'LIST' },
       ],
@@ -180,7 +180,7 @@ export const api = createApi({
         url: `/workflows/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, id) => [
+      invalidatesTags: (_result, _error, id) => [
         { type: 'Workflow', id },
         { type: 'Workflow', id: 'LIST' },
       ],
@@ -209,7 +209,7 @@ export const api = createApi({
 
     getSession: builder.query<Session, string>({
       query: (id) => `/sessions/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Session', id }],
+      providesTags: (_result, _error, id) => [{ type: 'Session', id }],
     }),
 
     createSession: builder.mutation<
@@ -229,7 +229,7 @@ export const api = createApi({
         url: `/sessions/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, id) => [
+      invalidatesTags: (_result, _error, id) => [
         { type: 'Session', id },
         { type: 'Session', id: 'LIST' },
       ],
@@ -238,7 +238,7 @@ export const api = createApi({
     // Messages
     getSessionMessages: builder.query<Message[], string>({
       query: (sessionId) => `/sessions/${sessionId}/messages`,
-      providesTags: (result, error, sessionId) => [
+      providesTags: (_result, _error, sessionId) => [
         { type: 'Message', id: `SESSION-${sessionId}` },
       ],
     }),
@@ -290,7 +290,7 @@ export const api = createApi({
 
     getTrace: builder.query<TraceSpan, string>({
       query: (id) => `/observability/traces/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Trace', id }],
+      providesTags: (_result, _error, id) => [{ type: 'Trace', id }],
     }),
   }),
 });

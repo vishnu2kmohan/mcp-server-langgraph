@@ -532,42 +532,38 @@ test-loki-logs:
 	@echo "Showing Loki and Alloy logs..."
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml logs -f loki-test alloy-test
 
-test-builder-up:
-	@echo "Starting builder service (unified API + React frontend)..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d builder-test
-	@echo "✓ Builder started"
+test-studio-up:  ## Start unified Studio frontend (replaces builder/playground)
+	@echo "Starting unified Studio frontend..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d mcp-server-test
+	@echo "✓ Studio started"
 	@echo ""
-	@echo "Builder Service:"
-	@echo "  API + Frontend: http://localhost:9001"
-	@echo "  Health:         http://localhost:9001/api/builder/health"
-	@echo "  API Docs:       http://localhost:9001/docs"
+	@echo "Unified Studio:"
+	@echo "  Frontend:  http://localhost/studio (via Traefik gateway)"
+	@echo "  API:       http://localhost:8000"
+	@echo "  Health:    http://localhost:8000/health/live"
+	@echo "  API Docs:  http://localhost:8000/docs"
 	@echo ""
 
-test-builder-down:
-	@echo "Stopping builder service..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml stop builder-test
-	@echo "✓ Builder stopped"
+test-studio-down:  ## Stop unified Studio frontend
+	@echo "Stopping unified Studio frontend..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml stop mcp-server-test
+	@echo "✓ Studio stopped"
 
-test-playground-up:
-	@echo "Starting playground service (with in-context observability)..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d playground-test
-	@echo "✓ Playground started"
-	@echo ""
-	@echo "Playground Service:"
-	@echo "  API + WebSocket: http://localhost:9002"
-	@echo "  Health:          http://localhost:9002/api/playground/health"
-	@echo "  API Docs:        http://localhost:9002/docs"
-	@echo ""
-	@echo "In-Context Observability:"
-	@echo "  Traces:    http://localhost:9002/api/playground/observability/traces"
-	@echo "  Logs:      http://localhost:9002/api/playground/observability/logs"
-	@echo "  Metrics:   http://localhost:9002/api/playground/observability/metrics"
-	@echo "  Alerts:    http://localhost:9002/api/playground/observability/alerts"
+# DEPRECATED: Use test-studio-up instead
+test-builder-up: test-studio-up
+	@echo "⚠️  DEPRECATED: test-builder-up is deprecated. Use 'make test-studio-up' instead."
 
-test-playground-down:
-	@echo "Stopping playground service..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml stop playground-test
-	@echo "✓ Playground stopped"
+# DEPRECATED: Use test-studio-down instead
+test-builder-down: test-studio-down
+	@echo "⚠️  DEPRECATED: test-builder-down is deprecated. Use 'make test-studio-down' instead."
+
+# DEPRECATED: Use test-studio-up instead
+test-playground-up: test-studio-up
+	@echo "⚠️  DEPRECATED: test-playground-up is deprecated. Use 'make test-studio-up' instead."
+
+# DEPRECATED: Use test-studio-down instead
+test-playground-down: test-studio-down
+	@echo "⚠️  DEPRECATED: test-playground-down is deprecated. Use 'make test-studio-down' instead."
 
 test-e2e:
 	@echo "Running end-to-end tests (parallel execution, requires test infrastructure)..."

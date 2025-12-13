@@ -28,12 +28,12 @@ pytestmark = [
 def _openfga_available() -> bool:
     """Check if OpenFGA is available."""
     try:
-        # Try without auth first - if preshared key is not configured, this will work
+        # OpenFGA uses /healthz for health checks (not /health)
         response = requests.get(
-            "http://localhost:9080/health",
+            "http://localhost:9080/healthz",
             timeout=5,
         )
-        return response.status_code in [200, 401]
+        return response.status_code == 200
     except Exception:
         return False
 
@@ -130,9 +130,10 @@ class TestOpenFGAHealthEndpoint:
         THEN: Should return 200 OK (health endpoints should be public)
 
         Note: Health endpoints must be accessible for K8s probes
+        Note: OpenFGA uses /healthz (not /health) for health checks
         """
         response = requests.get(
-            f"{OPENFGA_URL}/health",
+            f"{OPENFGA_URL}/healthz",
             timeout=10,
         )
 

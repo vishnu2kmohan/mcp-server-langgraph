@@ -33,8 +33,9 @@ pytestmark = [
 def _openfga_available() -> bool:
     """Check if OpenFGA is available and seeded."""
     try:
+        # OpenFGA uses /healthz for health checks (not /health)
         response = requests.get(
-            "http://localhost:9080/health",
+            "http://localhost:9080/healthz",
             timeout=5,
         )
         return response.status_code == 200

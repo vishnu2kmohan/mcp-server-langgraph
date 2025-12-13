@@ -32,6 +32,26 @@ pytestmark = [
 ]
 
 
+def _e2e_infrastructure_available() -> bool:
+    """Check if E2E infrastructure is available."""
+    try:
+        import requests
+
+        # Check Keycloak via gateway
+        keycloak_response = requests.get(
+            "http://localhost/authn/realms/default/.well-known/openid-configuration",
+            timeout=5,
+        )
+        return keycloak_response.status_code == 200
+    except Exception:
+        return False
+
+
+# Skip at module level if infrastructure not available
+if not _e2e_infrastructure_available():
+    pytestmark.append(pytest.mark.skip(reason="E2E infrastructure not available"))
+
+
 @pytest.mark.xdist_group(name="test_alice_power_user")
 class TestAlicePowerUserJourney:
     """
@@ -50,11 +70,11 @@ class TestAlicePowerUserJourney:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_01_power_user_login_and_feature_discovery(
         self,
         e2e_keycloak_base_url: str,
         e2e_api_base_url: str,
+        alice_credentials: dict,
     ) -> None:
         """
         Step 1: Alice logs in and discovers premium features.
@@ -82,14 +102,16 @@ class TestAlicePowerUserJourney:
                     f"{e2e_keycloak_base_url}/realms/default/protocol/openid-connect/token",
                     data={
                         "grant_type": "password",
-                        "client_id": "mcp-server",
-                        "username": "alice",
-                        "password": "alice123",
+                        "client_id": alice_credentials.get("client_id", "mcp-server"),
+                        "client_secret": alice_credentials.get("client_secret", ""),
+                        "username": alice_credentials["username"],
+                        "password": alice_credentials["password"],
+                        "scope": "openid email profile",
                     },
                     timeout=5.0,
                 )
 
-                assert login_resp.status_code == 200
+                assert login_resp.status_code == 200, f"Login failed: {login_resp.status_code}"
                 token_data = login_resp.json()
                 access_token = token_data["access_token"]
 
@@ -122,7 +144,6 @@ class TestAlicePowerUserJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_02_create_complex_workflow(
         self,
         e2e_api_base_url: str,
@@ -204,7 +225,6 @@ class TestAlicePowerUserJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_03_multi_session_orchestration(
         self,
         e2e_api_base_url: str,
@@ -284,7 +304,6 @@ class TestAlicePowerUserJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_04_trace_visualization_access(
         self,
         e2e_api_base_url: str,
@@ -340,7 +359,6 @@ class TestAlicePowerUserJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_05_cost_monitoring_and_optimization(
         self,
         e2e_api_base_url: str,
@@ -398,7 +416,6 @@ class TestAlicePowerUserJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_06_workflow_sharing_collaboration(
         self,
         e2e_api_base_url: str,
@@ -453,7 +470,6 @@ class TestAlicePowerUserJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_07_advanced_chat_with_tools(
         self,
         e2e_api_base_url: str,
@@ -518,7 +534,6 @@ class TestAlicePowerUserJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_08_complete_power_user_workflow(
         self,
         e2e_api_base_url: str,

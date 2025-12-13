@@ -34,6 +34,27 @@
 # ==============================================================================
 
 ARG PYTHON_VERSION=3.12
+ARG NODE_VERSION=22
+
+# ==============================================================================
+# STAGE: frontend-builder
+# Build the Studio frontend (React + Vite)
+# ==============================================================================
+FROM node:${NODE_VERSION}-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+
+# Copy package files first for better layer caching
+COPY src/mcp_server_langgraph/studio/frontend/package*.json ./
+
+# Install dependencies
+RUN npm ci --frozen-lockfile
+
+# Copy source code
+COPY src/mcp_server_langgraph/studio/frontend/ ./
+
+# Build the application (outputs to dist/)
+RUN npm run build
 
 # ==============================================================================
 # STAGE: base-builder
@@ -193,6 +214,10 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Note: pyproject.toml not needed at runtime - version is read via importlib.metadata
 COPY --chown=1001:0 src/ ./src/
 
+# Copy built frontend from frontend-builder stage
+# SPAStaticFiles in server_streamable.py serves from studio/frontend/dist
+COPY --from=frontend-builder --chown=1001:0 /app/frontend/dist ./src/mcp_server_langgraph/studio/frontend/dist
+
 # Drop privileges - use numeric UID for OpenShift compatibility
 # Note: --chown=1001:0 already sets correct ownership, no need for recursive chmod
 USER 1001
@@ -225,6 +250,10 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Note: pyproject.toml not needed at runtime - version is read via importlib.metadata
 COPY --chown=1001:0 src/ ./src/
 
+# Copy built frontend from frontend-builder stage
+# SPAStaticFiles in server_streamable.py serves from studio/frontend/dist
+COPY --from=frontend-builder --chown=1001:0 /app/frontend/dist ./src/mcp_server_langgraph/studio/frontend/dist
+
 # Drop privileges - use numeric UID for OpenShift compatibility
 # Note: --chown=1001:0 already sets correct ownership, no need for recursive chmod
 USER 1001
@@ -255,6 +284,10 @@ COPY --from=build-test --chown=1001:0 /app/.venv /app/.venv
 # Note: pyproject.toml not needed at runtime - version is read via importlib.metadata
 COPY --chown=1001:0 src/ ./src/
 COPY --chown=1001:0 tests/ ./tests/
+
+# Copy built frontend from frontend-builder stage
+# SPAStaticFiles in server_streamable.py serves from studio/frontend/dist
+COPY --from=frontend-builder --chown=1001:0 /app/frontend/dist ./src/mcp_server_langgraph/studio/frontend/dist
 
 # Copy additional directories required by tests
 # NOTE: Per ADR-0053, scripts/ and deployments/ are NOT copied to the Docker image.

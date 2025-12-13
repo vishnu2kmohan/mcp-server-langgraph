@@ -20,16 +20,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from mcp_server_langgraph.api import (
-    api_keys_router,
-    gdpr_router,
-    health_router,
-    scim_router,
-    service_principals_router,
-    studio_router,
-)
-from mcp_server_langgraph.api.v1 import v1_router
 from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
+from mcp_server_langgraph.api.router_registry import get_router_registry, reset_router_registry
+from mcp_server_langgraph.api.routers import register_default_routers
 from mcp_server_langgraph.api.error_handlers import register_exception_handlers
 from mcp_server_langgraph.api.health import run_startup_validation_async
 from mcp_server_langgraph.auth.factory import create_user_provider
@@ -142,16 +135,12 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
     # Register exception handlers
     register_exception_handlers(app)
 
-    # Include API routers
-    app.include_router(health_router)  # Health check first (doesn't require auth)
-    app.include_router(api_keys_router)
-    app.include_router(service_principals_router)
-    app.include_router(gdpr_router)
-    app.include_router(scim_router)
-    app.include_router(studio_router)
-
-    # Unified v1 API (BFF architecture)
-    app.include_router(v1_router, prefix="/api/v1")
+    # Include API routers via RouterRegistry (OCP pattern)
+    # Reset registry for clean state (important for tests with multiple app creations)
+    reset_router_registry()
+    registry = get_router_registry()
+    register_default_routers(registry)
+    registry.mount_all(app)
 
     try:
         logger.info("FastAPI application created with all routers mounted")

@@ -6,44 +6,61 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+interface FeatureFlags {
+  enableWorkflowsFeature?: boolean;
+  enableSessionsFeature?: boolean;
+  enableCostDashboard?: boolean;
+  enableCostDashboardUsers?: boolean;
+  enableObservabilityUI?: boolean;
+  enableCodeExport?: boolean;
+  enableAISuggestions?: boolean;
+  enableMCPWebsocket?: boolean;
+}
+
 interface FeatureFlagsState {
-  enableWorkflowsFeature: boolean;
-  enableSessionsFeature: boolean;
-  enableCostDashboard: boolean;
-  enableCostDashboardUsers: boolean;
-  enableObservabilityUI: boolean;
-  enableCodeExport: boolean;
-  enableAISuggestions: boolean;
-  enableMCPWebsocket: boolean;
-  loaded: boolean;
+  flags: FeatureFlags;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: FeatureFlagsState = {
-  enableWorkflowsFeature: true,
-  enableSessionsFeature: true,
-  enableCostDashboard: true,
-  enableCostDashboardUsers: false,
-  enableObservabilityUI: true,
-  enableCodeExport: true,
-  enableAISuggestions: true,
-  enableMCPWebsocket: false,
-  loaded: false,
+  flags: {},
+  isLoading: false,
+  error: null,
 };
 
 export const featureFlagsSlice = createSlice({
   name: 'featureFlags',
   initialState,
   reducers: {
-    setFeatureFlags: (
-      state,
-      action: PayloadAction<Partial<Omit<FeatureFlagsState, 'loaded'>>>
-    ) => {
-      return { ...state, ...action.payload, loaded: true };
+    setFeatureFlagsLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+    setFeatureFlags: (state, action: PayloadAction<FeatureFlags>) => {
+      state.flags = { ...state.flags, ...action.payload };
+      state.isLoading = false;
+    },
+    setFeatureFlagsError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload;
+      state.isLoading = false;
     },
     resetFeatureFlags: () => initialState,
   },
 });
 
-export const { setFeatureFlags, resetFeatureFlags } = featureFlagsSlice.actions;
+export const {
+  setFeatureFlagsLoading,
+  setFeatureFlags,
+  setFeatureFlagsError,
+  resetFeatureFlags,
+} = featureFlagsSlice.actions;
+
+// Selectors
+export const selectFeatureFlags = (state: { featureFlags: FeatureFlagsState }) =>
+  state.featureFlags.flags;
+export const selectFeatureFlagsLoading = (state: { featureFlags: FeatureFlagsState }) =>
+  state.featureFlags.isLoading;
+export const selectFeatureFlag = (flagName: keyof FeatureFlags) => (state: { featureFlags: FeatureFlagsState }) =>
+  state.featureFlags.flags[flagName] ?? false;
 
 export default featureFlagsSlice.reducer;

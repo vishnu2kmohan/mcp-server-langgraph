@@ -15,256 +15,323 @@ import pytest
 import pytest_asyncio
 
 
+# OpenFGA configuration constants
+OPENFGA_URL = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
+OPENFGA_PRESHARED_KEY = os.getenv("OPENFGA_PRESHARED_KEY", "test-openfga-preshared-key")
+OPENFGA_TEST_STORE_NAME = "mcp-server-langgraph-test"
+
+
+def _get_openfga_store_and_model() -> tuple[str | None, str | None]:
+    """
+    Dynamically discover OpenFGA store and model IDs.
+
+    Queries the OpenFGA API to find the test store and its latest authorization model.
+    This avoids the need for environment variables that are only available inside Docker.
+
+    Returns:
+        Tuple of (store_id, model_id) or (None, None) if not found
+    """
+    import requests
+
+    headers = {
+        "Authorization": f"Bearer {OPENFGA_PRESHARED_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    # Find the test store
+    try:
+        stores_resp = requests.get(f"{OPENFGA_URL}/stores", headers=headers, timeout=10)
+        if stores_resp.status_code != 200:
+            return None, None
+
+        stores = stores_resp.json().get("stores", [])
+        store_id = None
+        for store in stores:
+            if store.get("name") == OPENFGA_TEST_STORE_NAME:
+                store_id = store.get("id")
+                break
+
+        if not store_id:
+            return None, None
+
+        # Get the latest authorization model
+        models_resp = requests.get(
+            f"{OPENFGA_URL}/stores/{store_id}/authorization-models",
+            headers=headers,
+            timeout=10,
+        )
+        if models_resp.status_code != 200:
+            return store_id, None
+
+        models = models_resp.json().get("authorization_models", [])
+        if not models:
+            return store_id, None
+
+        model_id = models[0].get("id")
+        return store_id, model_id
+
+    except Exception:
+        return None, None
+
+
 @pytest_asyncio.fixture
 async def openfga_seeded_tuples(test_infrastructure):
     """
-    Seed OpenFGA with authorization tuples for E2E tests.
+    Provide access to pre-seeded OpenFGA tuples for E2E tests.
 
-    This fixture creates the necessary authorization relationships
-    for user 'alice' to execute agent_chat and other MCP tools.
+    This fixture verifies that the pre-seeded tuples from docker-compose
+    (config/openfga/sample-tuples.json) exist for alice.
 
-    Tuples created:
-    - user:alice executor tool:agent_chat
-    - user:alice executor tool:conversation_get
-    - user:alice executor tool:conversation_search
-    - user:alice viewer conversation:* (pattern)
+    Pre-seeded tuples (from sample-tuples.json):
+    - user:alice executor tool:chat
+    - user:alice member organization:acme
+    - user:alice admin organization:acme
+    - user:alice owner conversation:thread_1
+    - user:alice viewer vector_store:default
+    - user:alice viewer authz:playground
 
     Yields:
-        dict: Mapping of created tuples for test assertions
-
-    Cleanup:
-        Deletes all created tuples after test completes
+        dict: Mapping of pre-seeded tuples for test assertions
     """
     if not test_infrastructure["ready"]:
         pytest.skip("E2E infrastructure not ready")
 
     from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
 
-    # Get OpenFGA connection from environment (set by openfga_client_real fixture)
-    api_url = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
-    store_id = os.getenv("OPENFGA_STORE_ID")
-    model_id = os.getenv("OPENFGA_MODEL_ID")
+    # Dynamically discover OpenFGA store and model IDs
+    store_id, model_id = _get_openfga_store_and_model()
 
     if not store_id or not model_id:
-        pytest.skip("OpenFGA store not initialized (OPENFGA_STORE_ID not set)")
+        pytest.skip("OpenFGA store not initialized (store not found)")
 
-    config = OpenFGAConfig(api_url=api_url, store_id=store_id, model_id=model_id)
+    config = OpenFGAConfig(
+        api_url=OPENFGA_URL,
+        store_id=store_id,
+        model_id=model_id,
+        preshared_key=OPENFGA_PRESHARED_KEY,
+    )
     client = OpenFGAClient(config=config)
 
-    # Define tuples for alice user
-    # Note: 'alice' is the username in keycloak-test-realm.json
-    tuples_to_create = [
-        {"user": "user:alice", "relation": "executor", "object": "tool:agent_chat"},
-        {"user": "user:alice", "relation": "executor", "object": "tool:conversation_get"},
-        {"user": "user:alice", "relation": "executor", "object": "tool:conversation_search"},
-        {"user": "user:alice", "relation": "executor", "object": "tool:search_tools"},
-    ]
-
-    # Write tuples to OpenFGA
+    # Verify pre-seeded tuple exists (alice can execute tool:chat)
     try:
-        await client.write_tuples(tuples_to_create)
+        can_execute = await client.check(
+            user="user:alice",
+            relation="executor",
+            obj="tool:chat",
+        )
+        if not can_execute:
+            pytest.skip("Pre-seeded OpenFGA tuples not found (alice cannot execute tool:chat)")
     except Exception as e:
-        pytest.skip(f"Failed to seed OpenFGA tuples: {e}")
+        await client.close()
+        pytest.skip(f"Failed to verify OpenFGA tuples: {e}")
 
     yield {
-        "tuples": tuples_to_create,
+        "tuples": [
+            {"user": "user:alice", "relation": "executor", "object": "tool:chat"},
+            {"user": "user:alice", "relation": "member", "object": "organization:acme"},
+            {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
+        ],
         "user": "user:alice",
-        "tools": ["agent_chat", "conversation_get", "conversation_search", "search_tools"],
+        "tools": ["chat"],  # Pre-seeded tool
     }
 
-    # Cleanup: Delete created tuples and close client
-    try:
-        await client.delete_tuples(tuples_to_create)
-    except Exception:
-        # Cleanup failure is non-critical - tuples will be orphaned but won't affect other tests
-        pass
-    finally:
-        # Close the OpenFGA client to prevent "Unclosed client session" warnings
-        await client.close()
+    # No cleanup needed - we didn't create any tuples
+    await client.close()
 
 
 @pytest_asyncio.fixture
 async def openfga_admin_tuples(test_infrastructure):
     """
-    Seed OpenFGA with admin-level authorization tuples for E2E tests.
+    Provide access to pre-seeded admin-level OpenFGA tuples for E2E tests.
 
-    Creates tuples that allow alice to manage service principals and API keys.
+    This fixture verifies that the pre-seeded tuples from docker-compose
+    exist for alice as admin on organization:acme.
 
-    Tuples created:
-    - user:alice admin organization:default
-    - organization:default#admin can_manage service_principal:*
+    Pre-seeded tuples (from sample-tuples.json):
+    - user:alice admin organization:acme
 
     Yields:
-        dict: Mapping of created admin tuples
-
-    Cleanup:
-        Deletes all created tuples after test completes
+        dict: Mapping of pre-seeded admin tuples
     """
     if not test_infrastructure["ready"]:
         pytest.skip("E2E infrastructure not ready")
 
     from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
 
-    api_url = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
-    store_id = os.getenv("OPENFGA_STORE_ID")
-    model_id = os.getenv("OPENFGA_MODEL_ID")
+    # Dynamically discover OpenFGA store and model IDs
+    store_id, model_id = _get_openfga_store_and_model()
 
     if not store_id or not model_id:
-        pytest.skip("OpenFGA store not initialized")
+        pytest.skip("OpenFGA store not initialized (store not found)")
 
-    config = OpenFGAConfig(api_url=api_url, store_id=store_id, model_id=model_id)
+    config = OpenFGAConfig(
+        api_url=OPENFGA_URL,
+        store_id=store_id,
+        model_id=model_id,
+        preshared_key=OPENFGA_PRESHARED_KEY,
+    )
     client = OpenFGAClient(config=config)
 
-    # Define admin tuples for alice
-    tuples_to_create = [
-        {"user": "user:alice", "relation": "admin", "object": "organization:default"},
-    ]
-
+    # Verify pre-seeded tuple exists (alice is admin on organization:acme)
     try:
-        await client.write_tuples(tuples_to_create)
+        is_admin = await client.check(
+            user="user:alice",
+            relation="admin",
+            obj="organization:acme",
+        )
+        if not is_admin:
+            pytest.skip("Pre-seeded OpenFGA tuples not found (alice is not admin)")
     except Exception as e:
-        pytest.skip(f"Failed to seed admin OpenFGA tuples: {e}")
+        await client.close()
+        pytest.skip(f"Failed to verify admin OpenFGA tuples: {e}")
 
     yield {
-        "tuples": tuples_to_create,
+        "tuples": [
+            {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
+        ],
         "user": "user:alice",
         "is_admin": True,
     }
 
-    # Cleanup: Delete created tuples and close client
-    try:
-        await client.delete_tuples(tuples_to_create)
-    except Exception:
-        pass
-    finally:
-        # Close the OpenFGA client to prevent "Unclosed client session" warnings
-        await client.close()
+    # No cleanup needed - we didn't create any tuples
+    await client.close()
 
 
 @pytest_asyncio.fixture
 async def openfga_bob_tuples(test_infrastructure):
     """
-    Seed OpenFGA with authorization tuples for bob user (standard tier).
+    Provide access to pre-seeded OpenFGA tuples for bob user (standard tier).
 
-    Creates tuples that allow bob to execute basic tools but with
-    limited permissions compared to alice (premium tier).
+    This fixture verifies that the pre-seeded tuples from docker-compose
+    exist for bob with limited permissions compared to alice.
 
-    Tuples created:
-    - user:bob executor tool:agent_chat
-    - user:bob executor tool:conversation_get
-    - user:bob viewer tool:search_tools (read-only)
+    Pre-seeded tuples (from sample-tuples.json):
+    - user:bob executor tool:chat
     - user:bob member organization:acme
+    - user:bob viewer conversation:thread_1
+    - user:bob assignee role:standard
+    - user:bob viewer vector_store:default
 
     Yields:
-        dict: Mapping of created tuples for test assertions
-
-    Cleanup:
-        Deletes all created tuples after test completes
+        dict: Mapping of pre-seeded tuples for test assertions
     """
     if not test_infrastructure["ready"]:
         pytest.skip("E2E infrastructure not ready")
 
     from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
 
-    api_url = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
-    store_id = os.getenv("OPENFGA_STORE_ID")
-    model_id = os.getenv("OPENFGA_MODEL_ID")
+    # Dynamically discover OpenFGA store and model IDs
+    store_id, model_id = _get_openfga_store_and_model()
 
     if not store_id or not model_id:
-        pytest.skip("OpenFGA store not initialized (OPENFGA_STORE_ID not set)")
+        pytest.skip("OpenFGA store not initialized (store not found)")
 
-    config = OpenFGAConfig(api_url=api_url, store_id=store_id, model_id=model_id)
+    config = OpenFGAConfig(
+        api_url=OPENFGA_URL,
+        store_id=store_id,
+        model_id=model_id,
+        preshared_key=OPENFGA_PRESHARED_KEY,
+    )
     client = OpenFGAClient(config=config)
 
-    # Define tuples for bob user (standard tier - limited permissions)
-    tuples_to_create = [
-        {"user": "user:bob", "relation": "executor", "object": "tool:agent_chat"},
-        {"user": "user:bob", "relation": "executor", "object": "tool:conversation_get"},
-        {"user": "user:bob", "relation": "viewer", "object": "tool:search_tools"},
-        {"user": "user:bob", "relation": "member", "object": "organization:acme"},
-    ]
-
+    # Verify pre-seeded tuple exists (bob is member of organization:acme)
     try:
-        await client.write_tuples(tuples_to_create)
+        is_member = await client.check(
+            user="user:bob",
+            relation="member",
+            obj="organization:acme",
+        )
+        if not is_member:
+            pytest.skip("Pre-seeded OpenFGA tuples not found (bob is not member)")
     except Exception as e:
-        pytest.skip(f"Failed to seed bob OpenFGA tuples: {e}")
+        await client.close()
+        pytest.skip(f"Failed to verify bob OpenFGA tuples: {e}")
 
     yield {
-        "tuples": tuples_to_create,
+        "tuples": [
+            {"user": "user:bob", "relation": "executor", "object": "tool:chat"},
+            {"user": "user:bob", "relation": "member", "object": "organization:acme"},
+        ],
         "user": "user:bob",
         "tier": "standard",
-        "tools": ["agent_chat", "conversation_get"],
-        "read_only_tools": ["search_tools"],
+        "tools": ["chat"],  # Pre-seeded tool
     }
 
-    # Cleanup
-    try:
-        await client.delete_tuples(tuples_to_create)
-    except Exception:
-        pass
-    finally:
-        await client.close()
+    # No cleanup needed - we didn't create any tuples
+    await client.close()
 
 
 @pytest_asyncio.fixture
 async def openfga_cross_user_tuples(test_infrastructure):
     """
-    Seed OpenFGA with tuples for testing cross-user access scenarios.
+    Provide access to pre-seeded tuples for testing cross-user access scenarios.
 
-    Creates tuples that allow:
-    - alice to share a workflow with bob (viewer access)
-    - bob cannot edit alice's workflow
-    - admin can access all resources
+    This fixture verifies that the pre-seeded tuples from docker-compose
+    exist for cross-user access testing.
 
-    Tuples created:
-    - user:bob viewer workflow:shared-workflow-1
-    - user:alice owner workflow:shared-workflow-1
+    Pre-seeded tuples (from sample-tuples.json):
+    - user:alice owner conversation:thread_1
+    - user:bob viewer conversation:thread_1
+    - user:admin owner conversation:thread_1
     - user:admin admin organization:acme
 
+    NOTE: Uses 'conversation' type since 'workflow' type doesn't exist in OpenFGA model.
+
     Yields:
-        dict: Mapping of created tuples for test assertions
+        dict: Mapping of pre-seeded tuples for test assertions
     """
     if not test_infrastructure["ready"]:
         pytest.skip("E2E infrastructure not ready")
 
     from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
 
-    api_url = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
-    store_id = os.getenv("OPENFGA_STORE_ID")
-    model_id = os.getenv("OPENFGA_MODEL_ID")
+    # Dynamically discover OpenFGA store and model IDs
+    store_id, model_id = _get_openfga_store_and_model()
 
     if not store_id or not model_id:
-        pytest.skip("OpenFGA store not initialized")
+        pytest.skip("OpenFGA store not initialized (store not found)")
 
-    config = OpenFGAConfig(api_url=api_url, store_id=store_id, model_id=model_id)
+    config = OpenFGAConfig(
+        api_url=OPENFGA_URL,
+        store_id=store_id,
+        model_id=model_id,
+        preshared_key=OPENFGA_PRESHARED_KEY,
+    )
     client = OpenFGAClient(config=config)
 
-    tuples_to_create = [
-        {"user": "user:alice", "relation": "owner", "object": "workflow:shared-workflow-1"},
-        {"user": "user:bob", "relation": "viewer", "object": "workflow:shared-workflow-1"},
-        {"user": "user:admin", "relation": "admin", "object": "organization:acme"},
-    ]
-
+    # Verify pre-seeded tuples exist (alice owns thread_1, bob can view thread_1)
     try:
-        await client.write_tuples(tuples_to_create)
+        alice_owns = await client.check(
+            user="user:alice",
+            relation="owner",
+            obj="conversation:thread_1",
+        )
+        bob_can_view = await client.check(
+            user="user:bob",
+            relation="viewer",
+            obj="conversation:thread_1",
+        )
+        if not alice_owns or not bob_can_view:
+            pytest.skip("Pre-seeded cross-user tuples not found")
     except Exception as e:
-        pytest.skip(f"Failed to seed cross-user OpenFGA tuples: {e}")
+        await client.close()
+        pytest.skip(f"Failed to verify cross-user OpenFGA tuples: {e}")
 
     yield {
-        "tuples": tuples_to_create,
-        "shared_workflow_id": "shared-workflow-1",
+        "tuples": [
+            {"user": "user:alice", "relation": "owner", "object": "conversation:thread_1"},
+            {"user": "user:bob", "relation": "viewer", "object": "conversation:thread_1"},
+            {"user": "user:admin", "relation": "admin", "object": "organization:acme"},
+        ],
+        "shared_workflow_id": "thread_1",  # Using conversation type instead of workflow
+        "shared_conversation_id": "thread_1",
         "owner": "user:alice",
         "viewer": "user:bob",
         "admin": "user:admin",
     }
 
-    # Cleanup
-    try:
-        await client.delete_tuples(tuples_to_create)
-    except Exception:
-        pass
-    finally:
-        await client.close()
+    # No cleanup needed - we didn't create any tuples
+    await client.close()
 
 
 @pytest.fixture
@@ -283,9 +350,35 @@ def e2e_keycloak_base_url():
     """
     Get the Keycloak base URL for E2E tests.
 
-    Default: http://localhost:9082/authn
+    Uses gateway URL (port 80) with /authn prefix for consistency with
+    integration tests and production configuration.
+
+    Default: http://localhost/authn
     """
-    return os.getenv("KEYCLOAK_URL", "http://localhost:9082/authn")
+    return os.getenv("KEYCLOAK_URL", "http://localhost/authn")
+
+
+# OAuth2 client configuration for E2E tests
+E2E_CLIENT_ID = "mcp-server"
+E2E_CLIENT_SECRET = "test-client-secret-for-e2e-tests"  # noqa: S105
+
+
+@pytest.fixture
+def alice_credentials():
+    """
+    Get alice's test credentials for E2E tests.
+
+    Returns:
+        dict: Username, password, and OAuth2 client credentials for alice
+    """
+    return {
+        "username": "alice",
+        "password": "alice123",
+        "email": "alice@example.com",
+        "tier": "premium",
+        "client_id": E2E_CLIENT_ID,
+        "client_secret": E2E_CLIENT_SECRET,
+    }
 
 
 @pytest.fixture
@@ -294,13 +387,15 @@ def bob_credentials():
     Get bob's test credentials for E2E tests.
 
     Returns:
-        dict: Username and password for bob
+        dict: Username, password, and OAuth2 client credentials for bob
     """
     return {
         "username": "bob",
         "password": "bob123",
         "email": "bob@example.com",
         "tier": "standard",
+        "client_id": E2E_CLIENT_ID,
+        "client_secret": E2E_CLIENT_SECRET,
     }
 
 
@@ -310,11 +405,13 @@ def admin_credentials():
     Get admin's test credentials for E2E tests.
 
     Returns:
-        dict: Username and password for admin
+        dict: Username, password, and OAuth2 client credentials for admin
     """
     return {
         "username": "admin",
         "password": "admin123",
         "email": "admin@example.com",
         "roles": ["admin"],
+        "client_id": E2E_CLIENT_ID,
+        "client_secret": E2E_CLIENT_SECRET,
     }

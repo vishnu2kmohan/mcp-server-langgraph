@@ -1,0 +1,376 @@
+---
+title: API Migration Guide
+description: Migrate from legacy APIs to the unified API v1 structure
+---
+
+# API Migration Guide: Unified API v1
+
+This guide helps you migrate from the legacy separate APIs (Builder, Playground, Studio, Cost) to the new unified `/api/v1/*` API structure.
+
+## Overview
+
+The MCP Server LangGraph project has consolidated four separate API services into a unified Backend-for-Frontend (BFF) architecture:
+
+| Legacy Service | Legacy Prefix | New Unified Prefix | Description |
+|----------------|---------------|-------------------|-------------|
+| Builder | `/api/builder/*` | `/api/v1/workflows/*` | Workflow CRUD operations |
+| Playground | `/api/playground/*` | `/api/v1/sessions/*` | Session management |
+| Playground | `/api/playground/chat/*` | `/api/v1/chat/*` | Chat operations with streaming |
+| Studio | `/api/v1/studio/*` | `/api/v1/*` | All unified endpoints |
+| Cost | `/api/cost/*` | `/api/v1/cost/*` | Cost tracking and aggregation |
+
+## Why This Migration?
+
+1. **Single Entry Point**: One API port (8000) instead of 4 separate ports
+2. **Consistent Authentication**: Unified Keycloak/JWT auth across all endpoints
+3. **Feature Flags**: Role-based feature visibility via `/api/v1/features`
+4. **Better DX**: Single API client for frontend applications
+5. **Improved Observability**: Centralized tracing and metrics
+
+## Endpoint Mapping
+
+### Workflows (was Builder)
+
+```diff
+- POST   /api/builder/workflows
++ POST   /api/v1/workflows
+
+- GET    /api/builder/workflows
++ GET    /api/v1/workflows
+
+- GET    /api/builder/workflows/{id}
++ GET    /api/v1/workflows/{id}
+
+- PUT    /api/builder/workflows/{id}
++ PUT    /api/v1/workflows/{id}
+
+- DELETE /api/builder/workflows/{id}
++ DELETE /api/v1/workflows/{id}
+
+- POST   /api/builder/workflows/{id}/deploy
++ POST   /api/v1/workflows/{id}/deploy
+
+- GET    /api/builder/templates
++ GET    /api/v1/templates
+```
+
+### Sessions (was Playground)
+
+```diff
+- POST   /api/playground/sessions
++ POST   /api/v1/sessions
+
+- GET    /api/playground/sessions
++ GET    /api/v1/sessions
+
+- GET    /api/playground/sessions/{id}
++ GET    /api/v1/sessions/{id}
+
+- DELETE /api/playground/sessions/{id}
++ DELETE /api/v1/sessions/{id}
+
+# New endpoint - Bootstrap workflow from chat session
++ POST   /api/v1/sessions/{id}/bootstrap-workflow
+```
+
+### Chat
+
+```diff
+- POST   /api/playground/chat
++ POST   /api/v1/chat
+
+- POST   /api/playground/chat/stream
++ POST   /api/v1/chat/stream
+
+- WebSocket /ws/playground/{session_id}
++ WebSocket /api/v1/chat/ws/{session_id}
+```
+
+### Cost Tracking
+
+```diff
+- GET    /api/cost/summary
++ GET    /api/v1/cost/summary
+
+- GET    /api/cost/by-session
++ GET    /api/v1/cost/by-session
+
+- GET    /api/cost/by-model
++ GET    /api/v1/cost/by-model
+
+- GET    /api/cost/by-user
++ GET    /api/v1/cost/by-user
+
+- GET    /api/cost/daily
++ GET    /api/v1/cost/daily
+```
+
+### Observability
+
+```diff
+- GET    /api/observability/traces
++ GET    /api/v1/observability/traces
+
+- GET    /api/observability/logs
++ GET    /api/v1/observability/logs
+
+- GET    /api/observability/metrics
++ GET    /api/v1/observability/metrics
+```
+
+### Feature Flags (New)
+
+```
+GET    /api/v1/features
+```
+
+Returns role-based feature visibility:
+
+```json
+{
+  "enable_workflows_feature": true,
+  "enable_sessions_feature": true,
+  "enable_cost_dashboard": false,
+  "enable_observability_ui": true,
+  "enable_code_export": true,
+  "enable_ai_suggestions": true,
+  "enable_mcp_websocket": false
+}
+```
+
+### MCP WebSocket (New - Experimental)
+
+```
+WebSocket /api/v1/mcp/ws
+```
+
+MCP 2025-11-25 compliant WebSocket with JSON-RPC 2.0:
+- `tools/list`, `tools/call` methods
+- Streaming extensions: `$/streaming/*`
+- Trace extensions: `$/trace/*`
+
+## Pagination Changes
+
+### Legacy (Offset-Based)
+
+```json
+{
+  "items": [...],
+  "total": 100,
+  "page": 1,
+  "page_size": 20
+}
+```
+
+### New (Cursor-Based)
+
+```json
+{
+  "items": [...],
+  "next_cursor": "eyJpZCI6MTAwfQ==",
+  "prev_cursor": null,
+  "has_more": true,
+  "total_count": 100
+}
+```
+
+**Benefits**:
+- Stable pagination during concurrent writes
+- Better performance for large datasets
+- RFC 5988 Link headers for navigation
+
+**Usage**:
+
+```bash
+# First page
+GET /api/v1/workflows?limit=20
+
+# Next page
+GET /api/v1/workflows?cursor=eyJpZCI6MTAwfQ==&limit=20
+```
+
+## New Headers
+
+### Rate Limit Headers
+
+All endpoints now return rate limit information:
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1699459200
+X-RateLimit-Policy: 1000;w=60
+```
+
+### Link Headers (RFC 5988)
+
+Paginated endpoints return navigation links:
+
+```
+Link: </api/v1/workflows?cursor=abc123&limit=20>; rel="next",
+      </api/v1/workflows?limit=20>; rel="first"
+```
+
+## Search Capabilities
+
+### PostgreSQL Full-Text Search
+
+The unified API supports full-text search across workflows, sessions, and templates:
+
+```bash
+# Search workflows
+GET /api/v1/workflows?q=data%20pipeline
+
+# Search sessions
+GET /api/v1/sessions?q=customer%20support
+
+# Search templates
+GET /api/v1/templates?q=langchain
+```
+
+**Features**:
+- Ranking by relevance (ts_rank)
+- Highlighting matches (ts_headline)
+- Stemming and stop words
+- Partial matching with prefix search
+
+## Authentication Changes
+
+### No Changes Required
+
+If you're already using JWT authentication, no changes are needed. The unified API uses the same authentication mechanism.
+
+### Token Format
+
+```
+Authorization: Bearer <jwt_token>
+```
+
+### Keycloak Integration
+
+The unified API supports Keycloak SSO with:
+- OAuth2 authorization code flow
+- OIDC ID tokens
+- Role-based access control
+- Automatic token refresh
+
+## Client SDK Updates
+
+### TypeScript/JavaScript (RTK Query)
+
+```typescript
+// Old - Multiple API clients
+import { builderApi } from './builder-api';
+import { playgroundApi } from './playground-api';
+import { costApi } from './cost-api';
+
+// New - Single unified API
+import { api } from './api';
+
+// Usage
+const { data: workflows } = api.useGetWorkflowsQuery({ limit: 20 });
+const { data: sessions } = api.useGetSessionsQuery({ limit: 20 });
+const { data: costs } = api.useGetCostSummaryQuery();
+```
+
+### Python
+
+```python
+# Old - Multiple base URLs
+builder_client = BuilderClient(base_url="http://localhost:8001")
+playground_client = PlaygroundClient(base_url="http://localhost:8002")
+cost_client = CostClient(base_url="http://localhost:8003")
+
+# New - Single unified client
+from mcp_server_langgraph.client import UnifiedAPIClient
+
+client = UnifiedAPIClient(
+    base_url="http://localhost:8000/api/v1",
+    auth_token=token
+)
+
+workflows = client.workflows.list()
+sessions = client.sessions.list()
+costs = client.cost.summary()
+```
+
+## Deprecation Timeline
+
+| Date | Milestone |
+|------|-----------|
+| **Now** | Unified API v1 available at `/api/v1/*` |
+| **+30 days** | Legacy endpoints return deprecation warning headers |
+| **+60 days** | Legacy endpoints return 410 Gone for new integrations |
+| **+90 days** | Legacy endpoints removed |
+
+### Deprecation Headers
+
+During the deprecation period, legacy endpoints return:
+
+```
+Deprecation: true
+Sunset: Sat, 15 Mar 2026 23:59:59 GMT
+Link: </api/v1/workflows>; rel="successor-version"
+```
+
+## Testing Your Migration
+
+### Health Check
+
+```bash
+# Verify unified API is running
+curl http://localhost:8000/health
+
+# Verify v1 router
+curl http://localhost:8000/api/v1/features
+```
+
+### Integration Tests
+
+```bash
+# Run unified API tests
+uv run pytest tests/e2e/test_unified_api_journey.py -v
+
+# Run all E2E tests
+uv run pytest tests/e2e/ -v
+```
+
+## Troubleshooting
+
+### 404 Not Found
+
+Ensure you're using the new endpoint paths. Check the mapping table above.
+
+### 401 Unauthorized
+
+The unified API uses the same auth as before. Verify your JWT token is valid and not expired.
+
+### 403 Forbidden
+
+Check feature flags. Some features may be disabled for your role:
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/features
+```
+
+### CORS Issues
+
+The unified API has updated CORS configuration. Ensure your origin is allowed:
+
+```python
+# In config
+CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5173"]
+```
+
+## Related Documentation
+
+- [CHANGELOG.md](../../CHANGELOG.md) - Full release notes
+- [ADR-0068: Gateway-Level Authentication](../../adr/adr-0068-gateway-level-authentication.md)
+- [API Reference](../api-reference/) - OpenAPI documentation
+- [Deployment Guide](../deployment/overview.mdx) - Production deployment
+
+## Getting Help
+
+- **GitHub Issues**: [Report bugs or request features](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)
+- **Discussions**: [Ask questions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)
+- **Documentation**: [Full Mintlify docs](https://mcp-server-langgraph.mintlify.app)

@@ -8,6 +8,27 @@ keywords: ["API reference", "playground", "sessions", "chat", "WebSocket", "stre
 contentType: "reference"
 ---
 
+<Warning>
+**Deprecation Notice (2025-12-13)**: The Playground API has been consolidated into the [Unified API v1](/guides/api-migration-guide).
+
+- **Sessions**: `/api/v1/sessions/*` (replaces `/api/playground/sessions/*`)
+- **Chat**: `/api/v1/chat/*` (replaces `/api/playground/chat/*`)
+- **WebSocket**: `/api/v1/chat/ws/{session_id}` (replaces `/ws/playground/{session_id}`)
+- **Migration guide**: See [API Migration Guide](/guides/api-migration-guide) for endpoint mappings
+- **Timeline**: Legacy endpoints will be removed 90 days after deprecation
+
+All new integrations should use the Unified API v1 endpoints.
+</Warning>
+
+<Info>
+**Unified Studio Frontend**: The Playground UI has been consolidated into the Unified Studio at `/studio/*`. Key routes:
+- `/studio/chat` - Chat interface with trace visualization
+- `/studio/sessions` - Session history and management
+- `/studio/observability` - Traces, logs, and metrics dashboard
+
+See the [Playground Guide](/guides/playground) for frontend usage.
+</Info>
+
 ## Overview
 
 The Playground API provides endpoints for managing chat sessions, sending messages, and retrieving observability data. All endpoints (except health) require JWT authentication.

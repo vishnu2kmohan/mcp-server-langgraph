@@ -182,7 +182,7 @@
             ]
           },
           {
-            "group": "Developer Tools",
+            "group": "Unified Studio",
             "pages": [
               "api-reference/playground",
               "api-reference/builder"
@@ -336,7 +336,7 @@
             ]
           },
           {
-            "group": "Developer Tools",
+            "group": "Unified Studio",
             "pages": [
               "guides/visual-workflow-builder",
               "guides/playground"
@@ -365,6 +365,7 @@
             "group": "Migration",
             "pages": [
               "guides/migration-guide",
+              "guides/api-migration-guide",
               "guides/container-migration",
               "guides/uv-migration"
             ]

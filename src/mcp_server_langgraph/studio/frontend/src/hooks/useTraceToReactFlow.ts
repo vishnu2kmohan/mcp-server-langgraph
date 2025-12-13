@@ -63,7 +63,7 @@ export function useTraceToReactFlow(
       queue.push({ spanId: span.spanId, depth: 0, siblingIndex: index });
     });
 
-    let maxSiblingAtDepth = new Map<number, number>();
+    const maxSiblingAtDepth = new Map<number, number>();
 
     while (queue.length > 0) {
       const { spanId, depth, siblingIndex } = queue.shift()!;

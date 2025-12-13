@@ -12,14 +12,14 @@
       }
     ]
   },
-  "description": "Builder workflow monitoring for MCP Server with LangGraph. Tracks code generation, validation, imports, and workflow complexity. Use this dashboard to identify slow code generation, validation failures, and workflow growth patterns.",
+  "description": "⚠️ DEPRECATED (2025-12-13): This dashboard has been consolidated into the Unified API v1 Dashboard. Please migrate to /d/unified-api-v1/unified-api-v1 for workflow monitoring. This dashboard will be removed in a future release. | Original: Builder workflow monitoring for MCP Server with LangGraph.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
   "links": [
+    { "asDropdown": false, "icon": "bolt", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "⚠️ MIGRATE: Unified API v1", "tooltip": "This dashboard is deprecated. Migrate to Unified API v1 Dashboard", "type": "link", "url": "/d/unified-api-v1/unified-api-v1" },
     { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Overview", "tooltip": "View LangGraph Agent Overview", "type": "link", "url": "/d/langgraph-agent-overview/langgraph-agent-overview" },
-    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Playground", "tooltip": "View Playground Dashboard", "type": "link", "url": "/d/playground/playground" },
     { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "LLM Performance", "tooltip": "View LLM Performance Dashboard", "type": "link", "url": "/d/llm-performance/llm-performance" }
   ],
   "liveNow": false,

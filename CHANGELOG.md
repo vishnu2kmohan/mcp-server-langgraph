@@ -7,6 +7,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Unified Studio Frontend** - Consolidated Builder and Playground into single React application:
+  - **Docker Multi-Stage Build**: Added `frontend-builder` stage (Node.js 22) for React/Vite build
+  - **FastAPI SPAStaticFiles**: Unified frontend served from `/studio` via SPAStaticFiles (no nginx required)
+  - **Traefik Gateway Route**: `/studio/*` route with forward-auth authentication middleware
+  - **Vite Configuration**: `base: '/studio/'` for subpath deployment behind gateway
+  - **OpenShift Compatible**: Uses UID 1001:0 for arbitrary UID support
+  - Files: `docker/Dockerfile` (frontend-builder stage), `server_streamable.py` (SPA mount)
+  - Makefile: `test-studio-up`, `test-studio-down` replace deprecated builder/playground targets
+
+- **Unified API v1 Router Structure** - Consolidated Builder, Playground, Studio, and Cost APIs under `/api/v1/*`:
+  - `src/mcp_server_langgraph/api/v1/` - New unified API directory with 12 routers:
+    - `workflows.py` - Workflow CRUD operations (from Builder)
+    - `sessions.py` - Session management (from Playground)
+    - `chat.py` - Chat completion with streaming support
+    - `observability.py` - Traces, logs, and metrics queries
+    - `cost.py` - Cost tracking and aggregation
+    - `features.py` - UI feature flags by role
+    - `vectors.py` - Qdrant vector store operations
+    - `templates.py` - Workflow templates
+    - `admin.py` - Admin operations
+    - `mcp_websocket.py` - MCP 2025-11-25 compliant WebSocket handler
+    - `workflow_bootstrap.py` - Create workflows from chat sessions
+  - Cursor-based pagination (`CursorPaginatedResponse`) for all list endpoints
+  - PostgreSQL full-text search for workflows, sessions, templates
+  - Rate limit headers (X-RateLimit-*) on all responses
+  - RFC 5988 Link headers for pagination
+
+- **Frontend Redux Toolkit + RTK Query** - Migrated Studio frontend to Redux Toolkit:
+  - `src/mcp_server_langgraph/studio/frontend/src/store/` - Redux store with slices:
+    - `authSlice.ts` - Authentication state
+    - `uiSlice.ts` - UI state (sidebar, theme)
+  - `src/mcp_server_langgraph/studio/frontend/src/api/` - RTK Query API clients:
+    - `index.ts` - Unified API with endpoints for workflows, sessions, chat, cost, observability
+  - Vitest test suite for all store and API functionality
+
+- **Real-time Trace Visualization** - React Flow-based trace canvas:
+  - `src/mcp_server_langgraph/studio/frontend/src/components/Trace/` - Trace components:
+    - `TraceCanvas.tsx` - Main canvas with connection controls
+    - `TraceNode.tsx` - Custom node for spans
+    - `TraceEdge.tsx` - Custom edge for span relationships
+  - `src/mcp_server_langgraph/studio/frontend/src/hooks/` - Trace hooks:
+    - `useTraceWebSocket.ts` - WebSocket connection for real-time traces
+    - `useTraceToReactFlow.ts` - Convert OpenTelemetry spans to React Flow nodes/edges
+  - Comprehensive Vitest test suite (27 tests)
+
+- **Workflow Bootstrap from Chat** - Create workflows from chat session traces:
+  - `POST /api/v1/sessions/{id}/bootstrap-workflow` endpoint
+  - `WorkflowBootstrapper` class for extracting steps from session messages
+  - Step selector for choosing which messages to include
+  - 8 unit tests following TDD methodology
+
+- **E2E User Journey Tests with HEART Metrics** - Comprehensive E2E test suite:
+  - `tests/e2e/journeys/test_admin_journey.py` - Admin user journey (8 tests)
+  - `tests/e2e/journeys/test_alice_power_user.py` - Power user journey (8 tests)
+  - `tests/e2e/journeys/test_bob_standard_user.py` - Standard user journey (8 tests)
+  - `tests/e2e/test_unified_api_journey.py` - Unified API journey (7 tests)
+  - HEART metrics framework integration (Happiness, Engagement, Adoption, Retention, Task Success)
+
+- **UI Feature Flags** - Role-based feature visibility:
+  - `enable_workflows_feature` - Workflow builder access
+  - `enable_sessions_feature` - Session/chat access
+  - `enable_cost_dashboard` - Cost dashboard (admin-only by default)
+  - `enable_observability_ui` - Observability dashboard
+  - `enable_code_export` - Code export functionality
+  - `enable_ai_suggestions` - AI-powered suggestions
+  - `enable_mcp_websocket` - Experimental MCP WebSocket
+
+- **Storage Layer Consolidation** - Unified repository pattern:
+  - `src/mcp_server_langgraph/storage/` - New storage directory:
+    - `base.py` - Abstract repository base classes
+    - `models.py` - Unified data models
+    - `postgres/` - PostgreSQL repositories
+    - `redis/` - Redis cache layer
+
+- **OpenFGA Authorization Model Updates** (ADR-0068):
+  - Added `vector_store` type for Qdrant collection access control
+  - Added `authz` type for OpenFGA Playground access
+  - Added `service_principal` type for service account delegation
+  - Sample tuples updated from 10 to 21 for comprehensive testing
+  - Seed script for automated OpenFGA initialization
+
+- **MCP WebSocket Handler** - MCP 2025-11-25 compliant WebSocket:
+  - JSON-RPC 2.0 message handling
+  - `tools/list`, `tools/call` method support
+  - Streaming extensions (`$/streaming/*`)
+  - Trace extensions (`$/trace/*`)
+  - Contract tests for MCP protocol compliance
+
+- **API Best Practices**:
+  - `src/mcp_server_langgraph/api/sorting.py` - Generic sorting utilities
+  - `src/mcp_server_langgraph/api/filtering.py` - Query filtering
+  - `src/mcp_server_langgraph/api/search.py` - Full-text search helpers
+
+- **Grafana OAuth2 Integration Tests** - End-to-end OAuth2 flow validation:
+  - `tests/integration/auth/test_grafana_oauth2.py` - OAuth2 redirect and login tests
+  - Keycloak client registration validation
+  - Role mapping verification (admin -> Admin, user -> Viewer)
+
 ### Fixed
 - **Python 3.11/3.13 CI Failures (PR #121)** - Fixed version-specific dependency issues:
   - **Click 8.3.x** (`pyproject.toml:144`) - Pinned to `<8.3.0` due to internal `_textwrap` module missing on Python 3.11/3.13

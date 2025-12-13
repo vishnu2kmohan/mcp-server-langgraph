@@ -13,14 +13,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useTraceWebSocket } from './useTraceWebSocket';
-import type { TraceSpan, TraceEvent } from './useTraceWebSocket';
 
-// Mock WebSocket
+// Mock WebSocket class
+let mockWebSocketInstances: MockWebSocket[] = [];
+
 class MockWebSocket {
-  static instances: MockWebSocket[] = [];
-
   url: string;
-  readyState: number = WebSocket.CONNECTING;
+  readyState: number = 0; // CONNECTING
+
   onopen: ((event: Event) => void) | null = null;
   onclose: ((event: CloseEvent) => void) | null = null;
   onerror: ((event: Event) => void) | null = null;
@@ -28,15 +28,15 @@ class MockWebSocket {
 
   constructor(url: string) {
     this.url = url;
-    MockWebSocket.instances.push(this);
+    mockWebSocketInstances.push(this);
   }
 
-  send(data: string): void {
+  send(_data: string): void {
     // Mock send
   }
 
   close(): void {
-    this.readyState = WebSocket.CLOSED;
+    this.readyState = 3; // CLOSED
     if (this.onclose) {
       this.onclose(new CloseEvent('close'));
     }
@@ -51,7 +51,7 @@ class MockWebSocket {
 
   // Helper to simulate connection open
   simulateOpen(): void {
-    this.readyState = WebSocket.OPEN;
+    this.readyState = 1; // OPEN
     if (this.onopen) {
       this.onopen(new Event('open'));
     }
@@ -63,16 +63,39 @@ class MockWebSocket {
       this.onerror(new Event('error'));
     }
   }
+
+  // Static constants
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
 }
+
+// Store original WebSocket
+const OriginalWebSocket = globalThis.WebSocket;
 
 describe('useTraceWebSocket', () => {
   beforeEach(() => {
-    MockWebSocket.instances = [];
-    vi.stubGlobal('WebSocket', MockWebSocket);
+    mockWebSocketInstances = [];
+
+    // Replace global WebSocket
+    globalThis.WebSocket = MockWebSocket as unknown as typeof WebSocket;
+
+    // Mock window.location
+    Object.defineProperty(window, 'location', {
+      value: {
+        protocol: 'http:',
+        host: 'localhost:3000',
+      },
+      writable: true,
+      configurable: true,
+    });
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    // Restore original WebSocket
+    globalThis.WebSocket = OriginalWebSocket;
+    vi.restoreAllMocks();
   });
 
   describe('Initial State', () => {
@@ -121,7 +144,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      expect(MockWebSocket.instances.length).toBe(1);
+      expect(mockWebSocketInstances.length).toBe(1);
     });
 
     it('should use default URL when not provided', () => {
@@ -131,7 +154,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
       expect(ws.url).toContain('/api/v1/mcp/ws');
     });
 
@@ -142,7 +165,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
       expect(ws.url).toContain('/custom/ws');
     });
 
@@ -153,7 +176,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
       expect(ws.url).toContain('test-session');
     });
 
@@ -164,7 +187,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
 
       act(() => {
         ws.simulateOpen();
@@ -178,7 +201,7 @@ describe('useTraceWebSocket', () => {
     it('should auto-connect when autoConnect is true', () => {
       renderHook(() => useTraceWebSocket({ autoConnect: true }));
 
-      expect(MockWebSocket.instances.length).toBe(1);
+      expect(mockWebSocketInstances.length).toBe(1);
     });
   });
 
@@ -190,7 +213,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
 
       act(() => {
         ws.simulateOpen();
@@ -200,7 +223,7 @@ describe('useTraceWebSocket', () => {
         result.current.disconnect();
       });
 
-      expect(ws.readyState).toBe(WebSocket.CLOSED);
+      expect(ws.readyState).toBe(3); // CLOSED
     });
 
     it('should set isConnected to false on disconnect', async () => {
@@ -210,7 +233,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
 
       act(() => {
         ws.simulateOpen();
@@ -238,7 +261,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
 
       act(() => {
         ws.simulateOpen();
@@ -274,7 +297,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
 
       act(() => {
         ws.simulateOpen();
@@ -325,7 +348,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
 
       act(() => {
         ws.simulateOpen();
@@ -378,7 +401,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
 
       act(() => {
         ws.simulateOpen();
@@ -413,7 +436,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
 
       act(() => {
         ws.simulateOpen();
@@ -467,7 +490,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
 
       act(() => {
         ws.simulateOpen();
@@ -497,7 +520,7 @@ describe('useTraceWebSocket', () => {
         result.current.connect();
       });
 
-      const ws = MockWebSocket.instances[0];
+      const ws = mockWebSocketInstances[0];
 
       act(() => {
         ws.simulateOpen();

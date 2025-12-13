@@ -5,7 +5,7 @@
  * Connects to the MCP WebSocket for live updates.
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -55,7 +55,7 @@ export function TraceCanvas({
   const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
   // Update nodes and edges when spans change
-  useMemo(() => {
+  useEffect(() => {
     setNodes(flowNodes);
     setEdges(flowEdges);
   }, [flowNodes, flowEdges, setNodes, setEdges]);

@@ -15,6 +15,7 @@ import re
 from typing import Any
 
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.auth.resource_registry import ResourceTypeRegistry
 from mcp_server_langgraph.auth.user_provider import UserProvider
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
@@ -38,6 +39,7 @@ class AuthorizationService:
         settings: Any | None = None,
         user_provider: UserProvider | None = None,
         users_db: dict[str, dict[str, Any]] | None = None,
+        resource_registry: ResourceTypeRegistry | None = None,
     ):
         """
         Initialize AuthorizationService.
@@ -47,11 +49,13 @@ class AuthorizationService:
             settings: Application settings (for fallback control)
             user_provider: User provider for fallback user lookups
             users_db: In-memory users database (for InMemoryUserProvider fallback)
+            resource_registry: Resource type registry for validation (OCP pattern)
         """
         self.openfga = openfga_client
         self.settings = settings
         self.user_provider = user_provider
         self.users_db = users_db or {}
+        self.resource_registry = resource_registry
 
     async def authorize(
         self,
@@ -76,6 +80,36 @@ class AuthorizationService:
             span.set_attribute("user.id", user_id)
             span.set_attribute("auth.relation", relation)
             span.set_attribute("auth.resource", resource)
+
+            # Validate resource and relation if registry is configured (OCP pattern)
+            if self.resource_registry is not None:
+                # Check if resource type is recognized
+                resource_type = self.resource_registry.get_type_for_resource(resource)
+                if resource_type is None:
+                    logger.warning(
+                        "Authorization denied - unknown resource type",
+                        extra={
+                            "user_id": user_id,
+                            "relation": relation,
+                            "resource": resource,
+                        },
+                    )
+                    span.set_attribute("auth.denied_reason", "unknown_resource_type")
+                    return False
+
+                # Check if relation is valid for this resource type
+                if not self.resource_registry.is_valid_relation_for_type(resource_type, relation):
+                    logger.warning(
+                        "Authorization denied - invalid relation for resource type",
+                        extra={
+                            "user_id": user_id,
+                            "relation": relation,
+                            "resource": resource,
+                            "resource_type": resource_type,
+                        },
+                    )
+                    span.set_attribute("auth.denied_reason", "invalid_relation_for_type")
+                    return False
 
             # Use OpenFGA if available
             if self.openfga:

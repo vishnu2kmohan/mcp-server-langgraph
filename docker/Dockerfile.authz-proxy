@@ -39,13 +39,18 @@ FROM python:3.12-slim AS runtime
 
 WORKDIR /app
 
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/config /app/config
+# Copy source for editable install (uv sync creates pth file pointing to /app/src)
+COPY --from=builder /app/src /app/src
 
 # Set PATH to use virtual environment
 ENV PATH="/app/.venv/bin:$PATH" \
-    PYTHONPATH="/app/src" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 

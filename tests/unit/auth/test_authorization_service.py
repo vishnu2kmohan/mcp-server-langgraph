@@ -341,3 +341,135 @@ class TestAuthorizationServiceWithContext:
             object="tool:chat",
             context=context,
         )
+
+
+@pytest.mark.xdist_group(name="test_authorization_service")
+class TestAuthorizationServiceWithResourceRegistry:
+    """Test AuthorizationService with ResourceTypeRegistry integration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+        # Reset the global resource registry
+        from mcp_server_langgraph.auth.resource_registry import reset_resource_type_registry
+
+        reset_resource_type_registry()
+
+    @pytest.mark.asyncio
+    async def test_authorize_validates_resource_type(self):
+        """
+        GIVEN: AuthorizationService with resource registry
+        WHEN: Authorizing with unknown resource type
+        THEN: Should deny access (invalid resource type)
+        """
+        from mcp_server_langgraph.auth.resource_registry import ResourceTypeRegistry
+
+        # Arrange
+        registry = ResourceTypeRegistry()
+        mock_settings = MagicMock()
+        mock_settings.environment = "test"
+        mock_settings.allow_auth_fallback = True
+
+        service = AuthorizationService(
+            openfga_client=None,
+            settings=mock_settings,
+            resource_registry=registry,
+        )
+
+        # Act
+        result = await service.authorize(
+            user_id="user:alice",
+            relation="viewer",
+            resource="unknown:resource",  # Unknown resource type
+        )
+
+        # Assert - denied due to invalid resource type
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_authorize_validates_relation_for_type(self):
+        """
+        GIVEN: AuthorizationService with resource registry
+        WHEN: Authorizing with invalid relation for resource type
+        THEN: Should deny access (invalid relation)
+        """
+        from mcp_server_langgraph.auth.resource_registry import ResourceTypeRegistry
+
+        # Arrange
+        registry = ResourceTypeRegistry()
+        mock_openfga = AsyncMock(spec=["check_permission"])  # noqa: async-mock-config
+        mock_openfga.check_permission = AsyncMock(return_value=True)
+
+        service = AuthorizationService(
+            openfga_client=mock_openfga,
+            resource_registry=registry,
+        )
+
+        # Act - try "owner" relation on "tool" type (not allowed)
+        result = await service.authorize(
+            user_id="user:alice",
+            relation="owner",  # "owner" is not a valid relation for "tool"
+            resource="tool:chat",
+        )
+
+        # Assert - denied due to invalid relation for type
+        assert result is False
+        # OpenFGA should not even be called
+        mock_openfga.check_permission.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_authorize_with_valid_resource_and_relation_proceeds(self):
+        """
+        GIVEN: AuthorizationService with resource registry
+        WHEN: Authorizing with valid resource type and relation
+        THEN: Should proceed to OpenFGA check
+        """
+        from mcp_server_langgraph.auth.resource_registry import ResourceTypeRegistry
+
+        # Arrange
+        registry = ResourceTypeRegistry()
+        mock_openfga = AsyncMock(spec=["check_permission"])  # noqa: async-mock-config
+        mock_openfga.check_permission = AsyncMock(return_value=True)
+
+        service = AuthorizationService(
+            openfga_client=mock_openfga,
+            resource_registry=registry,
+        )
+
+        # Act - valid relation for tool type
+        result = await service.authorize(
+            user_id="user:alice",
+            relation="executor",  # "executor" is valid for "tool"
+            resource="tool:chat",
+        )
+
+        # Assert - proceeds to OpenFGA
+        assert result is True
+        mock_openfga.check_permission.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_authorize_without_registry_skips_validation(self):
+        """
+        GIVEN: AuthorizationService without resource registry
+        WHEN: Authorizing any resource
+        THEN: Should proceed without resource/relation validation
+        """
+        # Arrange - no registry provided
+        mock_openfga = AsyncMock(spec=["check_permission"])  # noqa: async-mock-config
+        mock_openfga.check_permission = AsyncMock(return_value=True)
+
+        service = AuthorizationService(
+            openfga_client=mock_openfga,
+            resource_registry=None,
+        )
+
+        # Act - even unknown types should proceed to OpenFGA
+        result = await service.authorize(
+            user_id="user:alice",
+            relation="custom_relation",
+            resource="custom:resource",
+        )
+
+        # Assert - proceeds to OpenFGA (backward compatible)
+        assert result is True
+        mock_openfga.check_permission.assert_called_once()

@@ -30,6 +30,26 @@ pytestmark = [
 ]
 
 
+def _e2e_infrastructure_available() -> bool:
+    """Check if E2E infrastructure is available."""
+    try:
+        import requests
+
+        # Check Keycloak via gateway
+        keycloak_response = requests.get(
+            "http://localhost/authn/realms/default/.well-known/openid-configuration",
+            timeout=5,
+        )
+        return keycloak_response.status_code == 200
+    except Exception:
+        return False
+
+
+# Skip at module level if infrastructure not available
+if not _e2e_infrastructure_available():
+    pytestmark.append(pytest.mark.skip(reason="E2E infrastructure not available"))
+
+
 @pytest.mark.xdist_group(name="test_admin_journey")
 class TestAdminJourney:
     """
@@ -48,7 +68,6 @@ class TestAdminJourney:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_01_admin_login_and_token_validation(
         self,
         e2e_keycloak_base_url: str,
@@ -77,9 +96,11 @@ class TestAdminJourney:
                     f"{e2e_keycloak_base_url}/realms/default/protocol/openid-connect/token",
                     data={
                         "grant_type": "password",
-                        "client_id": "mcp-server",
+                        "client_id": admin_credentials.get("client_id", "mcp-server"),
+                        "client_secret": admin_credentials.get("client_secret", ""),
                         "username": admin_credentials["username"],
                         "password": admin_credentials["password"],
+                        "scope": "openid email profile",
                     },
                     timeout=5.0,
                 )
@@ -103,7 +124,6 @@ class TestAdminJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_02_admin_dashboard_access(
         self,
         e2e_api_base_url: str,
@@ -161,7 +181,6 @@ class TestAdminJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_03_user_management_operations(
         self,
         e2e_api_base_url: str,
@@ -242,7 +261,6 @@ class TestAdminJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_04_api_key_rotation(
         self,
         e2e_api_base_url: str,
@@ -289,7 +307,6 @@ class TestAdminJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_05_organization_management(
         self,
         e2e_api_base_url: str,
@@ -349,7 +366,6 @@ class TestAdminJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_06_audit_log_access(
         self,
         e2e_api_base_url: str,
@@ -402,7 +418,6 @@ class TestAdminJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_07_cross_user_resource_access(
         self,
         e2e_api_base_url: str,
@@ -451,7 +466,6 @@ class TestAdminJourney:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_08_complete_admin_workflow(
         self,
         e2e_api_base_url: str,

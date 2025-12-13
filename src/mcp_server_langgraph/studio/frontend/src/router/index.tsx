@@ -9,6 +9,8 @@ import { App } from '../App';
  * - /admin/* - Admin portal (admin role required)
  * - / - Redirect to /studio
  * - /build, /chat - Legacy redirects
+ *
+ * All page components are lazy-loaded for optimal bundle splitting.
  */
 export const router = createBrowserRouter(
   [
@@ -19,7 +21,7 @@ export const router = createBrowserRouter(
         // Root redirect to studio
         { index: true, element: <Navigate to="/studio" replace /> },
 
-        // Studio routes (will be lazy-loaded)
+        // Studio routes (lazy-loaded)
         {
           path: 'studio',
           children: [
@@ -27,122 +29,49 @@ export const router = createBrowserRouter(
             {
               path: 'workflows',
               lazy: async () => {
-                // Placeholder until component is created
-                return {
-                  Component: () => (
-                    <div className="flex h-screen items-center justify-center">
-                      <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                          Workflows
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Workflow builder coming soon...
-                        </p>
-                      </div>
-                    </div>
-                  ),
-                };
+                const { WorkflowsPage } = await import('../pages/WorkflowsPage');
+                return { Component: WorkflowsPage };
               },
             },
             {
               path: 'chat',
               lazy: async () => {
-                return {
-                  Component: () => (
-                    <div className="flex h-screen items-center justify-center">
-                      <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                          Chat
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Agent chat coming soon...
-                        </p>
-                      </div>
-                    </div>
-                  ),
-                };
+                const { ChatPage } = await import('../pages/ChatPage');
+                return { Component: ChatPage };
               },
             },
             {
               path: 'sessions',
               lazy: async () => {
-                return {
-                  Component: () => (
-                    <div className="flex h-screen items-center justify-center">
-                      <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                          Sessions
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Session history coming soon...
-                        </p>
-                      </div>
-                    </div>
-                  ),
-                };
+                const { SessionsPage } = await import('../pages/SessionsPage');
+                return { Component: SessionsPage };
               },
             },
             {
               path: 'mcp',
               lazy: async () => {
-                return {
-                  Component: () => (
-                    <div className="flex h-screen items-center justify-center">
-                      <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                          MCP Tools
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          MCP explorer coming soon...
-                        </p>
-                      </div>
-                    </div>
-                  ),
-                };
+                const { MCPPage } = await import('../pages/MCPPage');
+                return { Component: MCPPage };
               },
             },
             {
               path: 'observability',
               lazy: async () => {
-                return {
-                  Component: () => (
-                    <div className="flex h-screen items-center justify-center">
-                      <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                          Observability
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Traces and metrics coming soon...
-                        </p>
-                      </div>
-                    </div>
-                  ),
-                };
+                const { ObservabilityPage } = await import('../pages/ObservabilityPage');
+                return { Component: ObservabilityPage };
               },
             },
             {
               path: 'settings',
               lazy: async () => {
-                return {
-                  Component: () => (
-                    <div className="flex h-screen items-center justify-center">
-                      <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                          Settings
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          User settings coming soon...
-                        </p>
-                      </div>
-                    </div>
-                  ),
-                };
+                const { SettingsPage } = await import('../pages/SettingsPage');
+                return { Component: SettingsPage };
               },
             },
           ],
         },
 
-        // Admin routes (will be lazy-loaded with role guard)
+        // Admin routes (lazy-loaded with role guard)
         {
           path: 'admin',
           children: [
@@ -150,20 +79,8 @@ export const router = createBrowserRouter(
             {
               path: 'dashboard',
               lazy: async () => {
-                return {
-                  Component: () => (
-                    <div className="flex h-screen items-center justify-center">
-                      <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                          Admin Dashboard
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Admin portal coming soon...
-                        </p>
-                      </div>
-                    </div>
-                  ),
-                };
+                const { AdminDashboardPage } = await import('../pages/AdminDashboardPage');
+                return { Component: AdminDashboardPage };
               },
             },
           ],

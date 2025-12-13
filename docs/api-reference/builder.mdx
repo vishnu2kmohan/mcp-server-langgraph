@@ -8,6 +8,25 @@ keywords: ["API reference", "builder", "workflows", "validation", "code generati
 contentType: "reference"
 ---
 
+<Warning>
+**Deprecation Notice (2025-12-13)**: The Builder API has been consolidated into the [Unified API v1](/guides/api-migration-guide).
+
+- **New endpoint**: `/api/v1/workflows/*` (replaces `/api/builder/*`)
+- **Migration guide**: See [API Migration Guide](/guides/api-migration-guide) for endpoint mappings
+- **Timeline**: Legacy endpoints will be removed 90 days after deprecation
+
+All new integrations should use the Unified API v1 endpoints.
+</Warning>
+
+<Info>
+**Unified Studio Frontend**: The Builder UI has been consolidated into the Unified Studio at `/studio/*`. Key routes:
+- `/studio/workflows` - Visual workflow builder with React Flow canvas
+- `/studio/mcp` - MCP tools, resources, and prompts explorer
+- `/studio/settings` - User settings and preferences
+
+See the [Visual Workflow Builder Guide](/guides/visual-workflow-builder) for frontend usage.
+</Info>
+
 ## Overview
 
 The Builder API provides endpoints for creating, managing, and deploying visual workflows. All endpoints (except health and static assets) require JWT authentication.

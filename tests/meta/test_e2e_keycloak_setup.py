@@ -127,6 +127,73 @@ def test_realm_json_has_mcp_server_client(repo_root: Path):
     )
 
 
+def test_realm_json_has_grafana_client(repo_root: Path):
+    """
+    Verify that the realm configuration includes the 'grafana' client.
+
+    The E2E tests expect a client named 'grafana' with:
+    - enabled: true
+    - publicClient: false (confidential client with secret)
+    - secret: test-grafana-secret
+    - standardFlowEnabled: true (for authorization code flow with Grafana OAuth2)
+
+    Reference: ADR-0068 - Gateway-Level Authentication (Grafana uses native OAuth2)
+    """
+    realm_file = repo_root / "tests" / "e2e" / "default-realm.json"
+
+    with open(realm_file) as f:
+        realm_config = json.load(f)
+
+    # Check for clients array
+    clients = realm_config.get("clients", [])
+    assert isinstance(clients, list), f"Realm 'clients' must be an array, got: {type(clients)}"
+
+    # Find grafana client
+    grafana_client = None
+    for client in clients:
+        if client.get("clientId") == "grafana":
+            grafana_client = client
+            break
+
+    assert grafana_client is not None, (
+        "Client 'grafana' not found in realm configuration.\n"
+        "\n"
+        "Expected client configuration:\n"
+        "{\n"
+        '  "clientId": "grafana",\n'
+        '  "enabled": true,\n'
+        '  "publicClient": false,\n'
+        '  "secret": "test-grafana-secret",\n'
+        '  "standardFlowEnabled": true\n'
+        "}\n"
+        "\n"
+        f"Found clients: {[c.get('clientId') for c in clients]}\n"
+        "\n"
+        "This client is required for Grafana OAuth2 SSO integration.\n"
+        "See: ADR-0068 - Gateway-Level Authentication"
+    )
+
+    # Validate client configuration
+    assert grafana_client.get("enabled") is True, "Client 'grafana' must be enabled"
+
+    # Grafana client must be confidential (not public) with a secret
+    assert grafana_client.get("publicClient") is False, "Client 'grafana' must be a confidential client (publicClient: false)"
+
+    assert grafana_client.get("secret") is not None, (
+        "Client 'grafana' must have a secret configured for confidential client flow"
+    )
+
+    # Grafana uses standard authorization code flow
+    assert grafana_client.get("standardFlowEnabled") is True, (
+        "Client 'grafana' must have standardFlowEnabled for OAuth2 authorization code flow"
+    )
+
+    # Validate redirect URIs include Grafana dashboard paths
+    redirect_uris = grafana_client.get("redirectUris", [])
+    has_dashboard_redirect = any("/dashboards" in uri for uri in redirect_uris)
+    assert has_dashboard_redirect, f"Client 'grafana' must have redirect URI containing '/dashboards', got: {redirect_uris}"
+
+
 def test_realm_json_has_test_users(repo_root: Path):
     """
     Verify that the realm configuration includes test user 'alice'.
