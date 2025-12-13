@@ -2,10 +2,41 @@
 Template Recommendation Module
 
 Provides AI-powered workflow template recommendations.
+Uses embedding-based similarity (sentence-transformers) with fallback to keywords.
 """
 
 from dataclasses import dataclass, field
 from typing import Any
+
+# Lazy-load embeddings to handle missing dependency
+_embeddings_available: bool | None = None
+_embedding_model: Any = None
+_template_embeddings: dict[str, Any] = {}
+
+
+def _init_embeddings() -> bool:
+    """Initialize sentence-transformers model lazily.
+
+    Returns:
+        True if embeddings are available, False otherwise
+    """
+    global _embeddings_available  # noqa: PLW0603
+    global _embedding_model  # noqa: PLW0603
+
+    if _embeddings_available is not None:
+        return _embeddings_available
+
+    try:
+        from sentence_transformers import SentenceTransformer
+
+        # Use all-MiniLM-L6-v2 - fast and efficient for semantic search
+        _embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+        _embeddings_available = True
+        return True
+
+    except ImportError:
+        _embeddings_available = False
+        return False
 
 
 @dataclass
@@ -128,16 +159,60 @@ BUILT_IN_TEMPLATES = [
 class TemplateRecommender:
     """Recommends workflow templates based on user descriptions.
 
-    Uses semantic similarity to match user intent to available templates.
+    Uses semantic similarity (sentence-transformers) to match user intent
+    to available templates. Falls back to keyword matching when embeddings
+    are unavailable.
 
     Example:
         recommender = TemplateRecommender()
         matches = await recommender.recommend("Build a chatbot with RAG")
     """
 
-    def __init__(self) -> None:
-        """Initialize the template recommender."""
+    def __init__(self, enable_embeddings: bool = True) -> None:
+        """Initialize the template recommender.
+
+        Args:
+            enable_embeddings: Whether to use embedding-based similarity
+        """
         self._templates = list(BUILT_IN_TEMPLATES)
+        self._enable_embeddings = enable_embeddings
+        self._embeddings_initialized = False
+
+    def _initialize_embeddings(self) -> None:
+        """Pre-compute embeddings for all templates (lazy initialization)."""
+        global _template_embeddings  # noqa: PLW0603
+
+        if self._embeddings_initialized or not self._enable_embeddings:
+            return
+
+        if not _init_embeddings():
+            self._embeddings_initialized = True
+            return
+
+        # Pre-compute embeddings for all templates
+        for template in self._templates:
+            if template.id not in _template_embeddings:
+                text = self._get_template_text(template)
+                _template_embeddings[template.id] = _embedding_model.encode(text)
+
+        self._embeddings_initialized = True
+
+    def _get_template_text(self, template: WorkflowTemplate) -> str:
+        """Get combined text representation for embedding.
+
+        Args:
+            template: The workflow template
+
+        Returns:
+            Combined text for embedding
+        """
+        parts = [
+            template.name,
+            template.description,
+            template.category,
+            " ".join(template.tags),
+        ]
+        return " ".join(parts)
 
     def get_available_templates(self) -> list[WorkflowTemplate]:
         """Get all available templates.
@@ -154,6 +229,9 @@ class TemplateRecommender:
     ) -> list[dict[str, Any]]:
         """Recommend templates matching the description.
 
+        Uses embedding-based semantic similarity when sentence-transformers
+        is available, falling back to keyword matching otherwise.
+
         Args:
             description: User description of desired workflow
             top_k: Maximum number of templates to return
@@ -161,6 +239,9 @@ class TemplateRecommender:
         Returns:
             List of matching templates with similarity scores
         """
+        # Lazy-initialize embeddings on first recommendation
+        self._initialize_embeddings()
+
         results = []
 
         for template in self._templates:
@@ -188,6 +269,9 @@ class TemplateRecommender:
     ) -> float:
         """Compute similarity between description and template.
 
+        Uses embedding-based cosine similarity when available,
+        falls back to keyword matching otherwise.
+
         Args:
             description: User description
             template: Workflow template
@@ -195,8 +279,71 @@ class TemplateRecommender:
         Returns:
             Similarity score between 0 and 1
         """
-        # Simple keyword-based similarity for now
-        # In production, this would use embeddings
+        # Try embedding-based similarity first
+        if self._enable_embeddings and _embeddings_available and _embedding_model is not None:
+            try:
+                return self._compute_embedding_similarity(description, template)
+            except Exception:
+                # Fall through to keyword matching on any error
+                pass
+
+        # Fallback: keyword-based similarity
+        return self._compute_keyword_similarity(description, template)
+
+    def _compute_embedding_similarity(
+        self,
+        description: str,
+        template: WorkflowTemplate,
+    ) -> float:
+        """Compute cosine similarity using embeddings.
+
+        Args:
+            description: User description
+            template: Workflow template
+
+        Returns:
+            Cosine similarity score between 0 and 1
+        """
+        import numpy as np
+
+        # Get query embedding
+        query_embedding = _embedding_model.encode(description)
+
+        # Get or compute template embedding
+        if template.id in _template_embeddings:
+            template_embedding = _template_embeddings[template.id]
+        else:
+            template_text = self._get_template_text(template)
+            template_embedding = _embedding_model.encode(template_text)
+            _template_embeddings[template.id] = template_embedding
+
+        # Compute cosine similarity
+        dot_product = np.dot(query_embedding, template_embedding)
+        norm_query = np.linalg.norm(query_embedding)
+        norm_template = np.linalg.norm(template_embedding)
+
+        if norm_query == 0 or norm_template == 0:
+            return 0.0
+
+        similarity = dot_product / (norm_query * norm_template)
+
+        # Convert from [-1, 1] to [0, 1] range
+        return float((similarity + 1) / 2)
+
+    def _compute_keyword_similarity(
+        self,
+        description: str,
+        template: WorkflowTemplate,
+    ) -> float:
+        """Compute keyword-based similarity (fallback method).
+
+        Args:
+            description: User description
+            template: Workflow template
+
+        Returns:
+            Similarity score between 0 and 1
+        """
         description_lower = description.lower()
         score = 0.0
 

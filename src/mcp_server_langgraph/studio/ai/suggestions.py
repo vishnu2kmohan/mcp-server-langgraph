@@ -1,11 +1,64 @@
 """
 Workflow Suggestions Module
 
-Provides AI-powered workflow suggestions using LangGraph.
+Provides AI-powered workflow suggestions using LangGraph and LiteLLM.
+Includes HEART metrics tracking for suggestion quality and adoption.
 """
 
+import time
 from dataclasses import dataclass, field
 from typing import Any
+
+# Lazy-load metrics to handle missing dependency
+_metrics_available: bool | None = None
+_suggestion_counter: Any = None
+_suggestion_latency: Any = None
+_suggestion_confidence: Any = None
+
+
+def _init_suggestion_metrics() -> bool:
+    """Initialize suggestion metrics lazily."""
+    global _metrics_available  # noqa: PLW0603
+    global _suggestion_counter  # noqa: PLW0603
+    global _suggestion_latency  # noqa: PLW0603
+    global _suggestion_confidence  # noqa: PLW0603
+
+    if _metrics_available is not None:
+        return _metrics_available
+
+    try:
+        from prometheus_client import Counter, Histogram
+
+        _suggestion_counter = Counter(
+            "studio_suggestions_total",
+            "Total number of workflow suggestions generated",
+            ["suggestion_type", "source"],  # source: llm, heuristic
+        )
+
+        _suggestion_latency = Histogram(
+            "studio_suggestion_latency_seconds",
+            "Latency for generating suggestions",
+            ["source"],
+            buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
+        )
+
+        _suggestion_confidence = Histogram(
+            "studio_suggestion_confidence",
+            "Confidence scores for suggestions",
+            ["suggestion_type"],
+            buckets=(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0),
+        )
+
+        _metrics_available = True
+        return True
+
+    except ImportError:
+        _metrics_available = False
+        return False
+
+
+# Initialize on module load
+_init_suggestion_metrics()
 
 
 @dataclass
@@ -40,8 +93,16 @@ class Suggestion:
 class WorkflowSuggestionAgent:
     """AI agent that provides workflow suggestions.
 
-    Uses LangGraph to analyze workflows and suggest improvements,
-    additions, or modifications.
+    Uses LiteLLM to analyze workflows and suggest improvements,
+    additions, or modifications. Falls back to heuristic-based
+    suggestions when LLM is unavailable.
+
+    HEART Metrics tracked:
+    - Happiness: N/A (would require user feedback)
+    - Engagement: suggestion_count per workflow
+    - Adoption: N/A (would require tracking if suggestions are applied)
+    - Retention: N/A (would require session tracking)
+    - Task Success: confidence scores
 
     Example:
         agent = WorkflowSuggestionAgent()
@@ -52,18 +113,21 @@ class WorkflowSuggestionAgent:
 
     def __init__(
         self,
-        model_name: str = "gpt-4",
+        model_name: str = "gemini-2.5-flash",
         temperature: float = 0.7,
+        enable_llm: bool = True,
     ) -> None:
         """Initialize the workflow suggestion agent.
 
         Args:
             model_name: The LLM model to use
             temperature: Sampling temperature
+            enable_llm: Whether to use LLM (set False for testing)
         """
         self.model_name = model_name
         self.temperature = temperature
-        self._llm = None
+        self.enable_llm = enable_llm
+        self._llm_factory = None
 
     async def suggest(
         self,
@@ -81,8 +145,20 @@ class WorkflowSuggestionAgent:
         Returns:
             List of Suggestion objects
         """
-        # Invoke LLM to generate suggestions
-        response = await self._invoke_llm(workflow)
+        start_time = time.monotonic()
+
+        # Try LLM first, fallback to heuristics
+        if self.enable_llm:
+            try:
+                response = await self._invoke_llm(workflow)
+                source = "llm"
+            except Exception:
+                # LLM failed, use heuristics
+                response = self._generate_heuristic_suggestions(workflow)
+                source = "heuristic"
+        else:
+            response = self._generate_heuristic_suggestions(workflow)
+            source = "heuristic"
 
         # Parse suggestions from response
         raw_suggestions = response.get("suggestions", [])
@@ -103,10 +179,16 @@ class WorkflowSuggestionAgent:
         suggestions.sort(key=lambda x: x.confidence, reverse=True)
         suggestions = suggestions[:max_suggestions]
 
+        # Calculate latency
+        latency = time.monotonic() - start_time
+
         # Track metrics
         await self._track_suggestion_event(
             workflow_id=workflow.get("id", "unknown"),
             suggestion_count=len(suggestions),
+            suggestions=suggestions,
+            source=source,
+            latency=latency,
         )
 
         return suggestions
@@ -114,14 +196,71 @@ class WorkflowSuggestionAgent:
     async def _invoke_llm(self, workflow: dict[str, Any]) -> dict[str, Any]:
         """Invoke the LLM to generate suggestions.
 
+        Uses LiteLLM for multi-provider support. Falls back to
+        heuristics if LLM call fails.
+
         Args:
             workflow: The workflow to analyze
 
         Returns:
-            Raw response from LLM
+            Raw response with suggestions
         """
-        # This would integrate with LangGraph in production
-        # For now, return empty suggestions for workflow analysis
+        try:
+            from litellm import acompletion
+
+            # Build prompt from workflow
+            nodes = workflow.get("nodes", [])
+            edges = workflow.get("edges", [])
+
+            prompt = f"""Analyze this workflow and suggest improvements:
+
+Nodes: {nodes}
+Edges: {edges}
+
+Provide suggestions in JSON format with fields:
+- type: add_node, remove_node, add_edge, optimize, refactor
+- description: Clear description of the suggestion
+- confidence: Float between 0 and 1
+
+Return a JSON object with a "suggestions" array."""
+
+            response = await acompletion(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": "You are a workflow optimization assistant."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=self.temperature,
+                max_tokens=1024,
+                response_format={"type": "json_object"},
+            )
+
+            # Parse LLM response
+            import json
+
+            content = response.choices[0].message.content
+            result = json.loads(content)
+
+            # Ensure we return a properly typed dict
+            if isinstance(result, dict):
+                return dict(result)
+            return {"suggestions": []}
+
+        except Exception:
+            # Fall back to heuristics on any LLM error
+            return self._generate_heuristic_suggestions(workflow)
+
+    def _generate_heuristic_suggestions(self, workflow: dict[str, Any]) -> dict[str, Any]:
+        """Generate suggestions using heuristic rules.
+
+        This is the fallback when LLM is unavailable.
+
+        Args:
+            workflow: The workflow to analyze
+
+        Returns:
+            Dict with suggestions array
+        """
         nodes = workflow.get("nodes", [])
 
         if not nodes:
@@ -135,10 +274,8 @@ class WorkflowSuggestionAgent:
                 ]
             }
 
-        # Analyze workflow structure and generate suggestions
+        # Analyze workflow structure
         suggestions = []
-
-        # Check for common patterns
         node_types = [n.get("type", "") for n in nodes]
 
         if "input" in node_types and "output" not in node_types:
@@ -159,19 +296,65 @@ class WorkflowSuggestionAgent:
                 }
             )
 
+        # Check for disconnected nodes
+        edges = workflow.get("edges", [])
+        connected_nodes = set()
+        for edge in edges:
+            connected_nodes.add(edge.get("source"))
+            connected_nodes.add(edge.get("target"))
+
+        for node in nodes:
+            if node.get("id") not in connected_nodes and len(nodes) > 1:
+                suggestions.append(
+                    {
+                        "type": "add_edge",
+                        "description": f"Connect node '{node.get('id')}' to the workflow",
+                        "confidence": 0.85,
+                    }
+                )
+
         return {"suggestions": suggestions}
 
     async def _track_suggestion_event(
         self,
         workflow_id: str,
         suggestion_count: int,
+        suggestions: list[Suggestion],
+        source: str,
+        latency: float,
     ) -> None:
         """Track suggestion event for HEART metrics.
+
+        Tracks:
+        - Total suggestions by type and source
+        - Suggestion latency
+        - Confidence score distribution
 
         Args:
             workflow_id: ID of the workflow
             suggestion_count: Number of suggestions generated
+            suggestions: List of suggestions
+            source: Source of suggestions (llm or heuristic)
+            latency: Time taken to generate suggestions
         """
-        # This would integrate with the metrics system
-        # For now, just a placeholder
-        pass
+        if not _metrics_available:
+            return
+
+        try:
+            # Track suggestion count by type
+            if _suggestion_counter:
+                for s in suggestions:
+                    _suggestion_counter.labels(suggestion_type=s.type, source=source).inc()
+
+            # Track latency
+            if _suggestion_latency:
+                _suggestion_latency.labels(source=source).observe(latency)
+
+            # Track confidence scores
+            if _suggestion_confidence:
+                for s in suggestions:
+                    _suggestion_confidence.labels(suggestion_type=s.type).observe(s.confidence)
+
+        except Exception:
+            # Don't let metrics failures break the app
+            pass

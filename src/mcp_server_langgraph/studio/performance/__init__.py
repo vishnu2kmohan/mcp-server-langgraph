@@ -88,11 +88,31 @@ class BundleAnalyzer:
             Dict with pass/fail for each target
         """
         total_size = self.calculate_total_size()
+        gzipped_size = self._calculate_gzipped_size()
 
         return {
             "initial": total_size <= BUNDLE_SIZE_TARGETS["initial"],
-            "gzipped": True,  # Would need actual gzip check
+            "gzipped": gzipped_size <= BUNDLE_SIZE_TARGETS["gzipped"],
         }
+
+    def _calculate_gzipped_size(self) -> int:
+        """Calculate the total gzipped size of all JS bundles.
+
+        Returns:
+            Total gzipped size in bytes
+        """
+        import gzip
+
+        if self._dist_path is None or not self._dist_path.exists():
+            return 0
+
+        total_gzipped = 0
+        for js_file in self._dist_path.glob("**/*.js"):
+            content = js_file.read_bytes()
+            compressed = gzip.compress(content, compresslevel=6)
+            total_gzipped += len(compressed)
+
+        return total_gzipped
 
 
 __all__ = [
