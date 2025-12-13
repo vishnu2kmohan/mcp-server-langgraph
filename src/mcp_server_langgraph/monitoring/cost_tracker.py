@@ -175,6 +175,7 @@ class CostMetricsCollector:
         database_url: str | None = None,
         retention_days: int = 90,
         enable_persistence: bool = True,
+        storage_backend: str | None = None,
     ) -> None:
         """
         Initialize the cost metrics collector.
@@ -184,12 +185,32 @@ class CostMetricsCollector:
                          If None, uses in-memory storage only
             retention_days: Number of days to retain records (default: 90)
             enable_persistence: Whether to enable PostgreSQL persistence
+            storage_backend: Storage backend type ("memory" or "postgres")
+                            If None, uses COST_STORAGE_BACKEND from config
         """
         # Phase 2.2 SRP: Delegate to specialized services
         from mcp_server_langgraph.monitoring.cost_retention import CostRetentionPolicy
-        from mcp_server_langgraph.monitoring.cost_storage import MemoryCostStorage
+        from mcp_server_langgraph.monitoring.cost_storage import (
+            CostStorageBackend,
+            MemoryCostStorage,
+            PostgresCostStorage,
+        )
 
-        self._storage = MemoryCostStorage()
+        # Determine storage backend from config if not explicitly provided
+        if storage_backend is None:
+            try:
+                from mcp_server_langgraph.core.config import settings
+
+                storage_backend = settings.cost_storage_backend
+            except Exception:
+                storage_backend = "memory"
+
+        # Create storage based on backend type
+        storage: CostStorageBackend = (
+            PostgresCostStorage(database_url) if storage_backend == "postgres" and database_url else MemoryCostStorage()
+        )
+
+        self._storage = storage
         self._retention_policy = CostRetentionPolicy(retention_days=retention_days)
         self._database_url = database_url
         self._retention_days = retention_days

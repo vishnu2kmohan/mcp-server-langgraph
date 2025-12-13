@@ -222,7 +222,7 @@ class LLMFactory:
             if not is_provider_specific:
                 filtered_kwargs[key] = value
 
-        logger.debug(
+        self.telemetry.logger.debug(
             "Filtered kwargs for fallback model",
             extra={
                 "model": model_name,
@@ -290,7 +290,7 @@ class LLMFactory:
                 # Set environment variable if we have a value
                 if value and env_var:
                     os.environ[env_var] = str(value)
-                    logger.debug(
+                    self.telemetry.logger.debug(
                         f"Configured credential for provider: {provider}", extra={"provider": provider, "env_var": env_var}
                     )
 
@@ -351,7 +351,7 @@ class LLMFactory:
 
         start_time = time.perf_counter()
 
-        with tracer.start_as_current_span("llm.invoke") as span:
+        with self.telemetry.tracer.start_as_current_span("llm.invoke") as span:
             span.set_attribute("llm.provider", self.provider)
             span.set_attribute("llm.model", self.model_name)
 
@@ -384,9 +384,9 @@ class LLMFactory:
                     )
 
                 # Track OTel metrics
-                metrics.successful_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
+                self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
 
-                logger.info(
+                self.telemetry.logger.info(
                     "LLM invocation successful",
                     extra={
                         "model": self.model_name,
@@ -401,11 +401,11 @@ class LLMFactory:
                 duration_ms = (time.perf_counter() - start_time) * 1000
                 record_llm_request_duration(self.model_name, duration_ms, self.provider)
 
-                logger.error(
+                self.telemetry.logger.error(
                     f"LLM invocation failed: {e}", extra={"model": self.model_name, "provider": self.provider}, exc_info=True
                 )
 
-                metrics.failed_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
+                self.telemetry.metrics.failed_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
                 span.record_exception(e)
 
                 # Try fallback if enabled
@@ -446,7 +446,7 @@ class LLMFactory:
 
         start_time = time.perf_counter()
 
-        with tracer.start_as_current_span("llm.ainvoke") as span:
+        with self.telemetry.tracer.start_as_current_span("llm.ainvoke") as span:
             span.set_attribute("llm.provider", self.provider)
             span.set_attribute("llm.model", self.model_name)
 
@@ -477,9 +477,9 @@ class LLMFactory:
                         response.usage.completion_tokens or 0,  # type: ignore[attr-defined]
                     )
 
-                metrics.successful_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
+                self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
 
-                logger.info(
+                self.telemetry.logger.info(
                     "Async LLM invocation successful",
                     extra={
                         "model": self.model_name,
@@ -532,13 +532,13 @@ class LLMFactory:
                         cause=e,
                     )
                 else:
-                    logger.error(
+                    self.telemetry.logger.error(
                         f"Async LLM invocation failed: {e}",
                         extra={"model": self.model_name, "provider": self.provider},
                         exc_info=True,
                     )
 
-                    metrics.failed_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
+                    self.telemetry.metrics.failed_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
                     span.record_exception(e)
 
                     # Try fallback if enabled
@@ -557,7 +557,7 @@ class LLMFactory:
             if fallback_model == self.model_name:
                 continue  # Skip if it's the same model
 
-            logger.warning(f"Trying fallback model: {fallback_model}", extra={"primary_model": self.model_name})
+            self.telemetry.logger.warning(f"Trying fallback model: {fallback_model}", extra={"primary_model": self.model_name})
 
             try:
                 formatted_messages = self._format_messages(messages)
@@ -574,14 +574,14 @@ class LLMFactory:
 
                 content = response.choices[0].message.content
 
-                logger.info("Fallback successful", extra={"fallback_model": fallback_model})
+                self.telemetry.logger.info("Fallback successful", extra={"fallback_model": fallback_model})
 
-                metrics.successful_calls.add(1, {"operation": "llm.fallback", "model": fallback_model})
+                self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.fallback", "model": fallback_model})
 
                 return AIMessage(content=content)
 
             except Exception as e:
-                logger.error(f"Fallback model {fallback_model} failed: {e}", exc_info=True)
+                self.telemetry.logger.error(f"Fallback model {fallback_model} failed: {e}", exc_info=True)
                 continue
 
         msg = "All models failed including fallbacks"
@@ -605,7 +605,7 @@ class LLMFactory:
             # Apply exponential backoff delay before attempt (except first)
             if attempt > 0:
                 delay = min(current_delay, FALLBACK_MAX_DELAY_SECONDS)
-                logger.info(
+                self.telemetry.logger.info(
                     f"Waiting {delay:.1f}s before fallback attempt {attempt + 1}",
                     extra={"delay_seconds": delay, "fallback_model": fallback_model},
                 )
@@ -613,7 +613,7 @@ class LLMFactory:
                 current_delay *= FALLBACK_DELAY_MULTIPLIER
 
             attempt += 1
-            logger.warning(f"Trying fallback model: {fallback_model}", extra={"primary_model": self.model_name})
+            self.telemetry.logger.warning(f"Trying fallback model: {fallback_model}", extra={"primary_model": self.model_name})
 
             try:
                 formatted_messages = self._format_messages(messages)
@@ -630,14 +630,14 @@ class LLMFactory:
 
                 content = response.choices[0].message.content
 
-                logger.info("Async fallback successful", extra={"fallback_model": fallback_model})
+                self.telemetry.logger.info("Async fallback successful", extra={"fallback_model": fallback_model})
 
-                metrics.successful_calls.add(1, {"operation": "llm.fallback_async", "model": fallback_model})
+                self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.fallback_async", "model": fallback_model})
 
                 return AIMessage(content=content)
 
             except Exception as e:
-                logger.error(f"Async fallback model {fallback_model} failed: {e}", exc_info=True)
+                self.telemetry.logger.error(f"Async fallback model {fallback_model} failed: {e}", exc_info=True)
                 continue
 
         msg = "All async models failed including fallbacks"
@@ -672,7 +672,7 @@ def _get_provider_credential(config, provider: str) -> str | None:  # type: igno
     return credential_map.get(provider)
 
 
-def _get_provider_kwargs(config, provider: str) -> dict:  # type: ignore[no-untyped-def]
+def _get_provider_kwargs(config: Any, provider: str) -> dict[str, Any]:
     """
     Get provider-specific kwargs for LLMFactory.
 
@@ -683,7 +683,7 @@ def _get_provider_kwargs(config, provider: str) -> dict:  # type: ignore[no-unty
     Returns:
         Dictionary of provider-specific kwargs
     """
-    provider_kwargs: dict = {}
+    provider_kwargs: dict[str, Any] = {}
 
     if provider == "azure":
         provider_kwargs.update(
