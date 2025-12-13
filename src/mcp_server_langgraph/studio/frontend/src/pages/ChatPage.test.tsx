@@ -14,23 +14,43 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ChatPage } from './ChatPage';
 import * as sessionStoreModule from '../stores/sessionStore';
+import * as streamingChatModule from '../hooks/useStreamingChat';
 
 // Mock the session store
 vi.mock('../stores/sessionStore');
+
+// Mock the streaming chat hook
+vi.mock('../hooks/useStreamingChat');
 
 // Mock scrollIntoView
 Element.prototype.scrollIntoView = vi.fn();
 
 const mockUseSessionStore = vi.mocked(sessionStoreModule.useSessionStore);
+const mockUseStreamingChat = vi.mocked(streamingChatModule.useStreamingChat);
 
 describe('ChatPage', () => {
   const mockSendMessage = vi.fn();
+  const mockAddMessage = vi.fn();
   const mockClearMessages = vi.fn();
   const mockClearError = vi.fn();
+  const mockStartStream = vi.fn();
+  const mockStopStream = vi.fn();
+  const mockClearContent = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default mock state
+
+    // Default streaming chat mock
+    mockUseStreamingChat.mockReturnValue({
+      isStreaming: false,
+      streamingContent: '',
+      error: null,
+      startStream: mockStartStream,
+      stopStream: mockStopStream,
+      clearContent: mockClearContent,
+    });
+
+    // Default session store mock
     mockUseSessionStore.mockReturnValue({
       currentSession: null,
       sessions: [],
@@ -39,6 +59,7 @@ describe('ChatPage', () => {
       isSending: false,
       error: null,
       sendMessage: mockSendMessage,
+      addMessage: mockAddMessage,
       clearMessages: mockClearMessages,
       clearError: mockClearError,
       fetchSessions: vi.fn(),
@@ -152,8 +173,20 @@ describe('ChatPage', () => {
 
     beforeEach(() => {
       mockUseSessionStore.mockReturnValue({
-        ...mockUseSessionStore(),
         currentSession: mockSession,
+        sessions: [],
+        isLoadingSession: false,
+        isLoadingSessions: false,
+        isSending: false,
+        error: null,
+        sendMessage: mockSendMessage,
+        addMessage: mockAddMessage,
+        clearMessages: mockClearMessages,
+        clearError: mockClearError,
+        fetchSessions: vi.fn(),
+        createSession: vi.fn(),
+        loadSession: vi.fn(),
+        deleteSession: vi.fn(),
       });
     });
 
@@ -181,7 +214,7 @@ describe('ChatPage', () => {
       expect(sendButton).not.toBeDisabled();
     });
 
-    it('should call sendMessage when form is submitted', async () => {
+    it('should add user message and start stream when form is submitted', async () => {
       render(<ChatPage />);
 
       const input = screen.getByPlaceholderText('Type your message...');
@@ -191,7 +224,15 @@ describe('ChatPage', () => {
       fireEvent.submit(form);
 
       await waitFor(() => {
-        expect(mockSendMessage).toHaveBeenCalledWith('Hello');
+        // Should add user message immediately
+        expect(mockAddMessage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            role: 'user',
+            content: 'Hello',
+          })
+        );
+        // Should start streaming
+        expect(mockStartStream).toHaveBeenCalledWith('session-1', 'Hello');
       });
     });
 
@@ -218,11 +259,22 @@ describe('ChatPage', () => {
       messages: [],
     };
 
-    it('should show thinking indicator when sending', () => {
+    it('should show thinking indicator when sending (legacy)', () => {
       mockUseSessionStore.mockReturnValue({
-        ...mockUseSessionStore(),
         currentSession: mockSession,
+        sessions: [],
+        isLoadingSession: false,
+        isLoadingSessions: false,
         isSending: true,
+        error: null,
+        sendMessage: mockSendMessage,
+        addMessage: mockAddMessage,
+        clearMessages: mockClearMessages,
+        clearError: mockClearError,
+        fetchSessions: vi.fn(),
+        createSession: vi.fn(),
+        loadSession: vi.fn(),
+        deleteSession: vi.fn(),
       });
 
       render(<ChatPage />);
@@ -230,11 +282,63 @@ describe('ChatPage', () => {
       expect(screen.getByText('Thinking...')).toBeInTheDocument();
     });
 
-    it('should disable input when sending', () => {
+    it('should show streaming content when streaming', () => {
+      mockUseStreamingChat.mockReturnValue({
+        isStreaming: true,
+        streamingContent: 'Hello from AI',
+        error: null,
+        startStream: mockStartStream,
+        stopStream: mockStopStream,
+        clearContent: mockClearContent,
+      });
+
       mockUseSessionStore.mockReturnValue({
-        ...mockUseSessionStore(),
         currentSession: mockSession,
-        isSending: true,
+        sessions: [],
+        isLoadingSession: false,
+        isLoadingSessions: false,
+        isSending: false,
+        error: null,
+        sendMessage: mockSendMessage,
+        addMessage: mockAddMessage,
+        clearMessages: mockClearMessages,
+        clearError: mockClearError,
+        fetchSessions: vi.fn(),
+        createSession: vi.fn(),
+        loadSession: vi.fn(),
+        deleteSession: vi.fn(),
+      });
+
+      render(<ChatPage />);
+
+      expect(screen.getByText(/Hello from AI/)).toBeInTheDocument();
+    });
+
+    it('should disable input when streaming', () => {
+      mockUseStreamingChat.mockReturnValue({
+        isStreaming: true,
+        streamingContent: '',
+        error: null,
+        startStream: mockStartStream,
+        stopStream: mockStopStream,
+        clearContent: mockClearContent,
+      });
+
+      mockUseSessionStore.mockReturnValue({
+        currentSession: mockSession,
+        sessions: [],
+        isLoadingSession: false,
+        isLoadingSessions: false,
+        isSending: false,
+        error: null,
+        sendMessage: mockSendMessage,
+        addMessage: mockAddMessage,
+        clearMessages: mockClearMessages,
+        clearError: mockClearError,
+        fetchSessions: vi.fn(),
+        createSession: vi.fn(),
+        loadSession: vi.fn(),
+        deleteSession: vi.fn(),
       });
 
       render(<ChatPage />);
@@ -252,12 +356,25 @@ describe('ChatPage', () => {
       messages: [],
     };
 
+    const getErrorMockState = () => ({
+      currentSession: mockSession,
+      sessions: [],
+      isLoadingSession: false,
+      isLoadingSessions: false,
+      isSending: false,
+      error: 'Something went wrong',
+      sendMessage: mockSendMessage,
+      addMessage: mockAddMessage,
+      clearMessages: mockClearMessages,
+      clearError: mockClearError,
+      fetchSessions: vi.fn(),
+      createSession: vi.fn(),
+      loadSession: vi.fn(),
+      deleteSession: vi.fn(),
+    });
+
     it('should display error banner when error exists', () => {
-      mockUseSessionStore.mockReturnValue({
-        ...mockUseSessionStore(),
-        currentSession: mockSession,
-        error: 'Something went wrong',
-      });
+      mockUseSessionStore.mockReturnValue(getErrorMockState());
 
       render(<ChatPage />);
 
@@ -265,11 +382,7 @@ describe('ChatPage', () => {
     });
 
     it('should show dismiss button for errors', () => {
-      mockUseSessionStore.mockReturnValue({
-        ...mockUseSessionStore(),
-        currentSession: mockSession,
-        error: 'Something went wrong',
-      });
+      mockUseSessionStore.mockReturnValue(getErrorMockState());
 
       render(<ChatPage />);
 
@@ -277,11 +390,7 @@ describe('ChatPage', () => {
     });
 
     it('should call clearError when dismiss is clicked', () => {
-      mockUseSessionStore.mockReturnValue({
-        ...mockUseSessionStore(),
-        currentSession: mockSession,
-        error: 'Something went wrong',
-      });
+      mockUseSessionStore.mockReturnValue(getErrorMockState());
 
       render(<ChatPage />);
 

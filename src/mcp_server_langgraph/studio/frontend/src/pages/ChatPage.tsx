@@ -6,6 +6,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useSessionStore } from '../stores/sessionStore';
+import { useStreamingChat } from '../hooks/useStreamingChat';
 import { SaveAsWorkflowButton } from '../components/Chat/SaveAsWorkflowButton';
 import {
   Send,
@@ -27,6 +28,7 @@ export function ChatPage() {
     isSending,
     error,
     sendMessage,
+    addMessage,
     clearMessages,
     clearError,
     fetchSessions,
@@ -34,12 +36,23 @@ export function ChatPage() {
     loadSession,
   } = useSessionStore();
 
+  // Streaming chat hook for real-time responses (HEART: Happiness)
+  const {
+    isStreaming,
+    streamingContent,
+    startStream,
+    clearContent,
+  } = useStreamingChat();
+
   const messages = useMemo(() => currentSession?.messages || [], [currentSession?.messages]);
 
-  // Auto-scroll to bottom when messages change
+  // Determine if we're in an active sending/streaming state
+  const isProcessing = isSending || isStreaming;
+
+  // Auto-scroll to bottom when messages or streaming content change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, streamingContent]);
 
   // Auto-create or load session on mount
   useEffect(() => {
@@ -81,12 +94,38 @@ export function ChatPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isSending) return;
+    if (!input.trim() || isProcessing || !currentSession) return;
 
     const content = input.trim();
     setInput('');
-    await sendMessage(content);
+
+    // Add user message immediately (optimistic update)
+    const userMessage = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      role: 'user' as const,
+      content,
+      timestamp: Date.now(),
+    };
+    addMessage(userMessage);
+
+    // Start streaming response (HEART: Happiness - real-time feedback)
+    startStream(currentSession.id, content);
   };
+
+  // When streaming completes, add the response as a message
+  useEffect(() => {
+    if (!isStreaming && streamingContent && currentSession) {
+      // Add the streamed response as an assistant message
+      const assistantMessage = {
+        id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        role: 'assistant' as const,
+        content: streamingContent,
+        timestamp: Date.now(),
+      };
+      addMessage(assistantMessage);
+      clearContent();
+    }
+  }, [isStreaming, streamingContent, currentSession, addMessage, clearContent]);
 
   const handleClear = async () => {
     if (confirm('Clear all messages in this session?')) {
@@ -179,7 +218,26 @@ export function ChatPage() {
             </div>
           ))
         )}
-        {isSending && (
+        {/* Streaming response with real-time content (HEART: Happiness) */}
+        {isStreaming && (
+          <div className="flex justify-start">
+            <div className="max-w-[70%] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 rounded-lg">
+              {streamingContent ? (
+                <p className="whitespace-pre-wrap text-gray-900 dark:text-gray-100">
+                  {streamingContent}
+                  <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
+                </p>
+              ) : (
+                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                  <RefreshCw size={16} className="animate-spin" />
+                  <span>Thinking...</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {/* Legacy sending indicator (fallback) */}
+        {isSending && !isStreaming && (
           <div className="flex justify-start">
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 rounded-lg">
               <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
@@ -203,15 +261,15 @@ export function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
-            disabled={isSending}
+            disabled={isProcessing}
             className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
           />
           <button
             type="submit"
-            disabled={!input.trim() || isSending}
+            disabled={!input.trim() || isProcessing}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {isSending ? (
+            {isProcessing ? (
               <Loader2 size={18} className="animate-spin" />
             ) : (
               <Send size={18} />
