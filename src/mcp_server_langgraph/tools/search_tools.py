@@ -12,6 +12,7 @@ from pydantic import Field
 from qdrant_client import QdrantClient
 
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
 from mcp_server_langgraph.observability.telemetry import logger, metrics
 
 
@@ -129,7 +130,7 @@ async def web_search(
                     results = [f'Web search: "{query}"\n']
                     for i, result in enumerate(data.get("results", [])[:num_results], 1):
                         results.append(f"\n{i}. {result.get('title', 'No title')}")
-                        results.append(f"   {result.get('content', 'No snippet')[:200]}...")
+                        results.append(f"   {result.get('content', 'No snippet')[:MESSAGE_PREVIEW_LENGTH]}...")
                         results.append(f"   URL: {result.get('url', 'N/A')}")
 
                     logger.info("Tavily web search completed", extra={"results": len(data.get("results", []))})

@@ -33,6 +33,7 @@ from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
+from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
 from mcp_server_langgraph.core.security import sanitize_for_logging
 from mcp_server_langgraph.mcp.elicitation import (
     ElicitationAction,
@@ -992,8 +993,8 @@ class MCPAgentStreamableServer:
                     content = getattr(msg, "content", str(msg))
 
                     # Truncate long messages for readability
-                    if len(content) > 200:
-                        content = content[:200] + "..."
+                    if len(content) > MESSAGE_PREVIEW_LENGTH:
+                        content = content[:MESSAGE_PREVIEW_LENGTH] + "..."
 
                     formatted_lines.append(f"{i}. [{msg_type}] {content}")
 
@@ -2006,6 +2007,28 @@ def custom_openapi() -> dict[str, Any]:
 
 # Apply custom OpenAPI schema
 app.openapi = custom_openapi  # type: ignore[method-assign]
+
+
+# ==============================================================================
+# Studio Frontend (Unified SPA)
+# ==============================================================================
+# Mount the consolidated Studio frontend replacing Builder and Playground.
+# SPA routing handled by SPAStaticFiles (fallback to index.html for React Router).
+# Mount AFTER all API routes - SPAStaticFiles is a catch-all for client-side routing.
+#
+# Reference: docs/guides/api-migration-guide.md
+from pathlib import Path
+
+from mcp_server_langgraph.utils.spa_static_files import create_spa_static_files
+
+# Studio frontend location: src/mcp_server_langgraph/studio/frontend/dist
+_studio_frontend_dist = Path(__file__).parent.parent / "studio" / "frontend" / "dist"
+
+# Only mount if frontend is built (graceful degradation for API-only mode)
+_studio_spa_handler = create_spa_static_files(str(_studio_frontend_dist), caching=True)
+if _studio_spa_handler:
+    # Mount at /studio to match Traefik gateway routing and vite.config.ts base path
+    app.mount("/studio", _studio_spa_handler, name="studio-spa")
 
 
 def main() -> None:

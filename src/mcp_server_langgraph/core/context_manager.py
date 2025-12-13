@@ -13,9 +13,39 @@ References:
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
 from mcp_server_langgraph.llm.factory import create_summarization_model
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import count_tokens
+
+
+# ==============================================================================
+# Keyword categories for key information extraction (DRY refactoring)
+# ==============================================================================
+EXTRACTION_KEYWORDS: dict[str, list[str]] = {
+    "decisions": ["decided", "agreed", "chose", "selected", "picked", "opted", "determined", "concluded"],
+    "requirements": ["need", "require", "must", "should", "have to", "necessary", "essential", "mandatory"],
+    "facts": [" is ", " are ", " was ", " were ", "according to", "version", "default", "by default", "currently"],
+    "action_items": [
+        "todo",
+        "to-do",
+        "please",
+        "need to",
+        "should",
+        "will",
+        "let's",
+        "we'll",
+        "add",
+        "fix",
+        "update",
+        "refactor",
+    ],
+    "issues": ["error", "issue", "problem", "failed", "bug", "broken", "crash", "exception"],
+    "preferences": ["prefer", "like", "favorite", "dislike", "hate", "love", "enjoy", "rather"],
+    # Additional categories from task description
+    "questions": ["?", "how do", "what is", "why does", "when will", "where is", "which"],
+    "constraints": ["cannot", "must not", "limit", "constraint", "restriction", "blocked by"],
+}
 
 
 class CompactionResult(BaseModel):
@@ -288,12 +318,26 @@ Focus on high-signal information that maintains conversation context.
         else:
             return "Message"
 
+    def _matches_category(self, content: str, keywords: list[str]) -> bool:
+        """
+        Check if content matches any keyword in the category.
+
+        Args:
+            content: The text content to check
+            keywords: List of keywords to match against
+
+        Returns:
+            True if any keyword is found in the content (case-insensitive)
+        """
+        content_lower = content.lower()
+        return any(kw.lower() in content_lower for kw in keywords)
+
     def extract_key_information(self, messages: list[BaseMessage]) -> dict[str, list[str]]:
         """
         Extract and categorize key information from conversation.
 
         Implements "Structured Note-Taking" pattern from Anthropic's guide.
-        This is a rule-based fallback method.
+        This is a rule-based fallback method using data-driven keyword matching.
 
         Args:
             messages: Conversation messages
@@ -301,121 +345,19 @@ Focus on high-signal information that maintains conversation context.
         Returns:
             Dictionary with categorized key information
         """
-        key_info = {  # type: ignore[var-annotated]
-            "decisions": [],
-            "requirements": [],
-            "facts": [],
-            "action_items": [],
-            "issues": [],
-            "preferences": [],
-        }
+        # Initialize all categories from EXTRACTION_KEYWORDS
+        key_info: dict[str, list[str]] = {category: [] for category in EXTRACTION_KEYWORDS}
 
-        # Keyword-based extraction for all 6 categories
-        # Expanded from 10 to ~35 keywords for better coverage
+        # Keyword-based extraction using data-driven approach
         for msg in messages:
             msg_content = msg.content if hasattr(msg, "content") else ""
-            content = msg_content.lower() if isinstance(msg_content, str) else ""
+            if not isinstance(msg_content, str):
+                continue
 
-            # Decisions (voting, choosing, selecting)
-            if any(
-                keyword in content
-                for keyword in [
-                    "decided",
-                    "agreed",
-                    "chose",
-                    "selected",
-                    "picked",
-                    "opted",
-                    "determined",
-                    "concluded",
-                ]
-            ) and isinstance(msg_content, str):
-                key_info["decisions"].append(msg_content[:200])
-
-            # Requirements (obligations, constraints)
-            if any(
-                keyword in content
-                for keyword in [
-                    "need",
-                    "require",
-                    "must",
-                    "should",
-                    "have to",
-                    "necessary",
-                    "essential",
-                    "mandatory",
-                ]
-            ) and isinstance(msg_content, str):
-                key_info["requirements"].append(msg_content[:200])
-
-            # Facts (statements of truth, data points)
-            if any(
-                keyword in content
-                for keyword in [
-                    " is ",
-                    " are ",
-                    " was ",
-                    " were ",
-                    "according to",
-                    "version",
-                    "default",
-                    "by default",
-                    "currently",
-                ]
-            ) and isinstance(msg_content, str):
-                key_info["facts"].append(msg_content[:200])
-
-            # Action Items (tasks, TODOs)
-            if any(
-                keyword in content
-                for keyword in [
-                    "todo",
-                    "to-do",
-                    "please",
-                    "need to",
-                    "should",
-                    "will",
-                    "let's",
-                    "we'll",
-                    "add",
-                    "fix",
-                    "update",
-                    "refactor",
-                ]
-            ) and isinstance(msg_content, str):
-                key_info["action_items"].append(msg_content[:200])
-
-            # Issues (problems, bugs, errors)
-            if any(
-                keyword in content
-                for keyword in [
-                    "error",
-                    "issue",
-                    "problem",
-                    "failed",
-                    "bug",
-                    "broken",
-                    "crash",
-                    "exception",
-                ]
-            ) and isinstance(msg_content, str):
-                key_info["issues"].append(msg_content[:200])
-
-            # Preferences (likes, dislikes, choices)
-            if any(
-                keyword in content
-                for keyword in [
-                    "prefer",
-                    "like",
-                    "favorite",
-                    "dislike",
-                    "hate",
-                    "love",
-                    "enjoy",
-                    "rather",
-                ]
-            ) and isinstance(msg_content, str):
-                key_info["preferences"].append(msg_content[:200])
+            # Check each category using the _matches_category helper
+            for category, keywords in EXTRACTION_KEYWORDS.items():
+                if self._matches_category(msg_content, keywords):
+                    key_info[category].append(msg_content[:MESSAGE_PREVIEW_LENGTH])
 
         return key_info
 

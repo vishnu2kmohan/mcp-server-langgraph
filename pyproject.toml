@@ -742,6 +742,8 @@ markers = [
     "slow: Slow tests (> 1 second)",
     "timeout: Custom timeout override for pytest-timeout plugin (used for meta-tests running subprocesses)",
     "auth: Authentication/authorization tests",
+    "auth_flow: End-to-end authentication flow tests (Keycloak, OAuth2, OpenFGA)",
+    "grafana: Grafana OAuth2 integration tests (ADR-0068)",
     "api: API endpoint tests (REST API contract testing)",
     "openfga: OpenFGA integration tests",
     "infisical: Infisical integration tests",

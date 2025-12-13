@@ -55,23 +55,48 @@ class ContainerConfig:
 
 
 @runtime_checkable
-class TelemetryProvider(Protocol):
-    """Protocol for telemetry providers"""
+class LoggerProvider(Protocol):
+    """Protocol for logger-only providers (ISP compliant)."""
 
     @property
     def logger(self) -> logging.Logger:
-        """Get logger instance"""
+        """Get logger instance."""
         ...
+
+
+@runtime_checkable
+class MetricsProvider(Protocol):
+    """Protocol for metrics-only providers (ISP compliant)."""
 
     @property
     def metrics(self) -> Any:
-        """Get metrics instance"""
+        """Get metrics instance."""
         ...
+
+
+@runtime_checkable
+class TracerProvider(Protocol):
+    """Protocol for tracer-only providers (ISP compliant)."""
 
     @property
     def tracer(self) -> Any:
-        """Get tracer instance"""
+        """Get tracer instance."""
         ...
+
+
+@runtime_checkable
+class TelemetryProvider(LoggerProvider, MetricsProvider, TracerProvider, Protocol):
+    """
+    Composite protocol for full telemetry (logger + metrics + tracer).
+
+    For ISP compliance, prefer using the granular protocols when you only
+    need a subset of telemetry features:
+    - LoggerProvider: When you only need logging
+    - MetricsProvider: When you only need metrics
+    - TracerProvider: When you only need tracing
+    """
+
+    pass
 
 
 @runtime_checkable
@@ -441,3 +466,39 @@ def create_production_container() -> ApplicationContainer:
     """
     config = ContainerConfig(environment="production")
     return ApplicationContainer(config)
+
+
+# ==============================================================================
+# Public API
+# ==============================================================================
+
+__all__ = [
+    # Granular protocols (ISP compliant)
+    "LoggerProvider",
+    "MetricsProvider",
+    "TracerProvider",
+    # Composite protocol (backward compatibility)
+    "TelemetryProvider",
+    # Other protocols
+    "AuthProvider",
+    "StorageProvider",
+    # Configuration
+    "ContainerConfig",
+    # Container
+    "ApplicationContainer",
+    # Helper functions
+    "create_test_container",
+    "create_development_container",
+    "create_production_container",
+    # No-op implementations
+    "NoOpLogger",
+    "NoOpMetrics",
+    "NoOpTracer",
+    "NoOpTelemetryProvider",
+    "NoOpAuthProvider",
+    # Production implementations
+    "ProductionTelemetryProvider",
+    "InMemoryAuthProvider",
+    "MemoryStorageProvider",
+    "RedisStorageProvider",
+]

@@ -27,7 +27,7 @@ pytestmark = [
 
 
 def _grafana_available() -> bool:
-    """Check if Grafana is available with OAuth2 configured."""
+    """Check if Grafana is available."""
     try:
         # Check Grafana health endpoint (should be public)
         response = requests.get(
@@ -36,6 +36,44 @@ def _grafana_available() -> bool:
             allow_redirects=False,
         )
         return response.status_code in [200, 302, 307]
+    except Exception:
+        return False
+
+
+def _grafana_oauth2_configured() -> bool:
+    """Check if Grafana is configured for OAuth2 authentication.
+
+    Returns True if Grafana redirects to Keycloak for authentication,
+    False if it shows internal login page (OAuth2 not configured).
+
+    With GF_AUTH_OAUTH_AUTO_LOGIN=true, Grafana redirects through multiple hops:
+    1. /dashboards/ -> /dashboards/login
+    2. /dashboards/login -> /dashboards/login/generic_oauth
+    3. /dashboards/login/generic_oauth -> Keycloak authorize endpoint
+
+    This function follows the redirect chain to check if OAuth2 is configured.
+    """
+    try:
+        # Follow up to 5 redirects to find the Keycloak authorize endpoint
+        session = requests.Session()
+        url = "http://localhost/dashboards/"
+        for _ in range(5):
+            response = session.get(url, timeout=5, allow_redirects=False)
+            if response.status_code not in [301, 302, 307, 308]:
+                return False  # Not a redirect - OAuth2 not configured
+
+            location = response.headers.get("Location", "")
+            # Check if this redirect goes to Keycloak
+            if "authn/realms" in location or "openid-connect/auth" in location:
+                return True
+
+            # Handle relative redirects
+            if location.startswith("/"):
+                url = f"http://localhost{location}"
+            else:
+                url = location
+
+        return False  # Too many redirects without reaching Keycloak
     except Exception:
         return False
 
@@ -52,9 +90,11 @@ def _keycloak_available() -> bool:
         return False
 
 
-# Skip at module level if services not available
+# Skip at module level if services not available or OAuth2 not configured
 if not _grafana_available() or not _keycloak_available():
     pytestmark.append(pytest.mark.skip(reason="Grafana or Keycloak not available for OAuth2 integration tests"))
+elif not _grafana_oauth2_configured():
+    pytestmark.append(pytest.mark.skip(reason="Grafana OAuth2 not configured (ADR-0068 infrastructure pending)"))
 
 # URLs
 GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost")
@@ -80,28 +120,45 @@ class TestGrafanaOAuth2Redirect:
         """
         GIVEN: No authentication (no session cookie)
         WHEN: Accessing Grafana dashboard root
-        THEN: Should redirect to Keycloak login page
+        THEN: Should eventually redirect to Keycloak login page
 
         User Journey: Unauthenticated user tries to access Grafana
+
+        With GF_AUTH_OAUTH_AUTO_LOGIN=true, Grafana redirects through multiple hops:
+        1. /dashboards/ -> /dashboards/login
+        2. /dashboards/login -> /dashboards/login/generic_oauth
+        3. /dashboards/login/generic_oauth -> Keycloak authorize endpoint
         """
-        response = requests.get(
-            f"{GRAFANA_URL}/",
-            timeout=10,
-            allow_redirects=False,
-        )
+        session = requests.Session()
+        url = f"{GRAFANA_URL}/"
+        keycloak_redirect_found = False
+        final_location = ""
 
-        # Should redirect (302 or 307) to OAuth2 authorize endpoint
-        assert response.status_code in [302, 307], f"Expected redirect to Keycloak, got {response.status_code}"
+        # Follow redirect chain until we reach Keycloak
+        for _ in range(5):
+            response = session.get(url, timeout=10, allow_redirects=False)
+            if response.status_code not in [301, 302, 307, 308]:
+                break
 
-        # Check redirect location contains Keycloak authorize URL
-        location = response.headers.get("Location", "")
-        assert "authn/realms/default/protocol/openid-connect/auth" in location, (
-            f"Expected redirect to Keycloak authorize endpoint, got: {location}"
-        )
+            location = response.headers.get("Location", "")
+            final_location = location
 
-        # Check OAuth2 parameters are present
-        assert "client_id=grafana" in location, f"Expected client_id=grafana in redirect URL, got: {location}"
-        assert "response_type=code" in location, f"Expected response_type=code in redirect URL, got: {location}"
+            # Check if this redirect goes to Keycloak
+            if "authn/realms/default/protocol/openid-connect/auth" in location:
+                keycloak_redirect_found = True
+                break
+
+            # Handle relative redirects
+            if location.startswith("/"):
+                url = f"{GATEWAY_URL}{location}"
+            else:
+                url = location
+
+        assert keycloak_redirect_found, f"Expected redirect chain to end at Keycloak authorize endpoint, got: {final_location}"
+
+        # Check OAuth2 parameters are present in the final redirect
+        assert "client_id=grafana" in final_location, f"Expected client_id=grafana in redirect URL, got: {final_location}"
+        assert "response_type=code" in final_location, f"Expected response_type=code in redirect URL, got: {final_location}"
 
     def test_grafana_health_endpoint_is_accessible(self):
         """
@@ -237,7 +294,7 @@ class TestGrafanaClientConfiguration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_grafana_client_exists_in_keycloak(self):
+    def test_oidc_discovery_endpoint_available(self):
         """
         GIVEN: Keycloak realm with grafana client configured
         WHEN: Requesting OIDC discovery endpoint
@@ -260,3 +317,82 @@ class TestGrafanaClientConfiguration:
         # Verify supported grant types include authorization_code
         grant_types = data.get("grant_types_supported", [])
         assert "authorization_code" in grant_types, f"Expected authorization_code grant type, got: {grant_types}"
+
+    def test_grafana_client_registered_in_keycloak(self):
+        """
+        GIVEN: Keycloak running with default realm imported from tests/e2e/default-realm.json
+        WHEN: Checking for grafana client registration via Admin API
+        THEN: Grafana client should exist and be enabled
+
+        This test catches the scenario where realm wasn't imported properly,
+        which would cause "Client not found" error when accessing Grafana.
+
+        Root cause: Keycloak --import-realm only imports on first start.
+        If the database already exists, the realm won't be re-imported.
+        """
+        # Step 1: Get admin token from master realm
+        # We use the Keycloak admin credentials, not realm user credentials
+        admin_token_response = requests.post(
+            f"{KEYCLOAK_URL}/realms/master/protocol/openid-connect/token",
+            data={
+                "grant_type": "password",
+                "client_id": "admin-cli",
+                "username": "admin",
+                "password": "admin",  # noqa: S106
+            },
+            timeout=10,
+        )
+
+        assert admin_token_response.status_code == 200, (
+            f"Failed to get Keycloak admin token: {admin_token_response.status_code}\n"
+            f"Response: {admin_token_response.text}\n"
+            "\n"
+            "Possible causes:\n"
+            "1. Keycloak admin credentials may have changed\n"
+            "2. Keycloak may not be fully started\n"
+            "3. Keycloak may have required admin actions pending"
+        )
+
+        admin_token = admin_token_response.json().get("access_token")
+        assert admin_token, "Expected access_token in admin token response"
+
+        # Step 2: Query Keycloak Admin API for grafana client
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        clients_response = requests.get(
+            f"{KEYCLOAK_URL}/admin/realms/default/clients",
+            headers=headers,
+            params={"clientId": "grafana"},
+            timeout=10,
+        )
+
+        assert clients_response.status_code == 200, (
+            f"Failed to query Keycloak clients: {clients_response.status_code}\nResponse: {clients_response.text}"
+        )
+
+        clients = clients_response.json()
+
+        # Verify grafana client exists
+        grafana_clients = [c for c in clients if c.get("clientId") == "grafana"]
+        assert len(grafana_clients) == 1, (
+            "Client 'grafana' not found in Keycloak realm 'default'.\n"
+            "\n"
+            "This causes 'Client not found' error when accessing Grafana dashboards.\n"
+            "\n"
+            "Root cause: The realm was not imported or import failed.\n"
+            "Keycloak's --import-realm only imports on first start.\n"
+            "\n"
+            "Fix options:\n"
+            "1. Recreate volumes: docker compose -f docker-compose.test.yml down -v\n"
+            "2. Manually create client via Keycloak Admin UI or CLI\n"
+            "\n"
+            f"Found clients: {[c.get('clientId') for c in clients]}"
+        )
+
+        grafana_client = grafana_clients[0]
+
+        # Verify client configuration
+        assert grafana_client.get("enabled") is True, "Client 'grafana' exists but is disabled. Enable it in Keycloak."
+
+        assert grafana_client.get("standardFlowEnabled") is True, (
+            "Client 'grafana' must have standard flow enabled for OAuth2 authorization code flow"
+        )

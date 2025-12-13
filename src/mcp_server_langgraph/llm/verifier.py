@@ -16,6 +16,7 @@ from typing import Any, Literal
 from langchain_core.messages import BaseMessage, HumanMessage
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
 from mcp_server_langgraph.llm.factory import create_verification_model
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 import contextlib
@@ -175,7 +176,9 @@ class OutputVerifier:
         # Format conversation context if provided
         context_section = ""
         if conversation_context:
-            context_text = "\n".join([f"{self._get_role(msg)}: {msg.content[:200]}..." for msg in conversation_context[-3:]])
+            context_text = "\n".join(
+                [f"{self._get_role(msg)}: {msg.content[:MESSAGE_PREVIEW_LENGTH]}..." for msg in conversation_context[-3:]]
+            )
             context_section = f"""<conversation_context>
 {context_text}
 </conversation_context>

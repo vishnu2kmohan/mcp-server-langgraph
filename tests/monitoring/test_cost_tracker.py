@@ -243,6 +243,125 @@ async def test_cost_metrics_collector_increments_prometheus_counters():
 # ==============================================================================
 
 
+@pytest.mark.xdist_group(name="cost_tracker_aggregator")
+class TestAggregateByField:
+    """Tests for generic _aggregate_by_field method (TDD: RED phase)."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def aggregator(self):
+        from mcp_server_langgraph.monitoring.cost_tracker import CostAggregator
+
+        return CostAggregator()
+
+    @pytest.fixture
+    def sample_records(self):
+        return [
+            {"model": "gpt-4", "user_id": "user1", "feature": "chat", "cost": Decimal("0.10")},
+            {"model": "gpt-4", "user_id": "user2", "feature": "chat", "cost": Decimal("0.20")},
+            {"model": "claude-3", "user_id": "user1", "feature": "summarize", "cost": Decimal("0.15")},
+        ]
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_aggregate_by_field_model(self, aggregator, sample_records):
+        """Should aggregate by model field correctly."""
+        result = await aggregator._aggregate_by_field(sample_records, "model")
+        assert result == {"gpt-4": Decimal("0.30"), "claude-3": Decimal("0.15")}
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_aggregate_by_field_user_id(self, aggregator, sample_records):
+        """Should aggregate by user_id field correctly."""
+        result = await aggregator._aggregate_by_field(sample_records, "user_id")
+        assert result == {"user1": Decimal("0.25"), "user2": Decimal("0.20")}
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_aggregate_by_field_feature(self, aggregator, sample_records):
+        """Should aggregate by feature field correctly."""
+        result = await aggregator._aggregate_by_field(sample_records, "feature")
+        assert result == {"chat": Decimal("0.30"), "summarize": Decimal("0.15")}
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_aggregate_by_field_missing_field_uses_unknown(self, aggregator):
+        """Should use 'unknown' for missing fields."""
+        records = [
+            {"model": "gpt-4", "cost": Decimal("0.10")},  # No user_id
+            {"model": "gpt-4", "user_id": "user1", "cost": Decimal("0.20")},
+        ]
+        result = await aggregator._aggregate_by_field(records, "user_id")
+        assert result == {"unknown": Decimal("0.10"), "user1": Decimal("0.20")}
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_aggregate_by_field_empty_records(self, aggregator):
+        """Should return empty dict for empty records."""
+        result = await aggregator._aggregate_by_field([], "model")
+        assert result == {}
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_aggregate_by_field_handles_string_cost(self, aggregator):
+        """Should handle string cost values."""
+        records = [
+            {"model": "gpt-4", "cost": "0.10"},  # String, not Decimal
+            {"model": "gpt-4", "cost": "0.20"},
+        ]
+        result = await aggregator._aggregate_by_field(records, "model")
+        assert result == {"gpt-4": Decimal("0.30")}
+
+
+@pytest.mark.xdist_group(name="cost_tracker_aggregator")
+class TestExistingAggregationMethods:
+    """Tests that existing public methods still work after refactoring."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def aggregator(self):
+        from mcp_server_langgraph.monitoring.cost_tracker import CostAggregator
+
+        return CostAggregator()
+
+    @pytest.fixture
+    def sample_records(self):
+        return [
+            {"model": "gpt-4", "user_id": "user1", "feature": "chat", "cost": Decimal("0.10")},
+            {"model": "gpt-4", "user_id": "user2", "feature": "chat", "cost": Decimal("0.20")},
+        ]
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_aggregate_by_model_uses_generic(self, aggregator, sample_records):
+        """aggregate_by_model should delegate to _aggregate_by_field."""
+        result = await aggregator.aggregate_by_model(sample_records)
+        assert "gpt-4" in result
+        assert result["gpt-4"] == Decimal("0.30")
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_aggregate_by_user_uses_generic(self, aggregator, sample_records):
+        """aggregate_by_user should delegate to _aggregate_by_field."""
+        result = await aggregator.aggregate_by_user(sample_records)
+        assert "user1" in result
+        assert result["user1"] == Decimal("0.10")
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_aggregate_by_feature_uses_generic(self, aggregator, sample_records):
+        """aggregate_by_feature should delegate to _aggregate_by_field."""
+        result = await aggregator.aggregate_by_feature(sample_records)
+        assert "chat" in result
+        assert result["chat"] == Decimal("0.30")
+
+
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_cost_aggregator_sums_by_model():

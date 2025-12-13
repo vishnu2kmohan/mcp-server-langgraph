@@ -15,33 +15,117 @@ Reference: ADR-0068 - Gateway-Level Authentication (native OAuth2)
 """
 
 import os
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Any
 
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 
-from mcp_server_langgraph.auth.middleware import get_current_user
+from mcp_server_langgraph.auth.factory import create_auth_middleware
+from mcp_server_langgraph.auth.middleware import get_current_user, set_global_auth_middleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
-from mcp_server_langgraph.observability.telemetry import logger
+from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.observability.telemetry import init_observability, logger
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """
+    Application lifespan manager.
+
+    Initializes:
+    - Observability (OpenTelemetry)
+    - Auth middleware (Keycloak + OpenFGA)
+    - OpenFGA store_id lookup
+    """
+    global _openfga_store_id
+
+    # Initialize observability for logging and tracing
+    init_observability(settings)
+
+    # Create and register auth middleware globally
+    # This is required for get_current_user() dependency to work
+    auth_middleware = create_auth_middleware(settings)
+    set_global_auth_middleware(auth_middleware)
+
+    # Fetch OpenFGA store_id at startup
+    _openfga_store_id = await fetch_store_id()
+    if _openfga_store_id:
+        logger.info(f"OpenFGA store_id fetched: {_openfga_store_id}")
+    else:
+        logger.warning("Could not fetch OpenFGA store_id - permission checks may fail")
+
+    logger.info(
+        "authz-proxy initialized",
+        extra={
+            "auth_provider": settings.auth_provider,
+            "keycloak_server_url": settings.keycloak_server_url,
+            "openfga_store_id": _openfga_store_id,
+        },
+    )
+
+    yield
+
+    logger.info("authz-proxy shutting down")
+
 
 # Create FastAPI app
 app = FastAPI(
     title="OpenFGA Playground Auth Proxy",
     description="Protects OpenFGA Playground with Keycloak + OpenFGA authorization",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Configuration
 OPENFGA_PLAYGROUND_URL = os.getenv("OPENFGA_PLAYGROUND_URL", "http://openfga-test:3000")
+OPENFGA_API_URL = os.getenv("OPENFGA_API_URL", "http://localhost:8080")
+OPENFGA_PRESHARED_KEY = os.getenv("OPENFGA_PRESHARED_KEY")
+OPENFGA_STORE_NAME = "mcp-server-langgraph-test"  # Must match seed script
 AUTHZ_OBJECT = "authz:playground"
+
+# Global store_id, fetched at startup
+_openfga_store_id: str | None = None
+
+
+async def fetch_store_id() -> str | None:
+    """Fetch the OpenFGA store ID by looking up existing stores."""
+    import httpx
+
+    headers = {"Content-Type": "application/json"}
+    if OPENFGA_PRESHARED_KEY:
+        headers["Authorization"] = f"Bearer {OPENFGA_PRESHARED_KEY}"
+
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(f"{OPENFGA_API_URL}/stores", headers=headers)
+            if response.status_code == 200:
+                stores = response.json().get("stores", [])
+                for store in stores:
+                    if store.get("name") == OPENFGA_STORE_NAME:
+                        store_id: str = str(store["id"])
+                        return store_id
+                # If no store with expected name, use first store
+                if stores:
+                    first_store_id: str = str(stores[0]["id"])
+                    return first_store_id
+    except Exception as e:
+        logger.error(f"Failed to fetch OpenFGA store ID: {e}")
+
+    return None
 
 
 def get_openfga_client() -> OpenFGAClient:
-    """Get OpenFGA client instance with preshared key authentication."""
+    """Get OpenFGA client instance with preshared key authentication and store_id."""
+    # Use store_id from environment or fetched at startup
+    store_id = os.getenv("OPENFGA_STORE_ID") or _openfga_store_id
+
     config = OpenFGAConfig(
-        api_url=os.getenv("OPENFGA_API_URL", "http://localhost:8080"),
-        preshared_key=os.getenv("OPENFGA_PRESHARED_KEY"),
+        api_url=OPENFGA_API_URL,
+        store_id=store_id,
+        preshared_key=OPENFGA_PRESHARED_KEY,
     )
     return OpenFGAClient(config=config)
 
@@ -51,7 +135,9 @@ async def require_admin_permission(
     openfga: OpenFGAClient = Depends(get_openfga_client),
 ) -> dict[str, Any]:
     """Require admin permission on authz:playground."""
-    user_id = f"user:{current_user.get('preferred_username', current_user.get('sub'))}"
+    # get_current_user returns dict with 'username' (normalized from preferred_username or sub)
+    # and 'user_id' (already in "user:username" format)
+    user_id = current_user.get("user_id") or f"user:{current_user.get('username', 'unknown')}"
 
     try:
         allowed = await openfga.check_permission(

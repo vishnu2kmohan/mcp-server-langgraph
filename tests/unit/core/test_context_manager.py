@@ -417,5 +417,88 @@ class TestCompactionResult:
             )
 
 
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="context_manager_tests")
+class TestExtractionKeywords:
+    """Tests for extraction keywords configuration."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_extraction_keywords_has_required_categories(self):
+        """All required categories should be present."""
+        from mcp_server_langgraph.core.context_manager import EXTRACTION_KEYWORDS
+
+        # All 8 categories: 6 original + 2 from task description
+        required = {"decisions", "requirements", "facts", "action_items", "issues", "preferences", "questions", "constraints"}
+        assert required.issubset(set(EXTRACTION_KEYWORDS.keys()))
+
+    def test_each_category_has_keywords(self):
+        """Each category should have at least one keyword."""
+        from mcp_server_langgraph.core.context_manager import EXTRACTION_KEYWORDS
+
+        for category, keywords in EXTRACTION_KEYWORDS.items():
+            assert len(keywords) > 0, f"Category {category} has no keywords"
+            assert all(isinstance(kw, str) for kw in keywords)
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="context_manager_tests")
+class TestMatchesCategory:
+    """Tests for _matches_category helper method."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.fixture
+    def context_manager(self):
+        """Create ContextManager instance for testing."""
+        mock_settings = MagicMock()
+        mock_settings.model_name = "test-model"
+        mock_settings.llm_provider = "test-provider"
+
+        manager = ContextManager(
+            compaction_threshold=1000,
+            target_after_compaction=500,
+            recent_message_count=2,
+            settings=mock_settings,
+        )
+
+        manager.llm = AsyncMock(return_value=None)
+        manager.llm.ainvoke = AsyncMock(
+            return_value=MagicMock(content="Summary: User asked about Python, assistant explained basics.")
+        )
+
+        return manager
+
+    def test_matches_decision_keywords(self, context_manager):
+        """Should match decision-related content."""
+        from mcp_server_langgraph.core.context_manager import EXTRACTION_KEYWORDS
+
+        assert context_manager._matches_category("We decided to use Python", EXTRACTION_KEYWORDS["decisions"])
+        assert context_manager._matches_category("The team agreed on the approach", EXTRACTION_KEYWORDS["decisions"])
+
+    def test_matches_requirement_keywords(self, context_manager):
+        """Should match requirement-related content."""
+        from mcp_server_langgraph.core.context_manager import EXTRACTION_KEYWORDS
+
+        assert context_manager._matches_category("We need a database", EXTRACTION_KEYWORDS["requirements"])
+        assert context_manager._matches_category("The system must be secure", EXTRACTION_KEYWORDS["requirements"])
+
+    def test_case_insensitive_matching(self, context_manager):
+        """Matching should be case-insensitive."""
+        from mcp_server_langgraph.core.context_manager import EXTRACTION_KEYWORDS
+
+        assert context_manager._matches_category("WE DECIDED to proceed", EXTRACTION_KEYWORDS["decisions"])
+
+    def test_no_match_returns_false(self, context_manager):
+        """Should return False when no keywords match."""
+        from mcp_server_langgraph.core.context_manager import EXTRACTION_KEYWORDS
+
+        assert not context_manager._matches_category("Hello world", EXTRACTION_KEYWORDS["decisions"])
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

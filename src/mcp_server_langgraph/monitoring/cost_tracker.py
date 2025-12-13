@@ -449,6 +449,28 @@ class CostAggregator:
     - Total cost calculation
     """
 
+    async def _aggregate_by_field(self, records: list[dict[str, Any]], field: str) -> dict[str, Decimal]:
+        """
+        Generic aggregation by any field.
+
+        Args:
+            records: List of cost records
+            field: Field name to aggregate by
+
+        Returns:
+            Dictionary mapping field values to total costs
+        """
+        aggregated: dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
+        for record in records:
+            key = record.get(field, "unknown")
+            cost = record.get("cost", Decimal("0"))
+            if isinstance(cost, str):
+                cost = Decimal(cost)
+            elif not isinstance(cost, Decimal):
+                cost = Decimal(str(cost))
+            aggregated[key] += cost
+        return dict(aggregated)
+
     async def aggregate_by_model(self, records: list[dict[str, Any]]) -> dict[str, Decimal]:
         """
         Aggregate costs by model.
@@ -459,14 +481,7 @@ class CostAggregator:
         Returns:
             Dict mapping model names to total costs
         """
-        aggregated: dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
-
-        for record in records:
-            model = record["model"]
-            cost = record["cost"] if isinstance(record["cost"], Decimal) else Decimal(str(record["cost"]))
-            aggregated[model] += cost
-
-        return dict(aggregated)
+        return await self._aggregate_by_field(records, "model")
 
     async def aggregate_by_user(self, records: list[dict[str, Any]]) -> dict[str, Decimal]:
         """
@@ -478,14 +493,7 @@ class CostAggregator:
         Returns:
             Dict mapping user IDs to total costs
         """
-        aggregated: dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
-
-        for record in records:
-            user_id = record["user_id"]
-            cost = record["cost"] if isinstance(record["cost"], Decimal) else Decimal(str(record["cost"]))
-            aggregated[user_id] += cost
-
-        return dict(aggregated)
+        return await self._aggregate_by_field(records, "user_id")
 
     async def aggregate_by_feature(self, records: list[dict[str, Any]]) -> dict[str, Decimal]:
         """
@@ -497,14 +505,7 @@ class CostAggregator:
         Returns:
             Dict mapping feature names to total costs
         """
-        aggregated: dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
-
-        for record in records:
-            feature = record.get("feature", "unknown")
-            cost = record["cost"] if isinstance(record["cost"], Decimal) else Decimal(str(record["cost"]))
-            aggregated[feature] += cost
-
-        return dict(aggregated)
+        return await self._aggregate_by_field(records, "feature")
 
     async def calculate_total(self, records: list[dict[str, Any]]) -> Decimal:
         """

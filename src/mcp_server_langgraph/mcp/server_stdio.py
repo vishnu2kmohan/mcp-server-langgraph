@@ -25,6 +25,7 @@ from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
+from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import format_response
 
@@ -688,7 +689,10 @@ class MCPAgentServer:
                     if hasattr(msg, "content"):
                         content = msg.content
 
-                    formatted_messages.append(f"{i}. [{role}] {content[:200]}{'...' if len(content) > 200 else ''}")
+                    formatted_messages.append(
+                        f"{i}. [{role}] {content[:MESSAGE_PREVIEW_LENGTH]}"
+                        f"{'...' if len(content) > MESSAGE_PREVIEW_LENGTH else ''}"
+                    )
 
                 # Build response
                 response_text = (
