@@ -121,6 +121,224 @@
       "user": "user:alice",
       "relation": "viewer",
       "object": "authz:playground"
+    },
+    {
+      "_comment": "Workflow permissions (/api/v1/workflows)",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "workflow:default"
+    },
+    {
+      "user": "user:alice",
+      "relation": "owner",
+      "object": "workflow:alice_workflow"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "workflow:alice_workflow"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "workflow:default"
+    },
+    {
+      "_comment": "Session permissions (/api/v1/sessions)",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "session:admin_session"
+    },
+    {
+      "user": "user:alice",
+      "relation": "owner",
+      "object": "session:alice_session"
+    },
+    {
+      "user": "user:bob",
+      "relation": "owner",
+      "object": "session:bob_session"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "session:admin_session"
+    },
+    {
+      "_comment": "API Key permissions",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "api_key:admin_key"
+    },
+    {
+      "user": "user:alice",
+      "relation": "owner",
+      "object": "api_key:alice_key"
+    },
+    {
+      "user": "user:bob",
+      "relation": "owner",
+      "object": "api_key:bob_key"
+    },
+    {
+      "_comment": "Dashboard (Grafana) permissions",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "dashboard:grafana"
+    },
+    {
+      "user": "user:alice",
+      "relation": "editor",
+      "object": "dashboard:grafana"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "dashboard:grafana"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "dashboard:grafana"
+    },
+    {
+      "_comment": "Cost tracking permissions (/api/v1/cost)",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "cost:default"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "cost:default"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "cost:default"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "cost:default"
+    },
+    {
+      "_comment": "Observability permissions (/api/v1/observability)",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "observability:default"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "observability:default"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "observability:default"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "observability:default"
+    },
+    {
+      "_comment": "Chat permissions (/api/v1/chat)",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "chat:admin_chat"
+    },
+    {
+      "user": "user:alice",
+      "relation": "owner",
+      "object": "chat:alice_chat"
+    },
+    {
+      "user": "user:bob",
+      "relation": "owner",
+      "object": "chat:bob_chat"
+    },
+    {
+      "_comment": "MCP Connection permissions (/api/v1/mcp)",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "mcp_connection:admin_conn"
+    },
+    {
+      "user": "user:alice",
+      "relation": "owner",
+      "object": "mcp_connection:alice_conn"
+    },
+    {
+      "user": "user:bob",
+      "relation": "owner",
+      "object": "mcp_connection:bob_conn"
+    },
+    {
+      "_comment": "Gateway (Traefik) permissions - admin only for write access",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "gateway:traefik"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "gateway:traefik"
+    },
+    {
+      "_comment": "Logs (Loki) permissions",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "logs:loki"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "logs:loki"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "logs:loki"
+    },
+    {
+      "_comment": "Traces (Tempo) permissions",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "traces:tempo"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "traces:tempo"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "traces:tempo"
+    },
+    {
+      "_comment": "Metrics (Mimir) permissions",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "metrics:mimir"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "metrics:mimir"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "metrics:mimir"
+    },
+    {
+      "_comment": "Identity (Keycloak) permissions - admin only",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "identity:keycloak"
     }
   ]
 }

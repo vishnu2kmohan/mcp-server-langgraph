@@ -497,13 +497,10 @@ services:
   keycloak-init-test:
     # Reuse keycloak-test image (avoid duplicate builds) to have access to kcadm.sh
     # NOTE: Uses same GHCR image as keycloak-test for consistency
-    # Both image: and build: are specified. Docker Compose will:
-    # 1. Pull from GHCR if available (CI)
-    # 2. Fall back to building from docker/Dockerfile.keycloak (local)
+    # NO build: section here - reuses image already built by keycloak-test service
+    # This avoids BuildKit "already exists" error when both services try to export
+    # to the same image tag during `docker compose up --build`
     image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.keycloak
     # Override entrypoint and command to run the init script
     entrypoint: ["/bin/bash", "-c"]
     command:

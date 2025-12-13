@@ -224,6 +224,449 @@
           }
         }
       }
+    },
+    {
+      "type": "workflow",
+      "description": "LangGraph workflow definitions for /api/v1/workflows",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "editor": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}}
+            ]
+          }
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "editor"}},
+              {
+                "tupleToUserset": {
+                  "tupleset": {"relation": "organization"},
+                  "computedUserset": {"relation": "member"}
+                }
+              }
+            ]
+          }
+        },
+        "executor": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}},
+              {
+                "tupleToUserset": {
+                  "tupleset": {"relation": "organization"},
+                  "computedUserset": {"relation": "member"}
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "editor": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "executor": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "session",
+      "description": "Workflow execution instances for /api/v1/sessions",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}},
+              {
+                "tupleToUserset": {
+                  "tupleset": {"relation": "organization"},
+                  "computedUserset": {"relation": "member"}
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "api_key",
+      "description": "API key management for user authentication",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "viewer": {
+          "computedUserset": {"relation": "owner"}
+        },
+        "revoker": {
+          "computedUserset": {"relation": "owner"}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "dashboard",
+      "description": "Grafana/monitoring dashboard access control",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "editor": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "editor"}},
+              {
+                "tupleToUserset": {
+                  "tupleset": {"relation": "organization"},
+                  "computedUserset": {"relation": "member"}
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "editor": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "cost",
+      "description": "Cost tracking and analysis for /api/v1/cost",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}},
+              {
+                "tupleToUserset": {
+                  "tupleset": {"relation": "organization"},
+                  "computedUserset": {"relation": "member"}
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "observability",
+      "description": "Observability access for /api/v1/observability (traces, metrics, logs)",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}},
+              {
+                "tupleToUserset": {
+                  "tupleset": {"relation": "organization"},
+                  "computedUserset": {"relation": "member"}
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "chat",
+      "description": "Real-time chat resources for /api/v1/chat",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}}
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "mcp_connection",
+      "description": "MCP WebSocket connections for /api/v1/mcp",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "viewer": {
+          "computedUserset": {"relation": "owner"}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "gateway",
+      "description": "Traefik gateway dashboard access",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "logs",
+      "description": "Loki log aggregation access",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "traces",
+      "description": "Tempo distributed tracing access",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "metrics",
+      "description": "Mimir metrics storage access",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "identity",
+      "description": "Keycloak identity management access",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
     }
   ]
 }

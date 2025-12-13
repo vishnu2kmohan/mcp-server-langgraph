@@ -197,6 +197,11 @@ node_modules/
 package-lock.json
 yarn.lock
 
+# Frontend (Studio) build artifacts and coverage
+src/mcp_server_langgraph/studio/frontend/coverage/
+src/mcp_server_langgraph/studio/frontend/dist/
+src/mcp_server_langgraph/studio/frontend/.vite/
+
 # Terraform (if infrastructure as code)
 .terraform/
 *.tfstate
