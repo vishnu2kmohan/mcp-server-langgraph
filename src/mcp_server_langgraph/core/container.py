@@ -197,8 +197,16 @@ class NoOpTelemetryProvider:
         return self._tracer
 
 
-class NoOpAuthProvider:
-    """No-op auth provider for testing"""
+class TestAuthProvider:
+    """
+    Test auth provider that accepts all tokens.
+
+    Used for testing and development environments only.
+    Returns mock user data for any token provided.
+
+    Note: Previously named NoOpAuthProvider, renamed for LSP compliance
+    since it actively accepts tokens rather than doing nothing.
+    """
 
     def validate_token(self, token: str) -> bool:
         """Accept any token in test mode"""
@@ -210,10 +218,30 @@ class NoOpAuthProvider:
 
 
 class MemoryStorageProvider:
-    """In-memory storage provider for testing"""
+    """
+    In-memory storage provider for testing.
 
-    def __init__(self) -> None:
+    Warning: This provider should only be used in test environments.
+    Data is not persisted and will be lost on restart.
+    For development, configure Redis or use persistent storage.
+
+    YAGNI Note: Added deprecation warning for non-test usage to encourage
+    proper infrastructure setup even in development.
+    """
+
+    def __init__(self, environment: str = "test") -> None:
         self._store: dict[str, Any] = {}
+        # Warn if used in non-test environment
+        if environment not in ("test", "testing"):
+            import warnings
+
+            warnings.warn(
+                "MemoryStorageProvider is intended for testing only. "
+                "Data will not persist across restarts. "
+                "Configure Redis for development/production.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
     def get(self, key: str) -> Any | None:
         return self._store.get(key)
@@ -388,7 +416,7 @@ class ApplicationContainer:
         """Get auth provider (lazy initialization)"""
         if not hasattr(self, "_auth_instance"):
             if self.config.environment == "test":
-                self._auth_instance = NoOpAuthProvider()
+                self._auth_instance = TestAuthProvider()
             elif self.config.environment == "development" or not self.config.enable_auth:
                 self._auth_instance = InMemoryAuthProvider()  # type: ignore[assignment]
             else:
@@ -402,12 +430,12 @@ class ApplicationContainer:
         """Get storage provider (lazy initialization)"""
         if not hasattr(self, "_storage_instance"):
             if self.config.environment == "test":
-                self._storage_instance = MemoryStorageProvider()
+                self._storage_instance = MemoryStorageProvider(environment="test")
             elif self.settings.redis_host:
                 self._storage_instance = RedisStorageProvider(self.settings)  # type: ignore[assignment]
             else:
-                # Fallback to in-memory for development
-                self._storage_instance = MemoryStorageProvider()
+                # Fallback to in-memory for development (will trigger deprecation warning)
+                self._storage_instance = MemoryStorageProvider(environment=self.config.environment)
 
         return self._storage_instance
 
@@ -495,7 +523,7 @@ __all__ = [
     "NoOpMetrics",
     "NoOpTracer",
     "NoOpTelemetryProvider",
-    "NoOpAuthProvider",
+    "TestAuthProvider",
     # Production implementations
     "ProductionTelemetryProvider",
     "InMemoryAuthProvider",

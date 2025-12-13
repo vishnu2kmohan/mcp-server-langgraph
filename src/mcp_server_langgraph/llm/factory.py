@@ -644,18 +644,23 @@ class LLMFactory:
         raise RuntimeError(msg)
 
 
-def create_llm_from_config(config) -> LLMFactory:  # type: ignore[no-untyped-def]
+# ==============================================================================
+# DRY Helper Functions for Factory Creation
+# ==============================================================================
+
+
+def _get_provider_credential(config, provider: str) -> str | None:  # type: ignore[no-untyped-def]
     """
-    Create primary LLM instance from configuration
+    Get credential for a specific LLM provider from config.
 
     Args:
-        config: Settings object with LLM configuration
+        config: Settings object with provider credentials
+        provider: LLM provider name
 
     Returns:
-        Configured LLMFactory instance for primary chat operations
+        Credential string or None for providers using other auth (Vertex AI)
     """
-    # Determine API key based on provider
-    api_key_map = {
+    credential_map = {
         "anthropic": config.anthropic_api_key,
         "openai": config.openai_api_key,
         "google": config.google_api_key,
@@ -664,36 +669,43 @@ def create_llm_from_config(config) -> LLMFactory:  # type: ignore[no-untyped-def
         "azure": config.azure_api_key,
         "bedrock": config.aws_access_key_id,
     }
+    return credential_map.get(provider)
 
-    api_key = api_key_map.get(config.llm_provider)
 
-    # Provider-specific kwargs
-    provider_kwargs = {}
+def _get_provider_kwargs(config, provider: str) -> dict:  # type: ignore[no-untyped-def]
+    """
+    Get provider-specific kwargs for LLMFactory.
 
-    if config.llm_provider == "azure":
+    Args:
+        config: Settings object with provider configuration
+        provider: LLM provider name
+
+    Returns:
+        Dictionary of provider-specific kwargs
+    """
+    provider_kwargs: dict = {}
+
+    if provider == "azure":
         provider_kwargs.update(
             {
                 "api_base": config.azure_api_base,
                 "api_version": config.azure_api_version,
             }
         )
-    elif config.llm_provider == "bedrock":
+    elif provider == "bedrock":
         provider_kwargs.update(
             {
                 "aws_secret_access_key": config.aws_secret_access_key,
                 "aws_region_name": config.aws_region,
             }
         )
-    elif config.llm_provider == "ollama":
+    elif provider == "ollama":
         provider_kwargs.update(
             {
                 "api_base": config.ollama_base_url,
             }
         )
-    elif config.llm_provider in ["vertex_ai", "google"]:
-        # Vertex AI configuration
-        # LiteLLM requires vertex_project and vertex_location for Vertex AI models
-        # If using Workload Identity on GKE, authentication is automatic
+    elif provider in ["vertex_ai", "google"]:
         vertex_project = config.vertex_project or config.google_project_id
         if vertex_project:
             provider_kwargs.update(
@@ -703,22 +715,67 @@ def create_llm_from_config(config) -> LLMFactory:  # type: ignore[no-untyped-def
                 }
             )
 
+    return provider_kwargs
+
+
+def _create_factory_with_config(  # type: ignore[no-untyped-def]
+    config,
+    provider: str,
+    model_name: str,
+    temperature: float,
+    max_tokens: int,
+) -> LLMFactory:
+    """
+    Create LLMFactory with common configuration pattern.
+
+    Args:
+        config: Settings object with LLM configuration
+        provider: LLM provider name
+        model_name: Model name to use
+        temperature: Model temperature
+        max_tokens: Maximum tokens for response
+
+    Returns:
+        Configured LLMFactory instance
+    """
+    credential = _get_provider_credential(config, provider)
+    provider_kwargs = _get_provider_kwargs(config, provider)
+
     factory = LLMFactory(
-        provider=config.llm_provider,
-        model_name=config.model_name,
-        api_key=api_key,
-        temperature=config.model_temperature,
-        max_tokens=config.model_max_tokens,
+        provider=provider,
+        model_name=model_name,
+        api_key=credential,
+        temperature=temperature,
+        max_tokens=max_tokens,
         timeout=config.model_timeout,
         enable_fallback=config.enable_fallback,
         fallback_models=config.fallback_models,
         **provider_kwargs,
     )
 
-    # Set up credentials for primary + all fallback providers
+    # Set up credentials for all providers
     factory._setup_environment(config=config)
 
     return factory
+
+
+def create_llm_from_config(config) -> LLMFactory:  # type: ignore[no-untyped-def]
+    """
+    Create primary LLM instance from configuration.
+
+    Args:
+        config: Settings object with LLM configuration
+
+    Returns:
+        Configured LLMFactory instance for primary chat operations
+    """
+    return _create_factory_with_config(
+        config=config,
+        provider=config.llm_provider,
+        model_name=config.model_name,
+        temperature=config.model_temperature,
+        max_tokens=config.model_max_tokens,
+    )
 
 
 def create_summarization_model(config) -> LLMFactory:  # type: ignore[no-untyped-def]
@@ -738,50 +795,16 @@ def create_summarization_model(config) -> LLMFactory:  # type: ignore[no-untyped
     if not getattr(config, "use_dedicated_summarization_model", False):
         return create_llm_from_config(config)
 
-    # Determine provider and API key
     provider = config.summarization_model_provider or config.llm_provider
+    model_name = config.summarization_model_name or config.model_name
 
-    api_key_map = {
-        "anthropic": config.anthropic_api_key,
-        "openai": config.openai_api_key,
-        "google": config.google_api_key,
-        "gemini": config.google_api_key,
-        "vertex_ai": None,  # Vertex AI uses Workload Identity or GOOGLE_APPLICATION_CREDENTIALS
-        "azure": config.azure_api_key,
-        "bedrock": config.aws_access_key_id,
-    }
-
-    api_key = api_key_map.get(provider)
-
-    # Provider-specific kwargs
-    provider_kwargs = {}
-    if provider == "azure":
-        provider_kwargs.update({"api_base": config.azure_api_base, "api_version": config.azure_api_version})
-    elif provider == "bedrock":
-        provider_kwargs.update({"aws_secret_access_key": config.aws_secret_access_key, "aws_region_name": config.aws_region})
-    elif provider == "ollama":
-        provider_kwargs.update({"api_base": config.ollama_base_url})
-    elif provider in ["vertex_ai", "google"]:
-        vertex_project = config.vertex_project or config.google_project_id
-        if vertex_project:
-            provider_kwargs.update({"vertex_project": vertex_project, "vertex_location": config.vertex_location})
-
-    factory = LLMFactory(
+    return _create_factory_with_config(
+        config=config,
         provider=provider,
-        model_name=config.summarization_model_name or config.model_name,
-        api_key=api_key,
+        model_name=model_name,
         temperature=config.summarization_model_temperature,
         max_tokens=config.summarization_model_max_tokens,
-        timeout=config.model_timeout,
-        enable_fallback=config.enable_fallback,
-        fallback_models=config.fallback_models,
-        **provider_kwargs,
     )
-
-    # Set up credentials for all providers
-    factory._setup_environment(config=config)
-
-    return factory
 
 
 def create_verification_model(config) -> LLMFactory:  # type: ignore[no-untyped-def]
@@ -801,47 +824,13 @@ def create_verification_model(config) -> LLMFactory:  # type: ignore[no-untyped-
     if not getattr(config, "use_dedicated_verification_model", False):
         return create_llm_from_config(config)
 
-    # Determine provider and API key
     provider = config.verification_model_provider or config.llm_provider
+    model_name = config.verification_model_name or config.model_name
 
-    api_key_map = {
-        "anthropic": config.anthropic_api_key,
-        "openai": config.openai_api_key,
-        "google": config.google_api_key,
-        "gemini": config.google_api_key,
-        "vertex_ai": None,  # Vertex AI uses Workload Identity or GOOGLE_APPLICATION_CREDENTIALS
-        "azure": config.azure_api_key,
-        "bedrock": config.aws_access_key_id,
-    }
-
-    api_key = api_key_map.get(provider)
-
-    # Provider-specific kwargs
-    provider_kwargs = {}
-    if provider == "azure":
-        provider_kwargs.update({"api_base": config.azure_api_base, "api_version": config.azure_api_version})
-    elif provider == "bedrock":
-        provider_kwargs.update({"aws_secret_access_key": config.aws_secret_access_key, "aws_region_name": config.aws_region})
-    elif provider == "ollama":
-        provider_kwargs.update({"api_base": config.ollama_base_url})
-    elif provider in ["vertex_ai", "google"]:
-        vertex_project = config.vertex_project or config.google_project_id
-        if vertex_project:
-            provider_kwargs.update({"vertex_project": vertex_project, "vertex_location": config.vertex_location})
-
-    factory = LLMFactory(
+    return _create_factory_with_config(
+        config=config,
         provider=provider,
-        model_name=config.verification_model_name or config.model_name,
-        api_key=api_key,
+        model_name=model_name,
         temperature=config.verification_model_temperature,
         max_tokens=config.verification_model_max_tokens,
-        timeout=config.model_timeout,
-        enable_fallback=config.enable_fallback,
-        fallback_models=config.fallback_models,
-        **provider_kwargs,
     )
-
-    # Set up credentials for all providers
-    factory._setup_environment(config=config)
-
-    return factory

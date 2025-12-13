@@ -236,11 +236,11 @@ class TestAuthProvider:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_noop_auth_provider(self):
-        """Test that no-op auth provider works for tests"""
-        from mcp_server_langgraph.core.container import NoOpAuthProvider
+    def test_test_auth_provider_accepts_any_token(self):
+        """Test that TestAuthProvider accepts any token for testing"""
+        from mcp_server_langgraph.core.container import TestAuthProvider
 
-        provider = NoOpAuthProvider()
+        provider = TestAuthProvider()
 
         # Should accept any token
         assert provider.validate_token("any-token") is True
@@ -277,11 +277,11 @@ class TestStorageProvider:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_memory_storage_provider(self):
+    def test_memory_storage_provider_basic_operations(self):
         """Test in-memory storage provider for tests"""
         from mcp_server_langgraph.core.container import MemoryStorageProvider
 
-        provider = MemoryStorageProvider()
+        provider = MemoryStorageProvider(environment="test")
 
         # Should support basic operations
         provider.set("key1", "value1")
