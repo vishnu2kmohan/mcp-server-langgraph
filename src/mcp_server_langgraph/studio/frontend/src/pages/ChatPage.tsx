@@ -21,12 +21,17 @@ export function ChatPage() {
 
   const {
     currentSession,
+    sessions,
     isLoadingSession,
+    isLoadingSessions,
     isSending,
     error,
     sendMessage,
     clearMessages,
     clearError,
+    fetchSessions,
+    createSession,
+    loadSession,
   } = useSessionStore();
 
   const messages = useMemo(() => currentSession?.messages || [], [currentSession?.messages]);
@@ -35,6 +40,44 @@ export function ChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Auto-create or load session on mount
+  useEffect(() => {
+    const initSession = async () => {
+      // Don't auto-create if already loading or session exists
+      if (isLoadingSession || isLoadingSessions || currentSession) {
+        return;
+      }
+
+      // Fetch sessions if list is empty
+      if (sessions.length === 0) {
+        await fetchSessions();
+        // After fetch, if still no sessions, create one
+        // Note: We don't check sessions.length here because fetchSessions updates the store
+        return;
+      }
+
+      // If sessions exist but none selected, load the most recent
+      if (sessions.length > 0) {
+        await loadSession(sessions[0].id);
+        return;
+      }
+    };
+
+    initSession();
+  }, [currentSession, sessions, isLoadingSession, isLoadingSessions, fetchSessions, createSession, loadSession]);
+
+  // Create session if fetchSessions returned empty list
+  useEffect(() => {
+    const createIfNeeded = async () => {
+      // Only create if not loading, no current session, and sessions list is empty
+      if (!isLoadingSession && !isLoadingSessions && !currentSession && sessions.length === 0) {
+        await createSession('New Chat');
+      }
+    };
+
+    createIfNeeded();
+  }, [sessions, currentSession, isLoadingSession, isLoadingSessions, createSession]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
