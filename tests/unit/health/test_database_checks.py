@@ -572,10 +572,12 @@ class TestConvenienceFunction:
         # IMPORTANT: Don't use AsyncMock(spec=...) - spec introspection doesn't detect
         # async methods correctly, causing MagicMock to be used instead of AsyncMock
         # for the validate() method. Use a plain mock and explicitly set async methods.
+        # Import both MagicMock and AsyncMock here for xdist worker isolation.
+        from unittest.mock import AsyncMock as LocalAsyncMock
         from unittest.mock import MagicMock
 
         mock_validator = MagicMock()
-        mock_validator.validate = AsyncMock(return_value=mock_result)
+        mock_validator.validate = LocalAsyncMock(return_value=mock_result)
 
         with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator", return_value=mock_validator):
             result = await validate_database_architecture()
@@ -596,10 +598,12 @@ class TestConvenienceFunction:
         # IMPORTANT: Don't use AsyncMock(spec=...) - spec introspection doesn't detect
         # async methods correctly, causing MagicMock to be used instead of AsyncMock
         # for the validate() method. Use a plain mock and explicitly set async methods.
+        # Import both MagicMock and AsyncMock here for xdist worker isolation.
+        from unittest.mock import AsyncMock as LocalAsyncMock
         from unittest.mock import MagicMock
 
         mock_validator = MagicMock()
-        mock_validator.validate = AsyncMock(return_value=mock_result)
+        mock_validator.validate = LocalAsyncMock(return_value=mock_result)
 
         with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator", return_value=mock_validator) as mock_class:
             result = await validate_database_architecture(

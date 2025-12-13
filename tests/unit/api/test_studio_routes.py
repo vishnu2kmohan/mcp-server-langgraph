@@ -9,7 +9,7 @@ import gc
 from typing import Any
 
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
 pytestmark = pytest.mark.unit
@@ -49,16 +49,13 @@ def mock_workflow_data() -> dict[str, Any]:
 def client(mock_current_user: dict[str, Any]) -> TestClient:
     """Create test client with mocked authentication.
 
-    Creates a fresh FastAPI app with studio router and auth override for each test.
+    Creates a fresh FastAPI app with studio router and auth middleware for each test.
     This ensures proper isolation in pytest-xdist parallel execution.
 
-    Uses middleware to set request.state.user, which get_current_user checks first.
-    This approach is more reliable than dependency overrides for xdist isolation.
+    Uses HTTP middleware to set request.state.user, which get_current_user
+    checks before attempting token validation. This approach is more reliable
+    than dependency_overrides in xdist workers.
     """
-    from starlette.middleware.base import BaseHTTPMiddleware
-    from starlette.requests import Request
-    from starlette.responses import Response
-
     from mcp_server_langgraph.api.studio import WorkflowService, router as studio_router
 
     # Clear in-memory storage before each test
@@ -68,17 +65,17 @@ def client(mock_current_user: dict[str, Any]) -> TestClient:
     # Create fresh app for this test
     app = FastAPI()
 
-    # Add middleware that sets request.state.user BEFORE any request processing
-    # This bypasses the authentication dependency entirely
-    class MockAuthMiddleware(BaseHTTPMiddleware):
-        async def dispatch(self, request: Request, call_next: Any) -> Response:
-            # Set user in request state - get_current_user checks this first
-            request.state.user = mock_current_user
-            return await call_next(request)
+    # Add middleware to inject test user into request.state
+    # This middleware runs BEFORE route handlers, and get_current_user
+    # checks request.state.user first (auth/middleware.py:852-854)
+    @app.middleware("http")
+    async def inject_test_user(request: Request, call_next):  # type: ignore[no-untyped-def]
+        """Inject test user into request state for authentication bypass."""
+        request.state.user = mock_current_user
+        response = await call_next(request)
+        return response
 
-    app.add_middleware(MockAuthMiddleware)
-
-    # Include router
+    # Include router AFTER middleware
     app.include_router(studio_router)
 
     # Use context manager for proper cleanup
@@ -87,7 +84,7 @@ def client(mock_current_user: dict[str, Any]) -> TestClient:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_studio_routes_workflows")
+@pytest.mark.xdist_group(name="test_studio_routes")
 class TestWorkflowCRUD:
     """Tests for workflow CRUD endpoints."""
 
@@ -184,7 +181,7 @@ class TestWorkflowCRUD:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_studio_routes_suggestions")
+@pytest.mark.xdist_group(name="test_studio_routes")
 class TestAISuggestions:
     """Tests for AI suggestion endpoints."""
 
@@ -226,7 +223,7 @@ class TestAISuggestions:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_studio_routes_templates")
+@pytest.mark.xdist_group(name="test_studio_routes")
 class TestTemplateEndpoints:
     """Tests for template endpoints."""
 
@@ -276,7 +273,7 @@ class TestTemplateEndpoints:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_studio_routes_auth")
+@pytest.mark.xdist_group(name="test_studio_routes")
 class TestAuthorizationEnforcement:
     """Tests for authorization enforcement on studio routes."""
 
@@ -311,41 +308,40 @@ class TestAuthorizationEnforcement:
         THEN should return 403 Forbidden or 404 Not Found
         """
         from mcp_server_langgraph.api.studio import WorkflowService, router as studio_router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
 
         # Clear storage
         WorkflowService._workflows.clear()
         WorkflowService._counter = 0
 
-        app = FastAPI()
-
-        # Override bearer_scheme BEFORE including router (xdist best practice)
-        app.dependency_overrides[bearer_scheme] = lambda: None
-
-        # Create workflow as bob
+        # Bob's user info
         bob_user = {**mock_current_user, "keycloak_id": "bob-uuid-456", "user_id": "bob"}
 
-        async def mock_bob() -> dict[str, Any]:
-            return bob_user
+        # Create app for bob to create the workflow
+        app_bob = FastAPI()
 
-        app.dependency_overrides[get_current_user] = mock_bob
-        app.include_router(studio_router)
+        @app_bob.middleware("http")
+        async def inject_bob_user(request: Request, call_next):  # type: ignore[no-untyped-def]
+            request.state.user = bob_user
+            return await call_next(request)
 
-        client_as_bob = TestClient(app)
-        create_response = client_as_bob.post("/api/v1/studio/workflows", json=mock_workflow_data)
-        workflow_id = create_response.json()["id"]
+        app_bob.include_router(studio_router)
 
-        # Now try to access as alice
-        async def mock_alice() -> dict[str, Any]:
-            return mock_current_user
+        with TestClient(app_bob) as client_as_bob:
+            create_response = client_as_bob.post("/api/v1/studio/workflows", json=mock_workflow_data)
+            workflow_id = create_response.json()["id"]
 
-        app.dependency_overrides[get_current_user] = mock_alice
-        client_as_alice = TestClient(app)
+        # Create separate app for alice
+        app_alice = FastAPI()
 
-        response = client_as_alice.get(f"/api/v1/studio/workflows/{workflow_id}")
+        @app_alice.middleware("http")
+        async def inject_alice_user(request: Request, call_next):  # type: ignore[no-untyped-def]
+            request.state.user = mock_current_user
+            return await call_next(request)
+
+        app_alice.include_router(studio_router)
+
+        with TestClient(app_alice) as client_as_alice:
+            response = client_as_alice.get(f"/api/v1/studio/workflows/{workflow_id}")
 
         # Should return 403 (access denied)
         assert response.status_code == 403
-
-        # Clean up
-        app.dependency_overrides.clear()
