@@ -18,6 +18,9 @@ import * as sessionStoreModule from '../stores/sessionStore';
 // Mock the session store
 vi.mock('../stores/sessionStore');
 
+// Mock scrollIntoView
+Element.prototype.scrollIntoView = vi.fn();
+
 const mockUseSessionStore = vi.mocked(sessionStoreModule.useSessionStore);
 
 describe('ChatPage', () => {

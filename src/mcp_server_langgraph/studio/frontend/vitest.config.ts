@@ -30,6 +30,8 @@ export default defineConfig({
         'src/test/**',
         'src/main.tsx',
         'src/vite-env.d.ts',
+        'src/types/**',
+        'src/**/index.ts',
       ],
     },
     testTimeout: 10000,
