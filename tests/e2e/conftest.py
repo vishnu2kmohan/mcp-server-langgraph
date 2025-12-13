@@ -141,6 +141,132 @@ async def openfga_admin_tuples(test_infrastructure):
         await client.close()
 
 
+@pytest_asyncio.fixture
+async def openfga_bob_tuples(test_infrastructure):
+    """
+    Seed OpenFGA with authorization tuples for bob user (standard tier).
+
+    Creates tuples that allow bob to execute basic tools but with
+    limited permissions compared to alice (premium tier).
+
+    Tuples created:
+    - user:bob executor tool:agent_chat
+    - user:bob executor tool:conversation_get
+    - user:bob viewer tool:search_tools (read-only)
+    - user:bob member organization:acme
+
+    Yields:
+        dict: Mapping of created tuples for test assertions
+
+    Cleanup:
+        Deletes all created tuples after test completes
+    """
+    if not test_infrastructure["ready"]:
+        pytest.skip("E2E infrastructure not ready")
+
+    from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
+
+    api_url = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
+    store_id = os.getenv("OPENFGA_STORE_ID")
+    model_id = os.getenv("OPENFGA_MODEL_ID")
+
+    if not store_id or not model_id:
+        pytest.skip("OpenFGA store not initialized (OPENFGA_STORE_ID not set)")
+
+    config = OpenFGAConfig(api_url=api_url, store_id=store_id, model_id=model_id)
+    client = OpenFGAClient(config=config)
+
+    # Define tuples for bob user (standard tier - limited permissions)
+    tuples_to_create = [
+        {"user": "user:bob", "relation": "executor", "object": "tool:agent_chat"},
+        {"user": "user:bob", "relation": "executor", "object": "tool:conversation_get"},
+        {"user": "user:bob", "relation": "viewer", "object": "tool:search_tools"},
+        {"user": "user:bob", "relation": "member", "object": "organization:acme"},
+    ]
+
+    try:
+        await client.write_tuples(tuples_to_create)
+    except Exception as e:
+        pytest.skip(f"Failed to seed bob OpenFGA tuples: {e}")
+
+    yield {
+        "tuples": tuples_to_create,
+        "user": "user:bob",
+        "tier": "standard",
+        "tools": ["agent_chat", "conversation_get"],
+        "read_only_tools": ["search_tools"],
+    }
+
+    # Cleanup
+    try:
+        await client.delete_tuples(tuples_to_create)
+    except Exception:
+        pass
+    finally:
+        await client.close()
+
+
+@pytest_asyncio.fixture
+async def openfga_cross_user_tuples(test_infrastructure):
+    """
+    Seed OpenFGA with tuples for testing cross-user access scenarios.
+
+    Creates tuples that allow:
+    - alice to share a workflow with bob (viewer access)
+    - bob cannot edit alice's workflow
+    - admin can access all resources
+
+    Tuples created:
+    - user:bob viewer workflow:shared-workflow-1
+    - user:alice owner workflow:shared-workflow-1
+    - user:admin admin organization:acme
+
+    Yields:
+        dict: Mapping of created tuples for test assertions
+    """
+    if not test_infrastructure["ready"]:
+        pytest.skip("E2E infrastructure not ready")
+
+    from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
+
+    api_url = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
+    store_id = os.getenv("OPENFGA_STORE_ID")
+    model_id = os.getenv("OPENFGA_MODEL_ID")
+
+    if not store_id or not model_id:
+        pytest.skip("OpenFGA store not initialized")
+
+    config = OpenFGAConfig(api_url=api_url, store_id=store_id, model_id=model_id)
+    client = OpenFGAClient(config=config)
+
+    tuples_to_create = [
+        {"user": "user:alice", "relation": "owner", "object": "workflow:shared-workflow-1"},
+        {"user": "user:bob", "relation": "viewer", "object": "workflow:shared-workflow-1"},
+        {"user": "user:admin", "relation": "admin", "object": "organization:acme"},
+    ]
+
+    try:
+        await client.write_tuples(tuples_to_create)
+    except Exception as e:
+        pytest.skip(f"Failed to seed cross-user OpenFGA tuples: {e}")
+
+    yield {
+        "tuples": tuples_to_create,
+        "shared_workflow_id": "shared-workflow-1",
+        "owner": "user:alice",
+        "viewer": "user:bob",
+        "admin": "user:admin",
+    }
+
+    # Cleanup
+    try:
+        await client.delete_tuples(tuples_to_create)
+    except Exception:
+        pass
+    finally:
+        await client.close()
+
+
 @pytest.fixture
 def e2e_api_base_url():
     """
@@ -160,3 +286,35 @@ def e2e_keycloak_base_url():
     Default: http://localhost:9082/authn
     """
     return os.getenv("KEYCLOAK_URL", "http://localhost:9082/authn")
+
+
+@pytest.fixture
+def bob_credentials():
+    """
+    Get bob's test credentials for E2E tests.
+
+    Returns:
+        dict: Username and password for bob
+    """
+    return {
+        "username": "bob",
+        "password": "bob123",
+        "email": "bob@example.com",
+        "tier": "standard",
+    }
+
+
+@pytest.fixture
+def admin_credentials():
+    """
+    Get admin's test credentials for E2E tests.
+
+    Returns:
+        dict: Username and password for admin
+    """
+    return {
+        "username": "admin",
+        "password": "admin123",
+        "email": "admin@example.com",
+        "roles": ["admin"],
+    }
