@@ -285,12 +285,10 @@ async def openfga_cross_user_tuples(test_infrastructure):
     exist for cross-user access testing.
 
     Pre-seeded tuples (from sample-tuples.json):
-    - user:alice owner conversation:thread_1
-    - user:bob viewer conversation:thread_1
-    - user:admin owner conversation:thread_1
+    - user:alice owner workflow:alice_workflow
+    - user:bob viewer workflow:alice_workflow
+    - user:admin owner workflow:default
     - user:admin admin organization:acme
-
-    NOTE: Uses 'conversation' type since 'workflow' type doesn't exist in OpenFGA model.
 
     Yields:
         dict: Mapping of pre-seeded tuples for test assertions
@@ -314,17 +312,17 @@ async def openfga_cross_user_tuples(test_infrastructure):
     )
     client = OpenFGAClient(config=config)
 
-    # Verify pre-seeded tuples exist (alice owns thread_1, bob can view thread_1)
+    # Verify pre-seeded tuples exist (alice owns workflow, bob can view)
     try:
         alice_owns = await client.check_permission(
             user="user:alice",
             relation="owner",
-            object="conversation:thread_1",
+            object="workflow:alice_workflow",
         )
         bob_can_view = await client.check_permission(
             user="user:bob",
             relation="viewer",
-            object="conversation:thread_1",
+            object="workflow:alice_workflow",
         )
         if not alice_owns or not bob_can_view:
             pytest.skip("Pre-seeded cross-user tuples not found")
@@ -334,15 +332,77 @@ async def openfga_cross_user_tuples(test_infrastructure):
 
     yield {
         "tuples": [
-            {"user": "user:alice", "relation": "owner", "object": "conversation:thread_1"},
-            {"user": "user:bob", "relation": "viewer", "object": "conversation:thread_1"},
+            {"user": "user:alice", "relation": "owner", "object": "workflow:alice_workflow"},
+            {"user": "user:bob", "relation": "viewer", "object": "workflow:alice_workflow"},
             {"user": "user:admin", "relation": "admin", "object": "organization:acme"},
         ],
-        "shared_workflow_id": "thread_1",  # Using conversation type instead of workflow
-        "shared_conversation_id": "thread_1",
+        "shared_workflow_id": "alice_workflow",
+        "shared_conversation_id": "thread_1",  # Kept for backward compatibility
         "owner": "user:alice",
         "viewer": "user:bob",
         "admin": "user:admin",
+    }
+
+    # No cleanup needed - we didn't create any tuples
+    await client.close()
+
+
+@pytest_asyncio.fixture
+async def openfga_workflow_tuples(test_infrastructure):
+    """
+    Provide access to pre-seeded workflow tuples for E2E tests.
+
+    This fixture verifies that the pre-seeded workflow tuples from docker-compose
+    exist for workflow authorization testing.
+
+    Pre-seeded tuples (from sample-tuples.json):
+    - user:admin owner workflow:default
+    - user:alice owner workflow:alice_workflow
+    - user:bob viewer workflow:alice_workflow
+
+    Yields:
+        dict: Mapping of pre-seeded workflow tuples for test assertions
+    """
+    if not test_infrastructure["ready"]:
+        pytest.skip("E2E infrastructure not ready")
+
+    from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
+
+    # Dynamically discover OpenFGA store and model IDs
+    store_id, model_id = _get_openfga_store_and_model()
+
+    if not store_id or not model_id:
+        pytest.skip("OpenFGA store not initialized (store not found)")
+
+    config = OpenFGAConfig(
+        api_url=OPENFGA_URL,
+        store_id=store_id,
+        model_id=model_id,
+        preshared_key=OPENFGA_PRESHARED_KEY,
+    )
+    client = OpenFGAClient(config=config)
+
+    # Verify pre-seeded tuple exists (alice owns workflow:alice_workflow)
+    try:
+        alice_owns = await client.check_permission(
+            user="user:alice",
+            relation="owner",
+            object="workflow:alice_workflow",
+        )
+        if not alice_owns:
+            pytest.skip("Pre-seeded workflow tuples not found")
+    except Exception as e:
+        await client.close()
+        pytest.skip(f"Failed to verify workflow OpenFGA tuples: {e}")
+
+    yield {
+        "tuples": [
+            {"user": "user:admin", "relation": "owner", "object": "workflow:default"},
+            {"user": "user:alice", "relation": "owner", "object": "workflow:alice_workflow"},
+            {"user": "user:bob", "relation": "viewer", "object": "workflow:alice_workflow"},
+        ],
+        "admin_workflow": "default",
+        "alice_workflow": "alice_workflow",
     }
 
     # No cleanup needed - we didn't create any tuples

@@ -289,4 +289,111 @@ describe('ChatPage', () => {
       expect(mockClearError).toHaveBeenCalled();
     });
   });
+
+  describe('Auto Session Management', () => {
+    it('should auto-create session when none exists', async () => {
+      const mockCreateSession = vi.fn().mockResolvedValue('new-session-id');
+      const mockFetchSessions = vi.fn();
+
+      mockUseSessionStore.mockReturnValue({
+        ...mockUseSessionStore(),
+        currentSession: null,
+        sessions: [],
+        isLoadingSessions: false,
+        createSession: mockCreateSession,
+        fetchSessions: mockFetchSessions,
+      });
+
+      render(<ChatPage />);
+
+      await waitFor(() => {
+        expect(mockCreateSession).toHaveBeenCalledWith('New Chat');
+      });
+    });
+
+    it('should load most recent session when sessions exist but none selected', async () => {
+      const mockLoadSession = vi.fn();
+      const mockFetchSessions = vi.fn();
+
+      mockUseSessionStore.mockReturnValue({
+        ...mockUseSessionStore(),
+        currentSession: null,
+        sessions: [
+          { id: 'session-1', name: 'Test Session', createdAt: Date.now(), updatedAt: Date.now(), messageCount: 5 }
+        ],
+        isLoadingSessions: false,
+        loadSession: mockLoadSession,
+        fetchSessions: mockFetchSessions,
+      });
+
+      render(<ChatPage />);
+
+      await waitFor(() => {
+        expect(mockLoadSession).toHaveBeenCalledWith('session-1');
+      });
+    });
+
+    it('should not auto-create when loading', () => {
+      const mockCreateSession = vi.fn();
+      const mockFetchSessions = vi.fn();
+
+      mockUseSessionStore.mockReturnValue({
+        ...mockUseSessionStore(),
+        currentSession: null,
+        sessions: [],
+        isLoadingSessions: true,
+        createSession: mockCreateSession,
+        fetchSessions: mockFetchSessions,
+      });
+
+      render(<ChatPage />);
+
+      expect(mockCreateSession).not.toHaveBeenCalled();
+    });
+
+    it('should not auto-create when session already exists', () => {
+      const mockCreateSession = vi.fn();
+      const mockFetchSessions = vi.fn();
+
+      const mockSession = {
+        id: 'session-1',
+        name: 'Test Session',
+        createdAt: new Date().toISOString(),
+        messages: [],
+      };
+
+      mockUseSessionStore.mockReturnValue({
+        ...mockUseSessionStore(),
+        currentSession: mockSession,
+        sessions: [],
+        isLoadingSessions: false,
+        createSession: mockCreateSession,
+        fetchSessions: mockFetchSessions,
+      });
+
+      render(<ChatPage />);
+
+      expect(mockCreateSession).not.toHaveBeenCalled();
+    });
+
+    it('should fetch sessions on mount when list is empty', async () => {
+      const mockFetchSessions = vi.fn();
+      const mockCreateSession = vi.fn().mockResolvedValue('new-session-id');
+
+      mockUseSessionStore.mockReturnValue({
+        ...mockUseSessionStore(),
+        currentSession: null,
+        sessions: [],
+        isLoadingSessions: false,
+        createSession: mockCreateSession,
+        fetchSessions: mockFetchSessions,
+      });
+
+      render(<ChatPage />);
+
+      await waitFor(() => {
+        expect(mockFetchSessions).toHaveBeenCalled();
+      });
+    });
+  });
 });

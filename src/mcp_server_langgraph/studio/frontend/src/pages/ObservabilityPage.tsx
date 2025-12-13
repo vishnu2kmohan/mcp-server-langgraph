@@ -15,79 +15,54 @@ interface Trace {
   name: string;
   duration: number;
   status: 'success' | 'error' | 'running';
-  timestamp: Date;
+  timestamp: string;
   spans: number;
 }
 
-interface Log {
-  id: string;
-  level: 'debug' | 'info' | 'warn' | 'error';
-  message: string;
-  timestamp: Date;
-  source: string;
-}
-
-interface Metric {
-  name: string;
-  value: number;
-  unit: string;
-  change: number;
+interface TracesResponse {
+  traces: Trace[];
 }
 
 export function ObservabilityPage() {
   const [activeTab, setActiveTab] = useState<ObservabilityTab>('traces');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [traces, setTraces] = useState<Trace[]>([]);
-  const [logs, setLogs] = useState<Log[]>([]);
-  const [metrics, setMetrics] = useState<Metric[]>([]);
 
   useEffect(() => {
-    // Simulate loading data
-    const loadData = async () => {
+    const loadTraces = async () => {
       setIsLoading(true);
-      await new Promise((r) => setTimeout(r, 500));
+      setError(null);
 
-      // Mock data
-      setTraces([
-        { id: '1', name: 'chat/completion', duration: 1234, status: 'success', timestamp: new Date(), spans: 5 },
-        { id: '2', name: 'tools/execute', duration: 567, status: 'success', timestamp: new Date(Date.now() - 60000), spans: 3 },
-        { id: '3', name: 'workflow/run', duration: 2345, status: 'running', timestamp: new Date(Date.now() - 120000), spans: 8 },
-      ]);
+      try {
+        const response = await fetch('/api/v1/observability/traces', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-      setLogs([
-        { id: '1', level: 'info', message: 'Session started', timestamp: new Date(), source: 'session-manager' },
-        { id: '2', level: 'debug', message: 'Loading tools from MCP server', timestamp: new Date(Date.now() - 30000), source: 'mcp-client' },
-        { id: '3', level: 'warn', message: 'Rate limit approaching (80%)', timestamp: new Date(Date.now() - 60000), source: 'rate-limiter' },
-        { id: '4', level: 'error', message: 'Tool execution timeout', timestamp: new Date(Date.now() - 90000), source: 'tool-executor' },
-      ]);
+        if (!response.ok) {
+          throw new Error('Failed to load traces');
+        }
 
-      setMetrics([
-        { name: 'Requests / min', value: 42, unit: 'req/min', change: 5.2 },
-        { name: 'Avg Response Time', value: 234, unit: 'ms', change: -12.5 },
-        { name: 'Error Rate', value: 0.5, unit: '%', change: -0.2 },
-        { name: 'Active Sessions', value: 8, unit: '', change: 2 },
-      ]);
-
-      setIsLoading(false);
+        const data: TracesResponse = await response.json();
+        setTraces(data.traces);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load traces');
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    loadData();
+    loadTraces();
   }, []);
 
   const tabs = [
     { id: 'traces' as const, label: 'Traces', icon: Activity },
-    { id: 'logs' as const, label: 'Logs', icon: FileText },
-    { id: 'metrics' as const, label: 'Metrics', icon: BarChart3 },
+    { id: 'logs' as const, label: 'Logs', icon: FileText, badge: 'Coming Soon' },
+    { id: 'metrics' as const, label: 'Metrics', icon: BarChart3, badge: 'Coming Soon' },
   ];
-
-  const getLogLevelColor = (level: Log['level']) => {
-    switch (level) {
-      case 'debug': return 'text-gray-500';
-      case 'info': return 'text-blue-500';
-      case 'warn': return 'text-yellow-500';
-      case 'error': return 'text-red-500';
-    }
-  };
 
   const getStatusColor = (status: Trace['status']) => {
     switch (status) {
@@ -135,6 +110,11 @@ export function ObservabilityPage() {
             >
               <tab.icon size={16} />
               {tab.label}
+              {tab.badge && (
+                <span className="ml-1 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full">
+                  {tab.badge}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -145,6 +125,17 @@ export function ObservabilityPage() {
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <RefreshCw size={32} className="animate-spin text-blue-500" />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+            <p className="text-lg mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <RefreshCw size={16} />
+              Retry
+            </button>
           </div>
         ) : (
           <>
@@ -169,6 +160,7 @@ export function ObservabilityPage() {
                               {trace.duration}ms
                             </span>
                             <span>{trace.spans} spans</span>
+                            <span>{new Date(trace.timestamp).toLocaleTimeString()}</span>
                           </div>
                         </div>
                       </div>
@@ -183,77 +175,19 @@ export function ObservabilityPage() {
 
             {/* Logs Tab */}
             {activeTab === 'logs' && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Filter size={16} className="text-gray-400" />
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
-                      Showing all levels
-                    </span>
-                  </div>
-                </div>
-                <div className="divide-y divide-gray-100 dark:divide-gray-700 font-mono text-sm">
-                  {logs.map((log) => (
-                    <div
-                      key={log.id}
-                      className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className={`uppercase text-xs font-bold ${getLogLevelColor(log.level)}`}>
-                          {log.level}
-                        </span>
-                        <span className="text-gray-400 text-xs">
-                          {log.timestamp.toLocaleTimeString()}
-                        </span>
-                        <span className="text-gray-500 text-xs">
-                          [{log.source}]
-                        </span>
-                        <span className="text-gray-900 dark:text-gray-100 flex-1">
-                          {log.message}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+                <FileText size={48} className="mb-4 opacity-50" />
+                <p className="text-lg">Logs Coming Soon</p>
+                <p className="text-sm mt-2">Log aggregation and viewing will be available in a future release</p>
               </div>
             )}
 
             {/* Metrics Tab */}
             {activeTab === 'metrics' && (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {metrics.map((metric) => (
-                  <div
-                    key={metric.name}
-                    className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      {metric.name}
-                    </h3>
-                    <div className="mt-2 flex items-baseline gap-2">
-                      <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                        {metric.value}
-                      </span>
-                      {metric.unit && (
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {metric.unit}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-2">
-                      <span
-                        className={`text-sm ${
-                          metric.change >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      >
-                        {metric.change >= 0 ? '+' : ''}
-                        {metric.change}%
-                      </span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">
-                        vs last hour
-                      </span>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+                <BarChart3 size={48} className="mb-4 opacity-50" />
+                <p className="text-lg">Metrics Coming Soon</p>
+                <p className="text-sm mt-2">Metrics dashboard will be available in a future release</p>
               </div>
             )}
           </>

@@ -6,6 +6,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useSessionStore } from '../stores/sessionStore';
+import { SaveAsWorkflowButton } from '../components/Chat/SaveAsWorkflowButton';
 import {
   Send,
   Loader2,
@@ -82,6 +83,7 @@ export function ChatPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <SaveAsWorkflowButton sessionId={currentSession.id} />
             <button
               onClick={handleClear}
               className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"

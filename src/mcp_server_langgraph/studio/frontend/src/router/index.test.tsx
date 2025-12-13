@@ -188,8 +188,8 @@ describe('Router', () => {
     it('should have expected number of studio child routes', () => {
       const rootRoute = router.routes.find((r: RouteObject) => r.path === '/');
       const studioRoute = rootRoute?.children?.find((r: RouteObject) => r.path === 'studio');
-      // index + workflows + chat + sessions + mcp + observability + settings = 7
-      expect(studioRoute?.children?.length).toBe(7);
+      // index + workflows + chat + sessions + mcp + observability + settings + cost = 8
+      expect(studioRoute?.children?.length).toBe(8);
     });
 
     it('should have expected number of admin child routes', () => {

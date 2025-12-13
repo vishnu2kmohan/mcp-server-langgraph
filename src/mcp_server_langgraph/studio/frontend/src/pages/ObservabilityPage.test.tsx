@@ -13,9 +13,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ObservabilityPage } from './ObservabilityPage';
 
+// Mock fetch
+global.fetch = vi.fn();
+
 describe('ObservabilityPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock successful API response
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        traces: [
+          { id: '1', name: 'chat/completion', duration: 1234, status: 'success', timestamp: new Date().toISOString(), spans: 5 },
+          { id: '2', name: 'tools/execute', duration: 567, status: 'success', timestamp: new Date(Date.now() - 60000).toISOString(), spans: 3 },
+          { id: '3', name: 'workflow/run', duration: 2345, status: 'running', timestamp: new Date(Date.now() - 120000).toISOString(), spans: 8 },
+        ],
+      }),
+    });
   });
 
   describe('Header', () => {
@@ -82,6 +96,32 @@ describe('ObservabilityPage', () => {
     });
   });
 
+  describe('API Integration', () => {
+    it('should call traces API on mount', async () => {
+      render(<ObservabilityPage />);
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/api/v1/observability/traces'),
+          expect.objectContaining({ method: 'GET' })
+        );
+      });
+    });
+
+    it('should handle API errors', async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: false,
+        statusText: 'Internal Server Error',
+      });
+
+      render(<ObservabilityPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to load traces/i)).toBeInTheDocument();
+      });
+    });
+  });
+
   describe('Traces Tab', () => {
     it('should display traces after loading', async () => {
       render(<ObservabilityPage />);
@@ -121,7 +161,7 @@ describe('ObservabilityPage', () => {
   });
 
   describe('Logs Tab', () => {
-    it('should display logs after loading', async () => {
+    it('should display coming soon badge for logs', async () => {
       render(<ObservabilityPage />);
 
       await waitFor(() => {
@@ -131,13 +171,13 @@ describe('ObservabilityPage', () => {
       fireEvent.click(screen.getByText('Logs'));
 
       await waitFor(() => {
-        expect(screen.getByText('Session started')).toBeInTheDocument();
+        expect(screen.getByText(/Coming Soon/i)).toBeInTheDocument();
       }, { timeout: 1000 });
     });
   });
 
   describe('Metrics Tab', () => {
-    it('should display metrics after loading', async () => {
+    it('should display coming soon badge for metrics', async () => {
       render(<ObservabilityPage />);
 
       await waitFor(() => {
@@ -147,8 +187,7 @@ describe('ObservabilityPage', () => {
       fireEvent.click(screen.getByText('Metrics'));
 
       await waitFor(() => {
-        expect(screen.getByText('Requests / min')).toBeInTheDocument();
-        expect(screen.getByText('Avg Response Time')).toBeInTheDocument();
+        expect(screen.getByText(/Coming Soon/i)).toBeInTheDocument();
       }, { timeout: 1000 });
     });
   });

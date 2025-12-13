@@ -19,6 +19,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
 from mcp_server_langgraph.api.router_registry import get_router_registry, reset_router_registry
@@ -135,6 +136,12 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
     # Register exception handlers
     register_exception_handlers(app)
 
+    # Register root endpoint BEFORE routers (so it's not overridden)
+    @app.get("/")
+    async def root() -> RedirectResponse:
+        """Root endpoint redirects to Studio UI"""
+        return RedirectResponse(url="/studio", status_code=307)
+
     # Include API routers via RouterRegistry (OCP pattern)
     # Reset registry for clean state (important for tests with multiple app creations)
     reset_router_registry()
@@ -162,14 +169,3 @@ app = create_app(skip_startup_validation=_is_pytest_session)
 async def health_check() -> dict[str, str]:
     """Health check endpoint"""
     return {"status": "healthy", "service": "mcp-server-langgraph"}
-
-
-@app.get("/")
-async def root() -> dict[str, str]:
-    """Root endpoint with API information"""
-    return {
-        "service": "MCP Server LangGraph",
-        "version": "2.8.0",
-        "docs": "/api/docs",
-        "health": "/health",
-    }
