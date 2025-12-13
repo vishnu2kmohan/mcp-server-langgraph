@@ -242,7 +242,7 @@ describe('CostPage', () => {
       render(<CostPage />);
 
       await waitFor(() => {
-        expect(screen.getByText(/Failed to load cost data/i)).toBeInTheDocument();
+        expect(screen.getByText(/Failed to load cost summary/i)).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByText(/Retry/i));
