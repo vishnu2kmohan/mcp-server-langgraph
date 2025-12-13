@@ -32,10 +32,47 @@ from mcp_server_langgraph.core.exceptions import (
     LLMRateLimitError,
     LLMTimeoutError,
 )
+from mcp_server_langgraph.core.container import TelemetryProvider
 from mcp_server_langgraph.llm.metrics import record_llm_request_duration, record_llm_token_usage
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_timeout
 from mcp_server_langgraph.resilience.retry import extract_retry_after_from_exception, is_overload_error
+
+
+# Phase 2.4 DIP: Default telemetry wrapper for backward compatibility
+class _DefaultTelemetry:
+    """Default telemetry wrapper using module-level imports."""
+
+    @property
+    def logger(self) -> Any:
+        """Get the default logger."""
+        return logger
+
+    @property
+    def metrics(self) -> Any:
+        """Get the default metrics."""
+        return metrics
+
+    @property
+    def tracer(self) -> Any:
+        """Get the default tracer."""
+        return tracer
+
+
+_default_telemetry: _DefaultTelemetry | None = None
+
+
+def get_default_telemetry() -> _DefaultTelemetry:
+    """
+    Get the default telemetry provider.
+
+    Returns:
+        Default telemetry wrapper with logger, metrics, and tracer.
+    """
+    global _default_telemetry
+    if _default_telemetry is None:
+        _default_telemetry = _DefaultTelemetry()
+    return _default_telemetry
 
 
 class LLMFactory:
@@ -55,6 +92,7 @@ class LLMFactory:
         timeout: int = 60,
         enable_fallback: bool = True,
         fallback_models: list[str] | None = None,
+        telemetry: TelemetryProvider | _DefaultTelemetry | None = None,
         **kwargs,
     ):
         """
@@ -69,6 +107,7 @@ class LLMFactory:
             timeout: Request timeout in seconds
             enable_fallback: Enable fallback to alternative models
             fallback_models: List of fallback model names
+            telemetry: Telemetry provider for logging/metrics/tracing (Phase 2.4 DIP)
             **kwargs: Additional provider-specific parameters
         """
         self.provider = provider
@@ -81,10 +120,13 @@ class LLMFactory:
         self.fallback_models = fallback_models or []
         self.kwargs = kwargs
 
+        # Phase 2.4 DIP: Injectable telemetry with backward-compatible default
+        self.telemetry = telemetry if telemetry is not None else get_default_telemetry()
+
         # Note: _setup_environment is now called by factory functions with config
         # This allows multi-provider credential setup for fallbacks
 
-        logger.info(
+        self.telemetry.logger.info(
             "LLM Factory initialized",
             extra={
                 "provider": provider,

@@ -5,13 +5,20 @@ Now supports:
 - Pluggable user providers (InMemory, Keycloak, custom)
 - Session management (Token-based or Session-based)
 - Fine-grained authorization via OpenFGA
+
+Architecture (Phase 2.1 SRP decomposition):
+- AuthorizationService: Handles authorization logic (auth/authorization.py)
+- MockResourceGenerator: Handles mock data for dev/test (auth/mock_resources.py)
+- AuthMiddleware: Facade coordinating authentication, authorization, and sessions
 """
 
 from functools import wraps
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from mcp_server_langgraph.auth.authorization import AuthorizationService
+from mcp_server_langgraph.auth.mock_resources import MockResourceGenerator
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.session import SessionData, SessionStore
 from mcp_server_langgraph.auth.user_provider import AuthResponse, InMemoryUserProvider, TokenVerification, UserProvider
@@ -156,6 +163,18 @@ class AuthMiddleware:
         else:
             self.users_db = {}  # Empty dict for non-inmemory providers
 
+        # Phase 2.1 SRP: Create authorization service (delegates to separate module)
+        # Cast users_db to dict[str, dict[str, Any]] since UserDBEntry is structurally compatible
+        self._authorization_service = AuthorizationService(
+            openfga_client=openfga_client,
+            settings=settings,
+            user_provider=user_provider,
+            users_db=cast(dict[str, dict[str, Any]], self.users_db),
+        )
+
+        # Phase 2.1 SRP: Create mock resource generator (delegates to separate module)
+        self._mock_resource_generator = MockResourceGenerator()
+
         logger.info(
             "AuthMiddleware initialized",
             extra={
@@ -205,6 +224,8 @@ class AuthMiddleware:
         """
         Check if user is authorized using OpenFGA
 
+        Delegates to AuthorizationService (Phase 2.1 SRP decomposition).
+
         Args:
             user_id: User identifier (e.g., "user:alice")
             relation: Relation to check (e.g., "executor", "viewer")
@@ -214,229 +235,19 @@ class AuthMiddleware:
         Returns:
             True if authorized, False otherwise
         """
-        with tracer.start_as_current_span("auth.authorize") as span:
-            span.set_attribute("user.id", user_id)
-            span.set_attribute("auth.relation", relation)
-            span.set_attribute("auth.resource", resource)
-
-            # Use OpenFGA if available
-            if self.openfga:
-                try:
-                    authorized = await self.openfga.check_permission(
-                        user=user_id, relation=relation, object=resource, context=context
-                    )
-
-                    span.set_attribute("auth.authorized", authorized)
-                    logger.info(
-                        "Authorization check (OpenFGA)",
-                        extra={"user_id": user_id, "relation": relation, "resource": resource, "authorized": authorized},
-                    )
-
-                    return authorized
-
-                except Exception as e:
-                    logger.error(
-                        f"OpenFGA authorization check failed: {e}",
-                        extra={"user_id": user_id, "relation": relation, "resource": resource},
-                        exc_info=True,
-                    )
-                    # Fail closed - deny access on error
-                    return False
-
-            # SECURITY CONTROL (OpenAI Codex Finding #1): Check if fallback authorization is allowed
-            # When OpenFGA is not available, check configuration to determine if we should:
-            # 1. Fail closed (deny all access) - secure default for production
-            # 2. Fall back to role-based checks - only if explicitly enabled for dev/test
-
-            allow_fallback = getattr(self.settings, "allow_auth_fallback", False) if self.settings else False
-            environment = getattr(self.settings, "environment", "production") if self.settings else "production"
-
-            # Defense in depth: NEVER allow fallback in production, even if misconfigured
-            if environment == "production":
-                logger.error(
-                    "Authorization DENIED: OpenFGA unavailable in production environment. "
-                    "Fallback authorization is not permitted in production for security reasons.",
-                    extra={
-                        "user_id": user_id,
-                        "relation": relation,
-                        "resource": resource,
-                        "environment": environment,
-                        "allow_auth_fallback": allow_fallback,
-                    },
-                )
-                return False
-
-            # Check if fallback is explicitly enabled
-            if not allow_fallback:
-                logger.warning(
-                    "Authorization DENIED: OpenFGA unavailable and fallback authorization is disabled. "
-                    "Set ALLOW_AUTH_FALLBACK=true to enable role-based fallback in development/test.",
-                    extra={
-                        "user_id": user_id,
-                        "relation": relation,
-                        "resource": resource,
-                        "allow_auth_fallback": allow_fallback,
-                        "environment": environment,
-                    },
-                )
-                return False
-
-            # Fallback: simple permission check (only when explicitly allowed in non-production)
-            logger.warning(
-                "OpenFGA not available, using fallback authorization (explicitly enabled)",
-                extra={
-                    "allow_auth_fallback": allow_fallback,
-                    "environment": environment,
-                },
-            )
-
-            # Extract username from user_id (handle worker-safe IDs for pytest-xdist)
-            # InMemoryUserProvider is test-only, so this test-specific logic is acceptable
-            # Examples: "user:alice" → "alice", "user:test_gw0_alice" → "alice"
-            if ":" in user_id:
-                id_part = user_id.split(":", 1)[1]  # Remove "user:" prefix
-                # Check if it's a worker-safe ID (format: test_gw\d+_username)
-                import re
-
-                match = re.match(r"test_gw\d+_(.*)", id_part)
-                username = match.group(1) if match else id_part
-            else:
-                username = user_id
-
-            # Get user data - try in-memory first, then query provider
-            user_data = None
-            user_roles = []
-
-            if isinstance(self.user_provider, InMemoryUserProvider):
-                # Fast path: Use in-memory users_db
-                if username not in self.users_db:
-                    logger.warning(
-                        "Fallback authorization denied - user not found",
-                        extra={"user_id": user_id, "username": username, "provider": "InMemory"},
-                    )
-                    return False
-                user = self.users_db[username]
-                user_roles = user["roles"]
-
-            else:
-                # For external providers (Keycloak, etc.): Query the provider
-                try:
-                    user_data = await self.user_provider.get_user_by_username(username)
-                    if not user_data:
-                        logger.warning(
-                            "Fallback authorization denied - user not found in provider",
-                            extra={"user_id": user_id, "username": username, "provider": type(self.user_provider).__name__},
-                        )
-                        return False
-                    user_roles = user_data.roles
-                    logger.info(
-                        "Fetched user from provider for fallback authorization",
-                        extra={
-                            "user_id": user_id,
-                            "username": username,
-                            "provider": type(self.user_provider).__name__,
-                            "roles": user_roles,
-                        },
-                    )
-                except Exception as e:
-                    logger.error(
-                        f"Failed to fetch user from provider for fallback authorization: {e}",
-                        extra={"user_id": user_id, "username": username, "provider": type(self.user_provider).__name__},
-                        exc_info=True,
-                    )
-                    # Fail closed - deny access if we can't verify user
-                    return False
-
-            # Admin users have access to everything
-            if "admin" in user_roles:
-                logger.info(
-                    "Fallback authorization granted - admin user",
-                    extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
-                )
-                return True
-
-            # Basic resource-based checks
-            if relation == "executor" and resource.startswith("tool:"):
-                authorized = "premium" in user_roles or "user" in user_roles
-                if authorized:
-                    logger.info(
-                        "Fallback authorization granted - tool executor",
-                        extra={
-                            "user_id": user_id,
-                            "username": username,
-                            "relation": relation,
-                            "resource": resource,
-                            "roles": user_roles,
-                        },
-                    )
-                return authorized
-
-            if relation in ("viewer", "editor") and resource.startswith("conversation:"):
-                # SECURITY: Scope conversation access by ownership in fallback mode
-                # Extract thread_id from resource (format: "conversation:thread_id")
-                thread_id = resource.split(":", 1)[1] if ":" in resource else ""
-
-                # Allow access only if:
-                # 1. Thread is the default/unnamed thread
-                # 2. Thread explicitly belongs to this user (prefixed with username)
-                # 3. User is accessing their own user-scoped conversations
-                if thread_id == "default" or thread_id == "":
-                    logger.info(
-                        "Fallback authorization granted - default conversation",
-                        extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
-                    )
-                    return True
-
-                # Check if conversation belongs to this user
-                # Format: "conversation:username_thread" or "conversation:user:username_thread"
-                if thread_id.startswith(f"{username}_"):
-                    logger.info(
-                        "Fallback authorization granted - user-owned conversation",
-                        extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
-                    )
-                    return True
-
-                # Also support user:username prefix in thread_id
-                user_id_normalized = user_id.split(":")[-1] if ":" in user_id else user_id
-                if thread_id.startswith(f"{user_id_normalized}_"):
-                    logger.info(
-                        "Fallback authorization granted - user-owned conversation (normalized)",
-                        extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
-                    )
-                    return True
-
-                # Deny access to conversations not owned by this user
-                logger.warning(
-                    "Fallback authorization denied conversation access",
-                    extra={
-                        "user_id": user_id,
-                        "username": username,
-                        "thread_id": thread_id,
-                        "relation": relation,
-                        "reason": "conversation_not_owned_by_user",
-                    },
-                )
-                return False
-
-            # Default deny
-            logger.warning(
-                "Fallback authorization denied - no matching rule",
-                extra={
-                    "user_id": user_id,
-                    "username": username,
-                    "relation": relation,
-                    "resource": resource,
-                    "roles": user_roles,
-                },
-            )
-            return False
+        # Delegate to AuthorizationService (Phase 2.1 SRP)
+        return await self._authorization_service.authorize(
+            user_id=user_id,
+            relation=relation,
+            resource=resource,
+            context=context,
+        )
 
     def _get_mock_resources(self, user_id: str, relation: str, resource_type: str) -> list[str]:
         """
         Get mock resources for development/testing when OpenFGA is not available.
 
-        Provides sample data to enable development and testing without authorization infrastructure.
-        Resources are scoped per user to maintain proper RBAC semantics.
+        Delegates to MockResourceGenerator (Phase 2.1 SRP decomposition).
 
         Args:
             user_id: User identifier (used to scope conversation resources)
@@ -446,32 +257,12 @@ class AuthMiddleware:
         Returns:
             List of mock resource identifiers scoped to the user
         """
-        # Extract username from user_id (handle both "user:alice" and "alice" formats)
-        username = user_id.split(":")[-1] if ":" in user_id else user_id
-
-        # Mock data for different resource types
-        mock_data = {
-            "tool": [
-                "tool:agent_chat",
-                "tool:conversation_get",
-                "tool:conversation_search",
-            ],
-            "conversation": [
-                # User-scoped conversations to maintain RBAC semantics
-                f"conversation:{username}_demo_thread_1",
-                f"conversation:{username}_demo_thread_2",
-                f"conversation:{username}_demo_thread_3",
-                f"conversation:{username}_sample_conversation",
-            ],
-            "user": [
-                "user:alice",
-                "user:bob",
-                "user:charlie",
-            ],
-        }
-
-        # Return mock data for the requested type
-        return mock_data.get(resource_type, [])
+        # Delegate to MockResourceGenerator (Phase 2.1 SRP)
+        return self._mock_resource_generator.get_resources(
+            user_id=user_id,
+            relation=relation,
+            resource_type=resource_type,
+        )
 
     async def list_accessible_resources(self, user_id: str, relation: str, resource_type: str) -> list[str]:
         """

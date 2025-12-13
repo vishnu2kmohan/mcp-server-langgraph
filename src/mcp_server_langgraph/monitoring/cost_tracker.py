@@ -4,6 +4,11 @@ Cost Metrics Collector
 Tracks token usage and costs for LLM API calls with async recording,
 Prometheus metrics integration, and PostgreSQL persistence.
 
+Architecture (Phase 2.2 SRP decomposition):
+- CostStorageBackend: Handles storage logic (cost_storage.py)
+- CostRetentionPolicy: Handles retention/cleanup logic (cost_retention.py)
+- CostMetricsCollector: Facade coordinating storage, persistence, and metrics
+
 Example:
     >>> from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
     >>> collector = CostMetricsCollector()
@@ -17,10 +22,9 @@ Example:
     ... )
 """
 
-import asyncio
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, UTC
 from decimal import Decimal
 from typing import Any, cast
 
@@ -160,6 +164,10 @@ class CostMetricsCollector:
     - Prometheus metrics integration
     - PostgreSQL persistence with retention policy
     - In-memory fallback when database unavailable
+
+    Architecture (Phase 2.2 SRP):
+    - Delegates storage to CostStorageBackend (MemoryCostStorage)
+    - Delegates retention to CostRetentionPolicy
     """
 
     def __init__(
@@ -177,8 +185,12 @@ class CostMetricsCollector:
             retention_days: Number of days to retain records (default: 90)
             enable_persistence: Whether to enable PostgreSQL persistence
         """
-        self._records: list[TokenUsage] = []
-        self._lock = asyncio.Lock()
+        # Phase 2.2 SRP: Delegate to specialized services
+        from mcp_server_langgraph.monitoring.cost_retention import CostRetentionPolicy
+        from mcp_server_langgraph.monitoring.cost_storage import MemoryCostStorage
+
+        self._storage = MemoryCostStorage()
+        self._retention_policy = CostRetentionPolicy(retention_days=retention_days)
         self._database_url = database_url
         self._retention_days = retention_days
         self._enable_persistence = enable_persistence and database_url is not None
@@ -186,7 +198,8 @@ class CostMetricsCollector:
     @property
     def total_records(self) -> int:
         """Get total number of records."""
-        return len(self._records)
+        # Phase 2.2 SRP: Delegate to storage
+        return self._storage.total_records
 
     async def record_usage(
         self,
@@ -254,9 +267,8 @@ class CostMetricsCollector:
             metadata=metadata or {},
         )
 
-        # Store record in-memory (thread-safe)
-        async with self._lock:
-            self._records.append(usage)
+        # Phase 2.2 SRP: Delegate storage to storage backend
+        await self._storage.store(usage)
 
         # Persist to PostgreSQL if enabled
         if self._enable_persistence:
@@ -328,6 +340,8 @@ class CostMetricsCollector:
         This method removes both in-memory and PostgreSQL records that exceed
         the configured retention period (default: 90 days).
 
+        Phase 2.2 SRP: Delegates in-memory cleanup to CostRetentionPolicy.
+
         Returns:
             Number of records deleted
 
@@ -336,15 +350,10 @@ class CostMetricsCollector:
             >>> deleted = await collector.cleanup_old_records()
             >>> print(f"Deleted {deleted} old records")
         """
+        from datetime import timedelta
 
-        cutoff_time = datetime.now(UTC) - timedelta(days=self._retention_days)
-        deleted_count = 0
-
-        # Clean up in-memory records
-        async with self._lock:
-            initial_count = len(self._records)
-            self._records = [r for r in self._records if r.timestamp >= cutoff_time]
-            deleted_count = initial_count - len(self._records)
+        # Phase 2.2 SRP: Delegate in-memory cleanup to retention policy
+        deleted_count = await self._retention_policy.cleanup(self._storage)
 
         # Clean up PostgreSQL records
         if self._enable_persistence:
@@ -357,6 +366,7 @@ class CostMetricsCollector:
                 # Type guard: _database_url is guaranteed non-None when _enable_persistence is True
                 assert self._database_url is not None, "database_url must be set when persistence is enabled"
 
+                cutoff_time = datetime.now(UTC) - timedelta(days=self._retention_days)
                 async with get_async_session(self._database_url) as session:
                     stmt = delete(TokenUsageRecord).where(TokenUsageRecord.timestamp < cutoff_time)
                     result = await session.execute(stmt)
@@ -367,7 +377,7 @@ class CostMetricsCollector:
 
                     logger = logging.getLogger(__name__)
                     logger.info(
-                        f"Cleaned up {deleted_count} records older than {self._retention_days} days "
+                        f"Cleaned up {db_deleted} database records older than {self._retention_days} days "
                         f"(cutoff: {cutoff_time.isoformat()})"
                     )
             except Exception as e:
@@ -380,8 +390,8 @@ class CostMetricsCollector:
 
     async def get_latest_record(self) -> TokenUsage | None:
         """Get the most recent usage record."""
-        async with self._lock:
-            return self._records[-1] if self._records else None
+        # Phase 2.2 SRP: Delegate to storage
+        return await self._storage.get_latest_record()
 
     async def get_records(
         self,
@@ -392,6 +402,8 @@ class CostMetricsCollector:
         """
         Get usage records with optional filtering.
 
+        Phase 2.2 SRP: Delegates to storage backend for filtering.
+
         Args:
             period: Time period ("day", "week", "month")
             user_id: Filter by user (optional)
@@ -400,15 +412,14 @@ class CostMetricsCollector:
         Returns:
             List of TokenUsage records
         """
-        async with self._lock:
-            records = self._records.copy()
-
-        # Apply filters
+        # Phase 2.2 SRP: Build filters and delegate to storage
+        filters: dict[str, str] = {}
         if user_id:
-            records = [r for r in records if r.user_id == user_id]
-
+            filters["user_id"] = user_id
         if model:
-            records = [r for r in records if r.model == model]
+            filters["model"] = model
+
+        records = await self._storage.get_records(filters=filters if filters else None)
 
         # TODO: Apply time period filter
 
