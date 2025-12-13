@@ -329,6 +329,11 @@ class Settings(BaseSettings):
     # Conversation Storage (uses checkpoint backend by default)
     conversation_storage_backend: str = "checkpoint"  # "checkpoint" (uses checkpoint_backend), "database"
 
+    # Cost Metrics Storage (Phase 2.2 SRP decomposition)
+    # Storage backend for token usage and cost metrics
+    # Uses MemoryCostStorage (dev) or PostgresCostStorage (production/test)
+    cost_storage_backend: str = "memory"  # "postgres" (recommended), "memory" (dev only)
+
     # GDPR/HIPAA/SOC2 Compliance Storage (ADR-0041: Pure PostgreSQL)
     # Storage for user profiles, preferences, consents, conversations, and audit logs
     # CRITICAL: Must use "postgres" in production (in-memory is DEVELOPMENT ONLY)
