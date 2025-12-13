@@ -14,17 +14,14 @@ Enhanced with resilience patterns (ADR-0026):
 
 import asyncio
 import os
-
-# Fallback resilience constants
-FALLBACK_BASE_DELAY_SECONDS = 1.0  # Initial delay between fallback attempts
-FALLBACK_DELAY_MULTIPLIER = 2.0  # Exponential multiplier
-FALLBACK_MAX_DELAY_SECONDS = 8.0  # Cap for fallback delays
-from typing import Any
+from enum import Enum
+from typing import Any, assert_never
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from litellm import acompletion, completion
 from litellm.utils import ModelResponse  # type: ignore[attr-defined]
 
+from mcp_server_langgraph.core.container import TelemetryProvider
 from mcp_server_langgraph.core.exceptions import (
     LLMModelNotFoundError,
     LLMOverloadError,
@@ -32,11 +29,33 @@ from mcp_server_langgraph.core.exceptions import (
     LLMRateLimitError,
     LLMTimeoutError,
 )
-from mcp_server_langgraph.core.container import TelemetryProvider
 from mcp_server_langgraph.llm.metrics import record_llm_request_duration, record_llm_token_usage
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_timeout
 from mcp_server_langgraph.resilience.retry import extract_retry_after_from_exception, is_overload_error
+
+# Fallback resilience constants
+FALLBACK_BASE_DELAY_SECONDS = 1.0  # Initial delay between fallback attempts
+FALLBACK_DELAY_MULTIPLIER = 2.0  # Exponential multiplier
+FALLBACK_MAX_DELAY_SECONDS = 8.0  # Cap for fallback delays
+
+
+# ==============================================================================
+# Model Type Enum (DRY consolidation)
+# ==============================================================================
+
+
+class ModelType(Enum):
+    """
+    Enum for different model purposes in the LLM factory.
+
+    Consolidates model creation logic into a single create_model function
+    instead of separate functions for each model type.
+    """
+
+    PRIMARY = "primary"
+    SUMMARIZATION = "summarization"
+    VERIFICATION = "verification"
 
 
 # Phase 2.4 DIP: Default telemetry wrapper for backward compatibility
@@ -834,3 +853,73 @@ def create_verification_model(config) -> LLMFactory:  # type: ignore[no-untyped-
         temperature=config.verification_model_temperature,
         max_tokens=config.verification_model_max_tokens,
     )
+
+
+# ==============================================================================
+# Consolidated Model Factory (DRY refactoring)
+# ==============================================================================
+
+
+def create_model(config, model_type: ModelType) -> LLMFactory:  # type: ignore[no-untyped-def]
+    """
+    Create LLM instance for specified model type (consolidated factory function).
+
+    This is the preferred way to create LLM instances. It consolidates the logic
+    from create_llm_from_config, create_summarization_model, and
+    create_verification_model into a single function with a model type parameter.
+
+    Args:
+        config: Settings object with LLM configuration
+        model_type: The type of model to create (PRIMARY, SUMMARIZATION, VERIFICATION)
+
+    Returns:
+        Configured LLMFactory instance
+
+    Example:
+        >>> from mcp_server_langgraph.llm.factory import create_model, ModelType
+        >>> factory = create_model(config, ModelType.SUMMARIZATION)
+    """
+    if model_type == ModelType.PRIMARY:
+        return _create_factory_with_config(
+            config=config,
+            provider=config.llm_provider,
+            model_name=config.model_name,
+            temperature=config.model_temperature,
+            max_tokens=config.model_max_tokens,
+        )
+
+    elif model_type == ModelType.SUMMARIZATION:
+        # Fall back to primary if dedicated model not enabled
+        if not getattr(config, "use_dedicated_summarization_model", False):
+            return create_model(config, ModelType.PRIMARY)
+
+        provider = config.summarization_model_provider or config.llm_provider
+        model_name = config.summarization_model_name or config.model_name
+
+        return _create_factory_with_config(
+            config=config,
+            provider=provider,
+            model_name=model_name,
+            temperature=config.summarization_model_temperature,
+            max_tokens=config.summarization_model_max_tokens,
+        )
+
+    elif model_type == ModelType.VERIFICATION:
+        # Fall back to primary if dedicated model not enabled
+        if not getattr(config, "use_dedicated_verification_model", False):
+            return create_model(config, ModelType.PRIMARY)
+
+        provider = config.verification_model_provider or config.llm_provider
+        model_name = config.verification_model_name or config.model_name
+
+        return _create_factory_with_config(
+            config=config,
+            provider=provider,
+            model_name=model_name,
+            temperature=config.verification_model_temperature,
+            max_tokens=config.verification_model_max_tokens,
+        )
+
+    else:
+        # Exhaustive check - ensures all ModelType values are handled
+        assert_never(model_type)
