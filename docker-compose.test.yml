@@ -25,21 +25,23 @@
 #   - No hard-coded container names (allows multiple isolated test stacks)
 #
 # GATEWAY ROUTES (via Traefik on port 80):
-#   /_oauth     - OAuth callback (traefik-forward-auth)
-#   /mcp        - MCP Server API [protected]
-#   /build      - Visual Workflow Builder [protected]
-#   /chat       - Interactive Playground [protected]
-#   /authn      - Keycloak (Authentication) [public]
-#   /authz      - OpenFGA API [protected]
-#   /playground - OpenFGA Playground UI [protected]
-#   /vectors    - Qdrant API [internal]
-#   /dashboard  - Qdrant Web UI [protected]
-#   /traces     - Tempo (Tracing) [internal]
-#   /logs       - Loki (Logs) [internal]
-#   /metrics    - Mimir (Metrics) [internal]
-#   /telemetry  - Alloy (Telemetry Collector) [protected]
-#   /dashboards - Grafana (Dashboards) [protected]
-#   /gateway    - Traefik Dashboard [protected]
+#   /_oauth           - OAuth callback (traefik-forward-auth)
+#   /mcp              - MCP Server API [protected]
+#   /studio/workflows - Visual Workflow Builder [protected] (NEW)
+#   /studio/chat      - Interactive Playground [protected] (NEW)
+#   /build            - Legacy route -> /studio/workflows [protected]
+#   /chat             - Legacy route -> /studio/chat [protected]
+#   /authn            - Keycloak (Authentication) [public]
+#   /authz            - OpenFGA API [protected]
+#   /playground       - OpenFGA Playground UI [protected]
+#   /vectors          - Qdrant API [internal]
+#   /dashboard        - Qdrant Web UI [protected]
+#   /traces           - Tempo (Tracing) [internal]
+#   /logs             - Loki (Logs) [internal]
+#   /metrics          - Mimir (Metrics) [internal]
+#   /telemetry        - Alloy (Telemetry Collector) [protected]
+#   /dashboards       - Grafana (Dashboards) [protected]
+#   /gateway          - Traefik Dashboard [protected]
 #
 # AUTHENTICATION (ADR-0054):
 #   Protected routes require Keycloak authentication via traefik-forward-auth.
@@ -1286,7 +1288,7 @@ services:
           - builder
     labels:
       - "traefik.enable=true"
-      # Route: /build/* -> builder:8001 (Visual Workflow Builder)
+      # Route: /build/* -> builder:8001 (Visual Workflow Builder) [LEGACY - redirects to /studio/workflows]
       - "traefik.http.routers.builder.rule=PathPrefix(`/build`)"
       - "traefik.http.routers.builder.entrypoints=web"
       - "traefik.http.routers.builder.priority=10"
@@ -1294,6 +1296,13 @@ services:
       - "traefik.http.middlewares.builder-strip.stripprefix.prefixes=/build"
       # Authentication via forward-auth middleware (ADR-0054)
       - "traefik.http.routers.builder.middlewares=forward-auth@docker,builder-strip"
+      # Route: /studio/workflows/* -> builder:8001 (New unified Studio route)
+      - "traefik.http.routers.studio-workflows.rule=PathPrefix(`/studio/workflows`)"
+      - "traefik.http.routers.studio-workflows.entrypoints=web"
+      - "traefik.http.routers.studio-workflows.priority=11"
+      - "traefik.http.routers.studio-workflows.service=builder"
+      - "traefik.http.middlewares.studio-workflows-strip.stripprefix.prefixes=/studio/workflows"
+      - "traefik.http.routers.studio-workflows.middlewares=forward-auth@docker,studio-workflows-strip"
 
   # ==============================================================================
   # INTERACTIVE PLAYGROUND
@@ -1361,7 +1370,7 @@ services:
           - playground
     labels:
       - "traefik.enable=true"
-      # Route: /chat/* -> playground:8002 (Interactive Playground)
+      # Route: /chat/* -> playground:8002 (Interactive Playground) [LEGACY - redirects to /studio/chat]
       # NOTE: Using /chat instead of /play to avoid confusion with OpenFGA /playground
       # WebSocket support is automatic in Traefik
       - "traefik.http.routers.playground.rule=PathPrefix(`/chat`)"
@@ -1372,6 +1381,13 @@ services:
       # NOTE: Playground has its own auth integration (login form + Keycloak),
       # so we don't use forward-auth here. forward-auth is for apps without auth.
       - "traefik.http.routers.playground.middlewares=playground-strip"
+      # Route: /studio/chat/* -> playground:8002 (New unified Studio route)
+      - "traefik.http.routers.studio-chat.rule=PathPrefix(`/studio/chat`)"
+      - "traefik.http.routers.studio-chat.entrypoints=web"
+      - "traefik.http.routers.studio-chat.priority=11"
+      - "traefik.http.routers.studio-chat.service=playground"
+      - "traefik.http.middlewares.studio-chat-strip.stripprefix.prefixes=/studio/chat"
+      - "traefik.http.routers.studio-chat.middlewares=studio-chat-strip"
 
 networks:
   mcp-test-network:

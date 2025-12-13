@@ -87,32 +87,34 @@ class TestConversationStatePersistence:
         # Mock the LLM to return a specific response
         mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="3+3 equals 6"))
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
-            # Get the agent graph
-            graph = create_agent_graph(test_settings)
+        # Mock pydantic agent to disable the real API call path
+        with patch("mcp_server_langgraph.core.agent._initialize_pydantic_agent", return_value=None):
+            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+                # Get the agent graph
+                graph = create_agent_graph(test_settings)
 
-            # Act: Run the graph (which will call generate_response)
-            result_state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test"}})
+                # Act: Run the graph (which will call generate_response)
+                result_state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test"}})
 
-            # Assert: Message history should be preserved AND new message added
-            result_messages = result_state["messages"]
+                # Assert: Message history should be preserved AND new message added
+                result_messages = result_state["messages"]
 
-            # CRITICAL ASSERTION
-            assert len(result_messages) >= 4, (
-                f"Expected at least 4 messages (3 original + 1 new), got {len(result_messages)}. "
-                f"This indicates generate_response is REPLACING the message list instead of APPENDING!\n"
-                f"Messages: {[m.content for m in result_messages]}"
-            )
+                # CRITICAL ASSERTION
+                assert len(result_messages) >= 4, (
+                    f"Expected at least 4 messages (3 original + 1 new), got {len(result_messages)}. "
+                    f"This indicates generate_response is REPLACING the message list instead of APPENDING!\n"
+                    f"Messages: {[m.content for m in result_messages]}"
+                )
 
-            # Verify original messages are still present
-            assert result_messages[0].content == "What is 2+2?", "First message lost!"
-            assert result_messages[1].content == "2+2 equals 4", "Second message lost!"
-            assert result_messages[2].content == "What about 3+3?", "Third message lost!"
+                # Verify original messages are still present
+                assert result_messages[0].content == "What is 2+2?", "First message lost!"
+                assert result_messages[1].content == "2+2 equals 4", "Second message lost!"
+                assert result_messages[2].content == "What about 3+3?", "Third message lost!"
 
-            # Verify new message was appended
-            assert any("3+3" in msg.content or "6" in msg.content for msg in result_messages[3:]), (
-                "New response not appended correctly"
-            )
+                # Verify new message was appended
+                assert any("3+3" in msg.content or "6" in msg.content for msg in result_messages[3:]), (
+                    "New response not appended correctly"
+                )
 
     @pytest.mark.asyncio
     @pytest.mark.xfail(
@@ -147,37 +149,39 @@ class TestConversationStatePersistence:
 
         mock_llm.ainvoke = mock_ainvoke
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
-            graph = create_agent_graph(test_settings)
+        # Mock pydantic agent to disable the real API call path
+        with patch("mcp_server_langgraph.core.agent._initialize_pydantic_agent", return_value=None):
+            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+                graph = create_agent_graph(test_settings)
 
-            # Act: Run graph THREE times
-            state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test1"}})
-            assert len(state["messages"]) == 2, f"After 1st call: expected 2 messages, got {len(state['messages'])}"
-            current_invocation[0] = 1  # Move to next response
+                # Act: Run graph THREE times
+                state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test1"}})
+                assert len(state["messages"]) == 2, f"After 1st call: expected 2 messages, got {len(state['messages'])}"
+                current_invocation[0] = 1  # Move to next response
 
-            # Add a human message for second turn
-            state["messages"] = state["messages"] + [HumanMessage(content="Question 2")]
-            state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test2"}})
-            assert len(state["messages"]) == 4, f"After 2nd call: expected 4 messages, got {len(state['messages'])}"
-            current_invocation[0] = 2  # Move to next response
+                # Add a human message for second turn
+                state["messages"] = state["messages"] + [HumanMessage(content="Question 2")]
+                state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test2"}})
+                assert len(state["messages"]) == 4, f"After 2nd call: expected 4 messages, got {len(state['messages'])}"
+                current_invocation[0] = 2  # Move to next response
 
-            # Add a human message for third turn
-            state["messages"] = state["messages"] + [HumanMessage(content="Question 3")]
-            state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test3"}})
+                # Add a human message for third turn
+                state["messages"] = state["messages"] + [HumanMessage(content="Question 3")]
+                state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test3"}})
 
-            # Assert: Should have 6 messages total (3 human + 3 AI)
-            assert len(state["messages"]) == 6, (
-                f"Expected 6 messages after 3 turns, got {len(state['messages'])}. "
-                f"Conversation history not accumulating properly!"
-            )
+                # Assert: Should have 6 messages total (3 human + 3 AI)
+                assert len(state["messages"]) == 6, (
+                    f"Expected 6 messages after 3 turns, got {len(state['messages'])}. "
+                    f"Conversation history not accumulating properly!"
+                )
 
-            # Verify the sequence
-            assert state["messages"][0].content == "Hello"
-            assert state["messages"][1].content == "Response 1"
-            assert state["messages"][2].content == "Question 2"
-            assert state["messages"][3].content == "Response 2"
-            assert state["messages"][4].content == "Question 3"
-            assert state["messages"][5].content == "Response 3"
+                # Verify the sequence
+                assert state["messages"][0].content == "Hello"
+                assert state["messages"][1].content == "Response 1"
+                assert state["messages"][2].content == "Question 2"
+                assert state["messages"][3].content == "Response 2"
+                assert state["messages"][4].content == "Question 3"
+                assert state["messages"][5].content == "Response 3"
 
     @pytest.mark.asyncio
     async def test_verification_enabled_preserves_history(self, mock_llm):
@@ -230,29 +234,33 @@ class TestConversationStatePersistence:
             )
         )
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
-            with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
-                graph = create_agent_graph(settings_with_verification)
+        # Mock pydantic agent to disable the real API call path
+        with patch("mcp_server_langgraph.core.agent._initialize_pydantic_agent", return_value=None):
+            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+                with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
+                    graph = create_agent_graph(settings_with_verification)
 
-                # Act: Run the graph with verification
-                result_state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test"}})
+                    # Act: Run the graph with verification
+                    result_state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test"}})
 
-                # Assert: All original messages should STILL be present
-                result_messages = result_state["messages"]
+                    # Assert: All original messages should STILL be present
+                    result_messages = result_state["messages"]
 
-                # Should have at least 4 messages (3 original + 1 new response)
-                assert len(result_messages) >= 4, (
-                    f"Expected at least 4 messages, got {len(result_messages)}. "
-                    f"Conversation history lost during verification loop!"
-                )
+                    # Should have at least 4 messages (3 original + 1 new response)
+                    assert len(result_messages) >= 4, (
+                        f"Expected at least 4 messages, got {len(result_messages)}. "
+                        f"Conversation history lost during verification loop!"
+                    )
 
-                # Verify original context is preserved
-                assert result_messages[0].content == "Explain quantum computing", "First message lost!"
-                assert result_messages[1].content == "Quantum computing is about qubits.", "Second message lost!"
-                assert result_messages[2].content == "Tell me more", "Third message lost!"
+                    # Verify original context is preserved
+                    assert result_messages[0].content == "Explain quantum computing", "First message lost!"
+                    assert result_messages[1].content == "Quantum computing is about qubits.", "Second message lost!"
+                    assert result_messages[2].content == "Tell me more", "Third message lost!"
 
-                # Verify new response is present
-                assert any("quantum" in msg.content.lower() for msg in result_messages[3:]), "New response not added correctly"
+                    # Verify new response is present
+                    assert any("quantum" in msg.content.lower() for msg in result_messages[3:]), (
+                        "New response not added correctly"
+                    )
 
     @pytest.mark.asyncio
     async def test_empty_initial_state_works_correctly(self, test_settings, mock_llm):
@@ -271,14 +279,16 @@ class TestConversationStatePersistence:
 
         mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Hello! How can I help you?"))
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
-            graph = create_agent_graph(test_settings)
+        # Mock pydantic agent to disable the real API call path
+        with patch("mcp_server_langgraph.core.agent._initialize_pydantic_agent", return_value=None):
+            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+                graph = create_agent_graph(test_settings)
 
-            # Act
-            result_state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test"}})
+                # Act
+                result_state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test"}})
 
-            # Assert: Should have 2 messages (original + response)
-            result_messages = result_state["messages"]
-            assert len(result_messages) == 2, f"Expected 2 messages, got {len(result_messages)}"
-            assert result_messages[0].content == "Hello, first message!"
-            assert "help" in result_messages[1].content.lower()
+                # Assert: Should have 2 messages (original + response)
+                result_messages = result_state["messages"]
+                assert len(result_messages) == 2, f"Expected 2 messages, got {len(result_messages)}"
+                assert result_messages[0].content == "Hello, first message!"
+                assert "help" in result_messages[1].content.lower()

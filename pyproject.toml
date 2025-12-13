@@ -734,6 +734,7 @@ filterwarnings = [
 ]
 markers = [
     "unit: Unit tests (fast, no external dependencies)",
+    "agent: Agent core functionality tests (generate_response, state management)",
     "integration: Integration tests (may require external services)",
     "e2e: End-to-end tests (full system tests)",
     "smoke: Smoke tests (critical path validation, CI startup verification)",
