@@ -51,9 +51,12 @@ def client(mock_current_user: dict[str, Any]) -> TestClient:
 
     Creates a fresh FastAPI app with studio router and auth override for each test.
     This ensures proper isolation in pytest-xdist parallel execution.
+
+    CRITICAL: Must override both bearer_scheme AND get_current_user to prevent
+    singleton pollution between xdist workers. See tests/PYTEST_XDIST_BEST_PRACTICES.md
     """
     from mcp_server_langgraph.api.studio import WorkflowService, router as studio_router
-    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
 
     # Clear in-memory storage before each test
     WorkflowService._workflows.clear()
@@ -61,13 +64,19 @@ def client(mock_current_user: dict[str, Any]) -> TestClient:
 
     # Create fresh app for this test
     app = FastAPI()
-    app.include_router(studio_router)
 
-    # Override authentication dependency
+    # Override authentication dependencies BEFORE including router
+    # CRITICAL: Must override bearer_scheme to prevent singleton pollution
+    app.dependency_overrides[bearer_scheme] = lambda: None
+
+    # Override get_current_user with async function
     async def mock_get_current_user() -> dict[str, Any]:
         return mock_current_user
 
     app.dependency_overrides[get_current_user] = mock_get_current_user
+
+    # Include router AFTER setting overrides
+    app.include_router(studio_router)
 
     # Use context manager for proper cleanup
     with TestClient(app) as test_client:
@@ -302,30 +311,41 @@ class TestAuthorizationEnforcement:
         THEN should return 403 Forbidden or 404 Not Found
         """
         from mcp_server_langgraph.api.studio import WorkflowService, router as studio_router
+        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
 
         # Clear storage
         WorkflowService._workflows.clear()
         WorkflowService._counter = 0
 
         app = FastAPI()
-        app.include_router(studio_router)
+
+        # Override bearer_scheme BEFORE including router (xdist best practice)
+        app.dependency_overrides[bearer_scheme] = lambda: None
 
         # Create workflow as bob
         bob_user = {**mock_current_user, "keycloak_id": "bob-uuid-456", "user_id": "bob"}
 
-        from mcp_server_langgraph.auth.middleware import get_current_user
+        async def mock_bob() -> dict[str, Any]:
+            return bob_user
 
-        app.dependency_overrides[get_current_user] = lambda: bob_user
+        app.dependency_overrides[get_current_user] = mock_bob
+        app.include_router(studio_router)
 
         client_as_bob = TestClient(app)
         create_response = client_as_bob.post("/api/v1/studio/workflows", json=mock_workflow_data)
         workflow_id = create_response.json()["id"]
 
         # Now try to access as alice
-        app.dependency_overrides[get_current_user] = lambda: mock_current_user
+        async def mock_alice() -> dict[str, Any]:
+            return mock_current_user
+
+        app.dependency_overrides[get_current_user] = mock_alice
         client_as_alice = TestClient(app)
 
         response = client_as_alice.get(f"/api/v1/studio/workflows/{workflow_id}")
 
         # Should return 403 (access denied)
         assert response.status_code == 403
+
+        # Clean up
+        app.dependency_overrides.clear()
