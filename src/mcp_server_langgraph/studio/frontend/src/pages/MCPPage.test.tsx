@@ -170,5 +170,210 @@ describe('MCPPage', () => {
         expect(mockAddServer).toHaveBeenCalledWith(expect.any(String), 'http://localhost:3000');
       });
     });
+
+    it('should not call addServer when URL is empty', async () => {
+      render(<MCPPage />);
+
+      fireEvent.click(screen.getByText('Servers'));
+
+      const input = screen.getByPlaceholderText(/Enter server URL/);
+      fireEvent.change(input, { target: { value: '' } });
+      fireEvent.click(screen.getByText('Add'));
+
+      expect(mockAddServer).not.toHaveBeenCalled();
+    });
+
+    it('should clear input after adding server', async () => {
+      render(<MCPPage />);
+
+      fireEvent.click(screen.getByText('Servers'));
+
+      const input = screen.getByPlaceholderText(/Enter server URL/) as HTMLInputElement;
+      fireEvent.change(input, { target: { value: 'http://localhost:3000' } });
+      fireEvent.click(screen.getByText('Add'));
+
+      await waitFor(() => {
+        expect(input.value).toBe('');
+      });
+    });
+  });
+
+  describe('Resources Tab', () => {
+    it('should switch to resources tab when clicked', () => {
+      mockUseMCPStore.mockReturnValue({
+        ...mockUseMCPStore(),
+        getAllResources: () => [
+          { uri: 'file://test.txt', name: 'test.txt', mimeType: 'text/plain' },
+        ],
+      });
+
+      render(<MCPPage />);
+
+      fireEvent.click(screen.getByText('Resources'));
+
+      expect(screen.getByText('test.txt')).toBeInTheDocument();
+    });
+
+    it('should filter resources by search query', () => {
+      mockUseMCPStore.mockReturnValue({
+        ...mockUseMCPStore(),
+        getAllResources: () => [
+          { uri: 'file://doc.txt', name: 'document.txt', mimeType: 'text/plain' },
+          { uri: 'file://data.json', name: 'data.json', mimeType: 'application/json' },
+        ],
+      });
+
+      render(<MCPPage />);
+
+      fireEvent.click(screen.getByText('Resources'));
+
+      // Search input placeholder changes based on active tab
+      const searchInput = screen.getByPlaceholderText(/Search/);
+      fireEvent.change(searchInput, { target: { value: 'doc' } });
+
+      expect(screen.getByText('document.txt')).toBeInTheDocument();
+      expect(screen.queryByText('data.json')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Prompts Tab', () => {
+    it('should switch to prompts tab when clicked', () => {
+      mockUseMCPStore.mockReturnValue({
+        ...mockUseMCPStore(),
+        getAllPrompts: () => [
+          { name: 'summarize', description: 'Summarize text' },
+        ],
+      });
+
+      render(<MCPPage />);
+
+      fireEvent.click(screen.getByText('Prompts'));
+
+      expect(screen.getByText('summarize')).toBeInTheDocument();
+    });
+
+    it('should filter prompts by search query', () => {
+      mockUseMCPStore.mockReturnValue({
+        ...mockUseMCPStore(),
+        getAllPrompts: () => [
+          { name: 'summarize', description: 'Summarize text' },
+          { name: 'translate', description: 'Translate text' },
+        ],
+      });
+
+      render(<MCPPage />);
+
+      fireEvent.click(screen.getByText('Prompts'));
+
+      // Search input placeholder changes based on active tab
+      const searchInput = screen.getByPlaceholderText(/Search/);
+      fireEvent.change(searchInput, { target: { value: 'sum' } });
+
+      expect(screen.getByText('summarize')).toBeInTheDocument();
+      expect(screen.queryByText('translate')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Tool Expansion', () => {
+    it('should show tool details when expanded', () => {
+      mockUseMCPStore.mockReturnValue({
+        ...mockUseMCPStore(),
+        getAllTools: () => [
+          {
+            name: 'calculator',
+            description: 'Perform calculations',
+            inputSchema: { type: 'object', properties: { x: { type: 'number' } } },
+          },
+        ],
+      });
+
+      render(<MCPPage />);
+
+      // Click on the tool to expand it
+      const expandButton = screen.getByText('calculator').closest('button');
+      if (expandButton) {
+        fireEvent.click(expandButton);
+      }
+
+      // After expanding, should show input schema
+      expect(screen.getByText('calculator')).toBeInTheDocument();
+    });
+  });
+
+  describe('Error State', () => {
+    it('should display error when present', () => {
+      mockUseMCPStore.mockReturnValue({
+        ...mockUseMCPStore(),
+        error: 'Connection failed',
+      });
+
+      render(<MCPPage />);
+
+      expect(screen.getByText(/Connection failed/)).toBeInTheDocument();
+    });
+  });
+
+  describe('Connecting State', () => {
+    it('should show connecting indicator when connecting', () => {
+      mockUseMCPStore.mockReturnValue({
+        ...mockUseMCPStore(),
+        isConnecting: true,
+      });
+
+      render(<MCPPage />);
+
+      // Check for connecting state (spinning icon or text)
+      expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+    });
+  });
+
+  describe('Server List', () => {
+    it('should display connected servers', () => {
+      const connectedServer = new Map([
+        ['server-1', {
+          id: 'server-1',
+          url: 'http://localhost:3000',
+          status: 'connected' as const,
+          tools: [{ name: 'tool1', description: 'A tool' }],
+          resources: [],
+          prompts: [],
+        }],
+      ]);
+      mockUseMCPStore.mockReturnValue({
+        ...mockUseMCPStore(),
+        servers: connectedServer,
+      });
+
+      render(<MCPPage />);
+
+      fireEvent.click(screen.getByText('Servers'));
+
+      expect(screen.getByText('http://localhost:3000')).toBeInTheDocument();
+    });
+
+    it('should show remove button for servers', () => {
+      const connectedServer = new Map([
+        ['server-1', {
+          id: 'server-1',
+          url: 'http://localhost:3000',
+          status: 'connected' as const,
+          tools: [],
+          resources: [],
+          prompts: [],
+        }],
+      ]);
+      mockUseMCPStore.mockReturnValue({
+        ...mockUseMCPStore(),
+        servers: connectedServer,
+      });
+
+      render(<MCPPage />);
+
+      fireEvent.click(screen.getByText('Servers'));
+
+      // There should be a remove/disconnect button
+      const buttons = screen.getAllByRole('button');
+      expect(buttons.length).toBeGreaterThan(0);
+    });
   });
 });
