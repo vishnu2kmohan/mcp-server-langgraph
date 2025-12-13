@@ -132,9 +132,10 @@ class TestTraceContextEdgeCases:
         )
 
         # Create a mock span with invalid context
+        # Use spec to ensure Mock doesn't auto-create is_valid as a MagicMock
         mock_span = Mock()
-        mock_span_context = Mock()
-        mock_span_context.is_valid = False  # Invalid context
+        mock_span_context = Mock(spec=["is_valid", "trace_id", "span_id"])
+        mock_span_context.is_valid = False  # Invalid context - should skip trace fields
         mock_span.get_span_context.return_value = mock_span_context
 
         # Patch where trace is used, not where it's defined

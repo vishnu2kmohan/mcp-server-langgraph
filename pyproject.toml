@@ -682,6 +682,19 @@ module = [
 disallow_untyped_calls = true
 strict = true
 
+# Phase 5: SRP decomposition modules (Phase 2.2 refactoring)
+[[tool.mypy.overrides]]
+module = [
+    "mcp_server_langgraph.monitoring.cost_storage",
+    "mcp_server_langgraph.monitoring.cost_retention",
+    "mcp_server_langgraph.api.router_registry",
+    "mcp_server_langgraph.auth.resource_registry",
+    "mcp_server_langgraph.core.constants",
+    "mcp_server_langgraph.core.extraction_strategies",
+]
+disallow_untyped_calls = true
+strict = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [".", "scripts"]  # Allow importing from scripts/ directory
