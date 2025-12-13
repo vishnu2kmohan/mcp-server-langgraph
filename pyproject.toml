@@ -737,6 +737,7 @@ markers = [
     "agent: Agent core functionality tests (generate_response, state management)",
     "integration: Integration tests (may require external services)",
     "e2e: End-to-end tests (full system tests)",
+    "user_journey: User journey tests (alice, bob, admin persona flows)",
     "smoke: Smoke tests (critical path validation, CI startup verification)",
     "slow: Slow tests (> 1 second)",
     "timeout: Custom timeout override for pytest-timeout plugin (used for meta-tests running subprocesses)",
