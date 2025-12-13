@@ -20,7 +20,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from mcp_server_langgraph.api import api_keys_router, gdpr_router, health_router, scim_router, service_principals_router
+from mcp_server_langgraph.api import (
+    api_keys_router,
+    gdpr_router,
+    health_router,
+    scim_router,
+    service_principals_router,
+    studio_router,
+)
 from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
 from mcp_server_langgraph.api.error_handlers import register_exception_handlers
 from mcp_server_langgraph.api.health import run_startup_validation_async
@@ -130,6 +137,7 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
     app.include_router(service_principals_router)
     app.include_router(gdpr_router)
     app.include_router(scim_router)
+    app.include_router(studio_router)
 
     try:
         logger.info("FastAPI application created with all routers mounted")
