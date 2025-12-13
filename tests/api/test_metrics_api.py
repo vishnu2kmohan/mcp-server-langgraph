@@ -2,7 +2,11 @@
 Tests for HEART Metrics API
 
 TDD: Tests written for the metrics API endpoints.
+
+Follows memory safety patterns for pytest-xdist.
 """
+
+import gc
 
 import pytest
 from fastapi import FastAPI
@@ -27,8 +31,13 @@ def client(app):
     return TestClient(app)
 
 
+@pytest.mark.xdist_group(name="metrics_api")
 class TestSubmitHeartMetrics:
     """Tests for POST /api/v1/metrics/heart"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_submit_minimal_metrics(self, client):
         """Should accept minimal metrics batch."""
@@ -104,8 +113,13 @@ class TestSubmitHeartMetrics:
         assert response.status_code == 422
 
 
+@pytest.mark.xdist_group(name="metrics_api")
 class TestSubmitEvents:
     """Tests for POST /api/v1/metrics/events"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_submit_events_with_valid_batch_returns_count(self, client):
         """Should accept event batch."""
@@ -157,8 +171,13 @@ class TestSubmitEvents:
         assert response.status_code == 201
 
 
+@pytest.mark.xdist_group(name="metrics_api")
 class TestAggregateMetrics:
     """Tests for GET /api/v1/metrics/heart/aggregate"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_get_aggregate_metrics(self, client):
         """Should return aggregate metrics."""
@@ -182,8 +201,13 @@ class TestAggregateMetrics:
         assert response.json()["app_name"] == "builder"
 
 
+@pytest.mark.xdist_group(name="metrics_api")
 class TestDashboard:
     """Tests for GET /api/v1/metrics/dashboard"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_get_dashboard_returns_both_apps_data(self, client):
         """Should return dashboard data."""
