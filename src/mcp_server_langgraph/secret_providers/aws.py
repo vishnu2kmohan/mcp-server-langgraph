@@ -5,6 +5,7 @@ Provides secrets from AWS Secrets Manager.
 """
 
 import os
+from typing import Any
 
 from .base import SecretNotFoundError, SecretsProvider, SecretsProviderError
 
@@ -32,9 +33,9 @@ class AWSSecretsProvider(SecretsProvider):
         """
         self._region = region_name or os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
         self._profile = profile_name or os.environ.get("AWS_PROFILE")
-        self._client: object | None = None
+        self._client: Any = None
 
-    def _get_client(self) -> object:
+    def _get_client(self) -> Any:
         """Get or create the boto3 Secrets Manager client.
 
         Returns:
@@ -76,7 +77,7 @@ class AWSSecretsProvider(SecretsProvider):
         try:
             client = self._get_client()
             response = client.get_secret_value(SecretId=name)
-            return response.get("SecretString", "")
+            return str(response.get("SecretString", ""))
         except Exception as e:
             error_str = str(e)
             if "ResourceNotFoundException" in error_str:

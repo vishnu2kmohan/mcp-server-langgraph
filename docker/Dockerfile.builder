@@ -41,7 +41,9 @@ ARG PYTHON_VERSION=3.12
 # ==============================================================================
 FROM node:20-alpine AS frontend-builder
 
-WORKDIR /frontend
+# Maintain the same directory structure as source to preserve relative imports
+# App.tsx imports from '../../../shared/frontend/src/' which needs the full path
+WORKDIR /src/mcp_server_langgraph/builder/frontend
 
 # Copy package files for dependency caching
 COPY src/mcp_server_langgraph/builder/frontend/package*.json ./
@@ -51,6 +53,17 @@ RUN npm ci --prefer-offline --no-audit
 
 # Copy frontend source code
 COPY src/mcp_server_langgraph/builder/frontend/ ./
+
+# Copy shared frontend at the correct relative path
+# '../../../shared/' from builder/frontend/src/ = /src/mcp_server_langgraph/shared/
+COPY src/mcp_server_langgraph/shared/frontend/ /src/mcp_server_langgraph/shared/frontend/
+
+# Install shared frontend dependencies (provides @types/react for TypeScript compilation)
+WORKDIR /src/mcp_server_langgraph/shared/frontend
+RUN npm ci --prefer-offline --no-audit
+
+# Switch back to builder frontend for build
+WORKDIR /src/mcp_server_langgraph/builder/frontend
 
 # Build the production bundle
 # Note: Vite outputs to ./dist by default
@@ -111,7 +124,7 @@ COPY --chown=1001:0 src/ ./src/
 
 # Copy built frontend from stage 1
 # Place in builder/frontend/dist to match SPAStaticFiles path expectations
-COPY --from=frontend-builder --chown=1001:0 /frontend/dist ./src/mcp_server_langgraph/builder/frontend/dist/
+COPY --from=frontend-builder --chown=1001:0 /src/mcp_server_langgraph/builder/frontend/dist ./src/mcp_server_langgraph/builder/frontend/dist/
 
 # Drop privileges - use numeric UID for OpenShift compatibility
 USER 1001

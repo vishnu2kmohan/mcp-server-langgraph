@@ -176,8 +176,8 @@ class TemplateRecommender:
                 }
             )
 
-        # Sort by similarity descending
-        results.sort(key=lambda x: x["similarity"], reverse=True)
+        # Sort by similarity descending - cast to float for type checker
+        results.sort(key=lambda x: float(str(x["similarity"])), reverse=True)
 
         return results[:top_k]
 

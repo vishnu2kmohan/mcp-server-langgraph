@@ -5,6 +5,7 @@ Provides secrets from Azure Key Vault.
 """
 
 import os
+from typing import Any
 
 from .base import SecretNotFoundError, SecretsProvider, SecretsProviderError
 
@@ -31,9 +32,9 @@ class AzureKeyVaultProvider(SecretsProvider):
             vault_url: Key Vault URL. Defaults to AZURE_KEY_VAULT_URL env var
         """
         self._vault_url = vault_url or os.environ.get("AZURE_KEY_VAULT_URL", "")
-        self._client: object | None = None
+        self._client: Any = None
 
-    def _get_client(self) -> object:
+    def _get_client(self) -> Any:
         """Get or create the Key Vault client.
 
         Returns:

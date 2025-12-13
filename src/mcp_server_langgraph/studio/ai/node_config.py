@@ -219,7 +219,7 @@ class NodeConfigAssistant:
             Help information
         """
         # Generate help based on node type
-        help_info = {
+        help_info: dict[str, Any] = {
             "help_text": f"Configure the {node_type} node.",
             "suggested_config": {},
             "examples": [],

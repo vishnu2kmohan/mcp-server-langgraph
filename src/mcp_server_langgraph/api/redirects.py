@@ -125,6 +125,9 @@ class LegacyRedirectMiddleware:
             full_path += f"?{query_string}"
 
         new_location = translate_legacy_path(full_path)
+        if new_location is None:
+            # Should not happen since _should_redirect checked first
+            return
 
         # Build redirect response
         await send(

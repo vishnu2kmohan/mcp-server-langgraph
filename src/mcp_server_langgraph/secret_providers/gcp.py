@@ -5,6 +5,7 @@ Provides secrets from Google Cloud Secret Manager.
 """
 
 import os
+from typing import Any
 
 from .base import SecretNotFoundError, SecretsProvider, SecretsProviderError
 
@@ -29,9 +30,9 @@ class GCPSecretsProvider(SecretsProvider):
             project_id: GCP project ID. Defaults to GOOGLE_CLOUD_PROJECT env var
         """
         self._project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT", "")
-        self._client: object | None = None
+        self._client: Any = None
 
-    def _get_client(self) -> object:
+    def _get_client(self) -> Any:
         """Get or create the Secret Manager client.
 
         Returns:
@@ -81,7 +82,7 @@ class GCPSecretsProvider(SecretsProvider):
         try:
             client = self._get_client()
             response = client.access_secret_version(request={"name": self._get_secret_path(name)})
-            return response.payload.data.decode("UTF-8")
+            return str(response.payload.data.decode("UTF-8"))
         except Exception as e:
             error_str = str(e)
             if "NOT_FOUND" in error_str or "404" in error_str:

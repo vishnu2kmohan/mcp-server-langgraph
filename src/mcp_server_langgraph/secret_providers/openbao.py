@@ -5,6 +5,7 @@ Provides secrets from OpenBao (or HashiCorp Vault) using the KV v2 secrets engin
 """
 
 import os
+from typing import Any
 
 from .base import SecretNotFoundError, SecretsProvider, SecretsProviderError
 
@@ -42,7 +43,7 @@ class OpenBaoProvider(SecretsProvider):
         self._token = token or os.environ.get("OPENBAO_TOKEN", "")
         self._mount_path = mount_path
         self._namespace = namespace
-        self._client: object | None = None
+        self._client: Any = None
 
     @property
     def address(self) -> str:
@@ -54,7 +55,7 @@ class OpenBaoProvider(SecretsProvider):
         """Get the secrets engine mount path."""
         return self._mount_path
 
-    def _get_client(self) -> object:
+    def _get_client(self) -> Any:
         """Get or create the HVAC client.
 
         Returns:
@@ -97,11 +98,11 @@ class OpenBaoProvider(SecretsProvider):
             # Extract value from KV v2 response structure
             data = response.get("data", {}).get("data", {})
             if "value" in data:
-                return data["value"]
+                return str(data["value"])
 
             # If no "value" key, return the first value
             if data:
-                return next(iter(data.values()))
+                return str(next(iter(data.values())))
 
             raise SecretNotFoundError(name)
 
@@ -164,7 +165,7 @@ class OpenBaoProvider(SecretsProvider):
             response = client.secrets.kv.v2.list_secrets(path=path, mount_point=self._mount_path)
 
             keys = response.get("data", {}).get("keys", [])
-            return keys
+            return list(keys)
 
         except Exception as e:
             if "404" in str(e):
@@ -180,6 +181,6 @@ class OpenBaoProvider(SecretsProvider):
         try:
             client = self._get_client()
             status = client.sys.read_health_status(method="GET")
-            return status.get("initialized", False)
+            return bool(status.get("initialized", False))
         except Exception:
             return False
