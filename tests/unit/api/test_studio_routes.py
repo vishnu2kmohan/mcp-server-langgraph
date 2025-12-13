@@ -57,10 +57,14 @@ def app_with_studio_router(mock_current_user: dict[str, Any]) -> FastAPI:
     app = FastAPI()
     app.include_router(studio_router)
 
-    # Override authentication dependency
+    # Override authentication dependency with async function
     from mcp_server_langgraph.auth.middleware import get_current_user
 
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    async def mock_get_current_user() -> dict[str, Any]:
+        """Return mock user for tests."""
+        return mock_current_user
+
+    app.dependency_overrides[get_current_user] = mock_get_current_user
 
     return app
 
