@@ -2,11 +2,26 @@
 E2E Test Configuration and Fixtures
 
 Provides fixtures for end-to-end tests including:
-- OpenFGA tuple seeding for authorization testing
+- OpenFGA tuple verification for authorization testing
 - Real infrastructure client connections
 - User journey helper fixtures
 
 These fixtures work with docker-compose.test.yml infrastructure.
+
+IMPORTANT: OpenFGA Tuple Management
+-----------------------------------
+The single source of truth for base user permissions (alice, bob, admin)
+is config/openfga/sample-tuples.json. This file is seeded into OpenFGA
+by docker-compose.test.yml via the openfga-seed-test container.
+
+E2E fixtures should VERIFY pre-seeded tuples exist, NOT create them.
+This ensures:
+1. Consistent permissions across all tests using make test-infra-up-build
+2. No "tuple already exists" errors from duplicate creation attempts
+3. Alignment with ADR-0068 for gateway-level authentication
+
+For test-specific tuples not covered by sample-tuples.json, individual
+tests may create and clean up their own tuples as needed.
 """
 
 import os
@@ -114,10 +129,10 @@ async def openfga_seeded_tuples(test_infrastructure):
 
     # Verify pre-seeded tuple exists (alice can execute tool:chat)
     try:
-        can_execute = await client.check(
+        can_execute = await client.check_permission(
             user="user:alice",
             relation="executor",
-            obj="tool:chat",
+            object="tool:chat",
         )
         if not can_execute:
             pytest.skip("Pre-seeded OpenFGA tuples not found (alice cannot execute tool:chat)")
@@ -174,10 +189,10 @@ async def openfga_admin_tuples(test_infrastructure):
 
     # Verify pre-seeded tuple exists (alice is admin on organization:acme)
     try:
-        is_admin = await client.check(
+        is_admin = await client.check_permission(
             user="user:alice",
             relation="admin",
-            obj="organization:acme",
+            object="organization:acme",
         )
         if not is_admin:
             pytest.skip("Pre-seeded OpenFGA tuples not found (alice is not admin)")
@@ -236,10 +251,10 @@ async def openfga_bob_tuples(test_infrastructure):
 
     # Verify pre-seeded tuple exists (bob is member of organization:acme)
     try:
-        is_member = await client.check(
+        is_member = await client.check_permission(
             user="user:bob",
             relation="member",
-            obj="organization:acme",
+            object="organization:acme",
         )
         if not is_member:
             pytest.skip("Pre-seeded OpenFGA tuples not found (bob is not member)")
@@ -301,15 +316,15 @@ async def openfga_cross_user_tuples(test_infrastructure):
 
     # Verify pre-seeded tuples exist (alice owns thread_1, bob can view thread_1)
     try:
-        alice_owns = await client.check(
+        alice_owns = await client.check_permission(
             user="user:alice",
             relation="owner",
-            obj="conversation:thread_1",
+            object="conversation:thread_1",
         )
-        bob_can_view = await client.check(
+        bob_can_view = await client.check_permission(
             user="user:bob",
             relation="viewer",
-            obj="conversation:thread_1",
+            object="conversation:thread_1",
         )
         if not alice_owns or not bob_can_view:
             pytest.skip("Pre-seeded cross-user tuples not found")
