@@ -133,6 +133,21 @@ class TestStartupValidationIncludesQdrant:
                 new_callable=AsyncMock,
                 return_value=(True, "Qdrant connected"),
             ) as mock_qdrant,
+            patch(
+                "mcp_server_langgraph.api.health.validate_loki_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Loki disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_tempo_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Tempo disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_mimir_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Mimir disabled"),
+            ),
         ):
             # Should not raise
             await run_startup_validation_async()
@@ -175,6 +190,21 @@ class TestStartupValidationIncludesQdrant:
                 "mcp_server_langgraph.api.health.validate_qdrant_connectivity_async",
                 new_callable=AsyncMock,
                 return_value=(False, "Qdrant connection refused"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_loki_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Loki disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_tempo_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Tempo disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_mimir_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Mimir disabled"),
             ),
             patch("mcp_server_langgraph.api.health.settings") as mock_settings,
         ):
@@ -229,6 +259,21 @@ class TestHealthEndpointIncludesQdrant:
                 new_callable=AsyncMock,
                 return_value=(True, "Qdrant connected"),
             ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_loki_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Loki disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_tempo_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Tempo disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_mimir_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Mimir disabled"),
+            ),
         ):
             result = await health_check()
 
@@ -268,6 +313,21 @@ class TestHealthEndpointIncludesQdrant:
                 "mcp_server_langgraph.api.health.validate_qdrant_connectivity_async",
                 new_callable=AsyncMock,
                 return_value=(False, "Qdrant connection refused"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_loki_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Loki disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_tempo_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Tempo disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_mimir_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Mimir disabled"),
             ),
         ):
             result = await health_check()

@@ -332,7 +332,12 @@ class KeycloakClient:
 
     async def authenticate_user(self, username: str, password: str) -> dict[str, Any]:
         """
-        Authenticate user using Resource Owner Password Credentials (ROPC) flow
+        DEPRECATED: Authenticate user using Resource Owner Password Credentials (ROPC) flow.
+
+        .. deprecated::
+            This method uses ROPC which is deprecated per RFC 9700 (OAuth 2.0 Security
+            Best Practice). Use Authorization Code + PKCE flow for user authentication,
+            or Client Credentials grant for service-to-service authentication.
 
         Args:
             username: Username
@@ -345,6 +350,16 @@ class KeycloakClient:
             httpx.HTTPError: If authentication fails
         """
         import time
+        import warnings
+
+        # Emit deprecation warning per RFC 9700
+        warnings.warn(
+            "authenticate_user() uses ROPC which is deprecated per RFC 9700. "
+            "Use Authorization Code + PKCE for user auth, or Client Credentials for "
+            "service-to-service auth. This method will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         start_time = time.perf_counter()
 

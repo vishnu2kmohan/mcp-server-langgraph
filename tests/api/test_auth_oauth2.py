@@ -122,6 +122,55 @@ class TestOAuth2Login:
         # The custom URI should be URL-encoded in the redirect
         assert "redirect_uri=" in location
 
+    def test_login_uses_public_url_for_redirect(self):
+        """Should use keycloak_public_url (not keycloak_server_url) for browser redirect.
+
+        This test catches the configuration issue where internal Docker URLs
+        (e.g., http://keycloak-test:8080) are accidentally used for browser redirects
+        instead of externally accessible URLs (e.g., http://localhost/authn).
+
+        See ADR-0071: keycloak_public_url is for browser redirects, keycloak_server_url
+        is for backend-to-backend token exchange.
+        """
+        # Mock settings with distinct public and internal URLs
+        with patch("mcp_server_langgraph.api.v1.auth.settings") as mock_settings:
+            mock_settings.keycloak_server_url = "http://internal-keycloak:8080/authn"
+            mock_settings.keycloak_public_url = "http://localhost/authn"
+            mock_settings.keycloak_realm = "test-realm"
+            mock_settings.keycloak_client_id = "test-client"
+            mock_settings.oauth2_auth_callback_uri = None  # Auto-detect
+            mock_settings.environment = "development"
+
+            app = _create_test_app()
+            client = TestClient(app)
+
+            response = client.get("/auth/login", follow_redirects=False)
+
+            location = response.headers.get("location", "")
+            # CRITICAL: Should use PUBLIC URL for browser redirect
+            assert "http://localhost/authn" in location
+            # Should NOT use internal Docker URL
+            assert "internal-keycloak" not in location
+
+    def test_login_falls_back_to_server_url_when_public_not_set(self):
+        """Should use keycloak_server_url when keycloak_public_url is not configured."""
+        with patch("mcp_server_langgraph.api.v1.auth.settings") as mock_settings:
+            mock_settings.keycloak_server_url = "http://localhost:8082/authn"
+            mock_settings.keycloak_public_url = None  # Not set
+            mock_settings.keycloak_realm = "test-realm"
+            mock_settings.keycloak_client_id = "test-client"
+            mock_settings.oauth2_auth_callback_uri = None
+            mock_settings.environment = "development"
+
+            app = _create_test_app()
+            client = TestClient(app)
+
+            response = client.get("/auth/login", follow_redirects=False)
+
+            location = response.headers.get("location", "")
+            # Falls back to server_url when public_url not configured
+            assert "http://localhost:8082/authn" in location
+
 
 # ============================================================================
 # GET /auth/callback Tests
@@ -229,6 +278,58 @@ class TestOAuth2Callback:
             post_data = call_args.kwargs.get("data", {})
             assert post_data.get("code_verifier") == "my-secret-verifier"
             assert post_data.get("grant_type") == "authorization_code"
+
+    def test_callback_uses_server_url_for_token_exchange(self):
+        """Should use keycloak_server_url (not keycloak_public_url) for token exchange.
+
+        Token exchange is backend-to-backend communication and should use the internal
+        Docker URL (keycloak_server_url), not the public URL used for browser redirects.
+
+        This ensures proper network routing in containerized environments where the
+        public URL may not be resolvable from within the container network.
+        """
+        with patch("mcp_server_langgraph.api.v1.auth.settings") as mock_settings:
+            # Configure distinct URLs
+            mock_settings.keycloak_server_url = "http://keycloak-internal:8080/authn"
+            mock_settings.keycloak_public_url = "http://localhost/authn"
+            mock_settings.keycloak_realm = "test-realm"
+            mock_settings.keycloak_client_id = "test-client"
+            mock_settings.keycloak_client_secret = None
+            mock_settings.frontend_url = "http://localhost"
+            mock_settings.oauth2_auth_callback_uri = None
+            mock_settings.environment = "development"
+
+            app = _create_test_app()
+            client = TestClient(
+                app,
+                cookies={
+                    "oauth2_state": "valid-state",
+                    "oauth2_code_verifier": "test-verifier",
+                    "oauth2_redirect_uri": "http://localhost/api/v1/auth/callback",
+                },
+            )
+
+            mock_response = MagicMock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {
+                "access_token": "token",
+                "expires_in": 300,
+            }
+
+            with patch("mcp_server_langgraph.api.v1.auth.httpx.AsyncClient") as mock_client_class:
+                mock_post = AsyncMock(return_value=mock_response)
+                mock_client_class.return_value.__aenter__.return_value.post = mock_post
+
+                client.get("/auth/callback?code=test-code&state=valid-state", follow_redirects=False)
+
+                # Verify token exchange uses INTERNAL URL (keycloak_server_url)
+                call_args = mock_post.call_args
+                assert call_args is not None
+                token_url = call_args.args[0] if call_args.args else call_args.kwargs.get("url", "")
+                # Should use internal URL for backend-to-backend communication
+                assert "keycloak-internal:8080" in token_url
+                # Should NOT use public URL
+                assert "localhost/authn" not in token_url
 
 
 # ============================================================================

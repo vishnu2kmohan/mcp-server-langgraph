@@ -95,6 +95,9 @@ langsmith_tracing: {{ .Values.config.langsmithTracing | quote }}
 auth_provider: {{ .Values.config.authProvider | quote }}
 auth_mode: {{ .Values.config.authMode | quote }}
 keycloak_server_url: {{ .Values.config.keycloakServerUrl | quote }}
+{{- if .Values.config.keycloakPublicUrl }}
+keycloak_public_url: {{ .Values.config.keycloakPublicUrl | quote }}
+{{- end }}
 keycloak_realm: {{ .Values.config.keycloakRealm | quote }}
 keycloak_client_id: {{ .Values.config.keycloakClientId | quote }}
 keycloak_verify_ssl: {{ .Values.config.keycloakVerifySsl | quote }}
@@ -129,6 +132,12 @@ postgres-username: {{ .Values.secrets.postgresUsername | default "postgres" | qu
 postgres-password: {{ .Values.secrets.postgresPassword | default "" | quote }}
 redis-password: {{ .Values.secrets.redisPassword | default "" | quote }}
 langsmith-api-key: {{ .Values.secrets.langsmithApiKey | default "" | quote }}
+github-client-id: {{ .Values.secrets.githubClientId | default "" | quote }}
+github-client-secret: {{ .Values.secrets.githubClientSecret | default "" | quote }}
+google-client-id: {{ .Values.secrets.googleClientId | default "" | quote }}
+google-client-secret: {{ .Values.secrets.googleClientSecret | default "" | quote }}
+microsoft-client-id: {{ .Values.secrets.microsoftClientId | default "" | quote }}
+microsoft-client-secret: {{ .Values.secrets.microsoftClientSecret | default "" | quote }}
 infisical-client-id: {{ .Values.secrets.infisicalClientId | default "" | quote }}
 infisical-client-secret: {{ .Values.secrets.infisicalClientSecret | default "" | quote }}
 infisical-project-id: {{ .Values.secrets.infisicalProjectId | default "" | quote }}

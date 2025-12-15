@@ -275,3 +275,375 @@ Run security tests:
 ```bash
 uv run pytest tests/unit/auth/ -v -k "issuer or iat or denylist or oauth2 or pkce"
 ```
+
+## Implementation Status (Updated 2025-12-15)
+
+### Audit Summary
+
+A comprehensive audit of all authentication methods across the codebase was performed:
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| **Frontend (LoginPage.tsx)** | ✅ Compliant | Uses OAuth2+PKCE via SSO redirect |
+| **Frontend (authSlice.ts)** | ✅ Compliant | Token management with proper cleanup |
+| **Frontend (baseQueryWithReauth.ts)** | ✅ Compliant | 401 handling with token refresh |
+| **Backend (/api/v1/auth/*)** | ✅ Compliant | OAuth2+PKCE endpoints implemented |
+| **Backend (/api/v1/login)** | ⚠️ Deprecated | ROPC with deprecation warning, will be removed in v2.0 |
+| **Keycloak (keycloak.py)** | ⚠️ Deprecated | `authenticate_user()` emits DeprecationWarning |
+| **E2E Tests (journeys/*)** | ✅ Compliant | Use Token Exchange/PKCE with ROPC fallback |
+| **Test Fixtures (conftest.py)** | ✅ Compliant | Auth hierarchy: Token Exchange → Client Credentials → ROPC |
+
+### ROPC Deprecation Warnings Implemented
+
+1. **`authenticate_user()` in `keycloak.py`**:
+   ```python
+   warnings.warn(
+       "authenticate_user() uses ROPC which is deprecated per RFC 9700. "
+       "Use Authorization Code + PKCE for user auth, or Client Credentials for "
+       "service-to-service auth. This method will be removed in a future version.",
+       DeprecationWarning,
+       stacklevel=2,
+   )
+   ```
+
+2. **`/api/v1/login` endpoint in `user.py`**:
+   - FastAPI `deprecated=True` flag set
+   - Logger warning emitted on every call
+
+3. **`login()` in `real_clients.py` (E2E tests)**:
+   - DeprecationWarning emitted with RFC 9700 reference
+
+4. **`get_token()` in `test_keycloak_openfga_auth_flow.py`**:
+   - DeprecationWarning suggesting Token Exchange alternative
+
+### Remaining ROPC Usage (29 files identified)
+
+Most ROPC usage is in:
+- **Test code**: Using auth hierarchy with modern methods first
+- **Setup scripts**: Administrative bootstrapping (acceptable)
+- **Documentation**: Examples marked as deprecated
+
+### Files with Deprecation Warnings
+
+| File | Method | Deprecation Warning |
+|------|--------|-------------------|
+| `src/mcp_server_langgraph/auth/keycloak.py` | `authenticate_user()` | ✅ Added |
+| `src/mcp_server_langgraph/api/v1/user.py` | `/login` endpoint | ✅ Present |
+| `tests/e2e/real_clients.py` | `login()` | ✅ Present |
+| `tests/e2e/journeys/test_keycloak_openfga_auth_flow.py` | `get_token()` | ✅ Present |
+
+### Keycloak Client Configuration (Updated 2025-12-15)
+
+**ROPC is now DISABLED** in `tests/e2e/default-realm.json`:
+
+```json
+{
+  "clientId": "mcp-server",
+  "directAccessGrantsEnabled": false,
+  "authorizationServicesEnabled": true,
+  "attributes": {
+    "oauth2.device.authorization.grant.enabled": "true"
+  }
+}
+```
+
+**New Authentication Methods Available:**
+
+| Method | RFC | Use Case |
+|--------|-----|----------|
+| **Token Exchange** | RFC 8693 | User impersonation without password |
+| **Device Authorization** | RFC 8628 | CLI/headless authentication |
+| **Client Credentials** | RFC 6749 | Service-to-service authentication |
+| **Authorization Code + PKCE** | RFC 7636 | Browser-based user authentication |
+| **DPoP (Token Binding)** | RFC 9449 | Sender-constrained tokens, replay protection |
+
+**Authorization Settings for Token Exchange:**
+- `authorizationServicesEnabled: true` - Required for token exchange
+- Authorization policies configured for service account token exchange
+- Scopes: `token-exchange`, `impersonate`
+
+### Test Coverage
+
+RFC 9700 compliance tests added to `tests/unit/auth/test_keycloak.py`:
+- `test_authenticate_user_emits_deprecation_warning` ✅
+- `test_authenticate_user_deprecation_warning_suggests_alternative` ✅
+- `test_authenticate_user_still_works_despite_deprecation` ✅
+
+### Device Authorization Grant (RFC 8628)
+
+New module: `src/mcp_server_langgraph/auth/device_auth.py`
+
+**Purpose:** Headless/CLI authentication without user interaction on the client device.
+
+**Classes:**
+- `DeviceAuthClient` - OAuth 2.0 Device Authorization client
+- `DeviceAuthError`, `AuthorizationPending`, `SlowDown`, `ExpiredToken`, `AccessDenied` - Error classes
+
+**Usage:**
+```python
+from mcp_server_langgraph.auth.device_auth import DeviceAuthClient, format_user_instructions
+
+client = DeviceAuthClient(
+    server_url="https://keycloak.example.com",
+    realm="mcp-server",
+    client_id="mcp-cli",
+)
+
+# Step 1: Request device code
+device_response = await client.request_device_code()
+print(format_user_instructions(device_response))
+
+# Step 2: Wait for user authorization
+tokens = await client.wait_for_authorization(
+    device_response["device_code"],
+    interval=device_response["interval"],
+)
+```
+
+**Tests:** `tests/unit/auth/test_device_auth.py` (12 tests)
+
+### DPoP Token Binding (RFC 9449)
+
+New module: `src/mcp_server_langgraph/auth/dpop.py`
+
+**Purpose:** Sender-constrained access tokens that prevent token theft and replay attacks.
+
+**Classes:**
+- `DPoPClient` - Generates DPoP proofs using ES256 (ECDSA with P-256)
+- `DPoPReplayCache` - In-memory jti cache for replay protection
+
+**Key Functions:**
+- `verify_dpop_proof()` - Server-side DPoP proof verification
+- `create_dpop_bound_token()` - Create tokens with cnf (confirmation) claim
+
+**Usage (Client):**
+```python
+from mcp_server_langgraph.auth.dpop import DPoPClient
+
+client = DPoPClient.generate()  # Generates new EC key pair
+proof = client.generate_proof(
+    http_method="POST",
+    http_uri="https://api.example.com/token",
+)
+headers = {"DPoP": proof}
+```
+
+**Usage (Server):**
+```python
+from mcp_server_langgraph.auth.dpop import verify_dpop_proof, DPoPReplayCache
+
+cache = DPoPReplayCache()
+result = verify_dpop_proof(
+    proof=request.headers["DPoP"],
+    http_method="POST",
+    http_uri="https://api.example.com/token",
+    jti_cache=cache,
+)
+if result["valid"]:
+    # Process request with verified token binding
+    pass
+```
+
+**Tests:** `tests/unit/auth/test_dpop.py` (11 tests)
+
+### DPoP Middleware Integration
+
+**Location:** `src/mcp_server_langgraph/auth/middleware.py`
+
+The DPoP verification is integrated into the authentication middleware via the `verify_token_with_dpop()` method:
+
+```python
+async def verify_token_with_dpop(
+    self,
+    token: str,
+    dpop_proof: str | None,
+    http_method: str,
+    http_uri: str,
+) -> TokenVerification:
+    """
+    Verify JWT token with optional DPoP sender-constraint verification.
+
+    Behavior:
+    - If token has cnf.jkt claim (DPoP-bound): DPoP proof is REQUIRED
+    - If token has no cnf claim: DPoP proof is optional (verified if provided)
+    """
+```
+
+**Verification Flow:**
+
+1. Verify the base JWT token (signature, exp, aud, iss)
+2. Check if token is DPoP-bound (has `cnf.jkt` claim)
+3. If DPoP-bound and no proof provided → REJECT
+4. If proof provided:
+   - Verify DPoP proof signature (ES256)
+   - Verify `htm` matches HTTP method
+   - Verify `htu` matches HTTP URI
+   - Verify `ath` matches token hash (for bound tokens)
+   - Check replay cache for `jti`
+   - Verify key thumbprint matches `cnf.jkt` (RFC 7638)
+5. Return verification result
+
+**Key Thumbprint Verification (RFC 7638):**
+
+```python
+# Calculate thumbprint of the proof's JWK
+canonical = json.dumps(
+    {"crv": proof_jwk["crv"], "kty": proof_jwk["kty"],
+     "x": proof_jwk["x"], "y": proof_jwk["y"]},
+    separators=(",", ":"), sort_keys=True,
+)
+thumbprint = hashlib.sha256(canonical.encode()).digest()
+actual_jkt = base64.urlsafe_b64encode(thumbprint).rstrip(b"=").decode()
+
+if actual_jkt != expected_jkt:
+    return TokenVerification(valid=False, error="DPoP key thumbprint mismatch")
+```
+
+**Tests:** `tests/unit/auth/test_dpop_middleware.py` (8 tests)
+
+| Test | Scenario |
+|------|----------|
+| `test_verify_token_without_dpop_succeeds_for_non_bound_token` | Non-DPoP tokens work without proof |
+| `test_verify_dpop_bound_token_without_proof_fails` | DPoP-bound tokens require proof |
+| `test_verify_token_with_valid_dpop_proof_succeeds` | Valid proof passes |
+| `test_verify_token_with_wrong_dpop_key_fails` | Wrong key is rejected |
+| `test_verify_token_with_wrong_http_method_fails` | Method mismatch rejected |
+| `test_verify_token_with_wrong_http_uri_fails` | URI mismatch rejected |
+| `test_verify_token_with_replayed_dpop_proof_fails` | Replay detection works |
+| `test_verify_token_with_optional_dpop_for_non_bound_token` | Optional DPoP verified when provided |
+
+### Device Authorization API Endpoints
+
+**Location:** `src/mcp_server_langgraph/api/v1/auth.py`
+
+Two new endpoints expose the Device Authorization Grant flow:
+
+#### GET /api/v1/auth/device
+
+**Purpose:** Request device authorization code for CLI/headless authentication.
+
+**Response Model:**
+```python
+class DeviceCodeResponse(BaseModel):
+    device_code: str       # Device verification code (for polling)
+    user_code: str         # User code to enter at verification_uri
+    verification_uri: str  # URL for user to visit
+    verification_uri_complete: str | None  # URL with user_code embedded (for QR)
+    expires_in: int        # Lifetime of device_code in seconds
+    interval: int = 5      # Polling interval in seconds
+```
+
+**Example Response:**
+```json
+{
+  "device_code": "GmRhmhcxhwAzkoEqiMEg_DnyEysNkuNhszIySk9eS",
+  "user_code": "WDJB-MJHT",
+  "verification_uri": "https://keycloak.example.com/device",
+  "verification_uri_complete": "https://keycloak.example.com/device?user_code=WDJB-MJHT",
+  "expires_in": 600,
+  "interval": 5
+}
+```
+
+#### POST /api/v1/auth/device/token
+
+**Purpose:** Poll for access token after device authorization.
+
+**Request Model:**
+```python
+class DeviceTokenRequest(BaseModel):
+    device_code: str  # Device code from GET /auth/device
+```
+
+**Success Response:** Returns `TokenResponse` (access_token, refresh_token, expires_in)
+
+**Error Responses (HTTP 400):**
+
+| Error Code | Description |
+|------------|-------------|
+| `authorization_pending` | User hasn't completed authorization yet |
+| `slow_down` | Client is polling too frequently |
+| `expired_token` | Device code has expired |
+| `access_denied` | User denied the authorization request |
+
+**Example Error Response:**
+```json
+{
+  "error": "authorization_pending",
+  "error_description": "Authorization pending"
+}
+```
+
+**CLI Integration Pattern:**
+
+```python
+import asyncio
+from mcp_server_langgraph.auth.device_auth import DeviceAuthClient
+
+client = DeviceAuthClient(
+    server_url="https://keycloak.example.com",
+    realm="mcp-server",
+    client_id="mcp-cli",
+)
+
+# Alternative: Use REST API directly
+async def cli_login():
+    # Step 1: Request device code
+    response = await httpx.get("https://api.example.com/api/v1/auth/device")
+    device_data = response.json()
+
+    print(f"Visit: {device_data['verification_uri']}")
+    print(f"Enter code: {device_data['user_code']}")
+
+    # Step 2: Poll for tokens
+    while True:
+        await asyncio.sleep(device_data["interval"])
+        token_response = await httpx.post(
+            "https://api.example.com/api/v1/auth/device/token",
+            json={"device_code": device_data["device_code"]},
+        )
+
+        if token_response.status_code == 200:
+            tokens = token_response.json()
+            print(f"Access token: {tokens['access_token'][:20]}...")
+            break
+        elif token_response.status_code == 400:
+            error = token_response.json()
+            if error["error"] == "authorization_pending":
+                continue  # Keep polling
+            elif error["error"] == "slow_down":
+                await asyncio.sleep(5)  # Increase interval
+                continue
+            else:
+                raise Exception(f"Auth failed: {error['error']}")
+```
+
+**Tests:** `tests/api/test_device_auth_api.py` (9 tests)
+
+| Test | Scenario |
+|------|----------|
+| `test_device_auth_request_returns_device_code` | Device code returned |
+| `test_device_auth_request_includes_verification_uri_complete` | QR-friendly URL included |
+| `test_device_auth_request_includes_expires_in` | Expiration time provided |
+| `test_device_token_poll_returns_tokens_when_authorized` | Successful token exchange |
+| `test_device_token_poll_returns_authorization_pending` | Pending state handled |
+| `test_device_token_poll_returns_slow_down` | Rate limiting handled |
+| `test_device_token_poll_returns_expired_token` | Expiration handled |
+| `test_device_token_poll_returns_access_denied` | Denial handled |
+| `test_device_token_poll_validates_device_code` | Input validation |
+
+### Frontend Support Summary
+
+The Studio frontend fully supports all applicable Keycloak authentication capabilities:
+
+| Capability | Frontend Support | Implementation |
+|------------|------------------|----------------|
+| **OAuth2 + PKCE** | ✅ Native | `LoginPage.tsx` redirects to `/api/v1/auth/login` |
+| **Token Callback** | ✅ Native | `AuthCallbackPage.tsx` handles URL fragment tokens |
+| **Token Refresh** | ✅ Native | `baseQueryWithReauth.ts` auto-refreshes on 401 |
+| **Token Storage** | ✅ Native | `authSlice.ts` manages localStorage persistence |
+| **Logout** | ✅ Native | `authSlice.ts` clears all auth storage keys |
+| **Device Auth** | N/A | Backend-only (for CLI tools, not browser) |
+| **DPoP** | Transparent | Handled in middleware (no frontend changes needed) |
+
+**Note:** Device Authorization Grant is intentionally not exposed in the frontend as it's designed for CLI/headless scenarios where browser-based PKCE flow is not available

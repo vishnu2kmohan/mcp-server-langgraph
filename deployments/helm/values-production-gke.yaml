@@ -91,6 +91,13 @@ config:
   observabilityBackend: "both"  # OpenTelemetry + LangSmith
   langsmithTracing: true
 
+  # Keycloak URLs
+  # Internal URL: Backend-to-backend communication via in-cluster service
+  keycloakServerUrl: "http://keycloak:8080/authn"
+  # Public URL: Browser redirects in OAuth2/PKCE flow via ingress
+  # Example: https://auth.my-project.example.com/authn
+  keycloakPublicUrl: ""  # Set via --set config.keycloakPublicUrl=https://...
+
   # Security
   keycloakVerifySsl: true
   redisSsl: false  # In-cluster Redis without TLS
@@ -149,6 +156,20 @@ externalSecrets:
       gcpSecret: "mcp-production-redis-password"
     - key: "keycloak-admin-password"
       gcpSecret: "mcp-production-keycloak-admin-password"
+    # SSO Identity Provider Credentials (optional)
+    # Create secrets in GCP Secret Manager to enable social login
+    - key: "github-client-id"
+      gcpSecret: "mcp-production-github-client-id"
+    - key: "github-client-secret"
+      gcpSecret: "mcp-production-github-client-secret"
+    - key: "google-client-id"
+      gcpSecret: "mcp-production-google-client-id"
+    - key: "google-client-secret"
+      gcpSecret: "mcp-production-google-client-secret"
+    - key: "microsoft-client-id"
+      gcpSecret: "mcp-production-microsoft-client-id"
+    - key: "microsoft-client-secret"
+      gcpSecret: "mcp-production-microsoft-client-secret"
 
 # OpenTelemetry Collector configuration
 opentelemetry:

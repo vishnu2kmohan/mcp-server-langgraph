@@ -17,7 +17,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.config import settings
@@ -297,7 +297,7 @@ async def get_identity_providers() -> IdentityProvidersListResponse:
         )
 
 
-@router.get("", response_model=IdentityProvidersListResponse)
+@router.get("")
 async def list_identity_providers() -> IdentityProvidersListResponse:
     """
     List available identity providers for SSO login.

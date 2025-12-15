@@ -47,28 +47,46 @@ def _create_test_app_with_user(user_data: dict[str, Any] | None = None) -> FastA
 
     Returns:
         FastAPI app with user router and appropriate dependency overrides
+
+    PYTEST-XDIST FIX (2025-12-15):
+    ==============================
+    Uses dependency override to completely replace get_current_user.
+    Also sets up mock global auth middleware as defensive fallback.
     """
+    from fastapi import Request
+
     from mcp_server_langgraph.api.v1.user import user_router
-    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.auth.middleware import (
+        get_current_user,
+        set_global_auth_middleware,
+    )
+
+    # Defensive: Set up mock global auth middleware in case override doesn't work
+    # This prevents RuntimeError if the real get_current_user is called
+    mock_middleware = MagicMock()
+    mock_middleware.verify_token = AsyncMock(return_value=user_data or {})
+    set_global_auth_middleware(mock_middleware)
 
     app = FastAPI()
-    app.include_router(user_router)
 
     if user_data is not None:
         # Override get_current_user to return mock user
-        async def mock_get_current_user() -> dict[str, Any]:
+        # Note: Must match original signature with Request parameter for xdist compatibility
+        async def mock_get_current_user(request: Request) -> dict[str, Any]:
             return user_data
 
         app.dependency_overrides[get_current_user] = mock_get_current_user
     else:
         # Override get_current_user to raise 401 (simulating no auth)
-        async def mock_get_current_user_unauthenticated() -> dict[str, Any]:
+        async def mock_get_current_user_unauthenticated(request: Request) -> dict[str, Any]:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Not authenticated",
             )
 
         app.dependency_overrides[get_current_user] = mock_get_current_user_unauthenticated
+
+    app.include_router(user_router)
 
     return app
 

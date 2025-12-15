@@ -336,3 +336,150 @@ def test_docker_compose_imports_realm(repo_root: Path):
         "\n"
         "This flag tells Keycloak to import realm configuration from /opt/keycloak/data/import/"
     )
+
+
+def test_realm_json_has_sso_identity_providers(repo_root: Path):
+    """
+    Verify that the realm configuration includes SSO identity providers.
+
+    The E2E tests expect identity providers for:
+    - GitHub (social login)
+    - Google (social login)
+    - Microsoft (enterprise SSO)
+
+    These are configured with placeholder values that are replaced at runtime
+    by the keycloak-init-test service if real credentials are provided.
+    """
+    realm_file = repo_root / "tests" / "e2e" / "default-realm.json"
+
+    with open(realm_file) as f:
+        realm_config = json.load(f)
+
+    # Check for identityProviders array
+    idps = realm_config.get("identityProviders", [])
+    assert isinstance(idps, list), f"Realm 'identityProviders' must be an array, got: {type(idps)}"
+
+    # Verify expected IdPs exist
+    idp_aliases = {idp.get("alias") for idp in idps}
+    expected_idps = {"github", "google", "microsoft"}
+
+    for expected_alias in expected_idps:
+        assert expected_alias in idp_aliases, (
+            f"Identity provider '{expected_alias}' not found in realm configuration.\n\nFound IdPs: {idp_aliases}"
+        )
+
+    # Verify each IdP has required fields
+    for idp in idps:
+        alias = idp.get("alias")
+        if alias not in expected_idps:
+            continue
+
+        assert idp.get("enabled") is True, f"IdP '{alias}' must be enabled (disabled at runtime if no credentials)"
+        assert idp.get("providerId") is not None, f"IdP '{alias}' must have a providerId"
+        assert idp.get("displayName") is not None, f"IdP '{alias}' must have a displayName"
+
+        # Config must have placeholder values
+        config = idp.get("config", {})
+        client_id = config.get("clientId", "")
+        _client_secret = config.get("clientSecret", "")
+
+        # Placeholders should be clearly identifiable
+        assert "placeholder" in client_id.lower() or client_id == "", (
+            f"IdP '{alias}' clientId should be a placeholder value (e.g., 'placeholder-{alias}-client-id'), got: '{client_id}'"
+        )
+
+
+def test_docker_compose_has_sso_env_file(repo_root: Path):
+    """
+    Verify that docker-compose.test.yml keycloak-init-test service
+    loads SSO credentials from env files.
+
+    The keycloak-init-test service should:
+    - Load .env.local for SSO credentials (GITHUB_CLIENT_ID, etc.)
+    - NOT have environment: block that overrides env_file values
+    """
+    docker_compose_file = repo_root / "docker-compose.test.yml"
+
+    with open(docker_compose_file) as f:
+        compose_config: dict = yaml.safe_load(f)
+
+    services = compose_config.get("services", {})
+    keycloak_init_service = services.get("keycloak-init-test")
+
+    assert keycloak_init_service is not None, "Service 'keycloak-init-test' not found in docker-compose.test.yml"
+
+    # Check for env_file directive
+    env_files = keycloak_init_service.get("env_file", [])
+    assert isinstance(env_files, list), f"env_file must be a list, got: {type(env_files)}"
+
+    # Look for .env.local
+    has_env_local = any(
+        (".env.local" in str(ef) if isinstance(ef, str) else ".env.local" in str(ef.get("path", ""))) for ef in env_files
+    )
+    assert has_env_local, (
+        f"keycloak-init-test must include .env.local in env_file for SSO credentials.\n\nCurrent env_files: {env_files}"
+    )
+
+    # Verify environment: block does NOT contain SSO credentials
+    # (they should come from env_file, not be overridden with empty fallbacks)
+    environment = keycloak_init_service.get("environment", [])
+
+    sso_env_vars = [
+        "GITHUB_CLIENT_ID",
+        "GITHUB_CLIENT_SECRET",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "MICROSOFT_CLIENT_ID",
+        "MICROSOFT_CLIENT_SECRET",
+    ]
+
+    for env_entry in environment:
+        if isinstance(env_entry, str):
+            for sso_var in sso_env_vars:
+                if env_entry.startswith(f"{sso_var}="):
+                    pytest.fail(
+                        f"SSO credential '{sso_var}' should NOT be in environment: block.\n"
+                        "\nDocker Compose resolves environment: before env_file:, so empty fallbacks "
+                        "like '${GITHUB_CLIENT_ID:-}' override values from .env.local.\n"
+                        "\nFix: Remove SSO credentials from environment: block, they're loaded via env_file."
+                    )
+
+
+def test_keycloak_init_script_disables_placeholder_idps(repo_root: Path):
+    """
+    Verify that the keycloak-init-test command script disables IdPs
+    that have placeholder credentials.
+
+    The script should:
+    - Check if credentials are real (not placeholder-* or empty)
+    - Enable IdPs with real credentials
+    - Disable IdPs that still have placeholders
+    """
+    docker_compose_file = repo_root / "docker-compose.test.yml"
+
+    with open(docker_compose_file) as f:
+        compose_config: dict = yaml.safe_load(f)
+
+    services = compose_config.get("services", {})
+    keycloak_init_service = services.get("keycloak-init-test")
+
+    assert keycloak_init_service is not None
+
+    # Get the command script
+    command = keycloak_init_service.get("command")
+    assert command is not None, "keycloak-init-test must have a command"
+
+    # Command can be string or list
+    command_str = command[0] if isinstance(command, list) else command
+
+    # Verify the script contains logic to disable IdPs with placeholders
+    assert "is_placeholder" in command_str or "placeholder" in command_str.lower(), (
+        "keycloak-init-test command must check for placeholder values.\n"
+        "\nExpected: Script should detect placeholder-* values and disable those IdPs."
+    )
+
+    # Verify the script can disable IdPs
+    assert "enabled=false" in command_str or '"enabled"=false' in command_str, (
+        "keycloak-init-test command must be able to disable IdPs.\n"
+        "\nExpected: kcadm.sh update with -s 'enabled=false' for IdPs without real credentials."
+    )

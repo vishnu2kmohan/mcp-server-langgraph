@@ -112,6 +112,10 @@ spec:
         # Keycloak Configuration
         - name: KEYCLOAK_SERVER_URL
           value: {{ .Values.config.keycloakServerUrl | quote }}
+        {{- if .Values.config.keycloakPublicUrl }}
+        - name: KEYCLOAK_PUBLIC_URL
+          value: {{ .Values.config.keycloakPublicUrl | quote }}
+        {{- end }}
         - name: KEYCLOAK_REALM
           value: {{ .Values.config.keycloakRealm | quote }}
         - name: KEYCLOAK_CLIENT_ID
@@ -220,6 +224,45 @@ spec:
             secretKeyRef:
               name: {{ include "mcp-server-langgraph.secretName" . }}
               key: infisical-project-id
+              optional: true
+
+        # SSO Identity Provider Credentials (optional)
+        # Used by Keycloak init job to configure GitHub, Google, Microsoft login
+        - name: GITHUB_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mcp-server-langgraph.secretName" . }}
+              key: github-client-id
+              optional: true
+        - name: GITHUB_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mcp-server-langgraph.secretName" . }}
+              key: github-client-secret
+              optional: true
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mcp-server-langgraph.secretName" . }}
+              key: google-client-id
+              optional: true
+        - name: GOOGLE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mcp-server-langgraph.secretName" . }}
+              key: google-client-secret
+              optional: true
+        - name: MICROSOFT_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mcp-server-langgraph.secretName" . }}
+              key: microsoft-client-id
+              optional: true
+        - name: MICROSOFT_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mcp-server-langgraph.secretName" . }}
+              key: microsoft-client-secret
               optional: true
         startupProbe:
           httpGet:

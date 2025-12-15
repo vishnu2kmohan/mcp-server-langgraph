@@ -577,6 +577,10 @@ test-e2e:
 	TESTING=true OTEL_SDK_DISABLED=true KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests KEYCLOAK_ADMIN_PASSWORD=admin JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only $(PYTEST) -n auto -m e2e -v --tb=short
 	@echo "✓ E2E tests complete"
 
+test-e2e-ci:  ## Run E2E tests with full CI parity (used by validate-pre-push-ci)
+	@echo "Running E2E tests with CI parity (orchestrated by test-e2e.sh)..."
+	@./scripts/test-e2e.sh && echo "✓ E2E tests passed" || (echo "✗ E2E tests failed" && exit 1)
+
 test-api:
 	@echo "Running API endpoint tests (unit tests for REST APIs)..."
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m "api and unit" -v
@@ -888,9 +892,10 @@ validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 
 	@echo "✓ Your push should pass most CI checks"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-## validate-pre-push-full: Comprehensive pre-push validation with integration tests
+## validate-pre-push-full: Comprehensive pre-push validation with integration + e2e tests
 ## Use cases: Pre-release audit, major refactoring, CI debugging
-validate-pre-push-full:  ## Comprehensive CI-equivalent validation with Docker (8-12 min)
+## Includes: unit, api, property, smoke, integration, AND e2e tests (true CI parity)
+validate-pre-push-full:  ## Comprehensive CI-equivalent validation with Docker (20-30 min, includes e2e)
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "🎯 CI-EQUIVALENT VALIDATION (FULL)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -910,6 +915,9 @@ validate-pre-push-full:  ## Comprehensive CI-equivalent validation with Docker (
 	@echo ""
 	@echo "▶ Running Integration Tests (Docker - requires Docker daemon)..."
 	@./scripts/test-integration.sh && echo "✓ Integration tests passed" || (echo "✗ Integration tests failed" && exit 1)
+	@echo ""
+	@echo "▶ Running E2E Tests (Docker - full user journeys, ~15-20 min)..."
+	@./scripts/test-e2e.sh && echo "✓ E2E tests passed" || (echo "✗ E2E tests failed" && exit 1)
 	@echo ""
 	@$(MAKE) _validate-pre-push-phase-4
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

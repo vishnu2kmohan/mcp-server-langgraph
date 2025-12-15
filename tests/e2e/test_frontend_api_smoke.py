@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import gc
 from typing import TYPE_CHECKING
-from unittest.mock import patch, MagicMock, AsyncMock
 
 import pytest
 from fastapi import FastAPI

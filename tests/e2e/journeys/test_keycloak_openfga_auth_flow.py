@@ -94,23 +94,108 @@ TEST_USERS = {
 
 
 class KeycloakAuthHelper:
-    """Helper class for Keycloak authentication operations."""
+    """
+    Helper class for Keycloak authentication operations.
+
+    Authentication Methods (per RFC 9700):
+    1. get_token_via_client_credentials() - RECOMMENDED for service accounts
+    2. get_token_via_token_exchange(username) - RECOMMENDED for user-specific tests
+    3. get_token(username, password) - DEPRECATED, uses ROPC
+    """
 
     def __init__(self, keycloak_url: str = KEYCLOAK_URL):
         self.keycloak_url = keycloak_url
         self.token_url = f"{keycloak_url}/realms/default/protocol/openid-connect/token"
         self.userinfo_url = f"{keycloak_url}/realms/default/protocol/openid-connect/userinfo"
+        self.client_id = "mcp-server"
+        self.client_secret = "test-client-secret-for-e2e-tests"
 
-    def get_token(self, username: str, password: str) -> dict:
-        """Get access token for user via password grant."""
+    def get_token_via_client_credentials(self) -> dict:
+        """
+        Get access token via client credentials grant (RFC 9700 compliant).
+
+        Use for service account authentication - no user context.
+        """
         import requests
 
         response = requests.post(
             self.token_url,
             data={
+                "grant_type": "client_credentials",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "scope": "openid email profile",
+            },
+            timeout=10,
+        )
+
+        if response.status_code != 200:
+            raise ValueError(f"Client credentials token request failed: {response.status_code} - {response.text}")
+
+        return response.json()
+
+    def get_token_via_token_exchange(self, username: str) -> dict:
+        """
+        Get user-specific access token via token exchange (RFC 8693).
+
+        Use for tests that need user-specific claims without the user's password.
+        Requires token exchange to be enabled in Keycloak for the client.
+        """
+        import requests
+
+        response = requests.post(
+            self.token_url,
+            data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "requested_subject": username,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "scope": "openid email profile",
+            },
+            timeout=10,
+        )
+
+        if response.status_code == 400:
+            error_body = response.json() if response.content else {}
+            error_desc = error_body.get("error_description", "")
+            if "not allowed" in error_desc.lower() or "permission" in error_desc.lower():
+                raise ValueError(
+                    f"Token exchange not configured for client '{self.client_id}'. "
+                    f"Enable token-exchange in Keycloak Admin. Error: {error_desc}"
+                )
+            raise ValueError(f"Token exchange failed: {error_desc}")
+
+        if response.status_code != 200:
+            raise ValueError(f"Token exchange request failed: {response.status_code} - {response.text}")
+
+        return response.json()
+
+    def get_token(self, username: str, password: str) -> dict:
+        """
+        Get access token for user via password grant (ROPC).
+
+        DEPRECATED per RFC 9700: Use get_token_via_token_exchange() instead.
+        Kept for backward compatibility and testing invalid credentials scenarios.
+        """
+        import warnings
+
+        import requests
+
+        # Emit deprecation warning per RFC 9700
+        warnings.warn(
+            "ROPC (password grant) is deprecated per RFC 9700. Use get_token_via_token_exchange() for user-specific tests.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        response = requests.post(
+            self.token_url,
+            data={
                 "grant_type": "password",
-                "client_id": "mcp-server",
-                "client_secret": "test-client-secret-for-e2e-tests",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
                 "username": username,
                 "password": password,
                 "scope": "openid email profile",
@@ -225,6 +310,35 @@ class OpenFGAAuthHelper:
         return False
 
 
+def _get_user_token(auth: KeycloakAuthHelper, username: str) -> dict:
+    """
+    Helper to get user token using modern auth methods with fallback.
+
+    Tries:
+    1. Token exchange (RFC 8693) - no password needed
+    2. ROPC (deprecated) - fallback if token exchange not configured
+
+    Args:
+        auth: KeycloakAuthHelper instance
+        username: Username to get token for
+
+    Returns:
+        Token response dict with access_token
+    """
+    import warnings
+
+    try:
+        return auth.get_token_via_token_exchange(username)
+    except ValueError as e:
+        if "not configured" in str(e) or "not allowed" in str(e):
+            # Fall back to ROPC (suppress the deprecation warning for this fallback)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=DeprecationWarning)
+                password = TEST_USERS.get(username, {}).get("password", "password123")
+                return auth.get_token(username, password)
+        raise
+
+
 @pytest.mark.xdist_group(name="test_keycloak_openfga_auth_flow")
 class TestKeycloakAuthentication:
     """Test Keycloak authentication operations."""
@@ -236,67 +350,70 @@ class TestKeycloakAuthentication:
     def test_admin_can_authenticate(self):
         """
         GIVEN: Admin user credentials from Keycloak
-        WHEN: Requesting access token via password grant
+        WHEN: Requesting access token via token exchange (or ROPC fallback)
         THEN: Should receive valid access token with correct claims
 
         User Journey: Admin logs in to access management features
+
+        Authentication: Uses RFC 8693 token exchange with ROPC fallback
         """
         auth = KeycloakAuthHelper()
-        token_response = auth.get_token(
-            TEST_USERS["admin"]["username"],
-            TEST_USERS["admin"]["password"],
-        )
+        token_response = _get_user_token(auth, "admin")
 
         assert "access_token" in token_response
-        assert "refresh_token" in token_response
-        assert token_response.get("token_type") == "Bearer"
+        # Token exchange may not return refresh_token
+        assert token_response.get("token_type", "Bearer") == "Bearer"
 
     def test_alice_can_authenticate(self):
         """
         GIVEN: Alice user credentials from Keycloak
-        WHEN: Requesting access token via password grant
+        WHEN: Requesting access token via token exchange (or ROPC fallback)
         THEN: Should receive valid access token
 
         User Journey: Alice logs in to access standard features
+
+        Authentication: Uses RFC 8693 token exchange with ROPC fallback
         """
         auth = KeycloakAuthHelper()
-        token_response = auth.get_token(
-            TEST_USERS["alice"]["username"],
-            TEST_USERS["alice"]["password"],
-        )
+        token_response = _get_user_token(auth, "alice")
 
         assert "access_token" in token_response
-        assert "refresh_token" in token_response
 
     def test_bob_can_authenticate(self):
         """
         GIVEN: Bob user credentials from Keycloak
-        WHEN: Requesting access token via password grant
+        WHEN: Requesting access token via token exchange (or ROPC fallback)
         THEN: Should receive valid access token
 
         User Journey: Bob logs in to access basic features
+
+        Authentication: Uses RFC 8693 token exchange with ROPC fallback
         """
         auth = KeycloakAuthHelper()
-        token_response = auth.get_token(
-            TEST_USERS["bob"]["username"],
-            TEST_USERS["bob"]["password"],
-        )
+        token_response = _get_user_token(auth, "bob")
 
         assert "access_token" in token_response
-        assert "refresh_token" in token_response
 
     def test_invalid_credentials_rejected(self):
         """
         GIVEN: Invalid user credentials
-        WHEN: Requesting access token
+        WHEN: Requesting access token via ROPC (intentionally testing ROPC flow)
         THEN: Should be rejected with error
 
         User Journey: Failed login attempt
+
+        Note: This test intentionally uses ROPC to test credential validation.
+        Token exchange cannot test invalid credentials (no password).
         """
+        import warnings
+
         auth = KeycloakAuthHelper()
 
-        with pytest.raises(ValueError, match="Token request failed"):
-            auth.get_token("invalid_user", "wrong_password")
+        # Suppress deprecation warning for this specific test
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            with pytest.raises(ValueError, match="Token request failed"):
+                auth.get_token("invalid_user", "wrong_password")
 
     def test_userinfo_endpoint_returns_claims(self):
         """
@@ -305,12 +422,11 @@ class TestKeycloakAuthentication:
         THEN: Should return user claims (sub, email, preferred_username)
 
         User Journey: Verify user identity after login
+
+        Authentication: Uses RFC 8693 token exchange with ROPC fallback
         """
         auth = KeycloakAuthHelper()
-        token_response = auth.get_token(
-            TEST_USERS["alice"]["username"],
-            TEST_USERS["alice"]["password"],
-        )
+        token_response = _get_user_token(auth, "alice")
 
         userinfo = auth.get_userinfo(token_response["access_token"])
 
@@ -439,13 +555,12 @@ class TestFullAuthFlow:
         THEN: Full flow should succeed with owner access
 
         User Journey: Admin logs in and accesses vector store management
+
+        Authentication: Uses RFC 8693 token exchange with ROPC fallback
         """
-        # Step 1: Authenticate via Keycloak
+        # Step 1: Authenticate via Keycloak (using modern auth)
         auth = KeycloakAuthHelper()
-        token_response = auth.get_token(
-            TEST_USERS["admin"]["username"],
-            TEST_USERS["admin"]["password"],
-        )
+        token_response = _get_user_token(auth, "admin")
         assert "access_token" in token_response, "Failed to get access token"
 
         # Step 2: Get user info from token
@@ -464,13 +579,12 @@ class TestFullAuthFlow:
         THEN: Full flow should succeed with viewer access
 
         User Journey: Alice logs in and views OpenFGA Playground
+
+        Authentication: Uses RFC 8693 token exchange with ROPC fallback
         """
-        # Step 1: Authenticate via Keycloak
+        # Step 1: Authenticate via Keycloak (using modern auth)
         auth = KeycloakAuthHelper()
-        token_response = auth.get_token(
-            TEST_USERS["alice"]["username"],
-            TEST_USERS["alice"]["password"],
-        )
+        token_response = _get_user_token(auth, "alice")
         assert "access_token" in token_response, "Failed to get access token"
 
         # Step 2: Get user info from token
@@ -489,13 +603,12 @@ class TestFullAuthFlow:
         THEN: Authentication succeeds but authorization fails
 
         User Journey: Bob logs in but cannot access OpenFGA Playground
+
+        Authentication: Uses RFC 8693 token exchange with ROPC fallback
         """
-        # Step 1: Authenticate via Keycloak (should succeed)
+        # Step 1: Authenticate via Keycloak (using modern auth)
         auth = KeycloakAuthHelper()
-        token_response = auth.get_token(
-            TEST_USERS["bob"]["username"],
-            TEST_USERS["bob"]["password"],
-        )
+        token_response = _get_user_token(auth, "bob")
         assert "access_token" in token_response, "Failed to get access token"
 
         # Step 2: Get user info from token

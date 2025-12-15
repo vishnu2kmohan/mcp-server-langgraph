@@ -2792,6 +2792,166 @@ class TestPrePushEnvironmentSanityChecks:
             )
 
 
+@pytest.mark.xdist_group(name="teste2etestsciparity")
+class TestE2ETestsCIParity:
+    """Validate that validate-pre-push-ci includes e2e tests for full CI parity.
+
+    CRITICAL: CI runs e2e-tests.yaml on the same triggers as ci.yaml (push to main/develop,
+    pull requests). Without e2e tests in validate-pre-push-ci, developers can pass local
+    validation but fail CI due to e2e test failures.
+
+    Added 2025-12-15 to fix CI parity gap.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def makefile_content(self, shared_makefile_content: str) -> str:
+        """Delegate to shared Makefile content fixture."""
+        return shared_makefile_content
+
+    @pytest.fixture
+    def e2e_workflow_path(self, repo_root: Path) -> Path:
+        """Get path to e2e-tests workflow."""
+        return repo_root / ".github" / "workflows" / "e2e-tests.yaml"
+
+    @pytest.fixture
+    def e2e_workflow_content(self, e2e_workflow_path: Path) -> str:
+        """Read e2e-tests workflow content."""
+        with open(e2e_workflow_path) as f:
+            return f.read()
+
+    def test_validate_pre_push_ci_includes_e2e_tests(self, makefile_content: str):
+        """Test that validate-pre-push-ci runs e2e tests.
+
+        CRITICAL: validate-pre-push-ci claims to be 'CI-equivalent validation' but
+        without e2e tests, it doesn't match what CI actually runs.
+
+        CI triggers both ci.yaml and e2e-tests.yaml on push/PR, so local validation
+        must include both to achieve true parity.
+        """
+        # Extract validate-pre-push-full target (called by validate-pre-push-ci)
+        full_match = re.search(
+            r"^validate-pre-push-full:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+
+        assert full_match, "Could not find validate-pre-push-full target in Makefile"
+
+        target_content = full_match.group(0)
+
+        # Should include e2e tests via test-e2e.sh script
+        has_e2e = "test-e2e.sh" in target_content or "test-e2e-ci" in target_content or "-m e2e" in target_content
+
+        assert has_e2e, (
+            "validate-pre-push-full MUST include e2e tests for CI parity\n"
+            "\n"
+            "Current issue:\n"
+            "  - CI triggers both ci.yaml AND e2e-tests.yaml on push/PR\n"
+            "  - validate-pre-push-ci only runs tests matching ci.yaml\n"
+            "  - e2e tests (user journey tests) are NOT run locally\n"
+            "  - Result: Code can pass local validation but fail CI\n"
+            "\n"
+            "Impact:\n"
+            "  - 25+ e2e tests (tests/e2e/journeys/) never run locally\n"
+            "  - User journey regressions only caught in CI\n"
+            "  - Wastes CI time and developer time\n"
+            "\n"
+            "Fix: Add e2e tests to validate-pre-push-full Phase 3\n"
+            "  @echo '▶ Running E2E Tests (Docker - full user journeys)...'\n"
+            "  @./scripts/test-e2e.sh && echo '✓ E2E tests passed'\n"
+            "\n"
+            f"Found in target:\n{target_content[:500]}...\n"
+        )
+
+    def test_e2e_workflow_triggers_match_ci_workflow(self, e2e_workflow_content: str, repo_root: Path):
+        """Verify that e2e-tests.yaml triggers on the same events as ci.yaml.
+
+        If e2e tests run on different triggers, they might not need to be in
+        validate-pre-push-ci. This test ensures they DO run on the same triggers.
+        """
+        ci_path = repo_root / ".github" / "workflows" / "ci.yaml"
+        with open(ci_path) as f:
+            ci_content = f.read()
+
+        # Both should trigger on push to main/develop
+        assert "push:" in e2e_workflow_content, "e2e-tests.yaml should trigger on push"
+        assert "push:" in ci_content, "ci.yaml should trigger on push"
+
+        # Both should trigger on pull_request
+        assert "pull_request:" in e2e_workflow_content, "e2e-tests.yaml should trigger on pull_request"
+        assert "pull_request:" in ci_content, "ci.yaml should trigger on pull_request"
+
+        # Verify they target same branches (main, develop)
+        e2e_has_main = "main" in e2e_workflow_content
+        ci_has_main = "main" in ci_content
+
+        assert e2e_has_main and ci_has_main, (
+            "Both e2e-tests.yaml and ci.yaml should target 'main' branch\n"
+            "This confirms e2e tests need to be in validate-pre-push-ci for parity"
+        )
+
+    def test_test_e2e_script_exists(self, repo_root: Path):
+        """Test that test-e2e.sh script exists for running e2e tests.
+
+        This script should follow the same pattern as test-integration.sh.
+        """
+        script_path = repo_root / "scripts" / "test-e2e.sh"
+
+        assert script_path.exists(), (
+            "scripts/test-e2e.sh MUST exist to run e2e tests\n"
+            "\n"
+            "This script should:\n"
+            "  1. Start test infrastructure (docker-compose.test.yml)\n"
+            "  2. Wait for all services to be healthy\n"
+            "  3. Verify Keycloak realm is imported (7.5 min timeout)\n"
+            "  4. Run e2e tests: uv run --frozen pytest -m e2e -v --tb=short\n"
+            "  5. Clean up infrastructure\n"
+            "\n"
+            "Pattern: Follow scripts/test-integration.sh structure\n"
+        )
+
+    def test_test_e2e_script_runs_correct_pytest_command(self, repo_root: Path):
+        """Test that test-e2e.sh runs the correct pytest command matching CI."""
+        script_path = repo_root / "scripts" / "test-e2e.sh"
+
+        if not script_path.exists():
+            pytest.skip("test-e2e.sh does not exist yet (will be caught by previous test)")
+
+        with open(script_path) as f:
+            script_content = f.read()
+
+        # Should run pytest with -m e2e marker
+        assert "-m e2e" in script_content or '-m "e2e"' in script_content, (
+            "test-e2e.sh must run 'pytest -m e2e' to match CI e2e-tests.yaml\n"
+            "\n"
+            "CI command (e2e-tests.yaml:212):\n"
+            "  pytest -m e2e -v --tb=short\n"
+        )
+
+        # Should set required environment variables
+        assert "TESTING=true" in script_content, "test-e2e.sh must set TESTING=true to enable test mode"
+
+        assert "OTEL_SDK_DISABLED=true" in script_content, "test-e2e.sh must set OTEL_SDK_DISABLED=true to match CI"
+
+        assert "KEYCLOAK_CLIENT_SECRET" in script_content, "test-e2e.sh must set KEYCLOAK_CLIENT_SECRET for authentication"
+
+
 @pytest.mark.xdist_group(name="testregressionprevention")
 class TestRegressionPrevention:
     """Tests to ensure validation doesn't regress over time."""

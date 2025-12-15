@@ -22,7 +22,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, EmailStr, Field
 
-from mcp_server_langgraph.auth.user_provider import UserData, UserProvider
+from mcp_server_langgraph.auth.user_provider import UserProvider
 from mcp_server_langgraph.core.dependencies import get_audit_log_repository, get_user_provider
 from mcp_server_langgraph.observability.telemetry import logger
 from mcp_server_langgraph.repositories.audit_log import AuditLogRepository

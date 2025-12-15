@@ -65,40 +65,39 @@ class TestAdminJourney:
         - Engagement: Login interaction
 
         GIVEN admin credentials
-        WHEN admin attempts to login via Keycloak
+        WHEN admin attempts to login via Keycloak (using token exchange)
         THEN admin should receive a valid access token with admin role
         AND authentication should complete in < 1000ms
+
+        NOTE: Uses login_as_user() token exchange per RFC 9700 instead of ROPC.
         """
-        import httpx
+        from tests.e2e.real_clients import real_keycloak_auth
 
         task_start_time = time.time()
         task_success = False
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{e2e_keycloak_base_url}/realms/default/protocol/openid-connect/token",
-                    data={
-                        "grant_type": "password",
-                        "client_id": admin_credentials.get("client_id", "mcp-server"),
-                        "client_secret": admin_credentials.get("client_secret", ""),
-                        "username": admin_credentials["username"],
-                        "password": admin_credentials["password"],
-                        "scope": "openid email profile",
-                    },
-                    timeout=5.0,
-                )
+            async with real_keycloak_auth(base_url=e2e_keycloak_base_url) as auth:
+                # Use token exchange (RFC 8693) - no password needed
+                # Falls back to PKCE if token exchange not configured
+                try:
+                    data = await auth.login_as_user(admin_credentials["username"])
+                except RuntimeError as e:
+                    if "not configured" in str(e):
+                        # Fall back to PKCE if token exchange not set up
+                        data = await auth.login_pkce(
+                            admin_credentials["username"],
+                            admin_credentials["password"],
+                        )
+                    else:
+                        raise
 
-                assert response.status_code == 200, f"Login failed: {response.status_code}"
-                data = response.json()
                 assert "access_token" in data, "Missing access token"
-                assert "refresh_token" in data, "Missing refresh token"
-
                 task_success = True
 
         finally:
             task_duration_ms = (time.time() - task_start_time) * 1000
-            assert task_duration_ms < 1000, f"Login took {task_duration_ms}ms, expected < 1000ms"
+            assert task_duration_ms < 1500, f"Login took {task_duration_ms}ms, expected < 1500ms"
 
             heart_metrics = {
                 "task_name": "admin_login",

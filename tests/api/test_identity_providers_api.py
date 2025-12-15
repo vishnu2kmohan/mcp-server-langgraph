@@ -8,7 +8,7 @@ TDD: RED phase - these tests define expected behavior.
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -16,8 +16,6 @@ from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.api.v1.identity_providers import (
     router,
-    IdentityProviderResponse,
-    get_identity_providers,
     clear_idp_cache,
 )
 

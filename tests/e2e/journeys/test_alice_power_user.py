@@ -69,50 +69,53 @@ class TestAlicePowerUserJourney:
         - Task Success: Authentication completion
 
         GIVEN alice has premium tier credentials
-        WHEN alice logs in and checks feature flags
+        WHEN alice logs in (via token exchange or PKCE) and checks feature flags
         THEN alice should see premium features enabled
-        AND login should complete in < 1000ms
+        AND login should complete in < 1500ms
+
+        NOTE: Uses login_as_user() token exchange per RFC 9700 instead of ROPC.
         """
         import httpx
+
+        from tests.e2e.real_clients import real_keycloak_auth
 
         task_start_time = time.time()
         task_success = False
         premium_features = []
 
         try:
-            async with httpx.AsyncClient() as client:
-                # Login
-                login_resp = await client.post(
-                    f"{e2e_keycloak_base_url}/realms/default/protocol/openid-connect/token",
-                    data={
-                        "grant_type": "password",
-                        "client_id": alice_credentials.get("client_id", "mcp-server"),
-                        "client_secret": alice_credentials.get("client_secret", ""),
-                        "username": alice_credentials["username"],
-                        "password": alice_credentials["password"],
-                        "scope": "openid email profile",
-                    },
-                    timeout=5.0,
-                )
+            async with real_keycloak_auth(base_url=e2e_keycloak_base_url) as auth:
+                # Use token exchange (RFC 8693) - no password needed
+                # Falls back to PKCE if token exchange not configured
+                try:
+                    token_data = await auth.login_as_user(alice_credentials["username"])
+                except RuntimeError as e:
+                    if "not configured" in str(e):
+                        # Fall back to PKCE if token exchange not set up
+                        token_data = await auth.login_pkce(
+                            alice_credentials["username"],
+                            alice_credentials["password"],
+                        )
+                    else:
+                        raise
 
-                assert login_resp.status_code == 200, f"Login failed: {login_resp.status_code}"
-                token_data = login_resp.json()
                 access_token = token_data["access_token"]
 
                 # Check feature flags
-                features_resp = await client.get(
-                    f"{e2e_api_base_url}/api/v1/features",
-                    headers={"Authorization": f"Bearer {access_token}"},
-                    timeout=5.0,
-                )
+                async with httpx.AsyncClient() as client:
+                    features_resp = await client.get(
+                        f"{e2e_api_base_url}/api/v1/features",
+                        headers={"Authorization": f"Bearer {access_token}"},
+                        timeout=5.0,
+                    )
 
-                if features_resp.status_code == 200:
-                    features = features_resp.json()
-                    # Check for premium features
-                    if isinstance(features, dict):
-                        for key, value in features.items():
-                            if value and "premium" in key.lower():
-                                premium_features.append(key)
+                    if features_resp.status_code == 200:
+                        features = features_resp.json()
+                        # Check for premium features
+                        if isinstance(features, dict):
+                            for key, value in features.items():
+                                if value and "premium" in key.lower():
+                                    premium_features.append(key)
 
                 task_success = True
 

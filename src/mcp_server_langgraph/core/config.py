@@ -88,6 +88,12 @@ class Settings(BaseSettings):
     # Observability Backend Selection
     observability_backend: str = "both"  # opentelemetry, langsmith, both
 
+    # LGTM Stack URLs (Loki, Grafana, Tempo, Mimir)
+    # Used for startup validation and health checks
+    loki_url: str = ""  # Loki URL for log aggregation (e.g., http://localhost:3100)
+    tempo_url: str = ""  # Tempo URL for distributed tracing (e.g., http://localhost:3200)
+    mimir_url: str = ""  # Mimir URL for metrics (e.g., http://localhost:9009)
+
     # Logging
     log_level: str = "INFO"
     log_file: str | None = None
@@ -301,7 +307,13 @@ class Settings(BaseSettings):
     enable_mock_authorization: bool | None = None  # None = auto-determine based on environment
 
     # Keycloak Settings
+    # Internal URL for backend-to-backend communication (token exchange, introspection)
+    # In Docker environments, use the internal service name (e.g., http://keycloak:8080/authn)
     keycloak_server_url: str = "http://localhost:8082"
+    # Public URL for browser redirects in OAuth2/PKCE flow
+    # This is the externally accessible URL (e.g., http://localhost/authn or https://auth.example.com/authn)
+    # Falls back to keycloak_server_url if not set
+    keycloak_public_url: str | None = None
     keycloak_realm: str = "langgraph-agent"
     keycloak_client_id: str = "langgraph-client"
     keycloak_client_secret: str | None = None

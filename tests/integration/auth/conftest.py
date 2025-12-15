@@ -90,6 +90,119 @@ def _grafana_oauth2_configured() -> bool:
         return False
 
 
+def _get_test_token_via_modern_auth() -> str | None:
+    """
+    Get a test token using modern auth methods (RFC 9700 compliant).
+
+    Tries:
+    1. Token exchange (RFC 8693) - impersonate admin user
+    2. Client credentials - service account token
+    3. ROPC (deprecated) - fallback for backward compatibility
+
+    Returns:
+        Access token string or None if all methods fail
+    """
+    token_url = "http://localhost/authn/realms/default/protocol/openid-connect/token"
+    client_id = "mcp-server"
+    client_secret = "test-client-secret-for-e2e-tests"
+
+    # Try 1: Token exchange (RFC 8693) for user-specific token
+    try:
+        response = requests.post(
+            token_url,
+            data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "requested_subject": "admin",
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            token = response.json().get("access_token")
+            if token:
+                return token
+    except Exception:
+        pass
+
+    # Try 2: Client credentials (service account)
+    try:
+        response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            token = response.json().get("access_token")
+            if token:
+                return token
+    except Exception:
+        pass
+
+    # Try 3: ROPC fallback (deprecated per RFC 9700)
+    try:
+        response = requests.post(
+            token_url,
+            data={
+                "grant_type": "password",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "username": "admin",
+                "password": "admin123",
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            return response.json().get("access_token")
+    except Exception:
+        pass
+
+    return None
+
+
+def _authz_proxy_available() -> bool:
+    """Check if authz-proxy service is reachable.
+
+    This only checks if the service is up and responding to HTTP requests.
+    It does NOT check if authentication/authorization is configured correctly.
+
+    Philosophy: If infrastructure is up (via make test-infra-up), tests should
+    RUN and potentially FAIL if misconfigured - not SKIP. Skipping should only
+    happen when the service is completely unreachable (connection refused).
+
+    Returns:
+        True if service is reachable (any HTTP response)
+        False only if connection fails entirely (service not running)
+    """
+    try:
+        response = requests.get(
+            "http://localhost/playground/",
+            timeout=5,
+            allow_redirects=False,
+        )
+        # Any HTTP response means the service is up - test should run
+        # The test itself will verify correct behavior (401/403/200)
+        return response.status_code > 0  # Any valid HTTP status
+    except requests.exceptions.ConnectionError:
+        # Service not running - skip is appropriate
+        return False
+    except requests.exceptions.Timeout:
+        # Service not responding in time - skip is appropriate
+        return False
+    except Exception:
+        # Other network errors - skip is appropriate
+        return False
+
+
 def _keycloak_token_endpoint_functional() -> bool:
     """Check if Keycloak token endpoint returns valid JSON."""
     try:
@@ -114,9 +227,17 @@ def _keycloak_admin_api_available() -> bool:
     3. Admin API can be queried
 
     Tests that require admin API access should be skipped if this returns False.
+
+    Note: Uses ROPC for admin-cli (Keycloak's standard pattern for admin access).
+    The admin-cli client is a public client in the master realm that is specifically
+    designed for ROPC-based admin tooling (e.g., kcadm.sh). This is Keycloak's
+    official approach and is acceptable here, though production admin access
+    should use client credentials with a dedicated service account.
+
+    Reference: https://www.keycloak.org/docs/latest/server_admin/#admin-cli
     """
     try:
-        # Get admin token from master realm
+        # Get admin token from master realm using admin-cli (Keycloak's standard pattern)
         token_response = requests.post(
             "http://localhost/authn/realms/master/protocol/openid-connect/token",
             data={
@@ -135,6 +256,85 @@ def _keycloak_admin_api_available() -> bool:
         return "access_token" in token_data
     except Exception:
         return False
+
+
+def get_user_token(
+    username: str,
+    password: str | None = None,
+    token_url: str = "http://localhost/authn/realms/default/protocol/openid-connect/token",
+    client_id: str = "mcp-server",
+    client_secret: str = "test-client-secret-for-e2e-tests",
+) -> str | None:
+    """
+    Get a user-specific access token using modern auth methods (RFC 9700 compliant).
+
+    This is a reusable helper for integration tests that need user tokens.
+
+    Tries:
+    1. Token exchange (RFC 8693) - no password needed
+    2. ROPC (deprecated) - fallback if token exchange not configured
+
+    Args:
+        username: Username to get token for
+        password: User's password (only used for ROPC fallback)
+        token_url: Keycloak token endpoint URL
+        client_id: OAuth2 client ID
+        client_secret: OAuth2 client secret
+
+    Returns:
+        Access token string or None if all methods fail
+    """
+    # Try 1: Token exchange (RFC 8693) for user-specific token
+    try:
+        response = requests.post(
+            token_url,
+            data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "requested_subject": username,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            token = response.json().get("access_token")
+            if token:
+                return token
+    except Exception:
+        pass
+
+    # Try 2: ROPC fallback (deprecated per RFC 9700)
+    if password:
+        try:
+            response = requests.post(
+                token_url,
+                data={
+                    "grant_type": "password",
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "username": username,
+                    "password": password,
+                    "scope": "openid profile email",
+                },
+                timeout=10,
+            )
+            if response.status_code == 200:
+                return response.json().get("access_token")
+        except Exception:
+            pass
+
+    return None
+
+
+# User credentials mapping for quick lookups
+USER_CREDENTIALS = {
+    "admin": "admin123",
+    "alice": "alice123",
+    "bob": "bob123",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -188,6 +388,8 @@ def skip_if_infrastructure_unavailable(request):
     elif test_file == "test_openfga_playground_proxy.py":
         if not _keycloak_available():
             pytest.skip("Keycloak not available at localhost:80/authn")
+        if not _authz_proxy_available():
+            pytest.skip("Authz-proxy/playground not available at localhost:80/playground")
 
 
 @pytest.fixture(autouse=True)

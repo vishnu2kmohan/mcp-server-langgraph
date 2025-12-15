@@ -24,6 +24,7 @@ from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.session import SessionData, SessionStore
 from mcp_server_langgraph.auth.token_denylist import TokenDenylist
 from mcp_server_langgraph.auth.user_provider import AuthResponse, InMemoryUserProvider, TokenVerification, UserProvider
+from mcp_server_langgraph.auth.dpop import DPoPReplayCache, verify_dpop_proof
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 # FastAPI imports for dependency injection (optional, only if using FastAPI endpoints)
@@ -136,6 +137,7 @@ class AuthMiddleware:
         session_store: SessionStore | None = None,
         settings: Any | None = None,
         token_denylist: TokenDenylist | None = None,
+        dpop_replay_cache: DPoPReplayCache | None = None,
     ):
         """
         Initialize AuthMiddleware
@@ -148,12 +150,14 @@ class AuthMiddleware:
             session_store: Session store for session-based authentication (optional)
             settings: Application settings (for authorization fallback control)
             token_denylist: Token denylist for immediate JWT revocation (OWASP best practice)
+            dpop_replay_cache: DPoP jti replay cache for replay protection (RFC 9449)
         """
         self.secret_key = secret_key
         self.openfga = openfga_client
         self.session_store = session_store
         self.settings = settings
         self.token_denylist = token_denylist
+        self.dpop_replay_cache = dpop_replay_cache
 
         # Use provided user provider or default to in-memory for backward compatibility
         if user_provider is None:
@@ -187,6 +191,7 @@ class AuthMiddleware:
                 "openfga_enabled": openfga_client is not None,
                 "session_enabled": session_store is not None,
                 "denylist_enabled": token_denylist is not None,
+                "dpop_enabled": dpop_replay_cache is not None,
                 "allow_auth_fallback": getattr(settings, "allow_auth_fallback", None) if settings else None,
             },
         )
@@ -377,6 +382,123 @@ class AuthMiddleware:
             logger.info("Token verified", extra={"sub": result.payload.get("sub")})
         else:
             logger.warning("Token verification failed", extra={"error": result.error})
+
+        return result
+
+    async def verify_token_with_dpop(
+        self,
+        token: str,
+        dpop_proof: str | None,
+        http_method: str,
+        http_uri: str,
+    ) -> TokenVerification:
+        """
+        Verify JWT token with optional DPoP (RFC 9449) sender-constraint verification.
+
+        DPoP provides token binding by requiring clients to prove possession of a
+        private key. This prevents token theft and replay attacks.
+
+        Behavior:
+        - If token has cnf.jkt claim (DPoP-bound): DPoP proof is REQUIRED
+        - If token has no cnf claim: DPoP proof is optional (verified if provided)
+
+        Args:
+            token: JWT access token to verify
+            dpop_proof: DPoP proof JWT from request header (may be None)
+            http_method: HTTP method of the request (GET, POST, etc.)
+            http_uri: Full HTTP URI of the request
+
+        Returns:
+            TokenVerification with validation result
+        """
+        import hashlib
+        import base64
+        import json
+
+        # First, verify the token itself
+        result = await self.verify_token(token)
+        if not result.valid or not result.payload:
+            return result
+
+        # Check if token is DPoP-bound (has cnf.jkt claim)
+        cnf = result.payload.get("cnf")
+        is_dpop_bound = cnf is not None and "jkt" in cnf
+
+        if is_dpop_bound and not dpop_proof:
+            # Token is bound but no proof provided - reject
+            logger.warning(
+                "DPoP-bound token presented without DPoP proof",
+                extra={"sub": result.payload.get("sub")},
+            )
+            return TokenVerification(
+                valid=False,
+                error="DPoP proof required for sender-constrained token",
+            )
+
+        if dpop_proof:
+            # Verify the DPoP proof
+            dpop_result = verify_dpop_proof(
+                proof=dpop_proof,
+                http_method=http_method,
+                http_uri=http_uri,
+                access_token=token if is_dpop_bound else None,
+                jti_cache=self.dpop_replay_cache,
+            )
+
+            if not dpop_result["valid"]:
+                logger.warning(
+                    "DPoP proof verification failed",
+                    extra={
+                        "error": dpop_result.get("error"),
+                        "sub": result.payload.get("sub"),
+                    },
+                )
+                return TokenVerification(
+                    valid=False,
+                    error=f"DPoP verification failed: {dpop_result.get('error', 'Unknown error')}",
+                )
+
+            # If token is DPoP-bound, verify the key thumbprint matches
+            if is_dpop_bound:
+                expected_jkt = cnf["jkt"]
+                proof_jwk = dpop_result.get("jwk")
+
+                if proof_jwk:
+                    # Calculate thumbprint of the proof's JWK
+                    canonical = json.dumps(
+                        {
+                            "crv": proof_jwk["crv"],
+                            "kty": proof_jwk["kty"],
+                            "x": proof_jwk["x"],
+                            "y": proof_jwk["y"],
+                        },
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                    thumbprint = hashlib.sha256(canonical.encode()).digest()
+                    actual_jkt = base64.urlsafe_b64encode(thumbprint).rstrip(b"=").decode()
+
+                    if actual_jkt != expected_jkt:
+                        logger.warning(
+                            "DPoP key thumbprint mismatch",
+                            extra={
+                                "expected": expected_jkt[:8] + "...",
+                                "actual": actual_jkt[:8] + "...",
+                                "sub": result.payload.get("sub"),
+                            },
+                        )
+                        return TokenVerification(
+                            valid=False,
+                            error="DPoP key thumbprint does not match token binding",
+                        )
+
+            logger.info(
+                "Token verified with DPoP",
+                extra={
+                    "sub": result.payload.get("sub"),
+                    "dpop_bound": is_dpop_bound,
+                },
+            )
 
         return result
 

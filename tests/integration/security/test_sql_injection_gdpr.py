@@ -111,7 +111,7 @@ async def test_conversation(
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.security
-@pytest.mark.xdist_group(name="testconversationstoresqlinjection")
+@pytest.mark.xdist_group(name="sql_injection_gdpr")  # Unified group to avoid DB race conditions
 class TestConversationStoreSQLInjection:
     """
     Test SQL injection defenses in PostgresConversationStore.update()
@@ -297,7 +297,7 @@ class TestConversationStoreSQLInjection:
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.security
-@pytest.mark.xdist_group(name="testauditlogstoresqlinjection")
+@pytest.mark.xdist_group(name="sql_injection_gdpr")  # Unified group to avoid DB race conditions
 class TestAuditLogStoreSQLInjection:
     """
     Test SQL injection defenses in PostgresAuditLogStore.list_user_logs()

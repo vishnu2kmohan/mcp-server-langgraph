@@ -64,7 +64,10 @@ class TestSessionManagedAuditRepositoryCreate:
             SessionManagedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        # Use MagicMock for session since SQLAlchemy async session has both
+        # sync methods (add, add_all) and async methods (flush, commit, execute)
+        mock_session = MagicMock()
+        mock_session.flush = AsyncMock()  # noqa: async-mock-config - async method
         mock_session_maker = MagicMock()
         mock_session_maker.return_value.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session_maker.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -93,7 +96,10 @@ class TestSessionManagedAuditRepositoryCreate:
             SessionManagedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        # Use MagicMock for session since SQLAlchemy async session has both
+        # sync methods (add, add_all) and async methods (flush, commit, execute)
+        mock_session = MagicMock()
+        mock_session.flush = AsyncMock()  # noqa: async-mock-config - async method
         mock_session_maker = MagicMock()
         mock_session_maker.return_value.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session_maker.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -122,7 +128,10 @@ class TestSessionManagedAuditRepositoryCreate:
             SessionManagedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        # Use MagicMock for session since SQLAlchemy async session has both
+        # sync methods (add, add_all) and async methods (flush, commit, execute)
+        mock_session = MagicMock()
+        mock_session.flush = AsyncMock()  # noqa: async-mock-config - async method
         mock_session_maker = MagicMock()
         mock_session_maker.return_value.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session_maker.return_value.__aexit__ = AsyncMock(return_value=None)

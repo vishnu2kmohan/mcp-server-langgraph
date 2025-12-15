@@ -730,6 +730,10 @@ filterwarnings = [
     "ignore:GDPR endpoints use in-memory storage.*:RuntimeWarning",
     # External library warnings (cannot fix directly)
     "ignore:.*enable_cleanup_closed ignored.*:DeprecationWarning:aiohttp",
+    # aiohttp unclosed client session from MCP SDK streamable HTTP client
+    # The MCP SDK uses aiohttp internally and may not always clean up sessions
+    # before pytest tears down the event loop. This is a transitive dependency issue.
+    "ignore:Unclosed client session.*:ResourceWarning",
     "ignore:Using.*@model_validator.*classmethod.*:DeprecationWarning:google.genai",
     # Kubernetes client uses deprecated urllib3 API - upstream issue not fixed yet
     # See: https://github.com/kubernetes-client/python/issues/2024
@@ -788,6 +792,7 @@ markers = [
     "stress: Stress tests (high load, parallel execution stress)",
     "security: Security tests (injection attacks, OWASP Top 10)",
     "kubernetes: Kubernetes integration tests (health probes, deployments)",
+    "health: Health check and startup validation tests (readiness, liveness, dependency checks)",
     "deployment: Deployment configuration and validation tests (Helm, Kustomize, placeholders)",
     "preview: Preview environment deployment tests",
     "skip_resilience_reset: Opt-out of autouse resilience state reset fixture (for circuit breaker tests)",
@@ -818,11 +823,13 @@ markers = [
     "postgres: PostgreSQL-backed storage tests (workflows, sessions, durable persistence)",
     "repository: Repository layer tests (data access, caching, CRUD operations)",
     "qdrant: Qdrant vector database tests (collections, search, upsert)",
+    "vectors: Vector database API integration tests (Qdrant REST endpoints)",
     "core: Core module tests (config, feature flags, caching)",
     "requires_full_infrastructure: Tests requiring full Docker infrastructure (builder, playground, observability stack)",
     "journey: User journey tests (complete user workflows with HEART metrics)",
     "unified_api: Unified API v1 endpoint tests",
     "admin_journey: Admin user journey tests (user management, audit logs)",
+    "connections_journey: MCP connections journey tests (OAuth2, connection lifecycle)",
     "power_user_journey: Power user journey tests (premium features, advanced workflows)",
     "standard_user_journey: Standard user journey tests (basic features, tier limits)",
     "hipaa: HIPAA compliance tests (45 CFR 164.312(b), ePHI audit logging)",

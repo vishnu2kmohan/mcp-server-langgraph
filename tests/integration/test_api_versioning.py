@@ -268,7 +268,12 @@ class TestBackwardCompatibility:
         gc.collect()
 
     def test_all_v1_endpoints_stable(self, test_client):
-        """All /api/v1 endpoints are considered stable (no breaking changes)"""
+        """All /api/v1 endpoints are considered stable (no breaking changes)
+
+        Note: Some v1 endpoints may be intentionally deprecated for security reasons
+        (e.g., ROPC login deprecated in favor of OAuth2). These are tracked in an
+        allowlist to distinguish intentional deprecations from accidental ones.
+        """
         openapi = test_client.get("/openapi.json").json()
         paths = openapi.get("paths", {})
 
@@ -277,16 +282,27 @@ class TestBackwardCompatibility:
         # All v1 endpoints should exist and be accessible
         assert len(v1_paths) > 0, "Should have at least one /api/v1 endpoint"
 
+        # Allowlist of v1 endpoints that are intentionally deprecated
+        # (e.g., for security reasons like ROPC being superseded by OAuth2)
+        allowed_deprecated_v1 = {
+            ("/api/v1/login", "post"),  # ROPC flow deprecated in favor of OAuth2
+        }
+
         # v1 endpoints should not be marked as deprecated (they're the current version)
+        # Exception: Endpoints in allowed_deprecated_v1 may be deprecated for security reasons
         for path in v1_paths:
             methods = paths[path]
             for method, operation in methods.items():
                 if method in ["get", "post", "put", "delete", "patch"]:
-                    # v1 endpoints should not be deprecated yet
-                    # (when v2 is introduced, v1 may be marked deprecated)
-                    # For now, v1 is current, so none should be deprecated
-                    # This assertion may change when v2 is introduced
-                    assert not operation.get("deprecated", False), f"v1 endpoint {path} {method} should not be deprecated"
+                    is_deprecated = operation.get("deprecated", False)
+                    is_allowed_deprecated = (path, method) in allowed_deprecated_v1
+
+                    if is_deprecated and not is_allowed_deprecated:
+                        # Unexpected deprecation - this endpoint should be stable
+                        pytest.fail(
+                            f"v1 endpoint {path} {method} is deprecated but not in allowlist. "
+                            f"If intentional, add to allowed_deprecated_v1."
+                        )
 
     def test_response_schema_extensions_allowed(self, test_client):
         """Response schemas can add new optional fields without breaking changes"""

@@ -603,9 +603,9 @@ class TestPostgresAuditLogRepository:
     @pytest.mark.unit
     async def test_model_to_dict_converts_all_fields(self, postgres_repo):
         """Test that _model_to_dict converts all model fields."""
-        # GIVEN: A mock model
+        # GIVEN: A mock model (using log_id as per UnifiedAuditLog model)
         mock_model = MagicMock()
-        mock_model.id = "log-123"
+        mock_model.log_id = "log-123"
         mock_model.event_type = "connection.created"
         mock_model.resource_type = "connection"
         mock_model.resource_id = "conn-456"
@@ -635,9 +635,9 @@ class TestPostgresAuditLogRepository:
     @pytest.mark.unit
     async def test_model_to_dict_handles_null_details(self, postgres_repo):
         """Test that _model_to_dict handles None details."""
-        # GIVEN: A model with None details
+        # GIVEN: A model with None details (using log_id as per UnifiedAuditLog model)
         mock_model = MagicMock()
-        mock_model.id = "log-123"
+        mock_model.log_id = "log-123"
         mock_model.event_type = "test"
         mock_model.resource_type = "connection"
         mock_model.resource_id = "conn-1"

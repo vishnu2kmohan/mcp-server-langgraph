@@ -166,9 +166,9 @@ def app(mock_repo: MockConnectionRepository) -> FastAPI:
     """Create a test FastAPI app with the health WebSocket endpoint."""
     from mcp_server_langgraph.api.v1.connection_health_ws import (
         connection_health_router,
-        get_connection_repository,
     )
     from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.core.dependencies import get_connection_repository
 
     test_app = FastAPI()
 

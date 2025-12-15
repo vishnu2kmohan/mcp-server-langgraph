@@ -48,8 +48,8 @@ class TestAuditSchedulerLifespanIntegration:
 
         # Mock the scheduler factory and audit service
         mock_scheduler = MagicMock()
-        mock_scheduler.start = AsyncMock()  # async-mock-configured
-        mock_scheduler.stop = AsyncMock()  # async-mock-configured
+        mock_scheduler.start = AsyncMock()  # noqa: async-mock-config - async method (awaited in app.py)
+        mock_scheduler.stop = MagicMock()  # sync method (not awaited in app.py)
 
         with (
             patch(
@@ -122,8 +122,8 @@ class TestAuditSchedulerLifespanIntegration:
         )
 
         mock_scheduler = MagicMock()
-        mock_scheduler.start = AsyncMock()  # async-mock-configured
-        mock_scheduler.stop = AsyncMock()  # async-mock-configured
+        mock_scheduler.start = AsyncMock()  # noqa: async-mock-config - async method (awaited in app.py)
+        mock_scheduler.stop = MagicMock()  # sync method (not awaited in app.py)
 
         with (
             patch(
@@ -164,9 +164,9 @@ class TestAuditSchedulerLifespanIntegration:
         )
 
         mock_scheduler = MagicMock()
-        mock_scheduler.start = AsyncMock()  # async-mock-configured
-        # Simulate error on stop
-        mock_scheduler.stop = AsyncMock(side_effect=Exception("Shutdown error"))
+        mock_scheduler.start = AsyncMock()  # noqa: async-mock-config - async method (awaited in app.py)
+        # Simulate error on stop (sync method, not awaited in app.py)
+        mock_scheduler.stop = MagicMock(side_effect=Exception("Shutdown error"))
 
         with (
             patch(
@@ -249,8 +249,8 @@ class TestAuditSchedulerDependencies:
         )
 
         mock_scheduler = MagicMock()
-        mock_scheduler.start = AsyncMock()  # async-mock-configured
-        mock_scheduler.stop = AsyncMock()  # async-mock-configured
+        mock_scheduler.start = AsyncMock()  # noqa: async-mock-config - async method (awaited in app.py)
+        mock_scheduler.stop = MagicMock()  # sync method (not awaited in app.py)
         mock_audit_service = MagicMock()
 
         with (

@@ -1603,3 +1603,125 @@ class TestKeycloakTokenIssuance:
             mock_client.return_value.__aenter__.return_value = mock_async_client
             with pytest.raises(httpx.HTTPStatusError):
                 await client.issue_token_for_user("user-uuid-123")
+
+
+@pytest.mark.unit
+@pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
+class TestRFC9700Compliance:
+    """
+    Test RFC 9700 (OAuth 2.0 Security Best Practice) compliance.
+
+    Per RFC 9700: "The Resource Owner Password Credentials flow MUST NOT be used."
+    These tests verify that ROPC usage emits deprecation warnings.
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_authenticate_user_emits_deprecation_warning(self, keycloak_config):
+        """
+        GIVEN: KeycloakClient with ROPC (authenticate_user)
+        WHEN: authenticate_user() is called
+        THEN: A DeprecationWarning referencing RFC 9700 should be emitted
+        """
+        import warnings
+
+        client = KeycloakClient(keycloak_config)
+        token_response = {
+            "access_token": "access-token-123",
+            "refresh_token": "refresh-token-456",
+            "expires_in": 300,
+            "token_type": "Bearer",
+        }
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_response = MagicMock()
+            mock_response.json.return_value = token_response
+            mock_response.raise_for_status = MagicMock()
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
+
+            # Capture deprecation warnings
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                await client.authenticate_user("alice", "password123")
+
+                # Verify deprecation warning was emitted
+                deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+                assert len(deprecation_warnings) >= 1, "Expected DeprecationWarning for ROPC usage"
+
+                # Verify warning message references RFC 9700
+                warning_messages = [str(x.message) for x in deprecation_warnings]
+                assert any("RFC 9700" in msg for msg in warning_messages), (
+                    f"Expected RFC 9700 in warning message, got: {warning_messages}"
+                )
+
+    @pytest.mark.asyncio
+    async def test_authenticate_user_deprecation_warning_suggests_alternative(self, keycloak_config):
+        """
+        GIVEN: KeycloakClient with ROPC (authenticate_user)
+        WHEN: authenticate_user() is called
+        THEN: The deprecation warning should suggest Authorization Code + PKCE alternative
+        """
+        import warnings
+
+        client = KeycloakClient(keycloak_config)
+        token_response = {
+            "access_token": "access-token-123",
+            "refresh_token": "refresh-token-456",
+            "expires_in": 300,
+            "token_type": "Bearer",
+        }
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_response = MagicMock()
+            mock_response.json.return_value = token_response
+            mock_response.raise_for_status = MagicMock()
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
+
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                await client.authenticate_user("alice", "password123")
+
+                deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+                warning_messages = [str(x.message) for x in deprecation_warnings]
+
+                # Verify alternative is suggested
+                assert any(
+                    "Authorization Code" in msg or "PKCE" in msg or "Client Credentials" in msg for msg in warning_messages
+                ), f"Expected alternative auth method in warning, got: {warning_messages}"
+
+    @pytest.mark.asyncio
+    async def test_authenticate_user_still_works_despite_deprecation(self, keycloak_config):
+        """
+        GIVEN: KeycloakClient with ROPC (authenticate_user)
+        WHEN: authenticate_user() is called
+        THEN: The method should still work (backward compatibility) despite deprecation
+        """
+        import warnings
+
+        client = KeycloakClient(keycloak_config)
+        token_response = {
+            "access_token": "test-access-token",
+            "refresh_token": "test-refresh-token",
+            "expires_in": 300,
+            "token_type": "Bearer",
+        }
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_response = MagicMock()
+            mock_response.json.return_value = token_response
+            mock_response.raise_for_status = MagicMock()
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
+
+            # Suppress warnings for this test - focus on functionality
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", DeprecationWarning)
+                tokens = await client.authenticate_user("alice", "password123")
+
+                # Verify the method still returns valid tokens
+                assert tokens["access_token"] == "test-access-token"
+                assert tokens["refresh_token"] == "test-refresh-token"
+                assert tokens["expires_in"] == 300

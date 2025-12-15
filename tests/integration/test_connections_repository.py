@@ -19,7 +19,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from mcp_server_langgraph.core.secrets import InMemorySecretsProvider
-from mcp_server_langgraph.models.connection import ConnectionBase, MCPConnectionModel, OAuth2StateModel
+from mcp_server_langgraph.models.connection import ConnectionBase
 from mcp_server_langgraph.models.project import ProjectBase, ProjectModel
 from mcp_server_langgraph.repositories.connections import PostgresConnectionRepository
 from mcp_server_langgraph.storage.models import (

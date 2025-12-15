@@ -9,7 +9,6 @@ Uses mock repository to avoid database dependency.
 
 import gc
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -932,7 +931,7 @@ class TestListProjectsSorting:
 
         response = client.get("/projects")
         assert response.status_code == 200
-        data = response.json()
+        _data = response.json()
         # Default should be created_at descending (newest first)
         # The implementation should ensure this works
 

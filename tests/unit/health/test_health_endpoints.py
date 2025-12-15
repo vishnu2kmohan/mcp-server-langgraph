@@ -8,7 +8,7 @@ and are accessible at the correct paths when mounted.
 import pytest
 from fastapi.testclient import TestClient
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.health]
 
 
 @pytest.mark.unit

@@ -263,7 +263,13 @@ config:
   authMode: "token"  # token (JWT), session
 
   # Keycloak Configuration
+  # Internal URL for backend-to-backend communication (token exchange, introspection)
+  # In Kubernetes, use the internal service name (e.g., http://keycloak:8080/authn)
   keycloakServerUrl: "http://keycloak:8080"
+  # Public URL for browser redirects in OAuth2/PKCE flow (externally accessible)
+  # Set this to the ingress URL users access (e.g., https://auth.example.com/authn)
+  # Falls back to keycloakServerUrl if empty
+  keycloakPublicUrl: ""
   keycloakRealm: "mcp-server-langgraph"
   keycloakClientId: "langgraph-client"
   keycloakVerifySsl: "true"
@@ -354,6 +360,16 @@ secrets:
   # LangSmith Observability (optional)
   langsmithApiKey: ""
 
+  # SSO Identity Provider Credentials (optional)
+  # Enable social login via GitHub, Google, and Microsoft OAuth2
+  # If not provided, the IdP will be disabled in Keycloak
+  githubClientId: ""
+  githubClientSecret: ""
+  googleClientId: ""
+  googleClientSecret: ""
+  microsoftClientId: ""
+  microsoftClientSecret: ""
+
   # Secrets Management (optional)
   infisicalClientId: ""
   infisicalClientSecret: ""
@@ -379,6 +395,25 @@ externalSecrets:
     - secretKey: openfga-model-id
       remoteRef:
         key: mcp-server-langgraph/openfga-model-id
+    # SSO Identity Provider Credentials (optional)
+    - secretKey: github-client-id
+      remoteRef:
+        key: mcp-server-langgraph/github-client-id
+    - secretKey: github-client-secret
+      remoteRef:
+        key: mcp-server-langgraph/github-client-secret
+    - secretKey: google-client-id
+      remoteRef:
+        key: mcp-server-langgraph/google-client-id
+    - secretKey: google-client-secret
+      remoteRef:
+        key: mcp-server-langgraph/google-client-secret
+    - secretKey: microsoft-client-id
+      remoteRef:
+        key: mcp-server-langgraph/microsoft-client-id
+    - secretKey: microsoft-client-secret
+      remoteRef:
+        key: mcp-server-langgraph/microsoft-client-secret
 
 # OpenFGA dependency
 openfga:

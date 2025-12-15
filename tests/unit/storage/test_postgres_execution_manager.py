@@ -6,7 +6,7 @@ TDD tests for database-backed execution history storage.
 
 import gc
 from datetime import datetime, UTC
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 

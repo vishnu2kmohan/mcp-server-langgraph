@@ -21,7 +21,7 @@ from mcp_server_langgraph.api.health import (
     validate_session_store_registered,
 )
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.health]
 
 
 @pytest.mark.unit
@@ -236,65 +236,131 @@ class TestHealthCheckEndpoint:
 
     def test_health_endpoint_returns_200_when_healthy(self, client):
         """Test health endpoint returns 200 when all systems healthy"""
-        with patch("mcp_server_langgraph.api.health.validate_observability_initialized", return_value=(True, "OK")):
-            with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
-                with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
-                    with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        with patch(
-                            "mcp_server_langgraph.api.health.validate_database_connectivity_async",
-                            new_callable=AsyncMock,
-                            return_value=(True, "OK"),
-                        ):
-                            response = client.get("/api/v1/health")
+        with (
+            patch("mcp_server_langgraph.api.health.validate_observability_initialized", return_value=(True, "OK")),
+            patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")),
+            patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")),
+            patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")),
+            patch(
+                "mcp_server_langgraph.api.health.validate_database_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "OK"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_qdrant_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Qdrant connected"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_loki_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Loki disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_tempo_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Tempo disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_mimir_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Mimir disabled"),
+            ),
+        ):
+            response = client.get("/api/v1/health")
 
-                            assert response.status_code == 200
-                            data = response.json()
-                            assert data["status"] == "healthy"
-                            assert all(data["checks"].values())
-                            assert data["errors"] == []
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "healthy"
+            assert all(data["checks"].values())
+            assert data["errors"] == []
 
     def test_health_endpoint_shows_degraded_with_warnings(self, client):
         """Test health endpoint shows degraded status with warnings"""
-        with patch("mcp_server_langgraph.api.health.validate_observability_initialized", return_value=(True, "OK")):
-            with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
-                with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
-                    with patch(
-                        "mcp_server_langgraph.api.health.validate_docker_sandbox_security",
-                        return_value=(True, "Docker sandbox warnings: Network allowlist not implemented"),
-                    ):
-                        with patch(
-                            "mcp_server_langgraph.api.health.validate_database_connectivity_async",
-                            new_callable=AsyncMock,
-                            return_value=(True, "OK"),
-                        ):
-                            response = client.get("/api/v1/health")
+        with (
+            patch("mcp_server_langgraph.api.health.validate_observability_initialized", return_value=(True, "OK")),
+            patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")),
+            patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")),
+            patch(
+                "mcp_server_langgraph.api.health.validate_docker_sandbox_security",
+                return_value=(True, "Docker sandbox warnings: Network allowlist not implemented"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_database_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "OK"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_qdrant_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Qdrant connected"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_loki_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Loki disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_tempo_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Tempo disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_mimir_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Mimir disabled"),
+            ),
+        ):
+            response = client.get("/api/v1/health")
 
-                            assert response.status_code == 200
-                            data = response.json()
-                            assert data["status"] == "degraded"
-                            assert len(data["warnings"]) > 0
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "degraded"
+            assert len(data["warnings"]) > 0
 
     def test_health_endpoint_shows_unhealthy_with_errors(self, client):
         """Test health endpoint shows unhealthy status with errors"""
-        with patch(
-            "mcp_server_langgraph.api.health.validate_observability_initialized",
-            return_value=(False, "Observability broken"),
+        with (
+            patch(
+                "mcp_server_langgraph.api.health.validate_observability_initialized",
+                return_value=(False, "Observability broken"),
+            ),
+            patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")),
+            patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")),
+            patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")),
+            patch(
+                "mcp_server_langgraph.api.health.validate_database_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "OK"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_qdrant_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Qdrant connected"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_loki_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Loki disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_tempo_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Tempo disabled"),
+            ),
+            patch(
+                "mcp_server_langgraph.api.health.validate_mimir_connectivity_async",
+                new_callable=AsyncMock,
+                return_value=(True, "Mimir disabled"),
+            ),
         ):
-            with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
-                with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
-                    with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        with patch(
-                            "mcp_server_langgraph.api.health.validate_database_connectivity_async",
-                            new_callable=AsyncMock,
-                            return_value=(True, "OK"),
-                        ):
-                            response = client.get("/api/v1/health")
+            response = client.get("/api/v1/health")
 
-                            assert response.status_code == 200  # Endpoint still works
-                            data = response.json()
-                            assert data["status"] == "unhealthy"
-                            assert len(data["errors"]) > 0
-                            assert data["checks"]["observability"] is False
+            assert response.status_code == 200  # Endpoint still works
+            data = response.json()
+            assert data["status"] == "unhealthy"
+            assert len(data["errors"]) > 0
+            assert data["checks"]["observability"] is False
 
 
 @pytest.mark.integration

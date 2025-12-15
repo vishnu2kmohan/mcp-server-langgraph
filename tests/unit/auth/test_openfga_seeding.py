@@ -77,12 +77,12 @@ class TestLoadSampleTuples:
         )
         assert admin_owner, "Admin should be owner of vector_store:default"
 
-        # Verify alice is viewer
-        alice_viewer = any(
-            t["user"] == "user:alice" and t["relation"] == "viewer" and t["object"] == "vector_store:default"
+        # Verify alice is editor (CRUD access per ADR-0068)
+        alice_editor = any(
+            t["user"] == "user:alice" and t["relation"] == "editor" and t["object"] == "vector_store:default"
             for t in vector_store_tuples
         )
-        assert alice_viewer, "Alice should be viewer of vector_store:default"
+        assert alice_editor, "Alice should be editor of vector_store:default"
 
         # Verify bob is viewer
         bob_viewer = any(

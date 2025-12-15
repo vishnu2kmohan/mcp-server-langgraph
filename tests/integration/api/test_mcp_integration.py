@@ -13,18 +13,14 @@ Tests verify:
 
 from __future__ import annotations
 
-import asyncio
 import gc
-import json
-from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, AsyncGenerator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from httpx import Response
 
 pytestmark = [
     pytest.mark.integration,

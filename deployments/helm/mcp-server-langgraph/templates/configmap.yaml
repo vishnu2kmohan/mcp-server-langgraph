@@ -35,6 +35,9 @@ data:
 
   # Keycloak Configuration
   keycloak_server_url: {{ .Values.config.keycloakServerUrl | quote }}
+  {{- if .Values.config.keycloakPublicUrl }}
+  keycloak_public_url: {{ .Values.config.keycloakPublicUrl | quote }}
+  {{- end }}
   keycloak_realm: {{ .Values.config.keycloakRealm | quote }}
   keycloak_client_id: {{ .Values.config.keycloakClientId | quote }}
   keycloak_verify_ssl: {{ .Values.config.keycloakVerifySsl | quote }}

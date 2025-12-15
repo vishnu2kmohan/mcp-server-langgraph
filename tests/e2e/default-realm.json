@@ -2,7 +2,7 @@
   "id": "default",
   "realm": "default",
   "enabled": true,
-  "displayName": "MCP Server LangGraph - Test Realm",
+  "displayName": "Agent Studio - Default Realm",
   "accessTokenLifespan": 3600,
   "refreshTokenMaxReuse": 0,
   "ssoSessionIdleTimeout": 1800,
@@ -41,14 +41,16 @@
     {
       "clientId": "mcp-server",
       "name": "MCP Server Test Client",
+      "description": "OAuth2 client for MCP Server with Token Exchange (RFC 8693), Device Authorization Grant (RFC 8628), and PKCE. ROPC DISABLED per RFC 9700.",
       "enabled": true,
       "publicClient": false,
       "clientAuthenticatorType": "client-secret",
       "secret": "test-client-secret-for-e2e-tests",
-      "directAccessGrantsEnabled": true,
+      "directAccessGrantsEnabled": false,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
       "protocol": "openid-connect",
       "redirectUris": [
         "http://localhost/*",
@@ -75,6 +77,57 @@
         "offline_access",
         "microprofile-jwt"
       ],
+      "attributes": {
+        "oauth2.device.authorization.grant.enabled": "true",
+        "oauth2.device.polling.interval": "5",
+        "oidc.ciba.grant.enabled": "false",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "post.logout.redirect.uris": "http://localhost/*##http://127.0.0.1/*"
+      },
+      "authorizationSettings": {
+        "allowRemoteResourceManagement": true,
+        "policyEnforcementMode": "ENFORCING",
+        "decisionStrategy": "AFFIRMATIVE",
+        "resources": [
+          {
+            "name": "Users Resource",
+            "type": "urn:mcp-server:resources:users",
+            "ownerManagedAccess": false,
+            "scopes": [
+              {"name": "token-exchange"},
+              {"name": "impersonate"}
+            ]
+          }
+        ],
+        "policies": [
+          {
+            "name": "Service Account Policy",
+            "description": "Policy for service account clients to perform token exchange",
+            "type": "client",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "clients": "[\"mcp-server\"]"
+            }
+          },
+          {
+            "name": "Token Exchange Permission",
+            "description": "Permission for token exchange (RFC 8693)",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "scopes": "[\"token-exchange\"]",
+              "applyPolicies": "[\"Service Account Policy\"]"
+            }
+          }
+        ],
+        "scopes": [
+          {"name": "token-exchange"},
+          {"name": "impersonate"}
+        ]
+      },
       "protocolMappers": [
         {
           "name": "Client Audience",

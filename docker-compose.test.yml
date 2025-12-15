@@ -570,69 +570,82 @@ services:
         fi
 
         # Configure SSO Identity Providers with actual credentials (if provided)
-        # The realm JSON imports placeholder values that need to be replaced at runtime
+        # The realm JSON imports with placeholder values that are replaced at runtime.
+        # If no real credentials are provided, the IdP is DISABLED to prevent login errors.
+
+        # Helper function to check if a value is a placeholder
+        is_placeholder() {
+          case "$$1" in
+            placeholder-*|PLACEHOLDER-*|""|unset) return 0 ;;  # true = is placeholder
+            *) return 1 ;;  # false = has real value
+          esac
+        }
 
         # GitHub IdP
-        if [ -n "$$GITHUB_CLIENT_ID" ] && [ -n "$$GITHUB_CLIENT_SECRET" ]; then
+        if [ -n "$$GITHUB_CLIENT_ID" ] && [ -n "$$GITHUB_CLIENT_SECRET" ] && \
+           ! is_placeholder "$$GITHUB_CLIENT_ID" && ! is_placeholder "$$GITHUB_CLIENT_SECRET"; then
           echo "Configuring GitHub IdP with actual credentials..."
           /opt/keycloak/bin/kcadm.sh update identity-provider/instances/github -r default \
             -s "config.clientId=$$GITHUB_CLIENT_ID" \
-            -s "config.clientSecret=$$GITHUB_CLIENT_SECRET" 2>/dev/null
+            -s "config.clientSecret=$$GITHUB_CLIENT_SECRET" \
+            -s "enabled=true" 2>/dev/null
           if [ $$? -eq 0 ]; then
-            echo "GitHub IdP configured successfully"
+            echo "✓ GitHub IdP configured and enabled"
           else
             echo "Warning: Failed to update GitHub IdP - it may not exist in the realm"
           fi
         else
-          echo "GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET not set - skipping GitHub IdP configuration"
+          echo "GitHub IdP has placeholder values or missing credentials - disabling..."
+          /opt/keycloak/bin/kcadm.sh update identity-provider/instances/github -r default \
+            -s "enabled=false" 2>/dev/null && echo "✓ GitHub IdP disabled" || echo "Warning: Could not disable GitHub IdP"
         fi
 
         # Google IdP
-        if [ -n "$$GOOGLE_CLIENT_ID" ] && [ -n "$$GOOGLE_CLIENT_SECRET" ]; then
+        if [ -n "$$GOOGLE_CLIENT_ID" ] && [ -n "$$GOOGLE_CLIENT_SECRET" ] && \
+           ! is_placeholder "$$GOOGLE_CLIENT_ID" && ! is_placeholder "$$GOOGLE_CLIENT_SECRET"; then
           echo "Configuring Google IdP with actual credentials..."
           /opt/keycloak/bin/kcadm.sh update identity-provider/instances/google -r default \
             -s "config.clientId=$$GOOGLE_CLIENT_ID" \
-            -s "config.clientSecret=$$GOOGLE_CLIENT_SECRET" 2>/dev/null
+            -s "config.clientSecret=$$GOOGLE_CLIENT_SECRET" \
+            -s "enabled=true" 2>/dev/null
           if [ $$? -eq 0 ]; then
-            echo "Google IdP configured successfully"
+            echo "✓ Google IdP configured and enabled"
           else
             echo "Warning: Failed to update Google IdP - it may not exist in the realm"
           fi
         else
-          echo "GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set - skipping Google IdP configuration"
+          echo "Google IdP has placeholder values or missing credentials - disabling..."
+          /opt/keycloak/bin/kcadm.sh update identity-provider/instances/google -r default \
+            -s "enabled=false" 2>/dev/null && echo "✓ Google IdP disabled" || echo "Warning: Could not disable Google IdP"
         fi
 
         # Microsoft IdP
-        if [ -n "$$MICROSOFT_CLIENT_ID" ] && [ -n "$$MICROSOFT_CLIENT_SECRET" ]; then
+        if [ -n "$$MICROSOFT_CLIENT_ID" ] && [ -n "$$MICROSOFT_CLIENT_SECRET" ] && \
+           ! is_placeholder "$$MICROSOFT_CLIENT_ID" && ! is_placeholder "$$MICROSOFT_CLIENT_SECRET"; then
           echo "Configuring Microsoft IdP with actual credentials..."
           /opt/keycloak/bin/kcadm.sh update identity-provider/instances/microsoft -r default \
             -s "config.clientId=$$MICROSOFT_CLIENT_ID" \
-            -s "config.clientSecret=$$MICROSOFT_CLIENT_SECRET" 2>/dev/null
+            -s "config.clientSecret=$$MICROSOFT_CLIENT_SECRET" \
+            -s "enabled=true" 2>/dev/null
           if [ $$? -eq 0 ]; then
-            echo "Microsoft IdP configured successfully"
+            echo "✓ Microsoft IdP configured and enabled"
           else
             echo "Warning: Failed to update Microsoft IdP - it may not exist in the realm"
           fi
         else
-          echo "MICROSOFT_CLIENT_ID or MICROSOFT_CLIENT_SECRET not set - skipping Microsoft IdP configuration"
+          echo "Microsoft IdP has placeholder values or missing credentials - disabling..."
+          /opt/keycloak/bin/kcadm.sh update identity-provider/instances/microsoft -r default \
+            -s "enabled=false" 2>/dev/null && echo "✓ Microsoft IdP disabled" || echo "Warning: Could not disable Microsoft IdP"
         fi
 
         echo "Keycloak initialization complete"
     env_file:
       - .env.test
+      # SSO OAuth credentials (GITHUB_CLIENT_ID, GOOGLE_CLIENT_ID, MICROSOFT_CLIENT_ID, etc.)
+      # are loaded from .env.local. DO NOT duplicate in environment: block as compose-level
+      # resolution happens before env_file, causing empty fallbacks to override real values.
       - path: .env.local
         required: false
-    environment:
-      # SSO OAuth credentials (override from compose-level resolution)
-      # GitHub
-      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
-      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
-      # Google
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      # Microsoft
-      - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID:-}
-      - MICROSOFT_CLIENT_SECRET=${MICROSOFT_CLIENT_SECRET:-}
     depends_on:
       keycloak-test:
         condition: service_healthy
@@ -853,6 +866,73 @@ services:
       - "traefik.http.routers.qdrant-dashboard.middlewares=forward-auth@docker"
 
   # ==============================================================================
+  # QDRANT INIT (Bootstrap default collections for E2E tests)
+  # ==============================================================================
+
+  qdrant-init-test:
+    # Use curlimages/curl for lightweight HTTP calls to Qdrant API
+    image: curlimages/curl:8.11.0
+    restart: "no"
+    depends_on:
+      qdrant-test:
+        condition: service_healthy
+    # Create default collection(s) for E2E testing
+    # - mcp_context: Default collection matching config.qdrant_collection_name (384 dims for MiniLM)
+    # - Vector size 384 matches all-MiniLM-L6-v2 embedding model (default in config.py)
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "Bootstrapping Qdrant collections..."
+
+        # Wait for Qdrant to be fully ready (healthcheck may pass before API is ready)
+        for i in 1 2 3 4 5; do
+          if curl -sf http://qdrant:6333/collections > /dev/null 2>&1; then
+            echo "Qdrant API is ready"
+            break
+          fi
+          echo "Waiting for Qdrant API... attempt $$i/5"
+          sleep 2
+        done
+
+        # Create mcp_context collection if it doesn't exist
+        # Vector size: 384 (all-MiniLM-L6-v2)
+        # Distance: Cosine (default for semantic similarity)
+        COLLECTION_EXISTS=$$(curl -sf http://qdrant:6333/collections/mcp_context 2>/dev/null | grep -c '"status":"ok"' || true)
+
+        if [ "$$COLLECTION_EXISTS" = "0" ]; then
+          echo "Creating mcp_context collection (384 dimensions, Cosine)..."
+          curl -X PUT http://qdrant:6333/collections/mcp_context \
+            -H "Content-Type: application/json" \
+            -d '{
+              "vectors": {
+                "size": 384,
+                "distance": "Cosine"
+              }
+            }'
+          echo ""
+          echo "✓ mcp_context collection created"
+        else
+          echo "✓ mcp_context collection already exists"
+        fi
+
+        # Verify collection is accessible
+        echo "Verifying collections..."
+        curl -sf http://qdrant:6333/collections | head -c 500
+        echo ""
+        echo "Qdrant bootstrap complete"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+        reservations:
+          cpus: '0.01'
+          memory: 32M
+    networks:
+      - mcp-test-network
+
+  # ==============================================================================
   # MCP SERVER (for E2E tests)
   # ==============================================================================
 
@@ -898,6 +978,9 @@ services:
         condition: service_healthy
       qdrant-test:
         condition: service_healthy
+      # VECTORS: Ensure default collection exists before API serves requests
+      qdrant-init-test:
+        condition: service_completed_successfully
       # OBSERVABILITY: Ensure OTLP endpoint is ready for telemetry from first request
       alloy-test:
         condition: service_healthy
@@ -920,7 +1003,10 @@ services:
       - POSTGRES_HOST=postgres-test
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres-test:5432/mcp_test
       - WORKFLOW_STORAGE_BACKEND=postgres
+      # Internal URL for backend-to-backend token exchange (Docker network)
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
+      # Public URL for browser redirects in OAuth2/PKCE flow (externally accessible)
+      - KEYCLOAK_PUBLIC_URL=http://localhost/authn
       - OPENFGA_API_URL=http://openfga-test:8080
       - REDIS_URL=redis://redis-test:6379/1
       - REDIS_SESSION_URL=redis://redis-test:6379/0
@@ -1532,7 +1618,8 @@ services:
     env_file:
       - .env.test
     environment:
-      # Docker networking values
+      # Docker networking values (container hostnames require compose-level resolution)
+      # Note: KEYCLOAK_REALM comes from .env.test (env_file above)
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       - OPENFGA_API_URL=http://openfga-test:8080
       - OPENFGA_PRESHARED_KEY=${OPENFGA_PRESHARED_KEY:-test-openfga-preshared-key}

@@ -23,7 +23,7 @@ from urllib.parse import urlencode
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query, Request, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.oauth2 import (
@@ -31,6 +31,14 @@ from mcp_server_langgraph.auth.oauth2 import (
     generate_code_challenge,
     generate_code_verifier,
     generate_state,
+)
+from mcp_server_langgraph.auth.device_auth import (
+    DeviceAuthClient,
+    AuthorizationPending,
+    SlowDown,
+    ExpiredToken,
+    AccessDenied,
+    DeviceAuthError,
 )
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger
@@ -104,9 +112,12 @@ async def oauth2_login(
         base = str(request.base_url).rstrip("/")
         actual_redirect_uri = f"{base}/api/v1/auth/callback"
 
-    # Build authorization URL
+    # Build authorization URL using PUBLIC Keycloak URL (browser redirect)
+    # keycloak_public_url is for browser redirects (externally accessible)
+    # keycloak_server_url is for backend token exchange (internal Docker network)
+    keycloak_public_url = settings.keycloak_public_url or settings.keycloak_server_url
     auth_url = build_authorization_url(
-        keycloak_url=settings.keycloak_server_url,
+        keycloak_url=keycloak_public_url,
         realm=settings.keycloak_realm,
         client_id=settings.keycloak_client_id,
         redirect_uri=actual_redirect_uri,
@@ -200,13 +211,13 @@ async def oauth2_callback(
     # Validate required params for success flow
     if not code:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Authorization code is required",
         )
 
     if not state:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="State parameter is required",
         )
 
@@ -429,6 +440,232 @@ async def oauth2_refresh(request: Request, body: RefreshTokenRequest) -> dict[st
                 "audit_category": "authentication",
                 "audit_outcome": "error",
                 "failure_reason": "service_unavailable",
+                "error_type": type(e).__name__,
+                "client_ip": request.client.host if request.client else None,
+            },
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication service unavailable",
+        ) from e
+
+
+# ============================================================================
+# Device Authorization Grant (RFC 8628) Endpoints
+# ============================================================================
+
+
+class DeviceCodeResponse(BaseModel):
+    """Device authorization response (RFC 8628 Section 3.2)."""
+
+    device_code: str = Field(..., description="Device verification code")
+    user_code: str = Field(..., description="User code to enter at verification_uri")
+    verification_uri: str = Field(..., description="URL for user to visit")
+    verification_uri_complete: str | None = Field(None, description="URL with user_code embedded (for QR codes)")
+    expires_in: int = Field(..., description="Lifetime of device_code in seconds")
+    interval: int = Field(default=5, description="Polling interval in seconds")
+
+
+class DeviceTokenRequest(BaseModel):
+    """Device token request."""
+
+    device_code: str = Field(..., min_length=1, description="Device code from /auth/device")
+
+
+class DeviceAuthErrorResponse(BaseModel):
+    """Device authorization error response (RFC 8628 Section 3.5)."""
+
+    error: str = Field(..., description="Error code")
+    error_description: str | None = Field(None, description="Human-readable error")
+
+
+@auth_router.get(
+    "/device",
+    response_model=DeviceCodeResponse,
+    responses={
+        503: {"model": AuthErrorResponse, "description": "Authentication service unavailable"},
+    },
+    summary="Request device authorization code",
+    description="""
+    Initiate Device Authorization Grant flow (RFC 8628).
+
+    This endpoint is for CLI/headless authentication scenarios where the client
+    cannot directly interact with the user for login.
+
+    Flow:
+    1. Client calls GET /auth/device to get device_code and user_code
+    2. Display verification_uri and user_code to user
+    3. User visits verification_uri on another device and enters user_code
+    4. Client polls POST /auth/device/token until authorization completes
+    """,
+)
+async def device_auth_request(request: Request) -> dict[str, Any]:
+    """
+    Request device authorization code.
+
+    Returns device_code for polling and user_code for display to the user.
+    """
+    try:
+        client = DeviceAuthClient(
+            server_url=settings.keycloak_server_url,
+            realm=settings.keycloak_realm,
+            client_id=settings.keycloak_client_id,
+            client_secret=settings.keycloak_client_secret,
+            verify_ssl=settings.keycloak_verify_ssl,
+        )
+
+        device_response = await client.request_device_code()
+
+        # Audit: Device authorization initiated
+        logger.info(
+            "Device authorization initiated",
+            extra={
+                "audit_event_type": "device_auth.initiated",
+                "audit_category": "authentication",
+                "audit_outcome": "success",
+                "user_code": device_response.get("user_code"),
+                "expires_in": device_response.get("expires_in"),
+                "client_ip": request.client.host if request.client else None,
+            },
+        )
+
+        return device_response
+
+    except Exception as e:
+        logger.error(
+            f"Device authorization request failed: {e}",
+            extra={
+                "audit_event_type": "device_auth.failed",
+                "audit_category": "authentication",
+                "audit_outcome": "error",
+                "error_type": type(e).__name__,
+                "client_ip": request.client.host if request.client else None,
+            },
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication service unavailable",
+        ) from e
+
+
+@auth_router.post(
+    "/device/token",
+    response_model=TokenResponse,
+    responses={
+        400: {"model": DeviceAuthErrorResponse, "description": "Authorization pending or error"},
+        503: {"model": AuthErrorResponse, "description": "Authentication service unavailable"},
+    },
+    summary="Poll for device authorization token",
+    description="""
+    Poll for access token after device authorization.
+
+    This endpoint should be called repeatedly (respecting the `interval` from
+    the device code response) until authorization completes or fails.
+
+    Possible error responses:
+    - `authorization_pending`: User hasn't completed authorization yet
+    - `slow_down`: Client is polling too frequently
+    - `expired_token`: Device code has expired
+    - `access_denied`: User denied the authorization request
+    """,
+)
+async def device_auth_token(
+    request: Request,
+    token_request: DeviceTokenRequest,
+) -> dict[str, Any]:
+    """
+    Poll for access token after device authorization.
+
+    Returns tokens if user has completed authorization, or error if pending/failed.
+    """
+    try:
+        client = DeviceAuthClient(
+            server_url=settings.keycloak_server_url,
+            realm=settings.keycloak_realm,
+            client_id=settings.keycloak_client_id,
+            client_secret=settings.keycloak_client_secret,
+            verify_ssl=settings.keycloak_verify_ssl,
+        )
+
+        tokens = await client.poll_for_token(token_request.device_code)
+
+        # Audit: Device authorization completed
+        logger.info(
+            "Device authorization completed",
+            extra={
+                "audit_event_type": "device_auth.completed",
+                "audit_category": "authentication",
+                "audit_outcome": "success",
+                "token_type": tokens.get("token_type", "Bearer"),
+                "expires_in": tokens.get("expires_in"),
+                "client_ip": request.client.host if request.client else None,
+            },
+        )
+
+        return {
+            "access_token": tokens["access_token"],
+            "refresh_token": tokens.get("refresh_token"),
+            "token_type": tokens.get("token_type", "Bearer"),
+            "expires_in": tokens.get("expires_in", 300),
+            "scope": tokens.get("scope"),
+        }
+
+    except AuthorizationPending:
+        # User hasn't completed authorization yet - this is expected during polling
+        return JSONResponse(
+            status_code=400, content={"error": "authorization_pending", "error_description": "Authorization pending"}
+        )
+
+    except SlowDown:
+        # Client is polling too fast
+        return JSONResponse(status_code=400, content={"error": "slow_down", "error_description": "Slow down polling interval"})
+
+    except ExpiredToken:
+        # Device code expired
+        return JSONResponse(
+            status_code=400, content={"error": "expired_token", "error_description": "Device code has expired"}
+        )
+
+    except AccessDenied:
+        # User denied authorization
+        logger.warning(
+            "Device authorization denied by user",
+            extra={
+                "audit_event_type": "device_auth.denied",
+                "audit_category": "authentication",
+                "audit_outcome": "denied",
+                "client_ip": request.client.host if request.client else None,
+            },
+        )
+        return JSONResponse(
+            status_code=400, content={"error": "access_denied", "error_description": "User denied authorization"}
+        )
+
+    except DeviceAuthError as e:
+        logger.error(
+            f"Device authorization error: {e}",
+            extra={
+                "audit_event_type": "device_auth.error",
+                "audit_category": "authentication",
+                "audit_outcome": "error",
+                "error_type": type(e).__name__,
+                "client_ip": request.client.host if request.client else None,
+            },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from e
+
+    except Exception as e:
+        logger.error(
+            f"Device token polling failed: {e}",
+            extra={
+                "audit_event_type": "device_auth.failed",
+                "audit_category": "authentication",
+                "audit_outcome": "error",
                 "error_type": type(e).__name__,
                 "client_ip": request.client.host if request.client else None,
             },

@@ -57,6 +57,7 @@ from tests.helpers.path_helpers import get_repo_root
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.observability,
+    pytest.mark.health,
 ]
 
 PROJECT_ROOT = get_repo_root()

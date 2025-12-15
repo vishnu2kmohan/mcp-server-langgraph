@@ -32,8 +32,8 @@ from mcp_server_langgraph.health.database_checks import (
     validate_database_architecture,
 )
 
-# Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+# Mark as unit test and health test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.health]
 
 
 @pytest.mark.unit

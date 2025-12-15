@@ -6,7 +6,6 @@ Supports subscribing and unsubscribing to push notifications.
 """
 
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -28,7 +27,7 @@ class PushSubscription(BaseModel):
 
     endpoint: str = Field(..., description="Push service endpoint URL")
     keys: PushSubscriptionKeys = Field(..., description="Subscription keys")
-    expirationTime: Optional[int] = Field(None, description="Optional expiration time")
+    expirationTime: int | None = Field(None, description="Optional expiration time")
 
 
 class UnsubscribeRequest(BaseModel):
@@ -58,7 +57,7 @@ def store_subscription(subscription: PushSubscription) -> bool:
         logger.info(f"Stored push subscription: {subscription.endpoint[:50]}...")
         return True
     except Exception as e:
-        logger.error(f"Failed to store subscription: {e}")
+        logger.exception(f"Failed to store subscription: {e}")
         return False
 
 
@@ -73,11 +72,11 @@ def remove_subscription(endpoint: str) -> bool:
             logger.info(f"Removed push subscription: {endpoint[:50]}...")
         return True
     except Exception as e:
-        logger.error(f"Failed to remove subscription: {e}")
+        logger.exception(f"Failed to remove subscription: {e}")
         return False
 
 
-@notifications_router.post("/subscribe", response_model=NotificationResponse)
+@notifications_router.post("/subscribe")
 async def subscribe_to_notifications(
     subscription: PushSubscription,
 ) -> NotificationResponse:
@@ -102,7 +101,7 @@ async def subscribe_to_notifications(
     return NotificationResponse(success=True, message="Successfully subscribed to push notifications")
 
 
-@notifications_router.post("/unsubscribe", response_model=NotificationResponse)
+@notifications_router.post("/unsubscribe")
 async def unsubscribe_from_notifications(
     request: UnsubscribeRequest,
 ) -> NotificationResponse:
