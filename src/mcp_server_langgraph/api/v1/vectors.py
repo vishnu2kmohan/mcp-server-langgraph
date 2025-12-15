@@ -87,6 +87,9 @@ def get_openfga_client() -> OpenFGAClient:
     """Get OpenFGA client instance with preshared key authentication."""
     config = OpenFGAConfig(
         api_url=os.getenv("OPENFGA_API_URL", "http://localhost:8080"),
+        store_id=os.getenv("OPENFGA_STORE_ID"),
+        store_name=os.getenv("OPENFGA_STORE_NAME"),
+        model_id=os.getenv("OPENFGA_MODEL_ID"),
         preshared_key=os.getenv("OPENFGA_PRESHARED_KEY"),
     )
     return OpenFGAClient(config=config)
@@ -139,7 +142,8 @@ async def require_viewer_permission(
     openfga: OpenFGAClient = Depends(get_openfga_client),
 ) -> dict[str, Any]:
     """Require viewer permission on vector_store:default."""
-    user_id = f"user:{current_user.get('preferred_username', current_user.get('sub'))}"
+    # get_current_user returns dict with 'user_id' already in "user:username" format
+    user_id = current_user.get("user_id") or f"user:{current_user.get('username', 'unknown')}"
 
     try:
         allowed = await openfga.check_permission(
@@ -168,7 +172,8 @@ async def require_editor_permission(
     openfga: OpenFGAClient = Depends(get_openfga_client),
 ) -> dict[str, Any]:
     """Require editor permission on vector_store:default."""
-    user_id = f"user:{current_user.get('preferred_username', current_user.get('sub'))}"
+    # get_current_user returns dict with 'user_id' already in "user:username" format
+    user_id = current_user.get("user_id") or f"user:{current_user.get('username', 'unknown')}"
 
     try:
         allowed = await openfga.check_permission(
@@ -197,7 +202,8 @@ async def require_owner_permission(
     openfga: OpenFGAClient = Depends(get_openfga_client),
 ) -> dict[str, Any]:
     """Require owner permission on vector_store:default."""
-    user_id = f"user:{current_user.get('preferred_username', current_user.get('sub'))}"
+    # get_current_user returns dict with 'user_id' already in "user:username" format
+    user_id = current_user.get("user_id") or f"user:{current_user.get('username', 'unknown')}"
 
     try:
         allowed = await openfga.check_permission(
@@ -278,7 +284,7 @@ async def create_collection(
             "Collection created",
             extra={
                 "collection": request.name,
-                "user": current_user.get("preferred_username"),
+                "user": current_user.get("username"),
             },
         )
 
@@ -309,7 +315,7 @@ async def delete_collection(
             "Collection deleted",
             extra={
                 "collection": collection_name,
-                "user": current_user.get("preferred_username"),
+                "user": current_user.get("username"),
             },
         )
 
@@ -399,7 +405,7 @@ async def upsert_points(
             extra={
                 "collection": request.collection_name,
                 "count": len(points),
-                "user": current_user.get("preferred_username"),
+                "user": current_user.get("username"),
             },
         )
 
@@ -503,7 +509,7 @@ async def upsert_vector_by_text(
             extra={
                 "collection": request.collection_name,
                 "point_id": point_id,
-                "user": current_user.get("preferred_username"),
+                "user": current_user.get("username"),
             },
         )
 
