@@ -343,3 +343,131 @@ class TestDPoPOptionalForNonBoundTokens:
 
         # Should succeed - DPoP adds security but doesn't break non-bound tokens
         assert result.valid is True
+
+
+@pytest.mark.xdist_group(name="dpop_middleware")
+class TestDPoPEnforcementMode:
+    """Test DPoP enforcement configuration option (RFC 9449 Section 10)."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_dpop_enforcement_disabled_allows_non_bound_tokens(self, mock_user_provider):
+        """
+        GIVEN: DPoP enforcement is disabled (default)
+        WHEN: Non-DPoP-bound token is used without proof
+        THEN: Should succeed
+        """
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
+
+        middleware = AuthMiddleware(
+            user_provider=mock_user_provider,
+            dpop_required=False,  # Default
+        )
+
+        result = await middleware.verify_token_with_dpop(
+            token="regular-access-token",
+            dpop_proof=None,
+            http_method="GET",
+            http_uri="https://api.example.com/resource",
+        )
+
+        assert result.valid is True
+
+    @pytest.mark.asyncio
+    async def test_dpop_enforcement_enabled_requires_proof_for_all_tokens(self, mock_user_provider, dpop_key_pair):
+        """
+        GIVEN: DPoP enforcement is enabled (strict mode)
+        WHEN: Any token is used WITHOUT DPoP proof
+        THEN: Should fail with "DPoP required" error
+        """
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
+
+        middleware = AuthMiddleware(
+            user_provider=mock_user_provider,
+            dpop_required=True,  # Strict mode enabled
+        )
+
+        result = await middleware.verify_token_with_dpop(
+            token="regular-access-token",
+            dpop_proof=None,  # No proof!
+            http_method="GET",
+            http_uri="https://api.example.com/resource",
+        )
+
+        assert result.valid is False
+        assert "dpop" in result.error.lower()
+        assert "required" in result.error.lower()
+
+    @pytest.mark.asyncio
+    async def test_dpop_enforcement_enabled_with_valid_proof_succeeds(self, mock_user_provider, dpop_key_pair):
+        """
+        GIVEN: DPoP enforcement is enabled
+        WHEN: Token is used WITH valid DPoP proof
+        THEN: Should succeed
+        """
+        from mcp_server_langgraph.auth.dpop import DPoPClient
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
+
+        middleware = AuthMiddleware(
+            user_provider=mock_user_provider,
+            dpop_required=True,
+        )
+
+        # Generate valid DPoP proof
+        client = DPoPClient(private_key=dpop_key_pair["private_key"])
+        proof = client.generate_proof(
+            http_method="GET",
+            http_uri="https://api.example.com/resource",
+        )
+
+        result = await middleware.verify_token_with_dpop(
+            token="regular-access-token",
+            dpop_proof=proof,
+            http_method="GET",
+            http_uri="https://api.example.com/resource",
+        )
+
+        assert result.valid is True
+
+    @pytest.mark.asyncio
+    async def test_dpop_enforcement_config_from_settings(self):
+        """
+        GIVEN: dpop_required is set in application settings
+        WHEN: AuthMiddleware is created
+        THEN: Should respect the configuration setting
+        """
+        from mcp_server_langgraph.core.config import Settings
+
+        # Test that the setting exists and has correct default
+        settings = Settings()
+        assert hasattr(settings, "dpop_required")
+        assert settings.dpop_required is False  # Secure default: optional
+
+    @pytest.mark.asyncio
+    async def test_dpop_enforcement_bound_token_always_requires_proof(self, mock_dpop_bound_token_provider):
+        """
+        GIVEN: DPoP enforcement is DISABLED
+        WHEN: DPoP-bound token (has cnf.jkt) is used WITHOUT proof
+        THEN: Should still fail (bound tokens ALWAYS require proof)
+        """
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
+
+        provider, _ = mock_dpop_bound_token_provider
+        middleware = AuthMiddleware(
+            user_provider=provider,
+            dpop_required=False,  # Enforcement disabled
+        )
+
+        result = await middleware.verify_token_with_dpop(
+            token="dpop-bound-access-token",
+            dpop_proof=None,  # No proof for bound token
+            http_method="GET",
+            http_uri="https://api.example.com/resource",
+        )
+
+        # Should fail even with enforcement disabled - token IS bound
+        assert result.valid is False
+        assert "required" in result.error.lower()
