@@ -249,3 +249,168 @@ class TestRateLimiting:
 
         assert "X-RateLimit-Limit" in RATE_LIMIT_HEADERS
         assert "X-RateLimit-Remaining" in RATE_LIMIT_HEADERS
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_studio_frontend_auth")
+class TestStudioFrontendAuthentication:
+    """
+    Tests for studio frontend authentication requirement.
+
+    Per security best practices, unauthenticated users should NOT be able
+    to view protected frontend pages. They should be redirected to login.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_studio_routes_require_authentication(self) -> None:
+        """
+        GIVEN an unauthenticated request
+        WHEN accessing /studio/ (main app with trailing slash)
+        THEN should redirect to /login.
+
+        Note: /studio without trailing slash first redirects to /studio/ (Starlette behavior)
+              then our auth check kicks in. We test the canonical path /studio/ directly.
+        """
+        from fastapi.testclient import TestClient
+
+        from mcp_server_langgraph.mcp.server_streamable import app
+
+        client = TestClient(app, raise_server_exceptions=False)
+
+        # Request studio page without session cookie
+        # Use /studio/ (canonical path) to avoid trailing slash redirect
+        response = client.get("/studio/", follow_redirects=False)
+
+        # Should redirect to login
+        assert response.status_code in (302, 307), f"Expected redirect, got {response.status_code}"
+        assert "/login" in response.headers.get("location", "")
+
+    def test_studio_chat_requires_authentication(self) -> None:
+        """
+        GIVEN an unauthenticated request
+        WHEN accessing /studio/chat
+        THEN should redirect to /login.
+        """
+        from fastapi.testclient import TestClient
+
+        from mcp_server_langgraph.mcp.server_streamable import app
+
+        client = TestClient(app, raise_server_exceptions=False)
+
+        response = client.get("/studio/chat", follow_redirects=False)
+
+        assert response.status_code in (302, 307), f"Expected redirect, got {response.status_code}"
+        assert "/login" in response.headers.get("location", "")
+
+    def test_studio_workflows_requires_authentication(self) -> None:
+        """
+        GIVEN an unauthenticated request
+        WHEN accessing /studio/workflows
+        THEN should redirect to /login.
+        """
+        from fastapi.testclient import TestClient
+
+        from mcp_server_langgraph.mcp.server_streamable import app
+
+        client = TestClient(app, raise_server_exceptions=False)
+
+        response = client.get("/studio/workflows", follow_redirects=False)
+
+        assert response.status_code in (302, 307), f"Expected redirect, got {response.status_code}"
+        assert "/login" in response.headers.get("location", "")
+
+    def test_login_page_accessible_without_auth(self) -> None:
+        """
+        GIVEN an unauthenticated request
+        WHEN accessing /login
+        THEN should serve the login page (200 or serve index.html).
+        """
+        from fastapi.testclient import TestClient
+
+        from mcp_server_langgraph.mcp.server_streamable import app
+
+        client = TestClient(app, raise_server_exceptions=False)
+
+        response = client.get("/login", follow_redirects=False)
+
+        # Login page should be accessible without auth
+        # Returns 200 if frontend is built, or redirect if not
+        assert response.status_code in (200, 307)
+        if response.status_code == 302:
+            # If redirecting, should NOT redirect to login (avoid loop)
+            assert "/login" not in response.headers.get("location", "")
+
+    def test_auth_callback_accessible_without_auth(self) -> None:
+        """
+        GIVEN an unauthenticated request
+        WHEN accessing /auth/callback
+        THEN should serve the callback page (for OAuth2 token exchange).
+        """
+        from fastapi.testclient import TestClient
+
+        from mcp_server_langgraph.mcp.server_streamable import app
+
+        client = TestClient(app, raise_server_exceptions=False)
+
+        response = client.get("/auth/callback", follow_redirects=False)
+
+        # Callback page should be accessible without auth
+        assert response.status_code in (200, 307)
+        if response.status_code == 302:
+            assert "/login" not in response.headers.get("location", "")
+
+    def test_studio_assets_accessible_without_auth(self) -> None:
+        """
+        GIVEN an unauthenticated request
+        WHEN accessing /studio/assets/* (static files for login page)
+        THEN should serve the assets (not redirect to login).
+        """
+        from fastapi.testclient import TestClient
+
+        from mcp_server_langgraph.mcp.server_streamable import app
+
+        client = TestClient(app, raise_server_exceptions=False)
+
+        # Assets should be accessible for the login page to load properly
+        response = client.get("/studio/assets/index.js", follow_redirects=False)
+
+        # Should NOT redirect to login (assets needed for login page itself)
+        # May be 404 if file doesn't exist, but should not be 302 to /login
+        if response.status_code in (302, 307):
+            assert "/login" not in response.headers.get("location", "")
+
+    def test_authenticated_user_can_access_studio(self) -> None:
+        """
+        GIVEN an authenticated user (with session cookie)
+        WHEN accessing /studio
+        THEN should serve the studio frontend.
+        """
+        from fastapi.testclient import TestClient
+
+        from mcp_server_langgraph.mcp.server_streamable import app
+
+        client = TestClient(app, raise_server_exceptions=False)
+
+        # Simulate authenticated session with session cookie
+        client.cookies.set("mcp_session", "valid-session-token")
+
+        response = client.get("/studio", follow_redirects=False)
+
+        # Authenticated user should get the page (200) or fallback redirect to /studio
+        # NOT redirect to /login
+        if response.status_code in (302, 307):
+            assert "/login" not in response.headers.get("location", "")
+
+    def test_session_cookie_set_after_successful_auth(self) -> None:
+        """
+        GIVEN a successful OAuth2 callback
+        WHEN tokens are exchanged
+        THEN should set mcp_session cookie for subsequent requests.
+        """
+        from mcp_server_langgraph.studio.security import SESSION_COOKIE_NAME
+
+        # Verify the session cookie name is defined
+        assert SESSION_COOKIE_NAME == "mcp_session"

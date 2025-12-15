@@ -94,7 +94,17 @@ app = FastAPI(
 # Configuration
 OPENFGA_PLAYGROUND_URL = os.getenv("OPENFGA_PLAYGROUND_URL", "http://openfga-test:3000")
 OPENFGA_API_URL = os.getenv("OPENFGA_API_URL", "http://localhost:8080")
+
+# OpenFGA Authentication: OIDC (Defense-in-Depth)
+# OpenFGA server uses authn=oidc - validates OIDC tokens from Keycloak
+# authz-proxy obtains OIDC tokens via OAuth 2.0 client credentials grant
+# This provides defense-in-depth: even with Docker network access, need valid token
+OPENFGA_OIDC_CLIENT_ID = os.getenv("OPENFGA_OIDC_CLIENT_ID")
+OPENFGA_OIDC_CLIENT_SECRET = os.getenv("OPENFGA_OIDC_CLIENT_SECRET")
+
+# Legacy preshared key (deprecated, fallback if OIDC not configured)
 OPENFGA_PRESHARED_KEY = os.getenv("OPENFGA_PRESHARED_KEY")
+
 OPENFGA_STORE_NAME = "mcp-server-langgraph-test"  # Must match seed script
 AUTHZ_OBJECT = "authz:playground"
 
@@ -103,12 +113,49 @@ _openfga_store_id: str | None = None
 
 
 async def fetch_store_id() -> str | None:
-    """Fetch the OpenFGA store ID by looking up existing stores."""
-    import httpx
+    """
+    Fetch the OpenFGA store ID by looking up existing stores.
 
+    Uses OIDC authentication if configured, otherwise falls back to preshared key.
+    """
     headers = {"Content-Type": "application/json"}
-    if OPENFGA_PRESHARED_KEY:
-        headers["Authorization"] = f"Bearer {OPENFGA_PRESHARED_KEY}"
+
+    # Obtain access token (OIDC or preshared key)
+    access_token = None
+
+    # Prefer OIDC authentication
+    if OPENFGA_OIDC_CLIENT_ID and OPENFGA_OIDC_CLIENT_SECRET:
+        try:
+            # Obtain OIDC access token from Keycloak
+            keycloak_server_url = settings.keycloak_server_url
+            keycloak_realm = settings.keycloak_realm
+            token_endpoint = f"{keycloak_server_url.rstrip('/')}/realms/{keycloak_realm}/protocol/openid-connect/token"
+
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.post(
+                    token_endpoint,
+                    data={
+                        "grant_type": "client_credentials",
+                        "client_id": OPENFGA_OIDC_CLIENT_ID,
+                        "client_secret": OPENFGA_OIDC_CLIENT_SECRET,
+                    },
+                )
+                if response.status_code == 200:
+                    access_token = response.json().get("access_token")
+                    if access_token:
+                        logger.info("Obtained OIDC access token for OpenFGA store lookup")
+                else:
+                    logger.warning(f"Failed to obtain OIDC token: HTTP {response.status_code}")
+        except Exception as e:
+            logger.warning(f"Failed to obtain OIDC token, falling back to preshared key: {e}")
+
+    # Fallback to preshared key if OIDC failed
+    if not access_token and OPENFGA_PRESHARED_KEY:
+        access_token = OPENFGA_PRESHARED_KEY
+        logger.info("Using preshared key for OpenFGA store lookup (deprecated)")
+
+    if access_token:
+        headers["Authorization"] = f"Bearer {access_token}"
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
@@ -130,13 +177,34 @@ async def fetch_store_id() -> str | None:
 
 
 def get_openfga_client() -> OpenFGAClient:
-    """Get OpenFGA client instance with preshared key authentication and store_id."""
+    """
+    Get OpenFGA client instance with OIDC or preshared key authentication.
+
+    Authentication method priority:
+    1. OIDC (if OPENFGA_OIDC_CLIENT_ID and OPENFGA_OIDC_CLIENT_SECRET are set)
+    2. Preshared key (if OPENFGA_PRESHARED_KEY is set) - deprecated
+    3. No authentication
+
+    Note: OIDC is recommended for production use.
+    """
     # Use store_id from environment or fetched at startup
     store_id = os.getenv("OPENFGA_STORE_ID") or _openfga_store_id
+
+    # Construct OIDC issuer URL from Keycloak server URL
+    oidc_issuer = None
+    if OPENFGA_OIDC_CLIENT_ID and OPENFGA_OIDC_CLIENT_SECRET:
+        keycloak_server_url = settings.keycloak_server_url
+        keycloak_realm = settings.keycloak_realm
+        oidc_issuer = f"{keycloak_server_url.rstrip('/')}/realms/{keycloak_realm}"
 
     config = OpenFGAConfig(
         api_url=OPENFGA_API_URL,
         store_id=store_id,
+        # OIDC authentication (recommended)
+        oidc_client_id=OPENFGA_OIDC_CLIENT_ID,
+        oidc_client_secret=OPENFGA_OIDC_CLIENT_SECRET,
+        oidc_issuer=oidc_issuer,
+        # Legacy preshared key (deprecated, fallback if OIDC not configured)
         preshared_key=OPENFGA_PRESHARED_KEY,
     )
     return OpenFGAClient(config=config)

@@ -290,6 +290,10 @@ class Settings(BaseSettings):
     openfga_store_id: str | None = None
     openfga_store_name: str | None = None  # For dynamic store lookup when store_id is not set
     openfga_model_id: str | None = None
+    # OIDC authentication (recommended for production)
+    openfga_oidc_client_id: str | None = None  # OIDC client ID for client credentials grant
+    openfga_oidc_client_secret: str | None = None  # OIDC client secret for client credentials grant
+    # Legacy preshared key (deprecated, use OIDC instead)
     openfga_preshared_key: str | None = None  # Preshared key for API authentication (ADR-0068)
 
     # Infisical

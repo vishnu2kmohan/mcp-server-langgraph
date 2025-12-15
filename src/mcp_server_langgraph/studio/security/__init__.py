@@ -32,12 +32,24 @@ SECURITY_HEADERS: dict[str, str] = {
     "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
 }
 
+# Session cookie name for studio frontend authentication
+SESSION_COOKIE_NAME = "mcp_session"
+
 # Cookie configuration
 COOKIE_CONFIG: dict[str, Any] = {
     "httponly": True,
     "secure": True,
     "samesite": "Strict",
     "path": "/",
+}
+
+# Session cookie configuration (used for studio frontend auth)
+SESSION_COOKIE_CONFIG: dict[str, Any] = {
+    "httponly": True,
+    "secure": False,  # Set to True in production (requires HTTPS)
+    "samesite": "Lax",  # Lax allows redirects from OAuth2
+    "path": "/",
+    "max_age": 86400,  # 24 hours (match session TTL)
 }
 
 # JWT validation configuration
@@ -255,6 +267,8 @@ class TenantContext:
 __all__ = [
     # Configuration
     "SECURITY_HEADERS",
+    "SESSION_COOKIE_NAME",
+    "SESSION_COOKIE_CONFIG",
     "COOKIE_CONFIG",
     "JWT_VALIDATION_CONFIG",
     "AUTHZ_CONFIG",

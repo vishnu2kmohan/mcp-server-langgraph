@@ -443,7 +443,7 @@ export function Sidebar() {
         role="navigation"
         aria-label="Main navigation"
       >
-        {/* Header - Two-row layout for better title visibility */}
+        {/* Header */}
         <div className={isCollapsed ? "p-3" : "px-4 py-4"}>
           {isCollapsed ? (
             /* Collapsed: Show only expand button centered */
@@ -459,9 +459,9 @@ export function Sidebar() {
               />
             </button>
           ) : (
-            /* Expanded: Logo + Title + Close/Collapse */
+            /* Expanded: Logo + Title (centered) + Close/Collapse */
             <div className="flex items-center w-full">
-              {/* Logo and title */}
+              {/* Logo and title - centered */}
               <div className="flex items-center gap-2 flex-1 justify-center">
                 <img
                   src="/icons/icon.svg"

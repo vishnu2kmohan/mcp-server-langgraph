@@ -432,6 +432,7 @@ async def oauth2_callback(
         )
 
     # Build token endpoint URL
+    # Use internal URL for backend-to-backend token exchange
     token_url = f"{settings.keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/token"
 
     # Exchange authorization code for tokens
@@ -503,10 +504,32 @@ async def oauth2_callback(
             # This is more secure than query params as fragments aren't sent to server
             frontend_url = settings.frontend_url.rstrip("/")
             fragment = urlencode({k: v for k, v in token_response.items() if v is not None})
-            return RedirectResponse(
+            response = RedirectResponse(
                 url=f"{frontend_url}/auth/callback#{fragment}",
                 status_code=status.HTTP_302_FOUND,
             )
+
+            # Set session cookie for server-side authentication of frontend pages
+            # This allows us to protect /studio/* routes from unauthenticated access
+            from mcp_server_langgraph.studio.security import (
+                SESSION_COOKIE_CONFIG,
+                SESSION_COOKIE_NAME,
+            )
+
+            # Generate signed session token using access token hash
+            # The session proves user completed OAuth2 flow successfully
+            session_token = _hash_refresh_token(tokens["access_token"])[:32]
+            response.set_cookie(
+                key=SESSION_COOKIE_NAME,
+                value=session_token,
+                httponly=SESSION_COOKIE_CONFIG["httponly"],
+                secure=SESSION_COOKIE_CONFIG["secure"] or settings.environment not in ("development", "test"),
+                samesite=SESSION_COOKIE_CONFIG["samesite"],
+                path=SESSION_COOKIE_CONFIG["path"],
+                max_age=SESSION_COOKIE_CONFIG["max_age"],
+            )
+
+            return response
 
     except httpx.HTTPError as e:
         # Audit: OAuth2 callback failed - Keycloak unreachable
@@ -671,6 +694,7 @@ async def token_introspection(
     Note: Requires client authentication (client_id + client_secret).
     """
     # Build introspection endpoint URL
+    # Use internal URL for backend-to-backend token introspection
     introspect_url = (
         f"{settings.keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/token/introspect"
     )
@@ -785,6 +809,7 @@ async def oauth2_refresh(request: Request, body: RefreshTokenRequest) -> dict[st
             )
 
     # Build token endpoint URL
+    # Use internal URL for backend-to-backend token refresh
     token_url = f"{settings.keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/token"
 
     try:
@@ -1282,3 +1307,84 @@ async def backchannel_logout(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         ) from e
+
+
+# ============================================================================
+# OAuth2 Logout (OIDC RP-Initiated Logout)
+# ============================================================================
+
+
+@auth_router.get(
+    "/logout",
+    status_code=status.HTTP_302_FOUND,
+    summary="Initiate OAuth2 logout",
+    description="""
+    Initiate OIDC RP-Initiated Logout flow.
+
+    This endpoint redirects the user to Keycloak's end_session endpoint to:
+    1. Terminate the Keycloak session
+    2. Clear any SSO cookies
+    3. Optionally redirect back to the application
+
+    Parameters:
+    - post_logout_redirect_uri: Where to redirect after logout (must be registered in Keycloak)
+    - id_token_hint: The ID token for the session being logged out (improves security)
+    """,
+)
+async def oauth2_logout(
+    request: Request,
+    post_logout_redirect_uri: str | None = Query(None, description="URI to redirect after logout"),
+    id_token_hint: str | None = Query(None, description="ID token hint for the session"),
+) -> RedirectResponse:
+    """
+    Initiate OAuth2/OIDC logout flow.
+
+    Redirects to Keycloak end_session endpoint to terminate the user's session.
+    """
+    # Use public URL for browser redirect (same as login)
+    keycloak_public_url = settings.keycloak_public_url or settings.keycloak_server_url
+
+    # Build Keycloak end_session URL
+    # https://openid.net/specs/openid-connect-rpinitiated-1_0.html
+    logout_params: dict[str, str] = {
+        "client_id": settings.keycloak_client_id,
+    }
+
+    # Add optional parameters
+    if post_logout_redirect_uri:
+        logout_params["post_logout_redirect_uri"] = post_logout_redirect_uri
+    if id_token_hint:
+        logout_params["id_token_hint"] = id_token_hint
+
+    logout_url = (
+        f"{keycloak_public_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/logout?{urlencode(logout_params)}"
+    )
+
+    # Audit: OAuth2 logout initiated
+    logger.info(
+        "OAuth2 logout initiated",
+        extra={
+            "audit_event_type": "oauth2.logout.initiated",
+            "audit_category": "authentication",
+            "has_post_logout_redirect": post_logout_redirect_uri is not None,
+            "has_id_token_hint": id_token_hint is not None,
+            "client_ip": request.client.host if request.client else None,
+        },
+    )
+
+    # Create redirect response
+    response = RedirectResponse(url=logout_url, status_code=status.HTTP_302_FOUND)
+
+    # Clear OAuth2 session cookies and MCP session cookie
+    # Set cookies to expire immediately (Max-Age=0)
+    from mcp_server_langgraph.studio.security import SESSION_COOKIE_NAME
+
+    for cookie_name in ["oauth2_code_verifier", "oauth2_state", "oauth2_redirect_uri", "session_id", SESSION_COOKIE_NAME]:
+        response.delete_cookie(
+            key=cookie_name,
+            httponly=True,
+            secure=settings.environment != "development",
+            samesite="lax",
+        )
+
+    return response

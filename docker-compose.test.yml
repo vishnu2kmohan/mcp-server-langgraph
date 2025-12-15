@@ -324,20 +324,23 @@ services:
     ports:
       - "9080:8080"  # HTTP API
       - "9081:8081"  # gRPC API
-      - "9003:3000"  # Playground UI (default port 3000)
+      # Playground port removed - Playground disabled when using OIDC authentication
     environment:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable
       - OPENFGA_LOG_FORMAT=json
       - OPENFGA_LOG_LEVEL=warn  # Reduced logging for tests
-      - OPENFGA_PLAYGROUND_ENABLED=true  # Enable playground UI on port 3000
+      - OPENFGA_PLAYGROUND_ENABLED=false  # Disabled - Playground doesn't support OIDC
       # ======================================================================
-      # Preshared Key Authentication (ADR-0068)
+      # Authentication Strategy: OIDC (Defense-in-Depth Security)
       # ======================================================================
-      # All API requests (except /health) require Bearer token with preshared key
-      # Applications must include: Authorization: Bearer <preshared-key>
-      - OPENFGA_AUTHN_METHOD=preshared
-      - OPENFGA_AUTHN_PRESHARED_KEYS=${OPENFGA_PRESHARED_KEY:-test-openfga-preshared-key}
+      # OpenFGA validates OIDC tokens from Keycloak
+      # Services (authz-proxy, mcp-server) obtain OIDC tokens via client credentials grant
+      # This provides defense-in-depth: even with network access, attackers need valid tokens
+      # Reference: ADR-0070 - OpenFGA OIDC Authentication Migration
+      - OPENFGA_AUTHN_METHOD=oidc
+      - OPENFGA_AUTHN_OIDC_ISSUER=http://keycloak-test:8080/authn/realms/default
+      - OPENFGA_AUTHN_OIDC_AUDIENCE=openfga-server
       - TESTING=true
     healthcheck:
       test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
@@ -359,18 +362,19 @@ services:
           - openfga
     labels:
       - "traefik.enable=true"
-      # Route: /authz/* -> openfga:8080 (Authorization API)
+      # Route: /authz/* -> openfga:8080 (Authorization API) [OIDC-PROTECTED]
       # API endpoints are at /stores, /health, etc. accessed via /authz/stores, /authz/health
-      # NOTE: OpenFGA API now requires preshared key (ADR-0068)
+      # Authentication: OIDC tokens from Keycloak (OpenFGA validates JWT signatures)
+      # Services must obtain OIDC tokens via OAuth 2.0 client credentials grant
+      # Defense-in-depth security: network isolation + OIDC token validation
       - "traefik.http.routers.openfga-api.rule=PathPrefix(`/authz`)"
       - "traefik.http.routers.openfga-api.entrypoints=web"
       - "traefik.http.routers.openfga-api.priority=10"
       - "traefik.http.services.openfga-api.loadbalancer.server.port=8080"
       - "traefik.http.middlewares.openfga-strip.stripprefix.prefixes=/authz"
       - "traefik.http.routers.openfga-api.middlewares=openfga-strip"
-      # NOTE: OpenFGA Playground route moved to authz-proxy-test service (ADR-0068)
-      # The authz-proxy handles Keycloak JWT validation and OpenFGA permission checks
-      # before proxying to OpenFGA Playground at port 3000
+      # NOTE: OpenFGA Playground DISABLED (incompatible with OIDC authentication)
+      # authz-proxy validates JWT + checks OpenFGA admin permission before proxying to playground
 
   # ==============================================================================
   # OPENFGA SEEDING (Authorization Model + Relationship Tuples)
@@ -459,10 +463,18 @@ services:
       - KC_DB_PASSWORD=postgres
 
       # Runtime settings (not baked into build)
-      # NOTE: KC_HOSTNAME is intentionally NOT set. Keycloak will return the issuer
-      # based on the request hostname, allowing forward-auth to use the internal
-      # Docker hostname (keycloak-test:8080) while browsers use localhost.
+      # HOSTNAME CONFIGURATION: Set fixed hostname URL to ensure consistent issuer across all access methods
+      # This is required for E2E tests where tokens obtained via gateway (localhost:80) must be
+      # refreshed via internal Docker network URLs. Keycloak validates issuer consistency.
+      # Using KC_HOSTNAME_URL ensures the full issuer URL is consistent regardless of how Keycloak is accessed.
       # See: https://www.keycloak.org/server/hostname
+      # Keycloak 26+ hostname v2 configuration
+      # KC_HOSTNAME sets the fixed hostname for all issuer URLs
+      # KC_HOSTNAME_PORT=-1 uses default port for scheme (no port in HTTP URLs)
+      # KC_HOSTNAME_BACKCHANNEL_DYNAMIC=false ensures internal requests also use the fixed hostname
+      - KC_HOSTNAME=localhost
+      - KC_HOSTNAME_PORT=-1
+      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=false
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
 
@@ -847,13 +859,15 @@ services:
     labels:
       - "traefik.enable=true"
       # Route: /vectors/* -> qdrant:6333 (Vector Database API)
+      # Authentication: Internal API for programmatic access (no forward-auth)
+      # TODO: Consider adding Qdrant API key authentication for production
       - "traefik.http.routers.qdrant.rule=PathPrefix(`/vectors`)"
       - "traefik.http.routers.qdrant.entrypoints=web"
       - "traefik.http.routers.qdrant.priority=10"
       - "traefik.http.services.qdrant.loadbalancer.server.port=6333"
       - "traefik.http.middlewares.qdrant-strip.stripprefix.prefixes=/vectors"
-      # Authentication via forward-auth middleware (ADR-0054)
-      - "traefik.http.routers.qdrant.middlewares=forward-auth@docker,qdrant-strip"
+      # NO forward-auth - Internal API accessed by mcp-server
+      - "traefik.http.routers.qdrant.middlewares=qdrant-strip"
       # Route: /dashboard/* -> qdrant:6333/dashboard/* (Qdrant Web UI)
       # Qdrant dashboard uses hardcoded absolute paths (/dashboard/*) for assets.
       # Access via http://localhost/dashboard or http://localhost/vectors/dashboard
@@ -1003,8 +1017,11 @@ services:
       - POSTGRES_HOST=postgres-test
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres-test:5432/mcp_test
       - WORKFLOW_STORAGE_BACKEND=postgres
-      # Internal URL for backend-to-backend token exchange (Docker network)
-      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
+      # Backend URL for token operations (uses Traefik gateway for consistent issuer)
+      # When MCP server accesses Keycloak via traefik-gateway:80, the issuer in tokens is
+      # http://localhost/authn/realms/default - matching tokens obtained from external tests.
+      # This fixes issuer mismatch errors on token refresh/introspection.
+      - KEYCLOAK_SERVER_URL=http://traefik-gateway/authn
       # Public URL for browser redirects in OAuth2/PKCE flow (externally accessible)
       - KEYCLOAK_PUBLIC_URL=http://localhost/authn
       # Frontend URL for OAuth2 callback redirects (must be gateway URL, not internal port)
@@ -1044,22 +1061,23 @@ services:
     labels:
       - "traefik.enable=true"
       # Route: /mcp/* -> mcp-server:8000 (MCP Server API)
+      # Authentication: MCP tools validate JWT tokens via auth.verify_token() (no forward-auth)
       - "traefik.http.routers.mcp-api.rule=PathPrefix(`/mcp`)"
       - "traefik.http.routers.mcp-api.entrypoints=web"
       - "traefik.http.routers.mcp-api.priority=10"
       - "traefik.http.services.mcp-api.loadbalancer.server.port=8000"
       - "traefik.http.middlewares.mcp-strip.stripprefix.prefixes=/mcp"
-      # Authentication via forward-auth middleware (ADR-0054)
-      - "traefik.http.routers.mcp-api.middlewares=forward-auth@docker,mcp-strip"
+      # NO forward-auth - MCP protocol requires 'token' parameter in tool calls
+      - "traefik.http.routers.mcp-api.middlewares=mcp-strip"
       # Route: /studio/* -> mcp-server:8000/studio/* (Unified Studio Frontend)
       # SPA routing handled by SPAStaticFiles in FastAPI (fallback to index.html)
       # Frontend served from src/mcp_server_langgraph/studio/frontend/dist
+      # Authentication: React SPA handles OAuth2 PKCE flow natively (no forward-auth)
       - "traefik.http.routers.studio.rule=PathPrefix(`/studio`)"
       - "traefik.http.routers.studio.entrypoints=web"
       - "traefik.http.routers.studio.priority=10"
       - "traefik.http.routers.studio.service=mcp-api"
-      # Authentication via forward-auth middleware (ADR-0054)
-      - "traefik.http.routers.studio.middlewares=forward-auth@docker"
+      # NO forward-auth - SPA implements OAuth2 Authorization Code + PKCE flow
       # NO strip - FastAPI serves /studio/* directly
       # Route: /login -> mcp-server:8000/login (Native Login Page - NO AUTH)
       # Native login page bypasses forward-auth for seamless user experience
@@ -1068,6 +1086,13 @@ services:
       - "traefik.http.routers.login.priority=100"
       - "traefik.http.routers.login.service=mcp-api"
       # NO forward-auth middleware - login page is publicly accessible
+      # Route: /auth/callback -> mcp-server (NO AUTH for OAuth2 callback)
+      # OAuth2 Authorization Code + PKCE callback page (receives tokens in URL fragment)
+      - "traefik.http.routers.auth-callback.rule=Path(`/auth/callback`)"
+      - "traefik.http.routers.auth-callback.entrypoints=web"
+      - "traefik.http.routers.auth-callback.priority=100"
+      - "traefik.http.routers.auth-callback.service=mcp-api"
+      # NO forward-auth middleware - callback page is publicly accessible (tokens in fragment)
       # Route: /studio/assets/* -> mcp-server (NO AUTH for static assets)
       # Frontend JS/CSS assets needed for login page (served from /studio/assets)
       - "traefik.http.routers.assets.rule=PathPrefix(`/studio/assets`) || PathPrefix(`/assets`)"
@@ -1090,14 +1115,22 @@ services:
       - "traefik.http.routers.api-health.priority=100"
       - "traefik.http.routers.api-health.service=mcp-api"
       # NO forward-auth middleware - health endpoints are publicly accessible
+      # Route: /api/v1/identity-providers -> mcp-server (NO AUTH)
+      # Identity providers endpoint must be publicly accessible for login page
+      # The login page needs to fetch available IdPs BEFORE user authentication
+      - "traefik.http.routers.api-idp.rule=PathPrefix(`/api/v1/identity-providers`)"
+      - "traefik.http.routers.api-idp.entrypoints=web"
+      - "traefik.http.routers.api-idp.priority=100"
+      - "traefik.http.routers.api-idp.service=mcp-api"
+      # NO forward-auth middleware - identity providers endpoint is publicly accessible
       # Route: /api/* -> mcp-server:8000/api/* (API endpoints for frontend)
       # This allows the frontend at /studio to call /api/v1/* endpoints directly
+      # Authentication: JWT validation via AuthRequestMiddleware (no forward-auth)
       - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
       - "traefik.http.routers.api.entrypoints=web"
       - "traefik.http.routers.api.priority=10"
       - "traefik.http.routers.api.service=mcp-api"
-      # Authentication via forward-auth middleware (ADR-0054)
-      - "traefik.http.routers.api.middlewares=forward-auth@docker"
+      # NO forward-auth - API endpoints validate JWT tokens from Authorization header
       # NO strip - FastAPI serves /api/* directly
       # Route: / -> redirect to /login (Native Login entry point)
       # Priority 100 ensures this takes precedence; regex .* works because router already matches Path(`/`)
@@ -1634,7 +1667,10 @@ services:
       # Note: KEYCLOAK_REALM comes from .env.test (env_file above)
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       - OPENFGA_API_URL=http://openfga-test:8080
-      - OPENFGA_PRESHARED_KEY=${OPENFGA_PRESHARED_KEY:-test-openfga-preshared-key}
+      # OpenFGA Authentication: OIDC (Defense-in-Depth Security)
+      # authz-proxy obtains OIDC tokens from Keycloak via client credentials grant
+      # OpenFGA server validates these tokens (authn=oidc)
+      # Note: OPENFGA_OIDC_CLIENT_ID and OPENFGA_OIDC_CLIENT_SECRET come from .env.test
       - OPENFGA_PLAYGROUND_URL=http://openfga-test:3000
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=authz-proxy-test
@@ -1662,7 +1698,9 @@ services:
     labels:
       - "traefik.enable=true"
       # Route: /playground/* -> authz-proxy:8003 -> OpenFGA Playground
-      # Replaces direct access with authenticated+authorized proxy
+      # NOTE: This route is INACTIVE when OPENFGA_PLAYGROUND_ENABLED=false (OIDC mode)
+      # OpenFGA Playground doesn't support OIDC authentication
+      # Route preserved for non-OIDC environments where Playground can be enabled
       - "traefik.http.routers.openfga-playground.rule=PathPrefix(`/playground`)"
       - "traefik.http.routers.openfga-playground.entrypoints=web"
       - "traefik.http.routers.openfga-playground.priority=12"

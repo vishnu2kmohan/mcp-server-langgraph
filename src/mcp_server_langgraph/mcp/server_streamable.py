@@ -27,6 +27,7 @@ from mcp.types import Resource, TextContent, Tool
 from pydantic import AnyUrl, BaseModel, Field
 
 from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
+from mcp_server_langgraph.api.v1.auth import AuthSecurityHeadersMiddleware
 from mcp_server_langgraph.auth.factory import create_auth_middleware, create_user_provider
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -262,6 +263,12 @@ try:
 except Exception as e:
     _module_logger.warning(f"Failed to initialize AuthRequestMiddleware: {e}. REST API endpoints will require manual auth.")
 
+# Security headers middleware for auth endpoints (OWASP best practices)
+# Adds X-Content-Type-Options, X-Frame-Options, CSP, etc. to all responses
+# This must be added AFTER authentication middleware
+app.add_middleware(AuthSecurityHeadersMiddleware)
+_module_logger.info("AuthSecurityHeadersMiddleware enabled for OWASP security headers")
+
 
 class ChatInput(BaseModel):
     """
@@ -400,16 +407,39 @@ class MCPAgentStreamableServer:
         self._setup_handlers()
 
     def _create_openfga_client(self) -> OpenFGAClient | None:
-        """Create OpenFGA client from settings"""
+        """Create OpenFGA client from settings with OIDC authentication"""
         if self.settings.openfga_store_id and self.settings.openfga_model_id:
+            # Determine auth method for logging
+            auth_method = "none"
+            if self.settings.openfga_oidc_client_id and self.settings.openfga_oidc_client_secret:
+                auth_method = "oidc"
+            elif self.settings.openfga_preshared_key:
+                auth_method = "preshared (deprecated)"
+
             logger.info(
                 "Initializing OpenFGA client",
-                extra={"store_id": self.settings.openfga_store_id, "model_id": self.settings.openfga_model_id},
+                extra={
+                    "store_id": self.settings.openfga_store_id,
+                    "model_id": self.settings.openfga_model_id,
+                    "auth_method": auth_method,
+                },
             )
+
+            # Construct OIDC issuer URL from Keycloak settings
+            oidc_issuer = None
+            if self.settings.openfga_oidc_client_id and self.settings.openfga_oidc_client_secret:
+                oidc_issuer = f"{self.settings.keycloak_server_url.rstrip('/')}/realms/{self.settings.keycloak_realm}"
+
             return OpenFGAClient(
                 api_url=self.settings.openfga_api_url,
                 store_id=self.settings.openfga_store_id,
                 model_id=self.settings.openfga_model_id,
+                # OIDC authentication (recommended)
+                oidc_client_id=self.settings.openfga_oidc_client_id,
+                oidc_client_secret=self.settings.openfga_oidc_client_secret,
+                oidc_issuer=oidc_issuer,
+                # Legacy preshared key (deprecated, fallback if OIDC not configured)
+                preshared_key=self.settings.openfga_preshared_key,
             )
         else:
             logger.warning("OpenFGA not configured, authorization will use fallback mode")
@@ -2054,7 +2084,8 @@ from pathlib import Path
 
 from starlette.responses import FileResponse, RedirectResponse
 
-from mcp_server_langgraph.utils.spa_static_files import create_spa_static_files
+from mcp_server_langgraph.studio.security import SESSION_COOKIE_NAME
+from mcp_server_langgraph.utils.spa_static_files import create_authenticated_spa_static_files
 
 # Studio frontend location: src/mcp_server_langgraph/studio/frontend/dist
 _studio_frontend_dist = Path(__file__).parent.parent / "studio" / "frontend" / "dist"
@@ -2084,8 +2115,40 @@ async def login_page() -> FileResponse | RedirectResponse:
     return RedirectResponse(url="/studio", status_code=307)
 
 
+# OAuth2 Authorization Code + PKCE Callback route (ADR-0071)
+# Serves SPA index.html for React Router to handle /auth/callback
+# This bypasses Traefik forward-auth (configured in docker-compose.test.yml)
+@app.get("/auth/callback", tags=["auth"], response_model=None)
+async def auth_callback_page() -> FileResponse | RedirectResponse:
+    """
+    Serve OAuth2 callback page.
+
+    This endpoint serves the SPA's index.html which loads the React app.
+    React Router then handles the /auth/callback route and renders the AuthCallbackPage component.
+
+    The AuthCallbackPage extracts tokens from the URL fragment (#access_token=...)
+    and stores them in localStorage before redirecting to /studio.
+    """
+    index_path = _studio_frontend_dist / "index.html"
+    if index_path.exists():
+        return FileResponse(
+            index_path,
+            media_type="text/html",
+            headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+        )
+    # Fallback: redirect to studio if frontend not built
+    return RedirectResponse(url="/studio", status_code=307)
+
+
 # Only mount if frontend is built (graceful degradation for API-only mode)
-_studio_spa_handler = create_spa_static_files(str(_studio_frontend_dist), caching=True)
+# SECURITY: Use authenticated SPA handler to require session cookie for access
+# Unauthenticated users are redirected to /login
+_studio_spa_handler = create_authenticated_spa_static_files(
+    str(_studio_frontend_dist),
+    caching=True,
+    session_cookie_name=SESSION_COOKIE_NAME,
+    login_redirect_url="/login",
+)
 if _studio_spa_handler:
     # Mount at /studio to match Traefik gateway routing and vite.config.ts base path
     app.mount("/studio", _studio_spa_handler, name="studio-spa")

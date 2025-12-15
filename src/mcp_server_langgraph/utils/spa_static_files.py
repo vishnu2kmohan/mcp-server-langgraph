@@ -9,6 +9,7 @@ Features:
 - Falls back to index.html for client-side routes (React Router, etc.)
 - Returns 404 for missing static files (files with extensions)
 - Optional caching headers for production performance
+- Optional authentication requirement with redirect to login
 
 Usage:
     from mcp_server_langgraph.utils.spa_static_files import SPAStaticFiles
@@ -23,8 +24,10 @@ from collections.abc import MutableMapping
 from pathlib import Path
 from typing import Any
 
-from starlette.responses import Response
+from starlette.requests import Request
+from starlette.responses import RedirectResponse, Response
 from starlette.staticfiles import StaticFiles
+from starlette.types import Receive, Scope, Send
 
 
 class SPAStaticFiles(StaticFiles):
@@ -170,3 +173,145 @@ def create_spa_static_files(
         return SPAStaticFiles(directory=directory, html=True, caching=caching)
     except RuntimeError:
         return None
+
+
+class AuthenticatedSPAStaticFiles:
+    """
+    ASGI wrapper that enforces authentication for SPA routes.
+
+    This wrapper checks for a session cookie before serving SPA content.
+    Unauthenticated users are redirected to the login page.
+
+    Security:
+    - Protects all SPA routes from unauthenticated access
+    - Allows static assets (JS, CSS, fonts) for login page rendering
+    - Cookie-based session validation (set by OAuth2 callback)
+
+    Args:
+        spa_handler: The underlying SPAStaticFiles handler
+        session_cookie_name: Name of the session cookie to check
+        login_redirect_url: URL to redirect unauthenticated users to
+
+    Usage:
+        spa = create_spa_static_files("frontend/dist")
+        authenticated_spa = AuthenticatedSPAStaticFiles(
+            spa_handler=spa,
+            session_cookie_name="mcp_session",
+            login_redirect_url="/login",
+        )
+        app.mount("/studio", authenticated_spa, name="studio-spa")
+    """
+
+    # File extensions that should be served without authentication
+    # These are needed for the login page to render properly
+    PUBLIC_ASSET_EXTENSIONS = {
+        ".js",
+        ".css",
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".svg",
+        ".ico",
+        ".woff",
+        ".woff2",
+        ".ttf",
+        ".eot",
+        ".map",
+    }
+
+    def __init__(
+        self,
+        spa_handler: SPAStaticFiles,
+        session_cookie_name: str = "mcp_session",
+        login_redirect_url: str = "/login",
+    ) -> None:
+        """Initialize authenticated SPA handler."""
+        self.spa_handler = spa_handler
+        self.session_cookie_name = session_cookie_name
+        self.login_redirect_url = login_redirect_url
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """
+        ASGI application entry point.
+
+        Checks authentication before delegating to the SPA handler.
+        """
+        if scope["type"] != "http":
+            await self.spa_handler(scope, receive, send)
+            return
+
+        # Create request object to access cookies
+        request = Request(scope, receive)
+        path = scope.get("path", "")
+
+        # Check if this is a public asset (needed for login page)
+        if self._is_public_asset(path):
+            await self.spa_handler(scope, receive, send)
+            return
+
+        # Check for session cookie
+        session_cookie = request.cookies.get(self.session_cookie_name)
+
+        if session_cookie:
+            # User is authenticated, serve the SPA
+            await self.spa_handler(scope, receive, send)
+        else:
+            # User is not authenticated, redirect to login
+            response = RedirectResponse(
+                url=self.login_redirect_url,
+                status_code=302,
+            )
+            await response(scope, receive, send)
+
+    def _is_public_asset(self, path: str) -> bool:
+        """
+        Check if the path is a public static asset.
+
+        Static assets must be served without authentication to allow
+        the login page to load its JavaScript, CSS, and images.
+
+        Args:
+            path: Request path (e.g., "/studio/assets/index.js")
+
+        Returns:
+            True if this is a public asset, False otherwise
+        """
+        # Extract filename from path
+        filename = path.split("/")[-1] if path else ""
+
+        # Check for asset extensions
+        return any(filename.endswith(ext) for ext in self.PUBLIC_ASSET_EXTENSIONS)
+
+
+def create_authenticated_spa_static_files(
+    directory: str,
+    *,
+    caching: bool = False,
+    session_cookie_name: str = "mcp_session",
+    login_redirect_url: str = "/login",
+) -> AuthenticatedSPAStaticFiles | None:
+    """
+    Factory function to create an authenticated SPAStaticFiles handler.
+
+    Returns None if the directory doesn't exist or is invalid,
+    allowing graceful degradation when frontend is not built.
+
+    Args:
+        directory: Path to static files directory
+        caching: Whether to add cache-control headers
+        session_cookie_name: Name of the session cookie to check
+        login_redirect_url: URL to redirect unauthenticated users to
+
+    Returns:
+        AuthenticatedSPAStaticFiles instance or None if directory invalid
+    """
+    spa_handler = create_spa_static_files(directory, caching=caching)
+    if spa_handler is None:
+        return None
+
+    return AuthenticatedSPAStaticFiles(
+        spa_handler=spa_handler,
+        session_cookie_name=session_cookie_name,
+        login_redirect_url=login_redirect_url,
+    )

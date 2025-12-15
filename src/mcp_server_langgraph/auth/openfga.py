@@ -7,9 +7,14 @@ Enhanced with resilience patterns (ADR-0026):
 - Timeout enforcement (5s for auth operations)
 - Bulkhead isolation (50 concurrent auth checks max)
 
-Authentication (ADR-0068):
-- Preshared key authentication for API access
-- All API requests require: Authorization: Bearer <preshared-key>
+Authentication:
+- OIDC (OpenID Connect) - Recommended for production
+  * Client credentials grant (RFC 6749 Section 4.4) with Keycloak
+  * Automatic token refresh before expiration
+  * All API requests include: Authorization: Bearer <oidc-access-token>
+- Preshared key - Legacy authentication (deprecated)
+  * Static API token for backwards compatibility
+  * All API requests include: Authorization: Bearer <preshared-key>
 
 Configuration:
 - Authorization model loaded from config/openfga/model.json
@@ -47,10 +52,28 @@ class OpenFGAConfig(BaseModel):
         "the client will look up the store by name on initialization.",
     )
     model_id: str | None = Field(default=None, description="Authorization model ID")
+
+    # OIDC Authentication (OpenID Connect)
+    oidc_client_id: str | None = Field(
+        default=None,
+        description="OIDC client ID for Keycloak client credentials grant. "
+        "If set, client will obtain access tokens from Keycloak instead of using preshared key.",
+    )
+    oidc_client_secret: str | None = Field(
+        default=None,
+        description="OIDC client secret for Keycloak client credentials grant.",
+    )
+    oidc_issuer: str | None = Field(
+        default=None,
+        description="OIDC issuer URL (e.g., http://keycloak:8080/authn/realms/default). "
+        "Token endpoint is derived as {issuer}/protocol/openid-connect/token",
+    )
+
+    # Legacy Preshared Key Authentication (deprecated, use OIDC instead)
     preshared_key: str | None = Field(
         default=None,
-        description="Preshared key for API authentication (ADR-0068). "
-        "If set, all API requests will include Authorization: Bearer <key>",
+        description="[DEPRECATED] Preshared key for API authentication. "
+        "Use OIDC authentication (oidc_client_id, oidc_client_secret, oidc_issuer) instead.",
     )
 
     model_config = ConfigDict(
@@ -62,7 +85,12 @@ class OpenFGAConfig(BaseModel):
                 "api_url": "http://localhost:8080",
                 "store_id": "01H...",
                 "model_id": "01H...",
-                "preshared_key": "test-openfga-preshared-key",
+                # OIDC authentication (recommended)
+                "oidc_client_id": "openfga-server",
+                "oidc_client_secret": "test-openfga-server-secret",
+                "oidc_issuer": "http://keycloak:8080/authn/realms/default",
+                # Legacy preshared key (deprecated)
+                # "preshared_key": "test-openfga-preshared-key",
             }
         },
     )
@@ -93,6 +121,9 @@ class OpenFGAClient:
         store_name: str | None = None,
         model_id: str | None = None,
         preshared_key: str | None = None,
+        oidc_client_id: str | None = None,
+        oidc_client_secret: str | None = None,
+        oidc_issuer: str | None = None,
     ):
         """
         Initialize OpenFGA client (lazy async initialization pattern)
@@ -109,19 +140,37 @@ class OpenFGAClient:
             store_id: Authorization store ID (legacy, use config instead)
             store_name: Store name for dynamic lookup (legacy, use config instead)
             model_id: Authorization model ID (legacy, use config instead)
-            preshared_key: Preshared key for API auth (legacy, use config instead)
+            preshared_key: [DEPRECATED] Preshared key for API auth (use OIDC instead)
+            oidc_client_id: OIDC client ID for client credentials grant
+            oidc_client_secret: OIDC client secret for client credentials grant
+            oidc_issuer: OIDC issuer URL (Keycloak realm URL)
         """
         # Support both new config-based and legacy parameter-based initialization
         if config is None:
             # Check environment variables if not provided
             env_preshared_key = preshared_key or os.getenv("OPENFGA_PRESHARED_KEY")
             env_store_name = store_name or os.getenv("OPENFGA_STORE_NAME")
+            env_oidc_client_id = oidc_client_id or os.getenv("OPENFGA_OIDC_CLIENT_ID")
+            env_oidc_client_secret = oidc_client_secret or os.getenv("OPENFGA_OIDC_CLIENT_SECRET")
+
+            # Handle OIDC issuer: if explicitly provided use as-is, else construct from KEYCLOAK_SERVER_URL
+            env_oidc_issuer = oidc_issuer
+            if not env_oidc_issuer:
+                # Construct from environment variable if not explicitly provided
+                keycloak_server_url = os.getenv("KEYCLOAK_SERVER_URL")
+                if keycloak_server_url:
+                    keycloak_realm = os.getenv("KEYCLOAK_REALM", "default")
+                    env_oidc_issuer = f"{keycloak_server_url.rstrip('/')}/realms/{keycloak_realm}"
+
             config = OpenFGAConfig(
                 api_url=api_url or "http://localhost:8080",
                 store_id=store_id,
                 store_name=env_store_name,
                 model_id=model_id,
                 preshared_key=env_preshared_key,
+                oidc_client_id=env_oidc_client_id,
+                oidc_client_secret=env_oidc_client_secret,
+                oidc_issuer=env_oidc_issuer,
             )
 
         self.config = config
@@ -130,20 +179,116 @@ class OpenFGAClient:
         self.store_name = config.store_name
         self.model_id = config.model_id
         self.preshared_key = config.preshared_key
+        self.oidc_client_id = config.oidc_client_id
+        self.oidc_client_secret = config.oidc_client_secret
+        self.oidc_issuer = config.oidc_issuer
 
         # Lazy initialization: Store configuration, don't create OpenFgaClient yet
         # This prevents creating aiohttp resources which require an event loop
         self._client: OpenFgaClient | None = None
         self._initialized = False
+        self._oidc_access_token: str | None = None
+        self._oidc_token_expires_at: float | None = None
+
+        # Determine authentication method
+        auth_method = "none"
+        if config.oidc_client_id and config.oidc_client_secret and config.oidc_issuer:
+            auth_method = "oidc"
+        elif config.preshared_key:
+            auth_method = "preshared"
 
         logger.info(
             "OpenFGA client wrapper created (lazy init)",
             extra={
                 "api_url": config.api_url,
                 "store_name": config.store_name,
-                "auth_enabled": config.preshared_key is not None,
+                "auth_method": auth_method,
             },
         )
+
+    async def _get_oidc_access_token(self) -> str | None:
+        """
+        Obtain OIDC access token from Keycloak using client credentials grant.
+
+        This implements OAuth 2.0 client credentials grant (RFC 6749 Section 4.4)
+        for service-to-service authentication.
+
+        Returns:
+            OIDC access token or None if OIDC is not configured
+
+        Raises:
+            OpenFGAError: If token acquisition fails
+        """
+        if not self.oidc_client_id or not self.oidc_client_secret or not self.oidc_issuer:
+            logger.debug("OIDC not configured, skipping token acquisition")
+            return None
+
+        # Check if we have a valid cached token
+        import time
+
+        if self._oidc_access_token and self._oidc_token_expires_at:
+            # Refresh token 30 seconds before expiration (buffer for clock skew)
+            if time.time() < (self._oidc_token_expires_at - 30):
+                logger.debug("Using cached OIDC access token")
+                return self._oidc_access_token
+
+        # Construct token endpoint URL from issuer
+        token_endpoint = f"{self.oidc_issuer.rstrip('/')}/protocol/openid-connect/token"
+
+        logger.info(
+            "Obtaining OIDC access token from Keycloak",
+            extra={
+                "client_id": self.oidc_client_id,
+                "token_endpoint": token_endpoint,
+            },
+        )
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    token_endpoint,
+                    data={
+                        "grant_type": "client_credentials",
+                        "client_id": self.oidc_client_id,
+                        "client_secret": self.oidc_client_secret,
+                    },
+                    timeout=10.0,
+                )
+                response.raise_for_status()
+
+                token_response = response.json()
+                access_token = token_response.get("access_token")
+                expires_in = token_response.get("expires_in", 300)  # Default 5 minutes
+
+                if not access_token:
+                    msg = "No access_token in Keycloak token response"
+                    logger.error(msg)
+                    raise OpenFGAError(msg)
+
+                # Cache the token
+                import time
+
+                self._oidc_access_token = access_token
+                self._oidc_token_expires_at = time.time() + expires_in
+
+                logger.info(
+                    "OIDC access token obtained successfully",
+                    extra={
+                        "expires_in": expires_in,
+                        "token_type": token_response.get("token_type", "Bearer"),
+                    },
+                )
+
+                return access_token
+
+        except httpx.HTTPStatusError as e:
+            msg = f"Failed to obtain OIDC access token: HTTP {e.response.status_code}"
+            logger.error(msg, extra={"response": e.response.text}, exc_info=True)
+            raise OpenFGAError(msg) from e
+        except Exception as e:
+            msg = f"Failed to obtain OIDC access token: {e}"
+            logger.error(msg, exc_info=True)
+            raise OpenFGAError(msg) from e
 
     async def _ensure_initialized(self) -> None:
         """
@@ -152,7 +297,13 @@ class OpenFGAClient:
         This method creates the actual OpenFgaClient on first async call.
         Called by all async methods before performing operations.
 
-        If preshared_key is configured, credentials are added for API authentication (ADR-0068).
+        Authentication method selection (priority order):
+        1. OIDC (if oidc_client_id, oidc_client_secret, oidc_issuer are configured)
+           - Obtains access token from Keycloak via client credentials grant
+           - Token is cached and automatically refreshed before expiration
+        2. Preshared key (if preshared_key is configured) - deprecated
+        3. No authentication (if neither is configured)
+
         If store_id is not set but store_name is, looks up the store by name.
         """
         if not self._initialized:
@@ -173,13 +324,27 @@ class OpenFGAClient:
                         extra={"store_name": self.config.store_name},
                     )
 
-            # Build credentials if preshared key is configured
+            # Build credentials based on configured authentication method
             credentials = None
-            if self.config.preshared_key:
+            auth_method = "none"
+
+            # Prefer OIDC authentication over preshared key
+            if self.config.oidc_client_id and self.config.oidc_client_secret and self.config.oidc_issuer:
+                # Obtain OIDC access token from Keycloak
+                access_token = await self._get_oidc_access_token()
+                if access_token:
+                    credentials = Credentials(
+                        method="api_token",
+                        configuration=CredentialConfiguration(api_token=access_token),
+                    )
+                    auth_method = "oidc"
+            elif self.config.preshared_key:
+                # Fallback to preshared key (deprecated)
                 credentials = Credentials(
                     method="api_token",
                     configuration=CredentialConfiguration(api_token=self.config.preshared_key),
                 )
+                auth_method = "preshared"
 
             configuration = ClientConfiguration(
                 api_url=self.config.api_url,
@@ -194,6 +359,7 @@ class OpenFGAClient:
                 extra={
                     "api_url": self.config.api_url,
                     "store_id": store_id,
+                    "auth_method": auth_method,
                     "auth_enabled": credentials is not None,
                 },
             )
