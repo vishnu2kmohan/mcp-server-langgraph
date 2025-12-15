@@ -581,6 +581,10 @@ test-e2e-ci:  ## Run E2E tests with full CI parity (used by validate-pre-push-ci
 	@echo "Running E2E tests with CI parity (orchestrated by test-e2e.sh)..."
 	@./scripts/test-e2e.sh && echo "✓ E2E tests passed" || (echo "✗ E2E tests failed" && exit 1)
 
+test-frontend-ci:  ## Run frontend tests with full CI parity (lint, typecheck, test, build)
+	@echo "Running frontend tests with CI parity (orchestrated by test-frontend.sh)..."
+	@./scripts/test-frontend.sh && echo "✓ Frontend tests passed" || (echo "✗ Frontend tests failed" && exit 1)
+
 test-api:
 	@echo "Running API endpoint tests (unit tests for REST APIs)..."
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m "api and unit" -v
