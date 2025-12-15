@@ -173,6 +173,200 @@ async def validate_database_connectivity_async() -> tuple[bool, str]:
     return await check_database_connectivity(postgres_url, timeout=5.0)
 
 
+async def validate_loki_connectivity_async() -> tuple[bool, str]:
+    """
+    Validate Loki log aggregation connectivity.
+
+    This function is skipped if Loki is not configured (no loki_url).
+
+    Returns:
+        Tuple of (is_healthy, message)
+
+    Related to: LGTM Stack validation for observability
+    """
+    # Skip validation if Loki is not configured
+    if not settings.loki_url:
+        return True, "Loki disabled - not configured"
+
+    try:
+        from mcp_server_langgraph.core.startup_validation import validate_loki_connection
+
+        result = await validate_loki_connection(
+            url=settings.loki_url,
+            timeout=5,
+        )
+
+        if result.success:
+            return True, result.message or "Loki connected"
+        else:
+            return False, result.error or "Loki connection failed"
+
+    except Exception as e:
+        logger.error(
+            "Loki validation error",
+            extra={"error": str(e), "error_type": type(e).__name__},
+        )
+        return False, f"Loki validation failed: {e}"
+
+
+async def validate_tempo_connectivity_async() -> tuple[bool, str]:
+    """
+    Validate Tempo distributed tracing connectivity.
+
+    This function is skipped if Tempo is not configured (no tempo_url).
+
+    Returns:
+        Tuple of (is_healthy, message)
+
+    Related to: LGTM Stack validation for observability
+    """
+    # Skip validation if Tempo is not configured
+    if not settings.tempo_url:
+        return True, "Tempo disabled - not configured"
+
+    try:
+        from mcp_server_langgraph.core.startup_validation import validate_tempo_connection
+
+        result = await validate_tempo_connection(
+            url=settings.tempo_url,
+            timeout=5,
+        )
+
+        if result.success:
+            return True, result.message or "Tempo connected"
+        else:
+            return False, result.error or "Tempo connection failed"
+
+    except Exception as e:
+        logger.error(
+            "Tempo validation error",
+            extra={"error": str(e), "error_type": type(e).__name__},
+        )
+        return False, f"Tempo validation failed: {e}"
+
+
+async def validate_mimir_connectivity_async() -> tuple[bool, str]:
+    """
+    Validate Mimir metrics connectivity.
+
+    This function is skipped if Mimir is not configured (no mimir_url).
+
+    Returns:
+        Tuple of (is_healthy, message)
+
+    Related to: LGTM Stack validation for observability
+    """
+    # Skip validation if Mimir is not configured
+    if not settings.mimir_url:
+        return True, "Mimir disabled - not configured"
+
+    try:
+        from mcp_server_langgraph.core.startup_validation import validate_mimir_connection
+
+        result = await validate_mimir_connection(
+            url=settings.mimir_url,
+            timeout=5,
+        )
+
+        if result.success:
+            return True, result.message or "Mimir connected"
+        else:
+            return False, result.error or "Mimir connection failed"
+
+    except Exception as e:
+        logger.error(
+            "Mimir validation error",
+            extra={"error": str(e), "error_type": type(e).__name__},
+        )
+        return False, f"Mimir validation failed: {e}"
+
+
+async def bootstrap_qdrant_default_collection_async() -> tuple[bool, str]:
+    """
+    Bootstrap the default Qdrant collection at startup.
+
+    Creates the collection if it doesn't exist. This ensures E2E tests
+    and new deployments have the required collection available.
+
+    Returns:
+        Tuple of (success, message)
+
+    Related to: VectorsPage E2E test failures - collection not bootstrapped
+    """
+    # Skip if Qdrant is not configured
+    if not settings.qdrant_url and not settings.enable_dynamic_context_loading:
+        return True, "Qdrant bootstrap skipped - not configured"
+
+    if not settings.qdrant_url:
+        return True, "Qdrant bootstrap skipped - no qdrant_url configured"
+
+    try:
+        from mcp_server_langgraph.core.startup_validation import bootstrap_qdrant_collection
+
+        result = await bootstrap_qdrant_collection(
+            url=settings.qdrant_url,
+            collection_name=settings.qdrant_collection_name,
+            vector_size=getattr(settings, "qdrant_vector_size", 384),
+            timeout=10,
+        )
+
+        if result.success:
+            if result.created:
+                return True, f"Qdrant collection '{settings.qdrant_collection_name}' created"
+            else:
+                return True, f"Qdrant collection '{settings.qdrant_collection_name}' already exists"
+        else:
+            return False, f"Qdrant bootstrap failed: {result.error}"
+
+    except Exception as e:
+        logger.warning(
+            "Qdrant bootstrap failed",
+            extra={"error": str(e), "error_type": type(e).__name__},
+        )
+        return False, f"Qdrant bootstrap error: {e}"
+
+
+async def validate_qdrant_connectivity_async() -> tuple[bool, str]:
+    """
+    Validate Qdrant vector database connectivity.
+
+    This function is skipped if Qdrant is not configured (no qdrant_url and
+    dynamic context loading is disabled).
+
+    Returns:
+        Tuple of (is_healthy, message)
+
+    Related to: E2E Test infrastructure validation - VectorsPage failures
+    """
+    # Skip validation if Qdrant is not configured
+    if not settings.qdrant_url and not settings.enable_dynamic_context_loading:
+        return True, "Qdrant disabled - not configured"
+
+    # If URL is empty but dynamic context loading is expected, it's a config issue
+    if not settings.qdrant_url:
+        return True, "Qdrant not configured (no qdrant_url)"
+
+    try:
+        from mcp_server_langgraph.core.startup_validation import validate_qdrant_connection
+
+        result = await validate_qdrant_connection(
+            url=settings.qdrant_url,
+            timeout=5,
+        )
+
+        if result.success:
+            return True, result.message or "Qdrant connected"
+        else:
+            return False, result.error or "Qdrant connection failed"
+
+    except Exception as e:
+        logger.error(
+            "Qdrant validation error",
+            extra={"error": str(e), "error_type": type(e).__name__},
+        )
+        return False, f"Qdrant validation failed: {e}"
+
+
 def run_startup_validation() -> None:
     """
     Run all startup validations and raise SystemValidationError if critical checks fail.
@@ -198,8 +392,22 @@ async def run_startup_validation_async() -> None:
         "api_key_cache": validate_api_key_cache_configured(),
         "docker_sandbox": validate_docker_sandbox_security(),
         "database_connectivity": await validate_database_connectivity_async(),
+        "qdrant_connectivity": await validate_qdrant_connectivity_async(),
+        "loki_connectivity": await validate_loki_connectivity_async(),
+        "tempo_connectivity": await validate_tempo_connectivity_async(),
+        "mimir_connectivity": await validate_mimir_connectivity_async(),
     }
     _process_validation_results(checks)
+
+    # Bootstrap Qdrant collection if configured (after connectivity validation)
+    # This ensures E2E tests and new deployments have required collections
+    if settings.qdrant_url:
+        success, message = await bootstrap_qdrant_default_collection_async()
+        if success:
+            logger.info(f"✓ qdrant_bootstrap: {message}")
+        else:
+            # Graceful degradation - log warning but don't block startup
+            logger.warning(f"⚠ qdrant_bootstrap: {message}")
 
 
 def _process_validation_results(checks: dict[str, tuple[bool, str]]) -> None:
@@ -262,6 +470,10 @@ async def health_check() -> HealthCheckResult:
         "api_key_cache": validate_api_key_cache_configured(),
         "docker_sandbox": validate_docker_sandbox_security(),
         "database_connectivity": await validate_database_connectivity_async(),
+        "qdrant_connectivity": await validate_qdrant_connectivity_async(),
+        "loki_connectivity": await validate_loki_connectivity_async(),
+        "tempo_connectivity": await validate_tempo_connectivity_async(),
+        "mimir_connectivity": await validate_mimir_connectivity_async(),
     }
 
     # Convert to bool dict and collect errors/warnings
