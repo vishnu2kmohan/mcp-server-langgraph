@@ -560,7 +560,7 @@ jobs:
       if: hashFiles('coverage.json') != ''
 
     - name: Upload merged coverage to Codecov
-      uses: codecov/codecov-action@v5.5.1
+      uses: codecov/codecov-action@v5.5.2
       with:
         files: ./coverage-merged.xml
         flags: unit

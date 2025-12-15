@@ -174,7 +174,7 @@ jobs:
           type=registry,ref=ghcr.io/${{ github.repository }}:cache-release-${{ steps.platform.outputs.name }},mode=max
 
     - name: Generate SBOM
-      uses: anchore/sbom-action@v0.20.10
+      uses: anchore/sbom-action@v0.20.11
       with:
         format: spdx-json
         output-file: sbom-${{ matrix.platform }}.spdx.json
