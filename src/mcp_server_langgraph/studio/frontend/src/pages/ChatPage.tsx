@@ -22,6 +22,7 @@ import {
   clearMessages,
   addMessage,
   clearError,
+  setCurrentSession,
   selectCurrentSession,
   selectSessions,
   selectIsLoadingSession,
@@ -402,6 +403,21 @@ export function ChatPage() {
     ]);
   };
 
+  const handleSessionDelete = async (sessionId: string) => {
+    // Delete a single session
+    await deleteSession(sessionId);
+    // If the deleted session is the current one, clear current session
+    if (currentSession?.id === sessionId) {
+      dispatch(setCurrentSession(null));
+    }
+    // Refresh sessions list
+    dispatch(fetchSessions());
+    setActivities((prev) => [
+      { timestamp: Date.now(), action: "session deleted", details: sessionId },
+      ...prev.slice(0, 9),
+    ]);
+  };
+
   const handleRefreshTools = () => {
     // Reconnect to refresh tools list
     connect();
@@ -505,6 +521,7 @@ export function ChatPage() {
         isLoading={isLoadingSessions}
         enableBulkSelect={true}
         onBulkDelete={handleBulkDelete}
+        onDelete={handleSessionDelete}
         enableSearch={true}
         onSearch={handleSearch}
         enableStatusFilter={true}

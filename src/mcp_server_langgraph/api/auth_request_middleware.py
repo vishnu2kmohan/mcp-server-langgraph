@@ -16,6 +16,7 @@ from typing import Any
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
+from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.observability.telemetry import logger
 
@@ -76,7 +77,8 @@ class AuthRequestMiddleware(BaseHTTPMiddleware):
 
                 if verification.valid and verification.payload:
                     # Extract user information from token payload
-                    user_data = self._extract_user_from_payload(verification.payload)
+                    # Uses shared function for consistent extraction across all services
+                    user_data = extract_user_from_jwt_payload(verification.payload)
                     request.state.user = user_data
 
                     logger.debug(
@@ -126,79 +128,6 @@ class AuthRequestMiddleware(BaseHTTPMiddleware):
         # and endpoints can return 401 as needed
         response = await call_next(request)
         return response
-
-    def _extract_user_from_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """
-        Extract user information from JWT payload.
-
-        Handles both InMemory tokens and Keycloak tokens with proper field mapping.
-
-        Args:
-            payload: JWT token payload
-
-        Returns:
-            User data dict with user_id, username, roles, etc.
-        """
-        # Extract Keycloak UUID from sub claim (if present)
-        keycloak_id = payload.get("sub")
-
-        # Priority: preferred_username (Keycloak) > username (InMemory) > extract from sub (fallback)
-        username = payload.get("preferred_username") or payload.get("username")
-
-        if not username:
-            # Fallback to extracting username from sub
-            sub = keycloak_id or "unknown"
-
-            # If sub is in "user:username" format, extract username
-            if sub.startswith("user:"):
-                id_part = sub.replace("user:", "")
-
-                # Handle worker-safe IDs (e.g., "user:test_gw0_charlie" → "charlie")
-                import re
-
-                match = re.match(r"test_gw\d+_(.*)", id_part)
-                username = match.group(1) if match else id_part
-            else:
-                username = sub
-
-        # For user_id, use sub directly if it's already in "user:*" format, otherwise normalize from username
-        # This preserves worker-safe IDs like "user:test_gw0_alice" from InMemoryUserProvider tokens
-        if keycloak_id and keycloak_id.startswith("user:"):
-            user_id = keycloak_id  # Use sub directly (preserves worker-safe IDs)
-        else:
-            # Normalize to "user:username" format for OpenFGA compatibility
-            user_id = f"user:{username}" if not username.startswith("user:") else username
-
-        # Extract roles from Keycloak JWT structure
-        # Keycloak can put roles in multiple places:
-        # 1. realm_access.roles - realm-level roles
-        # 2. resource_access.<client>.roles - client-level roles
-        # 3. roles - sometimes mapped directly (InMemoryUserProvider)
-        roles: list[str] = []
-
-        # Check direct roles first (InMemoryUserProvider)
-        if payload.get("roles"):
-            roles = payload.get("roles", [])
-        else:
-            # Extract from Keycloak realm_access structure
-            realm_access = payload.get("realm_access", {})
-            if realm_access and isinstance(realm_access, dict):
-                roles.extend(realm_access.get("roles", []))
-
-            # Also check resource_access for client-specific roles
-            resource_access = payload.get("resource_access", {})
-            if resource_access and isinstance(resource_access, dict):
-                for client_roles in resource_access.values():
-                    if isinstance(client_roles, dict):
-                        roles.extend(client_roles.get("roles", []))
-
-        return {
-            "user_id": user_id,
-            "keycloak_id": keycloak_id,  # Raw UUID for Keycloak Admin API
-            "username": username,
-            "roles": roles,
-            "email": payload.get("email"),
-        }
 
     def _extract_user_from_forward_auth_headers(self, request: Request) -> dict[str, Any] | None:
         """

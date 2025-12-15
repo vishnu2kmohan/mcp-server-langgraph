@@ -12,7 +12,8 @@ async function globalSetup(): Promise<void> {
     // API server is on port 8000, with trailing slash to avoid redirect
     { name: 'API Server', url: process.env.API_URL || 'http://localhost:8000/health/' },
     // Keycloak is on port 9082 with /authn prefix
-    { name: 'Keycloak', url: (process.env.KEYCLOAK_URL || 'http://localhost:9082') + '/authn/health/ready' },
+    // Note: /authn/health/ready returns 404; use realm endpoint to verify readiness
+    { name: 'Keycloak', url: (process.env.KEYCLOAK_URL || 'http://localhost:9082') + '/authn/realms/default' },
     // Qdrant vector database on port 9333 (test environment)
     { name: 'Qdrant', url: process.env.QDRANT_URL || 'http://localhost:9333/' },
   ];

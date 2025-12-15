@@ -22,30 +22,6 @@ class AuditBase(DeclarativeBase):
     pass
 
 
-class AuditLogModel(AuditBase):
-    """SQLAlchemy model for audit log entries (legacy connection auditing)."""
-
-    __tablename__ = "audit_logs"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    resource_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    resource_id: Mapped[str] = mapped_column(String(255), nullable=False)
-    actor_id: Mapped[str] = mapped_column(String(255), nullable=False)
-    action: Mapped[str] = mapped_column(String(50), nullable=False)
-    details: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
-    user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-
-    __table_args__ = (
-        Index("idx_audit_logs_resource", "resource_type", "resource_id"),
-        Index("idx_audit_logs_actor", "actor_id"),
-        Index("idx_audit_logs_event_type", "event_type"),
-        Index("idx_audit_logs_timestamp", "timestamp"),
-    )
-
-
 class UnifiedAuditLog(AuditBase):
     """
     Unified audit log model for regulatory compliance.
@@ -224,3 +200,8 @@ class UnifiedAuditLog(AuditBase):
         # Extend table instead of creating new (same tablename)
         {"extend_existing": True},
     )
+
+
+# Alias for backward compatibility with existing code
+# AuditLogModel is the legacy name, UnifiedAuditLog is the canonical name
+AuditLogModel = UnifiedAuditLog

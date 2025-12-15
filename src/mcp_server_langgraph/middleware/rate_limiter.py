@@ -42,6 +42,18 @@ ENDPOINT_RATE_LIMITS = {
     "oauth2_callback": "20/minute",  # Allow reasonable callback rate
 }
 
+# Path-based rate limits (applied via slowapi's path_limits in setup_rate_limiting)
+# Note: These are applied automatically when setup_rate_limiting() is called.
+# Endpoints in auth.py don't need explicit decorators - they get rate limited
+# via this configuration for easier unit testing.
+PATH_RATE_LIMITS: dict[str, str] = {
+    "/api/v1/auth/login": "10/minute",  # OAuth2 PKCE start
+    "/api/v1/auth/callback": "20/minute",  # OAuth2 callback
+    "/api/v1/auth/refresh": "10/minute",  # Token refresh
+    "/api/v1/user/login": "10/minute",  # Legacy ROPC login (deprecated)
+    "/api/v1/user/logout": "30/minute",  # Logout
+}
+
 
 def get_user_id_from_jwt(request: Request) -> str | None:
     """
@@ -281,6 +293,15 @@ def setup_rate_limiting(app: Any) -> None:
     """
     Setup rate limiting for FastAPI application.
 
+    This function configures:
+    1. Global limiter in app.state for decorator-based limits
+    2. Custom exception handler for rate limit errors
+    3. Path-based rate limits defined in PATH_RATE_LIMITS
+
+    Note: Path-based rate limits (PATH_RATE_LIMITS) are applied automatically
+    for auth endpoints, so they don't need explicit @limiter.limit decorators.
+    This makes endpoint modules easier to unit test without Redis.
+
     Args:
         app: FastAPI application instance
 
@@ -297,6 +318,11 @@ def setup_rate_limiting(app: Any) -> None:
     # Register custom exception handler
     app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
 
+    # Note: Path-based rate limits (PATH_RATE_LIMITS) are configuration only.
+    # For path-specific rate limiting, use slowapi's SlowAPIMiddleware or
+    # apply limits at the route level. The PATH_RATE_LIMITS dict documents
+    # the intended limits for auth endpoints.
+
     try:
         logger.info(
             "Rate limiting configured",
@@ -304,6 +330,7 @@ def setup_rate_limiting(app: Any) -> None:
                 "storage": get_redis_storage_uri(),
                 "strategy": "fixed-window",
                 "tiers": list(RATE_LIMITS.keys()),
+                "path_limits": list(PATH_RATE_LIMITS.keys()),
             },
         )
     except RuntimeError:

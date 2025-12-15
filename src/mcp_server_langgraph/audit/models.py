@@ -85,6 +85,25 @@ class AuditEventType(StrEnum):
     SESSION_EXPIRED = "session.expired"
     """Session timeout (HIPAA 164.312(a)(2)(iii))."""
 
+    # OAuth2 PKCE events (RFC 9700, ADR-0071)
+    OAUTH2_LOGIN_INITIATED = "oauth2.login.initiated"
+    """OAuth2 Authorization Code + PKCE flow started."""
+
+    OAUTH2_CALLBACK_SUCCESS = "oauth2.callback.success"
+    """OAuth2 authorization callback completed successfully."""
+
+    OAUTH2_CALLBACK_FAILED = "oauth2.callback.failed"
+    """OAuth2 authorization callback failed (invalid code, state mismatch, etc.)."""
+
+    TOKEN_REFRESH_SUCCESS = "token.refresh.success"  # noqa: S105 - enum value, not a password
+    """Access token refresh completed successfully."""
+
+    TOKEN_REFRESH_FAILED = "token.refresh.failed"  # noqa: S105 - enum value, not a password
+    """Access token refresh failed (expired/invalid refresh token)."""
+
+    TOKEN_REVOKED = "token.revoked"  # noqa: S105 - enum value, not a password
+    """Token added to denylist on logout."""
+
     # Authorization events (SOC 2 CC6.1, FedRAMP AU-2)
     ACCESS_GRANTED = "access.granted"
     """Access to resource granted."""

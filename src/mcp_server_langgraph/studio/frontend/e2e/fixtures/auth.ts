@@ -95,6 +95,21 @@ async function getKeycloakToken(username: string, password: string): Promise<str
 }
 
 /**
+ * Parse JWT token to extract expiration time.
+ */
+function parseJwtExpiry(token: string): number {
+  try {
+    const base64Payload = token.split('.')[1];
+    const payload = JSON.parse(atob(base64Payload));
+    // exp is in seconds, convert to milliseconds
+    return payload.exp * 1000;
+  } catch {
+    // Default to 1 hour from now if parsing fails
+    return Date.now() + 60 * 60 * 1000;
+  }
+}
+
+/**
  * Set up authenticated page with either real Keycloak token or mock auth.
  */
 async function setupAuthenticatedPage(page: Page, user: TestUser): Promise<void> {
@@ -107,19 +122,45 @@ async function setupAuthenticatedPage(page: Page, user: TestUser): Promise<void>
     const token = await getKeycloakToken(userInfo.username, userInfo.password);
 
     if (token) {
+      // Calculate token expiry from JWT payload
+      const tokenExpiry = parseJwtExpiry(token);
+      // Refresh token expires in 30 days (typical)
+      const refreshExpiry = Date.now() + 30 * 24 * 60 * 60 * 1000;
+
       // Inject token into local storage before navigation
+      // Must match the format expected by:
+      // - authSlice.ts (AUTH_STORAGE_KEY = 'studio-auth')
+      // - api/index.ts prepareHeaders (reads 'auth_token')
       await page.addInitScript(
-        ({ token, user }) => {
+        ({ token, tokenExpiry, refreshExpiry, user }) => {
+          // Store in the format expected by authSlice.ts
+          const authState = {
+            state: {
+              tokens: {
+                accessToken: token,
+                refreshToken: token, // Use same token as placeholder
+                expiresAt: tokenExpiry,
+                refreshExpiresAt: refreshExpiry,
+              },
+            },
+          };
+          localStorage.setItem('studio-auth', JSON.stringify(authState));
+
+          // CRITICAL: Also set 'auth_token' directly - this is what api/index.ts prepareHeaders reads
           localStorage.setItem('auth_token', token);
+
+          // Also store user info for components that read it directly
           localStorage.setItem('user_info', JSON.stringify({
             username: user.username,
             persona: user.persona,
+            roles: user.persona === 'admin' ? ['admin'] : user.persona === 'developer' ? ['developer'] : ['user'],
             authenticated: true,
           }));
+
           // Skip onboarding modal for e2e tests
           localStorage.setItem('langgraph_onboarding_completed', 'true');
         },
-        { token, user: userInfo }
+        { token, tokenExpiry, refreshExpiry, user: userInfo }
       );
     } else {
       // Fallback to mock auth
@@ -140,16 +181,36 @@ async function setupMockAuth(
 ): Promise<void> {
   await page.addInitScript(
     ({ user }) => {
-      // Mock auth state in Redux store (via localStorage)
+      // Create a mock token (expiry 1 hour from now)
+      const now = Date.now();
+      const tokenExpiry = now + 60 * 60 * 1000; // 1 hour
+      const refreshExpiry = now + 30 * 24 * 60 * 60 * 1000; // 30 days
+
+      // Store in the format expected by authSlice.ts (AUTH_STORAGE_KEY = 'studio-auth')
+      const authState = {
+        state: {
+          tokens: {
+            accessToken: 'mock-access-token',
+            refreshToken: 'mock-refresh-token',
+            expiresAt: tokenExpiry,
+            refreshExpiresAt: refreshExpiry,
+          },
+        },
+      };
+      localStorage.setItem('studio-auth', JSON.stringify(authState));
+      // CRITICAL: Also set 'auth_token' directly - this is what api/index.ts prepareHeaders reads
+      localStorage.setItem('auth_token', 'mock-access-token');
       localStorage.setItem('auth_mock', 'true');
+
+      // Store user info for components that read it directly
       localStorage.setItem('user_info', JSON.stringify({
         username: user.username,
         persona: user.persona,
+        roles: user.persona === 'admin' ? ['admin'] : user.persona === 'developer' ? ['developer'] : ['user'],
         email: `${user.username}@example.com`,
         authenticated: true,
       }));
-      // Mock persona for RBAC
-      localStorage.setItem('persona', user.persona);
+
       // Skip onboarding modal for e2e tests
       localStorage.setItem('langgraph_onboarding_completed', 'true');
     },

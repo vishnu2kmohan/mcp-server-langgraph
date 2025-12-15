@@ -2,8 +2,12 @@
  * LoginPage
  *
  * Native login page for the Studio application.
- * Uses ROPC (Resource Owner Password Credentials) flow to authenticate
- * directly with Keycloak without redirecting to Keycloak UI.
+ *
+ * Authentication Options:
+ * 1. SSO Login (recommended) - OAuth2 Authorization Code + PKCE flow (ADR-0071)
+ * 2. Direct Login (deprecated) - ROPC flow for backward compatibility
+ *
+ * Per RFC 9700: ROPC is deprecated. Use Authorization Code + PKCE instead.
  */
 
 import { useState, useEffect } from "react";
@@ -18,6 +22,7 @@ import {
   ExternalLink,
   Key,
   Shield,
+  LogIn,
 } from "lucide-react";
 import { useLoginMutation, useGetIdentityProvidersQuery } from "../api";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -185,6 +190,32 @@ export function LoginPage() {
 
         {/* Login Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
+          {/* SSO Login Button (OAuth2 + PKCE - Recommended) */}
+          <div className="mb-6">
+            <a
+              href="/api/v1/auth/login"
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            >
+              <LogIn className="h-5 w-5" />
+              Sign in with SSO
+            </a>
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+              Recommended - Uses secure OAuth2 + PKCE flow
+            </p>
+          </div>
+
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                or sign in directly
+              </span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Alert */}
             {error && (

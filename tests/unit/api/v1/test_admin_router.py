@@ -65,7 +65,7 @@ class TestAdminAuditLogsEndpoint:
         """Force GC and reset singletons to prevent mock accumulation in xdist workers."""
         import sys
 
-        # Stop the patcher
+        # Stop the session maker patcher
         self._session_maker_patcher.stop()
 
         # Reset database singletons after each test
@@ -84,36 +84,35 @@ class TestAdminAuditLogsEndpoint:
         mock_repo.query.return_value = (items or [], total)
         return mock_repo
 
-    def _create_app(self, mock_repository: AsyncMock | None = None) -> FastAPI:
-        """Create a FastAPI app with the admin router."""
+    def _create_app_and_client(self, mock_repository: AsyncMock) -> TestClient:
+        """
+        Create a FastAPI app with overridden dependency and return test client.
+
+        PYTEST-XDIST FIX (2025-12-15):
+        ==============================
+        Use FastAPI's dependency_overrides with the exact same function object
+        that the router uses. Import get_audit_log_repository from core.dependencies
+        (where admin.py imports it from) to ensure function object identity matches.
+
+        Key insight: FastAPI's Depends() captures the function object at import time.
+        We must use the same object as the override key.
+        """
         from mcp_server_langgraph.api.v1.admin import admin_router
-        from mcp_server_langgraph.core.dependencies import get_audit_log_repository, get_db_session
+        from mcp_server_langgraph.core.dependencies import get_audit_log_repository
 
         app = FastAPI()
         app.include_router(admin_router, prefix="/api/v1")
 
-        # Override dependencies to prevent database connection attempts
-        if mock_repository:
-            app.dependency_overrides[get_audit_log_repository] = lambda: mock_repository
+        # Override using the exact same function object from core.dependencies
+        # This is the correct approach - FastAPI uses function identity for lookups
+        app.dependency_overrides[get_audit_log_repository] = lambda: mock_repository
 
-        # Always override get_db_session to prevent any database connection attempts
-        # This is a safety net for xdist parallel execution
-        async def mock_db_session():
-            raise RuntimeError("get_db_session should not be called in unit tests")
-            yield  # type: ignore[misc]
-
-        app.dependency_overrides[get_db_session] = mock_db_session
-
-        return app
-
-    def _create_client(self, mock_repository: AsyncMock | None = None) -> TestClient:
-        """Create a test client for the admin API."""
-        return TestClient(self._create_app(mock_repository))
+        return TestClient(app)
 
     def test_get_audit_logs_returns_200(self) -> None:
         """GET /api/v1/admin/audit-logs should return 200 with paginated data."""
         mock_repo = self._create_mock_repository(items=[], total=0)
-        client = self._create_client(mock_repo)
+        client = self._create_app_and_client(mock_repo)
         response = client.get("/api/v1/admin/audit-logs")
 
         assert response.status_code == 200
@@ -150,7 +149,7 @@ class TestAdminAuditLogsEndpoint:
         ]
 
         mock_repo = self._create_mock_repository(items=mock_logs, total=2)
-        client = self._create_client(mock_repo)
+        client = self._create_app_and_client(mock_repo)
         response = client.get("/api/v1/admin/audit-logs")
 
         assert response.status_code == 200
@@ -166,7 +165,7 @@ class TestAdminAuditLogsEndpoint:
     def test_get_audit_logs_with_limit_param(self) -> None:
         """GET /api/v1/admin/audit-logs should respect limit parameter."""
         mock_repo = self._create_mock_repository(items=[], total=0)
-        client = self._create_client(mock_repo)
+        client = self._create_app_and_client(mock_repo)
         response = client.get("/api/v1/admin/audit-logs?limit=10")
 
         assert response.status_code == 200
@@ -177,7 +176,7 @@ class TestAdminAuditLogsEndpoint:
     def test_get_audit_logs_with_cursor_param(self) -> None:
         """GET /api/v1/admin/audit-logs should respect cursor parameter (as offset)."""
         mock_repo = self._create_mock_repository(items=[], total=0)
-        client = self._create_client(mock_repo)
+        client = self._create_app_and_client(mock_repo)
         response = client.get("/api/v1/admin/audit-logs?cursor=10")
 
         assert response.status_code == 200
@@ -189,7 +188,7 @@ class TestAdminAuditLogsEndpoint:
     def test_get_audit_logs_with_user_id_filter(self) -> None:
         """GET /api/v1/admin/audit-logs should filter by user_id (mapped to actor_id)."""
         mock_repo = self._create_mock_repository(items=[], total=0)
-        client = self._create_client(mock_repo)
+        client = self._create_app_and_client(mock_repo)
         response = client.get("/api/v1/admin/audit-logs?user_id=user-123")
 
         assert response.status_code == 200
@@ -201,7 +200,7 @@ class TestAdminAuditLogsEndpoint:
     def test_get_audit_logs_with_action_filter(self) -> None:
         """GET /api/v1/admin/audit-logs should filter by action (mapped to event_type)."""
         mock_repo = self._create_mock_repository(items=[], total=0)
-        client = self._create_client(mock_repo)
+        client = self._create_app_and_client(mock_repo)
         response = client.get("/api/v1/admin/audit-logs?action=delete")
 
         assert response.status_code == 200
@@ -213,7 +212,7 @@ class TestAdminAuditLogsEndpoint:
     def test_get_audit_logs_with_resource_type_filter(self) -> None:
         """GET /api/v1/admin/audit-logs should filter by resource_type."""
         mock_repo = self._create_mock_repository(items=[], total=0)
-        client = self._create_client(mock_repo)
+        client = self._create_app_and_client(mock_repo)
         response = client.get("/api/v1/admin/audit-logs?resource_type=workflow")
 
         assert response.status_code == 200
@@ -224,7 +223,7 @@ class TestAdminAuditLogsEndpoint:
     def test_get_audit_logs_with_time_range_filter(self) -> None:
         """GET /api/v1/admin/audit-logs should filter by time range."""
         mock_repo = self._create_mock_repository(items=[], total=0)
-        client = self._create_client(mock_repo)
+        client = self._create_app_and_client(mock_repo)
         response = client.get("/api/v1/admin/audit-logs?start_time=2024-01-01T00:00:00Z&end_time=2024-01-31T23:59:59Z")
 
         assert response.status_code == 200
@@ -237,7 +236,7 @@ class TestAdminAuditLogsEndpoint:
     def test_get_audit_logs_with_sorting(self) -> None:
         """GET /api/v1/admin/audit-logs should accept sorting params (currently unused)."""
         mock_repo = self._create_mock_repository(items=[], total=0)
-        client = self._create_client(mock_repo)
+        client = self._create_app_and_client(mock_repo)
         response = client.get("/api/v1/admin/audit-logs?sort_by=timestamp&sort_order=desc")
 
         assert response.status_code == 200
@@ -247,7 +246,7 @@ class TestAdminAuditLogsEndpoint:
     def test_get_audit_logs_default_limit(self) -> None:
         """GET /api/v1/admin/audit-logs should use default limit of 50."""
         mock_repo = self._create_mock_repository(items=[], total=0)
-        client = self._create_client(mock_repo)
+        client = self._create_app_and_client(mock_repo)
         response = client.get("/api/v1/admin/audit-logs")
 
         assert response.status_code == 200

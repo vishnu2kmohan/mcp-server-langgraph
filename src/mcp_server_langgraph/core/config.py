@@ -321,6 +321,12 @@ class Settings(BaseSettings):
     # Example: https://app.example.com/studio/oauth/callback
     oauth2_redirect_uri: str = "http://localhost:5173/studio/oauth/callback"
 
+    # OAuth2 Authorization Code + PKCE Configuration (ADR-0071)
+    # This is the callback URI for the /api/v1/auth/callback endpoint
+    # Set to None to auto-detect from request (recommended for development)
+    # Example: https://api.example.com/api/v1/auth/callback
+    oauth2_auth_callback_uri: str | None = None
+
     # Session Management
     session_backend: str = "memory"  # "memory", "redis"
     redis_url: str = Field(
@@ -331,7 +337,8 @@ class Settings(BaseSettings):
     redis_port: int = 6379  # Redis port for rate limiting and cache
     redis_password: str | None = None
     redis_ssl: bool = False
-    session_ttl_seconds: int = 86400  # 24 hours
+    session_ttl_seconds: int = 86400  # 24 hours (absolute maximum)
+    session_idle_seconds: int = 1800  # 30 minutes (OWASP recommendation for idle timeout)
     session_sliding_window: bool = True
     session_max_concurrent: int = 5  # Max concurrent sessions per user
 

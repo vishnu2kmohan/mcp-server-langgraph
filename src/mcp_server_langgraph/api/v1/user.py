@@ -10,16 +10,23 @@ Authentication Flow:
 - POST /login: Direct username/password authentication (ROPC flow)
 - POST /logout: Token revocation (invalidates access/refresh tokens)
 - GET /me: Get current user info with computed persona
+
+Security:
+- Logout adds token to denylist for immediate invalidation (OWASP best practice)
 """
 
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 import httpx
+import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.middleware import get_current_user
+from mcp_server_langgraph.auth.token_denylist import TokenDenylist
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.dependencies import get_token_denylist
 from mcp_server_langgraph.observability.telemetry import logger
 
 user_router = APIRouter(tags=["user"])
@@ -135,10 +142,16 @@ async def get_me(
     )
 
 
-@user_router.post("/login")
+@user_router.post("/login", deprecated=True)
 async def login(body: LoginRequest) -> LoginResponse:
     """
-    Authenticate user with username and password.
+    DEPRECATED: Authenticate user with username and password (ROPC flow).
+
+    WARNING: This endpoint uses Resource Owner Password Credentials (ROPC) grant type,
+    which is deprecated per RFC 9700 (OAuth 2.0 Security Best Practice).
+
+    Migration: Use GET /api/v1/auth/login for OAuth2 Authorization Code + PKCE flow.
+    This endpoint will be removed in a future major version.
 
     Uses Keycloak's Resource Owner Password Credentials (ROPC) grant type
     to exchange credentials for tokens without requiring browser redirect.
@@ -148,6 +161,12 @@ async def login(body: LoginRequest) -> LoginResponse:
     Returns:
         LoginResponse with access_token, refresh_token, and user info
     """
+    # Log deprecation warning
+    logger.warning(
+        "ROPC login endpoint used - deprecated per RFC 9700. "
+        "Use GET /api/v1/auth/login for OAuth2 Authorization Code + PKCE flow."
+    )
+
     # Build Keycloak token endpoint URL
     token_url = f"{settings.keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/token"
 
@@ -236,12 +255,17 @@ async def login(body: LoginRequest) -> LoginResponse:
 async def logout(
     request: Request,
     body: LogoutRequest | None = None,
+    denylist: TokenDenylist = Depends(get_token_denylist),
 ) -> LogoutResponse:
     """
     Logout and revoke tokens.
 
     Revokes the access token (and optionally refresh token) with Keycloak.
     This is a native logout that doesn't redirect to Keycloak UI.
+
+    Security (OWASP best practice):
+    - Adds token JTI to denylist for immediate invalidation
+    - Token will be rejected even before Keycloak revocation propagates
 
     The client should:
     1. Call this endpoint
@@ -257,6 +281,27 @@ async def logout(
 
     if not access_token:
         return LogoutResponse(success=True, message="No active session")
+
+    # Add token to denylist for immediate invalidation (OWASP Session Management)
+    # Decode token without verification to extract jti and exp claims
+    # (Token was already verified by auth middleware before reaching this endpoint)
+    try:
+        # Decode without verification - we just need the claims
+        payload = jwt.decode(access_token, options={"verify_signature": False})
+        jti = payload.get("jti")
+        exp = payload.get("exp")
+
+        if jti and exp:
+            # Convert exp to datetime and add to denylist
+            expires_at = datetime.fromtimestamp(exp, tz=UTC)
+            await denylist.add(jti, expires_at)
+            logger.info(
+                "Token added to denylist on logout",
+                extra={"jti": jti[:8] + "..." if len(jti) > 8 else jti},
+            )
+    except jwt.DecodeError as e:
+        # Log but continue - Keycloak revocation will still happen
+        logger.warning(f"Could not decode token for denylist: {e}")
 
     # Build Keycloak logout/revoke endpoint URL
     revoke_url = f"{settings.keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/revoke"

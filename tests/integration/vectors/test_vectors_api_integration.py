@@ -87,6 +87,43 @@ def _qdrant_available() -> bool:
         return False
 
 
+def _token_issuer_valid() -> bool:
+    """Check if token issuer matches what API server expects.
+
+    Gets a test token and makes a request to verify the issuer is valid.
+    This catches environment mismatches where Keycloak is reachable but
+    the token issuer URL doesn't match the API server's expected issuer.
+    """
+    try:
+        import requests
+
+        # Get a test token
+        token = _get_token(TEST_USERS["admin"]["username"], TEST_USERS["admin"]["password"])
+        if not token:
+            return False
+
+        # Try to use the token - if issuer doesn't match, we'll get 401
+        response = requests.get(
+            f"{API_BASE_URL}/api/v1/vectors/collections",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=10,
+        )
+
+        # 200 = token valid, 403 = token valid but no permission (still valid issuer)
+        # 401 with "Invalid issuer" = environment mismatch
+        if response.status_code == 401:
+            try:
+                error_detail = response.json().get("detail", "")
+                if "Invalid issuer" in error_detail:
+                    return False
+            except Exception:
+                pass
+
+        return True
+    except Exception:
+        return False
+
+
 @pytest.fixture(scope="module")
 def skip_if_infra_unavailable():
     """Skip tests if required infrastructure is not available."""
@@ -96,6 +133,11 @@ def skip_if_infra_unavailable():
         pytest.skip("Keycloak not available at " + KEYCLOAK_URL)
     if not _qdrant_available():
         pytest.skip("Qdrant not available at " + QDRANT_URL)
+    if not _token_issuer_valid():
+        pytest.skip(
+            "Token issuer mismatch - Keycloak and API server not properly configured. "
+            "Run `docker-compose -f docker-compose.test.yml up` to start test environment."
+        )
 
 
 def _get_token(username: str, password: str) -> str | None:

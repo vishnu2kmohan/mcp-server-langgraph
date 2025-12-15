@@ -250,8 +250,8 @@ test.describe('Session CRUD Operations', () => {
     test('should select session when clicked', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
-      // Find session items - strict mode: sessions must be available
-      const sessionItem = alicePage.locator('[data-testid*="session"], .session-item, [role="listitem"]').first();
+      // Find session items - use specific selector to avoid matching overlay
+      const sessionItem = alicePage.locator('[data-testid^="session-item-"]').first();
       await expect(sessionItem).toBeVisible({ timeout: 10000 });
 
       await sessionItem.click();
@@ -263,8 +263,8 @@ test.describe('Session CRUD Operations', () => {
     test('should display session messages after selection', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
-      // Select a session - strict mode: must be visible
-      const sessionItem = alicePage.locator('[data-testid*="session"], .session-item').first();
+      // Select a session - use specific selector to avoid matching overlay
+      const sessionItem = alicePage.locator('[data-testid^="session-item-"]').first();
       await expect(sessionItem).toBeVisible({ timeout: 10000 });
 
       await sessionItem.click();
@@ -313,8 +313,8 @@ test.describe('Session CRUD Operations', () => {
     test('should have delete option for sessions', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
-      // Find a session item first
-      const sessionItem = alicePage.locator('[data-testid*="session"], .session-item').first();
+      // Find a session item first - use specific selector
+      const sessionItem = alicePage.locator('[data-testid^="session-item-"]').first();
       await expect(sessionItem).toBeVisible({ timeout: 10000 });
 
       // Find delete button - may be visible or behind a menu
@@ -322,8 +322,8 @@ test.describe('Session CRUD Operations', () => {
 
       // Try to find menu button if delete isn't visible
       if (!(await deleteButton.isVisible({ timeout: 1000 }).catch(() => false))) {
-        // Look for menu button (three dots, ellipsis)
-        const menuButton = alicePage.locator('[data-testid*="menu"], button[aria-label*="menu"]').first();
+        // Look for session menu button specifically
+        const menuButton = alicePage.locator('[data-testid^="session-menu-"]').first();
         await expect(menuButton).toBeVisible({ timeout: 5000 });
         await menuButton.click();
         await alicePage.waitForTimeout(300);
@@ -336,12 +336,13 @@ test.describe('Session CRUD Operations', () => {
     test('should show confirmation before deleting session', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
-      // Find and click delete button
+      // Find delete button - may be behind a menu
       const deleteButton = alicePage.getByRole('button', { name: /delete/i }).first();
 
       // Check if we need to open a menu first
       if (!(await deleteButton.isVisible({ timeout: 1000 }).catch(() => false))) {
-        const menuButton = alicePage.locator('[data-testid*="menu"], button[aria-label*="menu"]').first();
+        // Look for session menu button specifically
+        const menuButton = alicePage.locator('[data-testid^="session-menu-"]').first();
         await expect(menuButton).toBeVisible({ timeout: 5000 });
         await menuButton.click();
         await alicePage.waitForTimeout(300);
@@ -389,9 +390,13 @@ test.describe('Session CRUD Operations', () => {
 
       await selectAllCheckbox.click();
 
-      // Bulk delete button should appear - strict mode
-      const bulkDeleteButton = alicePage.getByRole('button', { name: /delete selected|bulk delete/i });
-      await expect(bulkDeleteButton).toBeVisible({ timeout: 5000 });
+      // Bulk action bar should appear with Delete button
+      const bulkActionBar = alicePage.getByRole('toolbar', { name: /bulk actions/i });
+      await expect(bulkActionBar).toBeVisible({ timeout: 5000 });
+
+      // Delete button within bulk action bar
+      const deleteButton = bulkActionBar.getByRole('button', { name: /delete/i });
+      await expect(deleteButton).toBeVisible();
     });
   });
 
@@ -442,8 +447,8 @@ test.describe('Session CRUD Operations', () => {
     test('should handle rapid session switching', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
-      // Get session items
-      const sessionItems = alicePage.locator('[data-testid*="session"], .session-item');
+      // Get session items - use specific selector
+      const sessionItems = alicePage.locator('[data-testid^="session-item-"]');
 
       if ((await sessionItems.count()) >= 2) {
         // Rapidly switch between sessions

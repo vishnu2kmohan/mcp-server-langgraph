@@ -18,9 +18,11 @@ from typing import Any, Optional, cast
 from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.auth.authorization import AuthorizationService
+from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
 from mcp_server_langgraph.auth.mock_resources import MockResourceGenerator
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.session import SessionData, SessionStore
+from mcp_server_langgraph.auth.token_denylist import TokenDenylist
 from mcp_server_langgraph.auth.user_provider import AuthResponse, InMemoryUserProvider, TokenVerification, UserProvider
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
@@ -133,6 +135,7 @@ class AuthMiddleware:
         user_provider: UserProvider | None = None,
         session_store: SessionStore | None = None,
         settings: Any | None = None,
+        token_denylist: TokenDenylist | None = None,
     ):
         """
         Initialize AuthMiddleware
@@ -144,11 +147,13 @@ class AuthMiddleware:
             user_provider: User provider instance (defaults to InMemoryUserProvider for backward compatibility)
             session_store: Session store for session-based authentication (optional)
             settings: Application settings (for authorization fallback control)
+            token_denylist: Token denylist for immediate JWT revocation (OWASP best practice)
         """
         self.secret_key = secret_key
         self.openfga = openfga_client
         self.session_store = session_store
         self.settings = settings
+        self.token_denylist = token_denylist
 
         # Use provided user provider or default to in-memory for backward compatibility
         if user_provider is None:
@@ -181,6 +186,7 @@ class AuthMiddleware:
                 "provider_type": type(user_provider).__name__,
                 "openfga_enabled": openfga_client is not None,
                 "session_enabled": session_store is not None,
+                "denylist_enabled": token_denylist is not None,
                 "allow_auth_fallback": getattr(settings, "allow_auth_fallback", None) if settings else None,
             },
         )
@@ -344,6 +350,10 @@ class AuthMiddleware:
         Supports both self-issued tokens (InMemoryUserProvider) and
         Keycloak-issued tokens (KeycloakUserProvider).
 
+        Security:
+        - Checks token denylist for immediate revocation (OWASP best practice)
+        - Tokens added to denylist on logout are rejected here
+
         Args:
             token: JWT token to verify
 
@@ -353,8 +363,18 @@ class AuthMiddleware:
         # Delegate to user provider (returns Pydantic TokenVerification)
         result = await self.user_provider.verify_token(token)
 
-        if result.valid:
-            logger.info("Token verified", extra={"sub": result.payload.get("sub") if result.payload else None})
+        if result.valid and result.payload:
+            # Check token denylist for immediate revocation (OWASP Session Management)
+            if self.token_denylist:
+                jti = result.payload.get("jti")
+                if jti and await self.token_denylist.is_denied(jti):
+                    logger.warning(
+                        "Token rejected (in denylist)",
+                        extra={"jti": jti[:8] + "..." if len(jti) > 8 else jti},
+                    )
+                    return TokenVerification(valid=False, error="Token has been revoked")
+
+            logger.info("Token verified", extra={"sub": result.payload.get("sub")})
         else:
             logger.warning("Token verification failed", extra={"error": result.error})
 
@@ -656,66 +676,9 @@ if FASTAPI_AVAILABLE:  # noqa: C901
             verification = await auth.verify_token(token)
 
             if verification.valid and verification.payload:
-                # Extract username: prefer preferred_username (Keycloak) over username over sub
-                # Keycloak uses UUID in 'sub', but OpenFGA needs 'user:username' format
-                # Extract Keycloak UUID from sub claim (required for Admin API calls)
-                keycloak_id = verification.payload.get("sub")
-
-                # Priority: preferred_username (Keycloak) > username (InMemory) > extract from sub (fallback)
-                username = verification.payload.get("preferred_username") or verification.payload.get("username")
-                if not username:
-                    # Fallback to extracting username from sub (for non-Keycloak IdPs without username field)
-                    sub = keycloak_id or "unknown"
-                    # If sub is in "user:username" format, extract username
-                    if sub.startswith("user:"):
-                        id_part = sub.replace("user:", "")
-                        # Handle worker-safe IDs (e.g., "user:test_gw0_charlie" → "charlie")
-                        import re
-
-                        match = re.match(r"test_gw\d+_(.*)", id_part)
-                        username = match.group(1) if match else id_part
-                    else:
-                        username = sub
-
-                # For user_id, use sub directly if it's already in "user:*" format, otherwise normalize from username
-                # This preserves worker-safe IDs like "user:test_gw0_alice" from InMemoryUserProvider tokens
-                if keycloak_id and keycloak_id.startswith("user:"):
-                    user_id = keycloak_id  # Use sub directly (preserves worker-safe IDs)
-                else:
-                    # Normalize to "user:username" format for OpenFGA compatibility
-                    user_id = f"user:{username}" if not username.startswith("user:") else username
-
-                # Extract roles from Keycloak JWT structure
-                # Keycloak can put roles in multiple places:
-                # 1. realm_access.roles - realm-level roles
-                # 2. resource_access.<client>.roles - client-level roles
-                # 3. roles - sometimes mapped directly (InMemoryUserProvider)
-                roles: list[str] = []
-                payload = verification.payload
-
-                # Check direct roles first (InMemoryUserProvider)
-                if payload.get("roles"):
-                    roles = payload.get("roles", [])
-                else:
-                    # Extract from Keycloak realm_access structure
-                    realm_access = payload.get("realm_access", {})
-                    if realm_access and isinstance(realm_access, dict):
-                        roles.extend(realm_access.get("roles", []))
-
-                    # Also check resource_access for client-specific roles
-                    resource_access = payload.get("resource_access", {})
-                    if resource_access and isinstance(resource_access, dict):
-                        for client_roles in resource_access.values():
-                            if isinstance(client_roles, dict):
-                                roles.extend(client_roles.get("roles", []))
-
-                user_data = {
-                    "user_id": user_id,
-                    "keycloak_id": keycloak_id,  # Raw UUID for Keycloak Admin API
-                    "username": username,
-                    "roles": roles,
-                    "email": payload.get("email"),
-                }
+                # Extract user information from token payload
+                # Uses shared function for consistent extraction across all services
+                user_data = extract_user_from_jwt_payload(verification.payload)
                 # Cache in request state for subsequent calls
                 request.state.user = user_data
                 return user_data

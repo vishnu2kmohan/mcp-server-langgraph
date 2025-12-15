@@ -14,6 +14,7 @@ from mcp_server_langgraph.auth.api_keys import APIKeyManager
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
+from mcp_server_langgraph.auth.token_denylist import TokenDenylist, create_token_denylist
 from mcp_server_langgraph.auth.user_provider import UserProvider
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.repositories.audit_log import AuditLogRepository
@@ -30,6 +31,7 @@ _openfga_client: OpenFGAClient | None = None
 _service_principal_manager: ServicePrincipalManager | None = None
 _api_key_manager: APIKeyManager | None = None
 _user_provider: UserProvider | None = None
+_token_denylist: TokenDenylist | None = None
 
 
 def get_keycloak_client() -> KeycloakClient:
@@ -311,6 +313,51 @@ def get_user_provider() -> UserProvider:
     return _user_provider
 
 
+def get_token_denylist() -> TokenDenylist:
+    """
+    Get TokenDenylist instance (singleton).
+
+    Creates an InMemoryTokenDenylist for development or RedisTokenDenylist
+    for production based on session_backend configuration.
+
+    Per OWASP: Token denylist enables immediate JWT revocation on logout,
+    preventing tokens from being used after explicit session termination.
+
+    Returns:
+        TokenDenylist instance
+
+    Example:
+        @router.post("/logout")
+        async def logout(
+            token: str = Depends(get_bearer_token),
+            denylist: TokenDenylist = Depends(get_token_denylist),
+        ):
+            # Add token to denylist
+            await denylist.add(token_jti, token_expires_at)
+    """
+    global _token_denylist
+
+    if _token_denylist is None:
+        # Use Redis if session_backend is redis, otherwise use in-memory
+        if settings.session_backend == "redis":
+            import redis.asyncio as redis
+
+            # Use same Redis URL as sessions for consistency
+            redis_client = redis.from_url(  # type: ignore[no-untyped-call]
+                settings.redis_url, decode_responses=True
+            )
+            _token_denylist = create_token_denylist(
+                backend="redis",
+                redis_client=redis_client,
+                key_prefix="token_denylist:",
+            )
+        else:
+            # Development mode - use in-memory denylist
+            _token_denylist = create_token_denylist(backend="memory")
+
+    return _token_denylist
+
+
 # ==============================================================================
 # Testing Utilities (CODEX Finding #6)
 # ==============================================================================
@@ -334,13 +381,14 @@ def reset_singleton_dependencies() -> None:
 
     WARNING: This should ONLY be used in tests. Never call in production code.
     """
-    global _keycloak_client, _openfga_client, _service_principal_manager, _api_key_manager, _user_provider
+    global _keycloak_client, _openfga_client, _service_principal_manager, _api_key_manager, _user_provider, _token_denylist
 
     _keycloak_client = None
     _openfga_client = None
     _service_principal_manager = None
     _api_key_manager = None
     _user_provider = None
+    _token_denylist = None
 
 
 # ==============================================================================

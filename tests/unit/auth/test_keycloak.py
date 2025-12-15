@@ -221,6 +221,7 @@ class TestTokenValidator:
         """Test successful token verification"""
         private_pem, _ = rsa_keypair
         validator = TokenValidator(keycloak_config)
+        expected_issuer = f"{keycloak_config.server_url}/realms/{keycloak_config.realm}"
         payload = {
             "sub": "user-id-123",
             "preferred_username": "alice",
@@ -228,6 +229,7 @@ class TestTokenValidator:
             "aud": "test-client",
             "exp": datetime.now(UTC) + timedelta(hours=1),
             "iat": datetime.now(UTC),
+            "iss": expected_issuer,  # Required: issuer claim
         }
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
@@ -246,11 +248,13 @@ class TestTokenValidator:
         """Test expired token verification fails"""
         private_pem, _ = rsa_keypair
         validator = TokenValidator(keycloak_config)
+        expected_issuer = f"{keycloak_config.server_url}/realms/{keycloak_config.realm}"
         payload = {
             "sub": "user-id-123",
             "aud": "test-client",
             "exp": datetime.now(UTC) - timedelta(hours=1),
             "iat": datetime.now(UTC) - timedelta(hours=2),
+            "iss": expected_issuer,  # Required: issuer claim
         }
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
@@ -286,6 +290,93 @@ class TestTokenValidator:
             with pytest.raises(jwt.InvalidTokenError, match="Public key not found"):
                 await validator.verify_token(token)
             assert mock_client.return_value.__aenter__.return_value.get.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_verify_token_with_wrong_issuer_raises_error(self, keycloak_config, rsa_keypair, jwks_response):
+        """
+        Test that token from wrong issuer is rejected.
+
+        Per OWASP JWT Cheat Sheet and RFC 9700: The `iss` (issuer) claim MUST be validated
+        to ensure the token was issued by the expected identity provider.
+        """
+        private_pem, _ = rsa_keypair
+        validator = TokenValidator(keycloak_config)
+        # Create token with wrong issuer
+        payload = {
+            "sub": "user-id-123",
+            "preferred_username": "alice",
+            "aud": "test-client",
+            "exp": datetime.now(UTC) + timedelta(hours=1),
+            "iat": datetime.now(UTC),
+            "iss": "http://malicious-issuer.com/realms/fake-realm",  # Wrong issuer
+        }
+        private_key = serialization.load_pem_private_key(private_pem, password=None)
+        token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_response = MagicMock()
+            mock_response.json.return_value = jwks_response
+            mock_response.raise_for_status = MagicMock()
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            with pytest.raises(jwt.InvalidIssuerError):
+                await validator.verify_token(token)
+
+    @pytest.mark.asyncio
+    async def test_verify_token_with_correct_issuer_succeeds(self, keycloak_config, rsa_keypair, jwks_response):
+        """Test that token with correct issuer is accepted."""
+        private_pem, _ = rsa_keypair
+        validator = TokenValidator(keycloak_config)
+        # Create token with correct issuer
+        expected_issuer = f"{keycloak_config.server_url}/realms/{keycloak_config.realm}"
+        payload = {
+            "sub": "user-id-123",
+            "preferred_username": "alice",
+            "aud": "test-client",
+            "exp": datetime.now(UTC) + timedelta(hours=1),
+            "iat": datetime.now(UTC),
+            "iss": expected_issuer,  # Correct issuer
+        }
+        private_key = serialization.load_pem_private_key(private_pem, password=None)
+        token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_response = MagicMock()
+            mock_response.json.return_value = jwks_response
+            mock_response.raise_for_status = MagicMock()
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            decoded = await validator.verify_token(token)
+            assert decoded["sub"] == "user-id-123"
+            assert decoded["iss"] == expected_issuer
+
+    @pytest.mark.asyncio
+    async def test_verify_token_with_future_iat_raises_error(self, keycloak_config, rsa_keypair, jwks_response):
+        """
+        Test that token with future issued-at (iat) timestamp is rejected.
+
+        Per OWASP: Tokens should not be accepted if their `iat` claim indicates
+        they were issued in the future (clock skew tolerance is acceptable).
+        """
+        private_pem, _ = rsa_keypair
+        validator = TokenValidator(keycloak_config)
+        # Create token with future iat (issued 1 hour in the future)
+        payload = {
+            "sub": "user-id-123",
+            "preferred_username": "alice",
+            "aud": "test-client",
+            "exp": datetime.now(UTC) + timedelta(hours=2),
+            "iat": datetime.now(UTC) + timedelta(hours=1),  # Future iat
+            "iss": f"{keycloak_config.server_url}/realms/{keycloak_config.realm}",
+        }
+        private_key = serialization.load_pem_private_key(private_pem, password=None)
+        token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_response = MagicMock()
+            mock_response.json.return_value = jwks_response
+            mock_response.raise_for_status = MagicMock()
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            with pytest.raises(jwt.ImmatureSignatureError):
+                await validator.verify_token(token)
 
 
 @pytest.mark.unit

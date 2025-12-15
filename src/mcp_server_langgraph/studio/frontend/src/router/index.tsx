@@ -254,6 +254,17 @@ export const router = createBrowserRouter(
           },
         },
 
+        // OAuth2 Authorization Code + PKCE callback (ADR-0071)
+        // Receives tokens in URL fragment from /api/v1/auth/callback redirect
+        {
+          path: "auth/callback",
+          lazy: async () => {
+            const { AuthCallbackPage } =
+              await import("../pages/AuthCallbackPage");
+            return { Component: AuthCallbackPage };
+          },
+        },
+
         // Legacy redirects (301 permanent)
         { path: "build", element: <Navigate to="/studio/workflows" replace /> },
         {

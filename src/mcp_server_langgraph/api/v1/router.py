@@ -12,6 +12,7 @@ from fastapi import APIRouter
 
 from mcp_server_langgraph.api.v1.admin import admin_router
 from mcp_server_langgraph.api.v1.agents import agents_router
+from mcp_server_langgraph.api.v1.auth import auth_router
 from mcp_server_langgraph.api.v1.notifications import notifications_router
 from mcp_server_langgraph.api.v1.ai import ai_router
 from mcp_server_langgraph.api.v1.audit import router as unified_audit_router
@@ -47,6 +48,9 @@ v1_router.include_router(features_router)
 
 # Include user info endpoint (/me for persona detection)
 v1_router.include_router(user_router)
+
+# Include OAuth2 Authorization Code + PKCE endpoints
+v1_router.include_router(auth_router)
 
 # Include projects CRUD endpoints (Unified Workspace Paradigm)
 v1_router.include_router(projects_router)

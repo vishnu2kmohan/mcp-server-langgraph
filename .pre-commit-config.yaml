@@ -1686,6 +1686,32 @@ repos:
       - tests/conftest.py (disable_auth_skip, isolated_environment)
 
       '
+  - id: check-testid-consistency
+    name: Check Test ID Consistency (E2E ↔ Components)
+    entry: uv run --frozen python -u scripts/validation/check_testid_consistency.py
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/(src/.*\.tsx|e2e/.*\.spec\.ts)$
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates data-testid selectors in E2E tests match component attributes.
+
+      Prevents mismatches like:
+      - E2E test expects: [data-testid="audit-log-entry"]
+      - Component uses: [data-testid="audit-log-row"]
+
+      Scans:
+      - React components (src/**/*.tsx) for data-testid="..." attributes
+      - E2E tests (e2e/**/*.spec.ts) for [data-testid="..."] selectors
+      - Playwright getByTestId("...") calls
+
+      Handles dynamic test IDs with template literals: data-testid={`session-item-${id}`}
+
+      See: .claude/context/testid-naming-convention.md for naming standards.
+      Created: 2025-12-15 (E2E test validation improvements)
+
+      '
 
 - repo: https://github.com/antonbabenko/pre-commit-terraform
   rev: v1.96.2

@@ -7,6 +7,8 @@ Supports:
 - Event logging with metadata
 - Query with filtering
 - Retention policy management
+
+Uses UnifiedAuditLog model for regulatory compliance (GDPR, HIPAA, SOC2, FedRAMP, EU AI Act).
 """
 
 from abc import ABC, abstractmethod
@@ -17,7 +19,7 @@ from uuid import uuid4
 from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from mcp_server_langgraph.models.audit_log import AuditLogModel
+from mcp_server_langgraph.models.audit_log import UnifiedAuditLog
 
 
 class AuditLogRepository(ABC):
@@ -70,16 +72,16 @@ class AuditLogRepository(ABC):
 
 
 class PostgresAuditLogRepository(AuditLogRepository):
-    """PostgreSQL implementation of AuditLogRepository."""
+    """PostgreSQL implementation of AuditLogRepository using UnifiedAuditLog."""
 
     def __init__(self, session: AsyncSession) -> None:
         """Initialize with async database session."""
         self._session = session
 
-    def _model_to_dict(self, model: AuditLogModel) -> dict[str, Any]:
+    def _model_to_dict(self, model: UnifiedAuditLog) -> dict[str, Any]:
         """Convert SQLAlchemy model to dictionary."""
         return {
-            "id": str(model.id),
+            "id": str(model.log_id),
             "event_type": model.event_type,
             "resource_type": model.resource_type,
             "resource_id": model.resource_id,
@@ -106,8 +108,8 @@ class PostgresAuditLogRepository(AuditLogRepository):
         log_id = str(uuid4())
         now = datetime.now(UTC)
 
-        model = AuditLogModel(
-            id=log_id,
+        model = UnifiedAuditLog(
+            log_id=log_id,
             event_type=event_type,
             resource_type=resource_type,
             resource_id=resource_id,
@@ -137,34 +139,34 @@ class PostgresAuditLogRepository(AuditLogRepository):
     ) -> tuple[list[dict[str, Any]], int]:
         """Query audit logs with filtering."""
         # Build base query
-        stmt = select(AuditLogModel)
+        stmt = select(UnifiedAuditLog)
         conditions = []
 
         if resource_type:
-            conditions.append(AuditLogModel.resource_type == resource_type)
+            conditions.append(UnifiedAuditLog.resource_type == resource_type)
         if resource_id:
-            conditions.append(AuditLogModel.resource_id == resource_id)
+            conditions.append(UnifiedAuditLog.resource_id == resource_id)
         if actor_id:
-            conditions.append(AuditLogModel.actor_id == actor_id)
+            conditions.append(UnifiedAuditLog.actor_id == actor_id)
         if event_type:
-            conditions.append(AuditLogModel.event_type == event_type)
+            conditions.append(UnifiedAuditLog.event_type == event_type)
         if start_time:
-            conditions.append(AuditLogModel.timestamp >= start_time)
+            conditions.append(UnifiedAuditLog.timestamp >= start_time)
         if end_time:
-            conditions.append(AuditLogModel.timestamp <= end_time)
+            conditions.append(UnifiedAuditLog.timestamp <= end_time)
 
         if conditions:
             stmt = stmt.where(and_(*conditions))
 
         # Get total count
-        count_stmt = select(AuditLogModel.id)
+        count_stmt = select(UnifiedAuditLog.log_id)
         if conditions:
             count_stmt = count_stmt.where(and_(*conditions))
         count_result = await self._session.execute(count_stmt)
         total = len(count_result.scalars().all())
 
         # Apply pagination and ordering
-        stmt = stmt.order_by(AuditLogModel.timestamp.desc())
+        stmt = stmt.order_by(UnifiedAuditLog.timestamp.desc())
         stmt = stmt.offset(offset).limit(limit)
 
         result = await self._session.execute(stmt)
@@ -180,14 +182,14 @@ class PostgresAuditLogRepository(AuditLogRepository):
     ) -> list[dict[str, Any]]:
         """Get audit logs for a specific resource."""
         stmt = (
-            select(AuditLogModel)
+            select(UnifiedAuditLog)
             .where(
                 and_(
-                    AuditLogModel.resource_type == resource_type,
-                    AuditLogModel.resource_id == resource_id,
+                    UnifiedAuditLog.resource_type == resource_type,
+                    UnifiedAuditLog.resource_id == resource_id,
                 )
             )
-            .order_by(AuditLogModel.timestamp.desc())
+            .order_by(UnifiedAuditLog.timestamp.desc())
             .limit(limit)
         )
 
@@ -200,7 +202,7 @@ class PostgresAuditLogRepository(AuditLogRepository):
         """Delete logs older than specified days."""
         cutoff = datetime.now(UTC) - timedelta(days=days)
 
-        stmt = delete(AuditLogModel).where(AuditLogModel.timestamp < cutoff)
+        stmt = delete(UnifiedAuditLog).where(UnifiedAuditLog.timestamp < cutoff)
         result = await self._session.execute(stmt)
         await self._session.flush()
 

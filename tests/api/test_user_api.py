@@ -15,11 +15,17 @@ which is more robust as it doesn't rely on global state management.
 
 Added additional fixture to reset global auth middleware singleton to prevent
 test pollution from other tests in the xdist suite.
+
+LOGOUT + DENYLIST (2025-12-15):
+===============================
+Added tests for logout endpoint with token denylist integration.
+Tokens are added to denylist on logout for immediate invalidation (OWASP best practice).
 """
 
 import gc
+from datetime import UTC, datetime, timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI, HTTPException, status
@@ -258,3 +264,155 @@ class TestGetCurrentUserIntegration:
         data = response.json()
         assert data["username"] == "alice"
         assert data["persona"] == "developer"
+
+
+# ============================================================================
+# POST /logout Tests (with denylist integration)
+# ============================================================================
+
+
+def _create_test_app_with_denylist(mock_denylist: MagicMock | None = None) -> FastAPI:
+    """
+    Create a test FastAPI app with dependency overrides for logout testing.
+
+    Args:
+        mock_denylist: Mock denylist to inject
+
+    Returns:
+        FastAPI app with user router and denylist override
+    """
+    from mcp_server_langgraph.api.v1.user import user_router
+    from mcp_server_langgraph.core.dependencies import get_token_denylist
+
+    app = FastAPI()
+    app.include_router(user_router)
+
+    if mock_denylist is not None:
+        app.dependency_overrides[get_token_denylist] = lambda: mock_denylist
+
+    return app
+
+
+@pytest.mark.xdist_group(name="user_api_logout")
+class TestLogoutWithDenylist:
+    """Tests for POST /logout - token denylist integration (OWASP best practice)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent accumulation in xdist workers."""
+        gc.collect()
+
+    def test_logout_adds_token_to_denylist(self):
+        """Should add token JTI to denylist on logout."""
+        import jwt
+
+        # Create a mock denylist
+        mock_denylist = MagicMock()
+        mock_denylist.add = AsyncMock(return_value=None)
+
+        # Create a valid JWT with jti and exp claims
+        token_payload = {
+            "sub": "user:alice",
+            "jti": "test-jti-12345",
+            "exp": (datetime.now(UTC) + timedelta(hours=1)).timestamp(),
+            "iat": datetime.now(UTC).timestamp(),
+        }
+        test_token = jwt.encode(token_payload, "secret", algorithm="HS256")
+
+        app = _create_test_app_with_denylist(mock_denylist)
+        client = TestClient(app)
+
+        # Mock httpx.AsyncClient to prevent actual Keycloak call
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = MagicMock()
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client.post = AsyncMock(return_value=MagicMock(status_code=200))
+            mock_client_class.return_value = mock_client
+
+            response = client.post(
+                "/logout",
+                headers={"Authorization": f"Bearer {test_token}"},
+            )
+
+        assert response.status_code == 200
+        # Verify denylist.add was called with jti
+        mock_denylist.add.assert_called_once()
+        call_args = mock_denylist.add.call_args[0]
+        assert call_args[0] == "test-jti-12345"  # jti
+        # Second arg is expires_at datetime
+        assert isinstance(call_args[1], datetime)
+
+    def test_logout_without_token_returns_success(self):
+        """Should return success when no token provided (no session)."""
+        mock_denylist = MagicMock()
+        mock_denylist.add = AsyncMock(return_value=None)
+
+        app = _create_test_app_with_denylist(mock_denylist)
+        client = TestClient(app)
+
+        response = client.post("/logout")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert "no active session" in data["message"].lower()
+        # Denylist should NOT be called when no token
+        mock_denylist.add.assert_not_called()
+
+    def test_logout_with_invalid_token_still_succeeds(self):
+        """Should return success even with invalid token format."""
+        mock_denylist = MagicMock()
+        mock_denylist.add = AsyncMock(return_value=None)
+
+        app = _create_test_app_with_denylist(mock_denylist)
+        client = TestClient(app)
+
+        # Mock httpx.AsyncClient to prevent actual Keycloak call
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = MagicMock()
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client.post = AsyncMock(return_value=MagicMock(status_code=200))
+            mock_client_class.return_value = mock_client
+
+            response = client.post(
+                "/logout",
+                headers={"Authorization": "Bearer invalid-not-a-jwt"},
+            )
+
+        # Logout should still succeed (graceful degradation)
+        assert response.status_code == 200
+        # Denylist add might not be called for invalid tokens (that's OK)
+
+    def test_logout_with_token_without_jti_still_succeeds(self):
+        """Should handle tokens without JTI claim gracefully."""
+        import jwt
+
+        mock_denylist = MagicMock()
+        mock_denylist.add = AsyncMock(return_value=None)
+
+        # Create a JWT without jti claim
+        token_payload = {
+            "sub": "user:alice",
+            "exp": (datetime.now(UTC) + timedelta(hours=1)).timestamp(),
+        }
+        test_token = jwt.encode(token_payload, "secret", algorithm="HS256")
+
+        app = _create_test_app_with_denylist(mock_denylist)
+        client = TestClient(app)
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = MagicMock()
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client.post = AsyncMock(return_value=MagicMock(status_code=200))
+            mock_client_class.return_value = mock_client
+
+            response = client.post(
+                "/logout",
+                headers={"Authorization": f"Bearer {test_token}"},
+            )
+
+        assert response.status_code == 200
+        # Denylist should NOT be called when no jti
+        mock_denylist.add.assert_not_called()

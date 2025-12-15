@@ -57,8 +57,16 @@ class KeycloakConfig(BaseModel):
     admin_realm: str = Field(default="default", description="Keycloak realm for admin API operations")
     client_id: str = Field(description="OAuth2/OIDC client ID")
     client_secret: str | None = Field(default=None, description="OAuth2/OIDC client secret")
-    admin_username: str | None = Field(default=None, description="Admin username for admin API access")
-    admin_password: str | None = Field(default=None, description="Admin password for admin API access")
+    admin_username: str | None = Field(
+        default=None, description="Admin username for admin API access (deprecated: use admin_client_secret)"
+    )
+    admin_password: str | None = Field(
+        default=None, description="Admin password for admin API access (deprecated: use admin_client_secret)"
+    )
+    admin_client_id: str = Field(default="admin-cli", description="Service account client ID for admin API (RFC 9700)")
+    admin_client_secret: str | None = Field(
+        default=None, description="Service account client secret for client credentials grant"
+    )
     verify_ssl: bool = Field(default=True, description="Verify SSL certificates")
     timeout: int = Field(default=30, description="HTTP request timeout in seconds")
 
@@ -237,17 +245,35 @@ class TokenValidator:
                     raise jwt.InvalidTokenError(msg)
 
                 # Verify and decode token
+                # Per RFC 9700 and OWASP JWT Cheat Sheet: validate iss, aud, exp, iat
+                expected_issuer = f"{self.config.server_url}/realms/{self.config.realm}"
                 payload = jwt.decode(
                     token,
                     public_key,  # type: ignore[arg-type]
                     algorithms=["RS256"],
                     audience=self.config.client_id,
+                    issuer=expected_issuer,
                     options={
                         "verify_signature": True,
                         "verify_exp": True,
                         "verify_aud": True,
+                        "verify_iss": True,
+                        "verify_iat": True,
                     },
                 )
+
+                # Additional iat validation: reject tokens issued in the future
+                # pyjwt's verify_iat only checks format, not that iat is not in future
+                iat = payload.get("iat")
+                if iat is not None:
+                    from datetime import datetime
+
+                    # Allow 30 seconds clock skew tolerance
+                    clock_skew_tolerance = 30
+                    now = datetime.now(UTC).timestamp()
+                    if iat > now + clock_skew_tolerance:
+                        msg = "Token issued in the future (iat claim)"
+                        raise jwt.ImmatureSignatureError(msg)
 
                 span.set_attribute("token.sub", payload.get("sub"))
                 span.set_attribute("token.preferred_username", payload.get("preferred_username"))
@@ -456,7 +482,10 @@ class KeycloakClient:
 
     async def get_admin_token(self) -> str:
         """
-        Get admin access token for admin API calls
+        Get admin access token for admin API calls.
+
+        Per RFC 9700: Uses Client Credentials grant (not ROPC) for service-to-service auth.
+        This requires a Keycloak service account client with realm-admin permissions.
 
         Returns:
             Admin access token
@@ -471,15 +500,36 @@ class KeycloakClient:
         with tracer.start_as_current_span("keycloak.get_admin_token"):
             async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
                 try:
-                    data = {
-                        "grant_type": "password",
-                        "client_id": "admin-cli",
-                        "username": self.config.admin_username,
-                        "password": self.config.admin_password,
-                    }
+                    # Use Client Credentials grant (RFC 9700 compliant)
+                    # Requires service account client with realm-admin permissions
+                    if self.config.admin_client_secret:
+                        # Preferred: Client Credentials grant (service account)
+                        data = {
+                            "grant_type": "client_credentials",
+                            "client_id": self.config.admin_client_id,
+                            "client_secret": self.config.admin_client_secret,
+                        }
+                        logger.debug("Using client credentials grant for admin token")
+                    else:
+                        # Fallback: ROPC (deprecated, for backward compatibility)
+                        # Validate required fields for ROPC grant
+                        if not self.config.admin_username or not self.config.admin_password:
+                            raise ValueError(
+                                "ROPC fallback requires admin_username and admin_password, "
+                                "or configure admin_client_secret for client credentials grant"
+                            )
+                        logger.warning(
+                            "Using deprecated ROPC grant for admin token. "
+                            "Set KEYCLOAK_ADMIN_CLIENT_SECRET for client credentials grant."
+                        )
+                        data = {
+                            "grant_type": "password",
+                            "client_id": self.config.admin_client_id,
+                            "username": self.config.admin_username,
+                            "password": self.config.admin_password,
+                        }
 
-                    # Admin token endpoint uses the admin_realm (defaults to same as user realm)
-                    # Note: Keycloak admin user should have realm-admin role in the admin_realm
+                    # Admin token endpoint uses the admin_realm (defaults to master for admin-cli)
                     admin_token_url = (
                         f"{self.config.server_url}/realms/{self.config.admin_realm}/protocol/openid-connect/token"
                     )
