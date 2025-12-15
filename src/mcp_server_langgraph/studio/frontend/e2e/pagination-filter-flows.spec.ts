@@ -36,10 +36,15 @@ test.describe('Pagination and Filter Flows', () => {
       await expect(sortDropdown).toBeVisible();
     });
 
-    test('should display status filter dropdown', async ({ page }) => {
-      // Look for status filter dropdown
-      const statusDropdown = page.getByRole('combobox', { name: /status/i });
-      await expect(statusDropdown).toBeVisible();
+    test('should display status filter buttons', async ({ page }) => {
+      // Look for status filter buttons (Active/Archived)
+      // The status filter is a group with buttons, not a dropdown
+      const statusGroup = page.getByRole('group', { name: /status/i });
+      await expect(statusGroup).toBeVisible();
+
+      // Verify the filter buttons exist
+      await expect(page.getByRole('button', { name: /Active/i })).toBeVisible();
+      await expect(page.getByRole('button', { name: /Archived/i })).toBeVisible();
     });
 
     test('should filter projects when typing in search', async ({ page }) => {

@@ -9,8 +9,12 @@ async function globalSetup(): Promise<void> {
   console.log('\n🚀 E2E Global Setup: Verifying backend services...\n');
 
   const services = [
-    { name: 'API Server', url: process.env.API_URL || 'http://localhost:8003/health' },
-    { name: 'Keycloak', url: (process.env.KEYCLOAK_URL || 'http://localhost:9082') + '/health/ready' },
+    // API server is on port 8000, with trailing slash to avoid redirect
+    { name: 'API Server', url: process.env.API_URL || 'http://localhost:8000/health/' },
+    // Keycloak is on port 9082 with /authn prefix
+    { name: 'Keycloak', url: (process.env.KEYCLOAK_URL || 'http://localhost:9082') + '/authn/health/ready' },
+    // Qdrant vector database on port 9333 (test environment)
+    { name: 'Qdrant', url: process.env.QDRANT_URL || 'http://localhost:9333/' },
   ];
 
   for (const service of services) {

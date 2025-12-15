@@ -99,6 +99,27 @@ describe("SessionPanel", () => {
       expect(screen.getByText("3 messages")).toBeInTheDocument();
       expect(screen.getByText("0 messages")).toBeInTheDocument();
     });
+
+    it("should have data-testid on each session item", () => {
+      const { container } = render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+        />,
+      );
+
+      expect(
+        container.querySelector('[data-testid="session-item-session-1"]'),
+      ).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="session-item-session-2"]'),
+      ).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="session-item-session-3"]'),
+      ).toBeInTheDocument();
+    });
   });
 
   describe("Empty State", () => {
@@ -363,6 +384,63 @@ describe("SessionPanel", () => {
       expect(screen.getByRole("searchbox")).toBeInTheDocument();
     });
 
+    it("should show clear button when search has value", () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          enableSearch={true}
+        />,
+      );
+
+      const searchInput = screen.getByRole("searchbox");
+      fireEvent.change(searchInput, { target: { value: "test" } });
+
+      const clearButton = screen.getByRole("button", { name: /clear search/i });
+      expect(clearButton).toBeInTheDocument();
+    });
+
+    it("should clear search and call onSearch when clear button is clicked", () => {
+      const mockOnSearch = vi.fn();
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          enableSearch={true}
+          onSearch={mockOnSearch}
+        />,
+      );
+
+      const searchInput = screen.getByRole("searchbox");
+      fireEvent.change(searchInput, { target: { value: "test" } });
+
+      const clearButton = screen.getByRole("button", { name: /clear search/i });
+      fireEvent.click(clearButton);
+
+      expect(searchInput).toHaveValue("");
+      expect(mockOnSearch).toHaveBeenCalledWith("");
+    });
+
+    it("should not show clear button when search is empty", () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          enableSearch={true}
+        />,
+      );
+
+      expect(
+        screen.queryByRole("button", { name: /clear search/i }),
+      ).not.toBeInTheDocument();
+    });
+
     it("should have search placeholder text", () => {
       render(
         <SessionPanel
@@ -431,6 +509,21 @@ describe("SessionPanel", () => {
       expect(
         screen.getByRole("button", { name: /^active$/i }),
       ).toBeInTheDocument();
+    });
+
+    it("should have role=group and aria-label for accessibility", () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          enableStatusFilter={true}
+        />,
+      );
+
+      const statusGroup = screen.getByRole("group", { name: /status/i });
+      expect(statusGroup).toBeInTheDocument();
     });
 
     it('should have "All" button selected by default', () => {
@@ -784,6 +877,226 @@ describe("SessionPanel", () => {
       expect(
         screen.queryByRole("toolbar", { name: /bulk actions/i }),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Single Session Delete", () => {
+    const mockOnDelete = vi.fn();
+
+    beforeEach(() => {
+      mockOnDelete.mockClear();
+    });
+
+    it("should render menu button on each session when onDelete is provided", () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      // Each session should have a menu button
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      expect(menuButtons.length).toBe(3);
+    });
+
+    it("should not render menu buttons when onDelete is not provided", () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+        />,
+      );
+
+      // No menu buttons
+      expect(
+        screen.queryByRole("button", { name: /session menu/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show delete option when menu button is clicked", async () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      // Click menu button on first session
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+
+      // Delete option should be visible
+      expect(
+        screen.getByRole("button", { name: /delete/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should show confirmation dialog when delete is clicked", async () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      // Click menu button
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+
+      // Click delete
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+      });
+
+      // Confirmation dialog should be visible
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
+    });
+
+    it("should close confirmation dialog when cancel is clicked", async () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      // Open menu and click delete
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+      });
+
+      // Dialog should be visible
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+      // Click cancel
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+      });
+
+      // Dialog should be closed
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      // onDelete should not be called
+      expect(mockOnDelete).not.toHaveBeenCalled();
+    });
+
+    it("should call onDelete with session id when confirmed", async () => {
+      mockOnDelete.mockResolvedValue(undefined);
+
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      // Open menu and click delete
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+      });
+
+      // Confirm deletion
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /confirm/i }));
+      });
+
+      // onDelete should be called with the correct session id
+      await waitFor(() => {
+        expect(mockOnDelete).toHaveBeenCalledWith("session-3");
+      });
+    });
+
+    it("should close dialog after successful deletion", async () => {
+      mockOnDelete.mockResolvedValue(undefined);
+
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      // Open menu and click delete
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+      });
+
+      // Confirm deletion
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /confirm/i }));
+      });
+
+      // Dialog should close after deletion
+      await waitFor(() => {
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      });
+    });
+
+    it("should have data-testid on menu button for E2E testing", () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      // Menu buttons should have data-testid
+      const menuButton = document.querySelector(
+        '[data-testid="session-menu-session-3"]',
+      );
+      expect(menuButton).toBeInTheDocument();
     });
   });
 });

@@ -210,193 +210,203 @@ test.describe('Session CRUD Operations', () => {
   });
 
   test.describe('Session Search', () => {
+    // STRICT MODE: Tests fail if expected elements aren't visible
     test('should have search input', async ({ alicePage }) => {
-      // Look for search input in session panel
+      // Look for search input in session panel - strict mode: must be visible
       const searchInput = alicePage.getByPlaceholder(/search/i);
-      if (await searchInput.isVisible().catch(() => false)) {
-        await expect(searchInput).toBeVisible();
-      }
+      await expect(searchInput).toBeVisible({ timeout: 10000 });
     });
 
     test('should filter sessions when typing in search', async ({ alicePage }) => {
       const searchInput = alicePage.getByPlaceholder(/search/i);
+      await expect(searchInput).toBeVisible({ timeout: 10000 });
 
-      if (await searchInput.isVisible().catch(() => false)) {
-        // Type search query
-        await searchInput.fill('Test');
+      // Type search query
+      await searchInput.fill('Test');
 
-        // Wait for debounced search
-        await alicePage.waitForTimeout(500);
+      // Wait for debounced search
+      await alicePage.waitForTimeout(500);
 
-        // Search input should have the value
-        await expect(searchInput).toHaveValue('Test');
-      }
+      // Search input should have the value
+      await expect(searchInput).toHaveValue('Test');
     });
 
     test('should clear search when clicking clear button', async ({ alicePage }) => {
       const searchInput = alicePage.getByPlaceholder(/search/i);
+      await expect(searchInput).toBeVisible({ timeout: 10000 });
 
-      if (await searchInput.isVisible().catch(() => false)) {
-        await searchInput.fill('Test');
+      await searchInput.fill('Test');
 
-        // Look for clear button
-        const clearButton = alicePage.getByRole('button', { name: /clear|x|×/i }).first();
-        if (await clearButton.isVisible().catch(() => false)) {
-          await clearButton.click();
-          await expect(searchInput).toHaveValue('');
-        }
-      }
+      // Look for clear button - strict mode: must be visible
+      const clearButton = alicePage.getByRole('button', { name: /clear|x|×/i }).first();
+      await expect(clearButton).toBeVisible({ timeout: 5000 });
+      await clearButton.click();
+      await expect(searchInput).toHaveValue('');
     });
   });
 
   test.describe('Session Selection', () => {
+    // STRICT MODE: Tests fail if expected elements aren't visible
     test('should select session when clicked', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
-      // Find session items
+      // Find session items - strict mode: sessions must be available
       const sessionItem = alicePage.locator('[data-testid*="session"], .session-item, [role="listitem"]').first();
+      await expect(sessionItem).toBeVisible({ timeout: 10000 });
 
-      if (await sessionItem.isVisible().catch(() => false)) {
-        await sessionItem.click();
+      await sessionItem.click();
 
-        // Selected session should be highlighted or active
-        await alicePage.waitForLoadState('networkidle');
-      }
+      // Selected session should be highlighted or active
+      await alicePage.waitForLoadState('networkidle');
     });
 
     test('should display session messages after selection', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
-      // Select a session
+      // Select a session - strict mode: must be visible
       const sessionItem = alicePage.locator('[data-testid*="session"], .session-item').first();
+      await expect(sessionItem).toBeVisible({ timeout: 10000 });
 
-      if (await sessionItem.isVisible().catch(() => false)) {
-        await sessionItem.click();
+      await sessionItem.click();
 
-        // Wait for messages to load
-        await alicePage.waitForLoadState('networkidle');
+      // Wait for messages to load
+      await alicePage.waitForLoadState('networkidle');
 
-        // Message area should be visible
-        const messageArea = alicePage.locator('main, [role="main"], .messages, .chat-messages');
-        await expect(messageArea.first()).toBeVisible();
-      }
+      // Message area should be visible
+      const messageArea = alicePage.locator('main, [role="main"], .messages, .chat-messages');
+      await expect(messageArea.first()).toBeVisible();
     });
   });
 
   test.describe('Session Status Filter', () => {
-    test('should have status filter dropdown', async ({ alicePage }) => {
-      // Look for status filter
+    // STRICT MODE: Tests fail if expected elements aren't visible
+    test('should have status filter', async ({ alicePage }) => {
+      // Look for status filter - could be dropdown or button group
       const statusFilter = alicePage.getByRole('combobox', { name: /status/i });
+      const statusButtons = alicePage.getByRole('group', { name: /status/i });
 
-      if (await statusFilter.isVisible().catch(() => false)) {
-        await expect(statusFilter).toBeVisible();
-      }
+      // Either combobox or button group should be visible
+      const filterLocator = statusFilter.or(statusButtons);
+      await expect(filterLocator.first()).toBeVisible({ timeout: 10000 });
     });
 
     test('should filter by status when selecting option', async ({ alicePage }) => {
       const statusFilter = alicePage.getByRole('combobox', { name: /status/i });
 
-      if (await statusFilter.isVisible().catch(() => false)) {
+      // Check if we have a dropdown
+      if (await statusFilter.isVisible({ timeout: 2000 }).catch(() => false)) {
         await statusFilter.selectOption('active');
         await alicePage.waitForLoadState('networkidle');
         await expect(statusFilter).toHaveValue('active');
+      } else {
+        // Check for button-based filter
+        const activeButton = alicePage.getByRole('button', { name: /active/i });
+        await expect(activeButton).toBeVisible({ timeout: 5000 });
+        await activeButton.click();
+        await alicePage.waitForLoadState('networkidle');
       }
     });
   });
 
   test.describe('Session Deletion', () => {
+    // STRICT MODE: Tests fail if expected elements aren't visible
     test('should have delete option for sessions', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
-      // Find a session item with delete button
+      // Find a session item first
+      const sessionItem = alicePage.locator('[data-testid*="session"], .session-item').first();
+      await expect(sessionItem).toBeVisible({ timeout: 10000 });
+
+      // Find delete button - may be visible or behind a menu
       const deleteButton = alicePage.getByRole('button', { name: /delete|remove/i }).first();
 
-      // May be hidden behind a menu
-      if (!(await deleteButton.isVisible().catch(() => false))) {
+      // Try to find menu button if delete isn't visible
+      if (!(await deleteButton.isVisible({ timeout: 1000 }).catch(() => false))) {
         // Look for menu button (three dots, ellipsis)
         const menuButton = alicePage.locator('[data-testid*="menu"], button[aria-label*="menu"]').first();
-        if (await menuButton.isVisible().catch(() => false)) {
-          await menuButton.click();
-          await alicePage.waitForTimeout(300);
-        }
+        await expect(menuButton).toBeVisible({ timeout: 5000 });
+        await menuButton.click();
+        await alicePage.waitForTimeout(300);
       }
+
+      // Now delete button should be visible
+      await expect(deleteButton).toBeVisible({ timeout: 5000 });
     });
 
     test('should show confirmation before deleting session', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
-      // Find delete button
+      // Find and click delete button
       const deleteButton = alicePage.getByRole('button', { name: /delete/i }).first();
 
-      if (await deleteButton.isVisible().catch(() => false)) {
-        await deleteButton.click();
-
-        // Should show confirmation dialog
-        const confirmDialog = alicePage.getByRole('dialog');
-        if (await confirmDialog.isVisible().catch(() => false)) {
-          await expect(confirmDialog).toBeVisible();
-
-          // Cancel the deletion
-          const cancelButton = confirmDialog.getByRole('button', { name: /cancel|no/i });
-          if (await cancelButton.isVisible().catch(() => false)) {
-            await cancelButton.click();
-          }
-        }
+      // Check if we need to open a menu first
+      if (!(await deleteButton.isVisible({ timeout: 1000 }).catch(() => false))) {
+        const menuButton = alicePage.locator('[data-testid*="menu"], button[aria-label*="menu"]').first();
+        await expect(menuButton).toBeVisible({ timeout: 5000 });
+        await menuButton.click();
+        await alicePage.waitForTimeout(300);
       }
+
+      await expect(deleteButton).toBeVisible({ timeout: 5000 });
+      await deleteButton.click();
+
+      // Should show confirmation dialog
+      const confirmDialog = alicePage.getByRole('dialog');
+      await expect(confirmDialog).toBeVisible({ timeout: 5000 });
+
+      // Cancel the deletion
+      const cancelButton = confirmDialog.getByRole('button', { name: /cancel|no/i });
+      await expect(cancelButton).toBeVisible({ timeout: 5000 });
+      await cancelButton.click();
     });
   });
 
   test.describe('Bulk Selection', () => {
+    // STRICT MODE: Tests fail if expected elements aren't visible
     test('should have select all checkbox', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
-      // Look for select all checkbox
+      // Look for select all checkbox - strict mode
       const selectAllCheckbox = alicePage.getByRole('checkbox', { name: /select all/i });
-
-      if (await selectAllCheckbox.isVisible().catch(() => false)) {
-        await expect(selectAllCheckbox).toBeVisible();
-      }
+      await expect(selectAllCheckbox).toBeVisible({ timeout: 10000 });
     });
 
     test('should select all sessions when clicking select all', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
       const selectAllCheckbox = alicePage.getByRole('checkbox', { name: /select all/i });
+      await expect(selectAllCheckbox).toBeVisible({ timeout: 10000 });
 
-      if (await selectAllCheckbox.isVisible().catch(() => false)) {
-        await selectAllCheckbox.click();
-        await expect(selectAllCheckbox).toBeChecked();
-      }
+      await selectAllCheckbox.click();
+      await expect(selectAllCheckbox).toBeChecked();
     });
 
     test('should show bulk delete button when sessions are selected', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
       const selectAllCheckbox = alicePage.getByRole('checkbox', { name: /select all/i });
+      await expect(selectAllCheckbox).toBeVisible({ timeout: 10000 });
 
-      if (await selectAllCheckbox.isVisible().catch(() => false)) {
-        await selectAllCheckbox.click();
+      await selectAllCheckbox.click();
 
-        // Bulk delete button should appear
-        const bulkDeleteButton = alicePage.getByRole('button', { name: /delete selected|bulk delete/i });
-        if (await bulkDeleteButton.isVisible().catch(() => false)) {
-          await expect(bulkDeleteButton).toBeVisible();
-        }
-      }
+      // Bulk delete button should appear - strict mode
+      const bulkDeleteButton = alicePage.getByRole('button', { name: /delete selected|bulk delete/i });
+      await expect(bulkDeleteButton).toBeVisible({ timeout: 5000 });
     });
   });
 
   test.describe('Pagination', () => {
-    test('should show load more button if more sessions exist', async ({ alicePage }) => {
+    // These tests are conditionally strict - pagination may not exist if there are few sessions
+    test('should show session count indicator', async ({ alicePage }) => {
       await alicePage.waitForLoadState('networkidle');
 
-      // Look for load more button
-      const loadMoreButton = alicePage.getByRole('button', { name: /load more|show more/i });
+      // Should show session count or pagination indicator
+      const countIndicator = alicePage.getByText(/\d+\s*(sessions|of\s*\d+)/i);
+      const paginationInfo = alicePage.locator('[data-testid*="pagination"], .pagination');
 
-      // May or may not be visible depending on session count
-      if (await loadMoreButton.isVisible().catch(() => false)) {
-        await expect(loadMoreButton).toBeVisible();
-      }
+      // At least one should be visible
+      const countOrPagination = countIndicator.or(paginationInfo);
+      await expect(countOrPagination.first()).toBeVisible({ timeout: 10000 });
     });
 
     test('should load more sessions when clicking load more', async ({ alicePage }) => {
@@ -404,7 +414,9 @@ test.describe('Session CRUD Operations', () => {
 
       const loadMoreButton = alicePage.getByRole('button', { name: /load more|show more/i });
 
-      if (await loadMoreButton.isVisible().catch(() => false)) {
+      // Load more button is only visible when there are more sessions to load
+      // This is a conditional test - if button exists, clicking it should work
+      if (await loadMoreButton.isVisible({ timeout: 2000 }).catch(() => false)) {
         await loadMoreButton.click();
         await alicePage.waitForLoadState('networkidle');
 

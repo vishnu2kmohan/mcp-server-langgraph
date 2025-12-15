@@ -97,7 +97,6 @@ describe("uiSlice", () => {
       const result = uiReducer(state, setTheme("system"));
       expect(result.theme).toBe("system");
     });
-
   });
 
   describe("getInitialTheme", () => {

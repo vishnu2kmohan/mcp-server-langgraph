@@ -407,7 +407,7 @@ export function ObservabilityPage() {
                     Total Requests
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {metrics.requests_total.toLocaleString()}
+                    {(metrics.requests_total ?? 0).toLocaleString()}
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -415,7 +415,7 @@ export function ObservabilityPage() {
                     Total Errors
                   </h3>
                   <div className="text-2xl font-semibold text-red-600 dark:text-red-400">
-                    {metrics.errors_total.toLocaleString()}
+                    {(metrics.errors_total ?? 0).toLocaleString()}
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -423,7 +423,7 @@ export function ObservabilityPage() {
                     Avg Latency
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {metrics.avg_latency_ms}ms
+                    {metrics.avg_latency_ms ?? 0}ms
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -431,7 +431,7 @@ export function ObservabilityPage() {
                     P99 Latency
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {metrics.p99_latency_ms}ms
+                    {metrics.p99_latency_ms ?? 0}ms
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -439,7 +439,7 @@ export function ObservabilityPage() {
                     Tokens Used
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {metrics.tokens_used.toLocaleString()}
+                    {(metrics.tokens_used ?? 0).toLocaleString()}
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -447,7 +447,7 @@ export function ObservabilityPage() {
                     Active Sessions
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {metrics.active_sessions}
+                    {metrics.active_sessions ?? 0}
                   </div>
                 </div>
               </div>

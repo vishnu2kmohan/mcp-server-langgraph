@@ -77,67 +77,63 @@ test.describe('API Verification - All Pages Load Without Errors', () => {
 
 test.describe('AgentsPage - Model Config and Tools', () => {
   // AgentsPage requires authentication
+  // STRICT MODE: Tests fail if expected elements aren't visible (no error state fallback)
   test('should display agent configuration section', async ({ adminPage }) => {
     await adminPage.goto('/studio/connections/agents');
 
-    // Wait for page to load - check for heading or error state
+    // Wait for page to load - strict mode: must show heading
     const heading = adminPage.getByRole('heading', { name: /Agent Configuration/i });
-    const errorState = adminPage.getByText(/Failed to load/i);
-    await expect(heading.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(heading).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display model settings or error state', async ({ adminPage }) => {
+  test('should display model settings', async ({ adminPage }) => {
     await adminPage.goto('/studio/connections/agents');
 
-    // Check for model configuration elements or error state
+    // Check for model configuration elements - strict mode: must show model
     await adminPage.waitForLoadState('networkidle');
     const modelText = adminPage.getByText(/Model/i);
-    const errorState = adminPage.getByText(/Failed to load/i);
-    await expect(modelText.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(modelText.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display tools list or loading state', async ({ adminPage }) => {
+  test('should display tools list', async ({ adminPage }) => {
     await adminPage.goto('/studio/connections/agents');
 
-    // Check for tools section or loading/error state
+    // Check for tools section - loading is acceptable, error is not
     await adminPage.waitForLoadState('networkidle');
     const tools = adminPage.getByText(/Tools/i);
     const loading = adminPage.locator('.animate-spin');
-    const errorState = adminPage.getByText(/Failed to load/i);
-    await expect(tools.or(loading).or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(tools.or(loading).first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display verification settings or loading state', async ({ adminPage }) => {
+  test('should display verification settings', async ({ adminPage }) => {
     await adminPage.goto('/studio/connections/agents');
 
-    // Check for human-in-the-loop settings or loading/error state
+    // Check for human-in-the-loop settings - loading is acceptable, error is not
     await adminPage.waitForLoadState('networkidle');
     const verification = adminPage.getByText(/Verification/i);
     const loading = adminPage.locator('.animate-spin');
-    const errorState = adminPage.getByText(/Failed to load/i);
-    await expect(verification.or(loading).or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(verification.or(loading).first()).toBeVisible({ timeout: 10000 });
   });
 });
 
 test.describe('AuditLogPage - Logs and Filtering', () => {
   // AuditLogPage requires admin authentication
+  // STRICT MODE: Tests fail if expected elements aren't visible (no error state fallback)
   test('should display audit logs section', async ({ adminPage }) => {
     await adminPage.goto('/studio/admin/audit-logs');
 
-    // Wait for page to load - check for heading or error state
+    // Wait for page to load - strict mode: must show heading
     const heading = adminPage.getByRole('heading', { name: /Audit/i });
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(heading.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(heading.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('should have filter options or error state', async ({ adminPage }) => {
+  test('should have filter options', async ({ adminPage }) => {
     await adminPage.goto('/studio/admin/audit-logs');
     await adminPage.waitForLoadState('networkidle');
 
-    // Check for filter controls or error state
+    // Check for filter controls - strict mode: must show filter input
     const searchInput = adminPage.getByPlaceholder(/Search|Filter/i);
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(searchInput.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(searchInput.first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should display log entries or empty state', async ({ adminPage }) => {
@@ -146,51 +142,48 @@ test.describe('AuditLogPage - Logs and Filtering', () => {
     // Wait for data to load
     await adminPage.waitForLoadState('networkidle');
 
-    // Should show either log entries, empty state, or error
-    const hasLogs = await adminPage.locator('[data-testid="audit-log-entry"]').count() > 0;
+    // Should show either log entries or empty state (but NOT error state)
+    const hasLogs = await adminPage.locator('[data-testid="audit-log-row"]').count() > 0;
     const hasEmptyState = await adminPage.getByText(/No audit|No logs/i).isVisible().catch(() => false);
-    const hasError = await adminPage.getByText(/Failed to load|Error/i).isVisible().catch(() => false);
 
-    expect(hasLogs || hasEmptyState || hasError).toBe(true);
+    // STRICT MODE: Error state is NOT acceptable
+    expect(hasLogs || hasEmptyState).toBe(true);
   });
 });
 
 test.describe('VectorsPage - Collections and Search', () => {
   // VectorsPage requires authentication for API access
+  // STRICT MODE: Tests fail if expected elements aren't visible (no error state fallback)
   test('should display vector collections section', async ({ adminPage }) => {
     await adminPage.goto('/studio/connections/vectors');
 
-    // Wait for page to load - check for heading or error state
+    // Wait for page to load - strict mode: must show heading
     const heading = adminPage.getByRole('heading', { name: /Vector Collections/i });
-    const errorState = adminPage.getByText(/Failed to load/i);
-    await expect(heading.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(heading).toBeVisible({ timeout: 10000 });
   });
 
-  test('should have create collection button or error state', async ({ adminPage }) => {
+  test('should have create collection button', async ({ adminPage }) => {
     await adminPage.goto('/studio/connections/vectors');
 
-    // Check for create button or error state
+    // Check for create button - strict mode: must be visible
     const button = adminPage.getByRole('button', { name: /Create Collection/i });
-    const errorState = adminPage.getByText(/Failed to load/i);
-    await expect(button.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(button).toBeVisible({ timeout: 10000 });
   });
 
-  test('should have search button or error state', async ({ adminPage }) => {
+  test('should have search button', async ({ adminPage }) => {
     await adminPage.goto('/studio/connections/vectors');
 
-    // Check for search button or error state
+    // Check for search button - strict mode: must be visible
     const button = adminPage.getByRole('button', { name: /Search/i });
-    const errorState = adminPage.getByText(/Failed to load/i);
-    await expect(button.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(button).toBeVisible({ timeout: 10000 });
   });
 
   test('should have refresh button', async ({ adminPage }) => {
     await adminPage.goto('/studio/connections/vectors');
 
-    // Refresh button should always be visible (even in error state)
-    await expect(adminPage.getByRole('button', { name: /Refresh/i })).toBeVisible({
-      timeout: 10000,
-    });
+    // Refresh button should be visible - strict mode
+    const refreshButton = adminPage.getByRole('button', { name: /Refresh/i });
+    await expect(refreshButton).toBeVisible({ timeout: 10000 });
   });
 
   test('should display collections or empty state', async ({ adminPage }) => {
@@ -198,219 +191,212 @@ test.describe('VectorsPage - Collections and Search', () => {
 
     await adminPage.waitForLoadState('networkidle');
 
-    // Should show collections count, empty state, or error
-    const hasCollections = await adminPage.getByText(/collection/i).isVisible();
+    // Should show collections or empty state (but NOT error state)
+    const hasCollections = await adminPage.getByText(/collection/i).first().isVisible().catch(() => false);
     const hasEmptyState = await adminPage.getByText(/No collections/i).isVisible().catch(() => false);
-    const hasError = await adminPage.getByText(/Failed to load/i).isVisible().catch(() => false);
 
-    expect(hasCollections || hasEmptyState || hasError).toBe(true);
+    // STRICT MODE: Error state is NOT acceptable
+    expect(hasCollections || hasEmptyState).toBe(true);
   });
 });
 
 test.describe('CostPage - Summary, Model Breakdown, History', () => {
   // CostPage requires authentication for API access
+  // STRICT MODE: Tests fail if expected elements aren't visible (no error state fallback)
   test('should display cost dashboard', async ({ adminPage }) => {
     await adminPage.goto('/studio/cost');
 
-    // Wait for page to load - check for heading or error state
+    // Wait for page to load - strict mode: must show heading
     const heading = adminPage.getByRole('heading', { name: /Cost/i });
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(heading.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(heading).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display cost summary metrics or error', async ({ adminPage }) => {
+  test('should display cost summary metrics', async ({ adminPage }) => {
     await adminPage.goto('/studio/cost');
 
     // Wait for data to load
     await adminPage.waitForLoadState('networkidle');
 
-    // Check for cost summary elements (or loading skeleton or error)
+    // Check for cost summary elements (loading is acceptable, error is not)
     const hasTotalCost = await adminPage.getByText(/Total Cost/i).isVisible().catch(() => false);
     const hasTotalTokens = await adminPage.getByText(/Total Tokens/i).isVisible().catch(() => false);
     const hasLoading = await adminPage.locator('.animate-pulse').count() > 0;
-    const hasError = await adminPage.getByText(/Failed to load|Error/i).isVisible().catch(() => false);
 
-    expect(hasTotalCost || hasTotalTokens || hasLoading || hasError).toBe(true);
+    // STRICT MODE: Error state is NOT acceptable
+    expect(hasTotalCost || hasTotalTokens || hasLoading).toBe(true);
   });
 
-  test('should display cost by model section or error', async ({ adminPage }) => {
+  test('should display cost by model section', async ({ adminPage }) => {
     await adminPage.goto('/studio/cost');
     await adminPage.waitForLoadState('networkidle');
 
-    // Check for model breakdown or error
+    // Check for model breakdown - strict mode: must be visible
     const heading = adminPage.getByText(/by Model|Model Breakdown/i);
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(heading.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(heading.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display cost trend chart section or error', async ({ adminPage }) => {
+  test('should display cost trend chart section', async ({ adminPage }) => {
     await adminPage.goto('/studio/cost');
     await adminPage.waitForLoadState('networkidle');
 
-    // Check for cost trend/history or error
+    // Check for cost trend/history - strict mode: must be visible
     const heading = adminPage.getByText(/Trend|History|Chart/i);
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(heading.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(heading.first()).toBeVisible({ timeout: 10000 });
   });
 });
 
 test.describe('AdminDashboardPage - Health and HEART Metrics', () => {
   // AdminDashboardPage requires admin authentication
+  // STRICT MODE: Tests fail if expected elements aren't visible (no error state fallback)
   test('should display admin dashboard', async ({ adminPage }) => {
     await adminPage.goto('/studio/admin/dashboard');
 
-    // Wait for page to load - check for heading or error state
+    // Wait for page to load - strict mode: must show heading
     const heading = adminPage.getByRole('heading', { name: /Admin|Dashboard/i });
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(heading.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(heading.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display system health section or error', async ({ adminPage }) => {
+  test('should display system health section', async ({ adminPage }) => {
     await adminPage.goto('/studio/admin/dashboard');
     await adminPage.waitForLoadState('networkidle');
 
-    // Check for system health or error
+    // Check for system health - strict mode: must be visible
     const healthSection = adminPage.getByText(/System Health|Health Status/i);
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(healthSection.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(healthSection.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display health status indicator or loading', async ({ adminPage }) => {
+  test('should display health status indicator', async ({ adminPage }) => {
     await adminPage.goto('/studio/admin/dashboard');
     await adminPage.waitForLoadState('networkidle');
 
-    // Check for status indicator (healthy, degraded, unhealthy, or loading)
+    // Check for status indicator (healthy, degraded, unhealthy, or loading) - error is not acceptable
     const hasStatus = await adminPage.getByText(/healthy|degraded|unhealthy/i).isVisible().catch(() => false);
     const hasLoading = await adminPage.locator('.animate-spin, .animate-pulse').count() > 0;
-    const hasError = await adminPage.getByText(/Failed to load|Error/i).isVisible().catch(() => false);
-    expect(hasStatus || hasLoading || hasError).toBe(true);
+
+    // STRICT MODE: Error state is NOT acceptable
+    expect(hasStatus || hasLoading).toBe(true);
   });
 
-  test('should display HEART metrics section or error', async ({ adminPage }) => {
+  test('should display HEART metrics section', async ({ adminPage }) => {
     await adminPage.goto('/studio/admin/dashboard');
     await adminPage.waitForLoadState('networkidle');
 
-    // Check for HEART metrics or error
+    // Check for HEART metrics - strict mode: must be visible
     const heartSection = adminPage.getByText(/HEART|Metrics/i);
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(heartSection.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(heartSection.first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should have refresh button', async ({ adminPage }) => {
     await adminPage.goto('/studio/admin/dashboard');
 
-    // Refresh button should be visible
+    // Refresh button should be visible - strict mode
     const refreshButton = adminPage.getByRole('button', { name: /Refresh/i });
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(refreshButton.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(refreshButton).toBeVisible({ timeout: 10000 });
   });
 });
 
-test.describe('ConnectionsPage - OAuth2 Flow', () => {
-  // ConnectionsPage requires authentication
-  test('should display connections page', async ({ adminPage }) => {
+test.describe('ConnectionsPage - MCP Explorer', () => {
+  // ConnectionsPage (MCP Explorer) requires authentication
+  // STRICT MODE: Tests fail if expected elements aren't visible (no error state fallback)
+  test('should display MCP Explorer page', async ({ adminPage }) => {
     await adminPage.goto('/studio/connections/mcp');
 
-    // Wait for page to load - check for heading or error state
-    const heading = adminPage.getByRole('heading', { name: /MCP|Connections/i });
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(heading.or(errorState)).toBeVisible({ timeout: 10000 });
+    // Wait for page to load - strict mode: must show heading
+    const heading = adminPage.getByRole('heading', { name: /MCP Explorer/i });
+    await expect(heading).toBeVisible({ timeout: 10000 });
   });
 
-  test('should have create connection button or error state', async ({ adminPage }) => {
+  test('should have MCP capability tabs', async ({ adminPage }) => {
     await adminPage.goto('/studio/connections/mcp');
 
-    // Check for create button or error state
-    const button = adminPage.getByRole('button', { name: /Create|Add|New/i });
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(button.or(errorState)).toBeVisible({ timeout: 10000 });
+    // MCP Explorer has tabs: Tools, Resources, Prompts, Servers - strict mode
+    const toolsTab = adminPage.getByRole('button', { name: /Tools/i });
+    await expect(toolsTab.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display connections list or empty state', async ({ adminPage }) => {
+  test('should display MCP status or empty state', async ({ adminPage }) => {
     await adminPage.goto('/studio/connections/mcp');
     await adminPage.waitForLoadState('networkidle');
 
-    // Should show connections, empty state, or error
-    const hasConnections = await adminPage.locator('[data-testid="connection-card"]').count() > 0;
-    const hasEmptyState = await adminPage.getByText(/No connections/i).isVisible().catch(() => false);
-    const hasError = await adminPage.getByText(/Failed to load|Error/i).isVisible().catch(() => false);
+    // Should show status, tools/resources, or empty state (but NOT error state)
+    const hasStatus = await adminPage.getByText(/Connected|Disconnected/i).isVisible().catch(() => false);
+    const hasEmptyState = await adminPage.getByText(/No tools|No resources|No prompts|No servers/i).isVisible().catch(() => false);
 
-    expect(hasConnections || hasEmptyState || hasError).toBe(true);
+    // STRICT MODE: Error state is NOT acceptable
+    expect(hasStatus || hasEmptyState).toBe(true);
   });
 });
 
-test.describe('WorkflowsPage - CRUD Operations', () => {
-  // WorkflowsPage requires authentication
-  test('should display workflows page', async ({ adminPage }) => {
+test.describe('WorkflowsPage - Workflow Editor', () => {
+  // WorkflowsPage shows the workflow editor
+  // STRICT MODE: Tests fail if expected elements aren't visible (no error state fallback)
+  test('should display workflow editor page', async ({ adminPage }) => {
     await adminPage.goto('/studio/workflows');
 
-    // Wait for page to load - check for heading or error state
-    const heading = adminPage.getByRole('heading', { name: /Workflows/i });
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(heading.or(errorState)).toBeVisible({ timeout: 10000 });
+    // Wait for page to load - strict mode: must show workflow heading
+    // The page shows "New Workflow" for new workflows
+    const heading = adminPage.getByRole('heading', { name: /Workflow/i });
+    await expect(heading.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('should have create workflow button or error state', async ({ adminPage }) => {
+  test('should have workflow action buttons', async ({ adminPage }) => {
     await adminPage.goto('/studio/workflows');
 
-    // Check for create button or error state
-    const button = adminPage.getByRole('button', { name: /Create|New/i });
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(button.or(errorState)).toBeVisible({ timeout: 10000 });
+    // Workflow editor has buttons: Run, Generate Code, Save, Export JSON - strict mode
+    const runButton = adminPage.getByRole('button', { name: /Run/i });
+    await expect(runButton).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display workflows list or empty state', async ({ adminPage }) => {
+  test('should display workflow editor controls', async ({ adminPage }) => {
     await adminPage.goto('/studio/workflows');
     await adminPage.waitForLoadState('networkidle');
 
-    // Should show workflows, empty state, or error
-    const hasWorkflows = await adminPage.locator('[data-testid="workflow-card"]').count() > 0;
-    const hasEmptyState = await adminPage.getByText(/No workflows/i).isVisible().catch(() => false);
-    const hasError = await adminPage.getByText(/Failed to load|Error/i).isVisible().catch(() => false);
+    // Should show workflow editor controls - STRICT MODE: Error is NOT acceptable
+    const hasControls = await adminPage.getByRole('button', { name: /Save|Export|Generate/i }).count() > 0;
 
-    expect(hasWorkflows || hasEmptyState || hasError).toBe(true);
+    expect(hasControls).toBe(true);
   });
 });
 
 test.describe('ProjectsPage - CRUD Operations', () => {
   // ProjectsPage requires authentication
+  // STRICT MODE: Tests fail if expected elements aren't visible (no error state fallback)
   test('should display projects page', async ({ adminPage }) => {
     await adminPage.goto('/studio/projects');
 
-    // Wait for page to load - check for heading or error state
+    // Wait for page to load - strict mode: must show heading
     const heading = adminPage.getByRole('heading', { name: /Projects/i });
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(heading.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(heading).toBeVisible({ timeout: 10000 });
   });
 
-  test('should have create project button or error state', async ({ adminPage }) => {
+  test('should have create project button', async ({ adminPage }) => {
     await adminPage.goto('/studio/projects');
 
-    // Check for create button or error state
+    // Check for create button - strict mode: must be visible
     const button = adminPage.getByRole('button', { name: /Create|New/i });
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(button.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(button.first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should have search and filter controls', async ({ adminPage }) => {
     await adminPage.goto('/studio/projects');
 
-    // Check for search input or error state
+    // Check for search input - strict mode: must be visible
     const searchInput = adminPage.getByPlaceholder(/Search/i);
-    const errorState = adminPage.getByText(/Failed to load|Error/i);
-    await expect(searchInput.or(errorState)).toBeVisible({ timeout: 10000 });
+    await expect(searchInput).toBeVisible({ timeout: 10000 });
   });
 
   test('should display projects list or empty state', async ({ adminPage }) => {
     await adminPage.goto('/studio/projects');
     await adminPage.waitForLoadState('networkidle');
 
-    // Should show projects, empty state, or error
-    const hasProjects = await adminPage.locator('[data-testid="project-card"]').count() > 0;
-    const hasEmptyState = await adminPage.getByText(/No projects/i).isVisible().catch(() => false);
-    const hasError = await adminPage.getByText(/Failed to load|Error/i).isVisible().catch(() => false);
+    // Should show projects (via count in header or project headings), or empty state
+    // Projects header shows count like "(8)" when projects exist
+    const hasProjectCount = await adminPage.getByText(/\(\d+\)/).isVisible().catch(() => false);
+    const hasProjectHeading = await adminPage.getByRole('heading', { level: 3 }).count() > 0;
+    const hasEmptyState = await adminPage.getByText(/No projects|Create your first/i).isVisible().catch(() => false);
 
-    expect(hasProjects || hasEmptyState || hasError).toBe(true);
+    // STRICT MODE: Error state is NOT acceptable
+    expect(hasProjectCount || hasProjectHeading || hasEmptyState).toBe(true);
   });
 });
 
@@ -728,25 +714,22 @@ test.describe('OAuth2 Flow - Complete Integration', () => {
     });
   });
 
-  test.describe('OAuth2 Start Flow', () => {
-    test('should have add connection with OAuth2 option', async ({ adminPage }) => {
+  test.describe('MCP Explorer Tabs', () => {
+    // STRICT MODE: Tests fail if expected elements aren't visible (no error state fallback)
+    test('should have Tools tab on MCP Explorer', async ({ adminPage }) => {
       await adminPage.goto('/studio/connections/mcp');
 
-      // Check for add connection button or error state
-      const button = adminPage.getByRole('button', { name: /Add|Create|New/i });
-      const errorState = adminPage.getByText(/Failed to load|Error/i);
-      await expect(button.or(errorState)).toBeVisible({ timeout: 10000 });
+      // Check for Tools tab - strict mode: must be visible
+      const toolsTab = adminPage.getByRole('button', { name: /Tools/i });
+      await expect(toolsTab.first()).toBeVisible({ timeout: 10000 });
     });
 
-    test('should have from template button for pre-configured OAuth connections', async ({
-      adminPage,
-    }) => {
+    test('should have Resources tab on MCP Explorer', async ({ adminPage }) => {
       await adminPage.goto('/studio/connections/mcp');
 
-      // Check for template button or error state
-      const button = adminPage.getByRole('button', { name: /Template|From Template/i });
-      const errorState = adminPage.getByText(/Failed to load|Error/i);
-      await expect(button.or(errorState)).toBeVisible({ timeout: 10000 });
+      // Check for Resources tab - strict mode: must be visible
+      const resourcesTab = adminPage.getByRole('button', { name: /Resources/i });
+      await expect(resourcesTab.first()).toBeVisible({ timeout: 10000 });
     });
   });
 });

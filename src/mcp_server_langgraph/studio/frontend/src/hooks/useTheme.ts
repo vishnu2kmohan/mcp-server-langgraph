@@ -53,7 +53,11 @@ export function useTheme(): UseThemeReturn {
     applyTheme();
 
     // Listen for system theme changes when in "system" mode
-    if (theme === "system" && typeof window !== "undefined" && window.matchMedia) {
+    if (
+      theme === "system" &&
+      typeof window !== "undefined" &&
+      window.matchMedia
+    ) {
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
       const handleChange = () => applyTheme();
 

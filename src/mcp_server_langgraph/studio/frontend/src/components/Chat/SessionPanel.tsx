@@ -11,7 +11,13 @@
  */
 
 import { useState } from "react";
-import { Plus, ChevronLeft, ChevronRight, MessageSquare } from "lucide-react";
+import {
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  MessageSquare,
+  X,
+} from "lucide-react";
 import { Skeleton } from "../UI/Skeleton";
 import { BulkActionBar } from "../UI/BulkActionBar";
 
@@ -45,6 +51,8 @@ export interface SessionPanelProps {
   // Bulk selection
   enableBulkSelect?: boolean;
   onBulkDelete?: (sessionIds: string[]) => void | Promise<void>;
+  // Single session delete
+  onDelete?: (sessionId: string) => void | Promise<void>;
 }
 
 export function SessionPanel({
@@ -77,6 +85,11 @@ export function SessionPanel({
     const value = e.target.value;
     setSearchQuery(value);
     onSearch?.(value);
+  };
+
+  const handleSearchClear = () => {
+    setSearchQuery("");
+    onSearch?.("");
   };
 
   const handleStatusClick = (status: string) => {
@@ -200,19 +213,35 @@ export function SessionPanel({
         {/* Search Input */}
         {enableSearch && (
           <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Search sessions..."
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+            <div className="relative">
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Search sessions..."
+                className="w-full px-2 py-1.5 pr-8 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              {searchQuery.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleSearchClear}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  aria-label="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
         {/* Status Filter */}
         {enableStatusFilter && (
-          <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex gap-1">
+          <div
+            className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex gap-1"
+            role="group"
+            aria-label="Status filter"
+          >
             <button
               onClick={() => handleStatusClick("")}
               className={`px-2 py-1 text-xs rounded ${
@@ -310,6 +339,7 @@ export function SessionPanel({
               {displaySessions.map((session) => (
                 <div
                   key={session.id}
+                  data-testid={`session-item-${session.id}`}
                   className={`flex items-center gap-2 w-full text-left px-3 py-2 rounded transition-colors ${
                     session.id === currentSessionId
                       ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"

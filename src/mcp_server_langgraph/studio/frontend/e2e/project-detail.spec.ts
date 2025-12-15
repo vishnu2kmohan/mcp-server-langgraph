@@ -68,6 +68,42 @@ test.describe('ProjectDetailPage', () => {
               status: 'active',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
+              // Required fields for tabs and counts
+              session_count: 2,
+              workflow_count: 1,
+              connection_count: 0,
+              sessions: [
+                {
+                  id: 'session-1',
+                  name: 'Test Session 1',
+                  project_id: 'test-project-1',
+                  status: 'active',
+                  created_at: new Date().toISOString(),
+                },
+                {
+                  id: 'session-2',
+                  name: 'Test Session 2',
+                  project_id: 'test-project-1',
+                  status: 'completed',
+                  created_at: new Date().toISOString(),
+                },
+              ],
+              workflows: [
+                {
+                  id: 'workflow-1',
+                  name: 'Test Workflow',
+                  description: 'A test workflow',
+                  status: 'active',
+                },
+              ],
+              connections: [],
+              members: [
+                {
+                  user_id: 'alice',
+                  role: 'owner',
+                  added_at: new Date().toISOString(),
+                },
+              ],
             }),
           });
           return;
@@ -222,10 +258,12 @@ test.describe('ProjectDetailPage', () => {
   });
 
   test.describe('Tab Navigation', () => {
+    // STRICT MODE: Tests fail if expected elements aren't visible (no error state fallback)
     test('should display Sessions tab by default', async ({ alicePage }) => {
       await alicePage.goto(`/studio/projects/${testProjectId}`);
+      await alicePage.waitForLoadState('networkidle');
 
-      // Sessions tab should be visible
+      // Sessions tab should be visible - strict mode: error is NOT acceptable
       const sessionsTab = alicePage.getByRole('button', { name: /Sessions/i });
       await expect(sessionsTab).toBeVisible({ timeout: 10000 });
     });

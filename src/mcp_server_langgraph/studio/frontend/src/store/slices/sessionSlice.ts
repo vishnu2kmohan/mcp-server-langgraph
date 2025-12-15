@@ -489,8 +489,12 @@ export const sessionSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchMoreSessions.fulfilled, (state, action) => {
-        // Append new sessions to existing list
-        state.sessions = [...state.sessions, ...action.payload.items];
+        // Append new sessions to existing list, deduplicating by ID
+        const existingIds = new Set(state.sessions.map((s) => s.id));
+        const newSessions = action.payload.items.filter(
+          (s) => !existingIds.has(s.id),
+        );
+        state.sessions = [...state.sessions, ...newSessions];
         state.totalCount = action.payload.total;
         state.cursor = action.payload.next_cursor;
         state.hasMore = action.payload.next_cursor !== null;
@@ -506,13 +510,28 @@ export const sessionSlice = createSlice({
     builder
       .addCase(createSession.fulfilled, (state, action) => {
         const session = action.payload;
-        state.sessions.unshift({
-          id: session.id,
-          name: session.name,
-          createdAt: session.createdAt,
-          updatedAt: session.updatedAt,
-          messageCount: 0,
-        });
+        // Check if session already exists (prevent duplicates from race conditions)
+        const existsIndex = state.sessions.findIndex(
+          (s) => s.id === session.id,
+        );
+        if (existsIndex >= 0) {
+          // Update existing session instead of adding duplicate
+          state.sessions[existsIndex] = {
+            id: session.id,
+            name: session.name,
+            createdAt: session.createdAt,
+            updatedAt: session.updatedAt,
+            messageCount: 0,
+          };
+        } else {
+          state.sessions.unshift({
+            id: session.id,
+            name: session.name,
+            createdAt: session.createdAt,
+            updatedAt: session.updatedAt,
+            messageCount: 0,
+          });
+        }
         state.currentSession = session;
         state.error = null;
       })
