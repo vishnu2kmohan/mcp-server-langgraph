@@ -1,0 +1,115 @@
+# Audit Alerting Configuration
+#
+# This file configures alert notification channels for the Unified Audit
+# Logging Facility. Alerts are triggered for security events, compliance
+# violations, and system anomalies (FedRAMP AU-5 requirement).
+#
+# Environment variables are automatically substituted using ${VAR_NAME} syntax.
+# Set these in your environment or .env file:
+#   - AUDIT_SLACK_WEBHOOK_URL
+#   - AUDIT_SLACK_CHANNEL
+#   - AUDIT_PAGERDUTY_ROUTING_KEY
+#
+# Severity levels (in order of priority):
+#   - info: Informational events (routine auditing)
+#   - warning: Potential issues requiring attention
+#   - error: Errors that need investigation
+#   - critical: Critical security/compliance issues requiring immediate action
+
+# Slack webhook integration
+slack:
+  # Enable/disable Slack notifications
+  enabled: true
+
+  # Slack incoming webhook URL
+  # Get this from: Slack App > Incoming Webhooks > Add New Webhook
+  webhook_url: ${AUDIT_SLACK_WEBHOOK_URL:-}
+
+  # Target channel (optional - webhook usually has a default channel)
+  channel: ${AUDIT_SLACK_CHANNEL:-#audit-alerts}
+
+  # Bot username displayed in Slack
+  username: "Audit Alert Bot"
+
+  # Emoji icon for the bot
+  icon_emoji: ":shield:"
+
+  # Minimum severity to send to Slack (info, warning, error, critical)
+  min_severity: warning
+
+  # Alert types to send (empty = all types)
+  alert_types: []
+
+# PagerDuty Events API v2 integration
+pagerduty:
+  # Enable/disable PagerDuty notifications
+  enabled: true
+
+  # PagerDuty Events API v2 routing key (integration key)
+  # Get this from: PagerDuty > Services > Integrations > Events API V2
+  routing_key: ${AUDIT_PAGERDUTY_ROUTING_KEY:-}
+
+  # Service name for PagerDuty event source
+  service_name: "mcp-server-langgraph-audit"
+
+  # Minimum severity to trigger PagerDuty (typically critical only)
+  min_severity: critical
+
+  # Alert types to trigger PagerDuty (empty = all types)
+  # Recommended: only trigger for critical security events
+  alert_types:
+    - INTEGRITY_TAMPERING
+    - BULK_DATA_EXPORT
+    - AFTER_HOURS_ADMIN
+
+# Alert detection thresholds
+detection:
+  # Failed login threshold (FedRAMP AU-2, SOC 2 CC6.1)
+  failed_login:
+    threshold: 5
+    window_minutes: 15
+    severity: warning
+
+  # Bulk data export detection (GDPR Art. 20, HIPAA)
+  bulk_export:
+    threshold_records: 1000
+    severity: warning
+
+  # After-hours admin action detection (SOC 2 CC7.1)
+  after_hours_admin:
+    # Hours in UTC (22:00 - 06:00)
+    start_hour: 22
+    end_hour: 6
+    severity: warning
+
+  # Integrity tampering detection (FedRAMP AU-9)
+  integrity_tampering:
+    # Trigger on any tampering detection
+    severity: critical
+
+  # Rate limit exceeded detection
+  rate_limit:
+    threshold_per_minute: 100
+    severity: warning
+
+# Email integration (optional, for compliance reports)
+email:
+  enabled: false
+  smtp_host: ${AUDIT_SMTP_HOST:-localhost}
+  smtp_port: ${AUDIT_SMTP_PORT:-587}
+  smtp_user: ${AUDIT_SMTP_USER:-}
+  smtp_password: ${AUDIT_SMTP_PASSWORD:-}
+  from_address: ${AUDIT_EMAIL_FROM:-audit@example.com}
+  to_addresses:
+    - ${AUDIT_EMAIL_TO:-security@example.com}
+  min_severity: error
+
+# Webhook integration (generic HTTP webhook)
+webhook:
+  enabled: false
+  url: ${AUDIT_WEBHOOK_URL:-}
+  headers:
+    Authorization: "Bearer ${AUDIT_WEBHOOK_TOKEN:-}"
+  min_severity: warning
+  retry_attempts: 3
+  timeout_seconds: 10

@@ -1,0 +1,189 @@
+# Audit Log Retention Configuration
+# Compliance: GDPR, HIPAA, SOC 2, FedRAMP, EU AI Act
+#
+# This configuration defines regulatory-specific retention policies
+# for the Unified Audit Logging Facility.
+
+# Version
+version: "1.0.0"
+
+# Retention Policies by Regulation
+# All durations are in days unless otherwise specified
+retention_policies:
+  # GDPR - EU General Data Protection Regulation
+  # Article 5(1)(e): Storage limitation principle
+  # Article 30: Records of processing activities
+  gdpr:
+    retention_years: 7
+    retention_days: 2555  # 7 years
+    anonymize_after_years: 6
+    anonymize_after_days: 2190  # 6 years
+    compress_after_days: 90
+    event_categories:
+      - "data_access"
+      - "data_modification"
+      - "authentication"
+      - "authorization"
+    description: "GDPR requires documentation of processing activities for compliance verification"
+    legal_basis: "GDPR Articles 5(1)(e), 30"
+
+  # HIPAA - Health Insurance Portability and Accountability Act
+  # 45 CFR 164.312(b): Audit controls
+  # 45 CFR 164.530(j): 6-year retention requirement
+  hipaa:
+    retention_years: 6
+    retention_days: 2190  # 6 years
+    compress_after_days: 90
+    integrity_verification: true
+    event_categories:
+      - "data_access"
+      - "data_modification"
+      - "authentication"
+    phi_tracking: true
+    description: "HIPAA requires 6-year retention of audit logs for ePHI access"
+    legal_basis: "45 CFR 164.312(b), 45 CFR 164.530(j)"
+
+  # SOC 2 Type II - Service Organization Controls
+  # CC6.x: Logical and physical access controls
+  # CC7.x: System operations monitoring
+  soc2:
+    retention_years: 3
+    retention_days: 1095  # 3 years (typical audit period)
+    compress_after_days: 90
+    event_categories:
+      - "authentication"
+      - "authorization"
+      - "system"
+      - "configuration"
+    description: "SOC 2 requires retention for audit period plus reasonable buffer"
+    legal_basis: "TSC CC6.x, CC7.x"
+
+  # FedRAMP - Federal Risk and Authorization Management
+  # NIST 800-53 AU controls
+  fedramp:
+    retention_years: 7
+    retention_days: 2555  # 7 years for federal records
+    hot_storage_days: 90  # 90 days online
+    searchable_days: 365  # 1 year searchable
+    compress_after_days: 90
+    integrity_verification: true
+    hash_chain_required: true
+    event_categories:
+      - "authentication"
+      - "authorization"
+      - "data_access"
+      - "data_modification"
+      - "system"
+      - "security"
+    description: "FedRAMP requires 7-year retention with integrity protection"
+    legal_basis: "NIST 800-53 AU-2, AU-3, AU-9, AU-11"
+
+  # EU AI Act - Artificial Intelligence Act
+  # Articles 12, 19, 72
+  eu_ai_act:
+    retention_months: 6
+    retention_days: 183  # 6 months minimum
+    retention_years: 10  # For high-risk AI systems
+    high_risk_retention_days: 3650  # 10 years for high-risk
+    event_categories:
+      - "ai_operation"
+    track_model_details: true
+    track_decision_details: true
+    description: "EU AI Act requires logging of AI system operations"
+    legal_basis: "EU AI Act Articles 12, 19, 72"
+
+# Default Policy
+default:
+  retention_years: 7
+  retention_days: 2555
+  compress_after_days: 90
+  description: "Default policy following strictest requirement"
+
+# Storage Tiers
+storage_tiers:
+  hot:
+    # Active queries, full access
+    max_days: 90
+    storage_type: "postgresql"
+    indexed: true
+    description: "Recent events, fast query access"
+
+  warm:
+    # Searchable archive
+    max_days: 365
+    storage_type: "postgresql"
+    indexed: true
+    compressed: true
+    description: "Searchable archive with compression"
+
+  cold:
+    # Long-term archive
+    max_days: null  # Until retention expires
+    storage_type: "postgresql"
+    indexed: false
+    compressed: true
+    partitioned: true
+    description: "Long-term compliance archive"
+
+# Compression Settings
+compression:
+  enabled: true
+  algorithm: "zstd"
+  level: 3
+  min_age_days: 90
+  description: "Compress events older than 90 days"
+
+# Integrity Verification
+integrity:
+  enabled: true
+  schedule: "0 0 * * *"  # Daily at midnight
+  hash_algorithm: "HMAC-SHA256"
+  alert_on_failure: true
+  description: "Daily hash chain verification for FedRAMP AU-9"
+
+# Cleanup Schedule
+cleanup:
+  enabled: true
+  schedule: "0 2 * * 0"  # Weekly on Sunday at 2 AM
+  batch_size: 10000
+  dry_run: false
+  description: "Weekly retention cleanup"
+
+# Alerting on Retention Events
+alerts:
+  enabled: true
+  channels:
+    - "slack"
+    - "pagerduty"
+
+  events:
+    approaching_expiry:
+      enabled: true
+      advance_days: 30
+      severity: "info"
+
+    deletion_completed:
+      enabled: true
+      severity: "info"
+
+    deletion_failed:
+      enabled: true
+      severity: "error"
+
+    integrity_failure:
+      enabled: true
+      severity: "critical"
+
+# Compliance Reporting
+reporting:
+  enabled: true
+  frequency: "monthly"
+  include_metrics:
+    - "events_by_regulation"
+    - "events_by_category"
+    - "integrity_verifications"
+    - "retention_compliance"
+  formats:
+    - "json"
+    - "csv"
+    - "pdf"
