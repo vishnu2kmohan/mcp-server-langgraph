@@ -342,11 +342,12 @@ services:
       # Services (authz-proxy, mcp-server) obtain OIDC tokens via client credentials grant
       # This provides defense-in-depth: even with network access, attackers need valid tokens
       # Reference: ADR-0070 - OpenFGA OIDC Authentication Migration
-      # IMPORTANT: OpenFGA must access Keycloak via Traefik gateway (traefik-gateway service)
-      #   to ensure issuer URLs match the public-facing URLs (http://localhost/authn/realms/default)
-      #   Direct access to keycloak-test would cause issuer mismatch errors.
+      # IMPORTANT: OpenFGA must use the same issuer URL that Keycloak advertises in tokens
+      #   Keycloak issues tokens with iss: http://localhost/authn/realms/default
+      #   OpenFGA must expect the same issuer for token validation to succeed
+      #   The extra_hosts mapping allows OpenFGA to resolve localhost to host-gateway
       - OPENFGA_AUTHN_METHOD=oidc
-      - OPENFGA_AUTHN_OIDC_ISSUER=http://traefik-gateway/authn/realms/default
+      - OPENFGA_AUTHN_OIDC_ISSUER=http://localhost/authn/realms/default
       - OPENFGA_AUTHN_OIDC_AUDIENCE=openfga-server
       - TESTING=true
     healthcheck:
@@ -476,14 +477,12 @@ services:
       # Using KC_HOSTNAME_URL ensures the full issuer URL is consistent regardless of how Keycloak is accessed.
       # See: https://www.keycloak.org/server/hostname
       # Keycloak 26+ hostname v2 configuration
-      # KC_HOSTNAME_URL sets the public-facing frontend URL (for browsers via Traefik)
-      # KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true allows internal services (like OpenFGA) to receive
-      #   dynamic URLs when accessing Keycloak directly (e.g., http://keycloak-test:8080)
-      # This configuration allows:
-      #   - Frontend/browsers: http://localhost/authn/realms/default (via Traefik gateway)
-      #   - Backend/OpenFGA: http://keycloak-test:8080/authn/realms/default (direct internal access)
-      - KC_HOSTNAME_URL=http://localhost/authn
-      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
+      # KC_HOSTNAME sets the fixed hostname for all issuer URLs
+      # KC_HOSTNAME_PORT=-1 uses default port for scheme (no port in HTTP URLs)
+      # KC_HOSTNAME_BACKCHANNEL_DYNAMIC=false ensures consistent issuer across all access methods
+      - KC_HOSTNAME=localhost
+      - KC_HOSTNAME_PORT=-1
+      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=false
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
 
