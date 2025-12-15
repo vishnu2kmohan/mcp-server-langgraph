@@ -77,7 +77,11 @@ export function AuthCallbackPage() {
         }
 
         // Store tokens in localStorage
+        // Set both 'access_token' and 'auth_token' for compatibility:
+        // - 'access_token' is used by AuthCallbackPage and some components
+        // - 'auth_token' is read by api/index.ts prepareHeaders for API calls
         localStorage.setItem("access_token", accessToken);
+        localStorage.setItem("auth_token", accessToken);
         if (refreshToken) {
           localStorage.setItem("refresh_token", refreshToken);
         }

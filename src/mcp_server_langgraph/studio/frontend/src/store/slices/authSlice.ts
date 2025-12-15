@@ -83,6 +83,27 @@ function saveTokensToStorage(tokens: AuthTokens | null): void {
   }
 }
 
+/**
+ * Clear all auth-related localStorage keys.
+ * Called during logout to ensure complete session cleanup.
+ *
+ * Clears:
+ * - studio-auth: Main auth state (authSlice)
+ * - access_token: OAuth2 PKCE tokens (LoginPage, AuthCallbackPage)
+ * - refresh_token: OAuth2 refresh tokens
+ * - auth_token: Legacy token key (deprecated)
+ */
+function clearAllAuthStorage(): void {
+  try {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("auth_token"); // Legacy key
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
 // ============================================================================
 // State Type
 // ============================================================================
@@ -295,8 +316,9 @@ export const authSlice = createSlice({
   initialState: initialAuthState,
   reducers: {
     logout: (state) => {
-      // Clear localStorage
-      saveTokensToStorage(null);
+      // Clear all auth-related localStorage keys (not just studio-auth)
+      // This ensures complete cleanup including OAuth2 PKCE tokens
+      clearAllAuthStorage();
 
       // Reset state
       state.user = null;

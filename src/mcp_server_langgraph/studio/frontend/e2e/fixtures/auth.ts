@@ -6,11 +6,11 @@
  * - alice: Power user (developer)
  * - bob: Standard user (read-only for most resources)
  *
- * When BACKEND_ENABLED=true, uses real Keycloak authentication.
- * Otherwise, mocks authentication for frontend-only testing.
+ * Uses OAuth2 Authorization Code + PKCE flow per RFC 9700 (RFC 7636).
+ * ROPC (Resource Owner Password Credentials) is NOT used per security best practices.
  */
 
-import { test as base, type Page } from '@playwright/test';
+import { test as base, type Page, type BrowserContext } from '@playwright/test';
 
 // Test user credentials (from default-realm.json)
 const TEST_USERS = {
@@ -33,15 +33,8 @@ const TEST_USERS = {
 
 type TestUser = keyof typeof TEST_USERS;
 
-// Keycloak endpoints (when backend is enabled)
-// Note: Keycloak is configured with http-relative-path=/authn
-const KEYCLOAK_BASE = process.env.KEYCLOAK_URL || 'http://localhost:9082';
-const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM || 'default';
-const KEYCLOAK_PATH_PREFIX = process.env.KEYCLOAK_PATH_PREFIX || '/authn';
-const KEYCLOAK_TOKEN_URL = `${KEYCLOAK_BASE}${KEYCLOAK_PATH_PREFIX}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token`;
-// Client credentials for mcp-server (configured in default-realm.json)
-const KEYCLOAK_CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID || 'mcp-server';
-const KEYCLOAK_CLIENT_SECRET = process.env.KEYCLOAK_CLIENT_SECRET || 'test-client-secret-for-e2e-tests';
+// Base URL for the application (Traefik gateway)
+const APP_BASE_URL = process.env.BASE_URL || 'http://localhost';
 
 interface AuthFixtures {
   authenticatedPage: Page;
@@ -62,118 +55,71 @@ async function skipOnboarding(page: Page): Promise<void> {
 }
 
 /**
- * Get access token from Keycloak using Resource Owner Password Credentials grant.
+ * Authenticate via browser PKCE flow.
+ *
+ * Flow:
+ * 1. Navigate to /api/v1/auth/login (initiates PKCE)
+ * 2. Get redirected to Keycloak login page
+ * 3. Fill in credentials
+ * 4. Get redirected to /api/v1/auth/callback (token exchange)
+ * 5. Get redirected to /auth/callback#access_token=...
+ * 6. AuthCallbackPage stores tokens in localStorage
+ * 7. Get redirected to /studio
  */
-async function getKeycloakToken(username: string, password: string): Promise<string | null> {
+async function authenticateViaBrowserPKCE(
+  page: Page,
+  user: { username: string; password: string },
+  options: { timeout?: number } = {}
+): Promise<boolean> {
+  const timeout = options.timeout ?? 30000;
+
   try {
-    const response = await fetch(KEYCLOAK_TOKEN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'password',
-        client_id: KEYCLOAK_CLIENT_ID,
-        client_secret: KEYCLOAK_CLIENT_SECRET,
-        username,
-        password,
-      }),
+    // Navigate to login endpoint which redirects to Keycloak
+    await page.goto(`${APP_BASE_URL}/api/v1/auth/login`, {
+      waitUntil: 'networkidle',
+      timeout,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'unknown');
-      console.warn(`Keycloak token fetch failed: ${response.status} - ${errorText}`);
-      return null;
+    // Wait for Keycloak login form
+    // The page should now be at Keycloak (e.g., http://localhost/authn/realms/default/...)
+    const usernameInput = page.locator('#username');
+    const passwordInput = page.locator('#password');
+    const loginButton = page.locator('#kc-login');
+
+    // Wait for the form to be visible
+    await usernameInput.waitFor({ state: 'visible', timeout });
+
+    // Fill in credentials
+    await usernameInput.fill(user.username);
+    await passwordInput.fill(user.password);
+
+    // Submit login form
+    await loginButton.click();
+
+    // Wait for redirect back to application
+    // After successful login, we should end up at /studio
+    await page.waitForURL(`${APP_BASE_URL}/studio/**`, { timeout });
+
+    // Verify token is stored in localStorage
+    // Check for 'access_token' (new OAuth2 PKCE flow) or 'auth_token' (legacy)
+    const token = await page.evaluate(() =>
+      localStorage.getItem('access_token') || localStorage.getItem('auth_token')
+    );
+    if (!token) {
+      console.warn('Token not found in localStorage after PKCE flow');
+      return false;
     }
 
-    const data = await response.json();
-    return data.access_token;
+    return true;
   } catch (error) {
-    console.warn('Keycloak not available, using mock auth:', error);
-    return null;
-  }
-}
-
-/**
- * Parse JWT token to extract expiration time.
- */
-function parseJwtExpiry(token: string): number {
-  try {
-    const base64Payload = token.split('.')[1];
-    const payload = JSON.parse(atob(base64Payload));
-    // exp is in seconds, convert to milliseconds
-    return payload.exp * 1000;
-  } catch {
-    // Default to 1 hour from now if parsing fails
-    return Date.now() + 60 * 60 * 1000;
-  }
-}
-
-/**
- * Set up authenticated page with either real Keycloak token or mock auth.
- */
-async function setupAuthenticatedPage(page: Page, user: TestUser): Promise<void> {
-  // Backend is enabled by default. Set BACKEND_ENABLED=false for frontend-only testing.
-  const backendEnabled = process.env.BACKEND_ENABLED !== 'false';
-  const userInfo = TEST_USERS[user];
-
-  if (backendEnabled) {
-    // Try to get real Keycloak token
-    const token = await getKeycloakToken(userInfo.username, userInfo.password);
-
-    if (token) {
-      // Calculate token expiry from JWT payload
-      const tokenExpiry = parseJwtExpiry(token);
-      // Refresh token expires in 30 days (typical)
-      const refreshExpiry = Date.now() + 30 * 24 * 60 * 60 * 1000;
-
-      // Inject token into local storage before navigation
-      // Must match the format expected by:
-      // - authSlice.ts (AUTH_STORAGE_KEY = 'studio-auth')
-      // - api/index.ts prepareHeaders (reads 'auth_token')
-      await page.addInitScript(
-        ({ token, tokenExpiry, refreshExpiry, user }) => {
-          // Store in the format expected by authSlice.ts
-          const authState = {
-            state: {
-              tokens: {
-                accessToken: token,
-                refreshToken: token, // Use same token as placeholder
-                expiresAt: tokenExpiry,
-                refreshExpiresAt: refreshExpiry,
-              },
-            },
-          };
-          localStorage.setItem('studio-auth', JSON.stringify(authState));
-
-          // CRITICAL: Also set 'auth_token' directly - this is what api/index.ts prepareHeaders reads
-          localStorage.setItem('auth_token', token);
-
-          // Also store user info for components that read it directly
-          localStorage.setItem('user_info', JSON.stringify({
-            username: user.username,
-            persona: user.persona,
-            roles: user.persona === 'admin' ? ['admin'] : user.persona === 'developer' ? ['developer'] : ['user'],
-            authenticated: true,
-          }));
-
-          // Skip onboarding modal for e2e tests
-          localStorage.setItem('langgraph_onboarding_completed', 'true');
-        },
-        { token, tokenExpiry, refreshExpiry, user: userInfo }
-      );
-    } else {
-      // Fallback to mock auth
-      await setupMockAuth(page, userInfo);
-    }
-  } else {
-    // Mock authentication for frontend-only testing
-    await setupMockAuth(page, userInfo);
+    console.warn(`Browser PKCE authentication failed for ${user.username}:`, error);
+    return false;
   }
 }
 
 /**
  * Set up mock authentication for frontend-only testing.
+ * Used when backend is unavailable or BACKEND_ENABLED=false.
  */
 async function setupMockAuth(
   page: Page,
@@ -200,6 +146,7 @@ async function setupMockAuth(
       localStorage.setItem('studio-auth', JSON.stringify(authState));
       // CRITICAL: Also set 'auth_token' directly - this is what api/index.ts prepareHeaders reads
       localStorage.setItem('auth_token', 'mock-access-token');
+      localStorage.setItem('access_token', 'mock-access-token');
       localStorage.setItem('auth_mock', 'true');
 
       // Store user info for components that read it directly
@@ -219,6 +166,43 @@ async function setupMockAuth(
 }
 
 /**
+ * Set up authenticated page with browser PKCE flow or mock auth fallback.
+ */
+async function setupAuthenticatedPage(
+  context: BrowserContext,
+  user: TestUser
+): Promise<Page> {
+  const page = await context.newPage();
+  await skipOnboarding(page);
+
+  // Check if backend is enabled
+  const backendEnabled = process.env.BACKEND_ENABLED !== 'false';
+  const userInfo = TEST_USERS[user];
+
+  if (backendEnabled) {
+    // Try browser-based PKCE authentication
+    const success = await authenticateViaBrowserPKCE(page, userInfo);
+
+    if (!success) {
+      console.warn(`PKCE auth failed for ${user}, falling back to mock auth`);
+      // Close the failed page and create a new one with mock auth
+      await page.close();
+      const newPage = await context.newPage();
+      await skipOnboarding(newPage);
+      await setupMockAuth(newPage, userInfo);
+      await newPage.goto(`${APP_BASE_URL}/studio`, { waitUntil: 'networkidle' });
+      return newPage;
+    }
+  } else {
+    // Mock authentication for frontend-only testing
+    await setupMockAuth(page, userInfo);
+    await page.goto(`${APP_BASE_URL}/studio`, { waitUntil: 'networkidle' });
+  }
+
+  return page;
+}
+
+/**
  * Extended test fixture with authenticated pages for each persona.
  * Also overrides the base `page` fixture to skip onboarding for all tests.
  */
@@ -230,17 +214,17 @@ export const test = base.extend<AuthFixtures & { page: Page }>({
   },
 
   // Generic authenticated page (uses admin by default)
-  authenticatedPage: async ({ page }, use) => {
-    await setupAuthenticatedPage(page, 'admin');
+  authenticatedPage: async ({ browser }, use) => {
+    const context = await browser.newContext();
+    const page = await setupAuthenticatedPage(context, 'admin');
     await use(page);
+    await context.close();
   },
 
   // Admin-authenticated page
   adminPage: async ({ browser }, use) => {
     const context = await browser.newContext();
-    const page = await context.newPage();
-    await skipOnboarding(page);
-    await setupAuthenticatedPage(page, 'admin');
+    const page = await setupAuthenticatedPage(context, 'admin');
     await use(page);
     await context.close();
   },
@@ -248,9 +232,7 @@ export const test = base.extend<AuthFixtures & { page: Page }>({
   // Alice (power user) authenticated page
   alicePage: async ({ browser }, use) => {
     const context = await browser.newContext();
-    const page = await context.newPage();
-    await skipOnboarding(page);
-    await setupAuthenticatedPage(page, 'alice');
+    const page = await setupAuthenticatedPage(context, 'alice');
     await use(page);
     await context.close();
   },
@@ -258,9 +240,7 @@ export const test = base.extend<AuthFixtures & { page: Page }>({
   // Bob (standard user) authenticated page
   bobPage: async ({ browser }, use) => {
     const context = await browser.newContext();
-    const page = await context.newPage();
-    await skipOnboarding(page);
-    await setupAuthenticatedPage(page, 'bob');
+    const page = await setupAuthenticatedPage(context, 'bob');
     await use(page);
     await context.close();
   },

@@ -190,6 +190,52 @@ describe("authSlice", () => {
 
       expect(localStorage.removeItem).toHaveBeenCalledWith("studio-auth");
     });
+
+    it("should clear all OAuth2 token keys from localStorage", () => {
+      const store = createTestStore({ tokens: mockTokens });
+      store.dispatch(logout());
+
+      // clearAllAuthStorage removes: studio-auth, access_token, refresh_token, auth_token
+      expect(localStorage.removeItem).toHaveBeenCalledWith("studio-auth");
+      expect(localStorage.removeItem).toHaveBeenCalledWith("access_token");
+      expect(localStorage.removeItem).toHaveBeenCalledWith("refresh_token");
+      expect(localStorage.removeItem).toHaveBeenCalledWith("auth_token");
+    });
+
+    it("should clear legacy auth_token key from localStorage", () => {
+      // GIVEN: Legacy auth_token exists
+      mockLocalStorage["auth_token"] = "legacy-token";
+
+      const store = createTestStore({ tokens: mockTokens });
+      store.dispatch(logout());
+
+      // THEN: Legacy key should be cleared
+      expect(localStorage.removeItem).toHaveBeenCalledWith("auth_token");
+    });
+
+    it("should set isAuthenticated to false after logout", () => {
+      const store = createTestStore({
+        user: mockUser,
+        tokens: mockTokens,
+      });
+
+      expect(selectIsAuthenticated(store.getState())).toBe(true);
+      store.dispatch(logout());
+      expect(selectIsAuthenticated(store.getState())).toBe(false);
+    });
+
+    it("should be idempotent - multiple logouts should not error", () => {
+      const store = createTestStore({ user: mockUser });
+
+      // Multiple logout calls should not throw
+      expect(() => {
+        store.dispatch(logout());
+        store.dispatch(logout());
+        store.dispatch(logout());
+      }).not.toThrow();
+
+      expect(selectUser(store.getState())).toBeNull();
+    });
   });
 
   describe("clearAuthError", () => {
@@ -217,6 +263,84 @@ describe("authSlice", () => {
         "studio-auth",
         JSON.stringify({ state: { tokens: mockTokens } }),
       );
+    });
+
+    it("should update both access and refresh tokens", () => {
+      const store = createTestStore({ tokens: mockTokens });
+      const newTokens: AuthTokens = {
+        accessToken: "updated-access-token",
+        refreshToken: "updated-refresh-token",
+        expiresAt: Date.now() + 7200000, // 2 hours
+        refreshExpiresAt: Date.now() + 172800000, // 48 hours
+      };
+
+      store.dispatch(setTokens(newTokens));
+
+      const tokens = selectTokens(store.getState());
+      expect(tokens?.accessToken).toBe("updated-access-token");
+      expect(tokens?.refreshToken).toBe("updated-refresh-token");
+    });
+
+    it("should preserve expiration timestamps", () => {
+      const store = createTestStore();
+      const futureExpiry = Date.now() + 3600000;
+      const futureRefreshExpiry = Date.now() + 86400000;
+      const tokensWithExpiry: AuthTokens = {
+        ...mockTokens,
+        expiresAt: futureExpiry,
+        refreshExpiresAt: futureRefreshExpiry,
+      };
+
+      store.dispatch(setTokens(tokensWithExpiry));
+
+      const tokens = selectTokens(store.getState());
+      expect(tokens?.expiresAt).toBe(futureExpiry);
+      expect(tokens?.refreshExpiresAt).toBe(futureRefreshExpiry);
+    });
+  });
+
+  describe("Token Expiration Handling", () => {
+    it("should detect expired access token", async () => {
+      const expiredTokens: AuthTokens = {
+        accessToken: "expired-token",
+        refreshToken: "valid-refresh",
+        expiresAt: Date.now() - 1000, // Already expired
+        refreshExpiresAt: Date.now() + 86400000, // Still valid
+      };
+
+      // Token with expiresAt in the past should be considered expired
+      // The check is: Date.now() >= expiresAt - BUFFER (5 min)
+      expect(expiredTokens.expiresAt < Date.now()).toBe(true);
+    });
+
+    it("should detect token about to expire within buffer", async () => {
+      // Token expires in 3 minutes (within 5 min buffer)
+      const tokenExpiresSoon: AuthTokens = {
+        accessToken: "soon-expired-token",
+        refreshToken: "valid-refresh",
+        expiresAt: Date.now() + 3 * 60 * 1000, // 3 minutes
+        refreshExpiresAt: Date.now() + 86400000,
+      };
+
+      // With 5 minute buffer, token expiring in 3 minutes should trigger refresh
+      const bufferMs = 5 * 60 * 1000;
+      const shouldRefresh = Date.now() >= tokenExpiresSoon.expiresAt - bufferMs;
+      expect(shouldRefresh).toBe(true);
+    });
+
+    it("should not refresh token with plenty of time remaining", async () => {
+      // Token expires in 30 minutes (outside 5 min buffer)
+      const validTokens: AuthTokens = {
+        accessToken: "valid-token",
+        refreshToken: "valid-refresh",
+        expiresAt: Date.now() + 30 * 60 * 1000, // 30 minutes
+        refreshExpiresAt: Date.now() + 86400000,
+      };
+
+      // With 5 minute buffer, token expiring in 30 minutes should NOT trigger refresh
+      const bufferMs = 5 * 60 * 1000;
+      const shouldRefresh = Date.now() >= validTokens.expiresAt - bufferMs;
+      expect(shouldRefresh).toBe(false);
     });
   });
 

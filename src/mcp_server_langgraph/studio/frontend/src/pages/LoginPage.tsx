@@ -3,31 +3,22 @@
  *
  * Native login page for the Studio application.
  *
- * Authentication Options:
- * 1. SSO Login (recommended) - OAuth2 Authorization Code + PKCE flow (ADR-0071)
- * 2. Direct Login (deprecated) - ROPC flow for backward compatibility
+ * Authentication: OAuth2 Authorization Code + PKCE flow (ADR-0071, RFC 9700)
  *
- * Per RFC 9700: ROPC is deprecated. Use Authorization Code + PKCE instead.
+ * Features:
+ * - Generic SSO button that redirects to Keycloak for authentication
+ * - Dynamic SSO Identity Provider buttons fetched from Keycloak
+ * - Each IdP button uses kc_idp_hint for direct provider redirect
+ *
+ * Per RFC 9700: ROPC MUST NOT be used. Use Authorization Code + PKCE instead.
  */
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import {
-  Lock,
-  Mail,
-  Eye,
-  EyeOff,
-  AlertCircle,
-  Loader2,
-  ExternalLink,
-  Key,
-  Shield,
-  LogIn,
-} from "lucide-react";
-import { useLoginMutation, useGetIdentityProvidersQuery } from "../api";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setUser, selectIsAuthenticated } from "../store/slices/authSlice";
-import { setPersona } from "../store/slices/personaSlice";
+import { ExternalLink, Key, Shield, LogIn, Loader2 } from "lucide-react";
+import { useGetIdentityProvidersQuery } from "../api";
+import { useAppSelector } from "../store/hooks";
+import { selectIsAuthenticated } from "../store/slices/authSlice";
 
 // Provider icon mapping - returns appropriate Lucide icon or SVG for known providers
 function getProviderIcon(icon: string) {
@@ -94,15 +85,9 @@ function getProviderIcon(icon: string) {
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [login, { isLoading }] = useLoginMutation();
+  // Fetch SSO identity providers from Keycloak
   const { data: idpData, isLoading: idpLoading } =
     useGetIdentityProvidersQuery();
 
@@ -113,52 +98,6 @@ export function LoginPage() {
       navigate("/studio", { replace: true });
     }
   }, [isAuthenticated, navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    if (!username.trim() || !password.trim()) {
-      setError("Please enter both username and password");
-      return;
-    }
-
-    try {
-      const result = await login({ username, password }).unwrap();
-
-      // Store tokens in localStorage for API calls
-      localStorage.setItem("access_token", result.access_token);
-      if (result.refresh_token) {
-        localStorage.setItem("refresh_token", result.refresh_token);
-      }
-
-      // Update Redux state with user info
-      dispatch(
-        setUser({
-          username: result.user.username,
-          email: result.user.email,
-          roles: result.user.roles,
-          persona: result.user.persona,
-        }),
-      );
-      dispatch(setPersona(result.user.persona));
-
-      // Navigate to studio
-      navigate("/studio", { replace: true });
-    } catch (err) {
-      // Extract error message from API response
-      let errorMessage = "Login failed. Please check your credentials.";
-
-      if (err && typeof err === "object" && "data" in err) {
-        const data = err.data as { detail?: string; message?: string };
-        errorMessage = data.detail || data.message || errorMessage;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-
-      setError(errorMessage);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 px-4">
@@ -190,153 +129,64 @@ export function LoginPage() {
 
         {/* Login Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
-          {/* SSO Login Button (OAuth2 + PKCE - Recommended) */}
-          <div className="mb-6">
-            <a
-              href="/api/v1/auth/login"
-              className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            >
-              <LogIn className="h-5 w-5" />
-              Sign in with SSO
-            </a>
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
-              Recommended - Uses secure OAuth2 + PKCE flow
-            </p>
-          </div>
-
-          {/* Divider */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+          {/* Loading state */}
+          {idpLoading && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2
+                className="h-8 w-8 animate-spin text-blue-600"
+                role="status"
+                aria-label="Loading identity providers"
+              />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                or sign in directly
-              </span>
-            </div>
-          </div>
+          )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Error Alert */}
-            {error && (
-              <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  {error}
+          {/* Main SSO Login Button (OAuth2 + PKCE) */}
+          {!idpLoading && (
+            <>
+              <div className="mb-6">
+                <a
+                  href="/api/v1/auth/login"
+                  className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                >
+                  <LogIn className="h-5 w-5" />
+                  Sign in with SSO
+                </a>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+                  Secure OAuth2 + PKCE authentication
                 </p>
               </div>
-            )}
 
-            {/* Username Field */}
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Username
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  placeholder="Enter your username"
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoading ? (
+              {/* SSO Identity Providers Section */}
+              {idpData && idpData.identity_providers.length > 0 && (
                 <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Signing in...
+                  {/* Divider */}
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                        or continue with
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* IdP Buttons */}
+                  <div className="space-y-3">
+                    {idpData.identity_providers.map((provider) => (
+                      <a
+                        key={provider.alias}
+                        href={provider.login_url}
+                        className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        {getProviderIcon(provider.icon)}
+                        <span>{provider.display_name}</span>
+                      </a>
+                    ))}
+                  </div>
                 </>
-              ) : (
-                "Sign In"
               )}
-            </button>
-          </form>
-
-          {/* SSO Identity Providers Section */}
-          {!idpLoading && idpData && idpData.identity_providers.length > 0 && (
-            <div className="mt-6">
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                    or continue with
-                  </span>
-                </div>
-              </div>
-
-              {/* IdP Buttons */}
-              <div className="mt-4 space-y-3">
-                {idpData.identity_providers.map((provider) => (
-                  <a
-                    key={provider.alias}
-                    href={provider.login_url}
-                    className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    {getProviderIcon(provider.icon)}
-                    <span>{provider.display_name}</span>
-                  </a>
-                ))}
-              </div>
-            </div>
+            </>
           )}
         </div>
 

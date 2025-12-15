@@ -5,7 +5,9 @@
  * invalidation, and real-time updates.
  */
 
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+
+import { baseQueryWithReauth } from "./baseQueryWithReauth";
 
 // Import types from centralized location
 import type {
@@ -195,22 +197,10 @@ function periodToDateRange(period: string): {
 }
 
 // API Definition
+// Uses baseQueryWithReauth for automatic 401 handling and token refresh
 export const api = createApi({
   reducerPath: "api",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "/api/v1",
-    // Include credentials (cookies) for forward-auth (Keycloak SSO)
-    // This ensures auth cookies are sent with requests
-    credentials: "include",
-    prepareHeaders: (headers) => {
-      // Add auth token if available (for direct JWT auth)
-      const token = localStorage.getItem("auth_token");
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: [
     "Workflow",
     "Session",
