@@ -85,6 +85,15 @@ services:
     image: traefik:v3.6.4
     # RESILIENCE: Auto-restart on failure for critical gateway infrastructure
     restart: unless-stopped
+    #
+    # DEPENDENCY DESIGN (Intentional):
+    # Traefik has NO explicit depends_on. This is by design because:
+    # 1. Traefik uses Docker provider for DYNAMIC service discovery via labels
+    # 2. As the gateway, it should start first to accept connections
+    # 3. Routes to unhealthy backends return 502/503 (temporary during startup)
+    # 4. Backends are automatically added to routing when they become healthy
+    # 5. Adding depends_on would delay ALL routes (including /authn needed by forward-auth)
+    #
     command:
       # API and Dashboard
       - "--api.dashboard=true"
@@ -304,6 +313,8 @@ services:
 
   openfga-test:
     image: openfga/openfga:v1.11.2
+    # RESILIENCE: Auto-restart on failure for critical authorization infrastructure
+    restart: unless-stopped
     command: run --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable'
     depends_on:
       postgres-test:
@@ -402,6 +413,8 @@ services:
   # ==============================================================================
 
   keycloak-test:
+    # RESILIENCE: Auto-restart on failure for critical authentication infrastructure
+    restart: unless-stopped
     # Use pre-optimized Keycloak image (no JIT compilation at startup)
     # This matches production behavior and speeds up container startup
     #
@@ -723,6 +736,8 @@ services:
   redis-test:
     # Redis 7.2 to match Memorystore (terraform/environments/gcp-preview/main.tf: redis_version = "REDIS_7_2")
     image: redis:7.2-alpine
+    # RESILIENCE: Auto-restart on failure for session/cache infrastructure
+    restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
     ports:
       - "9379:6379"
@@ -783,6 +798,8 @@ services:
   qdrant-test:
     # Use unprivileged image for non-root execution (Kubernetes-compatible)
     image: qdrant/qdrant:v1.15.5-unprivileged
+    # RESILIENCE: Auto-restart on failure for vector database infrastructure
+    restart: unless-stopped
     # Qdrant unprivileged runs as UID 1000
     user: "1000"
     ports:
@@ -840,6 +857,8 @@ services:
   # ==============================================================================
 
   mcp-server-test:
+    # RESILIENCE: Auto-restart on failure for MCP server application
+    restart: unless-stopped
     # CODEX FINDING FIX (2025-11-21): MCP Server for E2E Tests
     # =========================================================
     # Enables end-to-end testing of MCP protocol and full user journeys
@@ -878,6 +897,9 @@ services:
       redis-test:
         condition: service_healthy
       qdrant-test:
+        condition: service_healthy
+      # OBSERVABILITY: Ensure OTLP endpoint is ready for telemetry from first request
+      alloy-test:
         condition: service_healthy
     ports:
       - "8000:8000"  # HTTP API
@@ -1239,6 +1261,8 @@ services:
 
   loki-test:
     image: grafana/loki:3.6.2
+    # RESILIENCE: Auto-restart on failure for log aggregation
+    restart: unless-stopped
     # Loki runs as UID 10001 in the official image (non-root for security)
     # Init container (loki-init) sets volume permissions before startup
     user: "10001"
@@ -1290,6 +1314,8 @@ services:
 
   tempo-test:
     image: grafana/tempo:2.9.0
+    # RESILIENCE: Auto-restart on failure for distributed tracing
+    restart: unless-stopped
     # Tempo runs as UID 10001 in the official image (non-root for security)
     # Init container (tempo-init) sets volume permissions before startup
     user: "10001"
@@ -1339,6 +1365,8 @@ services:
 
   mimir-test:
     image: grafana/mimir:3.0.1
+    # RESILIENCE: Auto-restart on failure for metrics storage
+    restart: unless-stopped
     # Mimir runs as UID 10001 in the official image (non-root for security)
     # Init container (mimir-init) sets volume permissions before startup
     user: "10001"
@@ -1390,6 +1418,8 @@ services:
 
   alloy-test:
     image: grafana/alloy:v1.12.0
+    # RESILIENCE: Auto-restart on failure for telemetry collection
+    restart: unless-stopped
     command:
       - run
       - /etc/alloy/config.alloy
@@ -1480,6 +1510,8 @@ services:
   # 4. If authorized, request is proxied to OpenFGA Playground
 
   authz-proxy-test:
+    # RESILIENCE: Auto-restart on failure for authorization proxy
+    restart: unless-stopped
     image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-authz-proxy:latest
     build:
       context: .
@@ -1492,6 +1524,9 @@ services:
         condition: service_healthy
       openfga-seed-test:
         condition: service_completed_successfully  # Wait for tuples to be seeded
+      # OBSERVABILITY: Ensure OTLP endpoint is ready for telemetry from first request
+      alloy-test:
+        condition: service_healthy
     ports:
       - "9004:8003"  # Auth proxy port (offset +1001 from internal port)
     env_file:
