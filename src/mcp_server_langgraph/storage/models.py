@@ -11,7 +11,7 @@ These models support both Redis and PostgreSQL storage backends.
 """
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
@@ -146,3 +146,246 @@ class CostRecord(BaseModel):
     def serialize_datetime(self, value: datetime) -> str:
         """Serialize datetime to ISO 8601 format."""
         return value.isoformat()
+
+
+# =============================================================================
+# Project Models (Unified Workspace Paradigm)
+# =============================================================================
+
+
+class ProjectWorkflowRef(BaseModel):
+    """Reference to a workflow within a project."""
+
+    id: str = Field(description="Workflow ID")
+    name: str = Field(description="Workflow name")
+    added_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="When added to project")
+
+
+class ProjectSessionRef(BaseModel):
+    """Reference to a session within a project."""
+
+    id: str = Field(description="Session ID")
+    name: str = Field(description="Session name")
+    message_count: int = Field(default=0, description="Number of messages")
+    added_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="When added to project")
+
+
+class ProjectConnection(BaseModel):
+    """Connection (MCP server, vector store, API key) within a project."""
+
+    id: str = Field(description="Connection ID")
+    connection_type: str = Field(description="Type: mcp_server, vector_store, api_key")
+    name: str = Field(description="Connection name")
+    status: str = Field(default="active", description="Connection status")
+    config: dict[str, Any] | None = Field(default=None, description="Connection configuration")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Creation timestamp")
+
+
+class ProjectMember(BaseModel):
+    """Member of a project with role."""
+
+    user_id: str = Field(description="User ID")
+    role: str = Field(description="Role: owner, editor, viewer, executor")
+    added_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="When added")
+
+
+class Project(BaseModel):
+    """Full project state for storage (Unified Workspace container)."""
+
+    model_config = ConfigDict(ser_json_timedelta="iso8601")
+
+    id: str = Field(description="Unique project ID")
+    name: str = Field(description="Project name")
+    description: str = Field(default="", description="Project description")
+    organization_id: str | None = Field(default=None, description="Organization ID")
+    owner_id: str = Field(description="Owner user ID")
+    status: str = Field(default="active", description="Project status")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Creation timestamp")
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Last update timestamp")
+
+    # Child resources
+    workflows: list[ProjectWorkflowRef] = Field(default_factory=list, description="Workflows in project")
+    sessions: list[ProjectSessionRef] = Field(default_factory=list, description="Sessions in project")
+    connections: list[ProjectConnection] = Field(default_factory=list, description="Connections in project")
+    members: list[ProjectMember] = Field(default_factory=list, description="Project members")
+
+    @field_serializer("created_at", "updated_at")
+    def serialize_datetime(self, value: datetime) -> str:
+        """Serialize datetime to ISO 8601 format."""
+        return value.isoformat()
+
+    def to_summary(self) -> "ProjectSummary":
+        """Convert to summary model for list responses."""
+        return ProjectSummary(
+            id=self.id,
+            name=self.name,
+            description=self.description,
+            organization_id=self.organization_id,
+            owner_id=self.owner_id,
+            status=self.status,
+            workflow_count=len(self.workflows),
+            session_count=len(self.sessions),
+            connection_count=len(self.connections),
+            member_count=len(self.members),
+            created_at=self.created_at,
+            updated_at=self.updated_at,
+        )
+
+
+class ProjectSummary(BaseModel):
+    """Summary of a project for list responses."""
+
+    id: str = Field(description="Project ID")
+    name: str = Field(description="Project name")
+    description: str = Field(default="", description="Project description")
+    organization_id: str | None = Field(default=None, description="Organization ID")
+    owner_id: str = Field(description="Owner user ID")
+    status: str = Field(default="active", description="Project status")
+    workflow_count: int = Field(default=0, description="Number of workflows")
+    session_count: int = Field(default=0, description="Number of sessions")
+    connection_count: int = Field(default=0, description="Number of connections")
+    member_count: int = Field(default=0, description="Number of members")
+    created_at: datetime = Field(description="Creation timestamp")
+    updated_at: datetime = Field(description="Last update timestamp")
+
+
+# =============================================================================
+# MCP Connection Models (OAuth2 and API Key Authentication)
+# =============================================================================
+
+AuthType = Literal["none", "api_key", "oauth2"]
+ConnectionStatus = Literal["disconnected", "connecting", "connected", "error", "auth_required"]
+
+
+class OAuth2Config(BaseModel):
+    """OAuth2 configuration (client credentials only, not tokens)."""
+
+    client_id: str | None = Field(default=None, description="OAuth2 client ID")
+    authorization_url: str | None = Field(default=None, description="Authorization endpoint URL")
+    token_url: str | None = Field(default=None, description="Token endpoint URL")
+    scopes: list[str] = Field(default_factory=list, description="OAuth2 scopes")
+
+
+class MCPConnection(BaseModel):
+    """Full MCP connection entity for storage."""
+
+    model_config = ConfigDict(ser_json_timedelta="iso8601")
+
+    id: str = Field(description="Unique connection ID")
+    name: str = Field(description="Display name")
+    description: str | None = Field(default=None, description="Connection description")
+    url: str = Field(description="MCP server URL")
+
+    # Authentication
+    auth_type: AuthType = Field(default="none", description="Authentication method")
+    oauth2_config: OAuth2Config | None = Field(default=None, description="OAuth2 configuration")
+
+    # Connection state
+    status: ConnectionStatus = Field(default="disconnected", description="Connection status")
+    last_error: str | None = Field(default=None, description="Last error message")
+    last_connected_at: datetime | None = Field(default=None, description="Last successful connection")
+
+    # Server info (populated after successful connection)
+    server_name: str | None = Field(default=None, description="MCP server name")
+    server_version: str | None = Field(default=None, description="MCP server version")
+    server_capabilities: dict[str, Any] | None = Field(default=None, description="Server capabilities")
+
+    # Cached counts
+    tool_count: int = Field(default=0, description="Number of tools available")
+    resource_count: int = Field(default=0, description="Number of resources available")
+    prompt_count: int = Field(default=0, description="Number of prompts available")
+
+    # Ownership
+    owner_id: str = Field(description="Owner user ID")
+    organization_id: str | None = Field(default=None, description="Organization ID")
+    project_id: str | None = Field(default=None, description="Project ID")
+
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Creation timestamp")
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Last update timestamp")
+
+    @field_serializer("created_at", "updated_at", "last_connected_at")
+    def serialize_datetime(self, value: datetime | None) -> str | None:
+        """Serialize datetime to ISO 8601 format."""
+        return value.isoformat() if value else None
+
+    def to_summary(self) -> "MCPConnectionSummary":
+        """Convert to summary model for list responses."""
+        return MCPConnectionSummary(
+            id=self.id,
+            name=self.name,
+            url=self.url,
+            auth_type=self.auth_type,
+            status=self.status,
+            server_name=self.server_name,
+            tool_count=self.tool_count,
+            resource_count=self.resource_count,
+            prompt_count=self.prompt_count,
+            last_connected_at=self.last_connected_at,
+            created_at=self.created_at,
+        )
+
+
+class MCPConnectionSummary(BaseModel):
+    """Summary of an MCP connection for list responses."""
+
+    id: str = Field(description="Connection ID")
+    name: str = Field(description="Display name")
+    url: str = Field(description="MCP server URL")
+    auth_type: AuthType = Field(description="Authentication method")
+    status: ConnectionStatus = Field(description="Connection status")
+    server_name: str | None = Field(default=None, description="MCP server name")
+    tool_count: int = Field(default=0, description="Number of tools available")
+    resource_count: int = Field(default=0, description="Number of resources available")
+    prompt_count: int = Field(default=0, description="Number of prompts available")
+    last_connected_at: datetime | None = Field(default=None, description="Last successful connection")
+    created_at: datetime = Field(description="Creation timestamp")
+
+
+class MCPConnectionCreate(BaseModel):
+    """Request model for creating an MCP connection."""
+
+    name: str = Field(..., min_length=1, max_length=255, description="Display name")
+    description: str | None = Field(default=None, max_length=2000, description="Description")
+    url: str = Field(..., min_length=1, max_length=2048, description="MCP server URL")
+    auth_type: AuthType = Field(default="none", description="Authentication method")
+
+    # API Key auth (stored securely in secrets provider)
+    api_key: str | None = Field(default=None, description="API key (stored securely)")
+
+    # OAuth2 configuration
+    oauth2_client_id: str | None = Field(default=None, description="OAuth2 client ID")
+    oauth2_client_secret: str | None = Field(default=None, description="OAuth2 client secret (stored securely)")
+    oauth2_scopes: list[str] | None = Field(default=None, description="OAuth2 scopes")
+
+    # Association
+    project_id: str | None = Field(default=None, description="Project to associate with")
+
+
+class MCPConnectionUpdate(BaseModel):
+    """Request model for updating an MCP connection."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=255, description="Display name")
+    description: str | None = Field(default=None, max_length=2000, description="Description")
+    url: str | None = Field(default=None, min_length=1, max_length=2048, description="MCP server URL")
+    # Auth changes require separate endpoints for security
+
+
+class MCPConnectionTestResult(BaseModel):
+    """Result of testing an MCP connection."""
+
+    success: bool = Field(description="Whether the test was successful")
+    server_name: str | None = Field(default=None, description="MCP server name")
+    server_version: str | None = Field(default=None, description="MCP server version")
+    tool_count: int = Field(default=0, description="Number of tools available")
+    resource_count: int = Field(default=0, description="Number of resources available")
+    prompt_count: int = Field(default=0, description="Number of prompts available")
+    latency_ms: float | None = Field(default=None, description="Connection latency in milliseconds")
+    error: str | None = Field(default=None, description="Error message if test failed")
+
+
+class OAuth2StartResponse(BaseModel):
+    """Response from starting an OAuth2 authorization flow."""
+
+    authorization_url: str = Field(description="URL to redirect user to for authorization")
+    state: str = Field(description="State parameter for CSRF protection")

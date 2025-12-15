@@ -12,6 +12,9 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 
 from mcp_server_langgraph.storage.models import (
+    Project,
+    ProjectConnection,
+    ProjectSummary,
     Session,
     SessionSummary,
     Workflow,
@@ -135,4 +138,89 @@ class SessionRepository(BaseRepository[Session, SessionSummary]):
     @abstractmethod
     async def get_messages(self, session_id: str) -> builtins.list[dict[str, Any]] | None:
         """Get all messages for a session. Returns None if session not found."""
+        pass
+
+
+class ProjectRepository(BaseRepository[Project, ProjectSummary]):
+    """Repository for Project entities (Unified Workspace Paradigm)."""
+
+    @abstractmethod
+    async def create(self, entity: Project) -> Project:
+        """Create a new project."""
+        pass
+
+    @abstractmethod
+    async def get(self, entity_id: str) -> Project | None:
+        """Get a project by ID with all child resources."""
+        pass
+
+    @abstractmethod
+    async def update(self, entity_id: str, data: dict[str, Any]) -> Project | None:
+        """Update a project. Returns None if not found."""
+        pass
+
+    @abstractmethod
+    async def delete(self, entity_id: str, cascade: bool = False) -> bool:
+        """Delete a project. If cascade=True, also deletes child resources."""
+        pass
+
+    @abstractmethod
+    async def list(
+        self,
+        cursor: str | None = None,
+        limit: int = 20,
+        owner_id: str | None = None,
+        organization_id: str | None = None,
+        **filters: Any,
+    ) -> tuple[list[ProjectSummary], str | None]:
+        """List projects with pagination. Returns (summaries, next_cursor)."""
+        pass
+
+    # Child resource management
+
+    @abstractmethod
+    async def add_workflow(self, project_id: str, workflow_id: str, workflow_name: str) -> Project | None:
+        """Add a workflow to a project. Returns None if project not found."""
+        pass
+
+    @abstractmethod
+    async def remove_workflow(self, project_id: str, workflow_id: str) -> Project | None:
+        """Remove a workflow from a project. Returns None if project not found."""
+        pass
+
+    @abstractmethod
+    async def add_session(self, project_id: str, session_id: str, session_name: str) -> Project | None:
+        """Add a session to a project. Returns None if project not found."""
+        pass
+
+    @abstractmethod
+    async def remove_session(self, project_id: str, session_id: str) -> Project | None:
+        """Remove a session from a project. Returns None if project not found."""
+        pass
+
+    @abstractmethod
+    async def add_connection(self, project_id: str, connection: ProjectConnection) -> Project | None:
+        """Add a connection to a project. Returns None if project not found."""
+        pass
+
+    @abstractmethod
+    async def remove_connection(self, project_id: str, connection_id: str) -> Project | None:
+        """Remove a connection from a project. Returns None if project not found."""
+        pass
+
+    # Member management
+
+    @abstractmethod
+    async def add_member(self, project_id: str, user_id: str, role: str) -> Project | None:
+        """Add a member to a project. Returns None if project not found."""
+        pass
+
+    @abstractmethod
+    async def remove_member(self, project_id: str, user_id: str) -> Project | None:
+        """Remove a member from a project. Returns None if project not found."""
+        pass
+
+    @abstractmethod
+    async def get_member_role(self, project_id: str, user_id: str) -> str | None:
+        """Get a member's role in a project. Returns None if not a member."""
         pass
