@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     jwt_expiration_seconds: int = 3600
     use_password_hashing: bool = True  # Enable bcrypt password hashing for InMemoryUserProvider (default: secure)
 
+    # DPoP (Demonstrating Proof of Possession) - RFC 9449
+    # When enabled, ALL tokens require a valid DPoP proof (strict mode)
+    # When disabled (default), only tokens with cnf.jkt claim require DPoP
+    # SECURITY: Enable in high-security environments to prevent token theft
+    dpop_required: bool = False  # Default: optional (DPoP-bound tokens still require proof)
+
     # Authorization Fallback Control (OpenAI Codex Finding #1)
     # SECURITY: Controls whether authorization can fall back to role-based checks when OpenFGA is unavailable
     # Default: False (fail-closed, secure by default)

@@ -138,6 +138,7 @@ class AuthMiddleware:
         settings: Any | None = None,
         token_denylist: TokenDenylist | None = None,
         dpop_replay_cache: DPoPReplayCache | None = None,
+        dpop_required: bool = False,
     ):
         """
         Initialize AuthMiddleware
@@ -151,6 +152,8 @@ class AuthMiddleware:
             settings: Application settings (for authorization fallback control)
             token_denylist: Token denylist for immediate JWT revocation (OWASP best practice)
             dpop_replay_cache: DPoP jti replay cache for replay protection (RFC 9449)
+            dpop_required: If True, ALL tokens require DPoP proof (strict mode, RFC 9449 Section 10).
+                          If False (default), only tokens with cnf.jkt claim require DPoP.
         """
         self.secret_key = secret_key
         self.openfga = openfga_client
@@ -158,6 +161,7 @@ class AuthMiddleware:
         self.settings = settings
         self.token_denylist = token_denylist
         self.dpop_replay_cache = dpop_replay_cache
+        self.dpop_required = dpop_required
 
         # Use provided user provider or default to in-memory for backward compatibility
         if user_provider is None:
@@ -192,6 +196,7 @@ class AuthMiddleware:
                 "session_enabled": session_store is not None,
                 "denylist_enabled": token_denylist is not None,
                 "dpop_enabled": dpop_replay_cache is not None,
+                "dpop_required": dpop_required,
                 "allow_auth_fallback": getattr(settings, "allow_auth_fallback", None) if settings else None,
             },
         )
@@ -398,9 +403,11 @@ class AuthMiddleware:
         DPoP provides token binding by requiring clients to prove possession of a
         private key. This prevents token theft and replay attacks.
 
-        Behavior:
-        - If token has cnf.jkt claim (DPoP-bound): DPoP proof is REQUIRED
-        - If token has no cnf claim: DPoP proof is optional (verified if provided)
+        Behavior (depends on self.dpop_required):
+        - If dpop_required=True: ALL tokens require DPoP proof (strict mode)
+        - If dpop_required=False (default):
+          - Tokens with cnf.jkt claim (DPoP-bound): DPoP proof is REQUIRED
+          - Tokens without cnf claim: DPoP proof is optional (verified if provided)
 
         Args:
             token: JWT access token to verify
@@ -424,15 +431,23 @@ class AuthMiddleware:
         cnf = result.payload.get("cnf")
         is_dpop_bound = cnf is not None and "jkt" in cnf
 
-        if is_dpop_bound and not dpop_proof:
-            # Token is bound but no proof provided - reject
+        # Check if DPoP is required (either by enforcement mode or token binding)
+        dpop_required_for_this_request = self.dpop_required or is_dpop_bound
+
+        if dpop_required_for_this_request and not dpop_proof:
+            # DPoP is required (by enforcement or token binding) but no proof provided - reject
+            reason = "enforcement mode" if self.dpop_required else "sender-constrained token"
             logger.warning(
-                "DPoP-bound token presented without DPoP proof",
-                extra={"sub": result.payload.get("sub")},
+                f"DPoP proof required ({reason}) but not provided",
+                extra={
+                    "sub": result.payload.get("sub"),
+                    "dpop_required": self.dpop_required,
+                    "is_dpop_bound": is_dpop_bound,
+                },
             )
             return TokenVerification(
                 valid=False,
-                error="DPoP proof required for sender-constrained token",
+                error=f"DPoP proof required ({reason})",
             )
 
         if dpop_proof:

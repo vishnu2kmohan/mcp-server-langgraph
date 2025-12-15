@@ -2952,6 +2952,173 @@ class TestE2ETestsCIParity:
         assert "KEYCLOAK_CLIENT_SECRET" in script_content, "test-e2e.sh must set KEYCLOAK_CLIENT_SECRET for authentication"
 
 
+@pytest.mark.xdist_group(name="testfrontendciparity")
+class TestFrontendCIParity:
+    """Validate that validate-pre-push-ci includes frontend tests for full CI parity.
+
+    CRITICAL: CI runs a separate 'frontend-build' job that executes:
+    - npm run lint (ESLint)
+    - npm run typecheck (TypeScript)
+    - npm test (Vitest unit/integration)
+    - npm run build (build verification)
+
+    Without frontend tests in validate-pre-push-ci, developers can pass local
+    validation but fail CI due to frontend lint, typecheck, or test failures.
+
+    Added 2025-12-15 to fix frontend CI parity gap.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def makefile_content(self, shared_makefile_content: str) -> str:
+        """Delegate to shared Makefile content fixture."""
+        return shared_makefile_content
+
+    @pytest.fixture
+    def ci_workflow_path(self, repo_root: Path) -> Path:
+        """Get path to CI workflow."""
+        return repo_root / ".github" / "workflows" / "ci.yaml"
+
+    @pytest.fixture
+    def ci_workflow_content(self, ci_workflow_path: Path) -> str:
+        """Read CI workflow content."""
+        with open(ci_workflow_path) as f:
+            return f.read()
+
+    def test_ci_runs_frontend_tests(self, ci_workflow_content: str):
+        """Verify that CI actually runs frontend tests (justifies including them locally)."""
+        # CI should have a frontend-build job
+        assert "frontend-build" in ci_workflow_content or "frontend" in ci_workflow_content, (
+            "CI workflow should include frontend tests"
+        )
+
+        # CI should run npm test
+        assert "npm test" in ci_workflow_content or "npm run test" in ci_workflow_content, (
+            "CI should run 'npm test' for frontend unit tests"
+        )
+
+    def test_validate_pre_push_ci_includes_frontend_tests(self, makefile_content: str):
+        """Test that validate-pre-push-ci runs frontend tests.
+
+        CRITICAL: CI runs frontend-build job with lint, typecheck, test, and build.
+        validate-pre-push-ci must include these for true CI parity.
+        """
+        # Extract validate-pre-push-full target (called by validate-pre-push-ci)
+        full_match = re.search(
+            r"^validate-pre-push-full:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+
+        assert full_match, "Could not find validate-pre-push-full target in Makefile"
+
+        target_content = full_match.group(0)
+
+        # Should include frontend tests via test-frontend.sh script or npm commands
+        has_frontend = (
+            "test-frontend.sh" in target_content
+            or "test-frontend-ci" in target_content
+            or "npm test" in target_content
+            or "npm run test" in target_content
+        )
+
+        assert has_frontend, (
+            "validate-pre-push-full MUST include frontend tests for CI parity\n"
+            "\n"
+            "Current issue:\n"
+            "  - CI runs 'frontend-build' job with lint, typecheck, test, build\n"
+            "  - validate-pre-push-ci only runs Python tests\n"
+            "  - Frontend lint/typecheck/test failures only caught in CI\n"
+            "  - Result: Code can pass local validation but fail CI\n"
+            "\n"
+            "Impact:\n"
+            "  - ESLint errors not caught locally\n"
+            "  - TypeScript errors not caught locally\n"
+            "  - Vitest test failures not caught locally\n"
+            "  - Build failures not caught locally\n"
+            "\n"
+            "Fix: Add frontend tests to validate-pre-push-full\n"
+            "  @echo '▶ Running Frontend Tests (lint, typecheck, test, build)...'\n"
+            "  @./scripts/test-frontend.sh && echo '✓ Frontend tests passed'\n"
+            "\n"
+            f"Found in target:\n{target_content[:500]}...\n"
+        )
+
+    def test_test_frontend_script_exists(self, repo_root: Path):
+        """Test that test-frontend.sh script exists for running frontend tests."""
+        script_path = repo_root / "scripts" / "test-frontend.sh"
+
+        assert script_path.exists(), (
+            "scripts/test-frontend.sh MUST exist to run frontend tests\n"
+            "\n"
+            "This script should:\n"
+            "  1. cd to frontend directory\n"
+            "  2. npm ci (install dependencies)\n"
+            "  3. npm run lint (ESLint)\n"
+            "  4. npm run typecheck (TypeScript)\n"
+            "  5. npm test -- --run (Vitest)\n"
+            "  6. npm run build (build verification)\n"
+            "\n"
+            "Pattern: Match ci.yaml frontend-build job\n"
+        )
+
+    def test_test_frontend_script_runs_all_ci_steps(self, repo_root: Path):
+        """Test that test-frontend.sh runs all the same steps as CI."""
+        script_path = repo_root / "scripts" / "test-frontend.sh"
+
+        if not script_path.exists():
+            pytest.skip("test-frontend.sh does not exist yet (will be caught by previous test)")
+
+        with open(script_path) as f:
+            script_content = f.read()
+
+        # Should run npm ci or npm install
+        assert "npm ci" in script_content or "npm install" in script_content, (
+            "test-frontend.sh must install dependencies (npm ci or npm install)"
+        )
+
+        # Should run lint
+        assert "npm run lint" in script_content or "eslint" in script_content, (
+            "test-frontend.sh must run 'npm run lint' to match CI"
+        )
+
+        # Should run typecheck
+        assert "npm run typecheck" in script_content or "tsc" in script_content, (
+            "test-frontend.sh must run 'npm run typecheck' to match CI"
+        )
+
+        # Should run tests
+        assert "npm test" in script_content or "npm run test" in script_content or "vitest" in script_content, (
+            "test-frontend.sh must run 'npm test' to match CI"
+        )
+
+        # Should run build
+        assert "npm run build" in script_content, "test-frontend.sh must run 'npm run build' to match CI"
+
+    def test_frontend_directory_exists(self, repo_root: Path):
+        """Test that frontend directory exists with package.json."""
+        frontend_path = repo_root / "src" / "mcp_server_langgraph" / "studio" / "frontend"
+        package_json = frontend_path / "package.json"
+
+        assert frontend_path.exists(), f"Frontend directory not found at {frontend_path}"
+        assert package_json.exists(), f"package.json not found at {package_json}"
+
+
 @pytest.mark.xdist_group(name="testregressionprevention")
 class TestRegressionPrevention:
     """Tests to ensure validation doesn't regress over time."""
