@@ -46,8 +46,69 @@ def mock_workflow_data() -> dict[str, Any]:
 
 
 @pytest.fixture
-def client(mock_current_user: dict[str, Any]) -> TestClient:
-    """Create test client with mocked authentication.
+def mock_workflow_service():
+    """Create a mock workflow service that simulates in-memory storage."""
+    from datetime import UTC, datetime
+    from unittest.mock import AsyncMock, MagicMock
+
+    # In-memory storage for testing
+    _workflows: dict[str, dict[str, Any]] = {}
+    _counter = 0
+
+    async def mock_create_workflow(workflow_data: dict[str, Any]) -> dict[str, Any]:
+        nonlocal _counter
+        _counter += 1
+        workflow_id = f"workflow-{_counter}"
+        now = datetime.now(UTC).isoformat()
+        workflow = {
+            "id": workflow_id,
+            "name": workflow_data["name"],
+            "description": workflow_data.get("description", ""),
+            "nodes": workflow_data.get("nodes", []),
+            "edges": workflow_data.get("edges", []),
+            "user_id": workflow_data.get("user_id"),
+            "created_at": now,
+            "updated_at": now,
+            "status": "active",
+        }
+        _workflows[workflow_id] = workflow
+        return workflow
+
+    async def mock_get_workflow(workflow_id: str) -> dict[str, Any] | None:
+        return _workflows.get(workflow_id)
+
+    async def mock_update_workflow(workflow_id: str, updates: dict[str, Any]) -> dict[str, Any] | None:
+        if workflow_id not in _workflows:
+            return None
+        workflow = _workflows[workflow_id]
+        workflow.update(updates)
+        workflow["updated_at"] = datetime.now(UTC).isoformat()
+        return workflow
+
+    async def mock_delete_workflow(workflow_id: str) -> bool:
+        if workflow_id not in _workflows:
+            return False
+        del _workflows[workflow_id]
+        return True
+
+    async def mock_list_workflows(owner_id: str) -> tuple[list[dict[str, Any]], str | None]:
+        user_workflows = [w for w in _workflows.values() if w.get("user_id") == owner_id]
+        return user_workflows, None
+
+    # Create mock service
+    service = MagicMock()
+    service.create_workflow = AsyncMock(side_effect=mock_create_workflow)
+    service.get_workflow = AsyncMock(side_effect=mock_get_workflow)
+    service.update_workflow = AsyncMock(side_effect=mock_update_workflow)
+    service.delete_workflow = AsyncMock(side_effect=mock_delete_workflow)
+    service.list_workflows = AsyncMock(side_effect=mock_list_workflows)
+
+    return service
+
+
+@pytest.fixture
+def client(mock_current_user: dict[str, Any], mock_workflow_service: Any) -> TestClient:
+    """Create test client with mocked authentication and workflow service.
 
     Creates a fresh FastAPI app with studio router and auth middleware for each test.
     This ensures proper isolation in pytest-xdist parallel execution.
@@ -56,14 +117,14 @@ def client(mock_current_user: dict[str, Any]) -> TestClient:
     checks before attempting token validation. This approach is more reliable
     than dependency_overrides in xdist workers.
     """
-    from mcp_server_langgraph.api.studio import WorkflowService, router as studio_router
-
-    # Clear in-memory storage before each test
-    WorkflowService._workflows.clear()
-    WorkflowService._counter = 0
+    from mcp_server_langgraph.api.studio import router as studio_router
+    from mcp_server_langgraph.api.v1.workflows import get_workflow_service
 
     # Create fresh app for this test
     app = FastAPI()
+
+    # Override workflow service dependency
+    app.dependency_overrides[get_workflow_service] = lambda: mock_workflow_service
 
     # Add middleware to inject test user into request.state
     # This middleware runs BEFORE route handlers, and get_current_user
@@ -307,17 +368,48 @@ class TestAuthorizationEnforcement:
         WHEN requesting workflow
         THEN should return 403 Forbidden or 404 Not Found
         """
-        from mcp_server_langgraph.api.studio import WorkflowService, router as studio_router
+        from datetime import UTC, datetime
+        from unittest.mock import AsyncMock, MagicMock
 
-        # Clear storage
-        WorkflowService._workflows.clear()
-        WorkflowService._counter = 0
+        from mcp_server_langgraph.api.studio import router as studio_router
+        from mcp_server_langgraph.api.v1.workflows import get_workflow_service
+
+        # Shared in-memory storage for both apps
+        _workflows: dict[str, dict[str, Any]] = {}
+        _counter = [0]  # Use list to allow nonlocal modification
+
+        async def mock_create_workflow(workflow_data: dict[str, Any]) -> dict[str, Any]:
+            _counter[0] += 1
+            workflow_id = f"workflow-{_counter[0]}"
+            now = datetime.now(UTC).isoformat()
+            workflow = {
+                "id": workflow_id,
+                "name": workflow_data["name"],
+                "description": workflow_data.get("description", ""),
+                "nodes": workflow_data.get("nodes", []),
+                "edges": workflow_data.get("edges", []),
+                "user_id": workflow_data.get("user_id"),
+                "created_at": now,
+                "updated_at": now,
+                "status": "active",
+            }
+            _workflows[workflow_id] = workflow
+            return workflow
+
+        async def mock_get_workflow(workflow_id: str) -> dict[str, Any] | None:
+            return _workflows.get(workflow_id)
+
+        # Create shared mock service
+        shared_service = MagicMock()
+        shared_service.create_workflow = AsyncMock(side_effect=mock_create_workflow)
+        shared_service.get_workflow = AsyncMock(side_effect=mock_get_workflow)
 
         # Bob's user info
         bob_user = {**mock_current_user, "keycloak_id": "bob-uuid-456", "user_id": "bob"}
 
         # Create app for bob to create the workflow
         app_bob = FastAPI()
+        app_bob.dependency_overrides[get_workflow_service] = lambda: shared_service
 
         @app_bob.middleware("http")
         async def inject_bob_user(request: Request, call_next):  # type: ignore[no-untyped-def]
@@ -332,6 +424,7 @@ class TestAuthorizationEnforcement:
 
         # Create separate app for alice
         app_alice = FastAPI()
+        app_alice.dependency_overrides[get_workflow_service] = lambda: shared_service
 
         @app_alice.middleware("http")
         async def inject_alice_user(request: Request, call_next):  # type: ignore[no-untyped-def]
@@ -343,5 +436,5 @@ class TestAuthorizationEnforcement:
         with TestClient(app_alice) as client_as_alice:
             response = client_as_alice.get(f"/api/v1/studio/workflows/{workflow_id}")
 
-        # Should return 403 (access denied)
+        # Should return 403 (access denied) - the studio.py get_workflow checks owner
         assert response.status_code == 403

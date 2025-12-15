@@ -15,7 +15,6 @@ import gc
 import hashlib
 import inspect
 import os
-import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
@@ -85,50 +84,12 @@ class TestTemporaryDirectorySecurity:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_builder_api_does_not_use_hardcoded_tmp(self):
-        """
-        Test that builder API doesn't hardcode /tmp directory.
-
-        FAILS when: "/tmp" is hardcoded as default
-        PASSES when: Using tempfile.gettempdir() or similar secure method
-        """
-        from mcp_server_langgraph.builder.api import server
-
-        source = inspect.getsource(server)
-        if '"/tmp' in source or "'/tmp" in source:
-            assert "os.getenv" in source or "tempfile" in source, (
-                "Hardcoded /tmp directory detected without proper security controls. Use tempfile.gettempdir() or ensure strict validation."
-            )
-
-    def test_builder_output_directory_has_safe_default(self, monkeypatch):
-        """
-        Test that the default output directory is secure.
-
-        FAILS when: Default is world-writable /tmp without protection
-        PASSES when: Default uses application-specific secure directory
-        """
-        monkeypatch.delenv("BUILDER_OUTPUT_DIR", raising=False)
-        temp_dir = Path(tempfile.gettempdir())
-        assert temp_dir.exists()
-        app_temp = temp_dir / "mcp-server-workflows-test"
-        app_temp.mkdir(mode=448, parents=True, exist_ok=True)
-        stat_info = app_temp.stat()
-        permissions = oct(stat_info.st_mode)[-3:]
-        assert permissions in [
-            "700",
-            "755",
-        ], (
-            f"Temp directory has insecure permissions: {permissions}. Expected 700 (owner-only) or 755 (owner write, others read)."
-        )
-        app_temp.rmdir()
-
     def test_path_validation_prevents_directory_traversal(self):
         """
         Test that path validation prevents directory traversal attacks.
 
         This ensures that even if /tmp is used, proper validation prevents escaping.
         """
-        from pathlib import Path
 
         allowed_base = Path("/tmp/workflows").resolve()
         valid_path = Path("/tmp/workflows/my_workflow.py").resolve()

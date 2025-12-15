@@ -87,7 +87,7 @@ class TestMemoryCostStorage:
             await storage.store(usage)
 
         # Act
-        records = await storage.get_records()
+        records, _ = await storage.get_records()
 
         # Assert
         assert len(records) == 3
@@ -118,7 +118,7 @@ class TestMemoryCostStorage:
             await storage.store(usage)
 
         # Act
-        records = await storage.get_records(filters={"user_id": "user:alice"})
+        records, _ = await storage.get_records(filters={"user_id": "user:alice"})
 
         # Assert
         assert len(records) == 2
@@ -150,7 +150,7 @@ class TestMemoryCostStorage:
             await storage.store(usage)
 
         # Act
-        records = await storage.get_records(filters={"model": "gpt-4"})
+        records, _ = await storage.get_records(filters={"model": "gpt-4"})
 
         # Assert
         assert len(records) == 2
@@ -205,7 +205,7 @@ class TestMemoryCostStorage:
 
         # Assert
         assert deleted == 1
-        remaining = await storage.get_records()
+        remaining, _ = await storage.get_records()
         assert len(remaining) == 1
         assert remaining[0].session_id == "session-new"
 

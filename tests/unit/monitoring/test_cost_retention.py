@@ -80,7 +80,7 @@ class TestCostRetentionPolicy:
 
         # Assert
         assert deleted == 1
-        remaining = await storage.get_records()
+        remaining, _ = await storage.get_records()
         assert len(remaining) == 1
 
     @pytest.mark.asyncio
@@ -130,7 +130,7 @@ class TestCostRetentionPolicy:
 
         # Assert
         assert deleted == 1
-        remaining = await storage.get_records()
+        remaining, _ = await storage.get_records()
         assert len(remaining) == 1
         assert remaining[0].session_id == "session-20d"
 
@@ -169,7 +169,7 @@ class TestCostRetentionPolicy:
 
         # Assert
         assert deleted == 0
-        remaining = await storage.get_records()
+        remaining, _ = await storage.get_records()
         assert len(remaining) == 3
 
     @pytest.mark.asyncio
@@ -254,7 +254,7 @@ class TestCostRetentionPolicy:
 
         # Assert
         assert deleted == 1
-        remaining = await storage.get_records()
+        remaining, _ = await storage.get_records()
         assert len(remaining) == 1
         assert remaining[0].session_id == "session-within"
 

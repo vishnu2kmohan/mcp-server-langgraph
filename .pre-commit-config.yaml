@@ -255,6 +255,109 @@ repos:
       Duration: ~30s when Docker is available.
 
       '
+  - id: frontend-lint
+    name: Frontend ESLint Check
+    entry: >
+      bash -c 'cd src/mcp_server_langgraph/studio/frontend &&
+      if [ ! -d "node_modules" ]; then
+        echo "Installing frontend dependencies..." && npm ci --silent;
+      fi &&
+      npm run lint 2>&1 || (echo "" && echo "ERROR - Frontend ESLint errors detected." && echo "Run: cd src/mcp_server_langgraph/studio/frontend && npm run lint" && exit 1)'
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/src/.*\.(ts|tsx)$
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates frontend code passes ESLint checks.
+
+      Added 2025-12-14 for fast frontend linting on commit.
+
+      Runs ESLint with React hooks and refresh plugins. Catches:
+      - Unused variables and imports
+      - React hooks rules violations
+      - TypeScript-specific linting issues
+
+      Duration: ~2-4s when node_modules cached.
+
+      '
+  - id: frontend-format-check
+    name: Frontend Prettier Check
+    entry: >
+      bash -c 'cd src/mcp_server_langgraph/studio/frontend &&
+      if [ ! -d "node_modules" ]; then
+        echo "Installing frontend dependencies..." && npm ci --silent;
+      fi &&
+      npx prettier --check "src/**/*.{ts,tsx,css}" 2>&1 || (echo "" && echo "ERROR - Frontend formatting issues detected." && echo "Run: cd src/mcp_server_langgraph/studio/frontend && npm run format" && exit 1)'
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/src/.*\.(ts|tsx|css)$
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates frontend code is properly formatted with Prettier.
+
+      Added 2025-12-14 for consistent code formatting.
+
+      Checks (does not auto-fix) formatting for TypeScript and CSS files.
+      Run npm run format to auto-fix formatting issues.
+
+      Duration: ~1-2s when node_modules cached.
+
+      '
+  - id: frontend-typecheck
+    name: Frontend TypeScript Type Checking
+    entry: >
+      bash -c 'cd src/mcp_server_langgraph/studio/frontend &&
+      if [ ! -d "node_modules" ]; then
+        echo "Installing frontend dependencies..." && npm ci --silent;
+      fi &&
+      npm run typecheck 2>&1 || (echo "" && echo "ERROR - Frontend TypeScript errors detected." && echo "Run: cd src/mcp_server_langgraph/studio/frontend && npm run typecheck" && exit 1)'
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/.*\.(ts|tsx)$
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Validates frontend TypeScript compiles without errors.
+
+      Added 2025-12-13 to catch TypeScript errors before they reach Docker build.
+
+      Runs tsc --noEmit on the studio frontend codebase. This ensures type safety
+      and catches errors that unit tests might miss (unused variables, type mismatches,
+      missing properties in interfaces, etc.).
+
+      Duration: ~3-5s when node_modules cached, ~30s on first run.
+
+      Complements Docker build validation with faster, targeted TypeScript checking.
+
+      '
+  - id: frontend-test
+    name: Frontend Unit Tests (Vitest)
+    entry: >
+      bash -c 'cd src/mcp_server_langgraph/studio/frontend &&
+      if [ ! -d "node_modules" ]; then
+        echo "Installing frontend dependencies..." && npm ci --silent;
+      fi &&
+      npm test -- --run 2>&1 || (echo "" && echo "ERROR - Frontend tests failed." && echo "Run: cd src/mcp_server_langgraph/studio/frontend && npm test" && exit 1)'
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/src/.*\.(ts|tsx)$
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Runs frontend unit tests with Vitest before push.
+
+      Added 2025-12-14 to catch test failures before CI.
+
+      Runs the full Vitest test suite (2,168+ tests) in run mode (not watch).
+      Catches regressions in React components, hooks, and Redux slices.
+
+      Duration: ~20-30s depending on test count.
+
+      Complements TypeScript checking with behavioral validation.
+
+      '
   - id: run-integration-tests
     name: Run Integration Tests (manual - requires Docker)
     entry: bash -c 'PYTHONUNBUFFERED=1 OTEL_SDK_DISABLED=true uv run --frozen pytest -n auto tests/integration/ -v --tb=short'

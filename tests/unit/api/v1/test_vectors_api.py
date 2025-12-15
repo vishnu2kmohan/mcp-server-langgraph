@@ -107,8 +107,19 @@ def create_test_app_with_mocks(
 class TestVectorsAPIListCollections:
     """Test listing collections requires viewer permission."""
 
+    def setup_method(self) -> None:
+        """Initialize auth middleware before each test for isolation."""
+        from mcp_server_langgraph.auth import middleware as auth_middleware
+
+        mock = MagicMock()
+        mock.verify_token = AsyncMock(return_value=MagicMock(valid=True, payload={}))
+        auth_middleware._global_auth_middleware = mock
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Clear auth middleware and force GC to prevent accumulation in xdist workers."""
+        from mcp_server_langgraph.auth import middleware as auth_middleware
+
+        auth_middleware._global_auth_middleware = None
         gc.collect()
 
     def test_list_collections_requires_authentication(self):
@@ -168,8 +179,19 @@ class TestVectorsAPIListCollections:
 class TestVectorsAPICreateCollection:
     """Test creating collections requires editor permission."""
 
+    def setup_method(self) -> None:
+        """Initialize auth middleware before each test for isolation."""
+        from mcp_server_langgraph.auth import middleware as auth_middleware
+
+        mock = MagicMock()
+        mock.verify_token = AsyncMock(return_value=MagicMock(valid=True, payload={}))
+        auth_middleware._global_auth_middleware = mock
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Clear auth middleware and force GC to prevent accumulation in xdist workers."""
+        from mcp_server_langgraph.auth import middleware as auth_middleware
+
+        auth_middleware._global_auth_middleware = None
         gc.collect()
 
     def test_create_collection_requires_editor_permission(self, mock_current_user, mock_openfga_client, mock_qdrant_client):
@@ -220,8 +242,19 @@ class TestVectorsAPICreateCollection:
 class TestVectorsAPIDeleteCollection:
     """Test deleting collections requires owner permission."""
 
+    def setup_method(self) -> None:
+        """Initialize auth middleware before each test for isolation."""
+        from mcp_server_langgraph.auth import middleware as auth_middleware
+
+        mock = MagicMock()
+        mock.verify_token = AsyncMock(return_value=MagicMock(valid=True, payload={}))
+        auth_middleware._global_auth_middleware = mock
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Clear auth middleware and force GC to prevent accumulation in xdist workers."""
+        from mcp_server_langgraph.auth import middleware as auth_middleware
+
+        auth_middleware._global_auth_middleware = None
         gc.collect()
 
     def test_delete_collection_requires_owner_permission(self, mock_admin_user, mock_openfga_client, mock_qdrant_client):
@@ -266,8 +299,19 @@ class TestVectorsAPIDeleteCollection:
 class TestVectorsAPISearch:
     """Test searching vectors requires viewer permission."""
 
+    def setup_method(self) -> None:
+        """Initialize auth middleware before each test for isolation."""
+        from mcp_server_langgraph.auth import middleware as auth_middleware
+
+        mock = MagicMock()
+        mock.verify_token = AsyncMock(return_value=MagicMock(valid=True, payload={}))
+        auth_middleware._global_auth_middleware = mock
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Clear auth middleware and force GC to prevent accumulation in xdist workers."""
+        from mcp_server_langgraph.auth import middleware as auth_middleware
+
+        auth_middleware._global_auth_middleware = None
         gc.collect()
 
     def test_search_vectors_with_viewer_permission(self, mock_current_user, mock_openfga_client, mock_qdrant_client):

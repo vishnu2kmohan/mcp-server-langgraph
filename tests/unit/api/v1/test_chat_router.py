@@ -212,3 +212,96 @@ class TestChatHistoryEndpoint:
             response = client.get(f"/api/v1/chat/{session_id}/history")
 
             assert response.status_code == 404
+
+
+@pytest.mark.xdist_group(name="test_chat_router")
+class TestChatErrorHandling:
+    """Tests for chat router error handling."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_elicitation_required_returns_428(self, test_app: FastAPI) -> None:
+        """
+        GIVEN a chat service that raises MCPElicitationRequiredError
+        WHEN POST request is made to /chat/completions
+        THEN response should be 428 Precondition Required with elicitation details
+        """
+        from mcp_server_langgraph.api.v1.mcp_bridge import MCPElicitationRequiredError
+
+        with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.create_completion.side_effect = MCPElicitationRequiredError(
+                "User authentication required",
+                elicitations=[
+                    {"type": "url", "url": "https://oauth.example.com/authorize"},
+                ],
+            )
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/chat/completions",
+                json={
+                    "session_id": str(uuid4()),
+                    "messages": [{"role": "user", "content": "Hello"}],
+                },
+            )
+
+            assert response.status_code == 428
+            data = response.json()
+            assert "detail" in data
+            assert "elicitations" in data["detail"]
+            assert len(data["detail"]["elicitations"]) == 1
+            assert data["detail"]["elicitations"][0]["type"] == "url"
+
+    def test_mcp_connection_error_returns_503(self, test_app: FastAPI) -> None:
+        """
+        GIVEN a chat service that raises MCPConnectionError
+        WHEN POST request is made to /chat/completions
+        THEN response should be 503 Service Unavailable
+        """
+        from mcp_server_langgraph.api.v1.mcp_bridge import MCPConnectionError
+
+        with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.create_completion.side_effect = MCPConnectionError("MCP server connection refused")
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/chat/completions",
+                json={
+                    "session_id": str(uuid4()),
+                    "messages": [{"role": "user", "content": "Hello"}],
+                },
+            )
+
+            assert response.status_code == 503
+            assert "connection" in response.json()["detail"].lower()
+
+    def test_mcp_permission_error_returns_403(self, test_app: FastAPI) -> None:
+        """
+        GIVEN a chat service that raises MCPPermissionError
+        WHEN POST request is made to /chat/completions
+        THEN response should be 403 Forbidden
+        """
+        from mcp_server_langgraph.api.v1.mcp_bridge import MCPPermissionError
+
+        with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.create_completion.side_effect = MCPPermissionError("Access denied to chat resource")
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/chat/completions",
+                json={
+                    "session_id": str(uuid4()),
+                    "messages": [{"role": "user", "content": "Hello"}],
+                },
+            )
+
+            assert response.status_code == 403
+            assert "denied" in response.json()["detail"].lower()

@@ -569,17 +569,12 @@ class TestConvenienceFunction:
             errors=[],
             warnings=[],
         )
-        # IMPORTANT: Don't use AsyncMock(spec=...) - spec introspection doesn't detect
-        # async methods correctly, causing MagicMock to be used instead of AsyncMock
-        # for the validate() method. Use a plain mock and explicitly set async methods.
-        # Import both MagicMock and AsyncMock here for xdist worker isolation.
-        from unittest.mock import AsyncMock as LocalAsyncMock
-        from unittest.mock import MagicMock
+        # Use patch to replace the class and set validate on return_value
+        # This ensures the mock is properly applied even with pytest-xdist
+        with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator") as MockClass:
+            mock_instance = MockClass.return_value
+            mock_instance.validate = AsyncMock(return_value=mock_result)
 
-        mock_validator = MagicMock()
-        mock_validator.validate = LocalAsyncMock(return_value=mock_result)
-
-        with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator", return_value=mock_validator):
             result = await validate_database_architecture()
 
             assert result.is_valid
@@ -595,17 +590,12 @@ class TestConvenienceFunction:
             errors=[],
             warnings=[],
         )
-        # IMPORTANT: Don't use AsyncMock(spec=...) - spec introspection doesn't detect
-        # async methods correctly, causing MagicMock to be used instead of AsyncMock
-        # for the validate() method. Use a plain mock and explicitly set async methods.
-        # Import both MagicMock and AsyncMock here for xdist worker isolation.
-        from unittest.mock import AsyncMock as LocalAsyncMock
-        from unittest.mock import MagicMock
+        # Use patch to replace the class and set validate on return_value
+        # This ensures the mock is properly applied even with pytest-xdist
+        with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator") as MockClass:
+            mock_instance = MockClass.return_value
+            mock_instance.validate = AsyncMock(return_value=mock_result)
 
-        mock_validator = MagicMock()
-        mock_validator.validate = LocalAsyncMock(return_value=mock_result)
-
-        with patch("mcp_server_langgraph.health.database_checks.DatabaseValidator", return_value=mock_validator) as mock_class:
             result = await validate_database_architecture(
                 host="custom-host",
                 port=9432,
@@ -614,7 +604,7 @@ class TestConvenienceFunction:
             )
 
             # Verify custom parameters were passed
-            mock_class.assert_called_once_with(
+            MockClass.assert_called_once_with(
                 host="custom-host",
                 port=9432,
                 user="custom-user",

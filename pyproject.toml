@@ -38,6 +38,8 @@ dependencies = [
     "opentelemetry-api>=1.38.0",
     "opentelemetry-sdk>=1.38.0",
     "opentelemetry-instrumentation-logging>=0.59b0",
+    "opentelemetry-instrumentation-fastapi>=0.59b0",  # FastAPI auto-instrumentation (OTEL best practice)
+    "opentelemetry-instrumentation-httpx>=0.59b0",    # httpx HTTP client instrumentation
     # OTEL exporters moved to optional-dependencies[observability-*]
     # Choose observability-grpc OR observability-http based on your backend
     "openfga-sdk>=0.9.8",  # Updated 2025-11-28: Minor updates
@@ -774,6 +776,9 @@ markers = [
     "compliance: Generic compliance tests (metrics, auditing)",
     "gdpr: GDPR compliance tests (data subject rights)",
     "soc2: SOC 2 compliance tests (evidence collection, access reviews)",
+    "fedramp: FedRAMP compliance tests (government cloud, NIST controls)",
+    "hipaa: HIPAA compliance tests (healthcare data protection)",
+    "eu_ai_act: EU AI Act compliance tests (AI transparency, risk assessment)",
     "sla: SLA monitoring tests (uptime, response time, error rate)",
     "performance: Performance tests (load, stress, benchmarks)",
     "stress: Stress tests (high load, parallel execution stress)",
@@ -807,6 +812,7 @@ markers = [
     "builder: Visual workflow builder tests",
     "redis: Redis-backed storage tests (sessions, checkpoints)",
     "postgres: PostgreSQL-backed storage tests (workflows, sessions, durable persistence)",
+    "repository: Repository layer tests (data access, caching, CRUD operations)",
     "qdrant: Qdrant vector database tests (collections, search, upsert)",
     "core: Core module tests (config, feature flags, caching)",
     "requires_full_infrastructure: Tests requiring full Docker infrastructure (builder, playground, observability stack)",
@@ -815,6 +821,9 @@ markers = [
     "admin_journey: Admin user journey tests (user management, audit logs)",
     "power_user_journey: Power user journey tests (premium features, advanced workflows)",
     "standard_user_journey: Standard user journey tests (basic features, tier limits)",
+    "hipaa: HIPAA compliance tests (45 CFR 164.312(b), ePHI audit logging)",
+    "fedramp: FedRAMP compliance tests (NIST 800-53 AU controls, federal authorization)",
+    "eu_ai_act: EU AI Act compliance tests (Articles 12, 19, 72 high-risk AI logging)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)
@@ -925,6 +934,7 @@ dev = [
     "pytest-xdist>=3.8.0",
     "python-hcl2>=7.3.1", # HCL parser for Terraform regression tests
     "semgrep>=1.79.0",
+    "types-python-dateutil>=2.9.0.20251115",
     "types-pyyaml>=6.0.12.20250915",
 ]
 

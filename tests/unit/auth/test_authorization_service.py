@@ -40,7 +40,7 @@ class TestAuthorizationServiceOpenFGA:
         THEN: Should return True
         """
         # Arrange
-        mock_openfga = AsyncMock(spec=["check_permission"])  # noqa: async-mock-config
+        mock_openfga = AsyncMock(spec=["check_permission"])  # async-mock-configured
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         service = AuthorizationService(openfga_client=mock_openfga)
@@ -69,7 +69,7 @@ class TestAuthorizationServiceOpenFGA:
         THEN: Should return False
         """
         # Arrange
-        mock_openfga = AsyncMock(spec=["check_permission"])  # noqa: async-mock-config
+        mock_openfga = AsyncMock(spec=["check_permission"])  # async-mock-configured
         mock_openfga.check_permission = AsyncMock(return_value=False)
 
         service = AuthorizationService(openfga_client=mock_openfga)
@@ -92,7 +92,7 @@ class TestAuthorizationServiceOpenFGA:
         THEN: Should return False (fail closed)
         """
         # Arrange
-        mock_openfga = AsyncMock(spec=["check_permission"])  # noqa: async-mock-config
+        mock_openfga = AsyncMock(spec=["check_permission"])  # async-mock-configured
         mock_openfga.check_permission = AsyncMock(side_effect=Exception("Connection error"))
 
         service = AuthorizationService(openfga_client=mock_openfga)
@@ -182,7 +182,7 @@ class TestAuthorizationServiceFallback:
         mock_settings.environment = "test"
         mock_settings.allow_auth_fallback = True
 
-        mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # noqa: async-mock-config
+        mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # async-mock-configured
         mock_user_data = MagicMock()
         mock_user_data.roles = ["admin"]
         mock_user_provider.get_user_by_username = AsyncMock(return_value=mock_user_data)
@@ -215,7 +215,7 @@ class TestAuthorizationServiceFallback:
         mock_settings.environment = "test"
         mock_settings.allow_auth_fallback = True
 
-        mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # noqa: async-mock-config
+        mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # async-mock-configured
         mock_user_data = MagicMock()
         mock_user_data.roles = ["user"]
         mock_user_provider.get_user_by_username = AsyncMock(return_value=mock_user_data)
@@ -248,7 +248,7 @@ class TestAuthorizationServiceFallback:
         mock_settings.environment = "test"
         mock_settings.allow_auth_fallback = True
 
-        mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # noqa: async-mock-config
+        mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # async-mock-configured
         mock_user_data = MagicMock()
         mock_user_data.roles = ["user"]
         mock_user_provider.get_user_by_username = AsyncMock(return_value=mock_user_data)
@@ -281,7 +281,7 @@ class TestAuthorizationServiceFallback:
         mock_settings.environment = "test"
         mock_settings.allow_auth_fallback = True
 
-        mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # noqa: async-mock-config
+        mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # async-mock-configured
         mock_user_data = MagicMock()
         mock_user_data.roles = ["user"]
         mock_user_provider.get_user_by_username = AsyncMock(return_value=mock_user_data)
@@ -319,7 +319,7 @@ class TestAuthorizationServiceWithContext:
         THEN: Context should be passed to OpenFGA
         """
         # Arrange
-        mock_openfga = AsyncMock(spec=["check_permission"])  # noqa: async-mock-config
+        mock_openfga = AsyncMock(spec=["check_permission"])  # async-mock-configured
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         service = AuthorizationService(openfga_client=mock_openfga)
@@ -397,7 +397,7 @@ class TestAuthorizationServiceWithResourceRegistry:
 
         # Arrange
         registry = ResourceTypeRegistry()
-        mock_openfga = AsyncMock(spec=["check_permission"])  # noqa: async-mock-config
+        mock_openfga = AsyncMock(spec=["check_permission"])  # async-mock-configured
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         service = AuthorizationService(
@@ -428,7 +428,7 @@ class TestAuthorizationServiceWithResourceRegistry:
 
         # Arrange
         registry = ResourceTypeRegistry()
-        mock_openfga = AsyncMock(spec=["check_permission"])  # noqa: async-mock-config
+        mock_openfga = AsyncMock(spec=["check_permission"])  # async-mock-configured
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         service = AuthorizationService(
@@ -455,7 +455,7 @@ class TestAuthorizationServiceWithResourceRegistry:
         THEN: Should proceed without resource/relation validation
         """
         # Arrange - no registry provided
-        mock_openfga = AsyncMock(spec=["check_permission"])  # noqa: async-mock-config
+        mock_openfga = AsyncMock(spec=["check_permission"])  # async-mock-configured
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         service = AuthorizationService(

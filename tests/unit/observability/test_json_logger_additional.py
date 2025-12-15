@@ -106,9 +106,16 @@ class TestHostnameHandling:
         assert "hostname" not in log_data
 
 
-@pytest.mark.xdist_group(name="json_logger_additional_tests")
+@pytest.mark.xdist_group(name="json_logger_trace_context")
 class TestTraceContextEdgeCases:
     """Tests for OpenTelemetry trace context edge cases"""
+
+    def setup_method(self):
+        """Reset OpenTelemetry span context before each test for isolation."""
+        from opentelemetry import context
+
+        # Detach all attached contexts to ensure clean state
+        context.attach(context.Context())
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""

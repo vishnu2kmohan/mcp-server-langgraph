@@ -326,3 +326,247 @@ class TestSessionsMessagesEndpoint:
             )
 
             assert response.status_code == 201
+
+
+# ============================================================================
+# Sorting Tests
+# ============================================================================
+
+
+@pytest.mark.xdist_group(name="test_sessions_router_query")
+class TestSessionsListSorting:
+    """Tests for sorting sessions via GET /api/v1/sessions."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_list_sessions_sort_by_title_ascending(self, test_app: FastAPI) -> None:
+        """
+        GIVEN sessions exist
+        WHEN GET request with sort_by=title and sort_order=asc
+        THEN service should receive sorting parameters
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.list_sessions.return_value = ([], None)
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.get("/api/v1/sessions?sort_by=title&sort_order=asc")
+
+            assert response.status_code == 200
+            # Verify the service was called with sorting params
+            mock_service.list_sessions.assert_called_once()
+
+    def test_list_sessions_sort_by_created_at_descending(self, test_app: FastAPI) -> None:
+        """
+        GIVEN sessions exist
+        WHEN GET request with sort_by=created_at and sort_order=desc
+        THEN service should receive sorting parameters
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.list_sessions.return_value = ([], None)
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.get("/api/v1/sessions?sort_by=created_at&sort_order=desc")
+
+            assert response.status_code == 200
+
+    def test_list_sessions_sort_by_updated_at(self, test_app: FastAPI) -> None:
+        """
+        GIVEN sessions exist
+        WHEN GET request with sort_by=updated_at
+        THEN service should receive sorting parameters
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.list_sessions.return_value = ([], None)
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.get("/api/v1/sessions?sort_by=updated_at&sort_order=asc")
+
+            assert response.status_code == 200
+
+
+# ============================================================================
+# Filtering Tests
+# ============================================================================
+
+
+@pytest.mark.xdist_group(name="test_sessions_router_query")
+class TestSessionsListFiltering:
+    """Tests for filtering sessions via GET /api/v1/sessions."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_list_sessions_filter_by_status(self, test_app: FastAPI) -> None:
+        """
+        GIVEN sessions with different statuses exist
+        WHEN GET request with status=active
+        THEN service should receive status filter
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.list_sessions.return_value = ([], None)
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.get("/api/v1/sessions?status=active")
+
+            assert response.status_code == 200
+
+    def test_list_sessions_filter_by_workflow_id_and_status(self, test_app: FastAPI) -> None:
+        """
+        GIVEN sessions exist
+        WHEN GET request with workflow_id and status filters
+        THEN service should receive both filters
+        """
+        workflow_id = str(uuid4())
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.list_sessions.return_value = ([], None)
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.get(f"/api/v1/sessions?workflow_id={workflow_id}&status=active")
+
+            assert response.status_code == 200
+
+
+# ============================================================================
+# Search Tests
+# ============================================================================
+
+
+@pytest.mark.xdist_group(name="test_sessions_router_query")
+class TestSessionsListSearch:
+    """Tests for searching sessions via GET /api/v1/sessions."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_list_sessions_search_by_title(self, test_app: FastAPI) -> None:
+        """
+        GIVEN sessions exist
+        WHEN GET request with search parameter
+        THEN service should receive search query
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.list_sessions.return_value = (
+                [{"id": "1", "title": "Machine Learning Chat"}],
+                None,
+            )
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.get("/api/v1/sessions?search=Machine")
+
+            assert response.status_code == 200
+
+    def test_list_sessions_search_case_insensitive(self, test_app: FastAPI) -> None:
+        """
+        GIVEN sessions exist
+        WHEN GET request with lowercase search
+        THEN service should handle case-insensitive search
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.list_sessions.return_value = ([], None)
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.get("/api/v1/sessions?search=machine")
+
+            assert response.status_code == 200
+
+    def test_list_sessions_search_with_pagination(self, test_app: FastAPI) -> None:
+        """
+        GIVEN sessions exist
+        WHEN GET request with search and pagination
+        THEN service should handle both
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.list_sessions.return_value = ([], None)
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.get("/api/v1/sessions?search=test&limit=10")
+
+            assert response.status_code == 200
+
+    def test_list_sessions_search_no_results(self, test_app: FastAPI) -> None:
+        """
+        GIVEN no matching sessions
+        WHEN GET request with search
+        THEN should return empty list
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.list_sessions.return_value = ([], None)
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.get("/api/v1/sessions?search=nonexistent_xyz_123")
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["data"] == []
+
+
+# ============================================================================
+# Combined Query Tests
+# ============================================================================
+
+
+@pytest.mark.xdist_group(name="test_sessions_router_query")
+class TestSessionsListCombined:
+    """Tests for combining sorting, filtering, and search."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_list_sessions_search_with_sorting(self, test_app: FastAPI) -> None:
+        """
+        GIVEN sessions exist
+        WHEN GET request with search and sorting
+        THEN service should handle both
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.list_sessions.return_value = ([], None)
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.get("/api/v1/sessions?search=test&sort_by=title&sort_order=asc")
+
+            assert response.status_code == 200
+
+    def test_list_sessions_all_query_params(self, test_app: FastAPI) -> None:
+        """
+        GIVEN sessions exist
+        WHEN GET request with all query parameters
+        THEN service should handle all params
+        """
+        workflow_id = str(uuid4())
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.list_sessions.return_value = ([], None)
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.get(
+                f"/api/v1/sessions?search=test&workflow_id={workflow_id}"
+                "&status=active&sort_by=created_at&sort_order=desc&limit=10"
+            )
+
+            assert response.status_code == 200

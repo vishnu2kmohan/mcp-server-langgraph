@@ -219,5 +219,48 @@ class TestCORSValidation:
         settings.validate_cors_config()
 
 
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="config_validation_tests")
+class TestOAuth2ConfigValidation:
+    """Test OAuth2 redirect URI configuration."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_oauth2_redirect_uri_default_value(self):
+        """Test that oauth2_redirect_uri has correct default for local development."""
+        settings = Settings()
+
+        # Default should be local Vite dev server
+        assert settings.oauth2_redirect_uri == "http://localhost:5173/studio/oauth/callback"
+
+    def test_oauth2_redirect_uri_environment_override(self, monkeypatch):
+        """Test that oauth2_redirect_uri can be overridden via environment variable."""
+        test_uri = "http://localhost/studio/oauth/callback"
+        monkeypatch.setenv("OAUTH2_REDIRECT_URI", test_uri)
+
+        settings = Settings()
+
+        assert settings.oauth2_redirect_uri == test_uri
+
+    def test_oauth2_redirect_uri_production_https(self, monkeypatch):
+        """Test that production deployments typically use HTTPS redirect URIs."""
+        production_uri = "https://app.example.com/studio/oauth/callback"
+        monkeypatch.setenv("OAUTH2_REDIRECT_URI", production_uri)
+
+        settings = Settings()
+
+        assert settings.oauth2_redirect_uri == production_uri
+        assert settings.oauth2_redirect_uri.startswith("https://")
+
+    def test_oauth2_redirect_uri_callback_path(self):
+        """Test that redirect URI uses the studio OAuth callback path."""
+        settings = Settings()
+
+        # All OAuth2 redirect URIs should end with the callback path
+        assert settings.oauth2_redirect_uri.endswith("/studio/oauth/callback")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

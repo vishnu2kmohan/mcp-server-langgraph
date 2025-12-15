@@ -7,6 +7,8 @@ This tests the consolidated create_model function that replaces
 the separate create_summarization_model and create_verification_model functions.
 """
 
+import gc
+
 import pytest
 from unittest.mock import Mock
 
@@ -130,8 +132,13 @@ class TestCreateModelFunction:
         assert factory.provider == "google"
 
 
+@pytest.mark.xdist_group(name="llm_factory_backward_compat")
 class TestBackwardCompatibility:
     """Test that existing functions still work (backward compatibility)."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def mock_config(self):
@@ -159,11 +166,13 @@ class TestBackwardCompatibility:
         from mcp_server_langgraph.llm.factory import create_summarization_model
 
         factory = create_summarization_model(mock_config)
-        assert isinstance(factory, LLMFactory)
+        # Use type name check to avoid xdist module reimport issues with isinstance
+        assert type(factory).__name__ == "LLMFactory"
 
     def test_create_verification_model_still_works(self, mock_config):
         """Existing create_verification_model function still works."""
         from mcp_server_langgraph.llm.factory import create_verification_model
 
         factory = create_verification_model(mock_config)
-        assert isinstance(factory, LLMFactory)
+        # Use type name check to avoid xdist module reimport issues with isinstance
+        assert type(factory).__name__ == "LLMFactory"
