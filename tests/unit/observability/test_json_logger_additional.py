@@ -126,7 +126,17 @@ class TestTraceContextEdgeCases:
 
         When span_context.is_valid is False, trace_id and span_id should
         not be included in the log output.
+
+        PYTEST-XDIST FIX (2025-12-15):
+        ==============================
+        Previous approach used Mock(spec=["is_valid", ...]) which caused
+        issues in parallel execution where is_valid might be evaluated as
+        truthy MagicMock. Using real OpenTelemetry SpanContext with invalid
+        values (trace_id=0, span_id=0) is more robust as is_valid is a
+        computed property that returns False for zero IDs.
         """
+        from opentelemetry.trace import SpanContext, TraceFlags
+
         formatter = CustomJSONFormatter(service_name="test")
         record = logging.LogRecord(
             name="test",
@@ -138,12 +148,18 @@ class TestTraceContextEdgeCases:
             exc_info=None,
         )
 
-        # Create a mock span with invalid context
-        # Use spec to ensure Mock doesn't auto-create is_valid as a MagicMock
+        # Create a mock span with a real invalid SpanContext
+        # SpanContext with trace_id=0 and span_id=0 has is_valid=False
         mock_span = Mock()
-        mock_span_context = Mock(spec=["is_valid", "trace_id", "span_id"])
-        mock_span_context.is_valid = False  # Invalid context - should skip trace fields
-        mock_span.get_span_context.return_value = mock_span_context
+        invalid_span_context = SpanContext(
+            trace_id=0,  # Invalid: must be non-zero for valid context
+            span_id=0,  # Invalid: must be non-zero for valid context
+            is_remote=False,
+            trace_flags=TraceFlags.DEFAULT,
+        )
+        # Verify the context is indeed invalid
+        assert not invalid_span_context.is_valid
+        mock_span.get_span_context.return_value = invalid_span_context
 
         # Patch where trace is used, not where it's defined
         with patch("mcp_server_langgraph.observability.json_logger.trace.get_current_span", return_value=mock_span):

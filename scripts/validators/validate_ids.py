@@ -112,6 +112,37 @@ EXEMPT_FILES = [
     "test_middleware_helpers.py",  # Tests normalize_user_id() - pure function input/output
     "test_session_data_model.py",  # Tests Pydantic model validation - pure data model tests
     "test_security_utils.py",  # Tests sanitize_for_logging() - pure function input/output
+    # E2E journey tests that test OpenFGA authorization (uses seeded model with fixed user IDs)
+    "test_keycloak_openfga_auth_flow.py",  # OpenFGA authorization model validation (user:admin, user:alice, etc)
+    "test_openfga_seeding_flow.py",  # OpenFGA model seeding validation (tests seeded user tuples)
+    "test_unified_api_authorization.py",  # Integration tests for OpenFGA unified API authorization
+    # Compliance tests (use fixed example IDs for regulatory compliance testing scenarios)
+    "test_hipaa_audit_requirements.py",  # HIPAA compliance tests with example healthcare IDs
+    "test_eu_ai_act_requirements.py",  # EU AI Act compliance tests
+    "test_soc2_audit_requirements.py",  # SOC2 compliance tests
+    "test_gdpr_audit_requirements.py",  # GDPR compliance tests
+    "test_fedramp_audit_requirements.py",  # FedRAMP compliance tests
+    # Audit tests (InMemory repository - no database state pollution)
+    "test_audit_integrity.py",  # Tests hash chain integrity with InMemory repository
+    "test_audit_metrics.py",  # Tests audit metrics collection with InMemory
+    "test_audit_alerts.py",  # Tests audit alert thresholds with InMemory
+    "test_audit_api.py",  # API tests with mocked audit service
+    "test_audit_websocket.py",  # WebSocket tests with InMemory audit service
+    "test_audit_middleware_integration.py",  # Audit middleware with mocked dependencies
+    "test_compliance_reports.py",  # Compliance report generation with mocked data
+    # Auth mock tests (pure unit tests with mock data)
+    "test_mock_resources.py",  # Mock resource factories for testing
+    # Storage tests (InMemory backends)
+    "test_workflow_storage_optimizations.py",  # Tests with InMemory storage optimizations
+    # Auth unit tests (testing OpenFGA config patterns, no real database)
+    "test_openfga_config_validation.py",  # Tests OpenFGA config validation logic
+    "test_resource_registry.py",  # Tests resource registry with mock data
+    # Audit model tests (InMemory, testing data models)
+    "test_audit_models.py",  # Tests audit model validation
+    "test_audit_chain_integrity.py",  # Integration tests for audit hash chain (InMemory)
+    "test_audit_repository_integration.py",  # Integration tests for audit repository (InMemory)
+    # Cost storage tests (InMemory/mock backends)
+    "test_cost_storage_multicloud.py",  # Multi-cloud cost storage tests with mocked backends
 ]
 
 

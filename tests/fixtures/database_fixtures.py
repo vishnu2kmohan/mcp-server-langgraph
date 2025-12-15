@@ -80,16 +80,26 @@ async def postgres_connection_real(integration_test_env):
 
     # Connection params from environment (set in docker-compose.test.yml)
     # Note: Postgres test port is 9432 (offset from standard 5432 to avoid conflicts)
-    pool = await asyncpg.create_pool(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=int(os.getenv("POSTGRES_PORT", "9432")),
-        database=os.getenv("POSTGRES_DB", "gdpr_test"),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", "postgres"),  # Match docker-compose.test.yml
-        min_size=4,  # One connection per typical worker count
-        max_size=10,  # Allow burst for parallel tests
-        command_timeout=60,  # Prevent hanging queries
-    )
+    try:
+        pool = await asyncpg.create_pool(
+            host=os.getenv("POSTGRES_HOST", "localhost"),
+            port=int(os.getenv("POSTGRES_PORT", "9432")),
+            database=os.getenv("POSTGRES_DB", "gdpr_test"),
+            user=os.getenv("POSTGRES_USER", "postgres"),
+            password=os.getenv("POSTGRES_PASSWORD", "postgres"),  # Match docker-compose.test.yml
+            min_size=1,  # Minimal: 8 workers × 1 = 8 connections base
+            max_size=2,  # Conservative: 8 workers × 2 = 16 max for session pool
+            command_timeout=60,  # Prevent hanging queries
+        )
+    except OSError as e:
+        # Handle connection errors gracefully (like redis_client_real does)
+        pytest.skip(f"PostgreSQL not available: {e}")
+    except BaseException as e:
+        # Python 3.11+ wraps multiple connection errors in ExceptionGroup
+        # e.g., "Multiple exceptions: [Errno 111] Connect call failed, [Errno 101] Network unreachable"
+        if "ExceptionGroup" in type(e).__name__ or "Multiple exceptions" in str(e):
+            pytest.skip(f"PostgreSQL not available (multiple connection errors): {e}")
+        raise  # Re-raise unexpected exceptions
 
     yield pool
 
@@ -486,7 +496,7 @@ async def db_pool_gdpr(integration_test_env):
         password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         database=os.getenv("POSTGRES_DB", "gdpr_test"),
         min_size=1,
-        max_size=5,
+        max_size=2,  # Reduced to prevent connection exhaustion with xdist workers
     )
 
     # Execute GDPR schema SQL directly

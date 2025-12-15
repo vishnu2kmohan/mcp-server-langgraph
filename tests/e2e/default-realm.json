@@ -114,6 +114,19 @@
             "claim.name": "username",
             "jsonType.label": "String"
           }
+        },
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "roles",
+            "multivalued": "true"
+          }
         }
       ]
     }
@@ -163,7 +176,8 @@
       "realmRoles": [
         "offline_access",
         "uma_authorization",
-        "user"
+        "user",
+        "developer"
       ],
       "clientRoles": {
         "account": [
@@ -230,9 +244,139 @@
         "description": "Administrator role with full access",
         "composite": false,
         "clientRole": false
+      },
+      {
+        "name": "developer",
+        "description": "Developer role with access to build and workflow features",
+        "composite": false,
+        "clientRole": false
       }
     ]
   },
+  "identityProviders": [
+    {
+      "alias": "github",
+      "displayName": "GitHub",
+      "providerId": "github",
+      "enabled": true,
+      "updateProfileFirstLoginMode": "on",
+      "trustEmail": true,
+      "storeToken": true,
+      "addReadTokenRoleOnCreate": false,
+      "authenticateByDefault": false,
+      "linkOnly": false,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "syncMode": "IMPORT",
+        "clientId": "placeholder-github-client-id",
+        "clientSecret": "placeholder-github-client-secret",
+        "defaultScope": "user:email read:user",
+        "hideOnLoginPage": "false"
+      }
+    },
+    {
+      "alias": "google",
+      "displayName": "Google",
+      "providerId": "google",
+      "enabled": true,
+      "updateProfileFirstLoginMode": "on",
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "authenticateByDefault": false,
+      "linkOnly": false,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "syncMode": "IMPORT",
+        "clientId": "placeholder-google-client-id",
+        "clientSecret": "placeholder-google-client-secret",
+        "defaultScope": "openid email profile",
+        "hideOnLoginPage": "false"
+      }
+    },
+    {
+      "alias": "microsoft",
+      "displayName": "Microsoft",
+      "providerId": "microsoft",
+      "enabled": true,
+      "updateProfileFirstLoginMode": "on",
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "authenticateByDefault": false,
+      "linkOnly": false,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "syncMode": "IMPORT",
+        "clientId": "placeholder-microsoft-client-id",
+        "clientSecret": "placeholder-microsoft-client-secret",
+        "defaultScope": "openid email profile",
+        "hideOnLoginPage": "false"
+      }
+    }
+  ],
+  "identityProviderMappers": [
+    {
+      "name": "github-username-mapper",
+      "identityProviderAlias": "github",
+      "identityProviderMapper": "github-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "jsonField": "login",
+        "userAttribute": "username"
+      }
+    },
+    {
+      "name": "github-email-mapper",
+      "identityProviderAlias": "github",
+      "identityProviderMapper": "github-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "jsonField": "email",
+        "userAttribute": "email"
+      }
+    },
+    {
+      "name": "google-email-mapper",
+      "identityProviderAlias": "google",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "claim": "email",
+        "user.attribute": "email"
+      }
+    },
+    {
+      "name": "google-name-mapper",
+      "identityProviderAlias": "google",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "claim": "name",
+        "user.attribute": "firstName"
+      }
+    },
+    {
+      "name": "microsoft-email-mapper",
+      "identityProviderAlias": "microsoft",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "claim": "email",
+        "user.attribute": "email"
+      }
+    },
+    {
+      "name": "microsoft-name-mapper",
+      "identityProviderAlias": "microsoft",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "claim": "name",
+        "user.attribute": "firstName"
+      }
+    }
+  ],
   "defaultRoles": [
     "offline_access",
     "uma_authorization",

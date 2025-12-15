@@ -43,9 +43,8 @@ def _openfga_available() -> bool:
         return False
 
 
-# Skip at module level if OpenFGA not available
-if not _openfga_available():
-    pytestmark.append(pytest.mark.skip(reason="OpenFGA not available for seeding tests"))
+# Infrastructure check and autouse skip fixture are in tests/integration/auth/conftest.py
+# This avoids duplicate autouse fixtures across test files (best practice)
 
 # URLs and credentials
 OPENFGA_URL = os.getenv("OPENFGA_URL", "http://localhost:9080")

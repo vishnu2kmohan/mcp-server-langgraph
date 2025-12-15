@@ -1,5 +1,30 @@
 # Cloud SQL PostgreSQL Module
 # Creates a highly available PostgreSQL instance with automated backups, encryption, and monitoring
+#
+# TIMESCALEDB NOTE (Cost/Metrics Feature):
+# =========================================
+# CloudSQL does not natively support the TimescaleDB extension. For time-series data
+# (cost tracking, metrics, observability), consider these alternatives:
+#
+# 1. Timescale Cloud (Recommended for production):
+#    - Fully managed TimescaleDB service
+#    - Connect via Private Service Connect to GKE
+#    - https://www.timescale.com/cloud
+#
+# 2. AlloyDB for PostgreSQL:
+#    - Google's PostgreSQL-compatible database
+#    - Better performance for analytics workloads
+#    - Supports pg_partman for time-based partitioning
+#
+# 3. Self-managed TimescaleDB on GCE:
+#    - Deploy TimescaleDB Docker image on Compute Engine
+#    - Requires manual backup and HA configuration
+#
+# 4. Bigtable + BigQuery:
+#    - Native GCP time-series storage
+#    - Better for high-volume telemetry
+#
+# For development/testing, docker-compose.test.yml uses timescale/timescaledb:2.17.2-pg16
 
 locals {
   instance_name    = var.instance_name != "" ? var.instance_name : "${var.name_prefix}-postgres"

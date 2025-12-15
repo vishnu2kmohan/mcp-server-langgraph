@@ -82,12 +82,21 @@ def kubernetes_available():
     Check if Kubernetes is available and can execute Jobs.
 
     This fixture performs a comprehensive check:
-    1. kubeconfig can be loaded
-    2. API server is reachable
-    3. At least one Ready node exists (can schedule pods)
+    1. K8S_TESTS_ENABLED environment variable is set (explicit opt-in)
+    2. kubeconfig can be loaded
+    3. API server is reachable
+    4. At least one Ready node exists (can schedule pods)
 
     If any check fails, the test is skipped with a descriptive message.
+
+    NOTE: K8s Job tests require explicit opt-in via K8S_TESTS_ENABLED=1 because:
+    - Local kubeconfig may point to inaccessible clusters
+    - Job execution has significant latency (image pull, scheduling)
+    - CI environments need proper GKE/WIF setup for these tests
     """
+    # Require explicit opt-in for K8s tests (avoid false positives from stale kubeconfig)
+    if not os.getenv("K8S_TESTS_ENABLED"):
+        pytest.skip("K8s tests disabled (set K8S_TESTS_ENABLED=1 to enable)")
     if not _K8S_FUNCTIONAL:
         pytest.skip(f"Kubernetes not functional: {_K8S_SKIP_REASON}")
     return True

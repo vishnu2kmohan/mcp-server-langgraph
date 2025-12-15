@@ -1,5 +1,30 @@
 # RDS PostgreSQL Module
 # Creates a Multi-AZ PostgreSQL database with automated backups, encryption, and monitoring
+#
+# TIMESCALEDB NOTE (Cost/Metrics Feature):
+# =========================================
+# Amazon RDS does not natively support the TimescaleDB extension. For time-series data
+# (cost tracking, metrics, observability), consider these alternatives:
+#
+# 1. Amazon Timestream (Recommended for production):
+#    - Fully managed time-series database
+#    - Native AWS integration, serverless scaling
+#    - https://aws.amazon.com/timestream/
+#
+# 2. Timescale Cloud:
+#    - Fully managed TimescaleDB service
+#    - Connect via PrivateLink to EKS
+#    - https://www.timescale.com/cloud
+#
+# 3. Self-managed TimescaleDB on EC2:
+#    - Deploy TimescaleDB Docker image on EC2/ECS
+#    - Requires manual backup and HA configuration
+#
+# 4. Aurora PostgreSQL with pg_partman:
+#    - Use pg_partman extension for time-based partitioning
+#    - Better for moderate time-series workloads
+#
+# For development/testing, docker-compose.test.yml uses timescale/timescaledb:2.17.2-pg16
 
 locals {
   db_identifier = var.db_identifier != "" ? var.db_identifier : "${var.name_prefix}-postgres"

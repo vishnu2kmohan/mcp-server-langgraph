@@ -333,7 +333,7 @@ class TestAuditServiceIntegration:
         event = UnifiedAuditEvent(
             category=AuditEventCategory.AUTHENTICATION,
             event_type=AuditEventType.LOGIN_SUCCESS,
-            actor=AuditActor(actor_id="user:alice", actor_type="user"),
+            actor=AuditActor(actor_id="user:alice", actor_type="user"),  # ✅ Safe: InMemory backend
             context=AuditContext(request_id="req-001"),
             resource_type="session",
             resource_id="sess-001",

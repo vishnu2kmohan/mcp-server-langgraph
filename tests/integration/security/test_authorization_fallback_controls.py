@@ -92,14 +92,15 @@ class TestAuthorizationFallbackControls:
         )
 
         # Need to set users_db for fallback to work
-        middleware.users_db = {
-            "alice": {
-                "user_id": get_user_id("alice"),
-                "email": "alice@example.com",
-                "roles": ["user", "premium"],
-                "active": True,
-            }
+        # Set on both middleware and authorization service (which uses its own copy)
+        alice_entry = {
+            "user_id": get_user_id("alice"),
+            "email": "alice@example.com",
+            "roles": ["user", "premium"],
+            "active": True,
         }
+        middleware.users_db = {"alice": alice_entry}
+        middleware._authorization_service.users_db = {"alice": alice_entry}
 
         # Attempt to authorize tool execution
         authorized = await middleware.authorize(

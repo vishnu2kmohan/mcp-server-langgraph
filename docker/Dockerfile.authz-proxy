@@ -26,9 +26,20 @@ COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project --no-dev
 
-# Copy source code
-COPY src/ ./src/
-COPY config/ ./config/
+# Copy only the packages required by authz-proxy (not entire src/)
+# This enables Docker build caching - unrelated changes (frontend, MCP, API) won't trigger rebuilds
+# Dependencies traced from: authz_proxy/server.py imports + transitive deps
+COPY src/mcp_server_langgraph/__init__.py ./src/mcp_server_langgraph/
+COPY src/mcp_server_langgraph/authz_proxy/ ./src/mcp_server_langgraph/authz_proxy/
+COPY src/mcp_server_langgraph/auth/ ./src/mcp_server_langgraph/auth/
+COPY src/mcp_server_langgraph/core/ ./src/mcp_server_langgraph/core/
+COPY src/mcp_server_langgraph/observability/ ./src/mcp_server_langgraph/observability/
+COPY src/mcp_server_langgraph/resilience/ ./src/mcp_server_langgraph/resilience/
+COPY src/mcp_server_langgraph/secret_providers/ ./src/mcp_server_langgraph/secret_providers/
+# Transitive deps from core/ module (core/agent.py, core/context_manager.py)
+COPY src/mcp_server_langgraph/llm/ ./src/mcp_server_langgraph/llm/
+COPY src/mcp_server_langgraph/utils/ ./src/mcp_server_langgraph/utils/
+# Note: config/ is NOT needed at runtime (model.json only used by openfga-seed)
 
 # Install project
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -45,8 +56,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
 
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
-COPY --from=builder /app/config /app/config
 # Copy source for editable install (uv sync creates pth file pointing to /app/src)
+# Note: Only authz-proxy dependencies are copied, not entire src/
 COPY --from=builder /app/src /app/src
 
 # Set PATH to use virtual environment

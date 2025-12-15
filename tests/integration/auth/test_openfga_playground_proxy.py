@@ -51,9 +51,8 @@ def _authz_proxy_available() -> bool:
         return False
 
 
-# Skip at module level if services not available
-if not _keycloak_available():
-    pytestmark.append(pytest.mark.skip(reason="Keycloak not available for playground proxy tests"))
+# Infrastructure check and autouse skip fixture are in tests/integration/auth/conftest.py
+# This avoids duplicate autouse fixtures across test files (best practice)
 
 # URLs
 GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost")

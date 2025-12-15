@@ -526,6 +526,8 @@ def test_dev_dependencies_are_importable():
             "opentelemetry_instrumentation_logging",  # imports as opentelemetry.instrumentation.logging
             "opentelemetry_exporter_otlp_proto_grpc",  # imports as opentelemetry.exporter.otlp.proto.grpc
             "opentelemetry_exporter_otlp_proto_http",  # imports as opentelemetry.exporter.otlp.proto.http
+            "opentelemetry_instrumentation_fastapi",  # imports as opentelemetry.instrumentation.fastapi
+            "opentelemetry_instrumentation_httpx",  # imports as opentelemetry.instrumentation.httpx
             "langgraph_checkpoint_redis",  # imports as langgraph.checkpoint.redis
             "azure_identity",  # imports as azure.identity (namespace package)
             # Optional dependencies (not always installed)

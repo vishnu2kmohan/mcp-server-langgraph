@@ -6,7 +6,7 @@ that integrate with Keycloak Admin API.
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -31,15 +31,20 @@ def keycloak_config() -> KeycloakConfig:
 
 @pytest.fixture
 def mock_keycloak_client():
-    """Create mock KeycloakClient with async methods."""
+    """Create mock KeycloakClient with async methods.
+
+    These mocks are intentionally unconfigured here as individual tests
+    configure the return_value or side_effect as needed.
+    """
     mock_client = MagicMock()
-    mock_client.get_users = AsyncMock()
-    mock_client.create_user = AsyncMock()
-    mock_client.update_user = AsyncMock()
-    mock_client.delete_user = AsyncMock()
-    mock_client.get_user_by_username = AsyncMock()
-    mock_client.get_user = AsyncMock()
-    mock_client.set_user_password = AsyncMock()
+    # Mocks configured per-test with return_value or side_effect
+    mock_client.get_users = AsyncMock()  # noqa: async-mock-config
+    mock_client.create_user = AsyncMock()  # noqa: async-mock-config
+    mock_client.update_user = AsyncMock()  # noqa: async-mock-config
+    mock_client.delete_user = AsyncMock()  # noqa: async-mock-config
+    mock_client.get_user_by_username = AsyncMock()  # noqa: async-mock-config
+    mock_client.get_user = AsyncMock()  # noqa: async-mock-config
+    mock_client.set_user_password = AsyncMock()  # noqa: async-mock-config
     mock_client._get_user_realm_roles = AsyncMock(return_value=[])
     mock_client._get_user_client_roles = AsyncMock(return_value={})
     mock_client._get_user_groups = AsyncMock(return_value=[])

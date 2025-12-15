@@ -113,7 +113,7 @@ class TestAsyncMockConfigurationValidator:
         assert len(violations) == 0
 
     def test_respects_noqa_comment(self, tmp_path: Path) -> None:
-        """Test that # noqa: async-mock-config comment suppresses warnings."""
+        """Test that # async-mock-configured comment suppresses warnings."""
         test_file = tmp_path / "test_noqa.py"
         test_file.write_text(
             dedent(
@@ -121,7 +121,7 @@ class TestAsyncMockConfigurationValidator:
                 from unittest.mock import AsyncMock
 
                 def test_something():
-                    mock = AsyncMock()  # noqa: async-mock-config
+                    mock = AsyncMock()  # async-mock-configured
                     assert mock
                 """
             )

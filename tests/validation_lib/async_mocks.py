@@ -97,11 +97,11 @@ class AsyncMockConfigChecker(ast.NodeVisitor):
         self.async_mock_vars: dict[str, int] = {}  # var_name -> line_number
 
     def has_noqa_comment(self, lineno: int) -> bool:
-        """Check if a line has # noqa: async-mock-config comment."""
+        """Check if a line has # async-mock-configured comment."""
         if lineno <= 0 or lineno > len(self.source_lines):
             return False
         line = self.source_lines[lineno - 1]
-        return "# noqa: async-mock-config" in line or "#noqa: async-mock-config" in line or "# noqa" in line
+        return "# async-mock-configured" in line or "#noqa: async-mock-config" in line or "# noqa" in line
 
     def visit_Assign(self, node: ast.Assign) -> None:
         """Visit assignment nodes to detect AsyncMock() creation."""

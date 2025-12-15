@@ -12,16 +12,13 @@ This WebSocket endpoint provides real-time workflow execution updates:
 """
 
 import gc
-import json
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from fastapi.websockets import WebSocket
 
 
 pytestmark = [
@@ -115,6 +112,7 @@ def client(app: FastAPI) -> Generator[TestClient, None, None]:
         yield c
 
 
+@pytest.mark.xdist_group(name="testworkflowexecutionwebsocket")
 class TestWorkflowExecutionWebSocket:
     """Tests for workflow execution WebSocket endpoint."""
 
@@ -131,7 +129,7 @@ class TestWorkflowExecutionWebSocket:
     def test_websocket_connect_invalid_workflow(self, client: TestClient) -> None:
         """Should reject connection for non-existent workflow."""
         with pytest.raises(Exception):
-            with client.websocket_connect("/api/v1/workflows/invalid-id/execution") as ws:
+            with client.websocket_connect("/api/v1/workflows/invalid-id/execution"):
                 pass
 
     def test_start_execution_message(self, client: TestClient) -> None:
@@ -172,7 +170,7 @@ class TestWorkflowExecutionWebSocket:
             assert response["type"] == "execution_stopped"
             assert response["workflowId"] == "wf-123"
 
-    def test_ping_pong(self, client: TestClient) -> None:
+    def test_ping_message_returns_pong_response(self, client: TestClient) -> None:
         """Should respond to ping with pong."""
         with client.websocket_connect("/api/v1/workflows/wf-123/execution") as ws:
             ws.send_json({"type": "ping"})
@@ -200,6 +198,7 @@ class TestWorkflowExecutionWebSocket:
             assert "Invalid JSON" in response["message"]
 
 
+@pytest.mark.xdist_group(name="testworkflowexecutionnodeupdates")
 class TestWorkflowExecutionNodeUpdates:
     """Tests for node status updates during execution."""
 
@@ -237,6 +236,7 @@ class TestWorkflowExecutionNodeUpdates:
         assert "error" in message
 
 
+@pytest.mark.xdist_group(name="testworkflowexecutionlogs")
 class TestWorkflowExecutionLogs:
     """Tests for execution log streaming."""
 
@@ -267,6 +267,7 @@ class TestWorkflowExecutionLogs:
         assert "nodeId" not in message or message.get("nodeId") is None
 
 
+@pytest.mark.xdist_group(name="testworkflowexecutionmanager")
 class TestWorkflowExecutionManager:
     """Tests for the execution manager WebSocket class."""
 
@@ -283,7 +284,7 @@ class TestWorkflowExecutionManager:
         manager = ExecutionWebSocketManager()
         assert len(manager.active_connections) == 0
 
-    def test_manager_broadcast(self) -> None:
+    def test_manager_broadcast_with_no_connections_succeeds(self) -> None:
         """Manager should broadcast to all connected clients."""
         from mcp_server_langgraph.api.v1.workflow_execution_ws import (
             ExecutionWebSocketManager,

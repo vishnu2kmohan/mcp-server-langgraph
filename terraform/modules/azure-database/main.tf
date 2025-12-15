@@ -1,5 +1,25 @@
 # Azure Database for PostgreSQL Flexible Server Module
 # Creates a highly available PostgreSQL instance with automated backups, encryption, and monitoring
+#
+# TIMESCALEDB NOTE (Cost/Metrics Feature):
+# =========================================
+# Azure Database for PostgreSQL Flexible Server SUPPORTS TimescaleDB extension!
+# To enable TimescaleDB for time-series data (cost tracking, metrics, observability):
+#
+# 1. Add TimescaleDB to shared_preload_libraries:
+#    postgresql_configurations = {
+#      "shared_preload_libraries" = "pg_stat_statements,timescaledb"
+#    }
+#
+# 2. Create the extension in your application database:
+#    CREATE EXTENSION IF NOT EXISTS timescaledb;
+#
+# 3. Convert tables to hypertables:
+#    SELECT create_hypertable('cost_events', 'timestamp');
+#
+# Reference: https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-extensions
+#
+# For development/testing, docker-compose.test.yml uses timescale/timescaledb:2.17.2-pg16
 
 locals {
   server_name = var.server_name != "" ? var.server_name : "${var.name_prefix}-postgres"

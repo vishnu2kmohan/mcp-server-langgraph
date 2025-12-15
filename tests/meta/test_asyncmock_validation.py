@@ -35,7 +35,7 @@ class TestAsyncMockValidation:
 import asyncmock
 from unittest.mock import AsyncMock
 
-mock_conn.fetchval = AsyncMock  # noqa: async-mock-config(return_value=1)
+mock_conn.fetchval = AsyncMock  # async-mock-configured(return_value=1)
 """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(bad_code)

@@ -32,24 +32,8 @@ pytestmark = [
 ]
 
 
-def _e2e_infrastructure_available() -> bool:
-    """Check if E2E infrastructure is available."""
-    try:
-        import requests
-
-        # Check Keycloak via gateway
-        keycloak_response = requests.get(
-            "http://localhost/authn/realms/default/.well-known/openid-configuration",
-            timeout=5,
-        )
-        return keycloak_response.status_code == 200
-    except Exception:
-        return False
-
-
-# Skip at module level if infrastructure not available
-if not _e2e_infrastructure_available():
-    pytestmark.append(pytest.mark.skip(reason="E2E infrastructure not available"))
+# Infrastructure check and autouse skip fixture are in tests/e2e/conftest.py
+# This avoids duplicate autouse fixtures across test files (best practice)
 
 
 @pytest.mark.xdist_group(name="test_bob_standard_user")

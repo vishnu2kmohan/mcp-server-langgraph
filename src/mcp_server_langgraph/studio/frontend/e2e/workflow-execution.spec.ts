@@ -29,8 +29,8 @@ test.describe('Workflow Execution', () => {
       // Click Run button
       await page.getByRole('button', { name: /Run/i }).click();
 
-      // Execution panel should appear
-      await expect(page.getByText('Execution Logs')).toBeVisible();
+      // Execution panel should appear - use heading role to be specific
+      await expect(page.getByRole('heading', { name: 'Execution Logs' })).toBeVisible();
     });
 
     test('should show empty state message when no logs', async ({ page }) => {
@@ -45,16 +45,18 @@ test.describe('Workflow Execution', () => {
       // Click Run to open panel
       await page.getByRole('button', { name: /Run/i }).click();
 
-      // Wait for panel
-      await expect(page.getByText('Execution Logs')).toBeVisible();
+      // Wait for panel - use heading role to be specific
+      await expect(page.getByRole('heading', { name: 'Execution Logs' })).toBeVisible();
 
-      // Find and click close button (X icon)
-      const closeButton = page.locator('button').filter({ has: page.locator('svg.lucide-x') });
+      // Find and click close button (X icon) - the one in the execution panel header
+      // Use the close button that's a sibling of the Execution Logs heading
+      const executionPanel = page.locator('.h-64.bg-white.dark\\:bg-gray-800');
+      const closeButton = executionPanel.locator('button').filter({ has: page.locator('svg.lucide-x') });
       if (await closeButton.isVisible()) {
         await closeButton.click();
 
         // Panel should close
-        await expect(page.getByText('Execution Logs')).not.toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Execution Logs' })).not.toBeVisible();
       }
     });
   });
@@ -64,8 +66,8 @@ test.describe('Workflow Execution', () => {
       // Click Run to open panel
       await page.getByRole('button', { name: /Run/i }).click();
 
-      // Wait for panel
-      await expect(page.getByText('Execution Logs')).toBeVisible();
+      // Wait for panel - use heading role to be specific
+      await expect(page.getByRole('heading', { name: 'Execution Logs' })).toBeVisible();
 
       // Connection status should be visible
       const connectionStatus = page.getByTestId('connection-status');
@@ -79,8 +81,8 @@ test.describe('Workflow Execution', () => {
       // Click Run to open panel
       await page.getByRole('button', { name: /Run/i }).click();
 
-      // Wait for panel
-      await expect(page.getByText('Execution Logs')).toBeVisible();
+      // Wait for panel - use heading role to be specific
+      await expect(page.getByRole('heading', { name: 'Execution Logs' })).toBeVisible();
 
       // If disconnected, Reconnect button should be visible
       // Note: This may not appear if the server is running
@@ -140,8 +142,8 @@ test.describe('Workflow Execution', () => {
       // Click Run to start execution
       await page.getByRole('button', { name: /Run/i }).click();
 
-      // Wait for panel to open
-      await expect(page.getByText('Execution Logs')).toBeVisible();
+      // Wait for panel to open - use heading role to be specific
+      await expect(page.getByRole('heading', { name: 'Execution Logs' })).toBeVisible();
 
       // Check for state badge (idle by default when no backend)
       const stateBadge = page.locator('span').filter({ hasText: /idle|running|completed|error/ });
@@ -168,8 +170,8 @@ test.describe('Workflow Execution', () => {
       // Click Run to open panel
       await page.getByRole('button', { name: /Run/i }).click();
 
-      // Wait for panel
-      await expect(page.getByText('Execution Logs')).toBeVisible();
+      // Wait for panel - use heading role to be specific
+      await expect(page.getByRole('heading', { name: 'Execution Logs' })).toBeVisible();
 
       // Logs container should be present
       const logsContainer = page.getByTestId('logs-container');
@@ -180,8 +182,8 @@ test.describe('Workflow Execution', () => {
       // Click Run to open panel
       await page.getByRole('button', { name: /Run/i }).click();
 
-      // Wait for panel
-      await expect(page.getByText('Execution Logs')).toBeVisible();
+      // Wait for panel - use heading role to be specific
+      await expect(page.getByRole('heading', { name: 'Execution Logs' })).toBeVisible();
 
       // Clear button should appear when logs exist
       // By default, no logs exist so Clear button won't be visible

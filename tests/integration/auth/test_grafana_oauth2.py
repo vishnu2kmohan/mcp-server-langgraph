@@ -90,11 +90,8 @@ def _keycloak_available() -> bool:
         return False
 
 
-# Skip at module level if services not available or OAuth2 not configured
-if not _grafana_available() or not _keycloak_available():
-    pytestmark.append(pytest.mark.skip(reason="Grafana or Keycloak not available for OAuth2 integration tests"))
-elif not _grafana_oauth2_configured():
-    pytestmark.append(pytest.mark.skip(reason="Grafana OAuth2 not configured (ADR-0068 infrastructure pending)"))
+# Infrastructure check and autouse skip fixture are in tests/integration/auth/conftest.py
+# This avoids duplicate autouse fixtures across test files (best practice)
 
 # URLs
 GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost")

@@ -23,8 +23,13 @@ from mcp_server_langgraph.llm.factory import (
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="testmodeltypeenum")
 class TestModelTypeEnum:
     """Test the ModelType enum for different model purposes."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_model_type_has_primary(self):
         """Primary model type should exist."""
@@ -42,8 +47,13 @@ class TestModelTypeEnum:
         assert ModelType.VERIFICATION.value == "verification"
 
 
+@pytest.mark.xdist_group(name="testcreatemodelfunction")
 class TestCreateModelFunction:
     """Test the consolidated create_model function."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     @pytest.fixture
     def mock_config(self):

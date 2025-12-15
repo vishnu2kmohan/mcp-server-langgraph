@@ -491,10 +491,17 @@ class TestPostgresAuditLogRepository:
     @pytest.mark.unit
     async def test_log_event_adds_to_session(self, postgres_repo, mock_session):
         """Test that log_event adds model to session."""
+
         # WHEN: Logging an event
+        # Create a simple stub that properly returns string when str() is called
+        class MockUUID:
+            hex = "abc123"
+
+            def __str__(self) -> str:
+                return "abc123"
+
         with patch("mcp_server_langgraph.repositories.audit_log.uuid4") as mock_uuid:
-            mock_uuid.return_value = MagicMock(hex="abc123")
-            mock_uuid.return_value.__str__ = MagicMock(return_value="abc123")
+            mock_uuid.return_value = MockUUID()
 
             result = await postgres_repo.log_event(
                 event_type="connection.created",

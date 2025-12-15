@@ -63,9 +63,22 @@ def _openfga_available() -> bool:
         return False
 
 
-# Skip at module level if infrastructure not available
-if not _keycloak_available() or not _openfga_available():
-    pytestmark.append(pytest.mark.skip(reason="Auth infrastructure not available for E2E tests"))
+# Module-level skip checks are unreliable with pytest-xdist
+# Use autouse fixture instead for proper skip behavior
+
+
+@pytest.fixture(autouse=True)
+def skip_if_auth_infrastructure_unavailable():
+    """Skip tests if Keycloak/OpenFGA infrastructure is not available.
+
+    Using a fixture (vs module-level pytestmark.append) ensures proper
+    skip behavior with pytest-xdist workers.
+    """
+    if not _keycloak_available():
+        pytest.skip("Keycloak not available at localhost:80/authn")
+    if not _openfga_available():
+        pytest.skip("OpenFGA not available at localhost:9080")
+
 
 # URLs and credentials - use gateway URLs consistent with integration tests
 KEYCLOAK_URL = os.getenv("KEYCLOAK_SERVER_URL", "http://localhost/authn")

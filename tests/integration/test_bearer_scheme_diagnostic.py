@@ -173,9 +173,32 @@ class TestBearerSchemeOverrideDiagnostic:
         This mimics the actual test setup to identify where the override breaks.
 
         NOTE: This test may be skipped in CI if infrastructure (Keycloak, OpenFGA)
-        isn't available, as module imports may trigger network connections.
+        isn't available, as module imports or requests may trigger network connections.
         """
+        import httpcore
         import httpx
+
+        def _check_network_error(e: Exception) -> None:
+            """Check if exception is a network error and skip test if so.
+
+            Checks the exception and its entire __cause__ chain for network errors.
+            """
+            network_patterns = [
+                "Name or service not known",
+                "Connection refused",
+                "Temporary failure in name resolution",
+                "getaddrinfo failed",
+            ]
+
+            # Check the exception and its cause chain
+            exc: BaseException | None = e
+            while exc is not None:
+                error_msg = str(exc)
+                if isinstance(exc, (httpx.ConnectError, httpcore.ConnectError)) or any(
+                    pattern in error_msg for pattern in network_patterns
+                ):
+                    pytest.skip(f"Infrastructure not available: {e}")
+                exc = getattr(exc, "__cause__", None)
 
         try:
             from unittest.mock import AsyncMock
@@ -193,112 +216,110 @@ class TestBearerSchemeOverrideDiagnostic:
             from mcp_server_langgraph.auth.openfga import OpenFGAClient
             from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
             from tests.conftest import get_user_id
-        except httpx.ConnectError as e:
-            pytest.skip(f"Infrastructure not available: {e}")
         except Exception as e:
-            # Also catch other network-related errors during import
-            error_msg = str(e)
-            if any(
-                pattern in error_msg
-                for pattern in ["Name or service not known", "Connection refused", "Temporary failure in name resolution"]
-            ):
-                pytest.skip(f"Infrastructure not available: {e}")
+            _check_network_error(e)
             raise  # Re-raise if not a network error
 
-        # Create fresh app
-        app = FastAPI()
+        # Wrap all execution in try/except for network errors during test execution
+        try:
+            # Create fresh app
+            app = FastAPI()
 
-        mock_sp_manager = AsyncMock(spec=ServicePrincipalManager)
-        mock_keycloak = AsyncMock(spec=KeycloakClient)
-        mock_current_user = {
-            "user_id": get_user_id("alice"),
-            "username": "alice",
-            "email": "alice@example.com",
-        }
-        mock_openfga = AsyncMock(spec=OpenFGAClient)
+            mock_sp_manager = AsyncMock(spec=ServicePrincipalManager)
+            mock_keycloak = AsyncMock(spec=KeycloakClient)
+            mock_current_user = {
+                "user_id": get_user_id("alice"),
+                "username": "alice",
+                "email": "alice@example.com",
+            }
+            mock_openfga = AsyncMock(spec=OpenFGAClient)
 
-        # Mock functions matching async/sync
-        async def mock_get_current_user_async():
-            print(f"  [DEBUG] mock_get_current_user_async called - returning {mock_current_user}")
-            return mock_current_user
+            # Mock functions matching async/sync
+            async def mock_get_current_user_async():
+                print(f"  [DEBUG] mock_get_current_user_async called - returning {mock_current_user}")
+                return mock_current_user
 
-        def mock_get_keycloak_sync():
-            print("  [DEBUG] mock_get_keycloak_sync called")
-            return mock_keycloak
+            def mock_get_keycloak_sync():
+                print("  [DEBUG] mock_get_keycloak_sync called")
+                return mock_keycloak
 
-        def mock_get_sp_manager_sync():
-            print("  [DEBUG] mock_get_sp_manager_sync called")
-            return mock_sp_manager
+            def mock_get_sp_manager_sync():
+                print("  [DEBUG] mock_get_sp_manager_sync called")
+                return mock_sp_manager
 
-        def mock_get_openfga_sync():
-            print("  [DEBUG] mock_get_openfga_sync called")
-            return mock_openfga
+            def mock_get_openfga_sync():
+                print("  [DEBUG] mock_get_openfga_sync called")
+                return mock_openfga
 
-        # Print bearer_scheme info
-        print(f"\n[DEBUG] bearer_scheme object id: {id(bearer_scheme)}")
-        print(f"[DEBUG] bearer_scheme type: {type(bearer_scheme)}")
+            # Print bearer_scheme info
+            print(f"\n[DEBUG] bearer_scheme object id: {id(bearer_scheme)}")
+            print(f"[DEBUG] bearer_scheme type: {type(bearer_scheme)}")
 
-        # Override dependencies
-        print("[DEBUG] Setting dependency overrides...")
-        app.dependency_overrides[bearer_scheme] = lambda: None
-        app.dependency_overrides[get_keycloak_client] = mock_get_keycloak_sync
-        app.dependency_overrides[get_service_principal_manager] = mock_get_sp_manager_sync
-        app.dependency_overrides[get_current_user] = mock_get_current_user_async
-        app.dependency_overrides[get_openfga_client] = mock_get_openfga_sync
+            # Override dependencies
+            print("[DEBUG] Setting dependency overrides...")
+            app.dependency_overrides[bearer_scheme] = lambda: None
+            app.dependency_overrides[get_keycloak_client] = mock_get_keycloak_sync
+            app.dependency_overrides[get_service_principal_manager] = mock_get_sp_manager_sync
+            app.dependency_overrides[get_current_user] = mock_get_current_user_async
+            app.dependency_overrides[get_openfga_client] = mock_get_openfga_sync
 
-        print(f"[DEBUG] Registered overrides: {list(app.dependency_overrides.keys())}")
+            print(f"[DEBUG] Registered overrides: {list(app.dependency_overrides.keys())}")
 
-        # Include router
-        print("[DEBUG] Including router...")
-        app.include_router(router)
+            # Include router
+            print("[DEBUG] Including router...")
+            app.include_router(router)
 
-        # Create client and make request
-        client = TestClient(app)
-        print("[DEBUG] Making POST request to /api/v1/service-principals/...")
+            # Create client and make request
+            client = TestClient(app)
+            print("[DEBUG] Making POST request to /api/v1/service-principals/...")
 
-        # Mock the manager's create method
-        from dataclasses import dataclass
-        from datetime import datetime
+            # Mock the manager's create method
+            from dataclasses import dataclass
+            from datetime import datetime
 
-        @dataclass
-        class MockSP:
-            service_id: str = "test-sp"
-            name: str = "Test SP"
-            description: str = "Test"
-            authentication_mode: str = "client_credentials"
-            associated_user_id: str = get_user_id("alice")
-            owner_user_id: str = get_user_id("alice")
-            inherit_permissions: bool = True
-            enabled: bool = True
-            created_at: str = datetime.now(UTC).isoformat()
-            client_secret: str = "sp_secret_test123"
+            @dataclass
+            class MockSP:
+                service_id: str = "test-sp"
+                name: str = "Test SP"
+                description: str = "Test"
+                authentication_mode: str = "client_credentials"
+                associated_user_id: str = get_user_id("alice")
+                owner_user_id: str = get_user_id("alice")
+                inherit_permissions: bool = True
+                enabled: bool = True
+                created_at: str = datetime.now(UTC).isoformat()
+                client_secret: str = "sp_secret_test123"
 
-        mock_sp_manager.create_service_principal.return_value = MockSP()
+            mock_sp_manager.create_service_principal.return_value = MockSP()
 
-        response = client.post(
-            "/api/v1/service-principals/",
-            json={
-                "name": "Test Service Principal",
-                "description": "Diagnostic test",
-            },
-        )
+            response = client.post(
+                "/api/v1/service-principals/",
+                json={
+                    "name": "Test Service Principal",
+                    "description": "Diagnostic test",
+                },
+            )
 
-        print(f"[DEBUG] Response status: {response.status_code}")
-        print(f"[DEBUG] Response body: {response.text[:200]}")
+            print(f"[DEBUG] Response status: {response.status_code}")
+            print(f"[DEBUG] Response body: {response.text[:200]}")
 
-        if response.status_code == 401:
-            print("\n❌ DIAGNOSTIC FINDING: Getting 401 even with proper overrides!")
-            print("   This confirms the bearer_scheme override is not working.")
-            print("   Possible causes:")
-            print("   1. FastAPI resolves Depends(bearer_scheme) at router import time")
-            print("   2. The override is registered after router is already configured")
-            print("   3. Bearer_scheme singleton is shared across workers incorrectly")
-        elif response.status_code == 201:
-            print("\n✓ DIAGNOSTIC SUCCESS: Overrides are working correctly!")
-            print("   The issue might be specific to pytest-xdist worker environment.")
+            if response.status_code == 401:
+                print("\n❌ DIAGNOSTIC FINDING: Getting 401 even with proper overrides!")
+                print("   This confirms the bearer_scheme override is not working.")
+                print("   Possible causes:")
+                print("   1. FastAPI resolves Depends(bearer_scheme) at router import time")
+                print("   2. The override is registered after router is already configured")
+                print("   3. Bearer_scheme singleton is shared across workers incorrectly")
+            elif response.status_code == 201:
+                print("\n✓ DIAGNOSTIC SUCCESS: Overrides are working correctly!")
+                print("   The issue might be specific to pytest-xdist worker environment.")
 
-        # For diagnostic purposes, we document the finding but don't fail
-        # The actual fix will be in the service principal tests
+            # For diagnostic purposes, we document the finding but don't fail
+            # The actual fix will be in the service principal tests
+
+        except Exception as e:
+            _check_network_error(e)
+            raise  # Re-raise if not a network error
 
 
 if __name__ == "__main__":

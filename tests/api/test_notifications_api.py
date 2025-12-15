@@ -8,9 +8,11 @@ Tests cover:
 - Authentication requirements
 """
 
+import gc
+from unittest.mock import patch
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch
 
 from mcp_server_langgraph.app import app
 
@@ -32,8 +34,13 @@ def mock_subscription():
     }
 
 
+@pytest.mark.xdist_group(name="testnotificationsubscribe")
 class TestNotificationSubscribe:
     """Tests for POST /api/v1/notifications/subscribe."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_subscribe_with_valid_subscription_returns_success(self, client, mock_subscription):
         """Should successfully subscribe to push notifications."""
@@ -70,8 +77,13 @@ class TestNotificationSubscribe:
         assert response.status_code == 422
 
 
+@pytest.mark.xdist_group(name="testnotificationunsubscribe")
 class TestNotificationUnsubscribe:
     """Tests for POST /api/v1/notifications/unsubscribe."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_unsubscribe_with_valid_endpoint_returns_success(self, client):
         """Should successfully unsubscribe from push notifications."""
@@ -95,8 +107,13 @@ class TestNotificationUnsubscribe:
         assert response.status_code == 422
 
 
+@pytest.mark.xdist_group(name="testnotificationendpointexists")
 class TestNotificationEndpointExists:
     """Tests to verify notification endpoints are registered."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_subscribe_endpoint_exists(self, client):
         """Should have subscribe endpoint registered."""

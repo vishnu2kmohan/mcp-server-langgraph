@@ -5,6 +5,7 @@ Provides fixtures for end-to-end tests including:
 - OpenFGA tuple verification for authorization testing
 - Real infrastructure client connections
 - User journey helper fixtures
+- Infrastructure availability skip fixture (autouse)
 
 These fixtures work with docker-compose.test.yml infrastructure.
 
@@ -28,6 +29,32 @@ import os
 
 import pytest
 import pytest_asyncio
+import requests
+
+
+def _e2e_infrastructure_available() -> bool:
+    """Check if E2E infrastructure is available (Keycloak via gateway)."""
+    try:
+        # Check Keycloak via gateway
+        keycloak_response = requests.get(
+            "http://localhost/authn/realms/default/.well-known/openid-configuration",
+            timeout=5,
+        )
+        return keycloak_response.status_code == 200
+    except Exception:
+        return False
+
+
+@pytest.fixture(autouse=True)
+def skip_if_e2e_infrastructure_unavailable():
+    """Skip E2E tests if infrastructure is not available.
+
+    This autouse fixture runs before each E2E test and properly skips when
+    Keycloak/OpenFGA infrastructure is not reachable. Centralized in conftest.py
+    to avoid duplicate autouse fixtures across test files (best practice).
+    """
+    if not _e2e_infrastructure_available():
+        pytest.skip("E2E infrastructure not available")
 
 
 # OpenFGA configuration constants

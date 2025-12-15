@@ -30,6 +30,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.xdist_group(name="testconnectionrepository")
 class TestConnectionRepository:
     """TDD tests for connection repository interface and implementation."""
 

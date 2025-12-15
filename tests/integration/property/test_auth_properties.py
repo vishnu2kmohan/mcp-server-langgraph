@@ -291,8 +291,9 @@ class TestAuthorizationProperties:
 
         auth = AuthMiddleware()
 
-        # Mock OpenFGA to raise exception
-        with patch.object(auth, "openfga") as mock_openfga:
+        # Patch the authorization service's openfga, not the middleware's
+        # (AuthMiddleware delegates to _authorization_service which has its own openfga reference)
+        with patch.object(auth._authorization_service, "openfga") as mock_openfga:
             mock_openfga.check_permission = AsyncMock(side_effect=Exception("OpenFGA error"))
 
             # Property: Should deny on error (fail-closed)
@@ -350,8 +351,9 @@ class TestPermissionInheritance:
 
         auth = AuthMiddleware()
 
-        # Mock OpenFGA with org relationship
-        with patch.object(auth, "openfga") as mock_openfga:
+        # Patch the authorization service's openfga, not the middleware's
+        # (AuthMiddleware delegates to _authorization_service which has its own openfga reference)
+        with patch.object(auth._authorization_service, "openfga") as mock_openfga:
 
             async def mock_check(user, relation, object, context=None):
                 # Simulate: user is org member, tool belongs to org
@@ -378,7 +380,9 @@ class TestPermissionInheritance:
 
         auth = AuthMiddleware()
 
-        with patch.object(auth, "openfga") as mock_openfga:
+        # Patch the authorization service's openfga, not the middleware's
+        # (AuthMiddleware delegates to _authorization_service which has its own openfga reference)
+        with patch.object(auth._authorization_service, "openfga") as mock_openfga:
 
             async def mock_check(user, relation, object, context=None):
                 # Owner has all permissions

@@ -56,7 +56,7 @@ class TestObservabilityServiceImpl:
         return client
 
     @pytest.fixture
-    def sample_trace_info(self) -> "TraceInfo":
+    def sample_trace_info(self) -> TraceInfo:
         """Create a sample TraceInfo for testing."""
         from mcp_server_langgraph.observability.query.interfaces import (
             SpanInfo,
@@ -86,7 +86,7 @@ class TestObservabilityServiceImpl:
         )
 
     @pytest.fixture
-    def sample_trace_search_result(self, sample_trace_info: "TraceInfo") -> "TraceSearchResult":
+    def sample_trace_search_result(self, sample_trace_info: TraceInfo) -> TraceSearchResult:
         """Create a sample TraceSearchResult for testing."""
         from mcp_server_langgraph.observability.query.interfaces import TraceSearchResult
 
@@ -105,7 +105,7 @@ class TestObservabilityServiceImpl:
         self,
         mock_tracing_client: MagicMock,
         mock_metrics_client: MagicMock,
-        sample_trace_search_result: "TraceSearchResult",
+        sample_trace_search_result: TraceSearchResult,
     ) -> None:
         """GIVEN an ObservabilityServiceImpl with tracing client
         WHEN list_traces() is called
@@ -129,7 +129,7 @@ class TestObservabilityServiceImpl:
         self,
         mock_tracing_client: MagicMock,
         mock_metrics_client: MagicMock,
-        sample_trace_search_result: "TraceSearchResult",
+        sample_trace_search_result: TraceSearchResult,
     ) -> None:
         """GIVEN traces from tracing client
         WHEN list_traces() is called
@@ -155,7 +155,7 @@ class TestObservabilityServiceImpl:
         self,
         mock_tracing_client: MagicMock,
         mock_metrics_client: MagicMock,
-        sample_trace_search_result: "TraceSearchResult",
+        sample_trace_search_result: TraceSearchResult,
     ) -> None:
         """GIVEN session_id parameter
         WHEN list_traces() is called
@@ -181,7 +181,7 @@ class TestObservabilityServiceImpl:
         self,
         mock_tracing_client: MagicMock,
         mock_metrics_client: MagicMock,
-        sample_trace_info: "TraceInfo",
+        sample_trace_info: TraceInfo,
     ) -> None:
         """GIVEN more traces available
         WHEN list_traces() is called
@@ -214,7 +214,7 @@ class TestObservabilityServiceImpl:
         self,
         mock_tracing_client: MagicMock,
         mock_metrics_client: MagicMock,
-        sample_trace_info: "TraceInfo",
+        sample_trace_info: TraceInfo,
     ) -> None:
         """GIVEN a trace_id
         WHEN get_trace() is called
@@ -238,7 +238,7 @@ class TestObservabilityServiceImpl:
         self,
         mock_tracing_client: MagicMock,
         mock_metrics_client: MagicMock,
-        sample_trace_info: "TraceInfo",
+        sample_trace_info: TraceInfo,
     ) -> None:
         """GIVEN a trace with spans
         WHEN get_trace() is called
@@ -348,8 +348,8 @@ class TestObservabilityServiceImpl:
         self,
         mock_tracing_client: MagicMock,
         mock_metrics_client: MagicMock,
-        sample_trace_search_result: "TraceSearchResult",
-        sample_trace_info: "TraceInfo",
+        sample_trace_search_result: TraceSearchResult,
+        sample_trace_info: TraceInfo,
     ) -> None:
         """GIVEN an ObservabilityServiceImpl
         WHEN any method is called

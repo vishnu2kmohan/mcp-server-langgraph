@@ -259,20 +259,25 @@ class TestMCPBridge:
     # =========================================================================
 
     @pytest.mark.asyncio
-    async def test_get_mcp_bridge_returns_none_when_no_env(self) -> None:
+    async def test_get_mcp_bridge_returns_none_when_no_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """GIVEN no MCP_SERVER_URL environment variable
         WHEN get_mcp_bridge() is called
         THEN it returns None
         """
         from mcp_server_langgraph.api.v1.mcp_bridge import get_mcp_bridge, reset_mcp_bridge
 
+        # Use monkeypatch to remove the env var (auto-cleanup after test)
+        monkeypatch.delenv("MCP_SERVER_URL", raising=False)
+
+        # Reset the singleton first
         reset_mcp_bridge()
 
-        with patch.dict("os.environ", {}, clear=True):
-            with patch("os.getenv", return_value=None):
-                bridge = get_mcp_bridge()
+        # With no env var set, bridge should be None
+        bridge = get_mcp_bridge()
+        assert bridge is None, f"Expected None but got {bridge}"
 
-        assert bridge is None
+        # Reset singleton to avoid affecting other tests
+        reset_mcp_bridge()
 
     @pytest.mark.asyncio
     async def test_get_mcp_bridge_returns_bridge_when_url_set(self) -> None:
@@ -1185,7 +1190,7 @@ class TestMCPBridge2025Features:
 
         bridge = MCPBridge(mcp_client=mock_client)
 
-        result = await bridge.call_tool(
+        _ = await bridge.call_tool(
             tool_name="long_running_tool",
             arguments={"input": "data"},
             as_task=True,

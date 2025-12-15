@@ -7,8 +7,7 @@ workflow storage with the WebSocket execution endpoint.
 
 import gc
 from datetime import UTC, datetime
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -48,6 +47,7 @@ def mock_workflow_storage() -> AsyncMock:
     return storage
 
 
+@pytest.mark.xdist_group(name="testlanggraphexecutionmanager")
 class TestLangGraphExecutionManager:
     """Tests for LangGraphExecutionManager."""
 

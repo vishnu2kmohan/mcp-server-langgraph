@@ -219,3 +219,91 @@ class TestDashboard:
         assert "total_metrics_count" in data
         assert "total_events_count" in data
         assert "generated_at" in data
+
+
+@pytest.mark.xdist_group(name="metrics_api")
+class TestFeedbackEndpoint:
+    """Tests for POST /api/v1/metrics/feedback - NPS/CSAT collection"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_submit_nps_feedback(self, client):
+        """Should accept NPS score feedback."""
+        response = client.post(
+            "/api/v1/metrics/feedback",
+            json={
+                "nps_score": 9,
+                "comment": "Great product!",
+            },
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["success"] is True
+        assert "feedback_id" in data
+
+    def test_submit_csat_feedback(self, client):
+        """Should accept CSAT rating feedback."""
+        response = client.post(
+            "/api/v1/metrics/feedback",
+            json={
+                "csat_rating": 5,
+                "comment": "Very satisfied",
+            },
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["success"] is True
+
+    def test_submit_combined_feedback(self, client):
+        """Should accept combined NPS and CSAT feedback."""
+        response = client.post(
+            "/api/v1/metrics/feedback",
+            json={
+                "nps_score": 8,
+                "csat_rating": 4,
+                "comment": "Good overall experience",
+            },
+        )
+        assert response.status_code == 201
+
+    def test_submit_feedback_without_comment(self, client):
+        """Should accept feedback without comment."""
+        response = client.post(
+            "/api/v1/metrics/feedback",
+            json={
+                "nps_score": 7,
+            },
+        )
+        assert response.status_code == 201
+
+    def test_reject_invalid_nps_score(self, client):
+        """Should reject NPS score outside 0-10 range."""
+        response = client.post(
+            "/api/v1/metrics/feedback",
+            json={
+                "nps_score": 11,
+            },
+        )
+        assert response.status_code == 422
+
+    def test_reject_invalid_csat_rating(self, client):
+        """Should reject CSAT rating outside 1-5 range."""
+        response = client.post(
+            "/api/v1/metrics/feedback",
+            json={
+                "csat_rating": 0,
+            },
+        )
+        assert response.status_code == 422
+
+    def test_reject_empty_feedback(self, client):
+        """Should reject feedback with no scores."""
+        response = client.post(
+            "/api/v1/metrics/feedback",
+            json={
+                "comment": "Just a comment",
+            },
+        )
+        assert response.status_code == 422

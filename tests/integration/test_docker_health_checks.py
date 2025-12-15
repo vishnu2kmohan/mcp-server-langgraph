@@ -398,6 +398,7 @@ class TestDockerComposeHealthChecksIntegration:
             cleanup_result = run_docker_compose(
                 compose_file,
                 "down",
+                "-v",  # Remove volumes to prevent orphaned volume accumulation
                 # Removed: "--remove-orphans" - causes interference with main test infrastructure
                 timeout=30,
                 env=test_env,
@@ -491,6 +492,7 @@ class TestDockerComposeHealthChecksIntegration:
             run_docker_compose(
                 compose_file,
                 "down",
+                "-v",  # Remove volumes to prevent orphaned volume accumulation
                 # Removed: "--remove-orphans" - causes interference with main test infrastructure
                 timeout=30,
                 env=test_env,

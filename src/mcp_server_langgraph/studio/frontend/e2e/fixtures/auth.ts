@@ -16,17 +16,17 @@ import { test as base, type Page } from '@playwright/test';
 const TEST_USERS = {
   admin: {
     username: 'admin',
-    password: 'admin-password',
+    password: 'admin123',
     persona: 'admin',
   },
   alice: {
     username: 'alice',
-    password: 'alice-password',
+    password: 'alice123',
     persona: 'developer',
   },
   bob: {
     username: 'bob',
-    password: 'bob-password',
+    password: 'bob123',
     persona: 'user',
   },
 } as const;
@@ -34,9 +34,14 @@ const TEST_USERS = {
 type TestUser = keyof typeof TEST_USERS;
 
 // Keycloak endpoints (when backend is enabled)
+// Note: Keycloak is configured with http-relative-path=/authn
 const KEYCLOAK_BASE = process.env.KEYCLOAK_URL || 'http://localhost:9082';
 const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM || 'default';
-const KEYCLOAK_TOKEN_URL = `${KEYCLOAK_BASE}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token`;
+const KEYCLOAK_PATH_PREFIX = process.env.KEYCLOAK_PATH_PREFIX || '/authn';
+const KEYCLOAK_TOKEN_URL = `${KEYCLOAK_BASE}${KEYCLOAK_PATH_PREFIX}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token`;
+// Client credentials for mcp-server (configured in default-realm.json)
+const KEYCLOAK_CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID || 'mcp-server';
+const KEYCLOAK_CLIENT_SECRET = process.env.KEYCLOAK_CLIENT_SECRET || 'test-client-secret-for-e2e-tests';
 
 interface AuthFixtures {
   authenticatedPage: Page;
@@ -68,14 +73,16 @@ async function getKeycloakToken(username: string, password: string): Promise<str
       },
       body: new URLSearchParams({
         grant_type: 'password',
-        client_id: 'studio-frontend',
+        client_id: KEYCLOAK_CLIENT_ID,
+        client_secret: KEYCLOAK_CLIENT_SECRET,
         username,
         password,
       }),
     });
 
     if (!response.ok) {
-      console.warn(`Keycloak token fetch failed: ${response.status}`);
+      const errorText = await response.text().catch(() => 'unknown');
+      console.warn(`Keycloak token fetch failed: ${response.status} - ${errorText}`);
       return null;
     }
 

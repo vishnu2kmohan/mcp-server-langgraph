@@ -10,8 +10,7 @@ This endpoint returns the current agent configuration including:
 """
 
 import gc
-import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi import FastAPI
@@ -151,7 +150,6 @@ class TestAgentConfigResponseModel:
 
     def test_agent_config_temperature_bounds(self) -> None:
         """Temperature should be between 0 and 2."""
-        from pydantic import ValidationError
 
         from mcp_server_langgraph.api.v1.agents import AgentConfigResponse
 

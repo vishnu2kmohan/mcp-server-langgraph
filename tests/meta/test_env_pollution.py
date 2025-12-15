@@ -207,7 +207,6 @@ class TestEnvironmentIsolationMigration:
             "tests/unit/mcp/test_mcp_stdio_server.py",
             "tests/core/test_exceptions.py",
             "tests/integration/core/test_container.py",
-            "tests/builder/test_builder_security.py",
             "tests/performance/test_benchmarks.py",
             "tests/integration/test_openfga_client.py",
             "tests/regression/test_service_principal_test_isolation.py",

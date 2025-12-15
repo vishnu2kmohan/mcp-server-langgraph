@@ -215,15 +215,15 @@ class TestSchemaInitializationTiming:
 
         import asyncpg
 
-        # Create a small connection pool
+        # Create a minimal connection pool (reduced to prevent connection exhaustion)
         pool = await asyncpg.create_pool(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
             database=os.getenv("POSTGRES_DB", "gdpr_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-            min_size=2,
-            max_size=4,
+            min_size=1,
+            max_size=2,  # Minimal to prevent xdist connection exhaustion
         )
 
         try:

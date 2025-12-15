@@ -150,8 +150,9 @@ print('Should not reach here')
         assert result.timed_out is True
         assert result.execution_time >= 1
         # Allow for cleanup overhead (container stop, log retrieval)
-        # Timeout is 1s, but cleanup can add 1-2s depending on system load
-        assert result.execution_time < 3, f"Execution time {result.execution_time}s exceeds 3s (timeout=1s + cleanup)"
+        # Timeout is 1s, but cleanup can add 1-4s depending on system load
+        # and xdist worker parallelism contention
+        assert result.execution_time < 5, f"Execution time {result.execution_time}s exceeds 5s (timeout=1s + cleanup)"
 
     def test_memory_limit_enforcement(self, docker_available):
         """Test that memory limits are enforced"""

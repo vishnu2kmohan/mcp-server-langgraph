@@ -33,6 +33,8 @@ from mcp_server_langgraph.middleware.rate_limiter import (
     limiter,
     rate_limit_for_auth,
     rate_limit_for_llm,
+    rate_limit_for_oauth2_callback,
+    rate_limit_for_oauth2_start,
     rate_limit_for_search,
     setup_rate_limiting,
 )
@@ -108,6 +110,20 @@ class TestRateLimitConstants:
         assert "llm_chat" in ENDPOINT_RATE_LIMITS
         assert "search" in ENDPOINT_RATE_LIMITS
         assert "read" in ENDPOINT_RATE_LIMITS
+
+    def test_oauth2_rate_limits_defined(self):
+        """Test OAuth2-specific rate limits are defined"""
+        assert "oauth2_start" in ENDPOINT_RATE_LIMITS
+        assert "oauth2_callback" in ENDPOINT_RATE_LIMITS
+
+    def test_oauth2_endpoints_have_strict_limits(self):
+        """Test OAuth2 endpoints have strict limits to prevent abuse"""
+        oauth2_start_limit = int(ENDPOINT_RATE_LIMITS["oauth2_start"].split("/")[0])
+        oauth2_callback_limit = int(ENDPOINT_RATE_LIMITS["oauth2_callback"].split("/")[0])
+
+        # OAuth2 endpoints should have strict limits
+        assert oauth2_start_limit <= 10  # Max 10 starts per minute
+        assert oauth2_callback_limit <= 20  # Max 20 callbacks per minute
 
     def test_auth_endpoints_have_strict_limits(self):
         """Test authentication endpoints have strict limits"""
@@ -490,6 +506,26 @@ class TestEndpointSpecificDecorators:
             return {"status": "healthy"}
 
         assert hasattr(health_endpoint, "__wrapped__")
+
+    def test_rate_limit_for_oauth2_start_decorator(self):
+        """Test OAuth2 start endpoint rate limiter"""
+
+        @rate_limit_for_oauth2_start
+        async def oauth2_start_endpoint(request: Request):
+            return {"authorization_url": "https://example.com/auth"}
+
+        # Decorator should be applied
+        assert hasattr(oauth2_start_endpoint, "__wrapped__")
+
+    def test_rate_limit_for_oauth2_callback_decorator(self):
+        """Test OAuth2 callback endpoint rate limiter"""
+
+        @rate_limit_for_oauth2_callback
+        async def oauth2_callback_endpoint(request: Request):
+            return {"status": "success"}
+
+        # Decorator should be applied
+        assert hasattr(oauth2_callback_endpoint, "__wrapped__")
 
 
 @pytest.mark.xdist_group(name="middleware_rate_limiter_tests")

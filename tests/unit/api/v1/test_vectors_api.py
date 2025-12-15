@@ -76,26 +76,84 @@ def create_test_app_with_mocks(
     mock_openfga: AsyncMock | None,
     mock_qdrant: MagicMock | None,
 ) -> FastAPI:
-    """Create a test FastAPI app with dependency overrides."""
+    """
+    Create a test FastAPI app with dependency overrides.
+
+    PYTEST-XDIST FIX (2025-12-15):
+    ==============================
+    Previous approach relied on FastAPI's transitive dependency resolution
+    (overriding get_current_user and expecting it to propagate to require_*_permission).
+    This failed in parallel execution due to module-level caching issues.
+
+    New approach directly overrides the permission functions (require_viewer_permission,
+    require_editor_permission, require_owner_permission) which the routes actually depend on.
+    This is more robust as it doesn't rely on dependency chain resolution.
+    """
     from mcp_server_langgraph.api.v1.vectors import (
-        get_openfga_client,
         get_qdrant_client,
+        require_editor_permission,
+        require_owner_permission,
+        require_viewer_permission,
         router,
     )
-    from mcp_server_langgraph.auth.middleware import get_current_user
 
     app = FastAPI()
     app.include_router(router)
 
     if mock_user is not None:
-        # Use async function instead of sync lambda per xdist safety pattern
-        async def get_mock_user() -> dict[str, Any]:
+        # Override permission functions directly instead of get_current_user
+        # This avoids transitive dependency resolution issues in pytest-xdist
+        from fastapi import HTTPException, status
+
+        async def mock_require_viewer() -> dict[str, Any]:
+            # Call permission check on the mock OpenFGA if provided
+            if mock_openfga is not None:
+                user_id = f"user:{mock_user.get('preferred_username', mock_user.get('sub'))}"
+                allowed = await mock_openfga.check_permission(
+                    user=user_id,
+                    relation="viewer",
+                    object="vector_store:default",
+                )
+                if not allowed:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Insufficient permissions to access vector store",
+                    )
             return mock_user  # type: ignore[return-value]
 
-        app.dependency_overrides[get_current_user] = get_mock_user
+        async def mock_require_editor() -> dict[str, Any]:
+            if mock_openfga is not None:
+                user_id = f"user:{mock_user.get('preferred_username', mock_user.get('sub'))}"
+                allowed = await mock_openfga.check_permission(
+                    user=user_id,
+                    relation="editor",
+                    object="vector_store:default",
+                )
+                if not allowed:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Insufficient permissions to modify vector store",
+                    )
+            return mock_user  # type: ignore[return-value]
 
-    if mock_openfga is not None:
-        app.dependency_overrides[get_openfga_client] = lambda: mock_openfga
+        async def mock_require_owner() -> dict[str, Any]:
+            if mock_openfga is not None:
+                user_id = f"user:{mock_user.get('preferred_username', mock_user.get('sub'))}"
+                allowed = await mock_openfga.check_permission(
+                    user=user_id,
+                    relation="owner",
+                    object="vector_store:default",
+                )
+                if not allowed:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Insufficient permissions to delete from vector store",
+                    )
+            return mock_user  # type: ignore[return-value]
+
+        app.dependency_overrides[require_viewer_permission] = mock_require_viewer
+        app.dependency_overrides[require_editor_permission] = mock_require_editor
+        app.dependency_overrides[require_owner_permission] = mock_require_owner
 
     if mock_qdrant is not None:
         app.dependency_overrides[get_qdrant_client] = lambda: mock_qdrant

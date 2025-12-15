@@ -86,11 +86,8 @@ def _keycloak_token_endpoint_functional() -> bool:
         return False
 
 
-# Skip at module level if services not available or not fully functional
-if not _qdrant_available() or not _keycloak_available():
-    pytestmark.append(pytest.mark.skip(reason="Qdrant or Keycloak not available for auth integration tests"))
-elif not _keycloak_token_endpoint_functional():
-    pytestmark.append(pytest.mark.skip(reason="Keycloak token endpoint not returning valid JSON responses"))
+# Infrastructure check and autouse skip fixture are in tests/integration/auth/conftest.py
+# This avoids duplicate autouse fixtures across test files (best practice)
 
 # URLs
 GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost")

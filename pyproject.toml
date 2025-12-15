@@ -149,6 +149,7 @@ dev = [
     "rich>=13.0.0",  # Rich text and beautiful formatting in the terminal
     "websockets>=12.0",  # Required for E2E test imports (also in playground extra)
     "packaging>=21.0",  # Version parsing for MCP SDK version tests
+    "httpcore>=1.0.0",  # Low-level HTTP for network error handling in integration tests (httpcore.ConnectError)
 ]
 
 secrets = [
@@ -616,6 +617,9 @@ module = [
     "hvac.*",  # HashiCorp Vault client lacks type stubs
     "boto3.*",  # AWS SDK lacks py.typed marker
     "azure.*",  # Azure SDK lacks py.typed marker
+    "fakeredis.*",  # In-memory Redis fallback for testing
+    "langchain_openai.*",  # OpenAI embeddings (separate package from langchain)
+    "langchain_huggingface.*",  # HuggingFace embeddings (separate package from langchain)
 ]
 ignore_missing_imports = true
 # Disable additional strict checks for third-party libraries

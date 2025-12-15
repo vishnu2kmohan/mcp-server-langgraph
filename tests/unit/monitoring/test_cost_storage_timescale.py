@@ -18,6 +18,7 @@ import gc
 import pytest
 
 from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+from tests.conftest import get_user_id
 
 pytestmark = pytest.mark.unit
 
@@ -75,7 +76,7 @@ class TestTimescaleDBCostStorageCompression:
         # THEN: All fields should be preserved accurately
         test_record = TokenUsage(
             timestamp=datetime.now(UTC) - timedelta(days=10),
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             session_id="session-123",
             model="claude-3-opus",
             provider="anthropic",

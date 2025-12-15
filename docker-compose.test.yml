@@ -26,6 +26,7 @@
 #
 # GATEWAY ROUTES (via Traefik on port 80):
 #   /_oauth           - OAuth callback (traefik-forward-auth)
+#   /api/*            - API endpoints for frontend [protected]
 #   /mcp              - MCP Server API [protected]
 #   /studio/*         - Unified Studio Frontend [protected]
 #                       - /studio/workflows - Visual Workflow Builder
@@ -53,7 +54,7 @@
 #   Alloy is the unified collector that replaces Prometheus, Promtail, and OTEL Collector
 #
 # DIRECT PORTS (legacy, for direct access):
-#   9432  - PostgreSQL (test, offset +4000 from standard 5432)
+#   9432  - PostgreSQL/TimescaleDB (test, offset +4000 from standard 5432)
 #   9379  - Redis (test, offset +3000 from standard 6379)
 #   9333  - Qdrant (test, offset +3000 from standard 6333)
 #   9080  - OpenFGA HTTP API (test, offset +1000 from standard 8080)
@@ -136,6 +137,11 @@ services:
           - localhost
     labels:
       - "traefik.enable=true"
+      # Define forward-auth middleware in gateway so it exists at startup
+      # (traefik-forward-auth service may not be running yet when other services start)
+      - "traefik.http.middlewares.forward-auth.forwardauth.address=http://traefik-forward-auth:4181"
+      - "traefik.http.middlewares.forward-auth.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User,X-Auth-User,X-Auth-Email"
       # Route: /gateway/* -> Traefik Dashboard [PROTECTED]
       # Traefik dashboard requires both /api and /dashboard paths internally.
       # We use replacepathregex to rewrite /gateway/api -> /api and /gateway/dashboard -> /dashboard
@@ -154,14 +160,21 @@ services:
   # ==============================================================================
 
   postgres-test:
-    # PostgreSQL 16 to match CloudSQL (terraform/environments/gcp-preview/main.tf: postgres_major_version = 16)
-    image: postgres:16-alpine
+    # TimescaleDB 2.17 on PostgreSQL 16 for time-series metrics and cost tracking
+    # Matches CloudSQL version (terraform/environments/gcp-preview/main.tf: postgres_major_version = 16)
+    # TimescaleDB extension provides hypertables for efficient time-series storage
+    image: timescale/timescaledb:2.17.2-pg16
+    # Increase max_connections for pytest-xdist parallel workers (8 workers x ~10 connections each)
+    # Default is 100, which causes TooManyConnectionsError during parallel test runs
+    command: postgres -c max_connections=200 -c shared_buffers=256MB
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: openfga_test
       # Test-specific settings for speed
       POSTGRES_INITDB_ARGS: "-c fsync=off -c synchronous_commit=off -c full_page_writes=off"
+      # TimescaleDB preload (required for extension to work)
+      TIMESCALEDB_TELEMETRY: "off"
     ports:
       - "9432:5432"  # Offset port to avoid conflicts with dev environment
     volumes:
@@ -422,9 +435,9 @@ services:
       # NOTE: Filename must match realm name for Keycloak 26.x --import-realm
       - ./tests/e2e/default-realm.json:/opt/keycloak/data/import/default-realm.json:ro
     environment:
-      # Admin credentials
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      # Admin credentials (Keycloak 26+ uses KC_BOOTSTRAP_ADMIN_* instead of KEYCLOAK_ADMIN_*)
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin123
 
       # Database configuration - uses dedicated keycloak_test database for isolation
       # Note: KC_DB=postgres is baked into the optimized image (docker/Dockerfile.keycloak)
@@ -450,10 +463,21 @@ services:
       # Test-specific
       - TESTING=true
 
-      # JVM memory settings to prevent OOM
-      # Keycloak 26.x defaults to -XX:MaxRAMPercentage=70 which can exceed container limits
-      # Explicit heap limits ensure predictable memory usage
-      - JAVA_OPTS_APPEND=-Xms512m -Xmx768m -XX:MaxMetaspaceSize=192m
+      # GitHub OAuth App credentials (for SSO IdP testing)
+      # Create a GitHub OAuth App at: https://github.com/settings/developers
+      # Set callback URL to: http://localhost/authn/realms/default/broker/github/endpoint
+      # Pass via environment variables or .env.test.local:
+      #   GITHUB_CLIENT_ID=your-github-client-id
+      #   GITHUB_CLIENT_SECRET=your-github-client-secret
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+
+      # JVM memory settings to prevent OOM (exit code 137)
+      # Keycloak 26.x with Quarkus requires significant native memory beyond heap
+      # Container limit: 1792M, JVM heap: 768M, Metaspace: 256M, Native: ~768M headroom
+      # -XX:+UseG1GC: Lower memory footprint than default
+      # -XX:+ExitOnOutOfMemoryError: Fast-fail on OOM instead of hanging
+      - JAVA_OPTS_APPEND=-Xms384m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
     healthcheck:
       # Best Practice: Use /health/ready endpoint on management port 9000
       # Reference: https://www.keycloak.org/observability/health
@@ -468,10 +492,10 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          memory: 1280M
+          memory: 1792M  # Increased from 1280M to prevent OOM (exit 137)
         reservations:
           cpus: '0.25'
-          memory: 640M
+          memory: 768M   # Increased to match JVM -Xmx768m
     networks:
       mcp-test-network:
         aliases:
@@ -512,7 +536,7 @@ services:
             --server http://keycloak-test:8080/authn \
             --realm master \
             --user admin \
-            --password admin 2>/dev/null; then
+            --password admin123 2>/dev/null; then
             echo "Keycloak Admin CLI connected successfully"
             break
           fi
@@ -532,7 +556,70 @@ services:
           echo "Could not find admin user - may already be configured correctly"
         fi
 
+        # Configure SSO Identity Providers with actual credentials (if provided)
+        # The realm JSON imports placeholder values that need to be replaced at runtime
+
+        # GitHub IdP
+        if [ -n "$$GITHUB_CLIENT_ID" ] && [ -n "$$GITHUB_CLIENT_SECRET" ]; then
+          echo "Configuring GitHub IdP with actual credentials..."
+          /opt/keycloak/bin/kcadm.sh update identity-provider/instances/github -r default \
+            -s "config.clientId=$$GITHUB_CLIENT_ID" \
+            -s "config.clientSecret=$$GITHUB_CLIENT_SECRET" 2>/dev/null
+          if [ $$? -eq 0 ]; then
+            echo "GitHub IdP configured successfully"
+          else
+            echo "Warning: Failed to update GitHub IdP - it may not exist in the realm"
+          fi
+        else
+          echo "GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET not set - skipping GitHub IdP configuration"
+        fi
+
+        # Google IdP
+        if [ -n "$$GOOGLE_CLIENT_ID" ] && [ -n "$$GOOGLE_CLIENT_SECRET" ]; then
+          echo "Configuring Google IdP with actual credentials..."
+          /opt/keycloak/bin/kcadm.sh update identity-provider/instances/google -r default \
+            -s "config.clientId=$$GOOGLE_CLIENT_ID" \
+            -s "config.clientSecret=$$GOOGLE_CLIENT_SECRET" 2>/dev/null
+          if [ $$? -eq 0 ]; then
+            echo "Google IdP configured successfully"
+          else
+            echo "Warning: Failed to update Google IdP - it may not exist in the realm"
+          fi
+        else
+          echo "GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set - skipping Google IdP configuration"
+        fi
+
+        # Microsoft IdP
+        if [ -n "$$MICROSOFT_CLIENT_ID" ] && [ -n "$$MICROSOFT_CLIENT_SECRET" ]; then
+          echo "Configuring Microsoft IdP with actual credentials..."
+          /opt/keycloak/bin/kcadm.sh update identity-provider/instances/microsoft -r default \
+            -s "config.clientId=$$MICROSOFT_CLIENT_ID" \
+            -s "config.clientSecret=$$MICROSOFT_CLIENT_SECRET" 2>/dev/null
+          if [ $$? -eq 0 ]; then
+            echo "Microsoft IdP configured successfully"
+          else
+            echo "Warning: Failed to update Microsoft IdP - it may not exist in the realm"
+          fi
+        else
+          echo "MICROSOFT_CLIENT_ID or MICROSOFT_CLIENT_SECRET not set - skipping Microsoft IdP configuration"
+        fi
+
         echo "Keycloak initialization complete"
+    env_file:
+      - .env.test
+      - path: .env.local
+        required: false
+    environment:
+      # SSO OAuth credentials (override from compose-level resolution)
+      # GitHub
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      # Google
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      # Microsoft
+      - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID:-}
+      - MICROSOFT_CLIENT_SECRET=${MICROSOFT_CLIENT_SECRET:-}
     depends_on:
       keycloak-test:
         condition: service_healthy
@@ -592,7 +679,8 @@ services:
       - LIFETIME=3600
       # Logout Configuration
       # /_oauth/logout redirects to Keycloak logout for complete SSO logout
-      - LOGOUT_REDIRECT=http://localhost/authn/realms/default/protocol/openid-connect/logout?post_logout_redirect_uri=http%3A%2F%2Flocalhost%2Fauthn%2Frealms%2Fdefault%2Faccount&client_id=mcp-server
+      # post_logout_redirect_uri=http://localhost allows users to return to /studio after re-login
+      - LOGOUT_REDIRECT=http://localhost/authn/realms/default/protocol/openid-connect/logout?post_logout_redirect_uri=http%3A%2F%2Flocalhost&client_id=mcp-server
       # Logging
       - LOG_LEVEL=info
       - LOG_FORMAT=json
@@ -616,10 +704,8 @@ services:
           - forward-auth
     labels:
       - "traefik.enable=true"
-      # Define the ForwardAuth middleware that other services will use
-      - "traefik.http.middlewares.forward-auth.forwardauth.address=http://traefik-forward-auth:4181"
-      - "traefik.http.middlewares.forward-auth.forwardauth.trustForwardHeader=true"
-      - "traefik.http.middlewares.forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User,X-Auth-User,X-Auth-Email"
+      # NOTE: forward-auth middleware is defined in traefik-gateway labels (startup ordering fix)
+      # This service only needs to expose the /_oauth route for OAuth callbacks
       # OAuth callback route (handles redirect from Keycloak)
       # IMPORTANT: The /_oauth route MUST use the forward-auth middleware, NOT direct service routing.
       # traefik-forward-auth intercepts /_oauth via X-Forwarded-Uri header in middleware mode.
@@ -799,6 +885,7 @@ services:
     # Override locally with .env.test.local (gitignored) or shell environment
     env_file:
       - .env.test
+      - .env.local
     environment:
       # Docker networking values (must reference container names)
       # These override values from .env.test because they require compose-level resolution
@@ -809,6 +896,8 @@ services:
       # are being checked. Docker Compose health checks already ensure dependencies.
       - TESTING=true
       - POSTGRES_HOST=postgres-test
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres-test:5432/mcp_test
+      - WORKFLOW_STORAGE_BACKEND=postgres
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       - OPENFGA_API_URL=http://openfga-test:8080
       - REDIS_URL=redis://redis-test:6379/1
@@ -860,6 +949,47 @@ services:
       # Authentication via forward-auth middleware (ADR-0054)
       - "traefik.http.routers.studio.middlewares=forward-auth@docker"
       # NO strip - FastAPI serves /studio/* directly
+      # Route: /login -> mcp-server:8000/login (Native Login Page - NO AUTH)
+      # Native login page bypasses forward-auth for seamless user experience
+      - "traefik.http.routers.login.rule=Path(`/login`)"
+      - "traefik.http.routers.login.entrypoints=web"
+      - "traefik.http.routers.login.priority=100"
+      - "traefik.http.routers.login.service=mcp-api"
+      # NO forward-auth middleware - login page is publicly accessible
+      # Route: /studio/assets/* -> mcp-server (NO AUTH for static assets)
+      # Frontend JS/CSS assets needed for login page (served from /studio/assets)
+      - "traefik.http.routers.assets.rule=PathPrefix(`/studio/assets`) || PathPrefix(`/assets`)"
+      - "traefik.http.routers.assets.entrypoints=web"
+      - "traefik.http.routers.assets.priority=100"
+      - "traefik.http.routers.assets.service=mcp-api"
+      # NO forward-auth middleware - static assets are publicly accessible
+      # Route: /api/v1/login, /api/v1/logout -> mcp-server (NO AUTH)
+      # Native login/logout endpoints bypass forward-auth for direct Keycloak API calls
+      - "traefik.http.routers.api-auth.rule=Path(`/api/v1/login`) || Path(`/api/v1/logout`)"
+      - "traefik.http.routers.api-auth.entrypoints=web"
+      - "traefik.http.routers.api-auth.priority=100"
+      - "traefik.http.routers.api-auth.service=mcp-api"
+      # NO forward-auth middleware - login/logout are publicly accessible
+      # Route: /api/* -> mcp-server:8000/api/* (API endpoints for frontend)
+      # This allows the frontend at /studio to call /api/v1/* endpoints directly
+      - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.routers.api.priority=10"
+      - "traefik.http.routers.api.service=mcp-api"
+      # Authentication via forward-auth middleware (ADR-0054)
+      - "traefik.http.routers.api.middlewares=forward-auth@docker"
+      # NO strip - FastAPI serves /api/* directly
+      # Route: / -> redirect to /login (Native Login entry point)
+      # Priority 100 ensures this takes precedence; regex .* works because router already matches Path(`/`)
+      # Users start at /login, then navigate to /studio after authentication
+      - "traefik.http.routers.root.rule=Path(`/`)"
+      - "traefik.http.routers.root.entrypoints=web"
+      - "traefik.http.routers.root.priority=100"
+      - "traefik.http.routers.root.middlewares=root-redirect"
+      - "traefik.http.middlewares.root-redirect.redirectregex.regex=.*"
+      - "traefik.http.middlewares.root-redirect.redirectregex.replacement=/login"
+      - "traefik.http.middlewares.root-redirect.redirectregex.permanent=false"
+      - "traefik.http.routers.root.service=mcp-api"
 
   # ==============================================================================
   # OBSERVABILITY SERVICES (Grafana LGTM Stack)
@@ -1375,6 +1505,8 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=authz-proxy-test
       - LOG_FORMAT=json
+      # Disable console span/metric export (send to OTLP only, reduces log noise)
+      - ENABLE_CONSOLE_EXPORT=false
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/api/authz-proxy/health"]
       interval: 5s

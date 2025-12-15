@@ -26,7 +26,6 @@ pytestmark = pytest.mark.unit
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.monitoring.cost_storage import (
-        CostStorageBackend,
         CostSummary,
         DailyCost,
         ModelCost,
@@ -51,7 +50,7 @@ class TestCostServiceImpl:
         return storage
 
     @pytest.fixture
-    def sample_cost_summary(self) -> "CostSummary":
+    def sample_cost_summary(self) -> CostSummary:
         """Create a sample CostSummary for testing."""
         from mcp_server_langgraph.monitoring.cost_storage import CostSummary
 
@@ -66,7 +65,7 @@ class TestCostServiceImpl:
         )
 
     @pytest.fixture
-    def sample_model_costs(self) -> list["ModelCost"]:
+    def sample_model_costs(self) -> list[ModelCost]:
         """Create sample ModelCost list for testing."""
         from mcp_server_langgraph.monitoring.cost_storage import ModelCost
 
@@ -90,7 +89,7 @@ class TestCostServiceImpl:
         ]
 
     @pytest.fixture
-    def sample_daily_costs(self) -> list["DailyCost"]:
+    def sample_daily_costs(self) -> list[DailyCost]:
         """Create sample DailyCost list for testing."""
         from mcp_server_langgraph.monitoring.cost_storage import DailyCost
 
@@ -117,7 +116,7 @@ class TestCostServiceImpl:
     async def test_get_summary_delegates_to_storage(
         self,
         mock_storage: MagicMock,
-        sample_cost_summary: "CostSummary",
+        sample_cost_summary: CostSummary,
     ) -> None:
         """GIVEN a CostServiceImpl with storage
         WHEN get_summary() is called
@@ -137,7 +136,7 @@ class TestCostServiceImpl:
     async def test_get_summary_parses_date_strings(
         self,
         mock_storage: MagicMock,
-        sample_cost_summary: "CostSummary",
+        sample_cost_summary: CostSummary,
     ) -> None:
         """GIVEN date strings in YYYY-MM-DD format
         WHEN get_summary() is called
@@ -158,7 +157,7 @@ class TestCostServiceImpl:
     async def test_get_summary_returns_dict_with_float_cost(
         self,
         mock_storage: MagicMock,
-        sample_cost_summary: "CostSummary",
+        sample_cost_summary: CostSummary,
     ) -> None:
         """GIVEN a CostSummary with Decimal cost
         WHEN get_summary() is called
@@ -181,7 +180,7 @@ class TestCostServiceImpl:
     async def test_get_summary_handles_none_dates(
         self,
         mock_storage: MagicMock,
-        sample_cost_summary: "CostSummary",
+        sample_cost_summary: CostSummary,
     ) -> None:
         """GIVEN no date parameters
         WHEN get_summary() is called
@@ -206,7 +205,7 @@ class TestCostServiceImpl:
     async def test_get_by_model_delegates_to_storage(
         self,
         mock_storage: MagicMock,
-        sample_model_costs: list["ModelCost"],
+        sample_model_costs: list[ModelCost],
     ) -> None:
         """GIVEN a CostServiceImpl with storage
         WHEN get_by_model() is called
@@ -226,7 +225,7 @@ class TestCostServiceImpl:
     async def test_get_by_model_returns_list_of_dicts(
         self,
         mock_storage: MagicMock,
-        sample_model_costs: list["ModelCost"],
+        sample_model_costs: list[ModelCost],
     ) -> None:
         """GIVEN ModelCost list from storage
         WHEN get_by_model() is called
@@ -249,7 +248,7 @@ class TestCostServiceImpl:
     async def test_get_by_model_parses_date_strings(
         self,
         mock_storage: MagicMock,
-        sample_model_costs: list["ModelCost"],
+        sample_model_costs: list[ModelCost],
     ) -> None:
         """GIVEN date strings in YYYY-MM-DD format
         WHEN get_by_model() is called
@@ -274,7 +273,7 @@ class TestCostServiceImpl:
     async def test_get_history_delegates_to_storage(
         self,
         mock_storage: MagicMock,
-        sample_daily_costs: list["DailyCost"],
+        sample_daily_costs: list[DailyCost],
     ) -> None:
         """GIVEN a CostServiceImpl with storage
         WHEN get_history() is called
@@ -294,7 +293,7 @@ class TestCostServiceImpl:
     async def test_get_history_returns_list_of_dicts(
         self,
         mock_storage: MagicMock,
-        sample_daily_costs: list["DailyCost"],
+        sample_daily_costs: list[DailyCost],
     ) -> None:
         """GIVEN DailyCost list from storage
         WHEN get_history() is called
@@ -315,7 +314,7 @@ class TestCostServiceImpl:
     async def test_get_history_parses_date_strings(
         self,
         mock_storage: MagicMock,
-        sample_daily_costs: list["DailyCost"],
+        sample_daily_costs: list[DailyCost],
     ) -> None:
         """GIVEN date strings in YYYY-MM-DD format
         WHEN get_history() is called
@@ -353,9 +352,9 @@ class TestCostServiceImpl:
     async def test_cost_service_impl_does_not_raise_not_implemented(
         self,
         mock_storage: MagicMock,
-        sample_cost_summary: "CostSummary",
-        sample_model_costs: list["ModelCost"],
-        sample_daily_costs: list["DailyCost"],
+        sample_cost_summary: CostSummary,
+        sample_model_costs: list[ModelCost],
+        sample_daily_costs: list[DailyCost],
     ) -> None:
         """GIVEN a CostServiceImpl
         WHEN any method is called

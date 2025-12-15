@@ -16,6 +16,7 @@ from langchain_core.messages import AIMessage
 from mcp.types import TextContent
 
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.core import agent as agent_module
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 from tests.conftest import get_user_id
 
@@ -44,8 +45,13 @@ def mcp_server(mock_openfga_client):
 class TestResponseFormatControl:
     """Test response_format parameter in agent_chat tool."""
 
+    def setup_method(self) -> None:
+        """Clear agent graph cache before each test for proper isolation."""
+        agent_module._agent_graph_cache = None
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
+        agent_module._agent_graph_cache = None
         gc.collect()
 
     @pytest.mark.asyncio
@@ -53,9 +59,12 @@ class TestResponseFormatControl:
         """Test agent_chat with concise response format."""
         # Mock the agent graph to return a long response
         long_response = "Word " * 1000  # ~1000 tokens
-        # Create a mock graph with ainvoke method
-        mock_graph = mocker.Mock()
-        mock_graph.ainvoke = mocker.AsyncMock(return_value={"messages": [AIMessage(content=long_response)]})
+        # Create async mock graph - must be AsyncMock so all methods (ainvoke, aget_state) are awaitable
+        mock_graph = mocker.AsyncMock()
+        mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=long_response)]}
+        # Bypass checkpointer code path (mock returns MagicMock for checkpointer which is not None,
+        # leading to aget_state being called which is a MagicMock that can't be awaited)
+        mock_graph.checkpointer = None
         # Patch get_agent_graph to return our mock
         mocker.patch(
             "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
@@ -89,8 +98,11 @@ class TestResponseFormatControl:
         """Test agent_chat with detailed response format."""
         # Mock agent response
         medium_response = "Word " * 500  # ~500 tokens (within detailed limit)
-        mock_graph = mocker.Mock()
-        mock_graph.ainvoke = mocker.AsyncMock(return_value={"messages": [AIMessage(content=medium_response)]})
+        # Create async mock graph - must be AsyncMock so all methods (ainvoke, aget_state) are awaitable
+        mock_graph = mocker.AsyncMock()
+        mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=medium_response)]}
+        # Bypass checkpointer code path to avoid MagicMock await issues
+        mock_graph.checkpointer = None
         mocker.patch(
             "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
             return_value=mock_graph,
@@ -119,8 +131,11 @@ class TestResponseFormatControl:
     async def test_chat_default_format_is_concise(self, mcp_server, mocker):
         """Test that default response_format is concise."""
         short_response = "Short answer"
-        mock_graph = mocker.Mock()
-        mock_graph.ainvoke = mocker.AsyncMock(return_value={"messages": [AIMessage(content=short_response)]})
+        # Create async mock graph - must be AsyncMock so all methods (ainvoke, aget_state) are awaitable
+        mock_graph = mocker.AsyncMock()
+        mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=short_response)]}
+        # Bypass checkpointer code path to avoid MagicMock await issues
+        mock_graph.checkpointer = None
         mocker.patch(
             "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
             return_value=mock_graph,
@@ -146,8 +161,13 @@ class TestResponseFormatControl:
 class TestSearchFocusedTools:
     """Test conversation_search replacing list_conversations."""
 
+    def setup_method(self) -> None:
+        """Clear agent graph cache before each test for proper isolation."""
+        agent_module._agent_graph_cache = None
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
+        agent_module._agent_graph_cache = None
         gc.collect()
 
     @pytest.mark.asyncio
@@ -256,8 +276,13 @@ class TestSearchFocusedTools:
 class TestToolNamingAndBackwardCompatibility:
     """Test tool namespacing and backward compatibility."""
 
+    def setup_method(self) -> None:
+        """Clear agent graph cache before each test for proper isolation."""
+        agent_module._agent_graph_cache = None
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
+        agent_module._agent_graph_cache = None
         gc.collect()
 
     @pytest.mark.asyncio
@@ -297,8 +322,13 @@ class TestToolNamingAndBackwardCompatibility:
 class TestEnhancedErrorMessages:
     """Test enhanced, actionable error messages."""
 
+    def setup_method(self) -> None:
+        """Clear agent graph cache before each test for proper isolation."""
+        agent_module._agent_graph_cache = None
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
+        agent_module._agent_graph_cache = None
         gc.collect()
 
     @pytest.mark.asyncio
@@ -332,8 +362,13 @@ class TestEnhancedErrorMessages:
 class TestToolDescriptions:
     """Test enhanced tool descriptions."""
 
+    def setup_method(self) -> None:
+        """Clear agent graph cache before each test for proper isolation."""
+        agent_module._agent_graph_cache = None
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
+        agent_module._agent_graph_cache = None
         gc.collect()
 
     @pytest.mark.asyncio
@@ -381,8 +416,13 @@ class TestToolDescriptions:
 class TestInputValidation:
     """Test input validation for new parameters."""
 
+    def setup_method(self) -> None:
+        """Clear agent graph cache before each test for proper isolation."""
+        agent_module._agent_graph_cache = None
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
+        agent_module._agent_graph_cache = None
         gc.collect()
 
     @pytest.mark.asyncio
@@ -452,8 +492,13 @@ class TestInputValidation:
 class TestEndToEndToolImprovements:
     """End-to-end integration tests for tool improvements."""
 
+    def setup_method(self) -> None:
+        """Clear agent graph cache before each test for proper isolation."""
+        agent_module._agent_graph_cache = None
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
+        agent_module._agent_graph_cache = None
         gc.collect()
 
     @pytest.mark.asyncio
@@ -472,6 +517,8 @@ class TestEndToEndToolImprovements:
         # Create async mock for graph - ainvoke must be AsyncMock for await
         mock_graph = mocker.AsyncMock()
         mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=agent_response)]}
+        # Bypass checkpointer code path to avoid MagicMock await issues
+        mock_graph.checkpointer = None
         mocker.patch(
             "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
             return_value=mock_graph,

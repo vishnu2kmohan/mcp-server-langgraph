@@ -16,6 +16,7 @@ from decimal import Decimal
 import pytest
 
 from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+from tests.conftest import get_user_id
 
 
 # Mark as unit test
@@ -47,7 +48,7 @@ class TestMemoryCostStorage:
         storage = MemoryCostStorage()
         usage = TokenUsage(
             timestamp=datetime.now(UTC),
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             session_id="session-123",
             model="claude-sonnet-4-5-20250929",
             provider="anthropic",
@@ -76,7 +77,7 @@ class TestMemoryCostStorage:
         for i in range(3):
             usage = TokenUsage(
                 timestamp=datetime.now(UTC),
-                user_id=f"user:{i}",
+                user_id=get_user_id(str(i)),
                 session_id=f"session-{i}",
                 model="claude-sonnet-4-5-20250929",
                 provider="anthropic",
@@ -103,11 +104,13 @@ class TestMemoryCostStorage:
 
         # Arrange
         storage = MemoryCostStorage()
-        users = ["alice", "bob", "alice"]
-        for i, user in enumerate(users):
+        alice_id = get_user_id("alice")
+        bob_id = get_user_id("bob")
+        users = [alice_id, bob_id, alice_id]  # Two alice, one bob
+        for i, user_id in enumerate(users):
             usage = TokenUsage(
                 timestamp=datetime.now(UTC),
-                user_id=f"user:{user}",
+                user_id=user_id,
                 session_id=f"session-{i}",
                 model="claude-sonnet-4-5-20250929",
                 provider="anthropic",
@@ -118,11 +121,11 @@ class TestMemoryCostStorage:
             await storage.store(usage)
 
         # Act
-        records, _ = await storage.get_records(filters={"user_id": "user:alice"})
+        records, _ = await storage.get_records(filters={"user_id": alice_id})
 
         # Assert
         assert len(records) == 2
-        assert all(r.user_id == "user:alice" for r in records)
+        assert all(r.user_id == alice_id for r in records)
 
     @pytest.mark.asyncio
     async def test_get_records_filter_by_model(self):
@@ -136,10 +139,11 @@ class TestMemoryCostStorage:
         # Arrange
         storage = MemoryCostStorage()
         models = ["gpt-4", "claude-3", "gpt-4"]
+        user_id = get_user_id("alice")
         for i, model in enumerate(models):
             usage = TokenUsage(
                 timestamp=datetime.now(UTC),
-                user_id="user:alice",
+                user_id=user_id,
                 session_id=f"session-{i}",
                 model=model,
                 provider="openai" if model.startswith("gpt") else "anthropic",
@@ -176,7 +180,7 @@ class TestMemoryCostStorage:
         # Old record
         old_usage = TokenUsage(
             timestamp=old_time,
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             session_id="session-old",
             model="gpt-4",
             provider="openai",
@@ -189,7 +193,7 @@ class TestMemoryCostStorage:
         # New record
         new_usage = TokenUsage(
             timestamp=new_time,
-            user_id="user:bob",
+            user_id=get_user_id("bob"),
             session_id="session-new",
             model="gpt-4",
             provider="openai",
@@ -223,7 +227,7 @@ class TestMemoryCostStorage:
         for i in range(3):
             usage = TokenUsage(
                 timestamp=datetime.now(UTC),
-                user_id=f"user:{i}",
+                user_id=get_user_id(str(i)),
                 session_id=f"session-{i}",
                 model="gpt-4",
                 provider="openai",

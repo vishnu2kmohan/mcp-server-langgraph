@@ -51,8 +51,7 @@ class TestAdminAuditLogsEndpoint:
         """Create a test client for the admin API."""
         return TestClient(self._create_app(mock_repository))
 
-    @pytest.mark.asyncio
-    async def test_get_audit_logs_returns_200(self) -> None:
+    def test_get_audit_logs_returns_200(self) -> None:
         """GET /api/v1/admin/audit-logs should return 200 with paginated data."""
         mock_repo = self._create_mock_repository(items=[], total=0)
         client = self._create_client(mock_repo)
@@ -63,8 +62,7 @@ class TestAdminAuditLogsEndpoint:
         assert "items" in data
         assert "total" in data
 
-    @pytest.mark.asyncio
-    async def test_get_audit_logs_returns_paginated_response(self) -> None:
+    def test_get_audit_logs_returns_paginated_response(self) -> None:
         """GET /api/v1/admin/audit-logs should return properly paginated response."""
         # Repository returns data in its schema (actor_id, datetime timestamp)
         mock_logs = [
@@ -106,8 +104,7 @@ class TestAdminAuditLogsEndpoint:
         assert data["items"][0]["user_id"] == "user-123"
         assert data["items"][1]["id"] == "log-2"
 
-    @pytest.mark.asyncio
-    async def test_get_audit_logs_with_limit_param(self) -> None:
+    def test_get_audit_logs_with_limit_param(self) -> None:
         """GET /api/v1/admin/audit-logs should respect limit parameter."""
         mock_repo = self._create_mock_repository(items=[], total=0)
         client = self._create_client(mock_repo)
@@ -118,8 +115,7 @@ class TestAdminAuditLogsEndpoint:
         call_kwargs = mock_repo.query.call_args[1]
         assert call_kwargs.get("limit") == 10
 
-    @pytest.mark.asyncio
-    async def test_get_audit_logs_with_cursor_param(self) -> None:
+    def test_get_audit_logs_with_cursor_param(self) -> None:
         """GET /api/v1/admin/audit-logs should respect cursor parameter (as offset)."""
         mock_repo = self._create_mock_repository(items=[], total=0)
         client = self._create_client(mock_repo)
@@ -131,8 +127,7 @@ class TestAdminAuditLogsEndpoint:
         # Cursor is parsed as offset
         assert call_kwargs.get("offset") == 10
 
-    @pytest.mark.asyncio
-    async def test_get_audit_logs_with_user_id_filter(self) -> None:
+    def test_get_audit_logs_with_user_id_filter(self) -> None:
         """GET /api/v1/admin/audit-logs should filter by user_id (mapped to actor_id)."""
         mock_repo = self._create_mock_repository(items=[], total=0)
         client = self._create_client(mock_repo)
@@ -144,8 +139,7 @@ class TestAdminAuditLogsEndpoint:
         # API user_id -> repository actor_id
         assert call_kwargs.get("actor_id") == "user-123"
 
-    @pytest.mark.asyncio
-    async def test_get_audit_logs_with_action_filter(self) -> None:
+    def test_get_audit_logs_with_action_filter(self) -> None:
         """GET /api/v1/admin/audit-logs should filter by action (mapped to event_type)."""
         mock_repo = self._create_mock_repository(items=[], total=0)
         client = self._create_client(mock_repo)
@@ -157,8 +151,7 @@ class TestAdminAuditLogsEndpoint:
         # API action -> repository event_type
         assert call_kwargs.get("event_type") == "delete"
 
-    @pytest.mark.asyncio
-    async def test_get_audit_logs_with_resource_type_filter(self) -> None:
+    def test_get_audit_logs_with_resource_type_filter(self) -> None:
         """GET /api/v1/admin/audit-logs should filter by resource_type."""
         mock_repo = self._create_mock_repository(items=[], total=0)
         client = self._create_client(mock_repo)
@@ -169,8 +162,7 @@ class TestAdminAuditLogsEndpoint:
         call_kwargs = mock_repo.query.call_args[1]
         assert call_kwargs.get("resource_type") == "workflow"
 
-    @pytest.mark.asyncio
-    async def test_get_audit_logs_with_time_range_filter(self) -> None:
+    def test_get_audit_logs_with_time_range_filter(self) -> None:
         """GET /api/v1/admin/audit-logs should filter by time range."""
         mock_repo = self._create_mock_repository(items=[], total=0)
         client = self._create_client(mock_repo)
@@ -183,8 +175,7 @@ class TestAdminAuditLogsEndpoint:
         assert call_kwargs.get("start_time") == datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
         assert call_kwargs.get("end_time") == datetime(2024, 1, 31, 23, 59, 59, tzinfo=UTC)
 
-    @pytest.mark.asyncio
-    async def test_get_audit_logs_with_sorting(self) -> None:
+    def test_get_audit_logs_with_sorting(self) -> None:
         """GET /api/v1/admin/audit-logs should accept sorting params (currently unused)."""
         mock_repo = self._create_mock_repository(items=[], total=0)
         client = self._create_client(mock_repo)
@@ -194,8 +185,7 @@ class TestAdminAuditLogsEndpoint:
         # Repository always sorts by timestamp desc, but we verify params are accepted
         mock_repo.query.assert_called_once()
 
-    @pytest.mark.asyncio
-    async def test_get_audit_logs_default_limit(self) -> None:
+    def test_get_audit_logs_default_limit(self) -> None:
         """GET /api/v1/admin/audit-logs should use default limit of 50."""
         mock_repo = self._create_mock_repository(items=[], total=0)
         client = self._create_client(mock_repo)
@@ -284,7 +274,7 @@ class TestAuditLogResponseModels:
 
     def test_paginated_response_with_cursor(self) -> None:
         """PaginatedAuditLogResponse should support next_cursor for pagination."""
-        from mcp_server_langgraph.api.v1.admin import AuditLogEntry, PaginatedAuditLogResponse
+        from mcp_server_langgraph.api.v1.admin import PaginatedAuditLogResponse
 
         response = PaginatedAuditLogResponse(
             items=[],
