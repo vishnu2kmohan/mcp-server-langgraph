@@ -8,6 +8,7 @@
  * - Session selection
  * - Collapsible/expandable panel
  * - Loading state
+ * - Single session delete with confirmation
  */
 
 import { useState } from "react";
@@ -17,9 +18,12 @@ import {
   ChevronRight,
   MessageSquare,
   X,
+  MoreVertical,
+  Trash2,
 } from "lucide-react";
 import { Skeleton } from "../UI/Skeleton";
 import { BulkActionBar } from "../UI/BulkActionBar";
+import { ConfirmDialog } from "../UI/ConfirmDialog";
 
 export interface Session {
   id: string;
@@ -73,6 +77,7 @@ export function SessionPanel({
   totalCount,
   enableBulkSelect = false,
   onBulkDelete,
+  onDelete,
 }: SessionPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,6 +85,11 @@ export function SessionPanel({
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(
     new Set(),
   );
+  // State for single session delete
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [deleteConfirmSessionId, setDeleteConfirmSessionId] = useState<
+    string | null
+  >(null);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -129,6 +139,29 @@ export function SessionPanel({
     }
   };
 
+  // Single session delete handlers
+  const handleMenuToggle = (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenMenuId(openMenuId === sessionId ? null : sessionId);
+  };
+
+  const handleDeleteClick = (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenMenuId(null);
+    setDeleteConfirmSessionId(sessionId);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deleteConfirmSessionId && onDelete) {
+      await onDelete(deleteConfirmSessionId);
+      setDeleteConfirmSessionId(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmSessionId(null);
+  };
+
   // Sort sessions by most recent (updatedAt or createdAt)
   const sortedSessions = [...sessions].sort((a, b) => {
     const dateA = new Date(a.updatedAt || a.createdAt).getTime();
@@ -149,6 +182,12 @@ export function SessionPanel({
     }
     onSessionSelect(sessionId);
   };
+
+  // Get session name for delete confirmation
+  const deleteSessionName = deleteConfirmSessionId
+    ? sessions.find((s) => s.id === deleteConfirmSessionId)?.name ||
+      "this session"
+    : "";
 
   if (isCollapsed) {
     return (
@@ -364,6 +403,31 @@ export function SessionPanel({
                       {session.messageCount ?? 0} messages
                     </div>
                   </button>
+                  {/* Session menu button */}
+                  {onDelete && (
+                    <div className="relative flex-shrink-0">
+                      <button
+                        onClick={(e) => handleMenuToggle(session.id, e)}
+                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                        aria-label="Session menu"
+                        data-testid={`session-menu-${session.id}`}
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+                      {/* Dropdown menu */}
+                      {openMenuId === session.id && (
+                        <div className="absolute right-0 mt-1 w-32 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-50">
+                          <button
+                            onClick={(e) => handleDeleteClick(session.id, e)}
+                            className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -396,6 +460,18 @@ export function SessionPanel({
           />
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteConfirmSessionId !== null}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Session"
+        message={`Are you sure you want to delete "${deleteSessionName}"? This action cannot be undone.`}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        isDestructive={true}
+      />
     </>
   );
 }
