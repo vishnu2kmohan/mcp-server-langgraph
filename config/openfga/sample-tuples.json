@@ -5,10 +5,10 @@
     "purpose": "Single source of truth for test user permissions",
     "users": {
       "admin": "Super user with owner/admin access to all resources",
-      "alice": "Standard user with viewer access (org admin)",
-      "bob": "Basic user with viewer access (no playground access)"
+      "alice": "Developer user with editor access to vectors (CRUD), viewer access to OpenFGA authz UI",
+      "bob": "Basic user with viewer access to vectors (read-only, no OpenFGA authz UI access)"
     },
-    "updated": "2025-12-13"
+    "updated": "2025-12-15"
   },
   "tuples": [
     {
@@ -97,11 +97,13 @@
       "object": "vector_store:default"
     },
     {
+      "_comment": "Alice has editor (CRUD) access to vectors",
       "user": "user:alice",
-      "relation": "viewer",
+      "relation": "editor",
       "object": "vector_store:default"
     },
     {
+      "_comment": "Bob has read-only access to vectors",
       "user": "user:bob",
       "relation": "viewer",
       "object": "vector_store:default"
@@ -112,12 +114,13 @@
       "object": "vector_store:default"
     },
     {
-      "_comment": "OpenFGA Playground (authz) permissions (ADR-0068) - bob intentionally excluded",
+      "_comment": "OpenFGA Authorization UI (authz-proxy) permissions - bob intentionally excluded",
       "user": "user:admin",
       "relation": "admin",
       "object": "authz:playground"
     },
     {
+      "_comment": "Alice can view OpenFGA authz UI but not modify",
       "user": "user:alice",
       "relation": "viewer",
       "object": "authz:playground"

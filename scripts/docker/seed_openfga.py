@@ -248,8 +248,10 @@ def verify_permissions(store_id: str, model_id: str) -> bool:
     test_cases = [
         # User | Relation | Object | Expected
         ("user:admin", "owner", "vector_store:default", True),
-        ("user:alice", "viewer", "vector_store:default", True),
-        ("user:bob", "viewer", "vector_store:default", True),
+        ("user:alice", "editor", "vector_store:default", True),  # alice has CRUD
+        ("user:alice", "viewer", "vector_store:default", True),  # editor implies viewer
+        ("user:bob", "viewer", "vector_store:default", True),  # bob is read-only
+        ("user:bob", "editor", "vector_store:default", False),  # bob cannot edit
         ("user:admin", "admin", "authz:playground", True),
         ("user:alice", "admin", "authz:playground", False),  # alice is only viewer
         ("user:bob", "viewer", "authz:playground", False),  # bob has no access
@@ -327,9 +329,9 @@ def main() -> int:
     print(f"\nStore ID: {store_id}")
     print(f"Model ID: {model_id}")
     print("\nSeeded permissions:")
-    print("  - admin: owner on vector_store:default, admin on authz:playground")
-    print("  - alice: viewer on vector_store:default, viewer on authz:playground")
-    print("  - bob:   viewer on vector_store:default (no playground access)")
+    print("  - admin: owner on vector_store:default, admin on authz:playground (OpenFGA UI)")
+    print("  - alice: editor on vector_store:default (CRUD), viewer on authz:playground")
+    print("  - bob:   viewer on vector_store:default (read-only, no authz UI access)")
     print()
 
     return 0

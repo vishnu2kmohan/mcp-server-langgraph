@@ -276,7 +276,9 @@ class Settings(BaseSettings):
     # OpenFGA
     openfga_api_url: str = "http://localhost:8080"
     openfga_store_id: str | None = None
+    openfga_store_name: str | None = None  # For dynamic store lookup when store_id is not set
     openfga_model_id: str | None = None
+    openfga_preshared_key: str | None = None  # Preshared key for API authentication (ADR-0068)
 
     # Infisical
     infisical_site_url: str = "https://app.infisical.com"

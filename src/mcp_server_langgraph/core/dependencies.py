@@ -57,7 +57,10 @@ def get_openfga_client() -> OpenFGAClient | None:
     """
     Get OpenFGA client instance (singleton)
 
-    Returns None if OpenFGA is not fully configured (store_id or model_id missing).
+    Returns None if OpenFGA is not fully configured:
+    - Either store_id or store_name must be set (store_name enables dynamic lookup)
+    - model_id is optional (can be fetched from latest model)
+
     This allows graceful degradation when OpenFGA is intentionally disabled.
     """
     global _openfga_client
@@ -67,18 +70,22 @@ def get_openfga_client() -> OpenFGAClient | None:
         from mcp_server_langgraph.observability.telemetry import logger
 
         # Validate that required configuration is present
-        if not settings.openfga_store_id or not settings.openfga_model_id:
+        # Either store_id or store_name must be set (store_name enables dynamic lookup)
+        has_store_config = settings.openfga_store_id or settings.openfga_store_name
+        if not has_store_config:
             logger.warning(
                 "OpenFGA configuration incomplete - authorization will be degraded. "
-                f"store_id: {settings.openfga_store_id}, model_id: {settings.openfga_model_id}. "
-                "Set OPENFGA_STORE_ID and OPENFGA_MODEL_ID environment variables to enable OpenFGA."
+                f"store_id: {settings.openfga_store_id}, store_name: {settings.openfga_store_name}. "
+                "Set OPENFGA_STORE_ID or OPENFGA_STORE_NAME environment variable to enable OpenFGA."
             )
             return None
 
         openfga_config = OpenFGAConfig(
             api_url=settings.openfga_api_url,
             store_id=settings.openfga_store_id,
+            store_name=settings.openfga_store_name,
             model_id=settings.openfga_model_id,
+            preshared_key=settings.openfga_preshared_key,
         )
         _openfga_client = OpenFGAClient(config=openfga_config)
 

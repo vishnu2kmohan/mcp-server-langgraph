@@ -21,6 +21,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+import httpx
 from openfga_sdk import ClientConfiguration, OpenFgaClient
 from openfga_sdk.client.models import ClientCheckRequest, ClientTuple, ClientWriteRequest
 from openfga_sdk.credentials import CredentialConfiguration, Credentials
@@ -40,6 +41,11 @@ class OpenFGAConfig(BaseModel):
 
     api_url: str = Field(default="http://localhost:8080", description="OpenFGA server API URL")
     store_id: str | None = Field(default=None, description="Authorization store ID")
+    store_name: str | None = Field(
+        default=None,
+        description="Store name for dynamic lookup. If store_id is not set, "
+        "the client will look up the store by name on initialization.",
+    )
     model_id: str | None = Field(default=None, description="Authorization model ID")
     preshared_key: str | None = Field(
         default=None,
@@ -84,6 +90,7 @@ class OpenFGAClient:
         config: OpenFGAConfig | None = None,
         api_url: str | None = None,
         store_id: str | None = None,
+        store_name: str | None = None,
         model_id: str | None = None,
         preshared_key: str | None = None,
     ):
@@ -100,16 +107,19 @@ class OpenFGAClient:
             config: OpenFGAConfig instance (recommended)
             api_url: OpenFGA server URL (legacy, use config instead)
             store_id: Authorization store ID (legacy, use config instead)
+            store_name: Store name for dynamic lookup (legacy, use config instead)
             model_id: Authorization model ID (legacy, use config instead)
             preshared_key: Preshared key for API auth (legacy, use config instead)
         """
         # Support both new config-based and legacy parameter-based initialization
         if config is None:
-            # Check environment variable for preshared key if not provided
+            # Check environment variables if not provided
             env_preshared_key = preshared_key or os.getenv("OPENFGA_PRESHARED_KEY")
+            env_store_name = store_name or os.getenv("OPENFGA_STORE_NAME")
             config = OpenFGAConfig(
                 api_url=api_url or "http://localhost:8080",
                 store_id=store_id,
+                store_name=env_store_name,
                 model_id=model_id,
                 preshared_key=env_preshared_key,
             )
@@ -117,6 +127,7 @@ class OpenFGAClient:
         self.config = config
         self.api_url = config.api_url
         self.store_id = config.store_id
+        self.store_name = config.store_name
         self.model_id = config.model_id
         self.preshared_key = config.preshared_key
 
@@ -127,7 +138,11 @@ class OpenFGAClient:
 
         logger.info(
             "OpenFGA client wrapper created (lazy init)",
-            extra={"api_url": config.api_url, "auth_enabled": config.preshared_key is not None},
+            extra={
+                "api_url": config.api_url,
+                "store_name": config.store_name,
+                "auth_enabled": config.preshared_key is not None,
+            },
         )
 
     async def _ensure_initialized(self) -> None:
@@ -138,8 +153,26 @@ class OpenFGAClient:
         Called by all async methods before performing operations.
 
         If preshared_key is configured, credentials are added for API authentication (ADR-0068).
+        If store_id is not set but store_name is, looks up the store by name.
         """
         if not self._initialized:
+            # Look up store by name if store_id is not set but store_name is
+            store_id = self.config.store_id
+            if not store_id and self.config.store_name:
+                store_id = await self._lookup_store_by_name(self.config.store_name)
+                if store_id:
+                    self.store_id = store_id
+                    self.config.store_id = store_id
+                    logger.info(
+                        "Resolved store by name",
+                        extra={"store_name": self.config.store_name, "store_id": store_id},
+                    )
+                else:
+                    logger.warning(
+                        "Could not find store by name",
+                        extra={"store_name": self.config.store_name},
+                    )
+
             # Build credentials if preshared key is configured
             credentials = None
             if self.config.preshared_key:
@@ -150,7 +183,7 @@ class OpenFGAClient:
 
             configuration = ClientConfiguration(
                 api_url=self.config.api_url,
-                store_id=self.config.store_id,
+                store_id=store_id,
                 authorization_model_id=self.config.model_id,
                 credentials=credentials,
             )
@@ -158,8 +191,54 @@ class OpenFGAClient:
             self._initialized = True
             logger.info(
                 "OpenFGA SDK client initialized",
-                extra={"api_url": self.config.api_url, "auth_enabled": credentials is not None},
+                extra={
+                    "api_url": self.config.api_url,
+                    "store_id": store_id,
+                    "auth_enabled": credentials is not None,
+                },
             )
+
+    async def _lookup_store_by_name(self, store_name: str) -> str | None:
+        """
+        Look up an OpenFGA store by name.
+
+        This enables dynamic store discovery when OPENFGA_STORE_NAME is set
+        but OPENFGA_STORE_ID is not. The store is typically created by the
+        openfga-seed container during test infrastructure startup.
+
+        Args:
+            store_name: Name of the store to look up
+
+        Returns:
+            Store ID if found, None otherwise
+        """
+        try:
+            headers = {"Content-Type": "application/json"}
+            if self.config.preshared_key:
+                headers["Authorization"] = f"Bearer {self.config.preshared_key}"
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{self.config.api_url}/stores",
+                    headers=headers,
+                )
+
+                if response.status_code == 200:
+                    stores = response.json().get("stores", [])
+                    for store in stores:
+                        if store.get("name") == store_name:
+                            store_id: str = store["id"]
+                            return store_id
+
+                logger.debug(
+                    "Store not found by name",
+                    extra={"store_name": store_name, "status": response.status_code},
+                )
+                return None
+
+        except Exception as e:
+            logger.warning(f"Error looking up store by name: {e}")
+            return None
 
     async def close(self) -> None:
         """

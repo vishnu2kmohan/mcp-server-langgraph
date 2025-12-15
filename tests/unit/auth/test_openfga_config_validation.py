@@ -339,11 +339,11 @@ class TestRequiredTestUserPermissions:
             "admin should have admin on authz:playground"
         )
 
-    def test_alice_has_viewer_on_vector_store(self, tuples_data: dict):
-        """alice should have viewer on vector_store:default."""
+    def test_alice_has_editor_on_vector_store(self, tuples_data: dict):
+        """alice should have editor on vector_store:default (CRUD access)."""
         tuples = tuples_data["tuples"]
-        assert self._has_tuple(tuples, "user:alice", "viewer", "vector_store:default"), (
-            "alice should have viewer on vector_store:default"
+        assert self._has_tuple(tuples, "user:alice", "editor", "vector_store:default"), (
+            "alice should have editor on vector_store:default"
         )
 
     def test_alice_has_viewer_on_authz_playground(self, tuples_data: dict):
