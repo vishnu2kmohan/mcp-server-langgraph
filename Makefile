@@ -892,10 +892,10 @@ validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 
 	@echo "✓ Your push should pass most CI checks"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-## validate-pre-push-full: Comprehensive pre-push validation with integration + e2e tests
+## validate-pre-push-full: Comprehensive pre-push validation with integration + e2e + frontend tests
 ## Use cases: Pre-release audit, major refactoring, CI debugging
-## Includes: unit, api, property, smoke, integration, AND e2e tests (true CI parity)
-validate-pre-push-full:  ## Comprehensive CI-equivalent validation with Docker (20-30 min, includes e2e)
+## Includes: unit, api, property, smoke, integration, e2e, AND frontend tests (true CI parity)
+validate-pre-push-full:  ## Comprehensive CI-equivalent validation with Docker (25-35 min, includes e2e + frontend)
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "🎯 CI-EQUIVALENT VALIDATION (FULL)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -918,6 +918,9 @@ validate-pre-push-full:  ## Comprehensive CI-equivalent validation with Docker (
 	@echo ""
 	@echo "▶ Running E2E Tests (Docker - full user journeys, ~15-20 min)..."
 	@./scripts/test-e2e.sh && echo "✓ E2E tests passed" || (echo "✗ E2E tests failed" && exit 1)
+	@echo ""
+	@echo "▶ Running Frontend Tests (lint, typecheck, test, build, ~2-5 min)..."
+	@./scripts/test-frontend.sh && echo "✓ Frontend tests passed" || (echo "✗ Frontend tests failed" && exit 1)
 	@echo ""
 	@$(MAKE) _validate-pre-push-phase-4
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
