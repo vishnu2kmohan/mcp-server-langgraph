@@ -5,49 +5,183 @@
  * API keys, and application behavior.
  */
 
-import { useState } from 'react';
-import { useAuthStore } from '../stores/authStore';
-import { usePersonaStore } from '../stores/personaStore';
+import { useState, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { selectUser } from "../store/slices/authSlice";
+import { selectPersona, setPersona } from "../store/slices/personaSlice";
+import type { Persona } from "../store/slices/personaSlice";
+import { usePushNotifications } from "../hooks/usePushNotifications";
 import {
   User,
   Key,
   Bell,
+  BellRing,
   Palette,
   Shield,
   Save,
   Eye,
   EyeOff,
   Check,
-} from 'lucide-react';
+  Users,
+  Plus,
+  Trash2,
+  RefreshCw,
+  AlertCircle,
+  Search,
+  BellOff,
+} from "lucide-react";
 
-type SettingsTab = 'profile' | 'api-keys' | 'notifications' | 'appearance' | 'security';
+type SettingsTab =
+  | "profile"
+  | "api-keys"
+  | "notifications"
+  | "appearance"
+  | "security"
+  | "manage-keys";
+
+interface ManagedUser {
+  id: string;
+  email: string;
+  has_api_key: boolean;
+}
 
 export function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [showApiKey, setShowApiKey] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const { user } = useAuthStore();
-  const { persona, setPersona } = usePersonaStore();
+  const user = useAppSelector(selectUser);
+  const persona = useAppSelector(selectPersona);
+  const dispatch = useAppDispatch();
 
   // Form state
-  const [displayName, setDisplayName] = useState(user?.displayName || user?.username || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+  const [displayName, setDisplayName] = useState(
+    user?.displayName || user?.username || "",
+  );
+  const [email, setEmail] = useState(user?.email || "");
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
   const [notifications, setNotifications] = useState({
     sessionComplete: true,
     errors: true,
     updates: false,
   });
 
-  const tabs = [
-    { id: 'profile' as const, label: 'Profile', icon: User },
-    { id: 'api-keys' as const, label: 'API Keys', icon: Key },
-    { id: 'notifications' as const, label: 'Notifications', icon: Bell },
-    { id: 'appearance' as const, label: 'Appearance', icon: Palette },
-    { id: 'security' as const, label: 'Security', icon: Shield },
+  // Push notifications
+  const {
+    isSupported: isPushSupported,
+    isSubscribed: isPushSubscribed,
+    permission: pushPermission,
+    isLoading: isPushLoading,
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+  } = usePushNotifications();
+
+  // Admin user management
+  const [managedUsers, setManagedUsers] = useState<ManagedUser[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [adminError, setAdminError] = useState<string | null>(null);
+  const [userSearch, setUserSearch] = useState("");
+
+  const isAdmin = persona === "admin";
+
+  // Filter users by search query
+  const filteredManagedUsers = managedUsers.filter((user) =>
+    user.email.toLowerCase().includes(userSearch.toLowerCase()),
+  );
+
+  // Fetch users for admin key management
+  const loadManagedUsers = async () => {
+    setIsLoadingUsers(true);
+    setAdminError(null);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch("/api/v1/admin/users", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setManagedUsers(data.users || []);
+      } else {
+        setAdminError("Failed to load users");
+      }
+    } catch {
+      setAdminError("Failed to load users");
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin && activeTab === "manage-keys") {
+      loadManagedUsers();
+    }
+  }, [isAdmin, activeTab]);
+
+  const handleRevokeKey = async (userId: string) => {
+    setAdminError(null);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(`/api/v1/admin/users/${userId}/api-key`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+      });
+      if (!response.ok) {
+        setAdminError("Failed to revoke API key");
+        return;
+      }
+      await loadManagedUsers();
+    } catch {
+      setAdminError("Failed to revoke API key");
+    }
+  };
+
+  const handleGenerateKey = async (userId: string) => {
+    setAdminError(null);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(`/api/v1/admin/users/${userId}/api-key`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+      });
+      if (!response.ok) {
+        setAdminError("Failed to generate API key");
+        return;
+      }
+      await loadManagedUsers();
+    } catch {
+      setAdminError("Failed to generate API key");
+    }
+  };
+
+  const baseTabs = [
+    { id: "profile" as const, label: "Profile", icon: User },
+    { id: "api-keys" as const, label: "API Keys", icon: Key },
+    { id: "notifications" as const, label: "Notifications", icon: Bell },
+    { id: "appearance" as const, label: "Appearance", icon: Palette },
+    { id: "security" as const, label: "Security", icon: Shield },
   ];
+
+  // Add admin-only tab
+  const tabs = isAdmin
+    ? [
+        ...baseTabs,
+        { id: "manage-keys" as const, label: "Manage User Keys", icon: Users },
+      ]
+    : baseTabs;
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -109,8 +243,8 @@ export function SettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
                   activeTab === tab.id
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                 }`}
               >
                 <tab.icon size={20} />
@@ -124,7 +258,7 @@ export function SettingsPage() {
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-2xl">
             {/* Profile Tab */}
-            {activeTab === 'profile' && (
+            {activeTab === "profile" && (
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -155,7 +289,7 @@ export function SettingsPage() {
                   <select
                     value={persona}
                     onChange={(e) => {
-                      setPersona(e.target.value as 'admin' | 'developer' | 'user');
+                      dispatch(setPersona(e.target.value as Persona));
                     }}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
@@ -168,11 +302,12 @@ export function SettingsPage() {
             )}
 
             {/* API Keys Tab */}
-            {activeTab === 'api-keys' && (
+            {activeTab === "api-keys" && (
               <div className="space-y-6">
                 <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                   <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                    API keys provide access to your account. Keep them secure and never share them publicly.
+                    API keys provide access to your account. Keep them secure
+                    and never share them publicly.
                   </p>
                 </div>
                 <div>
@@ -181,7 +316,7 @@ export function SettingsPage() {
                   </label>
                   <div className="flex gap-2">
                     <input
-                      type={showApiKey ? 'text' : 'password'}
+                      type={showApiKey ? "text" : "password"}
                       value="sk-mcp-xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                       readOnly
                       className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono"
@@ -201,51 +336,120 @@ export function SettingsPage() {
             )}
 
             {/* Notifications Tab */}
-            {activeTab === 'notifications' && (
-              <div className="space-y-4">
-                {Object.entries(notifications).map(([key, enabled]) => (
-                  <label key={key} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-100">
-                        {key === 'sessionComplete' && 'Session Complete'}
-                        {key === 'errors' && 'Error Alerts'}
-                        {key === 'updates' && 'Product Updates'}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {key === 'sessionComplete' && 'Get notified when long-running sessions finish'}
-                        {key === 'errors' && 'Receive alerts for errors and failures'}
-                        {key === 'updates' && 'Stay informed about new features'}
-                      </p>
+            {activeTab === "notifications" && (
+              <div className="space-y-6">
+                {/* Push Notifications Section */}
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-3 mb-3">
+                    <BellRing className="h-5 w-5 text-blue-500" />
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                      Push Notifications
+                    </h3>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Receive real-time notifications even when the app is closed.
+                  </p>
+
+                  {!isPushSupported ? (
+                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                      <BellOff className="h-4 w-4" />
+                      <span className="text-sm">
+                        Push notifications are not supported in this browser.
+                      </span>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={enabled}
-                      onChange={(e) =>
-                        setNotifications({ ...notifications, [key]: e.target.checked })
-                      }
-                      className="w-5 h-5 text-blue-600 rounded"
-                    />
-                  </label>
-                ))}
+                  ) : pushPermission === "denied" ? (
+                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                      <AlertCircle className="h-4 w-4" />
+                      <span className="text-sm">
+                        Notifications are blocked. Please enable them in your
+                        browser settings.
+                      </span>
+                    </div>
+                  ) : isPushSubscribed ? (
+                    <button
+                      onClick={unsubscribePush}
+                      disabled={isPushLoading}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50"
+                      aria-label="Disable push notifications"
+                    >
+                      <BellOff className="h-4 w-4" />
+                      {isPushLoading
+                        ? "Disabling..."
+                        : "Disable Push Notifications"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={subscribePush}
+                      disabled={isPushLoading}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                      aria-label="Enable push notifications"
+                    >
+                      <Bell className="h-4 w-4" />
+                      {isPushLoading
+                        ? "Enabling..."
+                        : "Enable Push Notifications"}
+                    </button>
+                  )}
+                </div>
+
+                {/* In-App Notification Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Notification Preferences
+                  </h3>
+                  {Object.entries(notifications).map(([key, enabled]) => (
+                    <label
+                      key={key}
+                      className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                          {key === "sessionComplete" && "Session Complete"}
+                          {key === "errors" && "Error Alerts"}
+                          {key === "updates" && "Product Updates"}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {key === "sessionComplete" &&
+                            "Get notified when long-running sessions finish"}
+                          {key === "errors" &&
+                            "Receive alerts for errors and failures"}
+                          {key === "updates" &&
+                            "Stay informed about new features"}
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={enabled}
+                        onChange={(e) =>
+                          setNotifications({
+                            ...notifications,
+                            [key]: e.target.checked,
+                          })
+                        }
+                        className="w-5 h-5 text-blue-600 rounded"
+                      />
+                    </label>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Appearance Tab */}
-            {activeTab === 'appearance' && (
+            {activeTab === "appearance" && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
                     Theme
                   </label>
                   <div className="grid grid-cols-3 gap-4">
-                    {(['light', 'dark', 'system'] as const).map((t) => (
+                    {(["light", "dark", "system"] as const).map((t) => (
                       <button
                         key={t}
                         onClick={() => setTheme(t)}
                         className={`p-4 rounded-lg border-2 transition-colors ${
                           theme === t
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
                         }`}
                       >
                         <div className="text-center">
@@ -260,7 +464,7 @@ export function SettingsPage() {
             )}
 
             {/* Security Tab */}
-            {activeTab === 'security' && (
+            {activeTab === "security" && (
               <div className="space-y-6">
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
@@ -284,6 +488,139 @@ export function SettingsPage() {
                     Sign Out All Devices
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Manage User Keys Tab (Admin Only) */}
+            {activeTab === "manage-keys" && isAdmin && (
+              <div className="space-y-6">
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    As an administrator, you can manage API keys for all users
+                    in the system.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                    User API Keys
+                  </h3>
+                  <button
+                    onClick={loadManagedUsers}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                  >
+                    <RefreshCw
+                      size={16}
+                      className={isLoadingUsers ? "animate-spin" : ""}
+                    />
+                    Refresh
+                  </button>
+                </div>
+
+                {/* Error banner for admin operations */}
+                {adminError && !isLoadingUsers && (
+                  <div
+                    role="alert"
+                    className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <AlertCircle size={20} className="text-red-500" />
+                      <p className="text-sm text-red-700 dark:text-red-400">
+                        {adminError}
+                      </p>
+                    </div>
+                    <button
+                      onClick={loadManagedUsers}
+                      className="mt-3 flex items-center gap-2 px-3 py-1.5 text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200"
+                    >
+                      <RefreshCw size={14} />
+                      Retry
+                    </button>
+                  </div>
+                )}
+
+                {/* Search input */}
+                {!isLoadingUsers && managedUsers.length > 0 && (
+                  <div className="relative">
+                    <Search
+                      size={16}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                      type="text"
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                      placeholder="Search users by email..."
+                      className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    />
+                  </div>
+                )}
+
+                {isLoadingUsers ? (
+                  <div className="flex items-center justify-center py-8">
+                    <RefreshCw
+                      size={24}
+                      className="animate-spin text-blue-500"
+                    />
+                  </div>
+                ) : adminError &&
+                  managedUsers.length ===
+                    0 ? null /* Error banner is shown above */ : managedUsers.length ===
+                  0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    No users found
+                  </div>
+                ) : filteredManagedUsers.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    No users match your search
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {filteredManagedUsers.map((managedUser) => (
+                      <div
+                        key={managedUser.id}
+                        className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                            <User size={20} className="text-gray-500" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">
+                              {managedUser.email}
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {managedUser.has_api_key
+                                ? "Has API Key"
+                                : "No API Key"}
+                            </p>
+                          </div>
+                        </div>
+                        <div>
+                          {managedUser.has_api_key ? (
+                            <button
+                              onClick={() => handleRevokeKey(managedUser.id)}
+                              aria-label="Revoke"
+                              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200"
+                            >
+                              <Trash2 size={14} />
+                              Revoke
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleGenerateKey(managedUser.id)}
+                              aria-label="Generate"
+                              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-lg hover:bg-green-200"
+                            >
+                              <Plus size={14} />
+                              Generate
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

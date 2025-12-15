@@ -10,9 +10,9 @@
  * - Reconnection logic
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useTraceWebSocket } from './useTraceWebSocket';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { useTraceWebSocket } from "./useTraceWebSocket";
 
 // Mock WebSocket class
 let mockWebSocketInstances: MockWebSocket[] = [];
@@ -38,14 +38,16 @@ class MockWebSocket {
   close(): void {
     this.readyState = 3; // CLOSED
     if (this.onclose) {
-      this.onclose(new CloseEvent('close'));
+      this.onclose(new CloseEvent("close"));
     }
   }
 
   // Helper to simulate receiving a message
   simulateMessage(data: object): void {
     if (this.onmessage) {
-      this.onmessage(new MessageEvent('message', { data: JSON.stringify(data) }));
+      this.onmessage(
+        new MessageEvent("message", { data: JSON.stringify(data) }),
+      );
     }
   }
 
@@ -53,14 +55,14 @@ class MockWebSocket {
   simulateOpen(): void {
     this.readyState = 1; // OPEN
     if (this.onopen) {
-      this.onopen(new Event('open'));
+      this.onopen(new Event("open"));
     }
   }
 
   // Helper to simulate error
   simulateError(): void {
     if (this.onerror) {
-      this.onerror(new Event('error'));
+      this.onerror(new Event("error"));
     }
   }
 
@@ -71,21 +73,18 @@ class MockWebSocket {
   static CLOSED = 3;
 }
 
-// Store original WebSocket
-const OriginalWebSocket = globalThis.WebSocket;
-
-describe('useTraceWebSocket', () => {
+describe("useTraceWebSocket", () => {
   beforeEach(() => {
     mockWebSocketInstances = [];
 
-    // Replace global WebSocket
-    globalThis.WebSocket = MockWebSocket as unknown as typeof WebSocket;
+    // Use vi.stubGlobal for consistent mocking in jsdom environment
+    vi.stubGlobal("WebSocket", MockWebSocket);
 
     // Mock window.location
-    Object.defineProperty(window, 'location', {
+    Object.defineProperty(window, "location", {
       value: {
-        protocol: 'http:',
-        host: 'localhost:3000',
+        protocol: "http:",
+        host: "localhost:3000",
       },
       writable: true,
       configurable: true,
@@ -93,51 +92,51 @@ describe('useTraceWebSocket', () => {
   });
 
   afterEach(() => {
-    // Restore original WebSocket
-    globalThis.WebSocket = OriginalWebSocket;
+    // Restore all globals
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
-  describe('Initial State', () => {
-    it('should start with empty spans array', () => {
+  describe("Initial State", () => {
+    it("should start with empty spans array", () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       expect(result.current.spans).toEqual([]);
     });
 
-    it('should start with empty events array', () => {
+    it("should start with empty events array", () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       expect(result.current.events).toEqual([]);
     });
 
-    it('should start disconnected', () => {
+    it("should start disconnected", () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       expect(result.current.isConnected).toBe(false);
     });
 
-    it('should provide connect function', () => {
+    it("should provide connect function", () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
-      expect(typeof result.current.connect).toBe('function');
+      expect(typeof result.current.connect).toBe("function");
     });
 
-    it('should provide disconnect function', () => {
+    it("should provide disconnect function", () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
-      expect(typeof result.current.disconnect).toBe('function');
+      expect(typeof result.current.disconnect).toBe("function");
     });
 
-    it('should provide clearTraces function', () => {
+    it("should provide clearTraces function", () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
-      expect(typeof result.current.clearTraces).toBe('function');
+      expect(typeof result.current.clearTraces).toBe("function");
     });
   });
 
-  describe('Connection', () => {
-    it('should connect when connect() is called', () => {
+  describe("Connection", () => {
+    it("should connect when connect() is called", () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       act(() => {
@@ -147,7 +146,7 @@ describe('useTraceWebSocket', () => {
       expect(mockWebSocketInstances.length).toBe(1);
     });
 
-    it('should use default URL when not provided', () => {
+    it("should use default URL when not provided", () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       act(() => {
@@ -155,32 +154,36 @@ describe('useTraceWebSocket', () => {
       });
 
       const ws = mockWebSocketInstances[0];
-      expect(ws.url).toContain('/api/v1/mcp/ws');
+      expect(ws.url).toContain("/api/v1/mcp/ws");
     });
 
-    it('should use custom URL when provided', () => {
-      const { result } = renderHook(() => useTraceWebSocket({ url: '/custom/ws' }));
+    it("should use custom URL when provided", () => {
+      const { result } = renderHook(() =>
+        useTraceWebSocket({ url: "/custom/ws" }),
+      );
 
       act(() => {
         result.current.connect();
       });
 
       const ws = mockWebSocketInstances[0];
-      expect(ws.url).toContain('/custom/ws');
+      expect(ws.url).toContain("/custom/ws");
     });
 
-    it('should include session ID in URL when provided', () => {
-      const { result } = renderHook(() => useTraceWebSocket({ sessionId: 'test-session' }));
+    it("should include session ID in URL when provided", () => {
+      const { result } = renderHook(() =>
+        useTraceWebSocket({ sessionId: "test-session" }),
+      );
 
       act(() => {
         result.current.connect();
       });
 
       const ws = mockWebSocketInstances[0];
-      expect(ws.url).toContain('test-session');
+      expect(ws.url).toContain("test-session");
     });
 
-    it('should set isConnected to true on connection open', async () => {
+    it("should set isConnected to true on connection open", async () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       act(() => {
@@ -198,15 +201,15 @@ describe('useTraceWebSocket', () => {
       });
     });
 
-    it('should auto-connect when autoConnect is true', () => {
+    it("should auto-connect when autoConnect is true", () => {
       renderHook(() => useTraceWebSocket({ autoConnect: true }));
 
       expect(mockWebSocketInstances.length).toBe(1);
     });
   });
 
-  describe('Disconnection', () => {
-    it('should disconnect when disconnect() is called', async () => {
+  describe("Disconnection", () => {
+    it("should disconnect when disconnect() is called", async () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       act(() => {
@@ -226,7 +229,7 @@ describe('useTraceWebSocket', () => {
       expect(ws.readyState).toBe(3); // CLOSED
     });
 
-    it('should set isConnected to false on disconnect', async () => {
+    it("should set isConnected to false on disconnect", async () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       act(() => {
@@ -253,8 +256,8 @@ describe('useTraceWebSocket', () => {
     });
   });
 
-  describe('Span Handling', () => {
-    it('should add new span on $/trace/span message', async () => {
+  describe("Span Handling", () => {
+    it("should add new span on $/trace/span message", async () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       act(() => {
@@ -268,13 +271,13 @@ describe('useTraceWebSocket', () => {
       });
 
       const spanMessage = {
-        method: '$/trace/span',
+        method: "$/trace/span",
         params: {
-          traceId: 'trace-1',
-          spanId: 'span-1',
-          name: 'Test Span',
-          startTime: '2024-01-15T10:00:00Z',
-          status: 'UNSET',
+          traceId: "trace-1",
+          spanId: "span-1",
+          name: "Test Span",
+          startTime: "2024-01-15T10:00:00Z",
+          status: "UNSET",
           attributes: {},
         },
       };
@@ -285,12 +288,12 @@ describe('useTraceWebSocket', () => {
 
       await waitFor(() => {
         expect(result.current.spans.length).toBe(1);
-        expect(result.current.spans[0].spanId).toBe('span-1');
-        expect(result.current.spans[0].name).toBe('Test Span');
+        expect(result.current.spans[0].spanId).toBe("span-1");
+        expect(result.current.spans[0].name).toBe("Test Span");
       });
     });
 
-    it('should update existing span when span with same ID received', async () => {
+    it("should update existing span when span with same ID received", async () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       act(() => {
@@ -306,13 +309,13 @@ describe('useTraceWebSocket', () => {
       // Add initial span
       act(() => {
         ws.simulateMessage({
-          method: '$/trace/span',
+          method: "$/trace/span",
           params: {
-            traceId: 'trace-1',
-            spanId: 'span-1',
-            name: 'Test Span',
-            startTime: '2024-01-15T10:00:00Z',
-            status: 'UNSET',
+            traceId: "trace-1",
+            spanId: "span-1",
+            name: "Test Span",
+            startTime: "2024-01-15T10:00:00Z",
+            status: "UNSET",
             attributes: {},
           },
         });
@@ -321,14 +324,14 @@ describe('useTraceWebSocket', () => {
       // Update the span
       act(() => {
         ws.simulateMessage({
-          method: '$/trace/span',
+          method: "$/trace/span",
           params: {
-            traceId: 'trace-1',
-            spanId: 'span-1',
-            name: 'Test Span',
-            startTime: '2024-01-15T10:00:00Z',
-            endTime: '2024-01-15T10:00:05Z',
-            status: 'OK',
+            traceId: "trace-1",
+            spanId: "span-1",
+            name: "Test Span",
+            startTime: "2024-01-15T10:00:00Z",
+            endTime: "2024-01-15T10:00:05Z",
+            status: "OK",
             attributes: {},
           },
         });
@@ -336,12 +339,12 @@ describe('useTraceWebSocket', () => {
 
       await waitFor(() => {
         expect(result.current.spans.length).toBe(1);
-        expect(result.current.spans[0].status).toBe('OK');
-        expect(result.current.spans[0].endTime).toBe('2024-01-15T10:00:05Z');
+        expect(result.current.spans[0].status).toBe("OK");
+        expect(result.current.spans[0].endTime).toBe("2024-01-15T10:00:05Z");
       });
     });
 
-    it('should handle parent-child span relationships', async () => {
+    it("should handle parent-child span relationships", async () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       act(() => {
@@ -357,13 +360,13 @@ describe('useTraceWebSocket', () => {
       // Add parent span
       act(() => {
         ws.simulateMessage({
-          method: '$/trace/span',
+          method: "$/trace/span",
           params: {
-            traceId: 'trace-1',
-            spanId: 'parent-span',
-            name: 'Parent',
-            startTime: '2024-01-15T10:00:00Z',
-            status: 'UNSET',
+            traceId: "trace-1",
+            spanId: "parent-span",
+            name: "Parent",
+            startTime: "2024-01-15T10:00:00Z",
+            status: "UNSET",
             attributes: {},
           },
         });
@@ -372,14 +375,14 @@ describe('useTraceWebSocket', () => {
       // Add child span
       act(() => {
         ws.simulateMessage({
-          method: '$/trace/span',
+          method: "$/trace/span",
           params: {
-            traceId: 'trace-1',
-            spanId: 'child-span',
-            parentSpanId: 'parent-span',
-            name: 'Child',
-            startTime: '2024-01-15T10:00:01Z',
-            status: 'UNSET',
+            traceId: "trace-1",
+            spanId: "child-span",
+            parentSpanId: "parent-span",
+            name: "Child",
+            startTime: "2024-01-15T10:00:01Z",
+            status: "UNSET",
             attributes: {},
           },
         });
@@ -387,14 +390,16 @@ describe('useTraceWebSocket', () => {
 
       await waitFor(() => {
         expect(result.current.spans.length).toBe(2);
-        const childSpan = result.current.spans.find(s => s.spanId === 'child-span');
-        expect(childSpan?.parentSpanId).toBe('parent-span');
+        const childSpan = result.current.spans.find(
+          (s) => s.spanId === "child-span",
+        );
+        expect(childSpan?.parentSpanId).toBe("parent-span");
       });
     });
   });
 
-  describe('Event Handling', () => {
-    it('should add event on $/trace/event message', async () => {
+  describe("Event Handling", () => {
+    it("should add event on $/trace/event message", async () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       act(() => {
@@ -408,12 +413,12 @@ describe('useTraceWebSocket', () => {
       });
 
       const eventMessage = {
-        method: '$/trace/event',
+        method: "$/trace/event",
         params: {
-          spanId: 'span-1',
-          name: 'Log Event',
-          timestamp: '2024-01-15T10:00:02Z',
-          attributes: { message: 'Something happened' },
+          spanId: "span-1",
+          name: "Log Event",
+          timestamp: "2024-01-15T10:00:02Z",
+          attributes: { message: "Something happened" },
         },
       };
 
@@ -423,13 +428,13 @@ describe('useTraceWebSocket', () => {
 
       await waitFor(() => {
         expect(result.current.events.length).toBe(1);
-        expect(result.current.events[0].name).toBe('Log Event');
+        expect(result.current.events[0].name).toBe("Log Event");
       });
     });
   });
 
-  describe('Clear Traces', () => {
-    it('should clear all spans and events when clearTraces() is called', async () => {
+  describe("Clear Traces", () => {
+    it("should clear all spans and events when clearTraces() is called", async () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
       act(() => {
@@ -445,22 +450,22 @@ describe('useTraceWebSocket', () => {
       // Add some data
       act(() => {
         ws.simulateMessage({
-          method: '$/trace/span',
+          method: "$/trace/span",
           params: {
-            traceId: 'trace-1',
-            spanId: 'span-1',
-            name: 'Test',
-            startTime: '2024-01-15T10:00:00Z',
-            status: 'OK',
+            traceId: "trace-1",
+            spanId: "span-1",
+            name: "Test",
+            startTime: "2024-01-15T10:00:00Z",
+            status: "OK",
             attributes: {},
           },
         });
         ws.simulateMessage({
-          method: '$/trace/event',
+          method: "$/trace/event",
           params: {
-            spanId: 'span-1',
-            name: 'Event',
-            timestamp: '2024-01-15T10:00:01Z',
+            spanId: "span-1",
+            name: "Event",
+            timestamp: "2024-01-15T10:00:01Z",
             attributes: {},
           },
         });
@@ -480,11 +485,13 @@ describe('useTraceWebSocket', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should set isConnected to false on error', async () => {
+  describe("Error Handling", () => {
+    it("should set isConnected to false on error", async () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       act(() => {
         result.current.connect();
@@ -511,10 +518,12 @@ describe('useTraceWebSocket', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should handle malformed JSON messages gracefully', async () => {
+    it("should handle malformed JSON messages gracefully", async () => {
       const { result } = renderHook(() => useTraceWebSocket());
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       act(() => {
         result.current.connect();
@@ -529,7 +538,7 @@ describe('useTraceWebSocket', () => {
       // Send malformed JSON
       act(() => {
         if (ws.onmessage) {
-          ws.onmessage(new MessageEvent('message', { data: 'not valid json' }));
+          ws.onmessage(new MessageEvent("message", { data: "not valid json" }));
         }
       });
 

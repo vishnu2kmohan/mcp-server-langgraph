@@ -1,10 +1,79 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'prompt',
+      includeAssets: ['icons/*.png', 'icons/*.svg'],
+      manifest: false, // Use existing manifest.json in public/
+      workbox: {
+        // Precache all static assets
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // Runtime caching strategies
+        runtimeCaching: [
+          {
+            // API calls: Network First with cache fallback
+            urlPattern: /^\/api\/v1\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 5 * 60, // 5 minutes
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Static assets: Cache First
+            urlPattern: /\.(?:js|css)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'static-assets-cache',
+              expiration: {
+                maxEntries: 60,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
+            },
+          },
+          {
+            // Images: Cache First
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
+            },
+          },
+          {
+            // Fonts: Cache First
+            urlPattern: /\.(?:woff|woff2|ttf|eot)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'fonts-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+              },
+            },
+          },
+        ],
+      },
+      devOptions: {
+        enabled: false, // Disable SW in development
+      },
+    }),
+  ],
   // Base path for production deployment behind Traefik /studio prefix
   base: '/studio/',
   resolve: {
@@ -15,14 +84,14 @@ export default defineConfig({
   server: {
     port: 5175,
     proxy: {
-      // Proxy unified API v1 requests
+      // Proxy unified API v1 requests to backend
       '/api/v1': {
-        target: 'http://localhost:8003',
+        target: 'http://localhost:8000',
         changeOrigin: true,
       },
       // Proxy WebSocket connections for real-time updates
       '/ws/v1': {
-        target: 'ws://localhost:8003',
+        target: 'ws://localhost:8000',
         ws: true,
         changeOrigin: true,
       },
@@ -49,8 +118,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          state: ['zustand', 'immer'],
+          vendor: ['react', 'react-dom', 'react-router'],
+          state: ['@reduxjs/toolkit', 'react-redux'],
           editor: ['@monaco-editor/react'],
           flow: ['reactflow'],
           markdown: ['react-markdown', 'remark-gfm'],

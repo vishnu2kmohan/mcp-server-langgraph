@@ -4,8 +4,9 @@
  * Component for managing organizations with CRUD operations.
  */
 
-import { useState, useMemo } from 'react';
-import { Plus, Edit2, Trash2, Loader2, Search, X } from 'lucide-react';
+import { useState, useMemo } from "react";
+import { Plus, Edit2, Trash2, Loader2, Search } from "lucide-react";
+import { Dialog } from "../UI/Dialog";
 
 export interface Organization {
   id: string;
@@ -13,13 +14,13 @@ export interface Organization {
   slug: string;
   memberCount: number;
   createdAt: Date;
-  tier: 'free' | 'team' | 'enterprise';
+  tier: "free" | "team" | "enterprise";
 }
 
 export interface OrganizationFormData {
   name: string;
   slug?: string;
-  tier?: Organization['tier'];
+  tier?: Organization["tier"];
 }
 
 export interface OrganizationManagerProps {
@@ -41,13 +42,13 @@ export function OrganizationManager({
   onDelete,
   onSelect,
 }: OrganizationManagerProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
   const [deletingOrgId, setDeletingOrgId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<OrganizationFormData>({ name: '' });
+  const [formData, setFormData] = useState<OrganizationFormData>({ name: "" });
 
   const filteredOrganizations = useMemo(() => {
     if (!searchQuery) return organizations;
@@ -55,13 +56,13 @@ export function OrganizationManager({
     return organizations.filter(
       (org) =>
         org.name.toLowerCase().includes(query) ||
-        org.slug.toLowerCase().includes(query)
+        org.slug.toLowerCase().includes(query),
     );
   }, [organizations, searchQuery]);
 
   const handleCreate = () => {
     onCreate(formData);
-    setFormData({ name: '' });
+    setFormData({ name: "" });
     setIsCreateModalOpen(false);
   };
 
@@ -75,7 +76,7 @@ export function OrganizationManager({
     if (editingOrg) {
       onUpdate(editingOrg.id, formData);
       setEditingOrg(null);
-      setFormData({ name: '' });
+      setFormData({ name: "" });
       setIsEditModalOpen(false);
     }
   };
@@ -93,14 +94,14 @@ export function OrganizationManager({
     }
   };
 
-  const getTierLabel = (tier: Organization['tier']) => {
+  const getTierLabel = (tier: Organization["tier"]) => {
     switch (tier) {
-      case 'free':
-        return 'Free';
-      case 'team':
-        return 'Team';
-      case 'enterprise':
-        return 'Enterprise';
+      case "free":
+        return "Free";
+      case "team":
+        return "Team";
+      case "enterprise":
+        return "Enterprise";
     }
   };
 
@@ -157,8 +158,8 @@ export function OrganizationManager({
               onClick={() => onSelect(org.id)}
               className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${
                 selectedOrgId === org.id
-                  ? 'bg-blue-50 dark:bg-blue-900 border-blue-300 dark:border-blue-700'
-                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'
+                  ? "bg-blue-50 dark:bg-blue-900 border-blue-300 dark:border-blue-700"
+                  : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
               }`}
             >
               <div className="flex-1">
@@ -200,144 +201,110 @@ export function OrganizationManager({
       )}
 
       {/* Create Modal */}
-      {isCreateModalOpen && (
-        <Modal
-          title="Create Organization"
-          onClose={() => setIsCreateModalOpen(false)}
-        >
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="org-name"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Organization Name
-              </label>
-              <input
-                id="org-name"
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreate}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Create
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <Dialog
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Create Organization"
+        footer={
+          <>
+            <button
+              onClick={() => setIsCreateModalOpen(false)}
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCreate}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Create
+            </button>
+          </>
+        }
+      >
+        <div>
+          <label
+            htmlFor="org-name"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Organization Name
+          </label>
+          <input
+            id="org-name"
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </Dialog>
 
       {/* Edit Modal */}
-      {isEditModalOpen && editingOrg && (
-        <Modal
-          title="Edit Organization"
-          onClose={() => setIsEditModalOpen(false)}
-        >
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="edit-org-name"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Organization Name
-              </label>
-              <input
-                id="edit-org-name"
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdate}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <Dialog
+        open={isEditModalOpen && !!editingOrg}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Organization"
+        footer={
+          <>
+            <button
+              onClick={() => setIsEditModalOpen(false)}
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleUpdate}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Save
+            </button>
+          </>
+        }
+      >
+        <div>
+          <label
+            htmlFor="edit-org-name"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Organization Name
+          </label>
+          <input
+            id="edit-org-name"
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </Dialog>
 
       {/* Delete Confirmation */}
-      {isDeleteConfirmOpen && (
-        <Modal title="Confirm Delete" onClose={() => setIsDeleteConfirmOpen(false)}>
-          <div className="space-y-4">
-            <p className="text-gray-700 dark:text-gray-300">
-              Are you sure you want to delete this organization? This action
-              cannot be undone.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsDeleteConfirmOpen(false)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
-}
-
-interface ModalProps {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}
-
-function Modal({ title, onClose, children }: ModalProps) {
-  return (
-    <div
-      role="dialog"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-    >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {title}
-          </h3>
-          <button
-            onClick={onClose}
-            className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="p-4">{children}</div>
-      </div>
+      <Dialog
+        open={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        title="Confirm Delete"
+        footer={
+          <>
+            <button
+              onClick={() => setIsDeleteConfirmOpen(false)}
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteConfirm}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Confirm
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-700 dark:text-gray-300">
+          Are you sure you want to delete this organization? This action cannot
+          be undone.
+        </p>
+      </Dialog>
     </div>
   );
 }

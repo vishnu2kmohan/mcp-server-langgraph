@@ -2,29 +2,27 @@
  * SaveAsWorkflowButton
  *
  * Button component for bootstrapping a workflow from a chat session.
- * Calls the bootstrap API and shows success/error feedback.
+ * Uses RTK Query for API calls with automatic caching.
  */
 
-import { useState, useEffect } from 'react';
-import { Save, Loader2, CheckCircle, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Save, Loader2, CheckCircle, ExternalLink } from "lucide-react";
+import { useBootstrapWorkflowMutation } from "../../api";
+import type { BootstrapWorkflowResponse } from "../../types/api";
 
 interface SaveAsWorkflowButtonProps {
   sessionId: string;
   disabled?: boolean;
 }
 
-interface BootstrapResponse {
-  workflow_id: string;
-  name: string;
-}
-
-interface BootstrapError {
-  detail: string;
-}
-
-export function SaveAsWorkflowButton({ sessionId, disabled = false }: SaveAsWorkflowButtonProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState<BootstrapResponse | null>(null);
+export function SaveAsWorkflowButton({
+  sessionId,
+  disabled = false,
+}: SaveAsWorkflowButtonProps) {
+  const [bootstrapWorkflow, { isLoading }] = useBootstrapWorkflowMutation();
+  const [success, setSuccess] = useState<BootstrapWorkflowResponse | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,32 +48,40 @@ export function SaveAsWorkflowButton({ sessionId, disabled = false }: SaveAsWork
   const handleSaveAsWorkflow = async () => {
     if (disabled || isLoading) return;
 
-    setIsLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const response = await fetch(
-        `/api/v1/sessions/${sessionId}/bootstrap-workflow`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const result = await bootstrapWorkflow(sessionId).unwrap();
+      setSuccess(result);
+    } catch (err) {
+      // RTK Query error handling - handles both string and Pydantic validation error formats
+      let errorMessage = "Failed to create workflow";
 
-      if (!response.ok) {
-        const errorData: BootstrapError = await response.json();
-        throw new Error(errorData.detail || 'Failed to create workflow');
+      if (err && typeof err === "object" && "data" in err) {
+        const data = err.data as {
+          detail?: string | Array<{ msg?: string; type?: string }>;
+          message?: string;
+        };
+
+        if (typeof data.detail === "string") {
+          // FastAPI HTTPException format: { detail: "error message" }
+          errorMessage = data.detail;
+        } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+          // Pydantic validation error format: { detail: [{type, loc, msg, input}] }
+          const messages = data.detail
+            .map((e) => e.msg || e.type || "Validation error")
+            .join("; ");
+          errorMessage = messages || "Validation error";
+        } else if (data.message) {
+          // Alternative error format: { message: "error" }
+          errorMessage = data.message;
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
       }
 
-      const data: BootstrapResponse = await response.json();
-      setSuccess(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create workflow');
-    } finally {
-      setIsLoading(false);
+      setError(errorMessage);
     }
   };
 
@@ -93,7 +99,7 @@ export function SaveAsWorkflowButton({ sessionId, disabled = false }: SaveAsWork
         ) : (
           <Save size={16} />
         )}
-        {isLoading ? 'Saving...' : success ? 'Saved!' : 'Save as Workflow'}
+        {isLoading ? "Saving..." : success ? "Saved!" : "Save as Workflow"}
       </button>
 
       {/* Success Message */}

@@ -4,8 +4,9 @@
  * Component for managing users with role assignments.
  */
 
-import { useState, useMemo } from 'react';
-import { UserPlus, Search, Loader2, X } from 'lucide-react';
+import { useState, useMemo } from "react";
+import { UserPlus, Search, Loader2 } from "lucide-react";
+import { Dialog } from "../UI/Dialog";
 
 export interface User {
   id: string;
@@ -26,7 +27,7 @@ export interface UserManagerProps {
   onInvite: (email: string, roles: string[]) => void;
 }
 
-const AVAILABLE_ROLES = ['admin', 'developer', 'user'];
+const AVAILABLE_ROLES = ["admin", "developer", "user"];
 
 export function UserManager({
   users,
@@ -36,14 +37,16 @@ export function UserManager({
   onActivate,
   onInvite,
 }: UserManagerProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [isDeactivateConfirmOpen, setIsDeactivateConfirmOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [deactivatingUserId, setDeactivatingUserId] = useState<string | null>(null);
+  const [deactivatingUserId, setDeactivatingUserId] = useState<string | null>(
+    null,
+  );
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRoles, setInviteRoles] = useState<string[]>([]);
 
   const filteredUsers = useMemo(() => {
@@ -52,7 +55,7 @@ export function UserManager({
     return users.filter(
       (user) =>
         user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query)
+        user.email.toLowerCase().includes(query),
     );
   }, [users, searchQuery]);
 
@@ -73,13 +76,13 @@ export function UserManager({
 
   const handleRoleToggle = (role: string) => {
     setSelectedRoles((prev) =>
-      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
     );
   };
 
   const handleInviteRoleToggle = (role: string) => {
     setInviteRoles((prev) =>
-      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
     );
   };
 
@@ -98,16 +101,16 @@ export function UserManager({
 
   const handleInvite = () => {
     onInvite(inviteEmail, inviteRoles);
-    setInviteEmail('');
+    setInviteEmail("");
     setInviteRoles([]);
     setIsInviteModalOpen(false);
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
-      year: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
     });
   };
 
@@ -163,9 +166,11 @@ export function UserManager({
                   {user.name}
                 </h3>
                 <div
-                  data-testid={user.isActive ? 'status-active' : 'status-inactive'}
+                  data-testid={
+                    user.isActive ? "status-active" : "status-inactive"
+                  }
                   className={`w-2 h-2 rounded-full ${
-                    user.isActive ? 'bg-green-500' : 'bg-gray-400'
+                    user.isActive ? "bg-green-500" : "bg-gray-400"
                   }`}
                 />
               </div>
@@ -217,161 +222,132 @@ export function UserManager({
       </div>
 
       {/* Invite Modal */}
-      {isInviteModalOpen && (
-        <Modal title="Invite User" onClose={() => setIsInviteModalOpen(false)}>
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="invite-email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Email
+      <Dialog
+        open={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        title="Invite User"
+        footer={
+          <>
+            <button
+              onClick={() => setIsInviteModalOpen(false)}
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleInvite}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Send Invite
+            </button>
+          </>
+        }
+        contentClassName="space-y-4"
+      >
+        <div>
+          <label
+            htmlFor="invite-email"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Email
+          </label>
+          <input
+            id="invite-email"
+            type="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Roles
+          </span>
+          <div className="space-y-2">
+            {AVAILABLE_ROLES.map((role) => (
+              <label key={role} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={inviteRoles.includes(role)}
+                  onChange={() => handleInviteRoleToggle(role)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-gray-700 dark:text-gray-300">{role}</span>
               </label>
-              <input
-                id="invite-email"
-                type="email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Roles
-              </span>
-              <div className="space-y-2">
-                {AVAILABLE_ROLES.map((role) => (
-                  <label key={role} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={inviteRoles.includes(role)}
-                      onChange={() => handleInviteRoleToggle(role)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-gray-700 dark:text-gray-300">
-                      {role}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsInviteModalOpen(false)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleInvite}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Send Invite
-              </button>
-            </div>
+            ))}
           </div>
-        </Modal>
-      )}
+        </div>
+      </Dialog>
 
       {/* Role Management Modal */}
-      {isRoleModalOpen && editingUser && (
-        <Modal title="Manage Roles" onClose={() => setIsRoleModalOpen(false)}>
-          <div className="space-y-4">
-            <p className="text-gray-700 dark:text-gray-300">
-              Managing roles for {editingUser.name}
-            </p>
-            <div className="space-y-2">
-              {AVAILABLE_ROLES.map((role) => (
-                <label key={role} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedRoles.includes(role)}
-                    onChange={() => handleRoleToggle(role)}
-                    aria-label={role}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700 dark:text-gray-300">
-                    {role}
-                  </span>
-                </label>
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsRoleModalOpen(false)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveRoles}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Save Roles
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <Dialog
+        open={isRoleModalOpen && !!editingUser}
+        onClose={() => setIsRoleModalOpen(false)}
+        title="Manage Roles"
+        footer={
+          <>
+            <button
+              onClick={() => setIsRoleModalOpen(false)}
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveRoles}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Save Roles
+            </button>
+          </>
+        }
+        contentClassName="space-y-4"
+      >
+        <p className="text-gray-700 dark:text-gray-300">
+          Managing roles for {editingUser?.name}
+        </p>
+        <div className="space-y-2">
+          {AVAILABLE_ROLES.map((role) => (
+            <label key={role} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={selectedRoles.includes(role)}
+                onChange={() => handleRoleToggle(role)}
+                aria-label={role}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-gray-700 dark:text-gray-300">{role}</span>
+            </label>
+          ))}
+        </div>
+      </Dialog>
 
       {/* Deactivate Confirmation */}
-      {isDeactivateConfirmOpen && (
-        <Modal
-          title="Confirm Deactivation"
-          onClose={() => setIsDeactivateConfirmOpen(false)}
-        >
-          <div className="space-y-4">
-            <p className="text-gray-700 dark:text-gray-300">
-              Are you sure you want to deactivate this user? They will no longer
-              be able to access the system.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsDeactivateConfirmOpen(false)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeactivateConfirm}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
-}
-
-interface ModalProps {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}
-
-function Modal({ title, onClose, children }: ModalProps) {
-  return (
-    <div
-      role="dialog"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-    >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {title}
-          </h3>
-          <button
-            onClick={onClose}
-            className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="p-4">{children}</div>
-      </div>
+      <Dialog
+        open={isDeactivateConfirmOpen}
+        onClose={() => setIsDeactivateConfirmOpen(false)}
+        title="Confirm Deactivation"
+        footer={
+          <>
+            <button
+              onClick={() => setIsDeactivateConfirmOpen(false)}
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeactivateConfirm}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Confirm
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-700 dark:text-gray-300">
+          Are you sure you want to deactivate this user? They will no longer be
+          able to access the system.
+        </p>
+      </Dialog>
     </div>
   );
 }

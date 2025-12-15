@@ -5,7 +5,7 @@
  * and action buttons (dark mode, settings, help).
  */
 
-import { Sun, Moon, Settings, HelpCircle } from 'lucide-react';
+import { Sun, Moon, Settings, HelpCircle } from "lucide-react";
 
 export interface WorkflowHeaderProps {
   workflowName: string;
@@ -27,21 +27,21 @@ export function WorkflowHeader({
   return (
     <header
       className={`px-6 py-4 border-b ${
-        isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
       }`}
     >
       <div className="flex items-center justify-between">
         <div>
           <h1
             className={`text-2xl font-bold ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
+              isDarkMode ? "text-white" : "text-gray-900"
             }`}
           >
             Visual Workflow Builder
           </h1>
           <p
             className={`text-sm ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              isDarkMode ? "text-gray-400" : "text-gray-500"
             }`}
           >
             MCP Server with LangGraph - Build agents visually, export to code
@@ -54,7 +54,7 @@ export function WorkflowHeader({
             value={workflowName}
             onChange={(e) => onNameChange(e.target.value)}
             className={`px-3 py-2 border rounded-md ${
-              isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : ''
+              isDarkMode ? "bg-gray-800 border-gray-600 text-white" : ""
             }`}
             placeholder="Workflow name"
           />
@@ -62,11 +62,13 @@ export function WorkflowHeader({
             onClick={onToggleDarkMode}
             className={`p-2 rounded-lg transition-colors ${
               isDarkMode
-                ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? "bg-gray-700 text-yellow-400 hover:bg-gray-600"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
-            title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={
+              isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+            }
           >
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
@@ -74,8 +76,8 @@ export function WorkflowHeader({
             onClick={onOpenSettings}
             className={`p-2 rounded-lg transition-colors ${
               isDarkMode
-                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
             title="Settings"
             aria-label="Settings"
@@ -86,8 +88,8 @@ export function WorkflowHeader({
             onClick={onOpenHelp}
             className={`p-2 rounded-lg transition-colors ${
               isDarkMode
-                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
             title="Help"
             aria-label="Help"

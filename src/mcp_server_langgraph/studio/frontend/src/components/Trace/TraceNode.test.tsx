@@ -9,27 +9,27 @@
  * - Accessibility
  */
 
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import TraceNode from './TraceNode';
-import { ReactFlowProvider } from 'reactflow';
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import TraceNode from "./TraceNode";
+import { ReactFlowProvider } from "reactflow";
 
 // Wrapper component for React Flow context
 const renderWithReactFlow = (component: React.ReactNode) => {
   return render(<ReactFlowProvider>{component}</ReactFlowProvider>);
 };
 
-describe('TraceNode', () => {
+describe("TraceNode", () => {
   const defaultProps = {
-    id: 'test-node',
-    type: 'traceNode',
+    id: "test-node",
+    type: "traceNode",
     data: {
-      label: 'Test Span',
-      status: 'OK' as const,
-      statusColor: '#22c55e',
-      duration: '100ms',
+      label: "Test Span",
+      status: "OK" as const,
+      statusColor: "#22c55e",
+      duration: "100ms",
       attributes: {},
-      traceId: 'trace-123',
+      traceId: "trace-123",
     },
     selected: false,
     isConnectable: true,
@@ -39,151 +39,172 @@ describe('TraceNode', () => {
     dragging: false,
   };
 
-  describe('Rendering', () => {
-    it('should render the span name', () => {
+  describe("Rendering", () => {
+    it("should render the span name", () => {
       renderWithReactFlow(<TraceNode {...defaultProps} />);
 
-      expect(screen.getByText('Test Span')).toBeInTheDocument();
+      expect(screen.getByText("Test Span")).toBeInTheDocument();
     });
 
-    it('should render the duration when provided', () => {
+    it("should render the duration when provided", () => {
       renderWithReactFlow(<TraceNode {...defaultProps} />);
 
-      expect(screen.getByText('100ms')).toBeInTheDocument();
+      expect(screen.getByText("100ms")).toBeInTheDocument();
     });
 
-    it('should not render duration when empty', () => {
+    it("should not render duration when empty", () => {
       const props = {
         ...defaultProps,
-        data: { ...defaultProps.data, duration: '' },
+        data: { ...defaultProps.data, duration: "" },
       };
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
       // Duration element should not be present
-      const durationElements = container.querySelectorAll('.text-xs.opacity-75');
+      const durationElements = container.querySelectorAll(
+        ".text-xs.opacity-75",
+      );
       expect(durationElements.length).toBe(0);
     });
   });
 
-  describe('Status Styling', () => {
-    it('should apply OK status styling', () => {
+  describe("Status Styling", () => {
+    it("should apply OK status styling", () => {
       const props = {
         ...defaultProps,
-        data: { ...defaultProps.data, status: 'OK' as const, statusColor: '#22c55e' },
+        data: {
+          ...defaultProps.data,
+          status: "OK" as const,
+          statusColor: "#22c55e",
+        },
       };
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
-      const nodeDiv = container.querySelector('.bg-green-100');
+      const nodeDiv = container.querySelector(".bg-green-100");
       expect(nodeDiv).toBeInTheDocument();
     });
 
-    it('should apply ERROR status styling', () => {
+    it("should apply ERROR status styling", () => {
       const props = {
         ...defaultProps,
-        data: { ...defaultProps.data, status: 'ERROR' as const, statusColor: '#ef4444' },
+        data: {
+          ...defaultProps.data,
+          status: "ERROR" as const,
+          statusColor: "#ef4444",
+        },
       };
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
-      const nodeDiv = container.querySelector('.bg-red-100');
+      const nodeDiv = container.querySelector(".bg-red-100");
       expect(nodeDiv).toBeInTheDocument();
     });
 
-    it('should apply UNSET status styling', () => {
+    it("should apply UNSET status styling", () => {
       const props = {
         ...defaultProps,
-        data: { ...defaultProps.data, status: 'UNSET' as const, statusColor: '#6366f1' },
+        data: {
+          ...defaultProps.data,
+          status: "UNSET" as const,
+          statusColor: "#6366f1",
+        },
       };
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
-      const nodeDiv = container.querySelector('.bg-indigo-100');
+      const nodeDiv = container.querySelector(".bg-indigo-100");
       expect(nodeDiv).toBeInTheDocument();
     });
   });
 
-  describe('Running State', () => {
-    it('should show running indicator for UNSET status', () => {
+  describe("Running State", () => {
+    it("should show running indicator for UNSET status", () => {
       const props = {
         ...defaultProps,
-        data: { ...defaultProps.data, status: 'UNSET' as const },
+        data: { ...defaultProps.data, status: "UNSET" as const },
       };
 
       renderWithReactFlow(<TraceNode {...props} />);
 
-      expect(screen.getByText('Running...')).toBeInTheDocument();
+      expect(screen.getByText("Running...")).toBeInTheDocument();
     });
 
-    it('should have animated pulse for running spans', () => {
+    it("should have animated pulse for running spans", () => {
       const props = {
         ...defaultProps,
-        data: { ...defaultProps.data, status: 'UNSET' as const },
+        data: { ...defaultProps.data, status: "UNSET" as const },
       };
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
-      const pulseElement = container.querySelector('.animate-ping');
+      const pulseElement = container.querySelector(".animate-ping");
       expect(pulseElement).toBeInTheDocument();
     });
 
-    it('should not show running indicator for OK status', () => {
+    it("should not show running indicator for OK status", () => {
       renderWithReactFlow(<TraceNode {...defaultProps} />);
 
-      expect(screen.queryByText('Running...')).not.toBeInTheDocument();
+      expect(screen.queryByText("Running...")).not.toBeInTheDocument();
     });
 
-    it('should not show running indicator for ERROR status', () => {
+    it("should not show running indicator for ERROR status", () => {
       const props = {
         ...defaultProps,
-        data: { ...defaultProps.data, status: 'ERROR' as const },
+        data: { ...defaultProps.data, status: "ERROR" as const },
       };
 
       renderWithReactFlow(<TraceNode {...props} />);
 
-      expect(screen.queryByText('Running...')).not.toBeInTheDocument();
+      expect(screen.queryByText("Running...")).not.toBeInTheDocument();
     });
   });
 
-  describe('Selected State', () => {
-    it('should have ring styling when selected', () => {
+  describe("Selected State", () => {
+    it("should have ring styling when selected", () => {
       const props = { ...defaultProps, selected: true };
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
-      const selectedElement = container.querySelector('.ring-2');
+      const selectedElement = container.querySelector(".ring-2");
       expect(selectedElement).toBeInTheDocument();
     });
 
-    it('should not have ring styling when not selected', () => {
-      const { container } = renderWithReactFlow(<TraceNode {...defaultProps} />);
+    it("should not have ring styling when not selected", () => {
+      const { container } = renderWithReactFlow(
+        <TraceNode {...defaultProps} />,
+      );
 
-      const selectedElement = container.querySelector('.ring-2');
+      const selectedElement = container.querySelector(".ring-2");
       expect(selectedElement).not.toBeInTheDocument();
     });
   });
 
-  describe('Handles', () => {
-    it('should render target handle on the left', () => {
-      const { container } = renderWithReactFlow(<TraceNode {...defaultProps} />);
+  describe("Handles", () => {
+    it("should render target handle on the left", () => {
+      const { container } = renderWithReactFlow(
+        <TraceNode {...defaultProps} />,
+      );
 
       // React Flow handles have specific classes
       const targetHandle = container.querySelector('[data-handlepos="left"]');
       expect(targetHandle).toBeInTheDocument();
     });
 
-    it('should render source handle on the right', () => {
-      const { container } = renderWithReactFlow(<TraceNode {...defaultProps} />);
+    it("should render source handle on the right", () => {
+      const { container } = renderWithReactFlow(
+        <TraceNode {...defaultProps} />,
+      );
 
       const sourceHandle = container.querySelector('[data-handlepos="right"]');
       expect(sourceHandle).toBeInTheDocument();
     });
   });
 
-  describe('Label Truncation', () => {
-    it('should truncate long labels', () => {
-      const longLabel = 'This is a very long span name that should be truncated in the display';
+  describe("Label Truncation", () => {
+    it("should truncate long labels", () => {
+      const longLabel =
+        "This is a very long span name that should be truncated in the display";
       const props = {
         ...defaultProps,
         data: { ...defaultProps.data, label: longLabel },
@@ -191,12 +212,12 @@ describe('TraceNode', () => {
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
-      const labelElement = container.querySelector('.truncate');
+      const labelElement = container.querySelector(".truncate");
       expect(labelElement).toBeInTheDocument();
     });
 
-    it('should show full label on hover via title attribute', () => {
-      const longLabel = 'This is a very long span name';
+    it("should show full label on hover via title attribute", () => {
+      const longLabel = "This is a very long span name";
       const props = {
         ...defaultProps,
         data: { ...defaultProps.data, label: longLabel },
@@ -205,39 +226,47 @@ describe('TraceNode', () => {
       renderWithReactFlow(<TraceNode {...props} />);
 
       const labelElement = screen.getByText(longLabel);
-      expect(labelElement).toHaveAttribute('title', longLabel);
+      expect(labelElement).toHaveAttribute("title", longLabel);
     });
   });
 
-  describe('Accessibility', () => {
-    it('should have minimum width for readability', () => {
-      const { container } = renderWithReactFlow(<TraceNode {...defaultProps} />);
+  describe("Accessibility", () => {
+    it("should have minimum width for readability", () => {
+      const { container } = renderWithReactFlow(
+        <TraceNode {...defaultProps} />,
+      );
 
-      const nodeDiv = container.querySelector('.min-w-\\[180px\\]');
+      const nodeDiv = container.querySelector(".min-w-\\[180px\\]");
       expect(nodeDiv).toBeInTheDocument();
     });
 
-    it('should have proper color contrast for text', () => {
+    it("should have proper color contrast for text", () => {
       // OK status uses green text on green background
-      const { container } = renderWithReactFlow(<TraceNode {...defaultProps} />);
+      const { container } = renderWithReactFlow(
+        <TraceNode {...defaultProps} />,
+      );
 
-      const nodeDiv = container.querySelector('.text-green-800');
+      const nodeDiv = container.querySelector(".text-green-800");
       expect(nodeDiv).toBeInTheDocument();
     });
   });
 
-  describe('Transitions', () => {
-    it('should have hover shadow transition', () => {
-      const { container } = renderWithReactFlow(<TraceNode {...defaultProps} />);
+  describe("Transitions", () => {
+    it("should have hover shadow transition", () => {
+      const { container } = renderWithReactFlow(
+        <TraceNode {...defaultProps} />,
+      );
 
-      const nodeDiv = container.querySelector('.hover\\:shadow-lg');
+      const nodeDiv = container.querySelector(".hover\\:shadow-lg");
       expect(nodeDiv).toBeInTheDocument();
     });
 
-    it('should have transition duration', () => {
-      const { container } = renderWithReactFlow(<TraceNode {...defaultProps} />);
+    it("should have transition duration", () => {
+      const { container } = renderWithReactFlow(
+        <TraceNode {...defaultProps} />,
+      );
 
-      const nodeDiv = container.querySelector('.transition-all');
+      const nodeDiv = container.querySelector(".transition-all");
       expect(nodeDiv).toBeInTheDocument();
     });
   });

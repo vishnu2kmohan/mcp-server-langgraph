@@ -3,73 +3,150 @@
  *
  * Observability page showing traces, logs, and metrics
  * for agent execution monitoring.
+ *
+ * Uses RTK Query for data fetching with automatic caching and updates.
  */
 
-import { useEffect, useState } from 'react';
-import { Activity, FileText, BarChart3, RefreshCw, Clock } from 'lucide-react';
+import { useState } from "react";
+import {
+  Activity,
+  FileText,
+  BarChart3,
+  RefreshCw,
+  Clock,
+  Server,
+} from "lucide-react";
+import {
+  useListTracesQuery,
+  useListLogsQuery,
+  useGetMetricsQuery,
+} from "../api";
+import { SkeletonList, ErrorState } from "../components/UI";
 
-type ObservabilityTab = 'traces' | 'logs' | 'metrics';
-
-interface Trace {
-  id: string;
-  name: string;
-  duration: number;
-  status: 'success' | 'error' | 'running';
-  timestamp: string;
-  spans: number;
-}
-
-interface TracesResponse {
-  traces: Trace[];
-}
+type ObservabilityTab = "traces" | "logs" | "metrics";
 
 export function ObservabilityPage() {
-  const [activeTab, setActiveTab] = useState<ObservabilityTab>('traces');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [traces, setTraces] = useState<Trace[]>([]);
+  const [activeTab, setActiveTab] = useState<ObservabilityTab>("traces");
 
-  useEffect(() => {
-    const loadTraces = async () => {
-      setIsLoading(true);
-      setError(null);
+  // Traces filter state
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [sessionIdFilter, setSessionIdFilter] = useState<string>("");
+  const [timeRange, setTimeRange] = useState<string>("1h");
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
 
-      try {
-        const response = await fetch('/api/v1/observability/traces', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+  // Calculate time range for query
+  const getTimeRange = () => {
+    const now = new Date();
+    switch (timeRange) {
+      case "15m":
+        return new Date(now.getTime() - 15 * 60 * 1000).toISOString();
+      case "1h":
+        return new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+      case "24h":
+        return new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+      case "7d":
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      default:
+        return undefined;
+    }
+  };
 
-        if (!response.ok) {
-          throw new Error('Failed to load traces');
-        }
+  // Fetch data with RTK Query - skip based on active tab for lazy loading
+  const {
+    data: tracesData,
+    isLoading: isTracesLoading,
+    isFetching: isTracesFetching,
+    error: tracesError,
+    refetch: refetchTraces,
+  } = useListTracesQuery({
+    limit: 50,
+    status: statusFilter || undefined,
+    session_id: sessionIdFilter || undefined,
+    start_time: getTimeRange(),
+    cursor,
+  });
 
-        const data: TracesResponse = await response.json();
-        setTraces(data.traces);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load traces');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const {
+    data: logsData,
+    isLoading: isLogsLoading,
+    error: logsError,
+    refetch: refetchLogs,
+  } = useListLogsQuery({ limit: 50 }, { skip: activeTab !== "logs" });
 
-    loadTraces();
-  }, []);
+  const {
+    data: metricsData,
+    isLoading: isMetricsLoading,
+    error: metricsError,
+    refetch: refetchMetrics,
+  } = useGetMetricsQuery(undefined, { skip: activeTab !== "metrics" });
+
+  // Map traces to component format
+  const traces =
+    tracesData?.items.map((trace) => ({
+      id: trace.trace_id,
+      name: trace.name,
+      duration:
+        new Date(trace.end_time).getTime() -
+        new Date(trace.start_time).getTime(),
+      status: trace.status as "success" | "error" | "running",
+      timestamp: trace.start_time,
+      spans: 1, // Could be expanded in the future
+    })) ?? [];
+
+  // Map logs to component format
+  const logs = logsData?.items ?? [];
+
+  // Metrics data
+  const metrics = metricsData ?? null;
 
   const tabs = [
-    { id: 'traces' as const, label: 'Traces', icon: Activity },
-    { id: 'logs' as const, label: 'Logs', icon: FileText, badge: 'Coming Soon' },
-    { id: 'metrics' as const, label: 'Metrics', icon: BarChart3, badge: 'Coming Soon' },
+    { id: "traces" as const, label: "Traces", icon: Activity },
+    { id: "logs" as const, label: "Logs", icon: FileText },
+    { id: "metrics" as const, label: "Metrics", icon: BarChart3 },
   ];
 
-  const getStatusColor = (status: Trace['status']) => {
-    switch (status) {
-      case 'success': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-      case 'error': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      case 'running': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+  const getLogLevelColor = (level: "info" | "warn" | "error" | "debug") => {
+    switch (level) {
+      case "error":
+        return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+      case "warn":
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+      case "info":
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+      case "debug":
+        return "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400";
     }
+  };
+
+  const getStatusColor = (status: "success" | "error" | "running") => {
+    switch (status) {
+      case "success":
+        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+      case "error":
+        return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+      case "running":
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+    }
+  };
+
+  const isLoading =
+    activeTab === "traces"
+      ? isTracesLoading
+      : activeTab === "logs"
+        ? isLogsLoading
+        : isMetricsLoading;
+
+  const error =
+    activeTab === "traces"
+      ? tracesError
+      : activeTab === "logs"
+        ? logsError
+        : metricsError;
+
+  const handleRefresh = () => {
+    if (activeTab === "traces") refetchTraces();
+    else if (activeTab === "logs") refetchLogs();
+    else refetchMetrics();
   };
 
   return (
@@ -86,7 +163,7 @@ export function ObservabilityPage() {
             </p>
           </div>
           <button
-            onClick={() => window.location.reload()}
+            onClick={handleRefresh}
             className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             <RefreshCw size={16} />
@@ -104,90 +181,282 @@ export function ObservabilityPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
               }`}
             >
               <tab.icon size={16} />
               {tab.label}
-              {tab.badge && (
-                <span className="ml-1 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full">
-                  {tab.badge}
-                </span>
-              )}
             </button>
           ))}
         </div>
       </div>
 
+      {/* Traces Filters - only show on traces tab */}
+      {activeTab === "traces" && (
+        <div className="px-6 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* Status filter */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setStatusFilter("")}
+                className={`px-2 py-1 text-xs rounded ${
+                  statusFilter === ""
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+                aria-pressed={statusFilter === ""}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setStatusFilter("success")}
+                className={`px-2 py-1 text-xs rounded ${
+                  statusFilter === "success"
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+                aria-pressed={statusFilter === "success"}
+              >
+                Success
+              </button>
+              <button
+                onClick={() => setStatusFilter("error")}
+                className={`px-2 py-1 text-xs rounded ${
+                  statusFilter === "error"
+                    ? "bg-red-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+                aria-pressed={statusFilter === "error"}
+              >
+                Error
+              </button>
+              <button
+                onClick={() => setStatusFilter("running")}
+                className={`px-2 py-1 text-xs rounded ${
+                  statusFilter === "running"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+                aria-pressed={statusFilter === "running"}
+              >
+                Running
+              </button>
+            </div>
+
+            {/* Session ID filter */}
+            <input
+              type="text"
+              value={sessionIdFilter}
+              onChange={(e) => setSessionIdFilter(e.target.value)}
+              placeholder="Filter by session ID..."
+              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+
+            {/* Time range filter */}
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              aria-label="Time range"
+            >
+              <option value="15m">Last 15 minutes</option>
+              <option value="1h">Last 1 hour</option>
+              <option value="24h">Last 24 hours</option>
+              <option value="7d">Last 7 days</option>
+              <option value="all">All time</option>
+            </select>
+
+            {/* Trace count */}
+            {tracesData && (
+              <span className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
+                {traces.length} of {tracesData.total} traces
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <RefreshCw size={32} className="animate-spin text-blue-500" />
-          </div>
+          <SkeletonList items={5} />
         ) : error ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-            <p className="text-lg mb-4">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <RefreshCw size={16} />
-              Retry
-            </button>
-          </div>
+          <ErrorState
+            title="Failed to load data"
+            message="There was a problem loading the observability data. Please try again."
+            onRetry={handleRefresh}
+          />
         ) : (
           <>
             {/* Traces Tab */}
-            {activeTab === 'traces' && (
+            {activeTab === "traces" && (
               <div className="space-y-4">
-                {traces.map((trace) => (
-                  <div
-                    key={trace.id}
-                    className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Activity size={20} className="text-blue-500" />
-                        <div>
-                          <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                            {trace.name}
-                          </h3>
-                          <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            <span className="flex items-center gap-1">
-                              <Clock size={14} />
-                              {trace.duration}ms
-                            </span>
-                            <span>{trace.spans} spans</span>
-                            <span>{new Date(trace.timestamp).toLocaleTimeString()}</span>
+                {traces.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    No traces found
+                  </div>
+                ) : (
+                  <>
+                    {traces.map((trace) => (
+                      <div
+                        key={trace.id}
+                        className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Activity size={20} className="text-blue-500" />
+                            <div>
+                              <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                                {trace.name}
+                              </h3>
+                              <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                <span className="flex items-center gap-1">
+                                  <Clock size={14} />
+                                  {trace.duration}ms
+                                </span>
+                                <span>{trace.spans} spans</span>
+                                <span>
+                                  {new Date(
+                                    trace.timestamp,
+                                  ).toLocaleTimeString()}
+                                </span>
+                              </div>
+                            </div>
                           </div>
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${getStatusColor(trace.status)}`}
+                          >
+                            {trace.status}
+                          </span>
                         </div>
                       </div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(trace.status)}`}>
-                        {trace.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                    ))}
+                    {/* Load More Button */}
+                    {tracesData?.next_cursor && (
+                      <div className="flex justify-center pt-4">
+                        <button
+                          onClick={() => setCursor(tracesData.next_cursor)}
+                          disabled={isTracesFetching}
+                          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+                        >
+                          {isTracesFetching ? (
+                            <>
+                              <RefreshCw size={16} className="animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            "Load More"
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
 
             {/* Logs Tab */}
-            {activeTab === 'logs' && (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-                <FileText size={48} className="mb-4 opacity-50" />
-                <p className="text-lg">Logs Coming Soon</p>
-                <p className="text-sm mt-2">Log aggregation and viewing will be available in a future release</p>
+            {activeTab === "logs" && (
+              <div className="space-y-2">
+                {logs.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    No logs found
+                  </div>
+                ) : (
+                  logs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`px-2 py-0.5 text-xs rounded-full ${getLogLevelColor(log.level)}`}
+                          >
+                            {log.level}
+                          </span>
+                          <span className="text-gray-900 dark:text-gray-100">
+                            {log.message}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                          {log.service && (
+                            <span className="flex items-center gap-1">
+                              <Server size={14} />
+                              {log.service}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Clock size={14} />
+                            {new Date(log.timestamp).toLocaleTimeString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
 
             {/* Metrics Tab */}
-            {activeTab === 'metrics' && (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-                <BarChart3 size={48} className="mb-4 opacity-50" />
-                <p className="text-lg">Metrics Coming Soon</p>
-                <p className="text-sm mt-2">Metrics dashboard will be available in a future release</p>
+            {activeTab === "metrics" && metrics && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Total Requests
+                  </h3>
+                  <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                    {metrics.requests_total.toLocaleString()}
+                  </div>
+                </div>
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Total Errors
+                  </h3>
+                  <div className="text-2xl font-semibold text-red-600 dark:text-red-400">
+                    {metrics.errors_total.toLocaleString()}
+                  </div>
+                </div>
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Avg Latency
+                  </h3>
+                  <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                    {metrics.avg_latency_ms}ms
+                  </div>
+                </div>
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    P99 Latency
+                  </h3>
+                  <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                    {metrics.p99_latency_ms}ms
+                  </div>
+                </div>
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Tokens Used
+                  </h3>
+                  <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                    {metrics.tokens_used.toLocaleString()}
+                  </div>
+                </div>
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Active Sessions
+                  </h3>
+                  <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                    {metrics.active_sessions}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Empty metrics state */}
+            {activeTab === "metrics" && !metrics && !isMetricsLoading && (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                No metrics data available
               </div>
             )}
           </>

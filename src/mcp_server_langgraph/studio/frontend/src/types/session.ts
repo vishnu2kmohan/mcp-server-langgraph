@@ -13,7 +13,7 @@
 // ==============================================================================
 
 /** Supported LLM providers */
-export type ModelProvider = 'openai' | 'anthropic' | 'google' | 'azure';
+export type ModelProvider = "openai" | "anthropic" | "google" | "azure";
 
 /** Session configuration */
 export interface SessionConfig {
@@ -26,8 +26,8 @@ export interface SessionConfig {
 
 /** Default session configuration */
 export const DEFAULT_SESSION_CONFIG: SessionConfig = {
-  modelProvider: 'openai',
-  modelName: 'gpt-4',
+  modelProvider: "openai",
+  modelName: "gpt-4",
   temperature: 0.7,
   maxTokens: 4096,
 };
@@ -37,7 +37,7 @@ export const DEFAULT_SESSION_CONFIG: SessionConfig = {
 // ==============================================================================
 
 /** Message role */
-export type MessageRole = 'user' | 'assistant' | 'system';
+export type MessageRole = "user" | "assistant" | "system";
 
 /** Tool call within a message */
 export interface ToolCall {
@@ -49,8 +49,8 @@ export interface ToolCall {
   duration?: number;
 }
 
-/** Token usage stats */
-export interface TokenUsage {
+/** Token usage stats (client-side camelCase format) */
+export interface ClientTokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
@@ -60,7 +60,7 @@ export interface TokenUsage {
 export interface AgentMetadata {
   confidence?: number;
   reasoning?: string;
-  responseFormat?: 'concise' | 'detailed';
+  responseFormat?: "concise" | "detailed";
   verificationScore?: number;
   refinementAttempts?: number;
 }
@@ -73,7 +73,7 @@ export interface ChatMessage {
   timestamp: number;
   isStreaming?: boolean;
   toolCalls?: ToolCall[];
-  usage?: TokenUsage;
+  usage?: ClientTokenUsage;
   agentMetadata?: AgentMetadata;
 }
 
@@ -91,8 +91,8 @@ export interface SessionSummary {
   organizationId?: string;
 }
 
-/** Full session details */
-export interface Session {
+/** Full session details (client-side format) */
+export interface ClientSession {
   id: string;
   name: string;
   config: SessionConfig;
@@ -107,14 +107,19 @@ export interface Session {
 // ==============================================================================
 
 /** Stream chunk type */
-export type StreamChunkType = 'chunk' | 'complete' | 'error' | 'tool_call' | 'tool_result';
+export type StreamChunkType =
+  | "chunk"
+  | "complete"
+  | "error"
+  | "tool_call"
+  | "tool_result";
 
 /** Stream chunk from API */
 export interface StreamChunk {
   type: StreamChunkType;
   content?: string;
   messageId?: string;
-  usage?: TokenUsage;
+  usage?: ClientTokenUsage;
   toolCall?: ToolCall;
   error?: string;
 }
@@ -129,7 +134,7 @@ export interface SessionState {
   sessions: SessionSummary[];
 
   /** Currently active session */
-  currentSession: Session | null;
+  currentSession: ClientSession | null;
 
   /** Whether session list is loading */
   isLoadingSessions: boolean;
@@ -142,6 +147,18 @@ export interface SessionState {
 
   /** Error message if any */
   error: string | null;
+
+  /** Whether more sessions are available for pagination */
+  hasMore?: boolean;
+
+  /** Total count of sessions (for pagination display) */
+  totalCount?: number;
+
+  /** Whether loading more sessions */
+  isLoadingMore?: boolean;
+
+  /** Current pagination cursor */
+  cursor?: string | null;
 }
 
 /** Session store actions */
@@ -150,7 +167,10 @@ export interface SessionActions {
   fetchSessions: () => Promise<void>;
 
   /** Create a new session */
-  createSession: (name: string, config?: Partial<SessionConfig>) => Promise<string | null>;
+  createSession: (
+    name: string,
+    config?: Partial<SessionConfig>,
+  ) => Promise<string | null>;
 
   /** Load a session by ID */
   loadSession: (sessionId: string) => Promise<void>;

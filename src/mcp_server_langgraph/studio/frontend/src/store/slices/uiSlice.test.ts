@@ -10,7 +10,7 @@
  * - Notifications
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import uiReducer, {
   toggleSidebar,
   setSidebarOpen,
@@ -20,206 +20,240 @@ import uiReducer, {
   addNotification,
   removeNotification,
   clearNotifications,
-} from './uiSlice';
+  getInitialTheme,
+} from "./uiSlice";
 
 // Mock crypto.randomUUID
-const mockUUID = '12345678-1234-1234-1234-123456789abc';
-vi.stubGlobal('crypto', {
+const mockUUID = "12345678-1234-1234-1234-123456789abc";
+vi.stubGlobal("crypto", {
   randomUUID: () => mockUUID,
 });
 
-describe('uiSlice', () => {
+describe("uiSlice", () => {
+  // Default theme is now "dark" instead of "system"
   const initialState = {
     sidebarOpen: true,
-    theme: 'system' as const,
+    theme: "dark" as const,
     isLoading: false,
-    activeView: 'workflows' as const,
+    activeView: "workflows" as const,
     notifications: [],
+    sidebarCollapsed: false,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Clear localStorage before each test
+    localStorage.clear();
   });
 
-  describe('initial state', () => {
-    it('should return initial state when called with undefined', () => {
-      const result = uiReducer(undefined, { type: 'unknown' });
+  describe("initial state", () => {
+    it("should return initial state when called with undefined", () => {
+      const result = uiReducer(undefined, { type: "unknown" });
       expect(result).toEqual(initialState);
     });
   });
 
-  describe('toggleSidebar', () => {
-    it('should toggle sidebar from open to closed', () => {
+  describe("toggleSidebar", () => {
+    it("should toggle sidebar from open to closed", () => {
       const state = { ...initialState, sidebarOpen: true };
       const result = uiReducer(state, toggleSidebar());
       expect(result.sidebarOpen).toBe(false);
     });
 
-    it('should toggle sidebar from closed to open', () => {
+    it("should toggle sidebar from closed to open", () => {
       const state = { ...initialState, sidebarOpen: false };
       const result = uiReducer(state, toggleSidebar());
       expect(result.sidebarOpen).toBe(true);
     });
   });
 
-  describe('setSidebarOpen', () => {
-    it('should set sidebar to open', () => {
+  describe("setSidebarOpen", () => {
+    it("should set sidebar to open", () => {
       const state = { ...initialState, sidebarOpen: false };
       const result = uiReducer(state, setSidebarOpen(true));
       expect(result.sidebarOpen).toBe(true);
     });
 
-    it('should set sidebar to closed', () => {
+    it("should set sidebar to closed", () => {
       const state = { ...initialState, sidebarOpen: true };
       const result = uiReducer(state, setSidebarOpen(false));
       expect(result.sidebarOpen).toBe(false);
     });
   });
 
-  describe('setTheme', () => {
-    it('should set theme to light', () => {
-      const result = uiReducer(initialState, setTheme('light'));
-      expect(result.theme).toBe('light');
+  describe("setTheme", () => {
+    it("should set theme to light", () => {
+      const result = uiReducer(initialState, setTheme("light"));
+      expect(result.theme).toBe("light");
     });
 
-    it('should set theme to dark', () => {
-      const result = uiReducer(initialState, setTheme('dark'));
-      expect(result.theme).toBe('dark');
+    it("should set theme to dark", () => {
+      const result = uiReducer(initialState, setTheme("dark"));
+      expect(result.theme).toBe("dark");
     });
 
-    it('should set theme to system', () => {
-      const state = { ...initialState, theme: 'dark' as const };
-      const result = uiReducer(state, setTheme('system'));
-      expect(result.theme).toBe('system');
+    it("should set theme to system", () => {
+      const state = { ...initialState, theme: "dark" as const };
+      const result = uiReducer(state, setTheme("system"));
+      expect(result.theme).toBe("system");
+    });
+
+  });
+
+  describe("getInitialTheme", () => {
+    it("should be exported and callable", () => {
+      // getInitialTheme function should be exported
+      expect(typeof getInitialTheme).toBe("function");
+    });
+
+    it("should return a valid theme value", () => {
+      const result = getInitialTheme();
+      expect(["light", "dark", "system"]).toContain(result);
+    });
+
+    it("should default to dark when localStorage has no theme", () => {
+      // Clear any existing theme
+      localStorage.removeItem("theme");
+      // The function reads from localStorage
+      const result = getInitialTheme();
+      expect(result).toBe("dark");
     });
   });
 
-  describe('setLoading', () => {
-    it('should set loading to true', () => {
+  describe("setLoading", () => {
+    it("should set loading to true", () => {
       const result = uiReducer(initialState, setLoading(true));
       expect(result.isLoading).toBe(true);
     });
 
-    it('should set loading to false', () => {
+    it("should set loading to false", () => {
       const state = { ...initialState, isLoading: true };
       const result = uiReducer(state, setLoading(false));
       expect(result.isLoading).toBe(false);
     });
   });
 
-  describe('setActiveView', () => {
-    it('should set active view to workflows', () => {
-      const state = { ...initialState, activeView: 'sessions' as const };
-      const result = uiReducer(state, setActiveView('workflows'));
-      expect(result.activeView).toBe('workflows');
+  describe("setActiveView", () => {
+    it("should set active view to workflows", () => {
+      const state = { ...initialState, activeView: "sessions" as const };
+      const result = uiReducer(state, setActiveView("workflows"));
+      expect(result.activeView).toBe("workflows");
     });
 
-    it('should set active view to sessions', () => {
-      const result = uiReducer(initialState, setActiveView('sessions'));
-      expect(result.activeView).toBe('sessions');
+    it("should set active view to sessions", () => {
+      const result = uiReducer(initialState, setActiveView("sessions"));
+      expect(result.activeView).toBe("sessions");
     });
 
-    it('should set active view to chat', () => {
-      const result = uiReducer(initialState, setActiveView('chat'));
-      expect(result.activeView).toBe('chat');
+    it("should set active view to chat", () => {
+      const result = uiReducer(initialState, setActiveView("chat"));
+      expect(result.activeView).toBe("chat");
     });
 
-    it('should set active view to cost', () => {
-      const result = uiReducer(initialState, setActiveView('cost'));
-      expect(result.activeView).toBe('cost');
+    it("should set active view to cost", () => {
+      const result = uiReducer(initialState, setActiveView("cost"));
+      expect(result.activeView).toBe("cost");
     });
 
-    it('should set active view to observability', () => {
-      const result = uiReducer(initialState, setActiveView('observability'));
-      expect(result.activeView).toBe('observability');
+    it("should set active view to observability", () => {
+      const result = uiReducer(initialState, setActiveView("observability"));
+      expect(result.activeView).toBe("observability");
     });
   });
 
-  describe('addNotification', () => {
-    it('should add info notification', () => {
-      const notification = { type: 'info' as const, message: 'Test info' };
+  describe("addNotification", () => {
+    it("should add info notification", () => {
+      const notification = { type: "info" as const, message: "Test info" };
       const result = uiReducer(initialState, addNotification(notification));
 
       expect(result.notifications).toHaveLength(1);
-      expect(result.notifications[0].type).toBe('info');
-      expect(result.notifications[0].message).toBe('Test info');
+      expect(result.notifications[0].type).toBe("info");
+      expect(result.notifications[0].message).toBe("Test info");
       expect(result.notifications[0].id).toBe(mockUUID);
-      expect(typeof result.notifications[0].timestamp).toBe('number');
+      expect(typeof result.notifications[0].timestamp).toBe("number");
     });
 
-    it('should add success notification', () => {
-      const notification = { type: 'success' as const, message: 'Success!' };
+    it("should add success notification", () => {
+      const notification = { type: "success" as const, message: "Success!" };
       const result = uiReducer(initialState, addNotification(notification));
 
-      expect(result.notifications[0].type).toBe('success');
+      expect(result.notifications[0].type).toBe("success");
     });
 
-    it('should add warning notification', () => {
-      const notification = { type: 'warning' as const, message: 'Warning!' };
+    it("should add warning notification", () => {
+      const notification = { type: "warning" as const, message: "Warning!" };
       const result = uiReducer(initialState, addNotification(notification));
 
-      expect(result.notifications[0].type).toBe('warning');
+      expect(result.notifications[0].type).toBe("warning");
     });
 
-    it('should add error notification', () => {
-      const notification = { type: 'error' as const, message: 'Error!' };
+    it("should add error notification", () => {
+      const notification = { type: "error" as const, message: "Error!" };
       const result = uiReducer(initialState, addNotification(notification));
 
-      expect(result.notifications[0].type).toBe('error');
+      expect(result.notifications[0].type).toBe("error");
     });
 
-    it('should append to existing notifications', () => {
+    it("should append to existing notifications", () => {
       const stateWithNotification = {
         ...initialState,
         notifications: [
-          { id: 'existing', type: 'info' as const, message: 'Existing', timestamp: 1000 },
+          {
+            id: "existing",
+            type: "info" as const,
+            message: "Existing",
+            timestamp: 1000,
+          },
         ],
       };
       const result = uiReducer(
         stateWithNotification,
-        addNotification({ type: 'success', message: 'New' })
+        addNotification({ type: "success", message: "New" }),
       );
 
       expect(result.notifications).toHaveLength(2);
     });
   });
 
-  describe('removeNotification', () => {
-    it('should remove notification by id', () => {
+  describe("removeNotification", () => {
+    it("should remove notification by id", () => {
       const stateWithNotifications = {
         ...initialState,
         notifications: [
-          { id: 'a', type: 'info' as const, message: 'A', timestamp: 1000 },
-          { id: 'b', type: 'success' as const, message: 'B', timestamp: 1001 },
+          { id: "a", type: "info" as const, message: "A", timestamp: 1000 },
+          { id: "b", type: "success" as const, message: "B", timestamp: 1001 },
         ],
       };
-      const result = uiReducer(stateWithNotifications, removeNotification('a'));
+      const result = uiReducer(stateWithNotifications, removeNotification("a"));
 
       expect(result.notifications).toHaveLength(1);
-      expect(result.notifications[0].id).toBe('b');
+      expect(result.notifications[0].id).toBe("b");
     });
 
-    it('should do nothing if id not found', () => {
+    it("should do nothing if id not found", () => {
       const stateWithNotifications = {
         ...initialState,
         notifications: [
-          { id: 'a', type: 'info' as const, message: 'A', timestamp: 1000 },
+          { id: "a", type: "info" as const, message: "A", timestamp: 1000 },
         ],
       };
-      const result = uiReducer(stateWithNotifications, removeNotification('nonexistent'));
+      const result = uiReducer(
+        stateWithNotifications,
+        removeNotification("nonexistent"),
+      );
 
       expect(result.notifications).toHaveLength(1);
     });
   });
 
-  describe('clearNotifications', () => {
-    it('should clear all notifications', () => {
+  describe("clearNotifications", () => {
+    it("should clear all notifications", () => {
       const stateWithNotifications = {
         ...initialState,
         notifications: [
-          { id: 'a', type: 'info' as const, message: 'A', timestamp: 1000 },
-          { id: 'b', type: 'success' as const, message: 'B', timestamp: 1001 },
-          { id: 'c', type: 'error' as const, message: 'C', timestamp: 1002 },
+          { id: "a", type: "info" as const, message: "A", timestamp: 1000 },
+          { id: "b", type: "success" as const, message: "B", timestamp: 1001 },
+          { id: "c", type: "error" as const, message: "C", timestamp: 1002 },
         ],
       };
       const result = uiReducer(stateWithNotifications, clearNotifications());
@@ -227,7 +261,7 @@ describe('uiSlice', () => {
       expect(result.notifications).toHaveLength(0);
     });
 
-    it('should work on empty notifications', () => {
+    it("should work on empty notifications", () => {
       const result = uiReducer(initialState, clearNotifications());
       expect(result.notifications).toHaveLength(0);
     });

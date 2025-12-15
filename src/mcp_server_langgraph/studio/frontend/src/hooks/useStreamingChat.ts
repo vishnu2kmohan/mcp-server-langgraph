@@ -1,11 +1,24 @@
 /**
  * useStreamingChat Hook
  *
- * React hook for handling streaming chat responses using Server-Sent Events (SSE).
- * Manages EventSource connection, message accumulation, and error handling.
+ * React hook for handling streaming chat responses using fetch + ReadableStream.
+ * Uses POST requests with JSON body to support the backend's streaming endpoint.
+ *
+ * Note: We use fetch with ReadableStream instead of EventSource because:
+ * - EventSource only supports GET requests
+ * - Our backend expects POST /api/v1/chat/completions/stream with a JSON body
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from "react";
+
+/**
+ * Token usage information from streaming response
+ */
+export interface StreamingUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
 
 /**
  * State for streaming chat
@@ -14,19 +27,21 @@ interface StreamingChatState {
   isStreaming: boolean;
   streamingContent: string;
   error: string | null;
+  usage: StreamingUsage | null;
+  model: string | null;
 }
 
 /**
  * Return type for useStreamingChat hook
  */
-interface UseStreamingChatReturn extends StreamingChatState {
+export interface UseStreamingChatReturn extends StreamingChatState {
   startStream: (sessionId: string, message: string) => void;
   stopStream: () => void;
   clearContent: () => void;
 }
 
 /**
- * Hook for managing streaming chat with SSE
+ * Hook for managing streaming chat with fetch + ReadableStream
  *
  * @returns Streaming chat state and control functions
  *
@@ -49,74 +64,209 @@ interface UseStreamingChatReturn extends StreamingChatState {
 export function useStreamingChat(): UseStreamingChatReturn {
   const [state, setState] = useState<StreamingChatState>({
     isStreaming: false,
-    streamingContent: '',
+    streamingContent: "",
     error: null,
+    usage: null,
+    model: null,
   });
 
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  /**
+   * Parse SSE data line and extract content
+   */
+  const parseSSELine = useCallback(
+    (
+      line: string,
+    ): {
+      content?: string;
+      usage?: StreamingUsage;
+      model?: string;
+      done?: boolean;
+    } | null => {
+      // Check for done signal
+      if (line === "data: [DONE]") {
+        return { done: true };
+      }
+
+      // Parse data lines
+      if (line.startsWith("data: ")) {
+        const jsonStr = line.slice(6); // Remove "data: " prefix
+        try {
+          const data = JSON.parse(jsonStr);
+
+          const result: {
+            content?: string;
+            usage?: StreamingUsage;
+            model?: string;
+          } = {};
+
+          // Handle content - support both direct content and delta.content formats
+          if (data.content) {
+            result.content = data.content;
+          } else if (data.delta?.content) {
+            result.content = data.delta.content;
+          }
+
+          // Handle usage
+          if (data.usage) {
+            result.usage = {
+              promptTokens: data.usage.prompt_tokens,
+              completionTokens: data.usage.completion_tokens,
+              totalTokens: data.usage.total_tokens,
+            };
+          }
+
+          // Handle model
+          if (data.model) {
+            result.model = data.model;
+          }
+
+          return result;
+        } catch {
+          // Ignore non-JSON data lines
+          return null;
+        }
+      }
+
+      return null;
+    },
+    [],
+  );
 
   /**
    * Start streaming chat response
    */
-  const startStream = useCallback((sessionId: string, message: string) => {
-    // Close any existing connection
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-    }
-
-    // Reset state
-    setState({
-      isStreaming: true,
-      streamingContent: '',
-      error: null,
-    });
-
-    // Create EventSource for SSE
-    const url = `/api/v1/chat/completions/stream?session_id=${sessionId}&message=${encodeURIComponent(message)}`;
-    const eventSource = new EventSource(url);
-    eventSourceRef.current = eventSource;
-
-    // Handle incoming messages
-    eventSource.onmessage = (event: MessageEvent) => {
-      // Check for completion signal
-      if (event.data === '[DONE]') {
-        eventSource.close();
-        setState((prev) => ({ ...prev, isStreaming: false }));
-        return;
+  const startStream = useCallback(
+    (sessionId: string, message: string) => {
+      // Abort any existing stream
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
 
-      // Parse and accumulate content
-      try {
-        const data = JSON.parse(event.data);
-        if (data.content) {
+      // Create new abort controller
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+
+      // Reset state
+      setState({
+        isStreaming: true,
+        streamingContent: "",
+        error: null,
+        usage: null,
+        model: null,
+      });
+
+      // Build request body matching ChatCompletionRequest
+      const requestBody = {
+        session_id: sessionId,
+        messages: [{ role: "user", content: message }],
+      };
+
+      // Start the fetch + stream processing
+      const processStream = async () => {
+        try {
+          // Get JWT token from localStorage (hybrid auth: JWT primary, cookies fallback)
+          const token = localStorage.getItem("auth_token");
+
+          const response = await fetch("/api/v1/chat/completions/stream", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: JSON.stringify(requestBody),
+            signal: abortController.signal,
+            // Include credentials (cookies) for forward-auth (Keycloak SSO)
+            credentials: "include",
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const reader = response.body?.getReader();
+          if (!reader) {
+            throw new Error("No response body");
+          }
+
+          const decoder = new TextDecoder();
+          let buffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              setState((prev) => ({ ...prev, isStreaming: false }));
+              break;
+            }
+
+            // Decode chunk and add to buffer
+            buffer += decoder.decode(value, { stream: true });
+
+            // Process complete lines
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+            for (const line of lines) {
+              const trimmedLine = line.trim();
+              if (!trimmedLine) continue;
+
+              const parsed = parseSSELine(trimmedLine);
+              if (!parsed) continue;
+
+              if (parsed.done) {
+                setState((prev) => ({ ...prev, isStreaming: false }));
+                return;
+              }
+
+              setState((prev) => {
+                const updates: Partial<StreamingChatState> = {};
+
+                if (parsed.content) {
+                  updates.streamingContent =
+                    prev.streamingContent + parsed.content;
+                }
+
+                if (parsed.usage) {
+                  updates.usage = parsed.usage;
+                }
+
+                if (parsed.model) {
+                  updates.model = parsed.model;
+                }
+
+                return { ...prev, ...updates };
+              });
+            }
+          }
+        } catch (error) {
+          // Ignore abort errors
+          if (error instanceof Error && error.name === "AbortError") {
+            return;
+          }
+
           setState((prev) => ({
             ...prev,
-            streamingContent: prev.streamingContent + data.content,
+            isStreaming: false,
+            error: `Stream connection failed: ${error instanceof Error ? error.message : String(error)}`,
           }));
         }
-      } catch {
-        // Ignore non-JSON messages
-      }
-    };
+      };
 
-    // Handle errors
-    eventSource.onerror = () => {
-      eventSource.close();
-      setState((prev) => ({
-        ...prev,
-        isStreaming: false,
-        error: 'Stream connection failed',
-      }));
-    };
-  }, []);
+      // Start processing (don't await - let it run async)
+      processStream();
+    },
+    [parseSSELine],
+  );
 
   /**
    * Stop streaming
    */
   const stopStream = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
     setState((prev) => ({ ...prev, isStreaming: false }));
   }, []);
@@ -127,8 +277,10 @@ export function useStreamingChat(): UseStreamingChatReturn {
   const clearContent = useCallback(() => {
     setState((prev) => ({
       ...prev,
-      streamingContent: '',
+      streamingContent: "",
       error: null,
+      usage: null,
+      model: null,
     }));
   }, []);
 
@@ -137,8 +289,8 @@ export function useStreamingChat(): UseStreamingChatReturn {
    */
   useEffect(() => {
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
   }, []);

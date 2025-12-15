@@ -8,12 +8,12 @@
  * User persona determines default dashboard and available features.
  * Derived from JWT claims and role membership.
  */
-export type Persona = 'admin' | 'developer' | 'user';
+export type Persona = "admin" | "developer" | "user";
 
 /**
  * Organization role within a specific organization.
  */
-export type OrganizationRole = 'admin' | 'member' | 'viewer';
+export type OrganizationRole = "admin" | "member" | "viewer";
 
 /**
  * User representation from authentication provider.
@@ -46,7 +46,7 @@ export interface Organization {
   /** User's role within this organization */
   role: OrganizationRole;
   /** Organization tier for feature gating */
-  tier: 'shared' | 'hybrid' | 'dedicated';
+  tier: "shared" | "hybrid" | "dedicated";
 }
 
 /**

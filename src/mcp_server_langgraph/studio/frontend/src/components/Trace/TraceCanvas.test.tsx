@@ -10,18 +10,18 @@
  * - Connect/Disconnect buttons
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { TraceCanvas } from './TraceCanvas';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import { ReactFlowProvider } from 'reactflow';
-import * as useTraceWebSocketModule from '../../hooks/useTraceWebSocket';
-import * as useTraceToReactFlowModule from '../../hooks/useTraceToReactFlow';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { TraceCanvas } from "./TraceCanvas";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import { ReactFlowProvider } from "reactflow";
+import * as useTraceWebSocketModule from "../../hooks/useTraceWebSocket";
+import * as useTraceToReactFlowModule from "../../hooks/useTraceToReactFlow";
 
 // Mock the hooks
-vi.mock('../../hooks/useTraceWebSocket');
-vi.mock('../../hooks/useTraceToReactFlow');
+vi.mock("../../hooks/useTraceWebSocket");
+vi.mock("../../hooks/useTraceToReactFlow");
 
 // Mock ResizeObserver
 class ResizeObserverMock {
@@ -45,15 +45,19 @@ const renderWithProviders = (component: React.ReactNode) => {
   return render(
     <Provider store={store}>
       <ReactFlowProvider>{component}</ReactFlowProvider>
-    </Provider>
+    </Provider>,
   );
 };
 
 // Type-safe mock references
-const mockUseTraceWebSocket = vi.mocked(useTraceWebSocketModule.useTraceWebSocket);
-const mockUseTraceToReactFlow = vi.mocked(useTraceToReactFlowModule.useTraceToReactFlow);
+const mockUseTraceWebSocket = vi.mocked(
+  useTraceWebSocketModule.useTraceWebSocket,
+);
+const mockUseTraceToReactFlow = vi.mocked(
+  useTraceToReactFlowModule.useTraceToReactFlow,
+);
 
-describe('TraceCanvas', () => {
+describe("TraceCanvas", () => {
   beforeEach(() => {
     // Set default mock return values
     mockUseTraceWebSocket.mockReturnValue({
@@ -74,8 +78,8 @@ describe('TraceCanvas', () => {
     vi.clearAllMocks();
   });
 
-  describe('Empty State', () => {
-    it('should show empty state message when disconnected with no spans', () => {
+  describe("Empty State", () => {
+    it("should show empty state message when disconnected with no spans", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -87,10 +91,10 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      expect(screen.getByText('Not connected')).toBeInTheDocument();
+      expect(screen.getByText("Not connected")).toBeInTheDocument();
     });
 
-    it('should show waiting message when connected with no spans', () => {
+    it("should show waiting message when connected with no spans", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -102,12 +106,12 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      expect(screen.getByText('Waiting for traces...')).toBeInTheDocument();
+      expect(screen.getByText("Waiting for traces...")).toBeInTheDocument();
     });
   });
 
-  describe('Connection Status', () => {
-    it('should show disconnected indicator when not connected', () => {
+  describe("Connection Status", () => {
+    it("should show disconnected indicator when not connected", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -119,10 +123,10 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      expect(screen.getByText('Disconnected')).toBeInTheDocument();
+      expect(screen.getByText("Disconnected")).toBeInTheDocument();
     });
 
-    it('should show connected indicator when connected', () => {
+    it("should show connected indicator when connected", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -134,10 +138,10 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      expect(screen.getByText('Connected')).toBeInTheDocument();
+      expect(screen.getByText("Connected")).toBeInTheDocument();
     });
 
-    it('should have green status dot when connected', () => {
+    it("should have green status dot when connected", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -149,11 +153,11 @@ describe('TraceCanvas', () => {
 
       const { container } = renderWithProviders(<TraceCanvas />);
 
-      const greenDot = container.querySelector('.bg-green-500');
+      const greenDot = container.querySelector(".bg-green-500");
       expect(greenDot).toBeInTheDocument();
     });
 
-    it('should have gray status dot when disconnected', () => {
+    it("should have gray status dot when disconnected", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -165,13 +169,13 @@ describe('TraceCanvas', () => {
 
       const { container } = renderWithProviders(<TraceCanvas />);
 
-      const grayDot = container.querySelector('.bg-gray-400');
+      const grayDot = container.querySelector(".bg-gray-400");
       expect(grayDot).toBeInTheDocument();
     });
   });
 
-  describe('Connect Button', () => {
-    it('should show Connect button when disconnected', () => {
+  describe("Connect Button", () => {
+    it("should show Connect button when disconnected", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -183,10 +187,10 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      expect(screen.getByText('Connect')).toBeInTheDocument();
+      expect(screen.getByText("Connect")).toBeInTheDocument();
     });
 
-    it('should call connect when Connect button is clicked', () => {
+    it("should call connect when Connect button is clicked", () => {
       const mockConnect = vi.fn();
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
@@ -199,11 +203,11 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      fireEvent.click(screen.getByText('Connect'));
+      fireEvent.click(screen.getByText("Connect"));
       expect(mockConnect).toHaveBeenCalled();
     });
 
-    it('should show Disconnect button when connected', () => {
+    it("should show Disconnect button when connected", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -215,10 +219,10 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      expect(screen.getByText('Disconnect')).toBeInTheDocument();
+      expect(screen.getByText("Disconnect")).toBeInTheDocument();
     });
 
-    it('should call disconnect when Disconnect button is clicked', () => {
+    it("should call disconnect when Disconnect button is clicked", () => {
       const mockDisconnect = vi.fn();
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
@@ -231,13 +235,13 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      fireEvent.click(screen.getByText('Disconnect'));
+      fireEvent.click(screen.getByText("Disconnect"));
       expect(mockDisconnect).toHaveBeenCalled();
     });
   });
 
-  describe('Clear Button', () => {
-    it('should always show Clear button', () => {
+  describe("Clear Button", () => {
+    it("should always show Clear button", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -249,10 +253,10 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      expect(screen.getByText('Clear')).toBeInTheDocument();
+      expect(screen.getByText("Clear")).toBeInTheDocument();
     });
 
-    it('should call clearTraces when Clear button is clicked', () => {
+    it("should call clearTraces when Clear button is clicked", () => {
       const mockClearTraces = vi.fn();
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
@@ -265,16 +269,30 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      fireEvent.click(screen.getByText('Clear'));
+      fireEvent.click(screen.getByText("Clear"));
       expect(mockClearTraces).toHaveBeenCalled();
     });
   });
 
-  describe('Span and Event Count', () => {
-    it('should display span count', () => {
+  describe("Span and Event Count", () => {
+    it("should display span count", () => {
       const mockSpans = [
-        { spanId: '1', traceId: 't1', name: 'Span 1', startTime: '', status: 'OK' as const, attributes: {} },
-        { spanId: '2', traceId: 't1', name: 'Span 2', startTime: '', status: 'OK' as const, attributes: {} },
+        {
+          spanId: "1",
+          traceId: "t1",
+          name: "Span 1",
+          startTime: "",
+          status: "OK" as const,
+          attributes: {},
+        },
+        {
+          spanId: "2",
+          traceId: "t1",
+          name: "Span 2",
+          startTime: "",
+          status: "OK" as const,
+          attributes: {},
+        },
       ];
       mockUseTraceWebSocket.mockReturnValue({
         spans: mockSpans,
@@ -287,14 +305,14 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      expect(screen.getByText('2 spans | 0 events')).toBeInTheDocument();
+      expect(screen.getByText("2 spans | 0 events")).toBeInTheDocument();
     });
 
-    it('should display event count', () => {
+    it("should display event count", () => {
       const mockEvents = [
-        { spanId: '1', name: 'Event 1', timestamp: '', attributes: {} },
-        { spanId: '1', name: 'Event 2', timestamp: '', attributes: {} },
-        { spanId: '1', name: 'Event 3', timestamp: '', attributes: {} },
+        { spanId: "1", name: "Event 1", timestamp: "", attributes: {} },
+        { spanId: "1", name: "Event 2", timestamp: "", attributes: {} },
+        { spanId: "1", name: "Event 3", timestamp: "", attributes: {} },
       ];
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
@@ -307,12 +325,12 @@ describe('TraceCanvas', () => {
 
       renderWithProviders(<TraceCanvas />);
 
-      expect(screen.getByText('0 spans | 3 events')).toBeInTheDocument();
+      expect(screen.getByText("0 spans | 3 events")).toBeInTheDocument();
     });
   });
 
-  describe('Props', () => {
-    it('should pass sessionId to useTraceWebSocket', () => {
+  describe("Props", () => {
+    it("should pass sessionId to useTraceWebSocket", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -325,11 +343,11 @@ describe('TraceCanvas', () => {
       renderWithProviders(<TraceCanvas sessionId="test-session-123" />);
 
       expect(mockUseTraceWebSocket).toHaveBeenCalledWith(
-        expect.objectContaining({ sessionId: 'test-session-123' })
+        expect.objectContaining({ sessionId: "test-session-123" }),
       );
     });
 
-    it('should pass autoConnect to useTraceWebSocket', () => {
+    it("should pass autoConnect to useTraceWebSocket", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -342,11 +360,11 @@ describe('TraceCanvas', () => {
       renderWithProviders(<TraceCanvas autoConnect={true} />);
 
       expect(mockUseTraceWebSocket).toHaveBeenCalledWith(
-        expect.objectContaining({ autoConnect: true })
+        expect.objectContaining({ autoConnect: true }),
       );
     });
 
-    it('should apply custom className', () => {
+    it("should apply custom className", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -357,18 +375,25 @@ describe('TraceCanvas', () => {
       });
 
       const { container } = renderWithProviders(
-        <TraceCanvas className="custom-class" />
+        <TraceCanvas className="custom-class" />,
       );
 
-      const canvasDiv = container.querySelector('.custom-class');
+      const canvasDiv = container.querySelector(".custom-class");
       expect(canvasDiv).toBeInTheDocument();
     });
   });
 
-  describe('React Flow Integration', () => {
-    it('should pass nodes to useTraceToReactFlow', () => {
+  describe("React Flow Integration", () => {
+    it("should pass nodes to useTraceToReactFlow", () => {
       const mockSpans = [
-        { spanId: '1', traceId: 't1', name: 'Span 1', startTime: '', status: 'OK' as const, attributes: {} },
+        {
+          spanId: "1",
+          traceId: "t1",
+          name: "Span 1",
+          startTime: "",
+          status: "OK" as const,
+          attributes: {},
+        },
       ];
       mockUseTraceWebSocket.mockReturnValue({
         spans: mockSpans,
@@ -386,11 +411,11 @@ describe('TraceCanvas', () => {
       renderWithProviders(<TraceCanvas />);
 
       expect(mockUseTraceToReactFlow).toHaveBeenCalledWith(
-        expect.objectContaining({ spans: mockSpans })
+        expect.objectContaining({ spans: mockSpans }),
       );
     });
 
-    it('should use horizontal layout by default', () => {
+    it("should use horizontal layout by default", () => {
       mockUseTraceWebSocket.mockReturnValue({
         spans: [],
         events: [],
@@ -407,7 +432,7 @@ describe('TraceCanvas', () => {
       renderWithProviders(<TraceCanvas />);
 
       expect(mockUseTraceToReactFlow).toHaveBeenCalledWith(
-        expect.objectContaining({ layout: 'horizontal' })
+        expect.objectContaining({ layout: "horizontal" }),
       );
     });
   });

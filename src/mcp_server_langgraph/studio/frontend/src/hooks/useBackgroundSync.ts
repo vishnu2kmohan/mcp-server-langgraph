@@ -279,10 +279,18 @@ export function useBackgroundSync(
   const executeRequest = useCallback(
     async (request: QueuedRequest): Promise<boolean> => {
       try {
+        // Merge auth headers with request headers
+        const token = localStorage.getItem("auth_token");
+        const headers: Record<string, string> = {
+          ...request.headers,
+          ...(token && { Authorization: `Bearer ${token}` }),
+        };
+
         const response = await fetch(request.url, {
           method: request.method,
-          headers: request.headers,
+          headers,
           body: request.body,
+          credentials: "include",
         });
 
         return response.ok;

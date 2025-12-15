@@ -7,6 +7,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Mock PWA virtual modules for testing
+      'virtual:pwa-register/react': path.resolve(__dirname, './src/mocks/pwa-register-react.ts'),
+      'virtual:pwa-register': path.resolve(__dirname, './src/mocks/pwa-register.ts'),
     },
   },
   test: {
@@ -28,6 +31,7 @@ export default defineConfig({
         'src/**/*.test.{ts,tsx}',
         'src/**/*.spec.{ts,tsx}',
         'src/test/**',
+        'src/mocks/**',
         'src/main.tsx',
         'src/vite-env.d.ts',
         'src/types/**',

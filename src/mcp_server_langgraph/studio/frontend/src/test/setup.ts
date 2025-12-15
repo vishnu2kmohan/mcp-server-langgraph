@@ -4,12 +4,44 @@
  * This file runs before each test file and sets up:
  * - Testing library matchers
  * - Browser API mocks
+ * - MSW server for realistic API mocking
  * - Global test utilities
  */
 
-import '@testing-library/jest-dom/vitest';
-import { afterEach, beforeAll, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import "@testing-library/jest-dom/vitest";
+import { afterAll, afterEach, beforeAll, vi } from "vitest";
+import { cleanup } from "@testing-library/react";
+import { server } from "../mocks/server";
+
+// =============================================================================
+// MSW Server Setup
+// =============================================================================
+// NOTE: There are known AbortSignal compatibility warnings in stderr when using
+// MSW v2 with Node.js native fetch and RTK Query. This is a type mismatch
+// between jsdom's AbortSignal and Node.js's internal undici validation.
+// See: https://github.com/mswjs/msw/issues/1644
+//
+// These warnings do NOT affect test functionality - tests pass correctly.
+// The warnings occur in MSW's interceptor before any fetch wrapper can help.
+
+// Start MSW server before all tests
+beforeAll(() => {
+  server.listen({
+    // Warn about unhandled requests instead of erroring
+    // This allows tests that mock their own endpoints to work
+    onUnhandledRequest: "warn",
+  });
+});
+
+// Reset handlers after each test to ensure test isolation
+afterEach(() => {
+  server.resetHandlers();
+});
+
+// Close server after all tests
+afterAll(() => {
+  server.close();
+});
 
 // Cleanup after each test
 afterEach(() => {
@@ -27,7 +59,7 @@ beforeAll(() => {
 
 // Mock window.matchMedia
 beforeAll(() => {
-  Object.defineProperty(window, 'matchMedia', {
+  Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => ({
       matches: false,
@@ -52,7 +84,7 @@ beforeAll(() => {
     removeItem: vi.fn(),
     setItem: vi.fn(),
   };
-  Object.defineProperty(window, 'localStorage', {
+  Object.defineProperty(window, "localStorage", {
     value: localStorageMock,
   });
 });
@@ -67,14 +99,9 @@ beforeAll(() => {
     removeItem: vi.fn(),
     setItem: vi.fn(),
   };
-  Object.defineProperty(window, 'sessionStorage', {
+  Object.defineProperty(window, "sessionStorage", {
     value: sessionStorageMock,
   });
-});
-
-// Mock fetch
-beforeAll(() => {
-  global.fetch = vi.fn();
 });
 
 // Mock scrollTo
@@ -89,7 +116,7 @@ beforeAll(() => {
     unobserve: vi.fn(),
     disconnect: vi.fn(),
     root: null,
-    rootMargin: '',
+    rootMargin: "",
     thresholds: [],
     takeRecords: vi.fn(() => []),
   }));

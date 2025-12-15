@@ -3,86 +3,45 @@
  *
  * Cost tracking dashboard page showing LLM usage costs
  * with summary metrics and breakdown by model.
+ * Uses RTK Query for data fetching with automatic caching.
  */
 
-import { useEffect, useState } from 'react';
-import { DollarSign, Loader2, TrendingUp, RefreshCw } from 'lucide-react';
+import { useState } from "react";
+import { DollarSign, TrendingUp } from "lucide-react";
+import { Skeleton, SkeletonCard, ErrorState } from "../components/UI";
+import {
+  useGetCostSummaryQuery,
+  useGetCostByModelQuery,
+  useGetCostHistoryQuery,
+} from "../api";
 
-type Period = 'day' | 'week' | 'month';
-
-interface CostSummary {
-  total_cost: number;
-  total_tokens: number;
-  period: string;
-}
-
-interface ModelCost {
-  model: string;
-  cost: number;
-  tokens: number;
-}
-
-interface CostByModel {
-  models: ModelCost[];
-}
+type Period = "day" | "week" | "month";
 
 export function CostPage() {
-  const [period, setPeriod] = useState<Period>('week');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<CostSummary | null>(null);
-  const [modelCosts, setModelCosts] = useState<ModelCost[]>([]);
+  const [period, setPeriod] = useState<Period>("week");
 
-  const fetchCostData = async () => {
-    setIsLoading(true);
-    setError(null);
+  // RTK Query hooks for cost data
+  const {
+    data: summary,
+    isLoading: summaryLoading,
+    isError: summaryError,
+    error: summaryErrorData,
+    refetch: refetchSummary,
+  } = useGetCostSummaryQuery({ period });
 
-    try {
-      // Fetch cost summary
-      const summaryResponse = await fetch(
-        `/api/v1/cost/summary?period=${period}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+  const {
+    data: modelCosts,
+    isLoading: modelLoading,
+    refetch: refetchModel,
+  } = useGetCostByModelQuery({ period });
 
-      if (!summaryResponse.ok) {
-        throw new Error('Failed to load cost summary');
-      }
+  const {
+    data: historyData,
+    isLoading: historyLoading,
+    refetch: refetchHistory,
+  } = useGetCostHistoryQuery({ period });
 
-      const summaryData: CostSummary = await summaryResponse.json();
-      setSummary(summaryData);
-
-      // Fetch cost by model
-      const modelResponse = await fetch(
-        `/api/v1/cost/by-model?period=${period}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!modelResponse.ok) {
-        throw new Error('Failed to load cost by model');
-      }
-
-      const modelData: CostByModel = await modelResponse.json();
-      setModelCosts(modelData.models || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load cost data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCostData();
-  }, [period]);
+  const isLoading = summaryLoading || modelLoading || historyLoading;
 
   const formatCurrency = (amount: number): string => {
     return `$${amount.toFixed(2)}`;
@@ -92,13 +51,26 @@ export function CostPage() {
     return num.toLocaleString();
   };
 
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
   const handlePeriodChange = (newPeriod: Period) => {
     setPeriod(newPeriod);
   };
 
   const handleRetry = () => {
-    fetchCostData();
+    refetchSummary();
+    refetchModel();
+    refetchHistory();
   };
+
+  // Model costs is already an array from backend
+  const modelCostsArray = modelCosts ?? [];
+
+  // History data is already an array from backend
+  const historyItems = historyData ?? [];
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -131,20 +103,32 @@ export function CostPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <div className="space-y-6">
+            {/* Skeleton for Cost Summary Cards */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+            {/* Skeleton for Model Breakdown */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <Skeleton className="h-6 w-1/4 mb-4" />
+              <div className="space-y-3">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-3/4" />
+              </div>
+            </div>
           </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-            <p className="text-lg mb-4">{error}</p>
-            <button
-              onClick={handleRetry}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <RefreshCw size={16} />
-              Retry
-            </button>
-          </div>
+        ) : summaryError ? (
+          <ErrorState
+            title="Failed to load cost data"
+            message={
+              (summaryErrorData as { message?: string })?.message ||
+              "Unable to fetch cost information. Please try again."
+            }
+            onRetry={handleRetry}
+          />
         ) : (
           <div className="space-y-6">
             {/* Cost Summary Cards */}
@@ -164,7 +148,7 @@ export function CostPage() {
                     </span>
                   </div>
                   <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    Past {summary.period}
+                    Past {period}
                   </div>
                 </div>
 
@@ -178,11 +162,11 @@ export function CostPage() {
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                      {formatNumber(summary.total_tokens)}
+                      {formatNumber(summary.total_tokens ?? 0)}
                     </span>
                   </div>
                   <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    Past {summary.period}
+                    Past {period}
                   </div>
                 </div>
 
@@ -196,12 +180,18 @@ export function CostPage() {
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                      {formatCurrency(summary.total_cost / summary.total_tokens * 1000)}
+                      {summary.total_tokens && summary.total_tokens > 0
+                        ? formatCurrency(
+                            (summary.total_cost / summary.total_tokens) * 1000,
+                          )
+                        : "$0.00"}
                     </span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">/1K</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      /1K
+                    </span>
                   </div>
                   <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    Past {summary.period}
+                    Past {period}
                   </div>
                 </div>
               </div>
@@ -225,16 +215,19 @@ export function CostPage() {
                         Cost
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Tokens
+                        Requests
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Avg Cost/1K
+                        Avg Cost/Req
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {modelCosts.map((modelCost) => (
-                      <tr key={modelCost.model} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    {modelCostsArray.map((modelCost) => (
+                      <tr
+                        key={modelCost.model}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                           {modelCost.model}
                         </td>
@@ -242,15 +235,75 @@ export function CostPage() {
                           {formatCurrency(modelCost.cost)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
-                          {formatNumber(modelCost.tokens)}
+                          {formatNumber(modelCost.requests)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
-                          {formatCurrency(modelCost.cost / modelCost.tokens * 1000)}
+                          {modelCost.requests > 0
+                            ? formatCurrency(
+                                modelCost.cost / modelCost.requests,
+                              )
+                            : "$0.00"}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            {/* Cost History Chart */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Cost Trend
+                </h2>
+              </div>
+              <div className="p-6">
+                {historyItems.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    No cost data for this period
+                  </div>
+                ) : (
+                  <div data-testid="cost-history-chart" className="space-y-4">
+                    {/* Simple bar chart implementation */}
+                    <div className="h-48 flex items-end gap-2">
+                      {historyItems.map((point, index) => {
+                        const maxCost = Math.max(
+                          ...historyItems.map((p) => p.cost),
+                        );
+                        const heightPercent =
+                          maxCost > 0 ? (point.cost / maxCost) * 100 : 0;
+                        return (
+                          <div
+                            key={index}
+                            className="flex-1 flex flex-col items-center gap-1"
+                          >
+                            <div
+                              data-cost-bar
+                              className="w-full bg-blue-500 rounded-t transition-all hover:bg-blue-600"
+                              style={{
+                                height: `${heightPercent}%`,
+                                minHeight: "4px",
+                              }}
+                              title={`${formatDate(point.date)}: ${formatCurrency(point.cost)}`}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Date labels */}
+                    <div className="flex gap-2">
+                      {historyItems.map((point, index) => (
+                        <div
+                          key={index}
+                          className="flex-1 text-center text-xs text-gray-500 dark:text-gray-400"
+                        >
+                          {formatDate(point.date)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

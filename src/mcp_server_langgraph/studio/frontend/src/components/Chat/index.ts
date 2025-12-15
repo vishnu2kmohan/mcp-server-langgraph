@@ -4,8 +4,8 @@
  * Components for the chat interface integrated from Playground.
  */
 
-export { ChatMessage } from './ChatMessage';
-export type { ChatMessageProps } from './ChatMessage';
+export { ChatMessage } from "./ChatMessage";
+export type { ChatMessageProps, SourceCitation } from "./ChatMessage";
 
-export { ChatInput } from './ChatInput';
-export type { ChatInputProps } from './ChatInput';
+export { ChatInput } from "./ChatInput";
+export type { ChatInputProps } from "./ChatInput";

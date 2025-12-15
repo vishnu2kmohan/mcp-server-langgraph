@@ -5,8 +5,21 @@
  * resources, prompts, and server connections.
  */
 
-import { useState } from 'react';
-import { useMCPStore } from '../stores/mcpStore';
+import { useState } from "react";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import {
+  addServer,
+  removeServer,
+  clearMCPError,
+  selectServerList,
+  selectPrimaryServerId,
+  selectIsConnecting,
+  selectMCPError,
+  selectAllTools,
+  selectAllResources,
+  selectAllPrompts,
+  selectIsConnected,
+} from "../store/slices/mcpSlice";
 import {
   Wrench,
   FileText,
@@ -19,35 +32,32 @@ import {
   Check,
   X,
   Plus,
-} from 'lucide-react';
-import type { MCPTool, MCPResource, MCPPrompt, ServerEntry } from '../types/mcp';
+  AlertCircle,
+} from "lucide-react";
+import type {
+  MCPTool,
+  MCPResource,
+  MCPPrompt,
+  ServerEntry,
+} from "../types/mcp";
 
-type MCPTab = 'tools' | 'resources' | 'prompts' | 'servers';
+type MCPTab = "tools" | "resources" | "prompts" | "servers";
 
 export function MCPPage() {
-  const [activeTab, setActiveTab] = useState<MCPTab>('tools');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<MCPTab>("tools");
+  const [searchQuery, setSearchQuery] = useState("");
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [newServerUrl, setNewServerUrl] = useState('');
+  const [newServerUrl, setNewServerUrl] = useState("");
 
-  const {
-    servers,
-    primaryServerId,
-    isConnecting,
-    error,
-    addServer,
-    removeServer,
-    getAllTools,
-    getAllResources,
-    getAllPrompts,
-  } = useMCPStore();
-
-  const tools = getAllTools();
-  const resources = getAllResources();
-  const prompts = getAllPrompts();
-  const serverList = Array.from(servers.values());
-
-  const isConnected = serverList.some((s) => s.status === 'connected');
+  const dispatch = useAppDispatch();
+  const serverList = useAppSelector(selectServerList);
+  const primaryServerId = useAppSelector(selectPrimaryServerId);
+  const isConnecting = useAppSelector(selectIsConnecting);
+  const error = useAppSelector(selectMCPError);
+  const tools = useAppSelector(selectAllTools);
+  const resources = useAppSelector(selectAllResources);
+  const prompts = useAppSelector(selectAllPrompts);
+  const isConnected = useAppSelector(selectIsConnected);
 
   const toggleExpanded = (id: string) => {
     const next = new Set(expandedItems);
@@ -62,33 +72,48 @@ export function MCPPage() {
   const handleAddServer = async () => {
     if (!newServerUrl.trim()) return;
     const id = `server-${Date.now()}`;
-    await addServer(id, newServerUrl.trim());
-    setNewServerUrl('');
+    await dispatch(addServer({ id, url: newServerUrl.trim() }));
+    setNewServerUrl("");
   };
 
   const tabs = [
-    { id: 'tools' as const, label: 'Tools', icon: Wrench, count: tools.length },
-    { id: 'resources' as const, label: 'Resources', icon: FileText, count: resources.length },
-    { id: 'prompts' as const, label: 'Prompts', icon: MessageSquare, count: prompts.length },
-    { id: 'servers' as const, label: 'Servers', icon: Server, count: serverList.length },
+    { id: "tools" as const, label: "Tools", icon: Wrench, count: tools.length },
+    {
+      id: "resources" as const,
+      label: "Resources",
+      icon: FileText,
+      count: resources.length,
+    },
+    {
+      id: "prompts" as const,
+      label: "Prompts",
+      icon: MessageSquare,
+      count: prompts.length,
+    },
+    {
+      id: "servers" as const,
+      label: "Servers",
+      icon: Server,
+      count: serverList.length,
+    },
   ];
 
   const filteredTools = tools.filter(
     (t: MCPTool) =>
       t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      t.description?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const filteredResources = resources.filter(
     (r: MCPResource) =>
       r.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.uri?.toLowerCase().includes(searchQuery.toLowerCase())
+      r.uri?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const filteredPrompts = prompts.filter(
     (p: MCPPrompt) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      p.description?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -108,11 +133,11 @@ export function MCPPage() {
             <div className="flex items-center gap-2">
               <div
                 className={`w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-green-500' : 'bg-red-500'
+                  isConnected ? "bg-green-500" : "bg-red-500"
                 }`}
               />
               <span className="text-sm text-gray-600 dark:text-gray-300">
-                {isConnected ? 'Connected' : 'Disconnected'}
+                {isConnected ? "Connected" : "Disconnected"}
               </span>
             </div>
           </div>
@@ -128,8 +153,8 @@ export function MCPPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
               }`}
             >
               <tab.icon size={16} />
@@ -137,8 +162,8 @@ export function MCPPage() {
               <span
                 className={`px-2 py-0.5 text-xs rounded-full ${
                   activeTab === tab.id
-                    ? 'bg-blue-200 dark:bg-blue-800'
-                    : 'bg-gray-200 dark:bg-gray-600'
+                    ? "bg-blue-200 dark:bg-blue-800"
+                    : "bg-gray-200 dark:bg-gray-600"
                 }`}
               >
                 {tab.count}
@@ -149,7 +174,7 @@ export function MCPPage() {
       </div>
 
       {/* Search */}
-      {activeTab !== 'servers' && (
+      {activeTab !== "servers" && (
         <div className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="relative">
             <Search
@@ -169,8 +194,23 @@ export function MCPPage() {
 
       {/* Error */}
       {error && (
-        <div className="px-6 py-3 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
-          <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+        <div
+          role="alert"
+          className="px-6 py-3 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={16} className="text-red-500" />
+              <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+            </div>
+            <button
+              onClick={() => dispatch(clearMCPError())}
+              className="p-1 text-red-500 hover:text-red-700 dark:hover:text-red-300"
+              aria-label="Dismiss"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -183,10 +223,12 @@ export function MCPPage() {
         ) : (
           <div className="space-y-4">
             {/* Tools Tab */}
-            {activeTab === 'tools' && (
+            {activeTab === "tools" && (
               <>
                 {filteredTools.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400">No tools found</p>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No tools found
+                  </p>
                 ) : (
                   filteredTools.map((tool: MCPTool) => (
                     <div
@@ -231,38 +273,44 @@ export function MCPPage() {
             )}
 
             {/* Resources Tab */}
-            {activeTab === 'resources' && (
+            {activeTab === "resources" && (
               <>
                 {filteredResources.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400">No resources found</p>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No resources found
+                  </p>
                 ) : (
-                  filteredResources.map((resource: MCPResource, idx: number) => (
-                    <div
-                      key={resource.uri || idx}
-                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
-                    >
-                      <div className="flex items-center gap-3">
-                        <FileText size={20} className="text-green-500" />
-                        <div>
-                          <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                            {resource.name}
-                          </h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-                            {resource.uri}
-                          </p>
+                  filteredResources.map(
+                    (resource: MCPResource, idx: number) => (
+                      <div
+                        key={resource.uri || idx}
+                        className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                      >
+                        <div className="flex items-center gap-3">
+                          <FileText size={20} className="text-green-500" />
+                          <div>
+                            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                              {resource.name}
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                              {resource.uri}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ),
+                  )
                 )}
               </>
             )}
 
             {/* Prompts Tab */}
-            {activeTab === 'prompts' && (
+            {activeTab === "prompts" && (
               <>
                 {filteredPrompts.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400">No prompts found</p>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No prompts found
+                  </p>
                 ) : (
                   filteredPrompts.map((prompt: MCPPrompt) => (
                     <div
@@ -287,7 +335,7 @@ export function MCPPage() {
             )}
 
             {/* Servers Tab */}
-            {activeTab === 'servers' && (
+            {activeTab === "servers" && (
               <>
                 {/* Add Server Form */}
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-4">
@@ -314,7 +362,9 @@ export function MCPPage() {
                 </div>
 
                 {serverList.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400">No servers configured</p>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No servers configured
+                  </p>
                 ) : (
                   serverList.map((server: ServerEntry) => (
                     <div
@@ -328,7 +378,9 @@ export function MCPPage() {
                             <h3 className="font-medium text-gray-900 dark:text-gray-100">
                               {server.id}
                               {server.id === primaryServerId && (
-                                <span className="ml-2 text-xs text-blue-600">(Primary)</span>
+                                <span className="ml-2 text-xs text-blue-600">
+                                  (Primary)
+                                </span>
                               )}
                             </h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
@@ -337,12 +389,12 @@ export function MCPPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          {server.status === 'connected' ? (
+                          {server.status === "connected" ? (
                             <span className="flex items-center gap-1 text-green-600">
                               <Check size={16} />
                               Connected
                             </span>
-                          ) : server.status === 'error' ? (
+                          ) : server.status === "error" ? (
                             <span className="flex items-center gap-1 text-red-600">
                               <X size={16} />
                               Error
@@ -354,7 +406,7 @@ export function MCPPage() {
                             </span>
                           )}
                           <button
-                            onClick={() => removeServer(server.id)}
+                            onClick={() => dispatch(removeServer(server.id))}
                             className="p-2 text-gray-400 hover:text-red-500"
                           >
                             <X size={16} />
@@ -362,7 +414,9 @@ export function MCPPage() {
                         </div>
                       </div>
                       {server.error && (
-                        <p className="mt-2 text-sm text-red-600">{server.error}</p>
+                        <p className="mt-2 text-sm text-red-600">
+                          {server.error}
+                        </p>
                       )}
                     </div>
                   ))

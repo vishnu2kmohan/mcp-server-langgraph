@@ -4,13 +4,13 @@
  * Tests for the workflow header component with title, actions, and theme toggle.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { WorkflowHeader } from './WorkflowHeader';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { WorkflowHeader } from "./WorkflowHeader";
 
-describe('WorkflowHeader', () => {
+describe("WorkflowHeader", () => {
   const defaultProps = {
-    workflowName: 'my_workflow',
+    workflowName: "my_workflow",
     onNameChange: vi.fn(),
     isDarkMode: false,
     onToggleDarkMode: vi.fn(),
@@ -22,96 +22,108 @@ describe('WorkflowHeader', () => {
     vi.clearAllMocks();
   });
 
-  describe('Rendering', () => {
-    it('should render the workflow header with title', () => {
+  describe("Rendering", () => {
+    it("should render the workflow header with title", () => {
       render(<WorkflowHeader {...defaultProps} />);
 
-      expect(screen.getByText('Visual Workflow Builder')).toBeInTheDocument();
+      expect(screen.getByText("Visual Workflow Builder")).toBeInTheDocument();
     });
 
-    it('should render workflow name input', () => {
+    it("should render workflow name input", () => {
       render(<WorkflowHeader {...defaultProps} />);
 
-      const input = screen.getByDisplayValue('my_workflow');
+      const input = screen.getByDisplayValue("my_workflow");
       expect(input).toBeInTheDocument();
     });
 
-    it('should render dark mode toggle button', () => {
+    it("should render dark mode toggle button", () => {
       render(<WorkflowHeader {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /switch to dark mode/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /switch to dark mode/i }),
+      ).toBeInTheDocument();
     });
 
-    it('should render settings button', () => {
+    it("should render settings button", () => {
       render(<WorkflowHeader {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /settings/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /settings/i }),
+      ).toBeInTheDocument();
     });
 
-    it('should render help button', () => {
+    it("should render help button", () => {
       render(<WorkflowHeader {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /help/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /help/i })).toBeInTheDocument();
     });
   });
 
-  describe('Interactions', () => {
-    it('should call onNameChange when workflow name is updated', () => {
+  describe("Interactions", () => {
+    it("should call onNameChange when workflow name is updated", () => {
       render(<WorkflowHeader {...defaultProps} />);
 
-      const input = screen.getByDisplayValue('my_workflow');
-      fireEvent.change(input, { target: { value: 'new_workflow' } });
+      const input = screen.getByDisplayValue("my_workflow");
+      fireEvent.change(input, { target: { value: "new_workflow" } });
 
-      expect(defaultProps.onNameChange).toHaveBeenCalledWith('new_workflow');
+      expect(defaultProps.onNameChange).toHaveBeenCalledWith("new_workflow");
     });
 
-    it('should call onToggleDarkMode when dark mode button is clicked', () => {
+    it("should call onToggleDarkMode when dark mode button is clicked", () => {
       render(<WorkflowHeader {...defaultProps} />);
 
-      const button = screen.getByRole('button', { name: /switch to dark mode/i });
+      const button = screen.getByRole("button", {
+        name: /switch to dark mode/i,
+      });
       fireEvent.click(button);
 
       expect(defaultProps.onToggleDarkMode).toHaveBeenCalled();
     });
 
-    it('should call onOpenSettings when settings button is clicked', () => {
+    it("should call onOpenSettings when settings button is clicked", () => {
       render(<WorkflowHeader {...defaultProps} />);
 
-      const button = screen.getByRole('button', { name: /settings/i });
+      const button = screen.getByRole("button", { name: /settings/i });
       fireEvent.click(button);
 
       expect(defaultProps.onOpenSettings).toHaveBeenCalled();
     });
 
-    it('should call onOpenHelp when help button is clicked', () => {
+    it("should call onOpenHelp when help button is clicked", () => {
       render(<WorkflowHeader {...defaultProps} />);
 
-      const button = screen.getByRole('button', { name: /help/i });
+      const button = screen.getByRole("button", { name: /help/i });
       fireEvent.click(button);
 
       expect(defaultProps.onOpenHelp).toHaveBeenCalled();
     });
   });
 
-  describe('Dark Mode', () => {
-    it('should show sun icon when in dark mode', () => {
+  describe("Dark Mode", () => {
+    it("should show sun icon when in dark mode", () => {
       render(<WorkflowHeader {...defaultProps} isDarkMode={true} />);
 
-      expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /switch to light mode/i }),
+      ).toBeInTheDocument();
     });
 
-    it('should apply dark mode styles when isDarkMode is true', () => {
-      const { container } = render(<WorkflowHeader {...defaultProps} isDarkMode={true} />);
+    it("should apply dark mode styles when isDarkMode is true", () => {
+      const { container } = render(
+        <WorkflowHeader {...defaultProps} isDarkMode={true} />,
+      );
 
-      const header = container.querySelector('header');
-      expect(header).toHaveClass('bg-gray-800');
+      const header = container.querySelector("header");
+      expect(header).toHaveClass("bg-gray-800");
     });
 
-    it('should apply light mode styles when isDarkMode is false', () => {
-      const { container } = render(<WorkflowHeader {...defaultProps} isDarkMode={false} />);
+    it("should apply light mode styles when isDarkMode is false", () => {
+      const { container } = render(
+        <WorkflowHeader {...defaultProps} isDarkMode={false} />,
+      );
 
-      const header = container.querySelector('header');
-      expect(header).toHaveClass('bg-white');
+      const header = container.querySelector("header");
+      expect(header).toHaveClass("bg-white");
     });
   });
 });

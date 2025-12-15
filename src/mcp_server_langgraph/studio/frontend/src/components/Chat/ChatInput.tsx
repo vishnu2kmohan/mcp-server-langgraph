@@ -4,8 +4,8 @@
  * Input field for composing and sending chat messages.
  */
 
-import { useState, KeyboardEvent } from 'react';
-import { Send } from 'lucide-react';
+import { useState, KeyboardEvent } from "react";
+import { Send } from "lucide-react";
 
 export interface ChatInputProps {
   onSend: (message: string) => void;
@@ -16,20 +16,20 @@ export interface ChatInputProps {
 export function ChatInput({
   onSend,
   isDisabled = false,
-  placeholder = 'Type a message...',
+  placeholder = "Type a message...",
 }: ChatInputProps) {
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
   const handleSend = () => {
     const trimmedMessage = message.trim();
     if (trimmedMessage && !isDisabled) {
       onSend(trimmedMessage);
-      setMessage('');
+      setMessage("");
     }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -46,8 +46,8 @@ export function ChatInput({
         rows={1}
         className={`flex-1 px-4 py-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${
           isDisabled
-            ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed'
-            : 'bg-white dark:bg-gray-900'
+            ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+            : "bg-white dark:bg-gray-900"
         } border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100`}
       />
       <button
@@ -56,8 +56,8 @@ export function ChatInput({
         aria-label="Send message"
         className={`p-2 rounded-lg transition-colors ${
           isDisabled
-            ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
-            : 'bg-blue-600 hover:bg-blue-700 text-white'
+            ? "bg-gray-300 dark:bg-gray-700 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700 text-white"
         }`}
       >
         <Send size={20} />

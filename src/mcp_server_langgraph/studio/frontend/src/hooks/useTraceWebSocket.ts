@@ -5,7 +5,7 @@
  * Connects to the MCP WebSocket endpoint and subscribes to trace extensions.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface TraceSpan {
   traceId: string;
@@ -14,7 +14,7 @@ export interface TraceSpan {
   name: string;
   startTime: string;
   endTime?: string;
-  status: 'OK' | 'ERROR' | 'UNSET';
+  status: "OK" | "ERROR" | "UNSET";
   attributes: Record<string, unknown>;
 }
 
@@ -41,13 +41,9 @@ interface UseTraceWebSocketReturn {
 }
 
 export function useTraceWebSocket(
-  options: UseTraceWebSocketOptions = {}
+  options: UseTraceWebSocketOptions = {},
 ): UseTraceWebSocketReturn {
-  const {
-    url = '/api/v1/mcp/ws',
-    sessionId,
-    autoConnect = false,
-  } = options;
+  const { url = "/api/v1/mcp/ws", sessionId, autoConnect = false } = options;
 
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -59,7 +55,7 @@ export function useTraceWebSocket(
       const data = JSON.parse(event.data);
 
       // Handle trace span notifications
-      if (data.method === '$/trace/span') {
+      if (data.method === "$/trace/span") {
         const span: TraceSpan = {
           traceId: data.params.traceId,
           spanId: data.params.spanId,
@@ -67,7 +63,7 @@ export function useTraceWebSocket(
           name: data.params.name,
           startTime: data.params.startTime,
           endTime: data.params.endTime,
-          status: data.params.status || 'UNSET',
+          status: data.params.status || "UNSET",
           attributes: data.params.attributes || {},
         };
 
@@ -84,7 +80,7 @@ export function useTraceWebSocket(
       }
 
       // Handle trace event notifications
-      if (data.method === '$/trace/event') {
+      if (data.method === "$/trace/event") {
         const traceEvent: TraceEvent = {
           spanId: data.params.spanId,
           name: data.params.name,
@@ -95,7 +91,7 @@ export function useTraceWebSocket(
         setEvents((prev) => [...prev, traceEvent]);
       }
     } catch (error) {
-      console.error('Failed to parse trace message:', error);
+      console.error("Failed to parse trace message:", error);
     }
   }, []);
 
@@ -105,7 +101,7 @@ export function useTraceWebSocket(
     }
 
     const wsUrl = sessionId ? `${url}/${sessionId}` : url;
-    const fullUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}${wsUrl}`;
+    const fullUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}${wsUrl}`;
 
     const ws = new WebSocket(fullUrl);
 
@@ -115,15 +111,15 @@ export function useTraceWebSocket(
       // Send initialize message
       ws.send(
         JSON.stringify({
-          jsonrpc: '2.0',
+          jsonrpc: "2.0",
           id: 1,
-          method: 'initialize',
+          method: "initialize",
           params: {
-            protocolVersion: '2025-11-25',
+            protocolVersion: "2025-11-25",
             capabilities: {},
-            clientInfo: { name: 'studio-frontend', version: '1.0.0' },
+            clientInfo: { name: "studio-frontend", version: "1.0.0" },
           },
-        })
+        }),
       );
     };
 
@@ -132,7 +128,7 @@ export function useTraceWebSocket(
     };
 
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error("WebSocket error:", error);
       setIsConnected(false);
     };
 

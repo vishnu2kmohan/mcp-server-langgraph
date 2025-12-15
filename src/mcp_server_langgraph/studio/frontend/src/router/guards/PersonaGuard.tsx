@@ -5,9 +5,13 @@
  * Redirects to appropriate page if persona doesn't match.
  */
 
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuthStore } from '../../stores';
-import type { Persona } from '../../types/auth';
+import { Navigate, Outlet } from "react-router";
+import { useAppSelector } from "../../store/hooks";
+import {
+  selectPersona,
+  selectPersonaLoading,
+} from "../../store/slices/personaSlice";
+import type { Persona } from "../../types/auth";
 
 export interface PersonaGuardProps {
   /** Required personas to access this route */
@@ -20,9 +24,9 @@ export interface PersonaGuardProps {
 
 /** Default routes for each persona */
 const PERSONA_DEFAULT_ROUTES: Record<Persona, string> = {
-  admin: '/admin/dashboard',
-  developer: '/studio/workflows',
-  user: '/studio/chat',
+  admin: "/studio/admin/dashboard",
+  developer: "/studio/workflows",
+  user: "/studio/chat",
 };
 
 /**
@@ -34,22 +38,21 @@ export function PersonaGuard({
   fallbackPath,
   children,
 }: PersonaGuardProps) {
-  const user = useAuthStore((state) => state.user);
+  const persona = useAppSelector(selectPersona);
+  const isLoading = useAppSelector(selectPersonaLoading);
 
-  // If no user, let AuthGuard handle redirect
-  if (!user) {
+  // While loading persona info, render nothing
+  if (isLoading) {
     return null;
   }
 
-  const userPersona = user.persona;
-
   // Check if user's persona is in allowed list
-  if (allowedPersonas.includes(userPersona)) {
+  if (allowedPersonas.includes(persona)) {
     return children ? <>{children}</> : <Outlet />;
   }
 
   // Redirect to fallback or persona-appropriate default route
-  const redirectPath = fallbackPath || PERSONA_DEFAULT_ROUTES[userPersona];
+  const redirectPath = fallbackPath || PERSONA_DEFAULT_ROUTES[persona];
   return <Navigate to={redirectPath} replace />;
 }
 

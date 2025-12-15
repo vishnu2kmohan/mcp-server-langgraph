@@ -10,7 +10,11 @@
 // ==============================================================================
 
 /** MCP connection status */
-export type MCPConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
+export type MCPConnectionStatus =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "error";
 
 /** MCP server info from initialization */
 export interface MCPServerInfo {
@@ -43,7 +47,14 @@ export interface MCPServerConnection {
 
 /** JSON Schema type */
 export interface JSONSchema {
-  type?: 'object' | 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'null';
+  type?:
+    | "object"
+    | "string"
+    | "number"
+    | "integer"
+    | "boolean"
+    | "array"
+    | "null";
   properties?: Record<string, JSONSchema>;
   required?: string[];
   description?: string;
@@ -95,7 +106,7 @@ export interface MCPPrompt {
 // ==============================================================================
 
 /** Elicitation action */
-export type ElicitationAction = 'accept' | 'decline' | 'cancel';
+export type ElicitationAction = "accept" | "decline" | "cancel";
 
 /** Pending elicitation request */
 export interface PendingElicitation {
@@ -104,7 +115,7 @@ export interface PendingElicitation {
   message: string;
   requestedSchema: JSONSchema;
   createdAt: number;
-  mode?: 'inline' | 'url';
+  mode?: "inline" | "url";
   url?: string;
 }
 
@@ -114,7 +125,7 @@ export interface PendingElicitation {
 
 /** Sampling message */
 export interface SamplingMessage {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
 }
 
@@ -192,7 +203,11 @@ export interface AddServerOptions {
 /** MCP store actions */
 export interface MCPActions {
   /** Add a server connection */
-  addServer: (id: string, url: string, options?: AddServerOptions) => Promise<void>;
+  addServer: (
+    id: string,
+    url: string,
+    options?: AddServerOptions,
+  ) => Promise<void>;
 
   /** Remove a server connection */
   removeServer: (id: string) => void;
@@ -201,7 +216,11 @@ export interface MCPActions {
   setPrimaryServer: (id: string) => void;
 
   /** Update server status */
-  updateServerStatus: (id: string, status: MCPConnectionStatus, error?: string) => void;
+  updateServerStatus: (
+    id: string,
+    status: MCPConnectionStatus,
+    error?: string,
+  ) => void;
 
   /** Set server tools */
   setServerTools: (id: string, tools: MCPTool[]) => void;
@@ -216,7 +235,11 @@ export interface MCPActions {
   addElicitation: (elicitation: PendingElicitation) => void;
 
   /** Respond to elicitation */
-  respondToElicitation: (id: string, action: ElicitationAction, content?: Record<string, unknown>) => void;
+  respondToElicitation: (
+    id: string,
+    action: ElicitationAction,
+    content?: Record<string, unknown>,
+  ) => void;
 
   /** Add sampling request */
   addSamplingRequest: (request: PendingSamplingRequest) => void;

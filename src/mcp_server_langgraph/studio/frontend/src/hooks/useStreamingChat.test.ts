@@ -1,261 +1,322 @@
 /**
  * useStreamingChat Hook Tests
  *
- * Tests for streaming chat hook using Server-Sent Events (SSE).
+ * Tests for streaming chat hook using fetch + ReadableStream for SSE.
+ * Updated from EventSource to support POST requests with JSON body.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useStreamingChat } from './useStreamingChat';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { useStreamingChat } from "./useStreamingChat";
 
-// Mock EventSource
-class MockEventSource {
-  public onmessage: ((event: MessageEvent) => void) | null = null;
-  public onerror: ((event: Event) => void) | null = null;
-  public onopen: ((event: Event) => void) | null = null;
-  public readyState: number = 0;
-  public url: string;
+// Helper to create a mock ReadableStream that yields SSE chunks
+function createMockSSEStream(chunks: string[]): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+  let index = 0;
 
-  constructor(url: string) {
-    this.url = url;
-    this.readyState = 0; // CONNECTING
-  }
-
-  close() {
-    this.readyState = 2; // CLOSED
-  }
+  return new ReadableStream({
+    pull(controller) {
+      if (index < chunks.length) {
+        controller.enqueue(encoder.encode(chunks[index]));
+        index++;
+      } else {
+        controller.close();
+      }
+    },
+  });
 }
 
-describe('useStreamingChat', () => {
-  let mockEventSource: MockEventSource;
+// Helper to create a mock Response with SSE stream
+function createMockSSEResponse(
+  chunks: string[],
+  _ok = true,
+  status = 200,
+): Response {
+  const stream = createMockSSEStream(chunks);
+  return new Response(stream, {
+    status,
+    headers: { "Content-Type": "text/event-stream" },
+  });
+}
+
+describe("useStreamingChat", () => {
+  let mockFetch: ReturnType<typeof vi.fn>;
+  let abortController: AbortController | null = null;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock EventSource globally
-    mockEventSource = new MockEventSource('');
-    vi.stubGlobal(
-      'EventSource',
-      vi.fn((url: string) => {
-        mockEventSource.url = url;
-        return mockEventSource;
-      })
-    );
+    abortController = null;
+
+    // Mock fetch globally
+    mockFetch = vi.fn();
+    vi.stubGlobal("fetch", mockFetch);
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    abortController?.abort();
   });
 
-  describe('Initial State', () => {
-    it('should start with empty state', () => {
+  describe("Initial State", () => {
+    it("should start with empty state", () => {
       const { result } = renderHook(() => useStreamingChat());
 
       expect(result.current.isStreaming).toBe(false);
-      expect(result.current.streamingContent).toBe('');
+      expect(result.current.streamingContent).toBe("");
       expect(result.current.error).toBeNull();
     });
   });
 
-  describe('Starting Stream', () => {
-    it('should set isStreaming to true when starting stream', () => {
-      const { result } = renderHook(() => useStreamingChat());
-
-      act(() => {
-        result.current.startStream('session-123', 'Hello');
-      });
-
-      expect(result.current.isStreaming).toBe(true);
-    });
-
-    it('should create EventSource with correct URL', () => {
-      const { result } = renderHook(() => useStreamingChat());
-
-      act(() => {
-        result.current.startStream('session-123', 'Hello World');
-      });
-
-      expect(mockEventSource.url).toContain('/api/v1/chat/completions/stream');
-      expect(mockEventSource.url).toContain('session_id=session-123');
-      expect(mockEventSource.url).toContain('message=Hello%20World');
-    });
-
-    it('should reset content when starting new stream', () => {
-      const { result } = renderHook(() => useStreamingChat());
-
-      act(() => {
-        result.current.startStream('session-123', 'First message');
-      });
-
-      // Simulate receiving content
-      act(() => {
-        mockEventSource.onmessage?.({
-          data: JSON.stringify({ content: 'Response' }),
-        } as MessageEvent);
-      });
-
-      expect(result.current.streamingContent).toBe('Response');
-
-      // Start new stream
-      act(() => {
-        result.current.startStream('session-123', 'Second message');
-      });
-
-      expect(result.current.streamingContent).toBe('');
-    });
-
-    it('should close previous stream when starting new one', () => {
-      const { result } = renderHook(() => useStreamingChat());
-      const closeSpy = vi.spyOn(mockEventSource, 'close');
-
-      act(() => {
-        result.current.startStream('session-123', 'First');
-      });
-
-      const firstEventSource = mockEventSource;
-
-      // Create new mock for second stream
-      const secondEventSource = new MockEventSource('');
-      vi.stubGlobal(
-        'EventSource',
-        vi.fn(() => secondEventSource)
+  describe("Starting Stream", () => {
+    it("should set isStreaming to true when starting stream", async () => {
+      // Setup mock to return a pending promise
+      mockFetch.mockImplementation(
+        () =>
+          new Promise(() => {
+            /* never resolves */
+          }),
       );
 
-      act(() => {
-        result.current.startStream('session-123', 'Second');
-      });
-
-      expect(closeSpy).toHaveBeenCalled();
-    });
-  });
-
-  describe('Receiving Messages', () => {
-    it('should accumulate streamed content', async () => {
       const { result } = renderHook(() => useStreamingChat());
 
       act(() => {
-        result.current.startStream('session-123', 'Hello');
-      });
-
-      // Simulate receiving chunks
-      act(() => {
-        mockEventSource.onmessage?.({
-          data: JSON.stringify({ content: 'Hi ' }),
-        } as MessageEvent);
-      });
-
-      expect(result.current.streamingContent).toBe('Hi ');
-
-      act(() => {
-        mockEventSource.onmessage?.({
-          data: JSON.stringify({ content: 'there!' }),
-        } as MessageEvent);
-      });
-
-      expect(result.current.streamingContent).toBe('Hi there!');
-    });
-
-    it('should handle [DONE] message and close stream', async () => {
-      const { result } = renderHook(() => useStreamingChat());
-
-      act(() => {
-        result.current.startStream('session-123', 'Hello');
-      });
-
-      act(() => {
-        mockEventSource.onmessage?.({
-          data: JSON.stringify({ content: 'Response' }),
-        } as MessageEvent);
+        result.current.startStream("session-123", "Hello");
       });
 
       expect(result.current.isStreaming).toBe(true);
+    });
 
-      // Simulate stream completion
-      act(() => {
-        mockEventSource.onmessage?.({
-          data: '[DONE]',
-        } as MessageEvent);
+    it("should call fetch with POST and correct body", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Hi"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello World");
+        // Wait for fetch to be called
+        await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/chat/completions/stream",
+        expect.objectContaining({
+          method: "POST",
+          headers: expect.objectContaining({
+            "Content-Type": "application/json",
+          }),
+          body: expect.any(String),
+          signal: expect.any(AbortSignal),
+        }),
+      );
+
+      // Verify the body structure
+      const callArgs = mockFetch.mock.calls[0];
+      const body = JSON.parse(callArgs[1].body);
+      expect(body).toEqual({
+        session_id: "session-123",
+        messages: [{ role: "user", content: "Hello World" }],
+      });
+    });
+
+    it("should reset content when starting new stream", async () => {
+      // First stream returns content
+      mockFetch.mockResolvedValueOnce(
+        createMockSSEResponse([
+          'data: {"content":"First response"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "First message");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.streamingContent).toBe("First response");
+
+      // Second stream should reset
+      mockFetch.mockResolvedValueOnce(
+        createMockSSEResponse([
+          'data: {"content":"Second"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      await act(async () => {
+        result.current.startStream("session-123", "Second message");
+      });
+
+      // Content should be reset (empty or new content)
+      expect(result.current.streamingContent).not.toBe("First response");
+    });
+  });
+
+  describe("Receiving Messages", () => {
+    it("should accumulate streamed content", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Hi "}\n\n',
+          'data: {"content":"there!"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.streamingContent).toBe("Hi there!");
+    });
+
+    it("should handle [DONE] message and stop streaming", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Response"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
       });
 
       expect(result.current.isStreaming).toBe(false);
-      expect(result.current.streamingContent).toBe('Response');
+      expect(result.current.streamingContent).toBe("Response");
     });
 
-    it('should handle non-JSON messages gracefully', () => {
+    it("should handle messages with delta.content format", async () => {
+      // Backend sends delta.content format
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"delta":{"content":"Hello "}}\n\n',
+          'data: {"delta":{"content":"World"}}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
       const { result } = renderHook(() => useStreamingChat());
 
-      act(() => {
-        result.current.startStream('session-123', 'Hello');
+      await act(async () => {
+        result.current.startStream("session-123", "Hi");
+        await vi.waitFor(() => !result.current.isStreaming);
       });
 
-      // Send invalid JSON
-      act(() => {
-        mockEventSource.onmessage?.({
-          data: 'invalid json',
-        } as MessageEvent);
+      expect(result.current.streamingContent).toBe("Hello World");
+    });
+
+    it("should handle non-JSON messages gracefully", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          "data: invalid json\n\n",
+          'data: {"content":"Valid"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
       });
 
-      // Should not crash or add content
-      expect(result.current.streamingContent).toBe('');
+      // Should not crash and should get valid content
+      expect(result.current.streamingContent).toBe("Valid");
       expect(result.current.error).toBeNull();
     });
 
-    it('should handle messages without content field', () => {
+    it("should handle messages without content field", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"type":"metadata"}\n\n',
+          'data: {"content":"Actual content"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
       const { result } = renderHook(() => useStreamingChat());
 
-      act(() => {
-        result.current.startStream('session-123', 'Hello');
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
       });
 
-      // Send message without content
-      act(() => {
-        mockEventSource.onmessage?.({
-          data: JSON.stringify({ type: 'metadata' }),
-        } as MessageEvent);
-      });
-
-      expect(result.current.streamingContent).toBe('');
+      expect(result.current.streamingContent).toBe("Actual content");
     });
   });
 
-  describe('Error Handling', () => {
-    it('should set error on stream error', () => {
+  describe("Error Handling", () => {
+    it("should set error when fetch fails", async () => {
+      mockFetch.mockRejectedValue(new Error("Network error"));
+
       const { result } = renderHook(() => useStreamingChat());
 
-      act(() => {
-        result.current.startStream('session-123', 'Hello');
-      });
-
-      // Simulate error
-      act(() => {
-        mockEventSource.onerror?.({} as Event);
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => result.current.error !== null);
       });
 
       expect(result.current.isStreaming).toBe(false);
-      expect(result.current.error).toBe('Stream connection failed');
+      expect(result.current.error).toBe(
+        "Stream connection failed: Network error",
+      );
     });
 
-    it('should close connection on error', () => {
+    it("should set error when response is not ok", async () => {
+      mockFetch.mockResolvedValue(
+        new Response("Server Error", {
+          status: 500,
+          statusText: "Internal Server Error",
+        }),
+      );
+
       const { result } = renderHook(() => useStreamingChat());
-      const closeSpy = vi.spyOn(mockEventSource, 'close');
 
-      act(() => {
-        result.current.startStream('session-123', 'Hello');
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => result.current.error !== null);
       });
 
-      act(() => {
-        mockEventSource.onerror?.({} as Event);
-      });
-
-      expect(closeSpy).toHaveBeenCalled();
+      expect(result.current.isStreaming).toBe(false);
+      expect(result.current.error).toContain("500");
     });
   });
 
-  describe('Stopping Stream', () => {
-    it('should stop streaming when stopStream is called', () => {
+  describe("Stopping Stream", () => {
+    it("should stop streaming when stopStream is called", async () => {
+      // Create a stream that won't complete automatically
+      mockFetch.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            // Never resolve to keep stream "open"
+            setTimeout(() => {
+              resolve(
+                createMockSSEResponse([
+                  'data: {"content":"Response"}\n\n',
+                  "data: [DONE]\n\n",
+                ]),
+              );
+            }, 10000);
+          }),
+      );
+
       const { result } = renderHook(() => useStreamingChat());
 
       act(() => {
-        result.current.startStream('session-123', 'Hello');
+        result.current.startStream("session-123", "Hello");
       });
 
       expect(result.current.isStreaming).toBe(true);
@@ -267,22 +328,7 @@ describe('useStreamingChat', () => {
       expect(result.current.isStreaming).toBe(false);
     });
 
-    it('should close EventSource when stopStream is called', () => {
-      const { result } = renderHook(() => useStreamingChat());
-      const closeSpy = vi.spyOn(mockEventSource, 'close');
-
-      act(() => {
-        result.current.startStream('session-123', 'Hello');
-      });
-
-      act(() => {
-        result.current.stopStream();
-      });
-
-      expect(closeSpy).toHaveBeenCalled();
-    });
-
-    it('should handle stopStream when no stream is active', () => {
+    it("should handle stopStream when no stream is active", () => {
       const { result } = renderHook(() => useStreamingChat());
 
       // Should not throw
@@ -294,43 +340,185 @@ describe('useStreamingChat', () => {
     });
   });
 
-  describe('Clearing Content', () => {
-    it('should clear content when clearContent is called', () => {
+  describe("Clearing Content", () => {
+    it("should clear content when clearContent is called", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Response"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
       const { result } = renderHook(() => useStreamingChat());
 
-      act(() => {
-        result.current.startStream('session-123', 'Hello');
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
       });
 
-      act(() => {
-        mockEventSource.onmessage?.({
-          data: JSON.stringify({ content: 'Response' }),
-        } as MessageEvent);
-      });
-
-      expect(result.current.streamingContent).toBe('Response');
+      expect(result.current.streamingContent).toBe("Response");
 
       act(() => {
         result.current.clearContent();
       });
 
-      expect(result.current.streamingContent).toBe('');
+      expect(result.current.streamingContent).toBe("");
       expect(result.current.error).toBeNull();
     });
   });
 
-  describe('Cleanup', () => {
-    it('should close EventSource on unmount', () => {
+  describe("Cleanup", () => {
+    it("should abort fetch on unmount", async () => {
+      let capturedSignal: AbortSignal | null = null;
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        capturedSignal = options.signal as AbortSignal;
+        return new Promise(() => {
+          /* never resolves */
+        });
+      });
+
       const { result, unmount } = renderHook(() => useStreamingChat());
-      const closeSpy = vi.spyOn(mockEventSource, 'close');
 
       act(() => {
-        result.current.startStream('session-123', 'Hello');
+        result.current.startStream("session-123", "Hello");
       });
+
+      expect(capturedSignal).not.toBeNull();
+      expect(capturedSignal?.aborted).toBe(false);
 
       unmount();
 
-      expect(closeSpy).toHaveBeenCalled();
+      // Signal should be aborted after unmount
+      expect(capturedSignal?.aborted).toBe(true);
+    });
+  });
+
+  describe("Usage Tracking", () => {
+    it("should start with null usage", () => {
+      const { result } = renderHook(() => useStreamingChat());
+
+      expect(result.current.usage).toBeNull();
+    });
+
+    it("should track usage data from streaming chunks", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Response","usage":{"prompt_tokens":10,"completion_tokens":5,"total_tokens":15}}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.usage).toEqual({
+        promptTokens: 10,
+        completionTokens: 5,
+        totalTokens: 15,
+      });
+    });
+
+    it("should track model from streaming chunks", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Response","model":"gpt-4-turbo"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.model).toBe("gpt-4-turbo");
+    });
+
+    it("should preserve usage after stream completes", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Response","usage":{"prompt_tokens":10,"completion_tokens":5,"total_tokens":15},"model":"gpt-4"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.isStreaming).toBe(false);
+      expect(result.current.usage).toEqual({
+        promptTokens: 10,
+        completionTokens: 5,
+        totalTokens: 15,
+      });
+      expect(result.current.model).toBe("gpt-4");
+    });
+
+    it("should reset usage when starting new stream", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockSSEResponse([
+          'data: {"content":"First","usage":{"prompt_tokens":10,"completion_tokens":5,"total_tokens":15},"model":"gpt-4"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "First");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.usage).not.toBeNull();
+
+      // Start new stream - should reset
+      mockFetch.mockResolvedValueOnce(
+        createMockSSEResponse([
+          'data: {"content":"Second"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      await act(async () => {
+        result.current.startStream("session-123", "Second");
+      });
+
+      // Should be reset immediately when starting new stream
+      expect(result.current.usage).toBeNull();
+      expect(result.current.model).toBeNull();
+    });
+
+    it("should clear usage when clearContent is called", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Response","usage":{"prompt_tokens":10,"completion_tokens":5,"total_tokens":15}}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      act(() => {
+        result.current.clearContent();
+      });
+
+      expect(result.current.usage).toBeNull();
+      expect(result.current.model).toBeNull();
     });
   });
 });

@@ -7,14 +7,27 @@
  * - Store state and actions
  */
 
-import type { Node, Edge, XYPosition } from 'reactflow';
+import type { Node, Edge, XYPosition } from "reactflow";
 
 // ==============================================================================
 // Node Types
 // ==============================================================================
 
 /** Available workflow node types */
-export type WorkflowNodeType = 'tool' | 'llm' | 'conditional' | 'approval' | 'custom';
+export type WorkflowNodeType =
+  | "start"
+  | "tool"
+  | "llm"
+  | "conditional"
+  | "approval"
+  | "end"
+  | "custom";
+
+/** Node execution status */
+export type NodeStatus = "idle" | "running" | "success" | "error";
+
+/** Workflow execution state */
+export type ExecutionState = "idle" | "running" | "completed" | "error";
 
 /** Node data attached to workflow nodes */
 export interface WorkflowNodeData {
@@ -22,6 +35,7 @@ export interface WorkflowNodeData {
   nodeType: WorkflowNodeType;
   config: Record<string, unknown>;
   description?: string;
+  status?: NodeStatus;
 }
 
 /** Extended ReactFlow node with typed data */
@@ -53,7 +67,7 @@ export interface WorkflowMetadata {
 export interface ValidationError {
   nodeId?: string;
   edgeId?: string;
-  type: 'error' | 'warning';
+  type: "error" | "warning";
   message: string;
 }
 
@@ -78,6 +92,15 @@ export interface WorkflowSnapshot {
 // ==============================================================================
 // Store State
 // ==============================================================================
+
+/** Execution log entry */
+export interface ExecutionLog {
+  id: string;
+  timestamp: number;
+  nodeId?: string;
+  level: "info" | "warning" | "error";
+  message: string;
+}
 
 /** Workflow store state */
 export interface WorkflowState {
@@ -116,6 +139,15 @@ export interface WorkflowState {
 
   /** Error message if any */
   error: string | null;
+
+  /** Execution state */
+  executionState: ExecutionState;
+
+  /** Node execution statuses */
+  nodeStatuses: Map<string, NodeStatus>;
+
+  /** Execution logs */
+  executionLogs: ExecutionLog[];
 }
 
 /** Workflow store actions */
@@ -130,7 +162,11 @@ export interface WorkflowActions {
   saveWorkflow: () => Promise<void>;
 
   /** Add a new node */
-  addNode: (nodeType: WorkflowNodeType, position: XYPosition, label?: string) => string;
+  addNode: (
+    nodeType: WorkflowNodeType,
+    position: XYPosition,
+    label?: string,
+  ) => string;
 
   /** Update node data */
   updateNode: (nodeId: string, data: Partial<WorkflowNodeData>) => void;
@@ -142,13 +178,20 @@ export interface WorkflowActions {
   deleteNodes: (nodeIds: string[]) => void;
 
   /** Add an edge between nodes */
-  addEdge: (sourceId: string, targetId: string, sourceHandle?: string, targetHandle?: string) => string | null;
+  addEdge: (
+    sourceId: string,
+    targetId: string,
+    sourceHandle?: string,
+    targetHandle?: string,
+  ) => string | null;
 
   /** Delete an edge */
   deleteEdge: (edgeId: string) => void;
 
   /** Update node positions */
-  updateNodePositions: (updates: Array<{ id: string; position: XYPosition }>) => void;
+  updateNodePositions: (
+    updates: Array<{ id: string; position: XYPosition }>,
+  ) => void;
 
   /** Set selected nodes */
   setSelectedNodes: (nodeIds: string[]) => void;
@@ -176,6 +219,18 @@ export interface WorkflowActions {
 
   /** Reset workflow to initial state */
   reset: () => void;
+
+  /** Execute workflow */
+  executeWorkflow: () => Promise<void>;
+
+  /** Update node execution status */
+  updateNodeStatus: (nodeId: string, status: NodeStatus) => void;
+
+  /** Add execution log */
+  addExecutionLog: (log: Omit<ExecutionLog, "id" | "timestamp">) => void;
+
+  /** Clear execution logs */
+  clearExecutionLogs: () => void;
 }
 
 /** Combined workflow store type */

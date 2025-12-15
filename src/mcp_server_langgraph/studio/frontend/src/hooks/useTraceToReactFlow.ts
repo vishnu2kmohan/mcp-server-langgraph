@@ -4,13 +4,13 @@
  * Converts trace spans into React Flow nodes and edges for visualization.
  */
 
-import { useMemo } from 'react';
-import type { Node, Edge } from 'reactflow';
-import type { TraceSpan } from './useTraceWebSocket';
+import { useMemo } from "react";
+import type { Node, Edge } from "reactflow";
+import type { TraceSpan } from "./useTraceWebSocket";
 
 interface UseTraceToReactFlowOptions {
   spans: TraceSpan[];
-  layout?: 'horizontal' | 'vertical';
+  layout?: "horizontal" | "vertical";
   nodeWidth?: number;
   nodeHeight?: number;
   nodeSpacing?: number;
@@ -22,11 +22,11 @@ interface UseTraceToReactFlowReturn {
 }
 
 export function useTraceToReactFlow(
-  options: UseTraceToReactFlowOptions
+  options: UseTraceToReactFlowOptions,
 ): UseTraceToReactFlowReturn {
   const {
     spans,
-    layout = 'horizontal',
+    layout = "horizontal",
     nodeWidth = 200,
     nodeHeight = 60,
     nodeSpacing = 100,
@@ -56,7 +56,11 @@ export function useTraceToReactFlow(
 
     // Calculate positions using BFS
     const positions = new Map<string, { x: number; y: number }>();
-    const queue: Array<{ spanId: string; depth: number; siblingIndex: number }> = [];
+    const queue: Array<{
+      spanId: string;
+      depth: number;
+      siblingIndex: number;
+    }> = [];
 
     // Initialize with root spans
     rootSpans.forEach((span, index) => {
@@ -74,12 +78,12 @@ export function useTraceToReactFlow(
 
       // Calculate position based on layout
       const x =
-        layout === 'horizontal'
+        layout === "horizontal"
           ? depth * (nodeWidth + nodeSpacing)
           : siblingIndex * (nodeWidth + nodeSpacing);
 
       const y =
-        layout === 'horizontal'
+        layout === "horizontal"
           ? siblingIndex * (nodeHeight + nodeSpacing)
           : depth * (nodeHeight + nodeSpacing);
 
@@ -101,25 +105,28 @@ export function useTraceToReactFlow(
       const position = positions.get(span.spanId) || { x: 0, y: 0 };
 
       // Determine node status color
-      let statusColor = '#6366f1'; // Default indigo
-      if (span.status === 'OK') {
-        statusColor = '#22c55e'; // Green
-      } else if (span.status === 'ERROR') {
-        statusColor = '#ef4444'; // Red
+      let statusColor = "#6366f1"; // Default indigo
+      if (span.status === "OK") {
+        statusColor = "#22c55e"; // Green
+      } else if (span.status === "ERROR") {
+        statusColor = "#ef4444"; // Red
       }
 
       // Calculate duration
-      let duration = '';
+      let duration = "";
       if (span.startTime && span.endTime) {
         const start = new Date(span.startTime).getTime();
         const end = new Date(span.endTime).getTime();
         const durationMs = end - start;
-        duration = durationMs < 1000 ? `${durationMs}ms` : `${(durationMs / 1000).toFixed(2)}s`;
+        duration =
+          durationMs < 1000
+            ? `${durationMs}ms`
+            : `${(durationMs / 1000).toFixed(2)}s`;
       }
 
       return {
         id: span.spanId,
-        type: 'traceNode',
+        type: "traceNode",
         position,
         data: {
           label: span.name,
@@ -139,10 +146,10 @@ export function useTraceToReactFlow(
         id: `${span.parentSpanId}-${span.spanId}`,
         source: span.parentSpanId!,
         target: span.spanId,
-        type: 'smoothstep',
-        animated: span.status === 'UNSET' || !span.endTime,
+        type: "smoothstep",
+        animated: span.status === "UNSET" || !span.endTime,
         style: {
-          stroke: span.status === 'ERROR' ? '#ef4444' : '#6366f1',
+          stroke: span.status === "ERROR" ? "#ef4444" : "#6366f1",
           strokeWidth: 2,
         },
       }));

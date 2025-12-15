@@ -1,7 +1,7 @@
 /**
  * ObservabilityPage Tests
  *
- * TDD tests for the observability page.
+ * TDD tests for the observability page using RTK Query.
  * Tests cover:
  * - Tab navigation
  * - Traces display
@@ -9,186 +9,663 @@
  * - Metrics display
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ObservabilityPage } from './ObservabilityPage';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { ObservabilityPage } from "./ObservabilityPage";
+import { TestRouter } from "../test-utils";
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock the RTK Query hooks
+const mockRefetchTraces = vi.fn();
+const mockRefetchLogs = vi.fn();
+const mockRefetchMetrics = vi.fn();
 
-describe('ObservabilityPage', () => {
+vi.mock("../api", () => ({
+  useListTracesQuery: vi.fn(),
+  useListLogsQuery: vi.fn(),
+  useGetMetricsQuery: vi.fn(),
+}));
+
+import {
+  useListTracesQuery,
+  useListLogsQuery,
+  useGetMetricsQuery,
+} from "../api";
+
+// Cast to vi.Mock for type safety
+const mockUseListTracesQuery = useListTracesQuery as ReturnType<typeof vi.fn>;
+const mockUseListLogsQuery = useListLogsQuery as ReturnType<typeof vi.fn>;
+const mockUseGetMetricsQuery = useGetMetricsQuery as ReturnType<typeof vi.fn>;
+
+// Default mock data
+const mockTraces = [
+  {
+    trace_id: "1",
+    span_id: "s1",
+    name: "chat/completion",
+    start_time: new Date().toISOString(),
+    end_time: new Date(Date.now() + 1234).toISOString(),
+    status: "success",
+    attributes: {},
+  },
+  {
+    trace_id: "2",
+    span_id: "s2",
+    name: "tools/execute",
+    start_time: new Date(Date.now() - 60000).toISOString(),
+    end_time: new Date(Date.now() - 60000 + 567).toISOString(),
+    status: "success",
+    attributes: {},
+  },
+];
+
+const mockLogs = [
+  {
+    id: "log-1",
+    level: "info",
+    message: "Processing request",
+    timestamp: new Date().toISOString(),
+    service: "agent",
+  },
+  {
+    id: "log-2",
+    level: "error",
+    message: "Connection failed",
+    timestamp: new Date().toISOString(),
+    service: "mcp",
+  },
+];
+
+const mockMetrics = {
+  requests_total: 1523,
+  errors_total: 12,
+  avg_latency_ms: 234,
+  p99_latency_ms: 890,
+  tokens_used: 45678,
+  active_sessions: 8,
+};
+
+describe("ObservabilityPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock successful API response
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({
-        traces: [
-          { id: '1', name: 'chat/completion', duration: 1234, status: 'success', timestamp: new Date().toISOString(), spans: 5 },
-          { id: '2', name: 'tools/execute', duration: 567, status: 'success', timestamp: new Date(Date.now() - 60000).toISOString(), spans: 3 },
-          { id: '3', name: 'workflow/run', duration: 2345, status: 'running', timestamp: new Date(Date.now() - 120000).toISOString(), spans: 8 },
-        ],
-      }),
+
+    // Default mock: successful traces response
+    mockUseListTracesQuery.mockReturnValue({
+      data: { items: mockTraces, total: 2, limit: 50 },
+      isLoading: false,
+      error: null,
+      refetch: mockRefetchTraces,
+    });
+
+    mockUseListLogsQuery.mockReturnValue({
+      data: { items: mockLogs, total: 2, limit: 50 },
+      isLoading: false,
+      error: null,
+      refetch: mockRefetchLogs,
+    });
+
+    mockUseGetMetricsQuery.mockReturnValue({
+      data: mockMetrics,
+      isLoading: false,
+      error: null,
+      refetch: mockRefetchMetrics,
     });
   });
 
-  describe('Header', () => {
-    it('should display page title', () => {
-      render(<ObservabilityPage />);
+  describe("Header", () => {
+    it("should display page title", () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
 
-      expect(screen.getByText('Observability')).toBeInTheDocument();
+      expect(screen.getByText("Observability")).toBeInTheDocument();
     });
 
-    it('should display page description', () => {
-      render(<ObservabilityPage />);
+    it("should display page description", () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
 
-      expect(screen.getByText(/Monitor traces, logs, and metrics/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Monitor traces, logs, and metrics/),
+      ).toBeInTheDocument();
     });
 
-    it('should have refresh button', () => {
-      render(<ObservabilityPage />);
+    it("should have refresh button", () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
 
-      expect(screen.getByText('Refresh')).toBeInTheDocument();
+      expect(screen.getByText("Refresh")).toBeInTheDocument();
     });
   });
 
-  describe('Tabs', () => {
-    it('should have Traces tab', () => {
-      render(<ObservabilityPage />);
+  describe("Tabs", () => {
+    it("should have Traces tab", () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
 
-      expect(screen.getByText('Traces')).toBeInTheDocument();
+      expect(screen.getByText("Traces")).toBeInTheDocument();
     });
 
-    it('should have Logs tab', () => {
-      render(<ObservabilityPage />);
+    it("should have Logs tab", () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
 
-      expect(screen.getByText('Logs')).toBeInTheDocument();
+      expect(screen.getByText("Logs")).toBeInTheDocument();
     });
 
-    it('should have Metrics tab', () => {
-      render(<ObservabilityPage />);
+    it("should have Metrics tab", () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
 
-      expect(screen.getByText('Metrics')).toBeInTheDocument();
+      expect(screen.getByText("Metrics")).toBeInTheDocument();
     });
 
-    it('should switch to Logs tab when clicked', async () => {
-      render(<ObservabilityPage />);
+    it("should switch to Logs tab when clicked", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
 
-      // Wait for initial load
+      // Traces should be visible by default
+      expect(screen.getByText("chat/completion")).toBeInTheDocument();
+
+      // Click on Logs tab
+      fireEvent.click(screen.getByText("Logs"));
+
+      // Should display logs
       await waitFor(() => {
-        expect(screen.queryByText('chat/completion')).toBeInTheDocument();
-      }, { timeout: 1000 });
-
-      fireEvent.click(screen.getByText('Logs'));
-
-      // Should show logs coming soon content
-      await waitFor(() => {
-        expect(screen.getByText('Logs Coming Soon')).toBeInTheDocument();
-      }, { timeout: 1000 });
+        expect(screen.getByText("Processing request")).toBeInTheDocument();
+      });
     });
   });
 
-  describe('Loading State', () => {
-    it('should show loading spinner initially', () => {
-      render(<ObservabilityPage />);
+  describe("Loading State", () => {
+    it("should show loading skeletons initially", () => {
+      // Set traces to loading state
+      mockUseListTracesQuery.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: null,
+        refetch: mockRefetchTraces,
+      });
 
-      expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      // Should show skeleton placeholders instead of spinner
+      expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+    });
+
+    it("should show multiple skeleton items while loading", () => {
+      mockUseListTracesQuery.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: null,
+        refetch: mockRefetchTraces,
+      });
+
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      // Should have multiple skeleton items (3 by default)
+      const skeletons = document.querySelectorAll(".animate-pulse");
+      expect(skeletons.length).toBeGreaterThan(1);
     });
   });
 
-  describe('API Integration', () => {
-    it('should call traces API on mount', async () => {
-      render(<ObservabilityPage />);
+  describe("Traces Tab", () => {
+    it("should display traces after loading", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/api/v1/observability/traces'),
-          expect.objectContaining({ method: 'GET' })
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+    });
+
+    it("should show trace status badges", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Check for status badge
+      expect(screen.getAllByText("success").length).toBeGreaterThan(0);
+    });
+
+    it("should show trace duration", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        // Duration is calculated from start_time and end_time
+        // Multiple traces have duration, so use getAllByText
+        expect(screen.getAllByText(/ms/).length).toBeGreaterThan(0);
+      });
+    });
+
+    it("should show empty state when no traces", async () => {
+      // Override mock to return empty traces
+      mockUseListTracesQuery.mockReturnValue({
+        data: { items: [], total: 0, limit: 50 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchTraces,
+      });
+
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/No traces found/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Logs Tab", () => {
+    it("should fetch and display logs when switching to Logs tab", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Logs"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Processing request")).toBeInTheDocument();
+      });
+    });
+
+    it("should display log entries with level badges", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Logs"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Processing request")).toBeInTheDocument();
+        expect(screen.getByText("info")).toBeInTheDocument();
+      });
+    });
+
+    it("should show service name for each log entry", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Logs"));
+
+      await waitFor(() => {
+        expect(screen.getByText("agent")).toBeInTheDocument();
+      });
+    });
+
+    it("should show empty state when no logs", async () => {
+      // Override mock to return empty logs
+      mockUseListLogsQuery.mockReturnValue({
+        data: { items: [], total: 0, limit: 50 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchLogs,
+      });
+
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Logs"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/No logs found/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Metrics Tab", () => {
+    it("should fetch and display metrics when switching to Metrics tab", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Metrics"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Total Requests")).toBeInTheDocument();
+      });
+    });
+
+    it("should display request count metric", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Metrics"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Total Requests")).toBeInTheDocument();
+        expect(screen.getByText("1,523")).toBeInTheDocument();
+      });
+    });
+
+    it("should display error count metric", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Metrics"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Total Errors")).toBeInTheDocument();
+        expect(screen.getByText("12")).toBeInTheDocument();
+      });
+    });
+
+    it("should display latency metrics", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Metrics"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Avg Latency")).toBeInTheDocument();
+        expect(screen.getByText("234ms")).toBeInTheDocument();
+      });
+    });
+
+    it("should display token usage metric", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Metrics"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Tokens Used")).toBeInTheDocument();
+        expect(screen.getByText("45,678")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should display error message when fetch fails", async () => {
+      // Mock RTK Query hooks to return error state
+      mockUseListTracesQuery.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isFetching: false,
+        error: { status: 500, message: "Internal Server Error" },
+        refetch: mockRefetchTraces,
+      });
+
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to load/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should show retry button on error", async () => {
+      // Mock RTK Query hooks to return error state
+      mockUseListTracesQuery.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isFetching: false,
+        error: { status: 500 },
+        refetch: mockRefetchTraces,
+      });
+
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Retry")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Traces Pagination", () => {
+    it("should show Load More button when next_cursor is present", async () => {
+      mockUseListTracesQuery.mockReturnValue({
+        data: {
+          items: mockTraces,
+          total: 100,
+          limit: 50,
+          next_cursor: "next-page-cursor",
+        },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchTraces,
+      });
+
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /load more/i }),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should not show Load More button when no next_cursor", async () => {
+      mockUseListTracesQuery.mockReturnValue({
+        data: { items: mockTraces, total: 2, limit: 50 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchTraces,
+      });
+
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      expect(
+        screen.queryByRole("button", { name: /load more/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show trace count", async () => {
+      mockUseListTracesQuery.mockReturnValue({
+        data: { items: mockTraces, total: 100, limit: 50, next_cursor: "next" },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchTraces,
+      });
+
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/2 of 100/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Traces Filters", () => {
+    it("should have status filter buttons", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Status filter buttons
+      expect(
+        screen.getByRole("button", { name: /^all$/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /^success$/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /^error$/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should have session ID filter input", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      expect(screen.getByPlaceholderText(/session id/i)).toBeInTheDocument();
+    });
+
+    it("should have time range filter", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Time range filter options
+      expect(
+        screen.getByRole("combobox", { name: /time range/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should call hook with status filter when status is selected", async () => {
+      render(
+        <TestRouter>
+          <ObservabilityPage />
+        </TestRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /^error$/i }));
+
+      // The hook should be called with the new status
+      await waitFor(() => {
+        expect(mockUseListTracesQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ status: "error" }),
         );
       });
-    });
-
-    it('should handle API errors', async () => {
-      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-        ok: false,
-        statusText: 'Internal Server Error',
-      });
-
-      render(<ObservabilityPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/Failed to load traces/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Traces Tab', () => {
-    it('should display traces after loading', async () => {
-      render(<ObservabilityPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText('chat/completion')).toBeInTheDocument();
-      }, { timeout: 1000 });
-    });
-
-    it('should show trace status badges', async () => {
-      render(<ObservabilityPage />);
-
-      // Wait for loading to complete first
-      await waitFor(() => {
-        expect(screen.getByText('chat/completion')).toBeInTheDocument();
-      }, { timeout: 2000 });
-
-      // Now check for status badge - there are multiple traces, one with "success"
-      expect(screen.getAllByText('success').length).toBeGreaterThan(0);
-    });
-
-    it('should show trace duration', async () => {
-      render(<ObservabilityPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/1234ms/)).toBeInTheDocument();
-      }, { timeout: 1000 });
-    });
-
-    it('should show span count', async () => {
-      render(<ObservabilityPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/5 spans/)).toBeInTheDocument();
-      }, { timeout: 1000 });
-    });
-  });
-
-  describe('Logs Tab', () => {
-    it('should display coming soon message for logs', async () => {
-      render(<ObservabilityPage />);
-
-      await waitFor(() => {
-        expect(screen.queryByText('chat/completion')).toBeInTheDocument();
-      }, { timeout: 1000 });
-
-      fireEvent.click(screen.getByText('Logs'));
-
-      await waitFor(() => {
-        expect(screen.getByText('Logs Coming Soon')).toBeInTheDocument();
-      }, { timeout: 1000 });
-    });
-  });
-
-  describe('Metrics Tab', () => {
-    it('should display coming soon message for metrics', async () => {
-      render(<ObservabilityPage />);
-
-      await waitFor(() => {
-        expect(screen.queryByText('chat/completion')).toBeInTheDocument();
-      }, { timeout: 1000 });
-
-      fireEvent.click(screen.getByText('Metrics'));
-
-      await waitFor(() => {
-        expect(screen.getByText('Metrics Coming Soon')).toBeInTheDocument();
-      }, { timeout: 1000 });
     });
   });
 });

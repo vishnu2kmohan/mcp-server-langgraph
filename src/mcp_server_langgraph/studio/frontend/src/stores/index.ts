@@ -1,16 +1,11 @@
 /**
- * Zustand Store Exports
+ * Store Exports
  *
- * Central export point for all Studio stores.
- * Stores use Zustand 5.x with immer middleware for immutable updates.
+ * Central export point for Redux store types and slices.
+ *
+ * Use Redux hooks (useAppDispatch, useAppSelector) from store/hooks.ts
+ * to access store state and dispatch actions.
  */
 
-// Export individual stores
-export { useAuthStore } from './authStore';
-export { useWorkflowStore } from './workflowStore';
-export { useSessionStore } from './sessionStore';
-export { useMCPStore } from './mcpStore';
-export { usePersonaStore } from './personaStore';
-
-// Export types
-export type { Persona } from './personaStore';
+// Re-export Persona type from Redux slice for compatibility
+export type { Persona } from "../store/slices/personaSlice";

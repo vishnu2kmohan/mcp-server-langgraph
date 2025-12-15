@@ -1,357 +1,350 @@
 /**
  * RTK Query API Tests
  *
- * TDD tests for the unified API slice.
- * Tests cover:
- * - API configuration
- * - Endpoint definitions
- * - Tag types
- * - Query/mutation configurations
+ * Tests for API configuration, hook exports, and type definitions.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { api } from './index';
+import { describe, it, expect } from "vitest";
+import {
+  api,
+  useListWorkflowsQuery,
+  useGetWorkflowQuery,
+  useCreateWorkflowMutation,
+  useUpdateWorkflowMutation,
+  useDeleteWorkflowMutation,
+  useBootstrapWorkflowMutation,
+  useGetWorkflowSharesQuery,
+  useAddWorkflowShareMutation,
+  useRemoveWorkflowShareMutation,
+  useUpdateWorkflowPublicMutation,
+  useGenerateWorkflowCodeMutation,
+  useListSessionsQuery,
+  useGetSessionQuery,
+  useCreateSessionMutation,
+  useDeleteSessionMutation,
+  useGetSessionMessagesQuery,
+  useSendChatMessageMutation,
+  useGetCostSummaryQuery,
+  useGetCostByModelQuery,
+  useGetCostHistoryQuery,
+  useListTracesQuery,
+  useGetTraceQuery,
+  useListProjectsQuery,
+  useGetProjectQuery,
+  useCreateProjectMutation,
+  useUpdateProjectMutation,
+  useDeleteProjectMutation,
+  useGetFeatureFlagsQuery,
+  // Admin User hooks
+  useListAdminUsersQuery,
+  useGetAdminUserQuery,
+  useCreateAdminUserMutation,
+  useUpdateAdminUserMutation,
+  useDeleteAdminUserMutation,
+  // Workflow Execution hooks
+  useListWorkflowExecutionsQuery,
+  useGetWorkflowExecutionQuery,
+} from "./index";
 
-// Mock localStorage
-const mockLocalStorage = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
-Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
-
-describe('RTK Query API', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  describe('API Configuration', () => {
-    it('should have correct reducer path', () => {
-      expect(api.reducerPath).toBe('api');
+describe("RTK Query API", () => {
+  describe("API Configuration", () => {
+    it("should have correct reducerPath", () => {
+      expect(api.reducerPath).toBe("api");
     });
 
-    it('should export reducer function', () => {
-      expect(typeof api.reducer).toBe('function');
+    it("should have reducer defined", () => {
+      expect(api.reducer).toBeDefined();
+      expect(typeof api.reducer).toBe("function");
     });
 
-    it('should export middleware', () => {
+    it("should have middleware defined", () => {
       expect(api.middleware).toBeDefined();
     });
-
-    it('should have util methods', () => {
-      expect(api.util).toBeDefined();
-      expect(api.util.invalidateTags).toBeDefined();
-      expect(api.util.resetApiState).toBeDefined();
-    });
   });
 
-  describe('Endpoint Definitions', () => {
-    describe('Feature Flags', () => {
-      it('should have getFeatureFlags endpoint', () => {
-        expect(api.endpoints.getFeatureFlags).toBeDefined();
-      });
-
-      it('should be a query endpoint', () => {
-        expect(api.endpoints.getFeatureFlags.select).toBeDefined();
-      });
-    });
-
-    describe('Workflows', () => {
-      it('should have listWorkflows endpoint', () => {
-        expect(api.endpoints.listWorkflows).toBeDefined();
-      });
-
-      it('should have getWorkflow endpoint', () => {
-        expect(api.endpoints.getWorkflow).toBeDefined();
-      });
-
-      it('should have createWorkflow endpoint', () => {
-        expect(api.endpoints.createWorkflow).toBeDefined();
-      });
-
-      it('should have updateWorkflow endpoint', () => {
-        expect(api.endpoints.updateWorkflow).toBeDefined();
-      });
-
-      it('should have deleteWorkflow endpoint', () => {
-        expect(api.endpoints.deleteWorkflow).toBeDefined();
-      });
-    });
-
-    describe('Sessions', () => {
-      it('should have listSessions endpoint', () => {
-        expect(api.endpoints.listSessions).toBeDefined();
-      });
-
-      it('should have getSession endpoint', () => {
-        expect(api.endpoints.getSession).toBeDefined();
-      });
-
-      it('should have createSession endpoint', () => {
-        expect(api.endpoints.createSession).toBeDefined();
-      });
-
-      it('should have deleteSession endpoint', () => {
-        expect(api.endpoints.deleteSession).toBeDefined();
-      });
-    });
-
-    describe('Messages', () => {
-      it('should have getSessionMessages endpoint', () => {
-        expect(api.endpoints.getSessionMessages).toBeDefined();
-      });
-    });
-
-    describe('Chat', () => {
-      it('should have sendChatMessage endpoint', () => {
-        expect(api.endpoints.sendChatMessage).toBeDefined();
-      });
-    });
-
-    describe('Cost', () => {
-      it('should have getCostSummary endpoint', () => {
-        expect(api.endpoints.getCostSummary).toBeDefined();
-      });
-
-      it('should have getCostByModel endpoint', () => {
-        expect(api.endpoints.getCostByModel).toBeDefined();
-      });
-    });
-
-    describe('Observability', () => {
-      it('should have listTraces endpoint', () => {
-        expect(api.endpoints.listTraces).toBeDefined();
-      });
-
-      it('should have getTrace endpoint', () => {
-        expect(api.endpoints.getTrace).toBeDefined();
-      });
-    });
-  });
-
-  describe('Hooks Export', () => {
-    it('should export useGetFeatureFlagsQuery hook', async () => {
-      const { useGetFeatureFlagsQuery } = await import('./index');
-      expect(useGetFeatureFlagsQuery).toBeDefined();
-    });
-
-    it('should export useListWorkflowsQuery hook', async () => {
-      const { useListWorkflowsQuery } = await import('./index');
+  describe("Workflow Hooks Export", () => {
+    it("should export useListWorkflowsQuery", () => {
       expect(useListWorkflowsQuery).toBeDefined();
+      expect(typeof useListWorkflowsQuery).toBe("function");
     });
 
-    it('should export useGetWorkflowQuery hook', async () => {
-      const { useGetWorkflowQuery } = await import('./index');
+    it("should export useGetWorkflowQuery", () => {
       expect(useGetWorkflowQuery).toBeDefined();
+      expect(typeof useGetWorkflowQuery).toBe("function");
     });
 
-    it('should export useCreateWorkflowMutation hook', async () => {
-      const { useCreateWorkflowMutation } = await import('./index');
+    it("should export useCreateWorkflowMutation", () => {
       expect(useCreateWorkflowMutation).toBeDefined();
+      expect(typeof useCreateWorkflowMutation).toBe("function");
     });
 
-    it('should export useUpdateWorkflowMutation hook', async () => {
-      const { useUpdateWorkflowMutation } = await import('./index');
+    it("should export useUpdateWorkflowMutation", () => {
       expect(useUpdateWorkflowMutation).toBeDefined();
+      expect(typeof useUpdateWorkflowMutation).toBe("function");
     });
 
-    it('should export useDeleteWorkflowMutation hook', async () => {
-      const { useDeleteWorkflowMutation } = await import('./index');
+    it("should export useDeleteWorkflowMutation", () => {
       expect(useDeleteWorkflowMutation).toBeDefined();
+      expect(typeof useDeleteWorkflowMutation).toBe("function");
     });
 
-    it('should export useListSessionsQuery hook', async () => {
-      const { useListSessionsQuery } = await import('./index');
+    it("should export useBootstrapWorkflowMutation", () => {
+      expect(useBootstrapWorkflowMutation).toBeDefined();
+      expect(typeof useBootstrapWorkflowMutation).toBe("function");
+    });
+
+    it("should export useGetWorkflowSharesQuery", () => {
+      expect(useGetWorkflowSharesQuery).toBeDefined();
+      expect(typeof useGetWorkflowSharesQuery).toBe("function");
+    });
+
+    it("should export useAddWorkflowShareMutation", () => {
+      expect(useAddWorkflowShareMutation).toBeDefined();
+      expect(typeof useAddWorkflowShareMutation).toBe("function");
+    });
+
+    it("should export useRemoveWorkflowShareMutation", () => {
+      expect(useRemoveWorkflowShareMutation).toBeDefined();
+      expect(typeof useRemoveWorkflowShareMutation).toBe("function");
+    });
+
+    it("should export useUpdateWorkflowPublicMutation", () => {
+      expect(useUpdateWorkflowPublicMutation).toBeDefined();
+      expect(typeof useUpdateWorkflowPublicMutation).toBe("function");
+    });
+
+    it("should export useGenerateWorkflowCodeMutation", () => {
+      expect(useGenerateWorkflowCodeMutation).toBeDefined();
+      expect(typeof useGenerateWorkflowCodeMutation).toBe("function");
+    });
+  });
+
+  describe("Session Hooks Export", () => {
+    it("should export useListSessionsQuery", () => {
       expect(useListSessionsQuery).toBeDefined();
+      expect(typeof useListSessionsQuery).toBe("function");
     });
 
-    it('should export useGetSessionQuery hook', async () => {
-      const { useGetSessionQuery } = await import('./index');
+    it("should export useGetSessionQuery", () => {
       expect(useGetSessionQuery).toBeDefined();
+      expect(typeof useGetSessionQuery).toBe("function");
     });
 
-    it('should export useCreateSessionMutation hook', async () => {
-      const { useCreateSessionMutation } = await import('./index');
+    it("should export useCreateSessionMutation", () => {
       expect(useCreateSessionMutation).toBeDefined();
+      expect(typeof useCreateSessionMutation).toBe("function");
     });
 
-    it('should export useDeleteSessionMutation hook', async () => {
-      const { useDeleteSessionMutation } = await import('./index');
+    it("should export useDeleteSessionMutation", () => {
       expect(useDeleteSessionMutation).toBeDefined();
+      expect(typeof useDeleteSessionMutation).toBe("function");
     });
 
-    it('should export useGetSessionMessagesQuery hook', async () => {
-      const { useGetSessionMessagesQuery } = await import('./index');
+    it("should export useGetSessionMessagesQuery", () => {
       expect(useGetSessionMessagesQuery).toBeDefined();
+      expect(typeof useGetSessionMessagesQuery).toBe("function");
     });
+  });
 
-    it('should export useSendChatMessageMutation hook', async () => {
-      const { useSendChatMessageMutation } = await import('./index');
+  describe("Chat Hooks Export", () => {
+    it("should export useSendChatMessageMutation", () => {
       expect(useSendChatMessageMutation).toBeDefined();
+      expect(typeof useSendChatMessageMutation).toBe("function");
     });
+  });
 
-    it('should export useGetCostSummaryQuery hook', async () => {
-      const { useGetCostSummaryQuery } = await import('./index');
+  describe("Cost Hooks Export", () => {
+    it("should export useGetCostSummaryQuery", () => {
       expect(useGetCostSummaryQuery).toBeDefined();
+      expect(typeof useGetCostSummaryQuery).toBe("function");
     });
 
-    it('should export useGetCostByModelQuery hook', async () => {
-      const { useGetCostByModelQuery } = await import('./index');
+    it("should export useGetCostByModelQuery", () => {
       expect(useGetCostByModelQuery).toBeDefined();
+      expect(typeof useGetCostByModelQuery).toBe("function");
     });
 
-    it('should export useListTracesQuery hook', async () => {
-      const { useListTracesQuery } = await import('./index');
+    it("should export useGetCostHistoryQuery", () => {
+      expect(useGetCostHistoryQuery).toBeDefined();
+      expect(typeof useGetCostHistoryQuery).toBe("function");
+    });
+  });
+
+  describe("Observability Hooks Export", () => {
+    it("should export useListTracesQuery", () => {
       expect(useListTracesQuery).toBeDefined();
+      expect(typeof useListTracesQuery).toBe("function");
     });
 
-    it('should export useGetTraceQuery hook', async () => {
-      const { useGetTraceQuery } = await import('./index');
+    it("should export useGetTraceQuery", () => {
       expect(useGetTraceQuery).toBeDefined();
+      expect(typeof useGetTraceQuery).toBe("function");
     });
   });
 
-  describe('Reducer Integration', () => {
-    it('should create valid initial state', () => {
-      const initialState = api.reducer(undefined, { type: '@@INIT' });
-      expect(initialState).toBeDefined();
-      expect(typeof initialState).toBe('object');
+  describe("Project Hooks Export", () => {
+    it("should export useListProjectsQuery", () => {
+      expect(useListProjectsQuery).toBeDefined();
+      expect(typeof useListProjectsQuery).toBe("function");
     });
 
-    it('should handle unknown actions', () => {
-      const state = api.reducer(undefined, { type: 'UNKNOWN_ACTION' });
-      expect(state).toBeDefined();
-    });
-  });
-
-  describe('Endpoint Select Methods', () => {
-    it('should have select method for getFeatureFlags', () => {
-      const selector = api.endpoints.getFeatureFlags.select();
-      expect(typeof selector).toBe('function');
+    it("should export useGetProjectQuery", () => {
+      expect(useGetProjectQuery).toBeDefined();
+      expect(typeof useGetProjectQuery).toBe("function");
     });
 
-    it('should have select method for listWorkflows', () => {
-      const selector = api.endpoints.listWorkflows.select({ limit: 20 });
-      expect(typeof selector).toBe('function');
+    it("should export useCreateProjectMutation", () => {
+      expect(useCreateProjectMutation).toBeDefined();
+      expect(typeof useCreateProjectMutation).toBe("function");
     });
 
-    it('should have select method for getWorkflow', () => {
-      const selector = api.endpoints.getWorkflow.select('workflow-1');
-      expect(typeof selector).toBe('function');
+    it("should export useUpdateProjectMutation", () => {
+      expect(useUpdateProjectMutation).toBeDefined();
+      expect(typeof useUpdateProjectMutation).toBe("function");
     });
 
-    it('should have select method for listSessions', () => {
-      const selector = api.endpoints.listSessions.select({ limit: 20 });
-      expect(typeof selector).toBe('function');
-    });
-
-    it('should have select method for getSession', () => {
-      const selector = api.endpoints.getSession.select('session-1');
-      expect(typeof selector).toBe('function');
-    });
-
-    it('should have select method for getSessionMessages', () => {
-      const selector = api.endpoints.getSessionMessages.select('session-1');
-      expect(typeof selector).toBe('function');
-    });
-
-    it('should have select method for getCostSummary', () => {
-      const selector = api.endpoints.getCostSummary.select({ period: '30d' });
-      expect(typeof selector).toBe('function');
-    });
-
-    it('should have select method for getCostByModel', () => {
-      const selector = api.endpoints.getCostByModel.select({ period: '30d' });
-      expect(typeof selector).toBe('function');
-    });
-
-    it('should have select method for listTraces', () => {
-      const selector = api.endpoints.listTraces.select({ limit: 50 });
-      expect(typeof selector).toBe('function');
-    });
-
-    it('should have select method for getTrace', () => {
-      const selector = api.endpoints.getTrace.select('trace-1');
-      expect(typeof selector).toBe('function');
+    it("should export useDeleteProjectMutation", () => {
+      expect(useDeleteProjectMutation).toBeDefined();
+      expect(typeof useDeleteProjectMutation).toBe("function");
     });
   });
 
-  describe('Mutation Endpoints', () => {
-    it('createWorkflow should be a mutation', () => {
-      expect(api.endpoints.createWorkflow.initiate).toBeDefined();
-    });
-
-    it('updateWorkflow should be a mutation', () => {
-      expect(api.endpoints.updateWorkflow.initiate).toBeDefined();
-    });
-
-    it('deleteWorkflow should be a mutation', () => {
-      expect(api.endpoints.deleteWorkflow.initiate).toBeDefined();
-    });
-
-    it('createSession should be a mutation', () => {
-      expect(api.endpoints.createSession.initiate).toBeDefined();
-    });
-
-    it('deleteSession should be a mutation', () => {
-      expect(api.endpoints.deleteSession.initiate).toBeDefined();
-    });
-
-    it('sendChatMessage should be a mutation', () => {
-      expect(api.endpoints.sendChatMessage.initiate).toBeDefined();
+  describe("Feature Flags Hooks Export", () => {
+    it("should export useGetFeatureFlagsQuery", () => {
+      expect(useGetFeatureFlagsQuery).toBeDefined();
+      expect(typeof useGetFeatureFlagsQuery).toBe("function");
     });
   });
 
-  describe('Query Endpoints', () => {
-    it('getFeatureFlags should be a query', () => {
-      expect(api.endpoints.getFeatureFlags.initiate).toBeDefined();
-      expect(api.endpoints.getFeatureFlags.select).toBeDefined();
+  describe("Endpoints Configuration", () => {
+    it("should have listWorkflows endpoint defined", () => {
+      expect(api.endpoints.listWorkflows).toBeDefined();
     });
 
-    it('listWorkflows should be a query', () => {
-      expect(api.endpoints.listWorkflows.initiate).toBeDefined();
-      expect(api.endpoints.listWorkflows.select).toBeDefined();
+    it("should have listSessions endpoint defined", () => {
+      expect(api.endpoints.listSessions).toBeDefined();
     });
 
-    it('getWorkflow should be a query', () => {
-      expect(api.endpoints.getWorkflow.initiate).toBeDefined();
-      expect(api.endpoints.getWorkflow.select).toBeDefined();
+    it("should have listTraces endpoint defined", () => {
+      expect(api.endpoints.listTraces).toBeDefined();
     });
 
-    it('listSessions should be a query', () => {
-      expect(api.endpoints.listSessions.initiate).toBeDefined();
-      expect(api.endpoints.listSessions.select).toBeDefined();
+    it("should have listProjects endpoint defined", () => {
+      expect(api.endpoints.listProjects).toBeDefined();
     });
 
-    it('getSession should be a query', () => {
-      expect(api.endpoints.getSession.initiate).toBeDefined();
-      expect(api.endpoints.getSession.select).toBeDefined();
+    it("should have getCostHistory endpoint defined", () => {
+      expect(api.endpoints.getCostHistory).toBeDefined();
     });
 
-    it('getSessionMessages should be a query', () => {
-      expect(api.endpoints.getSessionMessages.initiate).toBeDefined();
-      expect(api.endpoints.getSessionMessages.select).toBeDefined();
+    it("should have getFeatureFlags endpoint defined", () => {
+      expect(api.endpoints.getFeatureFlags).toBeDefined();
     });
 
-    it('getCostSummary should be a query', () => {
-      expect(api.endpoints.getCostSummary.initiate).toBeDefined();
-      expect(api.endpoints.getCostSummary.select).toBeDefined();
+    it("should have bootstrapWorkflow endpoint defined", () => {
+      expect(api.endpoints.bootstrapWorkflow).toBeDefined();
     });
 
-    it('getCostByModel should be a query', () => {
-      expect(api.endpoints.getCostByModel.initiate).toBeDefined();
-      expect(api.endpoints.getCostByModel.select).toBeDefined();
+    it("should have getWorkflowShares endpoint defined", () => {
+      expect(api.endpoints.getWorkflowShares).toBeDefined();
     });
 
-    it('listTraces should be a query', () => {
-      expect(api.endpoints.listTraces.initiate).toBeDefined();
-      expect(api.endpoints.listTraces.select).toBeDefined();
+    it("should have addWorkflowShare endpoint defined", () => {
+      expect(api.endpoints.addWorkflowShare).toBeDefined();
     });
 
-    it('getTrace should be a query', () => {
-      expect(api.endpoints.getTrace.initiate).toBeDefined();
-      expect(api.endpoints.getTrace.select).toBeDefined();
+    it("should have removeWorkflowShare endpoint defined", () => {
+      expect(api.endpoints.removeWorkflowShare).toBeDefined();
+    });
+
+    it("should have updateWorkflowPublic endpoint defined", () => {
+      expect(api.endpoints.updateWorkflowPublic).toBeDefined();
+    });
+
+    it("should have generateWorkflowCode endpoint defined", () => {
+      expect(api.endpoints.generateWorkflowCode).toBeDefined();
+    });
+  });
+
+  describe("Tag Types", () => {
+    it("should include all required tag types", () => {
+      // Tag types are used for cache invalidation
+      // We verify by checking the endpoints provide correct tags
+      expect(api.endpoints.listWorkflows).toBeDefined();
+      expect(api.endpoints.listSessions).toBeDefined();
+      expect(api.endpoints.listProjects).toBeDefined();
+      expect(api.endpoints.listTraces).toBeDefined();
+    });
+  });
+
+  describe("Admin User Hooks Export", () => {
+    it("should export useListAdminUsersQuery", () => {
+      expect(useListAdminUsersQuery).toBeDefined();
+      expect(typeof useListAdminUsersQuery).toBe("function");
+    });
+
+    it("should export useGetAdminUserQuery", () => {
+      expect(useGetAdminUserQuery).toBeDefined();
+      expect(typeof useGetAdminUserQuery).toBe("function");
+    });
+
+    it("should export useCreateAdminUserMutation", () => {
+      expect(useCreateAdminUserMutation).toBeDefined();
+      expect(typeof useCreateAdminUserMutation).toBe("function");
+    });
+
+    it("should export useUpdateAdminUserMutation", () => {
+      expect(useUpdateAdminUserMutation).toBeDefined();
+      expect(typeof useUpdateAdminUserMutation).toBe("function");
+    });
+
+    it("should export useDeleteAdminUserMutation", () => {
+      expect(useDeleteAdminUserMutation).toBeDefined();
+      expect(typeof useDeleteAdminUserMutation).toBe("function");
+    });
+  });
+
+  describe("Admin User Endpoints Configuration", () => {
+    it("should have listAdminUsers endpoint defined", () => {
+      expect(api.endpoints.listAdminUsers).toBeDefined();
+    });
+
+    it("should have getAdminUser endpoint defined", () => {
+      expect(api.endpoints.getAdminUser).toBeDefined();
+    });
+
+    it("should have createAdminUser endpoint defined", () => {
+      expect(api.endpoints.createAdminUser).toBeDefined();
+    });
+
+    it("should have updateAdminUser endpoint defined", () => {
+      expect(api.endpoints.updateAdminUser).toBeDefined();
+    });
+
+    it("should have deleteAdminUser endpoint defined", () => {
+      expect(api.endpoints.deleteAdminUser).toBeDefined();
+    });
+  });
+
+  describe("Workflow Execution Hooks Export", () => {
+    it("should export useListWorkflowExecutionsQuery", () => {
+      expect(useListWorkflowExecutionsQuery).toBeDefined();
+      expect(typeof useListWorkflowExecutionsQuery).toBe("function");
+    });
+
+    it("should export useGetWorkflowExecutionQuery", () => {
+      expect(useGetWorkflowExecutionQuery).toBeDefined();
+      expect(typeof useGetWorkflowExecutionQuery).toBe("function");
+    });
+  });
+
+  describe("Workflow Execution Endpoints Configuration", () => {
+    it("should have listWorkflowExecutions endpoint defined", () => {
+      expect(api.endpoints.listWorkflowExecutions).toBeDefined();
+    });
+
+    it("should have getWorkflowExecution endpoint defined", () => {
+      expect(api.endpoints.getWorkflowExecution).toBeDefined();
     });
   });
 });

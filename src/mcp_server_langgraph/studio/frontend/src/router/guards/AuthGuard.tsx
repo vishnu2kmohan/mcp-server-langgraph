@@ -5,8 +5,9 @@
  * Redirects to login page if not authenticated.
  */
 
-import { Navigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuthStore } from '../../stores';
+import { Navigate, useLocation, Outlet } from "react-router";
+import { useAppSelector } from "../../store/hooks";
+import { selectUser, selectIsInitializing } from "../../store/slices/authSlice";
 
 export interface AuthGuardProps {
   /** Path to redirect to if not authenticated */
@@ -19,10 +20,10 @@ export interface AuthGuardProps {
  * AuthGuard wraps routes that require authentication.
  * Shows loading state during initialization, redirects to login if not authenticated.
  */
-export function AuthGuard({ loginPath = '/login', children }: AuthGuardProps) {
+export function AuthGuard({ loginPath = "/login", children }: AuthGuardProps) {
   const location = useLocation();
-  const user = useAuthStore((state) => state.user);
-  const isInitializing = useAuthStore((state) => state.isInitializing);
+  const user = useAppSelector(selectUser);
+  const isInitializing = useAppSelector(selectIsInitializing);
 
   // Show loading during auth initialization
   if (isInitializing) {
