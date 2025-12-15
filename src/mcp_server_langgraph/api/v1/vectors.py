@@ -59,6 +59,22 @@ class SearchRequest(BaseModel):
     limit: int = Field(default=10, description="Maximum number of results", ge=1, le=100)
 
 
+class TextSearchRequest(BaseModel):
+    """Request to search vectors using text (will be embedded)."""
+
+    collection_name: str = Field(..., description="Collection to search in")
+    query_text: str = Field(..., description="Query text to embed and search", min_length=1)
+    limit: int = Field(default=10, description="Maximum number of results", ge=1, le=100)
+
+
+class TextUpsertRequest(BaseModel):
+    """Request to upsert a text document (will be embedded)."""
+
+    collection_name: str = Field(..., description="Target collection")
+    text: str = Field(..., description="Text content to embed and store", min_length=1)
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata to store with the point")
+
+
 class UpsertPointsRequest(BaseModel):
     """Request to upsert points into a collection."""
 
@@ -83,6 +99,39 @@ def get_qdrant_client() -> Any:
 
     qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
     return QdrantClient(url=qdrant_url)
+
+
+def get_embedding_model() -> Any:
+    """
+    Get embedding model for text-to-vector conversion.
+
+    Uses LangChain embeddings based on configured provider.
+
+    Returns:
+        Embeddings model instance with embed_query method.
+    """
+    from mcp_server_langgraph.core.config import settings
+
+    provider = settings.embedding_provider
+    model_name = settings.embedding_model_name
+
+    if provider == "openai":
+        from langchain_openai import OpenAIEmbeddings
+
+        return OpenAIEmbeddings(model=model_name)
+    elif provider == "google":
+        from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+        return GoogleGenerativeAIEmbeddings(model=model_name)
+    elif provider in ("huggingface", "local"):
+        from langchain_huggingface import HuggingFaceEmbeddings
+
+        return HuggingFaceEmbeddings(model_name=model_name)
+    else:
+        # Default to OpenAI (already imported with type: ignore above)
+        from langchain_openai import OpenAIEmbeddings
+
+        return OpenAIEmbeddings(model=model_name or "text-embedding-3-small")
 
 
 async def require_viewer_permission(
@@ -360,4 +409,112 @@ async def upsert_points(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upsert points: {e}",
+        )
+
+
+@router.post("/search-text")
+async def search_vectors_by_text(
+    request: TextSearchRequest,
+    current_user: dict[str, Any] = Depends(require_viewer_permission),
+    qdrant: Any = Depends(get_qdrant_client),
+    embeddings: Any = Depends(get_embedding_model),
+) -> dict[str, Any]:
+    """
+    Search for similar vectors using text query.
+
+    The text query is converted to a vector using the configured embedding model,
+    then used to search for similar vectors in the collection.
+
+    Requires: viewer permission on vector_store:default
+    """
+    try:
+        # Convert text to embedding vector
+        query_vector = embeddings.embed_query(request.query_text)
+
+        # Search Qdrant with the embedding
+        results = qdrant.search(
+            collection_name=request.collection_name,
+            query_vector=query_vector,
+            limit=request.limit,
+        )
+
+        return {
+            "results": [
+                {
+                    "id": str(r.id),
+                    "score": r.score,
+                    "payload": r.payload,
+                }
+                for r in results
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Failed to search vectors by text: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to search vectors: {e}",
+        )
+
+
+@router.post("/upsert-text")
+async def upsert_vector_by_text(
+    request: TextUpsertRequest,
+    current_user: dict[str, Any] = Depends(require_editor_permission),
+    qdrant: Any = Depends(get_qdrant_client),
+    embeddings: Any = Depends(get_embedding_model),
+) -> dict[str, Any]:
+    """
+    Upsert a text document as a vector.
+
+    The text is converted to a vector using the configured embedding model,
+    then stored in the collection with the text and metadata as payload.
+
+    Requires: editor permission on vector_store:default
+    """
+    import uuid
+
+    from qdrant_client.models import PointStruct
+
+    try:
+        # Generate a UUID for the point
+        point_id = str(uuid.uuid4())
+
+        # Convert text to embedding vector
+        vector = embeddings.embed_query(request.text)
+
+        # Build payload with text and metadata
+        payload = {"text": request.text, **request.metadata}
+
+        # Create the point
+        point = PointStruct(
+            id=point_id,
+            vector=vector,
+            payload=payload,
+        )
+
+        # Upsert to Qdrant
+        qdrant.upsert(
+            collection_name=request.collection_name,
+            points=[point],
+        )
+
+        logger.info(
+            "Text vector upserted",
+            extra={
+                "collection": request.collection_name,
+                "point_id": point_id,
+                "user": current_user.get("preferred_username"),
+            },
+        )
+
+        return {
+            "collection": request.collection_name,
+            "point_id": point_id,
+            "status": "created",
+        }
+    except Exception as e:
+        logger.error(f"Failed to upsert text vector: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upsert text: {e}",
         )

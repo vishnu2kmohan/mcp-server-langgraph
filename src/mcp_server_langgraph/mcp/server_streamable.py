@@ -79,6 +79,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
         logger_temp.info("Observability initialized successfully")
 
+    # Instrument FastAPI app with OTEL tracing (best practice)
+    # This must happen AFTER observability is initialized
+    try:
+        from mcp_server_langgraph.observability.telemetry import instrument_fastapi_app
+
+        instrument_fastapi_app(app)
+        logger.info("FastAPI app instrumented with OTEL tracing")
+    except Exception as e:
+        logger.warning(f"Failed to instrument FastAPI app with OTEL: {e}")
+
     # Initialize global auth middleware for FastAPI dependencies
     # This must happen AFTER observability is initialized (for logging)
     try:
@@ -95,12 +105,33 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning(f"Failed to initialize global auth middleware: {e}")
 
+    # Initialize session service with Redis if available
+    try:
+        from mcp_server_langgraph.api.v1.sessions import initialize_session_service
+
+        await initialize_session_service()
+    except Exception as e:
+        logger.warning(f"Failed to initialize session service: {e}")
+
     yield
 
     # Shutdown - cleanup observability and close connections
     from mcp_server_langgraph.observability.telemetry import shutdown_observability
 
     logger.info("Application shutdown initiated")
+
+    # Cleanup session service connections (Postgres and Redis)
+    try:
+        from mcp_server_langgraph.api.v1.sessions import _postgres_engine, _redis_client
+
+        if _postgres_engine:
+            await _postgres_engine.dispose()
+            logger.info("Session service PostgreSQL engine closed")
+        if _redis_client:
+            await _redis_client.close()
+            logger.info("Session service Redis client closed")
+    except Exception as e:
+        logger.warning(f"Error closing session service connections: {e}")
 
     # Cleanup checkpointer resources (Redis connections, etc.)
     try:
@@ -1940,8 +1971,10 @@ from mcp_server_langgraph.api.service_principals import router as service_princi
 
 # Include REST API routes
 from mcp_server_langgraph.api.version import router as version_router  # noqa: E402
+from mcp_server_langgraph.api.v1 import v1_router  # noqa: E402
 
 app.include_router(version_router)
+app.include_router(v1_router, prefix="/api/v1")
 app.include_router(gdpr_router)
 app.include_router(api_keys_router)
 app.include_router(service_principals_router)
@@ -2019,10 +2052,37 @@ app.openapi = custom_openapi  # type: ignore[method-assign]
 # Reference: docs/guides/api-migration-guide.md
 from pathlib import Path
 
+from starlette.responses import FileResponse, RedirectResponse
+
 from mcp_server_langgraph.utils.spa_static_files import create_spa_static_files
 
 # Studio frontend location: src/mcp_server_langgraph/studio/frontend/dist
 _studio_frontend_dist = Path(__file__).parent.parent / "studio" / "frontend" / "dist"
+
+
+# Native Login route - serves SPA index.html for React Router to handle /login
+# This bypasses Traefik forward-auth (configured in docker-compose.test.yml)
+@app.get("/login", tags=["auth"], response_model=None)
+async def login_page() -> FileResponse | RedirectResponse:
+    """
+    Serve native login page.
+
+    This endpoint serves the SPA's index.html which loads the React app.
+    React Router then handles the /login route and renders the LoginPage component.
+
+    The login form calls POST /api/v1/login which authenticates via Keycloak ROPC
+    grant (Resource Owner Password Credentials) - no redirect to Keycloak UI.
+    """
+    index_path = _studio_frontend_dist / "index.html"
+    if index_path.exists():
+        return FileResponse(
+            index_path,
+            media_type="text/html",
+            headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+        )
+    # Fallback: redirect to studio if frontend not built
+    return RedirectResponse(url="/studio", status_code=307)
+
 
 # Only mount if frontend is built (graceful degradation for API-only mode)
 _studio_spa_handler = create_spa_static_files(str(_studio_frontend_dist), caching=True)

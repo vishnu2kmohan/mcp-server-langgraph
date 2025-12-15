@@ -54,6 +54,23 @@ except ImportError:
 
 from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
 
+# Conditional imports for auto-instrumentation (OTEL best practices)
+try:
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+    FASTAPI_INSTRUMENTATION_AVAILABLE = True
+except ImportError:
+    FASTAPI_INSTRUMENTATION_AVAILABLE = False
+    FastAPIInstrumentor = None  # type: ignore[misc, assignment, unused-ignore]
+
+try:
+    from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+
+    HTTPX_INSTRUMENTATION_AVAILABLE = True
+except ImportError:
+    HTTPX_INSTRUMENTATION_AVAILABLE = False
+    HTTPXClientInstrumentor = None  # type: ignore[misc, assignment, unused-ignore]
+
 # Configuration
 SERVICE_NAME = "mcp-server-langgraph"
 OTLP_ENDPOINT = "http://localhost:4317"  # Change to your OTLP collector
@@ -88,6 +105,7 @@ class ObservabilityConfig:
         self._setup_tracing()
         self._setup_metrics()
         self._setup_logging(enable_file_logging=enable_file_logging)
+        self._setup_httpx_instrumentation()  # OTEL best practice: instrument HTTP clients
 
         # Setup LangSmith if enabled
         if self.enable_langsmith:
@@ -418,6 +436,28 @@ class ObservabilityConfig:
         """Get logger instance"""
         return self.logger
 
+    def _setup_httpx_instrumentation(self) -> None:
+        """
+        Configure httpx HTTP client auto-instrumentation.
+
+        OTEL Best Practice: Instrument all HTTP clients to trace outgoing requests.
+        This enables distributed tracing across microservices (e.g., to Keycloak, OpenFGA, LLM APIs).
+
+        Reference: https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/httpx/httpx.html
+        """
+        if not HTTPX_INSTRUMENTATION_AVAILABLE or HTTPXClientInstrumentor is None:
+            if OBSERVABILITY_VERBOSE:
+                print("⚠ httpx instrumentation not available (install opentelemetry-instrumentation-httpx)")
+            return
+
+        try:
+            HTTPXClientInstrumentor().instrument()
+            if OBSERVABILITY_VERBOSE:
+                print("✓ httpx HTTP client instrumentation enabled")
+        except Exception as e:
+            if OBSERVABILITY_VERBOSE:
+                print(f"⚠ Failed to instrument httpx: {e}")
+
     def _setup_langsmith(self) -> None:
         """Configure LangSmith tracing"""
         try:
@@ -450,6 +490,74 @@ _propagator: TraceContextTextMapPropagator | None = None
 def is_initialized() -> bool:
     """Check if observability has been initialized."""
     return _observability_config is not None
+
+
+# Default URLs to exclude from tracing (health checks, metrics, readiness probes)
+# These endpoints are typically called frequently and don't need tracing
+OTEL_EXCLUDED_URLS = [
+    "health",
+    "healthz",
+    "health/live",
+    "health/ready",
+    "metrics",
+    "ready",
+    "readyz",
+    "livez",
+    "favicon.ico",
+]
+
+
+def instrument_fastapi_app(app: Any, excluded_urls: list[str] | None = None) -> None:
+    """
+    Instrument a FastAPI app with OpenTelemetry tracing.
+
+    OTEL Best Practice: Instrument FastAPI apps for automatic HTTP request tracing.
+    This captures request duration, status codes, and trace propagation.
+
+    Args:
+        app: FastAPI application instance
+        excluded_urls: List of URL patterns to exclude from tracing
+                      (defaults to health/metrics endpoints)
+
+    Reference: https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/fastapi/fastapi.html
+
+    Example:
+        >>> from fastapi import FastAPI
+        >>> from mcp_server_langgraph.observability.telemetry import instrument_fastapi_app
+        >>> app = FastAPI()
+        >>> instrument_fastapi_app(app)
+    """
+    if not FASTAPI_INSTRUMENTATION_AVAILABLE or FastAPIInstrumentor is None:
+        if OBSERVABILITY_VERBOSE:
+            print("⚠ FastAPI instrumentation not available (install opentelemetry-instrumentation-fastapi)")
+        return
+
+    try:
+        # Combine default and custom excluded URLs
+        urls_to_exclude = OTEL_EXCLUDED_URLS.copy()
+        if excluded_urls:
+            urls_to_exclude.extend(excluded_urls)
+
+        # Set excluded URLs via environment variable (OTEL standard)
+        # This is respected by the FastAPI instrumentor
+        current_excluded = os.getenv("OTEL_PYTHON_FASTAPI_EXCLUDED_URLS", "")
+        if current_excluded:
+            urls_to_exclude.extend(current_excluded.split(","))
+
+        # Remove duplicates and create comma-separated string
+        unique_urls = list({url.strip() for url in urls_to_exclude if url.strip()})
+        os.environ["OTEL_PYTHON_FASTAPI_EXCLUDED_URLS"] = ",".join(unique_urls)
+
+        # Instrument the app
+        FastAPIInstrumentor.instrument_app(app)
+
+        if OBSERVABILITY_VERBOSE:
+            print("✓ FastAPI app instrumented with OTEL tracing")
+            print(f"  - Excluded URLs: {', '.join(unique_urls[:5])}{'...' if len(unique_urls) > 5 else ''}")
+
+    except Exception as e:
+        if OBSERVABILITY_VERBOSE:
+            print(f"⚠ Failed to instrument FastAPI app: {e}")
 
 
 def init_observability(

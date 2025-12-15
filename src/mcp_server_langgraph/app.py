@@ -30,6 +30,22 @@ from mcp_server_langgraph.auth.factory import create_user_provider
 from mcp_server_langgraph.auth.middleware import AuthMiddleware, set_global_auth_middleware
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
+from mcp_server_langgraph.middleware.audit import (
+    AuditMiddleware,
+    get_audit_service,
+    set_audit_service,
+)
+from mcp_server_langgraph.audit.factory import create_audit_scheduler
+from mcp_server_langgraph.audit.service import UnifiedAuditService
+from mcp_server_langgraph.audit.compliance_service import ComplianceService
+from mcp_server_langgraph.audit.repository import create_audit_repository
+from mcp_server_langgraph.audit.retention_scheduler import create_retention_scheduler
+from mcp_server_langgraph.audit.alerts import AuditAlertDetector
+from mcp_server_langgraph.audit.config import load_alerting_config, create_notifiers_from_config
+from mcp_server_langgraph.audit.notifications import NotificationRouter, create_notification_callback
+from mcp_server_langgraph.api.v1.compliance_reports import set_compliance_service
+from mcp_server_langgraph.api.v1.audit_websocket import set_audit_event_broadcaster
+from mcp_server_langgraph.audit.broadcast import AuditEventBroadcaster
 from mcp_server_langgraph.observability.telemetry import init_observability, logger
 
 
@@ -75,7 +91,109 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
             except RuntimeError:
                 pass  # Graceful degradation if observability not initialized
 
+        # Initialize audit service (required for middleware and scheduler)
+        # Uses PostgresUnifiedAuditRepository if database_url is configured (production)
+        # Falls back to InMemoryUnifiedAuditRepository if not (development/testing)
+        try:
+            audit_repository = create_audit_repository(database_url=config.database_url)
+            # Create broadcaster for real-time WebSocket streaming
+            audit_broadcaster = AuditEventBroadcaster()
+
+            # Create alert notification system (Slack/PagerDuty integration)
+            alert_detector = None
+            try:
+                alerting_config = load_alerting_config()
+                notifiers = create_notifiers_from_config(alerting_config)
+                if notifiers:
+                    notification_router = NotificationRouter(notifiers=notifiers)
+                    notification_callback = create_notification_callback(notification_router)
+
+                    # Create alert detector with configured thresholds
+                    alert_detector = AuditAlertDetector(
+                        failed_login_threshold=alerting_config.detection.failed_login.threshold,
+                        failed_login_window_minutes=alerting_config.detection.failed_login.window_minutes,
+                        business_hours_start=alerting_config.detection.after_hours_admin.end_hour,
+                        business_hours_end=alerting_config.detection.after_hours_admin.start_hour,
+                        bulk_export_threshold_records=alerting_config.detection.bulk_export.threshold_records,
+                        alert_callback=notification_callback,
+                    )
+                    logger.info(f"Alert notification system initialized with {len(notifiers)} notifier(s)")
+                else:
+                    logger.info("No alert notifiers configured (Slack/PagerDuty webhooks not set)")
+            except Exception as alert_config_error:
+                logger.warning(f"Failed to initialize alert notifications: {alert_config_error}")
+
+            audit_service_instance = UnifiedAuditService(
+                repository=audit_repository,
+                integrity_secret=config.audit_integrity_secret,
+                broadcaster=audit_broadcaster,
+                alert_detector=alert_detector,
+            )
+            set_audit_service(audit_service_instance)
+            # Make broadcaster available to WebSocket endpoint
+            set_audit_event_broadcaster(audit_broadcaster)
+            logger.info("Audit service initialized successfully with WebSocket streaming")
+
+            # Initialize compliance service (depends on audit service)
+            compliance_service_instance = ComplianceService(
+                audit_service=audit_service_instance,
+            )
+            set_compliance_service(compliance_service_instance)
+            logger.info("Compliance service initialized successfully")
+        except Exception as e:
+            logger.warning(f"Failed to initialize audit service: {e}")
+
+        # Start audit integrity scheduler if enabled (FedRAMP AU-9 compliance)
+        audit_scheduler = None
+        if config.audit_scheduler_enabled:
+            audit_service = get_audit_service()
+            if audit_service is not None:
+                try:
+                    audit_scheduler = create_audit_scheduler(
+                        audit_service=audit_service,
+                        schedule_hours=config.audit_scheduler_hours,
+                    )
+                    await audit_scheduler.start()
+                    logger.info(f"Audit integrity scheduler started (every {config.audit_scheduler_hours} hours)")
+                except Exception as e:
+                    logger.warning(f"Failed to start audit scheduler: {e}")
+            else:
+                logger.warning("Audit scheduler enabled but no audit service configured - skipping")
+
+        # Start partition retention scheduler if enabled (FedRAMP AU-11 compliance)
+        retention_scheduler = None
+        if config.partition_retention_enabled:
+            try:
+                retention_scheduler = create_retention_scheduler(
+                    retention_months=config.partition_retention_months,
+                    schedule_hours=config.partition_retention_hours,
+                )
+                await retention_scheduler.start()
+                logger.info(
+                    f"Partition retention scheduler started "
+                    f"(retention={config.partition_retention_months} months, "
+                    f"interval={config.partition_retention_hours} hours)"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to start retention scheduler: {e}")
+
         yield
+
+        # Stop retention scheduler gracefully on shutdown
+        if retention_scheduler is not None:
+            try:
+                await retention_scheduler.stop()
+                logger.info("Partition retention scheduler stopped")
+            except Exception as e:
+                logger.warning(f"Error stopping retention scheduler: {e}")
+
+        # Stop audit scheduler gracefully on shutdown
+        if audit_scheduler is not None:
+            try:
+                audit_scheduler.stop()  # sync method, no await needed
+                logger.info("Audit integrity scheduler stopped")
+            except Exception as e:
+                logger.warning(f"Error stopping audit scheduler: {e}")
 
     app = FastAPI(
         title="MCP Server LangGraph API",
@@ -127,6 +245,15 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
     app.add_middleware(AuthRequestMiddleware, auth_middleware=auth_middleware)
     try:
         logger.info("Auth request middleware enabled")
+    except RuntimeError:
+        pass  # Graceful degradation if observability not initialized
+
+    # Audit middleware - captures HTTP requests for compliance logging
+    # Must be after AuthRequestMiddleware to access request.state.user
+    # Supports: FedRAMP AU-2/3, HIPAA 164.312(b), GDPR Art. 30, SOC 2 CC6/CC7
+    app.add_middleware(AuditMiddleware)
+    try:
+        logger.info("Audit middleware enabled (FedRAMP/HIPAA/GDPR/SOC2 compliance)")
     except RuntimeError:
         pass  # Graceful degradation if observability not initialized
 

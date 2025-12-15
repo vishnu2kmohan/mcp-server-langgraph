@@ -24,8 +24,11 @@ class AuthRequestMiddleware(BaseHTTPMiddleware):
     """
     FastAPI request middleware for JWT-based authentication.
 
-    Extracts Bearer tokens from Authorization headers, verifies them,
-    and sets request.state.user for authenticated requests.
+    Supports multiple authentication methods:
+    1. Bearer token in Authorization header (JWT direct auth)
+    2. X-Forwarded-* headers from Traefik forward-auth (Keycloak SSO)
+
+    Extracts authentication info and sets request.state.user for authenticated requests.
 
     Usage:
         app = FastAPI()
@@ -48,6 +51,10 @@ class AuthRequestMiddleware(BaseHTTPMiddleware):
         """
         Process incoming request, extract and verify auth token.
 
+        Checks authentication sources in order:
+        1. Bearer token in Authorization header
+        2. X-Forwarded-* headers from Traefik forward-auth
+
         Args:
             request: Incoming HTTP request
             call_next: Next middleware/handler in chain
@@ -55,7 +62,7 @@ class AuthRequestMiddleware(BaseHTTPMiddleware):
         Returns:
             HTTP response from downstream handlers
         """
-        # Extract Bearer token from Authorization header
+        # Try Method 1: Extract Bearer token from Authorization header
         auth_header = request.headers.get("Authorization", "")
         token = None
 
@@ -97,6 +104,21 @@ class AuthRequestMiddleware(BaseHTTPMiddleware):
                     f"Token verification exception: {e}",
                     extra={"path": request.url.path},
                     exc_info=True,
+                )
+
+        # Try Method 2: Forward-auth headers from Traefik (Keycloak SSO)
+        # Only if request.state.user not already set by Bearer token
+        if not hasattr(request.state, "user") or not request.state.user:
+            forward_auth_data = self._extract_user_from_forward_auth_headers(request)
+            if forward_auth_data:
+                request.state.user = forward_auth_data
+                logger.debug(
+                    "Request authenticated via forward-auth headers",
+                    extra={
+                        "user_id": forward_auth_data.get("user_id"),
+                        "username": forward_auth_data.get("username"),
+                        "path": request.url.path,
+                    },
                 )
 
         # Continue to next middleware/handler
@@ -147,10 +169,73 @@ class AuthRequestMiddleware(BaseHTTPMiddleware):
             # Normalize to "user:username" format for OpenFGA compatibility
             user_id = f"user:{username}" if not username.startswith("user:") else username
 
+        # Extract roles from Keycloak JWT structure
+        # Keycloak can put roles in multiple places:
+        # 1. realm_access.roles - realm-level roles
+        # 2. resource_access.<client>.roles - client-level roles
+        # 3. roles - sometimes mapped directly (InMemoryUserProvider)
+        roles: list[str] = []
+
+        # Check direct roles first (InMemoryUserProvider)
+        if payload.get("roles"):
+            roles = payload.get("roles", [])
+        else:
+            # Extract from Keycloak realm_access structure
+            realm_access = payload.get("realm_access", {})
+            if realm_access and isinstance(realm_access, dict):
+                roles.extend(realm_access.get("roles", []))
+
+            # Also check resource_access for client-specific roles
+            resource_access = payload.get("resource_access", {})
+            if resource_access and isinstance(resource_access, dict):
+                for client_roles in resource_access.values():
+                    if isinstance(client_roles, dict):
+                        roles.extend(client_roles.get("roles", []))
+
         return {
             "user_id": user_id,
             "keycloak_id": keycloak_id,  # Raw UUID for Keycloak Admin API
             "username": username,
-            "roles": payload.get("roles", []),
+            "roles": roles,
             "email": payload.get("email"),
+        }
+
+    def _extract_user_from_forward_auth_headers(self, request: Request) -> dict[str, Any] | None:
+        """
+        Extract user information from Traefik forward-auth headers.
+
+        Traefik forward-auth middleware sets headers like:
+        - X-Forwarded-User: Username (from preferred_username claim)
+        - X-Forwarded-Email: Email address
+        - X-Forwarded-Groups: Comma-separated list of roles/groups
+
+        This enables Keycloak SSO without requiring a Bearer token in the request.
+
+        Args:
+            request: Incoming HTTP request
+
+        Returns:
+            User data dict if forward-auth headers present, None otherwise
+        """
+        # Check for X-Forwarded-User header (set by Traefik forward-auth)
+        username = request.headers.get("X-Forwarded-User")
+        if not username:
+            return None
+
+        # Extract additional info from forward-auth headers
+        email = request.headers.get("X-Forwarded-Email")
+        groups_header = request.headers.get("X-Forwarded-Groups", "")
+
+        # Parse roles from comma-separated groups header
+        roles = [g.strip() for g in groups_header.split(",") if g.strip()] if groups_header else []
+
+        # Build user_id in OpenFGA format
+        user_id = f"user:{username}"
+
+        return {
+            "user_id": user_id,
+            "keycloak_id": None,  # Not available via forward-auth headers
+            "username": username,
+            "roles": roles,
+            "email": email,
         }

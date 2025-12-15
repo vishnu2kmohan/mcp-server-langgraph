@@ -32,6 +32,7 @@ def register_default_routers(registry: RouterRegistry) -> None:
         service_principals_router,
         studio_router,
     )
+    from mcp_server_langgraph.api.metrics import router as metrics_router
     from mcp_server_langgraph.api.v1 import v1_router
 
     # Health check first (doesn't require auth)
@@ -47,6 +48,9 @@ def register_default_routers(registry: RouterRegistry) -> None:
 
     # Feature routers
     registry.register(studio_router, tags=["studio"])
+
+    # Metrics routers (HEART framework)
+    registry.register(metrics_router, tags=["metrics"])
 
     # Unified v1 API (BFF architecture)
     registry.register(v1_router, prefix="/api/v1", tags=["v1"])

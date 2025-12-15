@@ -50,7 +50,12 @@ class Settings(BaseSettings):
         default="http://localhost:4317",
         validation_alias=AliasChoices("OTEL_EXPORTER_OTLP_ENDPOINT", "OTLP_ENDPOINT"),
     )
-    enable_console_export: bool = True
+    # Console export for OTEL spans/metrics (disable in production to reduce log noise)
+    # Read from ENABLE_CONSOLE_EXPORT env var (default: True for development)
+    enable_console_export: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("ENABLE_CONSOLE_EXPORT"),
+    )
     enable_tracing: bool = True
     enable_metrics: bool = True
 
@@ -301,8 +306,18 @@ class Settings(BaseSettings):
     keycloak_admin_realm: str = "master"  # Admin API uses master realm for admin-cli client
     keycloak_admin_username: str = "admin"
     keycloak_admin_password: str | None = None
+    keycloak_admin_client_id: str = "admin-cli"  # Service account for IdP discovery
+    keycloak_admin_client_secret: str | None = None  # Set via KEYCLOAK_ADMIN_CLIENT_SECRET
     keycloak_verify_ssl: bool = True
     keycloak_timeout: int = 30  # HTTP timeout in seconds
+
+    # Frontend URL for OAuth2 callbacks and redirects
+    frontend_url: str = "http://localhost:5173"
+
+    # OAuth2 Configuration (MCP Connections)
+    # Set this to your frontend OAuth2 callback URL
+    # Example: https://app.example.com/studio/oauth/callback
+    oauth2_redirect_uri: str = "http://localhost:5173/studio/oauth/callback"
 
     # Session Management
     session_backend: str = "memory"  # "memory", "redis"
@@ -334,6 +349,18 @@ class Settings(BaseSettings):
     # Uses MemoryCostStorage (dev) or PostgresCostStorage (production/test)
     cost_storage_backend: str = "memory"  # "postgres" (recommended), "memory" (dev only)
 
+    # Primary Database (Unified Workspace Paradigm - Projects, Sessions, Workflows)
+    # PostgreSQL URL for SQLAlchemy async (must use asyncpg driver)
+    # Example: postgresql+asyncpg://user:pass@localhost:5432/dbname
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/mcp"
+
+    # Workflow Storage Backend
+    # Determines where workflow definitions and sharing metadata are stored
+    # - "postgres": Uses PostgreSQL with FTS and cursor pagination (recommended for production)
+    # - "redis": Uses Redis for fast access (good for caching layer)
+    # - "memory": In-memory using fakeredis (development only, requires fakeredis package)
+    workflow_storage_backend: str = "postgres"  # "postgres" (recommended), "redis", "memory"
+
     # GDPR/HIPAA/SOC2 Compliance Storage (ADR-0041: Pure PostgreSQL)
     # Storage for user profiles, preferences, consents, conversations, and audit logs
     # CRITICAL: Must use "postgres" in production (in-memory is DEVELOPMENT ONLY)
@@ -350,6 +377,21 @@ class Settings(BaseSettings):
     # Audit Log Cold Storage (for long-term compliance archival)
     audit_log_cold_storage_backend: str | None = None  # None, "s3", "gcs", "azure", "local"
     audit_log_cold_storage_path: str | None = None  # Local path or bucket name
+
+    # Audit Integrity (FedRAMP AU-9 compliance)
+    # Secret for HMAC-SHA256 hash chain computation
+    audit_integrity_secret: str = "default-audit-secret-change-in-production"
+
+    # Audit Integrity Scheduler (FedRAMP AU-9 compliance)
+    # Runs periodic verification of audit log hash chains
+    audit_scheduler_enabled: bool = False  # Disabled by default (production only)
+    audit_scheduler_hours: int = 24  # Run every 24 hours by default
+
+    # Partition Retention Scheduler (FedRAMP AU-11 compliance)
+    # Runs periodic cleanup of expired audit log partitions
+    partition_retention_enabled: bool = False  # Disabled by default
+    partition_retention_months: int = 84  # 7 years default (FedRAMP)
+    partition_retention_hours: int = 24  # Run cleanup daily
 
     # S3 Configuration (for audit log archival)
     aws_s3_bucket: str | None = None  # S3 bucket for audit log archival

@@ -1,0 +1,594 @@
+"""
+MCP REST Router.
+
+Exposes MCP Protocol 2025-11-25 features via REST endpoints.
+
+Endpoints:
+- GET  /resources              - List available resources
+- GET  /resources/content      - Read a resource by URI
+- POST /sampling               - Request LLM completion (server-initiated)
+- POST /elicitation            - Request user input (form mode)
+- POST /elicitation/url        - Request user URL action
+- GET  /tasks                  - List active tasks
+- GET  /tasks/{id}             - Get task status
+- POST /tasks/{id}/cancel      - Cancel a task
+
+Example:
+    from mcp_server_langgraph.api.v1.mcp import mcp_router
+    app.include_router(mcp_router, prefix="/api/v1/mcp")
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, Query, status
+from pydantic import BaseModel, Field
+
+from mcp_server_langgraph.api.v1.mcp_bridge import (
+    ChatError,
+    MCPBridge,
+    MCPConnectionError,
+    MCPElicitationRequiredError,
+    MCPPermissionError,
+    MCPResource,
+    MCPResourceContent,
+    MCPResourceNotFoundError,
+    MCPTask,
+    MCPTaskNotFoundError,
+    SamplingResponse,
+    get_mcp_bridge,
+)
+
+
+mcp_router = APIRouter(tags=["mcp"])
+
+
+# =============================================================================
+# Request/Response Models
+# =============================================================================
+
+
+class ResourceResponse(BaseModel):
+    """Response model for a single resource."""
+
+    uri: str = Field(description="Resource URI")
+    name: str = Field(description="Resource name")
+    title: str | None = Field(default=None, description="Human-readable title")
+    description: str | None = Field(default=None, description="Resource description")
+    mime_type: str | None = Field(default=None, description="MIME type")
+
+
+class ResourceListResponse(BaseModel):
+    """Response model for listing resources."""
+
+    resources: list[ResourceResponse] = Field(description="List of resources")
+
+
+class ResourceContentItem(BaseModel):
+    """A single resource content item."""
+
+    uri: str = Field(description="Resource URI")
+    mime_type: str | None = Field(default=None, description="MIME type")
+    text: str | None = Field(default=None, description="Text content")
+    blob: str | None = Field(default=None, description="Base64 encoded binary content")
+
+
+class ResourceContentResponse(BaseModel):
+    """Response model for reading resource content."""
+
+    contents: list[ResourceContentItem] = Field(description="Resource contents")
+
+
+class SamplingRequest(BaseModel):
+    """Request model for sampling."""
+
+    messages: list[dict[str, Any]] = Field(description="Conversation messages")
+    max_tokens: int = Field(default=1000, ge=1, le=100000, description="Max tokens")
+    system_prompt: str | None = Field(default=None, description="System prompt")
+    model_hints: list[str] | None = Field(default=None, description="Model name hints")
+    intelligence_priority: float = Field(default=0.5, ge=0.0, le=1.0, description="Intelligence priority")
+    speed_priority: float = Field(default=0.5, ge=0.0, le=1.0, description="Speed priority")
+    cost_priority: float = Field(default=0.5, ge=0.0, le=1.0, description="Cost priority")
+
+
+class SamplingResponseModel(BaseModel):
+    """Response model for sampling."""
+
+    role: str = Field(description="Message role")
+    content: dict[str, Any] = Field(description="Message content")
+    model: str | None = Field(default=None, description="Model used")
+    stop_reason: str | None = Field(default=None, description="Stop reason")
+
+
+class ElicitationFormRequest(BaseModel):
+    """Request model for form elicitation."""
+
+    model_config = {"populate_by_name": True}
+
+    message: str = Field(description="Human-readable explanation")
+    requested_schema: dict[str, Any] | None = Field(default=None, alias="schema", description="JSON Schema for the form")
+
+
+class ElicitationUrlRequest(BaseModel):
+    """Request model for URL elicitation."""
+
+    message: str = Field(description="Human-readable explanation")
+    url: str = Field(description="URL to navigate to")
+
+
+class ElicitationResponseModel(BaseModel):
+    """Response model for elicitation."""
+
+    action: str = Field(description="User action (accept, decline, cancel)")
+    content: dict[str, Any] | None = Field(default=None, description="User input")
+
+
+class TaskResponse(BaseModel):
+    """Response model for a task."""
+
+    task_id: str = Field(description="Task ID")
+    status: str = Field(description="Task status")
+    created_at: datetime = Field(description="Creation timestamp")
+    last_updated_at: datetime = Field(description="Last update timestamp")
+    ttl: int | None = Field(default=None, description="TTL in milliseconds")
+    poll_interval: int | None = Field(default=None, description="Recommended poll interval in ms")
+    status_message: str | None = Field(default=None, description="Status message")
+
+
+class TaskListResponse(BaseModel):
+    """Response model for listing tasks."""
+
+    tasks: list[TaskResponse] = Field(description="List of tasks")
+
+
+class ElicitationRequiredResponse(BaseModel):
+    """Response model for elicitation required error."""
+
+    detail: str = Field(description="Error message")
+    elicitations: list[dict[str, Any]] = Field(description="Required elicitations")
+
+
+# =============================================================================
+# Service Layer
+# =============================================================================
+
+
+class MCPService:
+    """
+    Service layer for MCP operations.
+
+    Wraps MCPBridge and provides high-level operations for the router.
+    """
+
+    def __init__(self, bridge: MCPBridge | None = None) -> None:
+        """Initialize with optional bridge."""
+        self._bridge = bridge
+
+    @property
+    def bridge(self) -> MCPBridge | None:
+        """Get the MCP bridge, lazily initializing if needed."""
+        if self._bridge is None:
+            self._bridge = get_mcp_bridge()
+        return self._bridge
+
+    @property
+    def is_configured(self) -> bool:
+        """Check if the service is configured."""
+        return self.bridge is not None and self.bridge.is_configured
+
+    async def list_resources(self) -> list[MCPResource]:
+        """List available resources."""
+        bridge = self.bridge
+        if bridge is None or not bridge.is_configured:
+            return []
+        return await bridge.refresh_resources()
+
+    async def read_resource(self, uri: str) -> list[MCPResourceContent]:
+        """Read a resource by URI."""
+        bridge = self.bridge
+        if bridge is None or not bridge.is_configured:
+            raise ChatError("MCP not configured")
+        return await bridge.read_resource(uri)
+
+    async def request_sampling(
+        self,
+        messages: list[dict[str, Any]],
+        max_tokens: int = 1000,
+        system_prompt: str | None = None,
+        model_hints: list[str] | None = None,
+        intelligence_priority: float = 0.5,
+        speed_priority: float = 0.5,
+        cost_priority: float = 0.5,
+    ) -> SamplingResponse:
+        """Request LLM completion via sampling."""
+        bridge = self.bridge
+        if bridge is None or not bridge.is_configured:
+            raise ChatError("MCP not configured")
+        return await bridge.request_sampling(
+            messages=messages,
+            max_tokens=max_tokens,
+            system_prompt=system_prompt,
+            model_hints=model_hints,
+            intelligence_priority=intelligence_priority,
+            speed_priority=speed_priority,
+            cost_priority=cost_priority,
+        )
+
+    async def request_user_input(
+        self,
+        message: str,
+        schema: dict[str, Any] | None = None,
+    ) -> Any:
+        """Request user input via form elicitation."""
+        bridge = self.bridge
+        if bridge is None or not bridge.is_configured:
+            raise ChatError("MCP not configured")
+        return await bridge.request_user_input(message=message, schema=schema)
+
+    async def request_user_url_action(
+        self,
+        message: str,
+        url: str,
+    ) -> Any:
+        """Request user to navigate to a URL."""
+        bridge = self.bridge
+        if bridge is None or not bridge.is_configured:
+            raise ChatError("MCP not configured")
+        return await bridge.request_user_url_action(message=message, url=url)
+
+    async def list_tasks(self) -> list[MCPTask]:
+        """List active tasks."""
+        bridge = self.bridge
+        if bridge is None or not bridge.is_configured:
+            return []
+        return await bridge.list_tasks()
+
+    async def get_task(self, task_id: str) -> MCPTask:
+        """Get task status."""
+        bridge = self.bridge
+        if bridge is None or not bridge.is_configured:
+            raise ChatError("MCP not configured")
+        return await bridge.get_task(task_id)
+
+    async def cancel_task(self, task_id: str) -> MCPTask:
+        """Cancel a task."""
+        bridge = self.bridge
+        if bridge is None or not bridge.is_configured:
+            raise ChatError("MCP not configured")
+        return await bridge.cancel_task(task_id)
+
+
+# Service singleton
+_mcp_service: MCPService | None = None
+
+
+def get_mcp_service() -> MCPService:
+    """Get the MCP service instance."""
+    global _mcp_service
+    if _mcp_service is None:
+        _mcp_service = MCPService()
+    return _mcp_service
+
+
+def reset_mcp_service() -> None:
+    """Reset the MCP service singleton (for testing)."""
+    global _mcp_service
+    _mcp_service = None
+
+
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+
+def _convert_resource(resource: MCPResource) -> ResourceResponse:
+    """Convert MCPResource to response model."""
+    return ResourceResponse(
+        uri=resource.uri,
+        name=resource.name,
+        title=resource.title,
+        description=resource.description,
+        mime_type=resource.mime_type,
+    )
+
+
+def _convert_content(content: MCPResourceContent) -> ResourceContentItem:
+    """Convert MCPResourceContent to response model."""
+    return ResourceContentItem(
+        uri=content.uri,
+        mime_type=content.mime_type,
+        text=content.text,
+        blob=content.blob,
+    )
+
+
+def _convert_task(task: MCPTask) -> TaskResponse:
+    """Convert MCPTask to response model."""
+    return TaskResponse(
+        task_id=task.task_id,
+        status=task.status.value,
+        created_at=task.created_at,
+        last_updated_at=task.last_updated_at,
+        ttl=task.ttl,
+        poll_interval=task.poll_interval,
+        status_message=task.status_message,
+    )
+
+
+# =============================================================================
+# Endpoints
+# =============================================================================
+
+
+@mcp_router.get("/resources")
+async def list_resources() -> ResourceListResponse:
+    """
+    List available MCP resources.
+
+    Returns all resources exposed by the MCP server.
+    """
+    service = get_mcp_service()
+
+    try:
+        resources = await service.list_resources()
+        return ResourceListResponse(resources=[_convert_resource(r) for r in resources])
+    except MCPPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: {e}",
+        )
+    except MCPConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP connection failed: {e}",
+        )
+
+
+@mcp_router.get("/resources/content")
+async def read_resource(
+    uri: str = Query(..., description="Resource URI to read"),
+) -> ResourceContentResponse:
+    """
+    Read a resource by URI.
+
+    Returns the content of the specified resource.
+    """
+    service = get_mcp_service()
+
+    try:
+        contents = await service.read_resource(uri)
+        return ResourceContentResponse(contents=[_convert_content(c) for c in contents])
+    except MCPResourceNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Resource not found: {e}",
+        )
+    except MCPPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: {e}",
+        )
+    except MCPConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP connection failed: {e}",
+        )
+    except ChatError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP not configured: {e}",
+        )
+
+
+@mcp_router.post("/sampling")
+async def create_sampling(request: SamplingRequest) -> SamplingResponseModel:
+    """
+    Request LLM completion via MCP sampling.
+
+    This is a server-initiated request for the client to sample from an LLM.
+    Useful for agent patterns where the server needs LLM assistance.
+    """
+    service = get_mcp_service()
+
+    try:
+        response = await service.request_sampling(
+            messages=request.messages,
+            max_tokens=request.max_tokens,
+            system_prompt=request.system_prompt,
+            model_hints=request.model_hints,
+            intelligence_priority=request.intelligence_priority,
+            speed_priority=request.speed_priority,
+            cost_priority=request.cost_priority,
+        )
+        return SamplingResponseModel(
+            role=response.role,
+            content=response.content,
+            model=response.model,
+            stop_reason=response.stop_reason,
+        )
+    except MCPElicitationRequiredError as e:
+        raise HTTPException(
+            status_code=status.HTTP_428_PRECONDITION_REQUIRED,
+            detail={"detail": str(e), "elicitations": e.elicitations},
+        )
+    except MCPPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: {e}",
+        )
+    except MCPConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP connection failed: {e}",
+        )
+    except ChatError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP not configured: {e}",
+        )
+
+
+@mcp_router.post("/elicitation")
+async def create_elicitation(request: ElicitationFormRequest) -> ElicitationResponseModel:
+    """
+    Request user input via form elicitation.
+
+    Allows the server to request structured input from the user.
+    """
+    service = get_mcp_service()
+
+    try:
+        response = await service.request_user_input(
+            message=request.message,
+            schema=request.requested_schema,
+        )
+        return ElicitationResponseModel(
+            action=response.action.value,
+            content=response.content,
+        )
+    except MCPPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: {e}",
+        )
+    except MCPConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP connection failed: {e}",
+        )
+    except ChatError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP not configured: {e}",
+        )
+
+
+@mcp_router.post("/elicitation/url")
+async def create_url_elicitation(
+    request: ElicitationUrlRequest,
+) -> ElicitationResponseModel:
+    """
+    Request user to navigate to a URL.
+
+    Useful for OAuth flows or handling sensitive data.
+    """
+    service = get_mcp_service()
+
+    try:
+        response = await service.request_user_url_action(
+            message=request.message,
+            url=request.url,
+        )
+        return ElicitationResponseModel(
+            action=response.action.value,
+            content=response.content,
+        )
+    except MCPPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: {e}",
+        )
+    except MCPConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP connection failed: {e}",
+        )
+    except ChatError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP not configured: {e}",
+        )
+
+
+@mcp_router.get("/tasks")
+async def list_tasks() -> TaskListResponse:
+    """
+    List active MCP tasks.
+
+    Returns all currently active tasks (experimental feature).
+    """
+    service = get_mcp_service()
+
+    try:
+        tasks = await service.list_tasks()
+        return TaskListResponse(tasks=[_convert_task(t) for t in tasks])
+    except MCPPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: {e}",
+        )
+    except MCPConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP connection failed: {e}",
+        )
+
+
+@mcp_router.get("/tasks/{task_id}")
+async def get_task(task_id: str) -> TaskResponse:
+    """
+    Get task status.
+
+    Returns the current status of a task.
+    """
+    service = get_mcp_service()
+
+    try:
+        task = await service.get_task(task_id)
+        return _convert_task(task)
+    except MCPTaskNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task {task_id} not found",
+        )
+    except MCPPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: {e}",
+        )
+    except MCPConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP connection failed: {e}",
+        )
+    except ChatError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP not configured: {e}",
+        )
+
+
+@mcp_router.post("/tasks/{task_id}/cancel")
+async def cancel_task(task_id: str) -> TaskResponse:
+    """
+    Cancel a running task.
+
+    Attempts to cancel the specified task.
+    """
+    service = get_mcp_service()
+
+    try:
+        task = await service.cancel_task(task_id)
+        return _convert_task(task)
+    except MCPTaskNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task {task_id} not found",
+        )
+    except MCPPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: {e}",
+        )
+    except MCPConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP connection failed: {e}",
+        )
+    except ChatError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP not configured: {e}",
+        )

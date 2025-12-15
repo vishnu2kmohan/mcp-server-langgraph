@@ -41,6 +41,8 @@ CACHE_TTLS = {
     "prometheus_query": 60,  # 1 minute - metrics change frequently
     "knowledge_base": 1800,  # 30 minutes - search index updates periodically
     "feature_flag": 60,  # 1 minute - fast rollout needed
+    "connection": 300,  # 5 minutes - connection configs change infrequently
+    "connection_health": 60,  # 1 minute - health status may change
 }
 
 

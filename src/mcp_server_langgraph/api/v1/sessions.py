@@ -14,6 +14,10 @@ Usage:
     POST /api/v1/sessions/{id}/messages - Add a message to a session
 """
 
+import logging
+import uuid
+from abc import ABC, abstractmethod
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query, status
@@ -23,6 +27,12 @@ from mcp_server_langgraph.api.pagination import (
     CursorPaginatedResponse,
     CursorPaginationMetadata,
 )
+from mcp_server_langgraph.storage.session import (
+    PostgresSessionManager,
+    RedisSessionManager,
+)
+
+logger = logging.getLogger(__name__)
 
 
 sessions_router = APIRouter(tags=["sessions"])
@@ -65,51 +75,591 @@ class SessionResponse(BaseModel):
     status: str = Field(default="active", description="Session status")
 
 
-# Service Interface (will be implemented in Phase 4: Storage Consolidation)
+# Service Interface (ABC for proper typing)
 
 
-class SessionService:
-    """Interface for session operations. Implemented by storage layer."""
+class SessionService(ABC):
+    """Abstract interface for session operations. Implemented by storage layer."""
+
+    @abstractmethod
+    async def list_sessions(
+        self,
+        cursor: str | None = None,
+        limit: int = 20,
+        workflow_id: str | None = None,
+        status: str | None = None,
+        search: str | None = None,
+        sort_by: str | None = "created_at",
+        sort_order: str | None = "desc",
+    ) -> tuple[list[dict[str, Any]], str | None]:
+        """List sessions with pagination, filtering, search, and sorting.
+
+        Args:
+            cursor: Pagination cursor (session ID to start after)
+            limit: Maximum number of sessions to return
+            workflow_id: Filter by workflow ID
+            status: Filter by session status
+            search: Search in session title
+            sort_by: Field to sort by (title, created_at, updated_at)
+            sort_order: Sort order (asc, desc)
+
+        Returns (sessions, next_cursor).
+        """
+        ...
+
+    @abstractmethod
+    async def get_session(self, session_id: str) -> dict[str, Any] | None:
+        """Get a session by ID. Returns None if not found."""
+        ...
+
+    @abstractmethod
+    async def create_session(self, session_data: dict[str, Any]) -> dict[str, Any]:
+        """Create a new session. Returns the created session."""
+        ...
+
+    @abstractmethod
+    async def delete_session(self, session_id: str) -> bool:
+        """Delete a session. Returns True if deleted, False if not found."""
+        ...
+
+    @abstractmethod
+    async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
+        """Get all messages in a session. Returns None if session not found."""
+        ...
+
+    @abstractmethod
+    async def add_message(self, session_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Add a message to a session. Returns None if session not found."""
+        ...
+
+    @abstractmethod
+    async def clear_messages(self, session_id: str) -> bool:
+        """Clear all messages in a session. Returns True if cleared, False if session not found."""
+        ...
+
+
+class InMemorySessionService(SessionService):
+    """In-memory implementation for development and testing."""
+
+    def __init__(self) -> None:
+        self._sessions: dict[str, dict[str, Any]] = {}
 
     async def list_sessions(
         self,
         cursor: str | None = None,
         limit: int = 20,
         workflow_id: str | None = None,
+        status: str | None = None,
+        search: str | None = None,
+        sort_by: str | None = "created_at",
+        sort_order: str | None = "desc",
     ) -> tuple[list[dict[str, Any]], str | None]:
-        """List sessions with pagination. Returns (sessions, next_cursor)."""
-        raise NotImplementedError
+        """List sessions with pagination, filtering, search, and sorting."""
+        # Get all sessions
+        sessions = list(self._sessions.values())
+
+        # Apply filters
+        if workflow_id:
+            sessions = [s for s in sessions if s.get("workflow_id") == workflow_id]
+        if status:
+            sessions = [s for s in sessions if s.get("status") == status]
+
+        # Apply search (case-insensitive on title)
+        if search:
+            search_lower = search.lower()
+            sessions = [s for s in sessions if s.get("title") and search_lower in s.get("title", "").lower()]
+
+        # Apply sorting
+        reverse = sort_order == "desc"
+        if sort_by == "title":
+            sessions.sort(key=lambda s: (s.get("title") or "").lower(), reverse=reverse)
+        elif sort_by == "updated_at":
+            sessions.sort(key=lambda s: s.get("updated_at", ""), reverse=reverse)
+        else:  # Default: created_at
+            sessions.sort(key=lambda s: s.get("created_at", ""), reverse=reverse)
+
+        # Apply cursor-based pagination
+        start_idx = 0
+        if cursor:
+            for i, s in enumerate(sessions):
+                if s["id"] == cursor:
+                    start_idx = i + 1
+                    break
+
+        # Slice to limit
+        paginated = sessions[start_idx : start_idx + limit]
+
+        # Determine next cursor
+        next_cursor = None
+        if start_idx + limit < len(sessions):
+            next_cursor = paginated[-1]["id"] if paginated else None
+
+        return paginated, next_cursor
 
     async def get_session(self, session_id: str) -> dict[str, Any] | None:
-        """Get a session by ID. Returns None if not found."""
-        raise NotImplementedError
+        """Get a session by ID."""
+        return self._sessions.get(session_id)
 
     async def create_session(self, session_data: dict[str, Any]) -> dict[str, Any]:
-        """Create a new session. Returns the created session."""
-        raise NotImplementedError
+        """Create a new session."""
+        session_id = str(uuid.uuid4())
+        now = datetime.now(UTC).isoformat()
+
+        session: dict[str, Any] = {
+            "id": session_id,
+            "title": session_data.get("title"),
+            "workflow_id": session_data.get("workflow_id"),
+            "messages": [],
+            "created_at": now,
+            "updated_at": now,
+            "status": "active",
+        }
+
+        self._sessions[session_id] = session
+        return session
 
     async def delete_session(self, session_id: str) -> bool:
-        """Delete a session. Returns True if deleted, False if not found."""
-        raise NotImplementedError
+        """Delete a session."""
+        if session_id in self._sessions:
+            del self._sessions[session_id]
+            return True
+        return False
 
     async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
-        """Get all messages in a session. Returns None if session not found."""
-        raise NotImplementedError
+        """Get all messages in a session."""
+        session = self._sessions.get(session_id)
+        if session is None:
+            return None
+        messages: list[dict[str, Any]] = session.get("messages", [])
+        return messages
 
     async def add_message(self, session_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
-        """Add a message to a session. Returns None if session not found."""
-        raise NotImplementedError
+        """Add a message to a session."""
+        session = self._sessions.get(session_id)
+        if session is None:
+            return None
+
+        message = {
+            "role": message_data["role"],
+            "content": message_data["content"],
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+
+        session["messages"].append(message)
+        session["updated_at"] = datetime.now(UTC).isoformat()
+
+        return message
+
+    async def clear_messages(self, session_id: str) -> bool:
+        """Clear all messages in a session."""
+        session = self._sessions.get(session_id)
+        if session is None:
+            return False
+
+        session["messages"] = []
+        session["updated_at"] = datetime.now(UTC).isoformat()
+        return True
+
+
+class RedisSessionService(SessionService):
+    """Redis-backed implementation for production use."""
+
+    def __init__(self, manager: RedisSessionManager) -> None:
+        self._manager = manager
+
+    async def list_sessions(
+        self,
+        cursor: str | None = None,
+        limit: int = 20,
+        workflow_id: str | None = None,
+        status: str | None = None,
+        search: str | None = None,
+        sort_by: str | None = "created_at",
+        sort_order: str | None = "desc",
+    ) -> tuple[list[dict[str, Any]], str | None]:
+        """List sessions with pagination, filtering, search, and sorting.
+
+        Note: RedisSessionManager.list_sessions() requires a user_id.
+        For now, we'll use a global scan. In production, this should
+        be scoped to the authenticated user.
+        """
+        # TODO: Get user_id from request context once auth is wired up
+        # For now, use pattern matching to get all sessions
+        import redis.asyncio as redis
+
+        pattern = f"{self._manager.KEY_PREFIX}:*"
+        redis_client: redis.Redis = self._manager._redis
+        sessions: list[dict[str, Any]] = []
+
+        # Use SCAN to get session keys (excluding user-scoped keys)
+        async for key in redis_client.scan_iter(match=pattern, count=100):
+            # Skip user-scoped keys (they're duplicates)
+            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
+            if ":user:" in key_str:
+                continue
+
+            data = await redis_client.get(key)
+            if data:
+                from mcp_server_langgraph.storage.session import Session
+
+                session = Session.model_validate_json(data)
+                session_dict: dict[str, Any] = {
+                    "id": session.session_id,
+                    "title": session.name,
+                    "workflow_id": None,  # Not supported in current model
+                    "messages": [
+                        {
+                            "role": m.role,
+                            "content": m.content,
+                            "timestamp": m.timestamp.isoformat(),
+                        }
+                        for m in session.messages
+                    ],
+                    "created_at": session.created_at.isoformat(),
+                    "updated_at": session.updated_at.isoformat(),
+                    "status": "active",
+                }
+                sessions.append(session_dict)
+
+        # Apply filters
+        if workflow_id:
+            sessions = [s for s in sessions if s.get("workflow_id") == workflow_id]
+        if status:
+            sessions = [s for s in sessions if s.get("status") == status]
+
+        # Apply search (case-insensitive on title)
+        if search:
+            search_lower = search.lower()
+            sessions = [s for s in sessions if s.get("title") and search_lower in s.get("title", "").lower()]
+
+        # Apply sorting
+        reverse = sort_order == "desc"
+        if sort_by == "title":
+            sessions.sort(key=lambda s: (s.get("title") or "").lower(), reverse=reverse)
+        elif sort_by == "updated_at":
+            sessions.sort(key=lambda s: s.get("updated_at", ""), reverse=reverse)
+        else:  # Default: created_at
+            sessions.sort(key=lambda s: s.get("created_at", ""), reverse=reverse)
+
+        # Apply cursor-based pagination
+        start_idx = 0
+        if cursor:
+            for i, s in enumerate(sessions):
+                if s["id"] == cursor:
+                    start_idx = i + 1
+                    break
+
+        paginated = sessions[start_idx : start_idx + limit]
+        next_cursor = None
+        if start_idx + limit < len(sessions):
+            next_cursor = paginated[-1]["id"] if paginated else None
+
+        return paginated, next_cursor
+
+    async def get_session(self, session_id: str) -> dict[str, Any] | None:
+        """Get a session by ID."""
+        session = await self._manager.get_session(session_id)
+        if session is None:
+            return None
+
+        return {
+            "id": session.session_id,
+            "title": session.name,
+            "workflow_id": None,
+            "messages": [
+                {
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.timestamp.isoformat(),
+                }
+                for m in session.messages
+            ],
+            "created_at": session.created_at.isoformat(),
+            "updated_at": session.updated_at.isoformat(),
+            "status": "active",
+        }
+
+    async def create_session(self, session_data: dict[str, Any]) -> dict[str, Any]:
+        """Create a new session."""
+        session = await self._manager.create_session(
+            name=session_data.get("title") or "New Session",
+            user_id=None,  # TODO: Get from auth context
+        )
+
+        return {
+            "id": session.session_id,
+            "title": session.name,
+            "workflow_id": session_data.get("workflow_id"),
+            "messages": [],
+            "created_at": session.created_at.isoformat(),
+            "updated_at": session.updated_at.isoformat(),
+            "status": "active",
+        }
+
+    async def delete_session(self, session_id: str) -> bool:
+        """Delete a session."""
+        return await self._manager.delete_session(session_id)
+
+    async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
+        """Get all messages in a session."""
+        session = await self._manager.get_session(session_id)
+        if session is None:
+            return None
+
+        return [
+            {
+                "role": m.role,
+                "content": m.content,
+                "timestamp": m.timestamp.isoformat(),
+            }
+            for m in session.messages
+        ]
+
+    async def add_message(self, session_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Add a message to a session."""
+        message = await self._manager.add_message(
+            session_id=session_id,
+            role=message_data["role"],
+            content=message_data["content"],
+        )
+
+        if message is None:
+            return None
+
+        return {
+            "role": message.role,
+            "content": message.content,
+            "timestamp": message.timestamp.isoformat(),
+        }
+
+    async def clear_messages(self, session_id: str) -> bool:
+        """Clear all messages in a session."""
+        return await self._manager.clear_messages(session_id)
+
+
+class PostgresSessionService(SessionService):
+    """PostgreSQL-backed implementation for production use with ACID guarantees."""
+
+    def __init__(self, manager: PostgresSessionManager) -> None:
+        self._manager = manager
+
+    async def list_sessions(
+        self,
+        cursor: str | None = None,
+        limit: int = 20,
+        workflow_id: str | None = None,
+        status: str | None = None,
+        search: str | None = None,
+        sort_by: str | None = "created_at",
+        sort_order: str | None = "desc",
+    ) -> tuple[list[dict[str, Any]], str | None]:
+        """List sessions with pagination, filtering, search, and sorting.
+
+        Note: PostgresSessionManager.list_sessions() uses offset-based pagination.
+        We'll convert to cursor-based for API consistency.
+        """
+        # Get sessions (without messages for performance)
+        # PostgresSessionManager.list_sessions returns (sessions, next_cursor)
+        sessions, next_cursor = await self._manager.list_sessions(limit=limit + 1)
+
+        session_dicts: list[dict[str, Any]] = []
+        for s in sessions[:limit]:
+            session_dicts.append(
+                {
+                    "id": s.session_id,
+                    "title": s.name,
+                    "workflow_id": None,  # Not supported in current model
+                    "messages": [],  # Not loaded for list performance
+                    "created_at": s.created_at.isoformat(),
+                    "updated_at": s.updated_at.isoformat(),
+                    "status": "active",
+                }
+            )
+
+        # Apply filters (post-query filtering since manager doesn't support them yet)
+        if status:
+            session_dicts = [s for s in session_dicts if s.get("status") == status]
+
+        # Apply search (case-insensitive on title)
+        if search:
+            search_lower = search.lower()
+            session_dicts = [s for s in session_dicts if s.get("title") and search_lower in s.get("title", "").lower()]
+
+        # Apply sorting (post-query sorting since manager doesn't support it yet)
+        reverse = sort_order == "desc"
+        if sort_by == "title":
+            session_dicts.sort(key=lambda s: (s.get("title") or "").lower(), reverse=reverse)
+        elif sort_by == "updated_at":
+            session_dicts.sort(key=lambda s: s.get("updated_at", ""), reverse=reverse)
+        else:  # Default: created_at
+            session_dicts.sort(key=lambda s: s.get("created_at", ""), reverse=reverse)
+
+        # Determine next cursor
+        next_cursor = None
+        if len(sessions) > limit:
+            next_cursor = session_dicts[-1]["id"] if session_dicts else None
+
+        return session_dicts, next_cursor
+
+    async def get_session(self, session_id: str) -> dict[str, Any] | None:
+        """Get a session by ID."""
+        session = await self._manager.get_session(session_id)
+        if session is None:
+            return None
+
+        return {
+            "id": session.session_id,
+            "title": session.name,
+            "workflow_id": None,
+            "messages": [
+                {
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.timestamp.isoformat(),
+                }
+                for m in session.messages
+            ],
+            "created_at": session.created_at.isoformat(),
+            "updated_at": session.updated_at.isoformat(),
+            "status": "active",
+        }
+
+    async def create_session(self, session_data: dict[str, Any]) -> dict[str, Any]:
+        """Create a new session."""
+        session = await self._manager.create_session(
+            name=session_data.get("title") or "New Session",
+            user_id=None,  # TODO: Get from auth context
+        )
+
+        return {
+            "id": session.session_id,
+            "title": session.name,
+            "workflow_id": session_data.get("workflow_id"),
+            "messages": [],
+            "created_at": session.created_at.isoformat(),
+            "updated_at": session.updated_at.isoformat(),
+            "status": "active",
+        }
+
+    async def delete_session(self, session_id: str) -> bool:
+        """Delete a session."""
+        return await self._manager.delete_session(session_id)
+
+    async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
+        """Get all messages in a session."""
+        session = await self._manager.get_session(session_id)
+        if session is None:
+            return None
+
+        return [
+            {
+                "role": m.role,
+                "content": m.content,
+                "timestamp": m.timestamp.isoformat(),
+            }
+            for m in session.messages
+        ]
+
+    async def add_message(self, session_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Add a message to a session."""
+        message = await self._manager.add_message(
+            session_id=session_id,
+            role=message_data["role"],
+            content=message_data["content"],
+        )
+
+        if message is None:
+            return None
+
+        return {
+            "role": message.role,
+            "content": message.content,
+            "timestamp": message.timestamp.isoformat(),
+        }
+
+    async def clear_messages(self, session_id: str) -> bool:
+        """Clear all messages in a session."""
+        return await self._manager.clear_messages(session_id)
 
 
 # Service singleton (will be replaced by dependency injection in Phase 4)
 _session_service: SessionService | None = None
+_redis_client: Any = None  # Store Redis client for cleanup
+_postgres_engine: Any = None  # Store Postgres engine for cleanup
+
+
+async def initialize_session_service() -> SessionService:
+    """Initialize the session service with the best available backend.
+
+    Priority: PostgreSQL > Redis > In-Memory
+
+    PostgreSQL is preferred for ACID guarantees and durability.
+    Redis is used as a fast cache alternative if Postgres is unavailable.
+    In-Memory is the fallback for development/testing without infrastructure.
+    """
+    import os
+
+    global _session_service, _redis_client, _postgres_engine
+
+    # Check for PostgreSQL DATABASE_URL (preferred for ACID guarantees)
+    database_url = os.environ.get("DATABASE_URL")
+
+    if database_url:
+        try:
+            from mcp_server_langgraph.storage.session import (
+                create_postgres_engine,
+                init_session_database,
+            )
+
+            logger.info(f"Initializing PostgreSQL session service with URL: {database_url[:50]}...")
+            _postgres_engine = await create_postgres_engine(database_url)
+
+            # Initialize database schema (creates tables if not exist)
+            await init_session_database(_postgres_engine)
+
+            pg_manager = PostgresSessionManager(engine=_postgres_engine)
+            _session_service = PostgresSessionService(pg_manager)
+            logger.info("PostgreSQL session service initialized successfully")
+            return _session_service
+        except Exception as e:
+            logger.warning(f"Failed to connect to PostgreSQL: {e}")
+            # Fall through to try Redis
+
+    # Check for Redis URL (fallback from Postgres)
+    redis_url = os.environ.get("REDIS_SESSION_URL")
+
+    if redis_url:
+        try:
+            import redis.asyncio as redis
+
+            logger.info(f"Initializing Redis session service with URL: {redis_url}")
+            _redis_client = redis.from_url(  # type: ignore[no-untyped-call]
+                redis_url,
+                max_connections=10,
+                decode_responses=True,
+            )
+            # Test connection
+            await _redis_client.ping()
+            redis_manager = RedisSessionManager(redis_client=_redis_client, ttl_seconds=86400)
+            _session_service = RedisSessionService(redis_manager)
+            logger.info("Redis session service initialized successfully")
+            return _session_service
+        except Exception as e:
+            logger.warning(f"Failed to connect to Redis: {e}")
+            # Fall through to in-memory
+
+    # Fallback to in-memory
+    logger.info("No DATABASE_URL or REDIS_SESSION_URL set, using in-memory session service")
+    _session_service = InMemorySessionService()
+    return _session_service
 
 
 def get_session_service() -> SessionService:
     """Get the session service instance."""
     global _session_service
     if _session_service is None:
-        _session_service = SessionService()
+        # Fallback to in-memory if not initialized
+        _session_service = InMemorySessionService()
     return _session_service
 
 
@@ -127,14 +677,30 @@ async def list_sessions(
     cursor: str | None = Query(default=None, description="Pagination cursor"),
     limit: int = Query(default=20, ge=1, le=100, description="Items per page"),
     workflow_id: str | None = Query(default=None, description="Filter by workflow ID"),
+    status: str | None = Query(default=None, description="Filter by session status (active, archived)"),
+    search: str | None = Query(default=None, min_length=1, max_length=500, description="Search in title"),
+    sort_by: Literal["title", "created_at", "updated_at"] = Query(default="created_at", description="Field to sort by"),
+    sort_order: Literal["asc", "desc"] = Query(default="desc", description="Sort order"),
 ) -> CursorPaginatedResponse[dict[str, Any]]:
     """
     List all sessions with cursor-based pagination.
 
-    Optionally filter by workflow_id to get sessions for a specific workflow.
+    Supports:
+    - Pagination: cursor, limit
+    - Filtering: workflow_id, status
+    - Search: search (searches title)
+    - Sorting: sort_by, sort_order
     """
     service = get_session_service()
-    sessions, next_cursor = await service.list_sessions(cursor=cursor, limit=limit, workflow_id=workflow_id)
+    sessions, next_cursor = await service.list_sessions(
+        cursor=cursor,
+        limit=limit,
+        workflow_id=workflow_id,
+        status=status,
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
 
     # Build pagination metadata
     has_next = next_cursor is not None
@@ -236,3 +802,20 @@ async def add_message(session_id: str, request: MessageRequest) -> dict[str, Any
         )
 
     return message
+
+
+@sessions_router.delete("/sessions/{session_id}/messages", status_code=status.HTTP_204_NO_CONTENT)
+async def clear_messages(session_id: str) -> None:
+    """
+    Clear all messages in a session.
+
+    This removes all messages but keeps the session intact.
+    """
+    service = get_session_service()
+    cleared = await service.clear_messages(session_id)
+
+    if not cleared:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )

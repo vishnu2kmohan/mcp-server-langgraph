@@ -112,6 +112,27 @@ class EventReceiptResponse(BaseModel):
     received_at: datetime = Field(description="Server receipt timestamp")
 
 
+class FeedbackRequest(BaseModel):
+    """User feedback request (NPS/CSAT)"""
+
+    nps_score: int | None = Field(None, ge=0, le=10, description="Net Promoter Score (0-10)")
+    csat_rating: int | None = Field(None, ge=1, le=5, description="Customer Satisfaction Rating (1-5)")
+    comment: str | None = Field(None, max_length=2000, description="Optional feedback comment")
+
+    def model_post_init(self, __context: Any) -> None:
+        """Validate that at least one score is provided."""
+        if self.nps_score is None and self.csat_rating is None:
+            raise ValueError("At least one of nps_score or csat_rating must be provided")
+
+
+class FeedbackResponse(BaseModel):
+    """Response for feedback submission"""
+
+    success: bool = Field(description="Whether feedback was submitted successfully")
+    feedback_id: str = Field(description="Unique feedback identifier")
+    received_at: datetime = Field(description="Server receipt timestamp")
+
+
 class AggregateMetrics(BaseModel):
     """Aggregated metrics for dashboard"""
 
@@ -149,6 +170,7 @@ class AggregateMetrics(BaseModel):
 # Note: In production, these would be stored in PostgreSQL
 _metrics_store: list[HeartMetricsBatch] = []
 _events_store: list[tuple[str, str, FeatureEvent]] = []  # (session_id, app_name, event)
+_feedback_store: list[tuple[str, FeedbackRequest]] = []  # (feedback_id, request)
 
 
 # =============================================================================
@@ -334,3 +356,45 @@ async def get_dashboard() -> dict[str, Any]:
         "total_events_count": len(_events_store),
         "generated_at": datetime.now(UTC).isoformat(),
     }
+
+
+@router.post(
+    "/feedback",
+    status_code=status.HTTP_201_CREATED,
+    summary="Submit User Feedback",
+    description="Submit NPS/CSAT user feedback",
+)
+async def submit_feedback(request: FeedbackRequest) -> FeedbackResponse:
+    """
+    Submit user feedback (NPS/CSAT).
+
+    Example:
+        ```
+        POST /api/v1/metrics/feedback
+        {
+            "nps_score": 9,
+            "csat_rating": 4,
+            "comment": "Great product!"
+        }
+        ```
+    """
+    feedback_id = str(uuid4())
+
+    # Store feedback (in-memory for now)
+    _feedback_store.append((feedback_id, request))
+
+    logger.info(
+        "Feedback received",
+        extra={
+            "feedback_id": feedback_id,
+            "has_nps": request.nps_score is not None,
+            "has_csat": request.csat_rating is not None,
+            "has_comment": request.comment is not None,
+        },
+    )
+
+    return FeedbackResponse(
+        success=True,
+        feedback_id=feedback_id,
+        received_at=datetime.now(UTC),
+    )

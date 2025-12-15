@@ -1,0 +1,579 @@
+"""
+MCP Connections API Endpoints
+
+Implements CRUD operations for MCP server connections with:
+- OAuth2 authentication (per MCP 2025-03-26 / 2025-06-18 spec)
+- API Key authentication
+- Secure credential storage via secrets provider
+
+Usage:
+    from mcp_server_langgraph.api.v1.connections import connections_router
+    app.include_router(connections_router)
+"""
+
+from secrets import token_urlsafe
+from typing import Literal
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from pydantic import BaseModel, Field
+
+from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.middleware.rate_limiter import (
+    rate_limit_for_oauth2_callback,
+    rate_limit_for_oauth2_start,
+)
+
+from mcp_server_langgraph.core.dependencies import (
+    MCPClient,
+    OAuth2Service,
+    get_audit_log_repository,
+    get_connection_repository,
+    get_mcp_client,
+    get_oauth2_service,
+)
+from mcp_server_langgraph.repositories.audit_log import AuditLogRepository
+from mcp_server_langgraph.repositories.connections import ConnectionRepository
+from mcp_server_langgraph.storage.models import (
+    MCPConnection,
+    MCPConnectionCreate,
+    MCPConnectionSummary,
+    MCPConnectionTestResult,
+    MCPConnectionUpdate,
+    OAuth2StartResponse,
+)
+
+
+# ============================================================================
+# Response Models
+# ============================================================================
+
+
+class ConnectionListResponse(BaseModel):
+    """Response model for listing connections."""
+
+    items: list[MCPConnectionSummary]
+    total: int
+    cursor: str | None = None
+
+
+class ConnectionResponse(BaseModel):
+    """Full connection response (without secrets)."""
+
+    id: str
+    name: str
+    description: str | None = None
+    url: str
+    auth_type: str
+    status: str
+    server_name: str | None = None
+    server_version: str | None = None
+    tool_count: int = 0
+    resource_count: int = 0
+    prompt_count: int = 0
+    created_at: str
+    updated_at: str
+
+
+class OAuth2CallbackRequest(BaseModel):
+    """Request body for OAuth2 callback."""
+
+    code: str = Field(..., description="Authorization code from OAuth provider")
+    state: str = Field(..., description="State parameter for CSRF protection")
+
+
+class OAuth2CallbackResponse(BaseModel):
+    """Response from OAuth2 callback."""
+
+    status: Literal["success"] = "success"
+    message: str = "OAuth2 authorization completed"
+    connection_id: str = Field(..., description="ID of the authorized connection")
+
+
+# ============================================================================
+# Router
+# ============================================================================
+
+connections_router = APIRouter(prefix="/connections", tags=["connections"])
+
+
+# ============================================================================
+# Placeholder Dependencies (will be replaced by actual implementations)
+# ============================================================================
+
+
+def get_current_user_id(x_user_id: str | None = Header(None, alias="X-User-ID")) -> str:
+    """Get current user ID from header (placeholder for actual auth)."""
+    return x_user_id or "default-user"
+
+
+# ============================================================================
+# Endpoints
+# ============================================================================
+
+
+@connections_router.get("")
+async def list_connections(
+    user_id: str = Depends(get_current_user_id),
+    status: Literal["disconnected", "connecting", "connected", "error", "auth_required"] | None = Query(
+        None, description="Filter by status"
+    ),
+    auth_type: Literal["none", "api_key", "oauth2"] | None = Query(None, description="Filter by auth type"),
+    project_id: str | None = Query(None, description="Filter by project"),
+    search: str | None = Query(
+        None,
+        min_length=1,
+        max_length=500,
+        description="Search in name and description (uses PostgreSQL Full-Text Search)",
+    ),
+    cursor: str | None = Query(None, description="Pagination cursor"),
+    limit: int = Query(20, ge=1, le=100, description="Page size"),
+    sort_by: Literal["name", "created_at", "updated_at", "status"] = Query(
+        default="created_at", description="Field to sort by"
+    ),
+    sort_order: Literal["asc", "desc"] = Query(default="desc", description="Sort order"),
+    repo: ConnectionRepository = Depends(get_connection_repository),
+) -> ConnectionListResponse:
+    """
+    List MCP connections for the current user.
+
+    Supports:
+    - Pagination: cursor, limit (cursor-based for efficient large result sets)
+    - Filtering: status, auth_type, project_id
+    - Search: search (uses PostgreSQL Full-Text Search on name and description)
+    - Sorting: sort_by, sort_order
+    """
+    connections, next_cursor = await repo.list(
+        owner_id=user_id,
+        cursor=cursor,
+        limit=limit,
+        status=status,
+        auth_type=auth_type,
+        project_id=project_id,
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
+
+    return ConnectionListResponse(
+        items=connections,
+        total=len(connections),
+        cursor=next_cursor,
+    )
+
+
+@connections_router.post("", status_code=status.HTTP_201_CREATED)
+async def create_connection(
+    request: Request,
+    data: MCPConnectionCreate,
+    user_id: str = Depends(get_current_user_id),
+    repo: ConnectionRepository = Depends(get_connection_repository),
+    audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
+) -> MCPConnection:
+    """
+    Create a new MCP connection.
+
+    Supports three authentication types:
+    - none: No authentication
+    - api_key: API key stored in secrets provider
+    - oauth2: OAuth2 with PKCE flow
+    """
+    connection = await repo.create(data, owner_id=user_id)
+
+    # Log audit event
+    await audit_repo.log_event(
+        event_type="connection.created",
+        resource_type="connection",
+        resource_id=connection.id,
+        actor_id=user_id,
+        action="create",
+        details={"name": connection.name, "auth_type": connection.auth_type, "url": connection.url},
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
+
+    return connection
+
+
+@connections_router.get("/{connection_id}")
+async def get_connection(
+    connection_id: str,
+    repo: ConnectionRepository = Depends(get_connection_repository),
+) -> MCPConnection:
+    """
+    Get a specific MCP connection by ID.
+
+    Returns full connection details (without sensitive credentials).
+    """
+    connection = await repo.get(connection_id)
+    if connection is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connection {connection_id} not found",
+        )
+    return connection
+
+
+@connections_router.put("/{connection_id}")
+async def update_connection(
+    request: Request,
+    connection_id: str,
+    data: MCPConnectionUpdate,
+    user_id: str = Depends(get_current_user_id),
+    repo: ConnectionRepository = Depends(get_connection_repository),
+    audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
+) -> MCPConnection:
+    """
+    Update an MCP connection.
+
+    Note: Authentication changes require separate endpoints for security.
+    """
+    connection = await repo.update(connection_id, data)
+    if connection is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connection {connection_id} not found",
+        )
+
+    # Log audit event
+    await audit_repo.log_event(
+        event_type="connection.updated",
+        resource_type="connection",
+        resource_id=connection.id,
+        actor_id=user_id,
+        action="update",
+        details={"name": connection.name, "changes": data.model_dump(exclude_unset=True)},
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
+
+    return connection
+
+
+@connections_router.delete("/{connection_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_connection(
+    request: Request,
+    connection_id: str,
+    user_id: str = Depends(get_current_user_id),
+    repo: ConnectionRepository = Depends(get_connection_repository),
+    audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
+) -> None:
+    """
+    Delete an MCP connection.
+
+    Also removes associated secrets (API keys, OAuth2 tokens).
+    """
+    # Get connection info before deletion for audit log
+    connection = await repo.get(connection_id)
+    if connection is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connection {connection_id} not found",
+        )
+
+    deleted = await repo.delete(connection_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connection {connection_id} not found",
+        )
+
+    # Log audit event
+    await audit_repo.log_event(
+        event_type="connection.deleted",
+        resource_type="connection",
+        resource_id=connection_id,
+        actor_id=user_id,
+        action="delete",
+        details={"name": connection.name, "url": connection.url},
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
+
+
+@connections_router.post("/{connection_id}/test")
+async def test_connection(  # noqa: PT028
+    request: Request,
+    connection_id: str,
+    user_id: str = Depends(get_current_user_id),  # noqa: PT028
+    repo: ConnectionRepository = Depends(get_connection_repository),  # noqa: PT028
+    mcp_client: MCPClient = Depends(get_mcp_client),  # noqa: PT028
+    audit_repo: AuditLogRepository = Depends(get_audit_log_repository),  # noqa: PT028
+) -> MCPConnectionTestResult:
+    """
+    Test an MCP connection.
+
+    Attempts to connect to the MCP server and retrieve server info.
+    Updates connection status based on result.
+    """
+    connection = await repo.get(connection_id)
+    if connection is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connection {connection_id} not found",
+        )
+
+    # Get authentication header if needed
+    auth_header = None
+    if connection.auth_type == "api_key":
+        api_key = await repo.get_api_key(connection_id)
+        if api_key:
+            auth_header = f"Bearer {api_key}"
+    elif connection.auth_type == "oauth2":
+        access_token = await repo.get_oauth2_access_token(connection_id)
+        if access_token:
+            auth_header = f"Bearer {access_token}"
+
+    # Test the connection
+    test_result: MCPConnectionTestResult = await mcp_client.test_connection(connection.url, auth_header)
+
+    # Update connection status
+    if test_result.success:
+        await repo.update_status(
+            connection_id=connection_id,
+            status="connected",
+            server_name=test_result.server_name,
+            server_version=test_result.server_version,
+            tool_count=test_result.tool_count,
+            resource_count=test_result.resource_count,
+            prompt_count=test_result.prompt_count,
+        )
+    else:
+        await repo.update_status(
+            connection_id=connection_id,
+            status="error",
+            last_error=test_result.error,
+        )
+
+    # Log audit event
+    await audit_repo.log_event(
+        event_type="connection.tested",
+        resource_type="connection",
+        resource_id=connection_id,
+        actor_id=user_id,
+        action="test",
+        details={
+            "name": connection.name,
+            "success": test_result.success,
+            "latency_ms": test_result.latency_ms,
+            "error": test_result.error,
+        },
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
+
+    return test_result
+
+
+@connections_router.post("/{connection_id}/oauth/start")
+@rate_limit_for_oauth2_start
+async def start_oauth2_flow(
+    request: Request,
+    connection_id: str,
+    repo: ConnectionRepository = Depends(get_connection_repository),
+    oauth2_service: OAuth2Service = Depends(get_oauth2_service),
+) -> OAuth2StartResponse:
+    """
+    Start OAuth2 authorization flow for a connection.
+
+    Uses PKCE (Proof Key for Code Exchange) for security.
+    Returns the authorization URL and state parameter.
+    """
+    connection = await repo.get(connection_id)
+    if connection is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connection {connection_id} not found",
+        )
+
+    if connection.auth_type != "oauth2":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Connection is not configured for OAuth2 authentication",
+        )
+
+    if not connection.oauth2_config or not connection.oauth2_config.client_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OAuth2 client ID is not configured",
+        )
+
+    # Discover OAuth2 metadata from MCP server
+    metadata = await oauth2_service.discover_metadata(connection.url)
+
+    # Generate PKCE values
+    code_verifier = oauth2_service.generate_code_verifier()
+    code_challenge = oauth2_service.generate_code_challenge(code_verifier)
+
+    # Generate state for CSRF protection
+    state = token_urlsafe(32)
+
+    # Build redirect URI from settings (configurable via OAUTH2_REDIRECT_URI env var)
+    redirect_uri = settings.oauth2_redirect_uri
+
+    # Store state for callback validation
+    await repo.create_oauth2_state(
+        connection_id=connection_id,
+        state=state,
+        code_verifier=code_verifier,
+        redirect_uri=redirect_uri,
+    )
+
+    # Build authorization URL
+    scope = " ".join(connection.oauth2_config.scopes)
+    authorization_url = oauth2_service.build_authorization_url(
+        authorization_endpoint=metadata["authorization_endpoint"],
+        client_id=connection.oauth2_config.client_id,
+        redirect_uri=redirect_uri,
+        scope=scope,
+        state=state,
+        code_challenge=code_challenge,
+    )
+
+    return OAuth2StartResponse(
+        authorization_url=authorization_url,
+        state=state,
+    )
+
+
+@connections_router.post("/oauth/callback")
+@rate_limit_for_oauth2_callback
+async def oauth2_callback_stateless(
+    request: Request,
+    body: OAuth2CallbackRequest,
+    repo: ConnectionRepository = Depends(get_connection_repository),
+    oauth2_service: OAuth2Service = Depends(get_oauth2_service),
+) -> OAuth2CallbackResponse:
+    """
+    Handle OAuth2 callback (stateless - looks up connection from state).
+
+    This endpoint is called by the frontend OAuth2CallbackPage after the user
+    completes authorization at the OAuth2 provider. The connection_id is
+    retrieved from the stored state, allowing for a simpler frontend flow.
+
+    Args:
+        request: FastAPI Request object for rate limiting
+        body: OAuth2CallbackRequest with code and state from OAuth provider
+
+    Returns:
+        OAuth2CallbackResponse with connection_id on success
+
+    Raises:
+        HTTPException 400: Invalid or expired state
+        HTTPException 404: Connection not found
+    """
+    # Validate state and get connection_id + PKCE values
+    state_data = await repo.get_and_delete_oauth2_state(body.state)
+    if state_data is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired OAuth2 state",
+        )
+
+    connection_id = state_data["connection_id"]
+    connection = await repo.get(connection_id)
+    if connection is None or not connection.oauth2_config:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connection {connection_id} not found",
+        )
+
+    # Discover token endpoint
+    metadata = await oauth2_service.discover_metadata(connection.url)
+
+    # Exchange code for tokens
+    client_id = (connection.oauth2_config.client_id or "") if connection.oauth2_config else ""
+    tokens = await oauth2_service.exchange_code(
+        token_endpoint=metadata["token_endpoint"],
+        client_id=client_id,
+        client_secret=None,  # PKCE flow doesn't require client secret
+        code=body.code,
+        redirect_uri=state_data["redirect_uri"],
+        code_verifier=state_data["code_verifier"],
+    )
+
+    # Calculate expiry
+    expires_at = None
+    if "expires_in" in tokens:
+        from datetime import UTC, datetime, timedelta
+
+        expires_at = datetime.now(UTC) + timedelta(seconds=tokens["expires_in"])
+
+    # Store tokens securely
+    await repo.store_oauth2_tokens(
+        connection_id=connection_id,
+        access_token=tokens["access_token"],
+        refresh_token=tokens.get("refresh_token"),
+        expires_at=expires_at,
+    )
+
+    return OAuth2CallbackResponse(connection_id=connection_id)
+
+
+@connections_router.post("/{connection_id}/oauth/callback")
+@rate_limit_for_oauth2_callback
+async def oauth2_callback(
+    request: Request,
+    connection_id: str,
+    code: str = Query(..., description="Authorization code"),
+    state: str = Query(..., description="State parameter"),
+    repo: ConnectionRepository = Depends(get_connection_repository),
+    oauth2_service: OAuth2Service = Depends(get_oauth2_service),
+) -> dict[str, str]:
+    """
+    Handle OAuth2 callback.
+
+    Exchanges the authorization code for tokens and stores them securely.
+    """
+    # Validate state and get PKCE values
+    state_data = await repo.get_and_delete_oauth2_state(state)
+    if state_data is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired OAuth2 state",
+        )
+
+    if state_data["connection_id"] != connection_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Connection ID mismatch",
+        )
+
+    connection = await repo.get(connection_id)
+    if connection is None or not connection.oauth2_config:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connection {connection_id} not found",
+        )
+
+    # Discover token endpoint
+    metadata = await oauth2_service.discover_metadata(connection.url)
+
+    # Exchange code for tokens
+    # oauth2_config is guaranteed to exist here since we validated auth_type == "oauth2"
+    # Use empty string fallback to satisfy type checker (validation already done above)
+    client_id = (connection.oauth2_config.client_id or "") if connection.oauth2_config else ""
+    tokens = await oauth2_service.exchange_code(
+        token_endpoint=metadata["token_endpoint"],
+        client_id=client_id,
+        client_secret=None,  # PKCE flow doesn't require client secret
+        code=code,
+        redirect_uri=state_data["redirect_uri"],
+        code_verifier=state_data["code_verifier"],
+    )
+
+    # Calculate expiry
+    expires_at = None
+    if "expires_in" in tokens:
+        from datetime import UTC, datetime, timedelta
+
+        expires_at = datetime.now(UTC) + timedelta(seconds=tokens["expires_in"])
+
+    # Store tokens securely
+    await repo.store_oauth2_tokens(
+        connection_id=connection_id,
+        access_token=tokens["access_token"],
+        refresh_token=tokens.get("refresh_token"),
+        expires_at=expires_at,
+    )
+
+    return {"status": "success", "message": "OAuth2 authorization completed"}

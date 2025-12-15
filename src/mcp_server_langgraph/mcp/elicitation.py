@@ -12,7 +12,7 @@ Reference: https://modelcontextprotocol.io/specification/2025-11-25/client/elici
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from enum import Enum
 from typing import Any, Literal
 
@@ -116,7 +116,7 @@ class Elicitation(BaseModel):
     url: str | None = None  # Required when mode="url"
     status: str = "pending"
     response: ElicitationResponse | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     def to_jsonrpc(self) -> dict[str, Any]:
         """Convert to JSON-RPC 2.0 request format."""

@@ -38,6 +38,8 @@ ENDPOINT_RATE_LIMITS = {
     "llm_chat": "30/minute",  # LLM-heavy endpoints (cost control)
     "search": "100/minute",  # Search endpoints
     "read": "200/minute",  # Read-only endpoints
+    "oauth2_start": "10/minute",  # Prevent OAuth2 flow abuse
+    "oauth2_callback": "20/minute",  # Allow reasonable callback rate
 }
 
 
@@ -328,3 +330,13 @@ def rate_limit_for_search(func: Callable[..., Any]) -> Callable[..., Any]:
 def exempt_from_rate_limit(func: Callable[..., Any]) -> Callable[..., Any]:
     """Exempt endpoint from rate limiting (health checks, metrics)"""
     return limiter.exempt(func)  # type: ignore[no-any-return, no-untyped-call]
+
+
+def rate_limit_for_oauth2_start(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Rate limit decorator for OAuth2 start endpoints"""
+    return limiter.limit(ENDPOINT_RATE_LIMITS["oauth2_start"])(func)  # type: ignore[no-any-return]
+
+
+def rate_limit_for_oauth2_callback(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Rate limit decorator for OAuth2 callback endpoints"""
+    return limiter.limit(ENDPOINT_RATE_LIMITS["oauth2_callback"])(func)  # type: ignore[no-any-return]

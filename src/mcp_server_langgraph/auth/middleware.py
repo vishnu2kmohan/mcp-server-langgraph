@@ -685,12 +685,36 @@ if FASTAPI_AVAILABLE:  # noqa: C901
                     # Normalize to "user:username" format for OpenFGA compatibility
                     user_id = f"user:{username}" if not username.startswith("user:") else username
 
+                # Extract roles from Keycloak JWT structure
+                # Keycloak can put roles in multiple places:
+                # 1. realm_access.roles - realm-level roles
+                # 2. resource_access.<client>.roles - client-level roles
+                # 3. roles - sometimes mapped directly (InMemoryUserProvider)
+                roles: list[str] = []
+                payload = verification.payload
+
+                # Check direct roles first (InMemoryUserProvider)
+                if payload.get("roles"):
+                    roles = payload.get("roles", [])
+                else:
+                    # Extract from Keycloak realm_access structure
+                    realm_access = payload.get("realm_access", {})
+                    if realm_access and isinstance(realm_access, dict):
+                        roles.extend(realm_access.get("roles", []))
+
+                    # Also check resource_access for client-specific roles
+                    resource_access = payload.get("resource_access", {})
+                    if resource_access and isinstance(resource_access, dict):
+                        for client_roles in resource_access.values():
+                            if isinstance(client_roles, dict):
+                                roles.extend(client_roles.get("roles", []))
+
                 user_data = {
                     "user_id": user_id,
                     "keycloak_id": keycloak_id,  # Raw UUID for Keycloak Admin API
                     "username": username,
-                    "roles": verification.payload.get("roles", []),
-                    "email": verification.payload.get("email"),
+                    "roles": roles,
+                    "email": payload.get("email"),
                 }
                 # Cache in request state for subsequent calls
                 request.state.user = user_data

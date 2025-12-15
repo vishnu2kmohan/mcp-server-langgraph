@@ -4,6 +4,10 @@ Studio API Endpoints
 REST API for Studio workflows, AI suggestions, and template recommendations.
 Provides CRUD operations for workflows and AI-powered assistance features.
 
+NOTE: Workflow endpoints delegate to the unified /api/v1/workflows storage layer.
+The legacy in-memory WorkflowService has been removed. All workflow operations
+now use PostgresWorkflowManager or RedisWorkflowManager via WorkflowServiceAdapter.
+
 See ADR-0042 for Studio API design decisions.
 """
 
@@ -12,10 +16,10 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.api.v1.workflows import WorkflowService
 from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.studio.ai.suggestions import WorkflowSuggestionAgent
 from mcp_server_langgraph.studio.ai.templates import BUILT_IN_TEMPLATES, TemplateRecommender
-from datetime import UTC
 
 # Type aliases for FastAPI dependencies
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
@@ -138,122 +142,37 @@ class TemplateResponse(BaseModel):
 
 
 # =============================================================================
-# Workflow Service (In-Memory for now, can be replaced with DB)
+# Workflow Service (Unified Storage Layer)
 # =============================================================================
-
-
-class WorkflowService:
-    """Service for managing workflows.
-
-    This is a simple in-memory implementation.
-    In production, this would use PostgreSQL or another database.
-    """
-
-    # Class-level storage (in-memory for now)
-    _workflows: dict[str, dict[str, Any]] = {}
-    _counter: int = 0
-
-    @classmethod
-    async def create_workflow(
-        cls,
-        owner_id: str,
-        name: str,
-        description: str,
-        nodes: list[dict[str, Any]],
-        edges: list[dict[str, Any]],
-    ) -> dict[str, Any]:
-        """Create a new workflow."""
-        from datetime import datetime
-
-        cls._counter += 1
-        workflow_id = f"workflow-{cls._counter}"
-        now = datetime.now(UTC).isoformat()
-
-        workflow = {
-            "id": workflow_id,
-            "name": name,
-            "description": description,
-            "nodes": nodes,
-            "edges": edges,
-            "owner_id": owner_id,
-            "created_at": now,
-            "updated_at": now,
-        }
-        cls._workflows[workflow_id] = workflow
-        return workflow
-
-    @classmethod
-    async def get_workflow(cls, workflow_id: str) -> dict[str, Any] | None:
-        """Get a workflow by ID."""
-        return cls._workflows.get(workflow_id)
-
-    @classmethod
-    async def update_workflow(
-        cls,
-        workflow_id: str,
-        owner_id: str,
-        updates: dict[str, Any],
-    ) -> dict[str, Any] | None:
-        """Update an existing workflow."""
-        from datetime import datetime
-
-        workflow = cls._workflows.get(workflow_id)
-        if not workflow:
-            return None
-
-        # Check ownership
-        if workflow["owner_id"] != owner_id:
-            return None
-
-        # Apply updates
-        for key, value in updates.items():
-            if value is not None:
-                workflow[key] = value
-
-        workflow["updated_at"] = datetime.now(UTC).isoformat()
-        return workflow
-
-    @classmethod
-    async def delete_workflow(cls, workflow_id: str, owner_id: str) -> bool:
-        """Delete a workflow."""
-        workflow = cls._workflows.get(workflow_id)
-        if not workflow:
-            return False
-
-        if workflow["owner_id"] != owner_id:
-            return False
-
-        del cls._workflows[workflow_id]
-        return True
-
-    @classmethod
-    async def list_workflows(cls, owner_id: str) -> list[dict[str, Any]]:
-        """List all workflows for a user."""
-        return [w for w in cls._workflows.values() if w["owner_id"] == owner_id]
-
-    @classmethod
-    async def check_access(cls, workflow_id: str, user_id: str) -> bool:
-        """Check if user has access to workflow."""
-        workflow = cls._workflows.get(workflow_id)
-        if not workflow:
-            return False
-        return bool(workflow["owner_id"] == user_id)
+#
+# NOTE: The legacy in-memory WorkflowService has been removed.
+# All workflow operations now delegate to the unified /api/v1/workflows storage
+# layer via WorkflowServiceAdapter, which uses either:
+# - PostgresWorkflowManager (default, with FTS and composite indices)
+# - RedisWorkflowManager (for fast access with TTL support)
+#
+# This ensures consistent workflow storage across all API endpoints.
 
 
 # =============================================================================
 # Workflow Endpoints
 # =============================================================================
+#
+# These endpoints delegate to the unified /api/v1/workflows storage layer.
+# User authentication and ownership is enforced via the current_user dependency.
 
 
 @router.post("/workflows", status_code=status.HTTP_201_CREATED)
 async def create_workflow(
     request: CreateWorkflowRequest,
     current_user: CurrentUser,
+    service: WorkflowService,
 ) -> WorkflowResponse:
     """
     Create a new workflow.
 
     Creates a new workflow for the authenticated user.
+    Delegates to the unified workflow storage layer.
 
     Example:
         ```json
@@ -267,21 +186,33 @@ async def create_workflow(
     """
     user_id = current_user.get("keycloak_id") or current_user["user_id"]
 
-    workflow = await WorkflowService.create_workflow(
-        owner_id=user_id,
-        name=request.name,
-        description=request.description,
-        nodes=[n.model_dump() for n in request.nodes],
-        edges=[e.model_dump() for e in request.edges],
-    )
+    workflow_data = {
+        "name": request.name,
+        "description": request.description,
+        "nodes": [n.model_dump() for n in request.nodes],
+        "edges": [e.model_dump() for e in request.edges],
+        "user_id": user_id,
+    }
+    workflow = await service.create_workflow(workflow_data)
 
-    return WorkflowResponse(**workflow)
+    # Map to WorkflowResponse format
+    return WorkflowResponse(
+        id=workflow["id"],
+        name=workflow["name"],
+        description=workflow["description"],
+        nodes=workflow["nodes"],
+        edges=workflow["edges"],
+        owner_id=str(workflow.get("user_id") or user_id),
+        created_at=workflow["created_at"],
+        updated_at=workflow["updated_at"],
+    )
 
 
 @router.get("/workflows/{workflow_id}")
 async def get_workflow(
     workflow_id: str,
     current_user: CurrentUser,
+    service: WorkflowService,
 ) -> WorkflowResponse:
     """
     Get a workflow by ID.
@@ -290,21 +221,30 @@ async def get_workflow(
     """
     user_id = current_user.get("keycloak_id") or current_user["user_id"]
 
-    workflow = await WorkflowService.get_workflow(workflow_id)
+    workflow = await service.get_workflow(workflow_id)
     if not workflow:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Workflow not found",
         )
 
-    # Check access
-    if not await WorkflowService.check_access(workflow_id, user_id):
+    # Check ownership (user_id must match)
+    if workflow.get("user_id") and workflow["user_id"] != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
         )
 
-    return WorkflowResponse(**workflow)
+    return WorkflowResponse(
+        id=workflow["id"],
+        name=workflow["name"],
+        description=workflow["description"],
+        nodes=workflow["nodes"],
+        edges=workflow["edges"],
+        owner_id=str(workflow.get("user_id") or user_id),
+        created_at=workflow["created_at"],
+        updated_at=workflow["updated_at"],
+    )
 
 
 @router.put("/workflows/{workflow_id}")
@@ -312,6 +252,7 @@ async def update_workflow(
     workflow_id: str,
     request: UpdateWorkflowRequest,
     current_user: CurrentUser,
+    service: WorkflowService,
 ) -> WorkflowResponse:
     """
     Update an existing workflow.
@@ -320,26 +261,55 @@ async def update_workflow(
     """
     user_id = current_user.get("keycloak_id") or current_user["user_id"]
 
-    updates = request.model_dump(exclude_none=True)
-    if "nodes" in updates and request.nodes:
+    # First, check if workflow exists and user owns it
+    existing = await service.get_workflow(workflow_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Workflow not found",
+        )
+
+    if existing.get("user_id") and existing["user_id"] != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+        )
+
+    # Build update data
+    updates: dict[str, Any] = {}
+    if request.name is not None:
+        updates["name"] = request.name
+    if request.description is not None:
+        updates["description"] = request.description
+    if request.nodes is not None:
         updates["nodes"] = [n.model_dump() for n in request.nodes]
-    if "edges" in updates and request.edges:
+    if request.edges is not None:
         updates["edges"] = [e.model_dump() for e in request.edges]
 
-    workflow = await WorkflowService.update_workflow(workflow_id, user_id, updates)
+    workflow = await service.update_workflow(workflow_id, updates)
     if not workflow:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Workflow not found or access denied",
+            detail="Workflow not found",
         )
 
-    return WorkflowResponse(**workflow)
+    return WorkflowResponse(
+        id=workflow["id"],
+        name=workflow["name"],
+        description=workflow["description"],
+        nodes=workflow["nodes"],
+        edges=workflow["edges"],
+        owner_id=str(workflow.get("user_id") or user_id),
+        created_at=workflow["created_at"],
+        updated_at=workflow["updated_at"],
+    )
 
 
 @router.delete("/workflows/{workflow_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_workflow(
     workflow_id: str,
     current_user: CurrentUser,
+    service: WorkflowService,
 ) -> None:
     """
     Delete a workflow.
@@ -348,17 +318,32 @@ async def delete_workflow(
     """
     user_id = current_user.get("keycloak_id") or current_user["user_id"]
 
-    deleted = await WorkflowService.delete_workflow(workflow_id, user_id)
+    # First, check if workflow exists and user owns it
+    existing = await service.get_workflow(workflow_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Workflow not found",
+        )
+
+    if existing.get("user_id") and existing["user_id"] != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+        )
+
+    deleted = await service.delete_workflow(workflow_id)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Workflow not found or access denied",
+            detail="Workflow not found",
         )
 
 
 @router.get("/workflows")
 async def list_workflows(
     current_user: CurrentUser,
+    service: WorkflowService,
 ) -> list[WorkflowResponse]:
     """
     List all workflows for the current user.
@@ -367,8 +352,20 @@ async def list_workflows(
     """
     user_id = current_user.get("keycloak_id") or current_user["user_id"]
 
-    workflows = await WorkflowService.list_workflows(user_id)
-    return [WorkflowResponse(**w) for w in workflows]
+    workflows, _ = await service.list_workflows(owner_id=user_id)
+    return [
+        WorkflowResponse(
+            id=w["id"],
+            name=w["name"],
+            description=w["description"],
+            nodes=w.get("nodes", []),
+            edges=w.get("edges", []),
+            owner_id=str(w.get("user_id") or user_id),
+            created_at=w["created_at"],
+            updated_at=w["updated_at"],
+        )
+        for w in workflows
+    ]
 
 
 # =============================================================================

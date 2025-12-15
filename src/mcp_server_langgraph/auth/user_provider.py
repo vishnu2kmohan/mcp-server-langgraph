@@ -271,6 +271,66 @@ class UserProvider(ABC):
             List of UserData objects
         """
 
+    @abstractmethod
+    async def create_user(
+        self,
+        username: str,
+        email: str,
+        password: str,
+        roles: list[str] | None = None,
+    ) -> UserData:
+        """
+        Create a new user
+
+        Args:
+            username: Username (unique identifier)
+            email: Email address
+            password: Plaintext password (will be hashed)
+            roles: List of role names (defaults to ["user"])
+
+        Returns:
+            Created UserData
+
+        Raises:
+            ValueError: If user already exists or validation fails
+        """
+
+    @abstractmethod
+    async def update_user(
+        self,
+        username: str,
+        email: str | None = None,
+        roles: list[str] | None = None,
+        active: bool | None = None,
+    ) -> UserData:
+        """
+        Update an existing user
+
+        Args:
+            username: Username to update
+            email: New email address (optional)
+            roles: New roles (optional)
+            active: New active status (optional)
+
+        Returns:
+            Updated UserData
+
+        Raises:
+            ValueError: If user not found
+        """
+
+    @abstractmethod
+    async def delete_user(self, username: str) -> bool:
+        """
+        Delete a user
+
+        Args:
+            username: Username to delete
+
+        Returns:
+            True if deleted, False if not found
+        """
+
 
 class InMemoryUserProvider(UserProvider):
     """
@@ -592,6 +652,113 @@ class InMemoryUserProvider(UserProvider):
             for username, user_data in self.users_db.items()
         ]
 
+    async def create_user(
+        self,
+        username: str,
+        email: str,
+        password: str,
+        roles: list[str] | None = None,
+    ) -> UserData:
+        """
+        Create a new user
+
+        Args:
+            username: Username (unique identifier)
+            email: Email address
+            password: Plaintext password (will be hashed)
+            roles: List of role names (defaults to ["user"])
+
+        Returns:
+            Created UserData
+
+        Raises:
+            ValueError: If user already exists
+        """
+        if username in self.users_db:
+            msg = f"User already exists: {username}"
+            raise ValueError(msg)
+
+        # Use add_user for actual creation (handles password hashing)
+        user_roles = roles or ["user"]
+        self.add_user(
+            username=username,
+            password=password,
+            email=email,
+            roles=user_roles,
+        )
+
+        # Return the created user data
+        return UserData(
+            user_id=f"user:{username}",
+            username=username,
+            email=email,
+            roles=user_roles,
+            active=True,
+        )
+
+    async def update_user(
+        self,
+        username: str,
+        email: str | None = None,
+        roles: list[str] | None = None,
+        active: bool | None = None,
+    ) -> UserData:
+        """
+        Update an existing user
+
+        Args:
+            username: Username to update
+            email: New email address (optional)
+            roles: New roles (optional)
+            active: New active status (optional)
+
+        Returns:
+            Updated UserData
+
+        Raises:
+            ValueError: If user not found
+        """
+        if username not in self.users_db:
+            msg = f"User not found: {username}"
+            raise ValueError(msg)
+
+        user = self.users_db[username]
+
+        # Update fields if provided
+        if email is not None:
+            user["email"] = email
+        if roles is not None:
+            user["roles"] = roles
+        if active is not None:
+            user["active"] = active
+
+        logger.info(f"Updated user: {username}")
+
+        return UserData(
+            user_id=user["user_id"],
+            username=username,
+            email=user["email"],
+            roles=user["roles"],
+            active=user["active"],
+        )
+
+    async def delete_user(self, username: str) -> bool:
+        """
+        Delete a user
+
+        Args:
+            username: Username to delete
+
+        Returns:
+            True if deleted, False if not found
+        """
+        if username not in self.users_db:
+            return False
+
+        del self.users_db[username]
+        logger.info(f"Deleted user: {username}")
+        return True
+
     def create_token(self, username: str, expires_in: int = 3600) -> str:
         """
         Create JWT token for user (helper method for in-memory provider)
@@ -800,13 +967,190 @@ class KeycloakUserProvider(UserProvider):
 
     async def list_users(self) -> list[UserData]:
         """
-        List users (requires admin permissions)
+        List all users from Keycloak (requires admin permissions)
 
-        Note: This is a placeholder. In production, you'd implement pagination
-        and filtering using Keycloak admin API.
+        Returns:
+            List of UserData objects for all users in the realm
         """
-        logger.warning("list_users() not fully implemented for KeycloakUserProvider")
-        return []
+        with tracer.start_as_current_span("keycloak_provider.list_users"):
+            try:
+                users_data = await self.client.get_users()
+
+                result = []
+                for user_data in users_data:
+                    result.append(
+                        UserData(
+                            user_id=f"user:{user_data['username']}",
+                            username=user_data["username"],
+                            email=user_data.get("email", ""),
+                            roles=[],  # Roles would require additional API calls
+                            active=user_data.get("enabled", True),
+                        )
+                    )
+
+                logger.info(f"Listed {len(result)} users from Keycloak")
+                return result
+
+            except Exception as e:
+                logger.error(f"Failed to list users from Keycloak: {e}", exc_info=True)
+                return []
+
+    async def create_user(
+        self,
+        username: str,
+        email: str,
+        password: str,
+        roles: list[str] | None = None,
+    ) -> UserData:
+        """
+        Create a new user in Keycloak
+
+        Args:
+            username: Username (unique identifier)
+            email: Email address
+            password: Plaintext password (will be set via Admin API)
+            roles: List of role names (defaults to ["user"])
+
+        Returns:
+            Created UserData
+
+        Raises:
+            ValueError: If user already exists or creation fails
+        """
+        import httpx
+
+        with tracer.start_as_current_span("keycloak_provider.create_user") as span:
+            span.set_attribute("user.username", username)
+
+            user_roles = roles or ["user"]
+
+            try:
+                # Create user in Keycloak
+                user_config = {
+                    "username": username,
+                    "email": email,
+                    "enabled": True,
+                    "emailVerified": False,
+                }
+
+                user_uuid = await self.client.create_user(user_config)
+
+                # Set password after creation
+                await self.client.set_user_password(user_uuid, password, temporary=False)
+
+                logger.info(f"Created user in Keycloak: {username}", extra={"user_uuid": user_uuid})
+
+                return UserData(
+                    user_id=f"user:{username}",
+                    username=username,
+                    email=email,
+                    roles=user_roles,
+                    active=True,
+                )
+
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 409:
+                    msg = f"User already exists: {username}"
+                    raise ValueError(msg) from e
+                logger.error(f"Failed to create user in Keycloak: {e}", exc_info=True)
+                raise
+            except Exception as e:
+                logger.error(f"Failed to create user in Keycloak: {e}", exc_info=True)
+                raise
+
+    async def update_user(
+        self,
+        username: str,
+        email: str | None = None,
+        roles: list[str] | None = None,
+        active: bool | None = None,
+    ) -> UserData:
+        """
+        Update a user in Keycloak
+
+        Args:
+            username: Username to update
+            email: New email address (optional)
+            roles: New roles (optional)
+            active: New active/enabled status (optional)
+
+        Returns:
+            Updated UserData
+
+        Raises:
+            ValueError: If user not found
+        """
+        with tracer.start_as_current_span("keycloak_provider.update_user") as span:
+            span.set_attribute("user.username", username)
+
+            # Get existing user to find their UUID
+            keycloak_user = await self.client.get_user_by_username(username)
+
+            if not keycloak_user:
+                msg = f"User not found: {username}"
+                raise ValueError(msg)
+
+            # Build update config
+            update_config: dict[str, Any] = {}
+            if email is not None:
+                update_config["email"] = email
+            if active is not None:
+                update_config["enabled"] = active
+
+            # Update user in Keycloak
+            await self.client.update_user(keycloak_user.id, update_config)
+
+            # Fetch updated user data
+            updated_user = await self.client.get_user(keycloak_user.id)
+
+            if updated_user:
+                return UserData(
+                    user_id=f"user:{username}",
+                    username=username,
+                    email=updated_user.get("email", keycloak_user.email or ""),
+                    roles=roles or keycloak_user.realm_roles,
+                    active=updated_user.get("enabled", True),
+                )
+
+            # Fallback if get_user fails
+            return UserData(
+                user_id=f"user:{username}",
+                username=username,
+                email=email or keycloak_user.email or "",
+                roles=roles or keycloak_user.realm_roles,
+                active=active if active is not None else keycloak_user.enabled,
+            )
+
+    async def delete_user(self, username: str) -> bool:
+        """
+        Delete a user from Keycloak
+
+        Args:
+            username: Username to delete
+
+        Returns:
+            True if deleted, False if not found or error occurred
+        """
+        with tracer.start_as_current_span("keycloak_provider.delete_user") as span:
+            span.set_attribute("user.username", username)
+
+            try:
+                # Get user to find their UUID
+                keycloak_user = await self.client.get_user_by_username(username)
+
+                if not keycloak_user:
+                    logger.info(f"User not found for deletion: {username}")
+                    return False
+
+                # Delete user from Keycloak
+                await self.client.delete_user(keycloak_user.id)
+
+                logger.info(f"Deleted user from Keycloak: {username}")
+                return True
+
+            except Exception as e:
+                logger.error(f"Failed to delete user from Keycloak: {e}", exc_info=True)
+                return False
 
     async def refresh_token(self, refresh_token: str) -> dict[str, Any]:
         """

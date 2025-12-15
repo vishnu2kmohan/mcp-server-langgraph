@@ -27,7 +27,11 @@ from mcp_server_langgraph.auth.factory import create_auth_middleware
 from mcp_server_langgraph.auth.middleware import get_current_user, set_global_auth_middleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
 from mcp_server_langgraph.core.config import settings
-from mcp_server_langgraph.observability.telemetry import init_observability, logger
+from mcp_server_langgraph.observability.telemetry import (
+    init_observability,
+    instrument_fastapi_app,
+    logger,
+)
 
 
 @asynccontextmanager
@@ -37,6 +41,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     Initializes:
     - Observability (OpenTelemetry)
+    - FastAPI OTEL instrumentation
     - Auth middleware (Keycloak + OpenFGA)
     - OpenFGA store_id lookup
     """
@@ -44,6 +49,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Initialize observability for logging and tracing
     init_observability(settings)
+
+    # Instrument FastAPI app with OTEL tracing (best practice)
+    try:
+        instrument_fastapi_app(app)
+        logger.info("FastAPI app instrumented with OTEL tracing")
+    except Exception as e:
+        logger.warning(f"Failed to instrument FastAPI app with OTEL: {e}")
 
     # Create and register auth middleware globally
     # This is required for get_current_user() dependency to work
@@ -175,6 +187,22 @@ async def health() -> dict[str, str]:
     return {"status": "healthy", "service": "authz-proxy"}
 
 
+@app.get("/metrics")
+async def metrics() -> Response:
+    """
+    Prometheus metrics endpoint (public).
+
+    Required for Alloy/Prometheus scraping. Exposes OpenTelemetry metrics
+    in Prometheus format via prometheus-client.
+    """
+    from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+    return Response(
+        content=generate_latest(),
+        media_type=CONTENT_TYPE_LATEST,
+    )
+
+
 @app.api_route(
     "/{path:path}",
     methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
@@ -202,9 +230,12 @@ async def proxy_to_openfga_playground(
         key: value for key, value in request.headers.items() if key.lower() not in ("host", "authorization", "content-length")
     }
 
-    # Add user info headers for audit trail
+    # Add user info headers for audit trail and authentication
     forward_headers["X-Forwarded-User"] = current_user.get("preferred_username", "unknown")
     forward_headers["X-Forwarded-Email"] = current_user.get("email", "")
+    # Forward roles as comma-separated list for RBAC (persona detection)
+    roles = current_user.get("roles", [])
+    forward_headers["X-Forwarded-Groups"] = ",".join(roles) if roles else ""
 
     try:
         # Get request body

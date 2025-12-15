@@ -4,21 +4,32 @@ FastAPI Dependencies
 Provides dependency injection for commonly used services.
 """
 
+from collections.abc import AsyncGenerator
 from typing import Any
 
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from mcp_server_langgraph.auth.api_keys import APIKeyManager
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
+from mcp_server_langgraph.auth.user_provider import UserProvider
 from mcp_server_langgraph.core.config import Settings, settings
+from mcp_server_langgraph.repositories.audit_log import AuditLogRepository
+from mcp_server_langgraph.repositories.connections import (
+    ConnectionRepository,
+    PostgresConnectionRepository,
+)
+from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
+from mcp_server_langgraph.storage.base import ProjectRepository
 
 # Singleton instances (will be initialized on first use)
 _keycloak_client: KeycloakClient | None = None
 _openfga_client: OpenFGAClient | None = None
 _service_principal_manager: ServicePrincipalManager | None = None
 _api_key_manager: APIKeyManager | None = None
+_user_provider: UserProvider | None = None
 
 
 def get_keycloak_client() -> KeycloakClient:
@@ -244,6 +255,55 @@ def get_api_key_manager(
     return _api_key_manager
 
 
+def get_user_provider() -> UserProvider:
+    """
+    Get UserProvider instance (singleton).
+
+    Creates an InMemoryUserProvider for development/testing or
+    KeycloakUserProvider for production based on configuration.
+
+    Returns:
+        UserProvider instance
+
+    Example:
+        @router.get("/admin/users")
+        async def list_users(
+            provider: UserProvider = Depends(get_user_provider),
+        ):
+            return await provider.list_users()
+    """
+    global _user_provider
+
+    if _user_provider is None:
+        from mcp_server_langgraph.auth.user_provider import (
+            InMemoryUserProvider,
+            KeycloakUserProvider,
+        )
+        from mcp_server_langgraph.auth.keycloak import KeycloakConfig
+
+        # Use Keycloak if configured, otherwise fall back to InMemory
+        if settings.keycloak_server_url and settings.keycloak_realm:
+            keycloak_config = KeycloakConfig(
+                server_url=settings.keycloak_server_url,
+                realm=settings.keycloak_realm,
+                admin_realm=settings.keycloak_admin_realm,
+                client_id=settings.keycloak_client_id,
+                client_secret=settings.keycloak_client_secret,
+                admin_username=settings.keycloak_admin_username,
+                admin_password=settings.keycloak_admin_password,
+            )
+            openfga_client = get_openfga_client()
+            _user_provider = KeycloakUserProvider(
+                config=keycloak_config,
+                openfga_client=openfga_client,
+            )
+        else:
+            # Development mode - use InMemory provider
+            _user_provider = InMemoryUserProvider()
+
+    return _user_provider
+
+
 # ==============================================================================
 # Testing Utilities (CODEX Finding #6)
 # ==============================================================================
@@ -267,9 +327,388 @@ def reset_singleton_dependencies() -> None:
 
     WARNING: This should ONLY be used in tests. Never call in production code.
     """
-    global _keycloak_client, _openfga_client, _service_principal_manager, _api_key_manager
+    global _keycloak_client, _openfga_client, _service_principal_manager, _api_key_manager, _user_provider
 
     _keycloak_client = None
     _openfga_client = None
     _service_principal_manager = None
     _api_key_manager = None
+    _user_provider = None
+
+
+# ==============================================================================
+# Database Dependencies
+# ==============================================================================
+
+
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Get an async database session for dependency injection.
+
+    This dependency creates a new session for each request and handles
+    commit/rollback/close automatically.
+
+    Yields:
+        AsyncSession: Database session for the request
+
+    Example:
+        @router.get("/items")
+        async def get_items(session: AsyncSession = Depends(get_db_session)):
+            result = await session.execute(select(Item))
+            return result.scalars().all()
+    """
+    from mcp_server_langgraph.database.session import get_session_maker
+
+    # Get database URL from settings
+    database_url = settings.database_url
+
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is not configured. Set the DATABASE_URL environment variable.")
+
+    session_maker = get_session_maker(database_url)
+    async with session_maker() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+
+def get_project_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> ProjectRepository:
+    """
+    Get ProjectRepository instance for dependency injection.
+
+    Args:
+        session: Database session (injected)
+
+    Returns:
+        PostgresProjectRepository instance
+
+    Example:
+        @router.get("/projects/{id}")
+        async def get_project(
+            id: str,
+            repo: ProjectRepository = Depends(get_project_repository),
+        ):
+            return await repo.get(id)
+    """
+    return PostgresProjectRepository(session)
+
+
+# ==============================================================================
+# Connection Repository Dependencies
+# ==============================================================================
+
+
+def get_connection_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> ConnectionRepository:
+    """
+    Get ConnectionRepository instance for dependency injection.
+
+    Returns a CachedConnectionRepository wrapping PostgresConnectionRepository
+    for improved read performance via L1/L2 caching.
+
+    Args:
+        session: Database session (injected)
+
+    Returns:
+        CachedConnectionRepository instance (wraps PostgresConnectionRepository)
+
+    Example:
+        @router.get("/connections/{id}")
+        async def get_connection(
+            id: str,
+            repo: ConnectionRepository = Depends(get_connection_repository),
+        ):
+            return await repo.get(id)
+    """
+    from mcp_server_langgraph.core.secrets import get_secrets_provider
+    from mcp_server_langgraph.repositories.cached_connections import (
+        CachedConnectionRepository,
+    )
+
+    secrets_provider = get_secrets_provider()
+    postgres_repo = PostgresConnectionRepository(session, secrets_provider)
+
+    # Wrap with caching for improved read performance
+    return CachedConnectionRepository(postgres_repo)
+
+
+# ==============================================================================
+# Audit Log Repository Dependencies
+# ==============================================================================
+
+
+def get_audit_log_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> "AuditLogRepository":
+    """
+    Get AuditLogRepository instance for dependency injection.
+
+    Args:
+        session: Database session (injected)
+
+    Returns:
+        PostgresAuditLogRepository instance
+
+    Example:
+        @router.post("/connections/audit/log")
+        async def log_event(
+            event: AuditEvent,
+            repo: AuditLogRepository = Depends(get_audit_log_repository),
+        ):
+            return await repo.log_event(...)
+    """
+    from mcp_server_langgraph.repositories.audit_log import (
+        PostgresAuditLogRepository,
+    )
+
+    return PostgresAuditLogRepository(session)
+
+
+# ==============================================================================
+# OAuth2 Service Dependencies
+# ==============================================================================
+
+
+class OAuth2Service:
+    """
+    OAuth2 service for handling PKCE authorization flow.
+
+    This is a placeholder implementation. In production, this should be
+    replaced with a proper OAuth2 client library.
+    """
+
+    async def discover_metadata(self, url: str) -> dict[str, str]:
+        """Discover OAuth2 metadata from MCP server."""
+        # In production, fetch from {url}/.well-known/oauth-authorization-server
+        return {
+            "authorization_endpoint": f"{url}/oauth/authorize",
+            "token_endpoint": f"{url}/oauth/token",
+        }
+
+    def generate_code_verifier(self) -> str:
+        """Generate PKCE code verifier."""
+        import secrets
+
+        return secrets.token_urlsafe(64)
+
+    def generate_code_challenge(self, verifier: str) -> str:
+        """Generate PKCE code challenge (S256)."""
+        import base64
+        import hashlib
+
+        digest = hashlib.sha256(verifier.encode()).digest()
+        return base64.urlsafe_b64encode(digest).rstrip(b"=").decode()
+
+    def build_authorization_url(
+        self,
+        authorization_endpoint: str,
+        client_id: str,
+        redirect_uri: str,
+        scope: str,
+        state: str,
+        code_challenge: str,
+    ) -> str:
+        """Build OAuth2 authorization URL with PKCE."""
+        from urllib.parse import urlencode
+
+        params = {
+            "client_id": client_id,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+            "scope": scope,
+            "state": state,
+            "code_challenge": code_challenge,
+            "code_challenge_method": "S256",
+        }
+        return f"{authorization_endpoint}?{urlencode(params)}"
+
+    async def exchange_code(
+        self,
+        token_endpoint: str,
+        client_id: str,
+        client_secret: str | None,
+        code: str,
+        redirect_uri: str,
+        code_verifier: str,
+    ) -> dict[str, Any]:
+        """Exchange authorization code for tokens."""
+        import httpx
+
+        data = {
+            "grant_type": "authorization_code",
+            "client_id": client_id,
+            "code": code,
+            "redirect_uri": redirect_uri,
+            "code_verifier": code_verifier,
+        }
+        if client_secret:
+            data["client_secret"] = client_secret
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(token_endpoint, data=data)
+            response.raise_for_status()
+            result: dict[str, Any] = response.json()
+            return result
+
+
+_oauth2_service: OAuth2Service | None = None
+
+
+def get_oauth2_service() -> OAuth2Service:
+    """Get OAuth2 service instance (singleton)."""
+    global _oauth2_service
+
+    if _oauth2_service is None:
+        _oauth2_service = OAuth2Service()
+
+    return _oauth2_service
+
+
+# ==============================================================================
+# MCP Client Dependencies
+# ==============================================================================
+
+
+class MCPClient:
+    """
+    MCP client for testing connections.
+
+    Uses the official MCP SDK for Streamable HTTP transport to:
+    - Establish connection with MCP server
+    - Exchange initialization handshake
+    - Retrieve server info and capabilities (tools, resources, prompts)
+    """
+
+    def __init__(
+        self,
+        connection_timeout: float = 10.0,
+        sse_read_timeout: float = 30.0,
+    ) -> None:
+        """
+        Initialize MCP client.
+
+        Args:
+            connection_timeout: Timeout for HTTP operations
+            sse_read_timeout: Timeout for SSE event reading
+        """
+        self.connection_timeout = connection_timeout
+        self.sse_read_timeout = sse_read_timeout
+
+    async def test_connection(
+        self,
+        url: str,
+        auth_header: str | None = None,
+    ) -> Any:
+        """
+        Test connection to an MCP server using Streamable HTTP transport.
+
+        Args:
+            url: The MCP server URL (e.g., https://mcp.example.com)
+            auth_header: Optional authorization header value (e.g., "Bearer token")
+
+        Returns:
+            MCPConnectionTestResult with success status and server info
+        """
+        from mcp_server_langgraph.storage.models import MCPConnectionTestResult
+
+        headers: dict[str, str] = {}
+        if auth_header:
+            headers["Authorization"] = auth_header
+
+        try:
+            # Use MCP SDK's streamable HTTP client
+            from mcp.client.session import ClientSession
+            from mcp.client.streamable_http import streamablehttp_client
+            from mcp.types import Implementation
+
+            async with streamablehttp_client(
+                url=url,
+                headers=headers if headers else None,
+                timeout=self.connection_timeout,
+                sse_read_timeout=self.sse_read_timeout,
+            ) as (read_stream, write_stream, _get_session_id):
+                async with ClientSession(
+                    read_stream,
+                    write_stream,
+                    client_info=Implementation(
+                        name="mcp-server-langgraph",
+                        version="1.0.0",
+                    ),
+                ) as session:
+                    # Initialize the connection
+                    init_result = await session.initialize()
+
+                    # Get lists of tools, resources, and prompts if supported
+                    tool_count = 0
+                    resource_count = 0
+                    prompt_count = 0
+
+                    # Check capabilities and fetch lists
+                    if init_result.capabilities:
+                        if init_result.capabilities.tools:
+                            try:
+                                tools = await session.list_tools()
+                                tool_count = len(tools.tools) if tools.tools else 0
+                            except Exception:
+                                pass  # Server may not support tools
+
+                        if init_result.capabilities.resources:
+                            try:
+                                resources = await session.list_resources()
+                                resource_count = len(resources.resources) if resources.resources else 0
+                            except Exception:
+                                pass  # Server may not support resources
+
+                        if init_result.capabilities.prompts:
+                            try:
+                                prompts = await session.list_prompts()
+                                prompt_count = len(prompts.prompts) if prompts.prompts else 0
+                            except Exception:
+                                pass  # Server may not support prompts
+
+                    return MCPConnectionTestResult(
+                        success=True,
+                        server_name=init_result.serverInfo.name if init_result.serverInfo else None,
+                        server_version=init_result.serverInfo.version if init_result.serverInfo else None,
+                        tool_count=tool_count,
+                        resource_count=resource_count,
+                        prompt_count=prompt_count,
+                    )
+
+        except Exception as e:
+            # Categorize the error for better diagnostics
+            error_msg = str(e)
+            if "timeout" in error_msg.lower():
+                error_msg = f"Connection timeout: {e}"
+            elif "refused" in error_msg.lower():
+                error_msg = f"Connection refused: {e}"
+            elif "unauthorized" in error_msg.lower() or "401" in error_msg:
+                error_msg = f"Authentication failed: {e}"
+            elif "forbidden" in error_msg.lower() or "403" in error_msg:
+                error_msg = f"Access forbidden: {e}"
+
+            return MCPConnectionTestResult(
+                success=False,
+                error=error_msg,
+            )
+
+
+_mcp_client: MCPClient | None = None
+
+
+def get_mcp_client() -> MCPClient:
+    """Get MCP client instance (singleton)."""
+    global _mcp_client
+
+    if _mcp_client is None:
+        _mcp_client = MCPClient()
+
+    return _mcp_client
