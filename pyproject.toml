@@ -793,6 +793,7 @@ markers = [
     "security: Security tests (injection attacks, OWASP Top 10)",
     "kubernetes: Kubernetes integration tests (health probes, deployments)",
     "health: Health check and startup validation tests (readiness, liveness, dependency checks)",
+    "audit: Audit logging and compliance tests (repository, service, retention, integrity)",
     "deployment: Deployment configuration and validation tests (Helm, Kustomize, placeholders)",
     "preview: Preview environment deployment tests",
     "skip_resilience_reset: Opt-out of autouse resilience state reset fixture (for circuit breaker tests)",

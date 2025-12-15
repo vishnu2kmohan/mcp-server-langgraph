@@ -50,6 +50,11 @@ PATH_RATE_LIMITS: dict[str, str] = {
     "/api/v1/auth/login": "10/minute",  # OAuth2 PKCE start
     "/api/v1/auth/callback": "20/minute",  # OAuth2 callback
     "/api/v1/auth/refresh": "10/minute",  # Token refresh
+    "/api/v1/auth/device": "10/minute",  # Device Authorization Grant (RFC 8628)
+    "/api/v1/auth/device/token": "30/minute",  # Device token polling (higher limit for polling)
+    "/api/v1/auth/introspect": "100/minute",  # Token introspection (RFC 7662)
+    "/api/v1/auth/par": "10/minute",  # Pushed Authorization Requests (RFC 9126)
+    "/api/v1/auth/backchannel-logout": "20/minute",  # Backchannel logout (RFC 7009)
     "/api/v1/user/login": "10/minute",  # Legacy ROPC login (deprecated)
     "/api/v1/user/logout": "30/minute",  # Logout
 }
