@@ -1007,6 +1007,10 @@ services:
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       # Public URL for browser redirects in OAuth2/PKCE flow (externally accessible)
       - KEYCLOAK_PUBLIC_URL=http://localhost/authn
+      # Frontend URL for OAuth2 callback redirects (must be gateway URL, not internal port)
+      # This fixes the callback redirect issue where users were redirected to localhost:5173
+      # which is inaccessible from the browser (internal Vite port).
+      - FRONTEND_URL=http://localhost
       - OPENFGA_API_URL=http://openfga-test:8080
       - REDIS_URL=redis://redis-test:6379/1
       - REDIS_SESSION_URL=redis://redis-test:6379/0
@@ -1071,13 +1075,21 @@ services:
       - "traefik.http.routers.assets.priority=100"
       - "traefik.http.routers.assets.service=mcp-api"
       # NO forward-auth middleware - static assets are publicly accessible
-      # Route: /api/v1/login, /api/v1/logout -> mcp-server (NO AUTH)
-      # Native login/logout endpoints bypass forward-auth for direct Keycloak API calls
-      - "traefik.http.routers.api-auth.rule=Path(`/api/v1/login`) || Path(`/api/v1/logout`)"
+      # Route: /api/v1/auth/* -> mcp-server (NO AUTH)
+      # Native OAuth2 endpoints (login, logout, callback, refresh, introspect, etc.)
+      # These endpoints handle Keycloak OAuth2 flows directly without traefik-forward-auth
+      - "traefik.http.routers.api-auth.rule=PathPrefix(`/api/v1/auth`)"
       - "traefik.http.routers.api-auth.entrypoints=web"
       - "traefik.http.routers.api-auth.priority=100"
       - "traefik.http.routers.api-auth.service=mcp-api"
-      # NO forward-auth middleware - login/logout are publicly accessible
+      # NO forward-auth middleware - OAuth2 endpoints are publicly accessible
+      # Route: /api/v1/health/* -> mcp-server (NO AUTH)
+      # Health endpoints must be publicly accessible for Kubernetes probes and monitoring
+      - "traefik.http.routers.api-health.rule=PathPrefix(`/api/v1/health`)"
+      - "traefik.http.routers.api-health.entrypoints=web"
+      - "traefik.http.routers.api-health.priority=100"
+      - "traefik.http.routers.api-health.service=mcp-api"
+      # NO forward-auth middleware - health endpoints are publicly accessible
       # Route: /api/* -> mcp-server:8000/api/* (API endpoints for frontend)
       # This allows the frontend at /studio to call /api/v1/* endpoints directly
       - "traefik.http.routers.api.rule=PathPrefix(`/api`)"

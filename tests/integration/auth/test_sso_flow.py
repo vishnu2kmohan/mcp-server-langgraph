@@ -55,10 +55,12 @@ def teardown_module():
 
 
 def _api_available() -> bool:
-    """Check if the API server is available."""
+    """Check if the API server is available via Traefik gateway."""
     try:
+        # Tests run outside Docker network, so access via Traefik gateway (port 80)
+        # /login is publicly accessible (no forward-auth) and confirms API server is up
         response = requests.get(
-            "http://localhost:8000/health/live",
+            "http://localhost/login",
             timeout=5,
         )
         return response.status_code == 200
@@ -67,10 +69,12 @@ def _api_available() -> bool:
 
 
 def _keycloak_available() -> bool:
-    """Check if Keycloak is available."""
+    """Check if Keycloak is available via Traefik gateway."""
     try:
+        # Tests run outside Docker network, so access via Traefik gateway (port 80)
+        # Keycloak is routed via /authn path prefix in docker-compose.test.yml
         response = requests.get(
-            "http://localhost:8080/realms/default/.well-known/openid-configuration",
+            "http://localhost/authn/realms/default/.well-known/openid-configuration",
             timeout=5,
         )
         return response.status_code == 200
@@ -112,7 +116,7 @@ class TestSSOLoginInitiation:
         THEN a 302 redirect response is returned.
         """
         response = requests.get(
-            "http://localhost:8000/api/v1/auth/login",
+            "http://localhost/api/v1/auth/login",
             allow_redirects=False,
             timeout=10,
         )
@@ -128,7 +132,7 @@ class TestSSOLoginInitiation:
         THEN redirect URL points to Keycloak authorization endpoint.
         """
         response = requests.get(
-            "http://localhost:8000/api/v1/auth/login",
+            "http://localhost/api/v1/auth/login",
             allow_redirects=False,
             timeout=10,
         )
@@ -148,7 +152,7 @@ class TestSSOLoginInitiation:
         THEN redirect URL includes PKCE code_challenge and method.
         """
         response = requests.get(
-            "http://localhost:8000/api/v1/auth/login",
+            "http://localhost/api/v1/auth/login",
             allow_redirects=False,
             timeout=10,
         )
@@ -170,7 +174,7 @@ class TestSSOLoginInitiation:
         THEN redirect URL includes required OAuth2 parameters.
         """
         response = requests.get(
-            "http://localhost:8000/api/v1/auth/login",
+            "http://localhost/api/v1/auth/login",
             allow_redirects=False,
             timeout=10,
         )
@@ -195,7 +199,7 @@ class TestSSOLoginInitiation:
         THEN secure cookies are set for PKCE state management.
         """
         response = requests.get(
-            "http://localhost:8000/api/v1/auth/login",
+            "http://localhost/api/v1/auth/login",
             allow_redirects=False,
             timeout=10,
         )
@@ -221,7 +225,7 @@ class TestSSOCallbackHandling:
         THEN an error response is returned.
         """
         response = requests.get(
-            "http://localhost:8000/api/v1/auth/callback",
+            "http://localhost/api/v1/auth/callback",
             timeout=10,
         )
 
@@ -236,7 +240,7 @@ class TestSSOCallbackHandling:
         THEN an error response is returned.
         """
         response = requests.get(
-            "http://localhost:8000/api/v1/auth/callback",
+            "http://localhost/api/v1/auth/callback",
             params={
                 "code": "invalid_code",
                 "state": "mismatched_state",
@@ -255,7 +259,7 @@ class TestSSOCallbackHandling:
         THEN appropriate error response is returned.
         """
         response = requests.get(
-            "http://localhost:8000/api/v1/auth/callback",
+            "http://localhost/api/v1/auth/callback",
             params={
                 "error": "access_denied",
                 "error_description": "User denied the request",
@@ -282,7 +286,7 @@ class TestSSOLogoutFlow:
         THEN a valid response is returned.
         """
         response = requests.get(
-            "http://localhost:8000/api/v1/auth/logout",
+            "http://localhost/api/v1/auth/logout",
             allow_redirects=False,
             timeout=10,
         )
@@ -304,7 +308,7 @@ class TestSSOLogoutFlow:
         session.cookies.set("oauth2_code_verifier", "test_verifier")
 
         response = session.get(
-            "http://localhost:8000/api/v1/auth/logout",
+            "http://localhost/api/v1/auth/logout",
             allow_redirects=False,
             timeout=10,
         )
@@ -328,7 +332,7 @@ class TestSSOTokenRefresh:
         THEN authentication error is returned.
         """
         response = requests.post(
-            "http://localhost:8000/api/v1/auth/refresh",
+            "http://localhost/api/v1/auth/refresh",
             timeout=10,
         )
 
@@ -403,7 +407,7 @@ class TestSSOSecurityHeaders:
         THEN appropriate security headers are present.
         """
         response = requests.get(
-            "http://localhost:8000/api/v1/auth/login",
+            "http://localhost/api/v1/auth/login",
             allow_redirects=False,
             timeout=10,
         )
@@ -420,7 +424,7 @@ class TestSSOSecurityHeaders:
         THEN appropriate security headers are present.
         """
         response = requests.get(
-            "http://localhost:8000/api/v1/auth/callback",
+            "http://localhost/api/v1/auth/callback",
             params={"error": "test"},
             timeout=10,
         )

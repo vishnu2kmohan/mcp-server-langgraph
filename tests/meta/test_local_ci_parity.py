@@ -3110,6 +3110,37 @@ class TestFrontendCIParity:
         # Should run build
         assert "npm run build" in script_content, "test-frontend.sh must run 'npm run build' to match CI"
 
+        # Should run Playwright e2e tests
+        assert "test:e2e" in script_content or "playwright" in script_content.lower(), (
+            "test-frontend.sh must run 'npm run test:e2e' (Playwright) to match CI\n"
+            "\n"
+            "Frontend has Playwright e2e tests that should be run for full coverage:\n"
+            "  - npm run test:e2e (runs playwright test)\n"
+            "  - Requires: npx playwright install --with-deps\n"
+        )
+
+    def test_ci_runs_playwright_e2e_tests(self, ci_workflow_content: str):
+        """Verify that CI runs Playwright e2e tests for frontend."""
+        # CI should run playwright e2e tests
+        has_playwright = (
+            "test:e2e" in ci_workflow_content
+            or "playwright" in ci_workflow_content.lower()
+            or "npm run test:e2e" in ci_workflow_content
+        )
+
+        assert has_playwright, (
+            "CI must run Playwright e2e tests for frontend\n"
+            "\n"
+            "Frontend has Playwright e2e tests in:\n"
+            "  src/mcp_server_langgraph/studio/frontend/e2e/\n"
+            "\n"
+            "Add to ci.yaml frontend-build job:\n"
+            "  - name: Install Playwright browsers\n"
+            "    run: npx playwright install --with-deps chromium\n"
+            "  - name: Run Playwright e2e tests\n"
+            "    run: npm run test:e2e\n"
+        )
+
     def test_frontend_directory_exists(self, repo_root: Path):
         """Test that frontend directory exists with package.json."""
         frontend_path = repo_root / "src" / "mcp_server_langgraph" / "studio" / "frontend"

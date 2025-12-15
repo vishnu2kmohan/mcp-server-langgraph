@@ -23,6 +23,7 @@ from fastapi.responses import RedirectResponse
 
 from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
 from mcp_server_langgraph.api.router_registry import get_router_registry, reset_router_registry
+from mcp_server_langgraph.api.v1.auth import AuthSecurityHeadersMiddleware
 from mcp_server_langgraph.api.routers import register_default_routers
 from mcp_server_langgraph.api.error_handlers import register_exception_handlers
 from mcp_server_langgraph.api.health import run_startup_validation_async
@@ -254,6 +255,14 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
     app.add_middleware(AuditMiddleware)
     try:
         logger.info("Audit middleware enabled (FedRAMP/HIPAA/GDPR/SOC2 compliance)")
+    except RuntimeError:
+        pass  # Graceful degradation if observability not initialized
+
+    # Security headers middleware - adds OWASP-recommended security headers to auth endpoints
+    # Headers: X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, HSTS (in production)
+    app.add_middleware(AuthSecurityHeadersMiddleware)
+    try:
+        logger.info("Auth security headers middleware enabled (OWASP best practices)")
     except RuntimeError:
         pass  # Graceful degradation if observability not initialized
 

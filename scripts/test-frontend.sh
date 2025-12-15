@@ -1,7 +1,7 @@
 #!/bin/bash
 # Frontend Test Script
 # =======================================
-# Runs frontend lint, typecheck, tests, and build
+# Runs frontend lint, typecheck, tests (Vitest + Playwright), and build
 #
 # This script achieves CI parity by running the same commands as the
 # 'frontend-build' job in ci.yaml.
@@ -13,7 +13,7 @@
 #   --skip-install    Skip npm ci (use existing node_modules)
 #   --skip-build      Skip npm run build (faster for test-only runs)
 #   --lint-only       Only run linting
-#   --test-only       Only run tests (skip lint, typecheck, build)
+#   --test-only       Only run Vitest tests (skip lint, typecheck, Playwright, build)
 #   --verbose         Show detailed output
 #
 # EXAMPLES:
@@ -31,7 +31,9 @@
 #   - npm ci (install dependencies)
 #   - npm run lint (ESLint)
 #   - npm run typecheck (TypeScript)
-#   - npm test -- --run (Vitest)
+#   - npm test -- --run (Vitest unit/integration)
+#   - npx playwright install --with-deps chromium
+#   - npm run test:e2e (Playwright e2e)
 #   - npm run build (build verification)
 
 set -euo pipefail
@@ -194,14 +196,34 @@ fi
 # Step 4: Run tests (Vitest)
 log_info "Running Vitest tests..."
 if npm test -- --run; then
-    log_success "Tests passed"
+    log_success "Vitest tests passed"
 else
-    log_error "Tests failed!"
+    log_error "Vitest tests failed!"
     exit 1
 fi
 echo ""
 
-# Step 5: Build verification
+# Step 5: Run Playwright e2e tests
+if [ "$TEST_ONLY" = false ]; then
+    log_info "Installing Playwright browsers (chromium)..."
+    if npx playwright install --with-deps chromium; then
+        log_success "Playwright browsers installed"
+    else
+        log_warning "Playwright browser install failed - continuing anyway"
+    fi
+    echo ""
+
+    log_info "Running Playwright e2e tests..."
+    if npm run test:e2e; then
+        log_success "Playwright e2e tests passed"
+    else
+        log_error "Playwright e2e tests failed!"
+        exit 1
+    fi
+    echo ""
+fi
+
+# Step 6: Build verification
 if [ "$SKIP_BUILD" = false ] && [ "$TEST_ONLY" = false ]; then
     log_info "Running build verification..."
     if npm run build; then
