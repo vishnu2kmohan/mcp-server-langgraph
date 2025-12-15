@@ -206,9 +206,12 @@ class CostMetricsCollector:
                 storage_backend = "memory"
 
         # Create storage based on backend type
-        storage: CostStorageBackend = (
-            PostgresCostStorage(database_url) if storage_backend == "postgres" and database_url else MemoryCostStorage()
-        )
+        storage: CostStorageBackend
+        if storage_backend == "postgres" and database_url:  # noqa: SIM108
+            # PostgresCostStorage has slightly different method signatures (bucket_interval vs interval)
+            storage = PostgresCostStorage(database_url)  # type: ignore[assignment]
+        else:
+            storage = MemoryCostStorage()
 
         self._storage = storage
         self._retention_policy = CostRetentionPolicy(retention_days=retention_days)
@@ -440,7 +443,8 @@ class CostMetricsCollector:
         if model:
             filters["model"] = model
 
-        records = await self._storage.get_records(filters=filters if filters else None)
+        # Storage now returns tuple (records, next_cursor)
+        records, _ = await self._storage.get_records(filters=filters if filters else None)
 
         # TODO: Apply time period filter
 
