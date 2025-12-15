@@ -37,6 +37,16 @@ EOSQL
 
 echo "✓ Test databases created successfully"
 
+# Enable TimescaleDB extension in databases that use time-series data
+# TimescaleDB provides hypertables for efficient storage of metrics and cost tracking data
+# Reference: ADR for Cost/Metrics feature
+echo "Enabling TimescaleDB extension in mcp_test database..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "mcp_test" <<-EOSQL
+    CREATE EXTENSION IF NOT EXISTS timescaledb;
+    \echo 'TimescaleDB extension enabled in mcp_test'
+EOSQL
+echo "✓ TimescaleDB extension enabled"
+
 # Apply GDPR schema to gdpr_test database (legacy - kept for backwards compatibility)
 # The GDPR schema is required for E2E tests (test_infrastructure fixture checks for these tables)
 # See: tests/fixtures/docker_fixtures.py - _verify_schema_ready()
