@@ -36,6 +36,13 @@ from mcp_server_langgraph.core.exceptions import OpenFGAError, OpenFGATimeoutErr
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_timeout
 
+# OIDC token refresh buffer (seconds)
+# Refresh tokens this many seconds before expiration to account for:
+# - Clock skew between services
+# - Network latency
+# - Token validation time
+OIDC_TOKEN_REFRESH_BUFFER_SECONDS = 60  # Increased from 30s for better reliability
+
 
 class OpenFGAConfig(BaseModel):
     """
@@ -227,8 +234,8 @@ class OpenFGAClient:
         import time
 
         if self._oidc_access_token and self._oidc_token_expires_at:
-            # Refresh token 30 seconds before expiration (buffer for clock skew)
-            if time.time() < (self._oidc_token_expires_at - 30):
+            # Refresh token before expiration (buffer for clock skew, network latency)
+            if time.time() < (self._oidc_token_expires_at - OIDC_TOKEN_REFRESH_BUFFER_SECONDS):
                 logger.debug("Using cached OIDC access token")
                 return self._oidc_access_token
 

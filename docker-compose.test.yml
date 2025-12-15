@@ -321,6 +321,10 @@ services:
         condition: service_healthy
       openfga-migrate-test:
         condition: service_completed_successfully
+    # Map localhost to traefik-gateway so OpenFGA can resolve JWKS URIs from Keycloak discovery
+    # Keycloak returns jwks_uri: http://localhost/authn/... which OpenFGA needs to resolve
+    extra_hosts:
+      - "localhost:host-gateway"
     ports:
       - "9080:8080"  # HTTP API
       - "9081:8081"  # gRPC API
@@ -338,8 +342,11 @@ services:
       # Services (authz-proxy, mcp-server) obtain OIDC tokens via client credentials grant
       # This provides defense-in-depth: even with network access, attackers need valid tokens
       # Reference: ADR-0070 - OpenFGA OIDC Authentication Migration
+      # IMPORTANT: OpenFGA must access Keycloak via Traefik gateway (traefik-gateway service)
+      #   to ensure issuer URLs match the public-facing URLs (http://localhost/authn/realms/default)
+      #   Direct access to keycloak-test would cause issuer mismatch errors.
       - OPENFGA_AUTHN_METHOD=oidc
-      - OPENFGA_AUTHN_OIDC_ISSUER=http://keycloak-test:8080/authn/realms/default
+      - OPENFGA_AUTHN_OIDC_ISSUER=http://traefik-gateway/authn/realms/default
       - OPENFGA_AUTHN_OIDC_AUDIENCE=openfga-server
       - TESTING=true
     healthcheck:
@@ -469,12 +476,14 @@ services:
       # Using KC_HOSTNAME_URL ensures the full issuer URL is consistent regardless of how Keycloak is accessed.
       # See: https://www.keycloak.org/server/hostname
       # Keycloak 26+ hostname v2 configuration
-      # KC_HOSTNAME sets the fixed hostname for all issuer URLs
-      # KC_HOSTNAME_PORT=-1 uses default port for scheme (no port in HTTP URLs)
-      # KC_HOSTNAME_BACKCHANNEL_DYNAMIC=false ensures internal requests also use the fixed hostname
-      - KC_HOSTNAME=localhost
-      - KC_HOSTNAME_PORT=-1
-      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=false
+      # KC_HOSTNAME_URL sets the public-facing frontend URL (for browsers via Traefik)
+      # KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true allows internal services (like OpenFGA) to receive
+      #   dynamic URLs when accessing Keycloak directly (e.g., http://keycloak-test:8080)
+      # This configuration allows:
+      #   - Frontend/browsers: http://localhost/authn/realms/default (via Traefik gateway)
+      #   - Backend/OpenFGA: http://keycloak-test:8080/authn/realms/default (direct internal access)
+      - KC_HOSTNAME_URL=http://localhost/authn
+      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
 

@@ -6,7 +6,7 @@ TDD Cycle: RED -> GREEN -> REFACTOR
 These tests verify that:
 1. OpenFGAClient reads OIDC configuration from environment variables
 2. OIDC token acquisition implements OAuth 2.0 client credentials grant correctly
-3. Token caching works as expected (30-second buffer before expiration)
+3. Token caching works as expected (60-second buffer before expiration)
 4. Token refresh happens automatically when cached token is near expiration
 5. Error handling for failed token acquisition
 6. Fallback to preshared key when OIDC is not configured
@@ -310,9 +310,9 @@ class TestOpenFGAClientOIDCTokenAcquisition:
     @pytest.mark.asyncio
     async def test_get_oidc_token_refreshes_near_expiry(self):
         """
-        GIVEN: Cached token that expires in less than 30 seconds
+        GIVEN: Cached token that expires in less than 60 seconds
         WHEN: Requesting token
-        THEN: Should refresh token (30-second buffer for clock skew)
+        THEN: Should refresh token (60-second buffer for clock skew)
 
         User Journey: Proactive refresh prevents authentication failures
         """
@@ -323,9 +323,9 @@ class TestOpenFGAClientOIDCTokenAcquisition:
             oidc_issuer="http://keycloak/realms/default",
         )
 
-        # Set cached token that expires in 20 seconds (within 30s buffer)
+        # Set cached token that expires in 50 seconds (within 60s buffer)
         client._oidc_access_token = "old-token"
-        client._oidc_token_expires_at = time.time() + 20
+        client._oidc_token_expires_at = time.time() + 50
 
         mock_response = MagicMock()
         mock_response.status_code = 200

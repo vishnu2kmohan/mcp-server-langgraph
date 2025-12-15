@@ -420,7 +420,7 @@ export function CommandPalette() {
       role="dialog"
       aria-modal="true"
       aria-label="Command palette"
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
+      className="fixed inset-0 z-[65] flex items-start justify-center pt-[20vh]"
     >
       {/* Backdrop */}
       <div

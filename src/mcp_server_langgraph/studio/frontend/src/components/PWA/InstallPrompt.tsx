@@ -49,7 +49,7 @@ export function InstallPrompt({
     <div
       role="alert"
       aria-live="polite"
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 max-w-md"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[70] bg-emerald-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 max-w-md"
     >
       <Download
         className={`h-5 w-5 flex-shrink-0 ${isInstalling ? "animate-bounce" : ""}`}
