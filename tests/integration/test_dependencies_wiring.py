@@ -103,7 +103,9 @@ class TestOpenFGAClientWiring:
         with patch("mcp_server_langgraph.core.dependencies.settings") as mock_settings:
             mock_settings.openfga_api_url = "http://localhost:8080"
             mock_settings.openfga_store_id = None
+            mock_settings.openfga_store_name = None  # Explicit None to prevent MagicMock
             mock_settings.openfga_model_id = None
+            mock_settings.openfga_preshared_key = None  # Explicit None to prevent MagicMock
             client = get_openfga_client()
             assert client is None, (
                 "get_openfga_client() should return None when store_id or model_id is missing, not create a broken client that will fail at runtime"
@@ -119,7 +121,9 @@ class TestOpenFGAClientWiring:
         with patch("mcp_server_langgraph.core.dependencies.settings") as mock_settings:
             mock_settings.openfga_api_url = "http://localhost:8080"
             mock_settings.openfga_store_id = "01HTEST123"
+            mock_settings.openfga_store_name = None  # Explicit None to prevent MagicMock
             mock_settings.openfga_model_id = "01HMODEL456"
+            mock_settings.openfga_preshared_key = None  # Explicit None to prevent MagicMock
             client = get_openfga_client()
             assert client is not None
             assert client.store_id == "01HTEST123"
@@ -136,7 +140,9 @@ class TestOpenFGAClientWiring:
         with patch("mcp_server_langgraph.core.dependencies.settings") as mock_settings:
             mock_settings.openfga_api_url = "http://localhost:8080"
             mock_settings.openfga_store_id = None
+            mock_settings.openfga_store_name = None  # Explicit None to prevent MagicMock
             mock_settings.openfga_model_id = None
+            mock_settings.openfga_preshared_key = None  # Explicit None to prevent MagicMock
             client = get_openfga_client()
             assert client is None
 
@@ -397,7 +403,9 @@ class TestDependencyStartupSmoke:
         with patch("mcp_server_langgraph.core.dependencies.settings") as mock_settings:
             mock_settings.openfga_api_url = "http://localhost:8080"
             mock_settings.openfga_store_id = None
+            mock_settings.openfga_store_name = None  # Explicit None to prevent MagicMock
             mock_settings.openfga_model_id = None
+            mock_settings.openfga_preshared_key = None  # Explicit None to prevent MagicMock
             client = get_openfga_client()
             assert client is None, "OpenFGA client should be None when store_id/model_id are not configured"
 

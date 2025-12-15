@@ -3,19 +3,35 @@ Tests for Admin Router
 
 TDD tests for GET /api/v1/admin/audit-logs endpoint.
 This endpoint returns paginated audit log entries for admin users.
+
+PYTEST-XDIST FIX (2025-12-15):
+==============================
+- Removed module-level import of InMemoryAuditLogRepository to avoid
+  triggering database-related imports at test collection time.
+- Use plain AsyncMock without spec to avoid import side effects.
+- Also override get_db_session dependency to prevent any database connection
+  attempts during xdist parallel execution.
+- Patch get_session_maker at module level to prevent any connection attempts.
 """
 
 import gc
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from mcp_server_langgraph.repositories.audit_log import InMemoryAuditLogRepository
+# TYPE_CHECKING only imports for IDE/mypy - not at runtime
+if TYPE_CHECKING:
+    pass
 
 pytestmark = pytest.mark.unit
+
+
+# NOTE: Database singletons are reset by the central
+# reset_dependency_singletons fixture in tests/conftest.py
 
 
 @pytest.mark.unit
@@ -23,27 +39,70 @@ pytestmark = pytest.mark.unit
 class TestAdminAuditLogsEndpoint:
     """Tests for GET /api/v1/admin/audit-logs endpoint."""
 
+    _session_maker_patcher: patch  # type: ignore[type-arg]
+
+    def setup_method(self) -> None:
+        """Reset database singletons and patch session maker before each test."""
+        import sys
+
+        # Reset database session singletons to prevent pollution from other tests
+        if "mcp_server_langgraph.database.session" in sys.modules:
+            import mcp_server_langgraph.database.session as session_module
+
+            session_module._engine = None
+            session_module._async_session_maker = None
+
+        # Patch get_session_maker at the source (database.session module) to prevent
+        # ANY database connection attempts. This is critical for xdist isolation where
+        # other tests may have set DATABASE_URL.
+        self._session_maker_patcher = patch(
+            "mcp_server_langgraph.database.session.get_session_maker",
+            return_value=MagicMock(),
+        )
+        self._session_maker_patcher.start()
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC and reset singletons to prevent mock accumulation in xdist workers."""
+        import sys
+
+        # Stop the patcher
+        self._session_maker_patcher.stop()
+
+        # Reset database singletons after each test
+        if "mcp_server_langgraph.database.session" in sys.modules:
+            import mcp_server_langgraph.database.session as session_module
+
+            session_module._engine = None
+            session_module._async_session_maker = None
+
         gc.collect()
 
     def _create_mock_repository(self, items: list[dict] | None = None, total: int = 0) -> AsyncMock:
         """Create a mock repository that returns the specified items."""
-        mock_repo = AsyncMock(spec=InMemoryAuditLogRepository)
+        # Use plain AsyncMock without spec to avoid importing database-related modules
+        mock_repo = AsyncMock()
         mock_repo.query.return_value = (items or [], total)
         return mock_repo
 
     def _create_app(self, mock_repository: AsyncMock | None = None) -> FastAPI:
         """Create a FastAPI app with the admin router."""
         from mcp_server_langgraph.api.v1.admin import admin_router
-        from mcp_server_langgraph.core.dependencies import get_audit_log_repository
+        from mcp_server_langgraph.core.dependencies import get_audit_log_repository, get_db_session
 
         app = FastAPI()
         app.include_router(admin_router, prefix="/api/v1")
 
-        # Override dependency if mock provided
+        # Override dependencies to prevent database connection attempts
         if mock_repository:
             app.dependency_overrides[get_audit_log_repository] = lambda: mock_repository
+
+        # Always override get_db_session to prevent any database connection attempts
+        # This is a safety net for xdist parallel execution
+        async def mock_db_session():
+            raise RuntimeError("get_db_session should not be called in unit tests")
+            yield  # type: ignore[misc]
+
+        app.dependency_overrides[get_db_session] = mock_db_session
 
         return app
 
@@ -202,8 +261,40 @@ class TestAdminAuditLogsEndpoint:
 class TestAuditLogResponseModels:
     """Tests for audit log response models."""
 
+    _session_maker_patcher: patch  # type: ignore[type-arg]
+
+    def setup_method(self) -> None:
+        """Reset database singletons and patch session maker before each test."""
+        import sys
+
+        # Reset database session singletons to prevent pollution from other tests
+        if "mcp_server_langgraph.database.session" in sys.modules:
+            import mcp_server_langgraph.database.session as session_module
+
+            session_module._engine = None
+            session_module._async_session_maker = None
+
+        # Patch get_session_maker at the source to prevent ANY database connection attempts
+        self._session_maker_patcher = patch(
+            "mcp_server_langgraph.database.session.get_session_maker",
+            return_value=MagicMock(),
+        )
+        self._session_maker_patcher.start()
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC and reset singletons to prevent mock accumulation in xdist workers."""
+        import sys
+
+        # Stop the patcher
+        self._session_maker_patcher.stop()
+
+        # Reset database singletons after each test
+        if "mcp_server_langgraph.database.session" in sys.modules:
+            import mcp_server_langgraph.database.session as session_module
+
+            session_module._engine = None
+            session_module._async_session_maker = None
+
         gc.collect()
 
     def test_audit_log_entry_model(self) -> None:

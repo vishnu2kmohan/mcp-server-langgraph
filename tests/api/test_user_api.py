@@ -12,6 +12,9 @@ This failed in parallel execution due to module-level caching and global state p
 
 New approach uses FastAPI dependency overrides to directly override get_current_user,
 which is more robust as it doesn't rely on global state management.
+
+Added additional fixture to reset global auth middleware singleton to prevent
+test pollution from other tests in the xdist suite.
 """
 
 import gc
@@ -23,6 +26,10 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.testclient import TestClient
 
 pytestmark = [pytest.mark.unit, pytest.mark.api]
+
+
+# NOTE: Auth and database singletons are reset by the central
+# reset_dependency_singletons fixture in tests/conftest.py
 
 
 def _create_test_app_with_user(user_data: dict[str, Any] | None = None) -> FastAPI:

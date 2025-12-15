@@ -386,6 +386,18 @@ def reset_dependency_singletons():
         # If module not loaded or reset fails, continue (defensive)
         pass
 
+    # Reset database session singletons (only if already loaded)
+    # PYTEST-XDIST FIX (2025-12-15): Prevent DB connection pollution
+    try:
+        if "mcp_server_langgraph.database.session" in sys.modules:
+            import mcp_server_langgraph.database.session as session_module
+
+            session_module._engine = None
+            session_module._async_session_maker = None
+    except Exception:
+        # If module not loaded or reset fails, continue (defensive)
+        pass
+
     yield
 
     # AFTER test: Reset all dependency singletons to ensure clean state for next test
@@ -420,6 +432,18 @@ def reset_dependency_singletons():
             import mcp_server_langgraph.compliance.gdpr.factory as gdpr_factory
 
             gdpr_factory._gdpr_storage = None
+    except Exception:
+        # If module not loaded or reset fails, continue (defensive)
+        pass
+
+    # Reset database session singletons (only if already loaded)
+    # PYTEST-XDIST FIX (2025-12-15): Prevent DB connection pollution
+    try:
+        if "mcp_server_langgraph.database.session" in sys.modules:
+            import mcp_server_langgraph.database.session as session_module
+
+            session_module._engine = None
+            session_module._async_session_maker = None
     except Exception:
         # If module not loaded or reset fails, continue (defensive)
         pass

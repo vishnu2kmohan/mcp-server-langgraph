@@ -12,17 +12,13 @@ Features tested:
 - Graceful disconnection handling
 """
 
-import asyncio
 import gc
-import json
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from starlette.websockets import WebSocketDisconnect
 
 from mcp_server_langgraph.storage.models import (
     MCPConnection,
@@ -31,6 +27,10 @@ from mcp_server_langgraph.storage.models import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.api, pytest.mark.websocket]
+
+
+# NOTE: Auth and database singletons are reset by the central
+# reset_dependency_singletons fixture in tests/conftest.py
 
 
 # ============================================================================
@@ -260,8 +260,8 @@ class TestHealthBroadcasting:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_receives_heartbeat(self, client: TestClient) -> None:
-        """Should receive periodic heartbeat messages."""
+    def test_websocket_heartbeat_returns_pong_on_ping(self, client: TestClient) -> None:
+        """Should receive pong response when sending ping."""
         with client.websocket_connect("/api/v1/connections/health/ws") as websocket:
             # Receive initial status
             websocket.receive_json()
