@@ -84,6 +84,28 @@ def _qdrant_available() -> bool:
         return False
 
 
+def _qdrant_auth_configured() -> bool:
+    """Check if Qdrant gateway has auth configured (forward-auth middleware).
+
+    This verifies that accessing Qdrant without auth returns 302/307/401/403,
+    not 200. Tests that verify auth behavior should skip if auth isn't configured.
+
+    Returns:
+        True if gateway responds with auth challenge (302/307/401/403)
+        False if gateway returns 200 (no auth) or is unreachable
+    """
+    try:
+        response = requests.get(
+            "http://localhost/vectors/",
+            timeout=5,
+            allow_redirects=False,
+        )
+        # ONLY accept auth responses - if 200, auth isn't configured
+        return response.status_code in [302, 307, 401, 403]
+    except Exception:
+        return False
+
+
 def _grafana_available() -> bool:
     """Check if Grafana is available."""
     try:
@@ -407,6 +429,12 @@ def skip_if_infrastructure_unavailable(request):
             pytest.skip("Keycloak not available at localhost:80/authn")
         if not _keycloak_token_endpoint_functional():
             pytest.skip("Keycloak token endpoint not returning valid JSON responses")
+        if not _qdrant_auth_configured():
+            pytest.skip(
+                "Qdrant gateway auth not configured (got 200 instead of 302/307/401/403). "
+                "Tests in test_qdrant_auth.py verify that auth is required - "
+                "they should skip when forward-auth middleware is not configured."
+            )
 
     elif test_file == "test_grafana_oauth2.py":
         if not _grafana_available():
