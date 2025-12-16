@@ -523,6 +523,7 @@ export const sessionSlice = createSlice({
             updatedAt: session.updatedAt,
             messageCount: 0,
           };
+          // Don't increment totalCount for existing session
         } else {
           state.sessions.unshift({
             id: session.id,
@@ -531,6 +532,8 @@ export const sessionSlice = createSlice({
             updatedAt: session.updatedAt,
             messageCount: 0,
           });
+          // Increment totalCount for new session
+          state.totalCount += 1;
         }
         state.currentSession = session;
         state.error = null;
