@@ -15,7 +15,11 @@ export type ArtifactType =
   | "mermaid"
   | "json"
   | "image"
-  | "text";
+  | "text"
+  | "svg"
+  | "audio"
+  | "video"
+  | "executable";
 
 /**
  * Chart types for ChartArtifact
@@ -193,6 +197,105 @@ export interface TextArtifact extends BaseArtifact {
 }
 
 /**
+ * SVG artifact configuration
+ */
+export interface SVGConfig {
+  width?: number | string;
+  height?: number | string;
+  preserveAspectRatio?: string;
+  enableZoom?: boolean;
+  enablePan?: boolean;
+}
+
+/**
+ * SVG artifact (inline vector graphics)
+ */
+export interface SVGArtifact extends BaseArtifact {
+  type: "svg";
+  data: string; // SVG markup or data URL
+  config?: SVGConfig;
+}
+
+/**
+ * Audio artifact configuration
+ */
+export interface AudioConfig {
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  controls?: boolean;
+  preload?: "none" | "metadata" | "auto";
+}
+
+/**
+ * Audio artifact
+ */
+export interface AudioArtifact extends BaseArtifact {
+  type: "audio";
+  data: string; // URL or base64 data URL
+  mimeType?: string; // audio/mpeg, audio/wav, audio/ogg, etc.
+  config?: AudioConfig;
+}
+
+/**
+ * Video artifact configuration
+ */
+export interface VideoConfig {
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  controls?: boolean;
+  preload?: "none" | "metadata" | "auto";
+  width?: number | string;
+  height?: number | string;
+  poster?: string; // Thumbnail image URL
+}
+
+/**
+ * Video artifact
+ */
+export interface VideoArtifact extends BaseArtifact {
+  type: "video";
+  data: string; // URL or base64 data URL
+  mimeType?: string; // video/mp4, video/webm, video/ogg, etc.
+  config?: VideoConfig;
+}
+
+/**
+ * Executable code artifact configuration
+ */
+export interface ExecutableConfig {
+  language: string;
+  runtime?: "docker" | "kubernetes" | "webassembly" | "pyodide";
+  timeout?: number; // Execution timeout in milliseconds
+  showLineNumbers?: boolean;
+  theme?: "light" | "dark";
+  maxOutputLines?: number;
+  enableStdin?: boolean;
+}
+
+/**
+ * Execution result from sandbox
+ */
+export interface ExecutionResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  executionTime?: number; // in milliseconds
+  error?: string;
+}
+
+/**
+ * Executable code artifact (sandboxed code execution)
+ */
+export interface ExecutableArtifact extends BaseArtifact {
+  type: "executable";
+  data: string; // Source code
+  config: ExecutableConfig;
+  result?: ExecutionResult;
+}
+
+/**
  * Union type of all artifacts
  */
 export type Artifact =
@@ -202,7 +305,11 @@ export type Artifact =
   | MermaidArtifact
   | JSONArtifact
   | ImageArtifact
-  | TextArtifact;
+  | TextArtifact
+  | SVGArtifact
+  | AudioArtifact
+  | VideoArtifact
+  | ExecutableArtifact;
 
 /**
  * Artifact detection result
