@@ -287,8 +287,11 @@ class TokenValidator:
                         msg = "Token issued in the future (iat claim)"
                         raise jwt.ImmatureSignatureError(msg)
 
-                span.set_attribute("token.sub", payload.get("sub"))
-                span.set_attribute("token.preferred_username", payload.get("preferred_username"))
+                # Only set attributes if values are not None (OTel rejects None)
+                if (sub := payload.get("sub")) is not None:
+                    span.set_attribute("token.sub", sub)
+                if (username := payload.get("preferred_username")) is not None:
+                    span.set_attribute("token.preferred_username", username)
 
                 duration_ms = (time.perf_counter() - start_time) * 1000
                 record_token_verification("success", duration_ms, provider="keycloak")

@@ -155,7 +155,7 @@ class AuthSecurityHeadersMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Add security headers to response."""
-        response = await call_next(request)
+        response: Response = await call_next(request)
 
         # Determine which security headers to use based on path
         path = request.url.path
@@ -538,7 +538,7 @@ async def oauth2_callback(
             # This is more secure than query params as fragments aren't sent to server
             frontend_url = settings.frontend_url.rstrip("/")
             fragment = urlencode({k: v for k, v in token_response.items() if v is not None})
-            response = RedirectResponse(
+            redirect_response = RedirectResponse(
                 url=f"{frontend_url}/auth/callback#{fragment}",
                 status_code=status.HTTP_302_FOUND,
             )
@@ -553,7 +553,7 @@ async def oauth2_callback(
             # Generate signed session token using access token hash
             # The session proves user completed OAuth2 flow successfully
             session_token = _hash_refresh_token(tokens["access_token"])[:32]
-            response.set_cookie(
+            redirect_response.set_cookie(
                 key=SESSION_COOKIE_NAME,
                 value=session_token,
                 httponly=SESSION_COOKIE_CONFIG["httponly"],
@@ -563,7 +563,7 @@ async def oauth2_callback(
                 max_age=SESSION_COOKIE_CONFIG["max_age"],
             )
 
-            return response
+            return redirect_response
 
     except httpx.HTTPError as e:
         # Audit: OAuth2 callback failed - Keycloak unreachable
@@ -1069,7 +1069,7 @@ async def device_auth_request(request: Request) -> dict[str, Any]:
 async def device_auth_token(
     request: Request,
     token_request: DeviceTokenRequest,
-) -> dict[str, Any]:
+) -> dict[str, Any] | JSONResponse:
     """
     Poll for access token after device authorization.
 
