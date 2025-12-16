@@ -65,9 +65,11 @@ class TestSessionManagedAuditRepositoryCreate:
         )
 
         # Use MagicMock for session since SQLAlchemy async session has both
-        # sync methods (add, add_all) and async methods (flush, commit, execute)
+        # sync methods (add, add_all) and async methods (flush, commit, execute, rollback)
         mock_session = MagicMock()
         mock_session.flush = AsyncMock()  # noqa: async-mock-config - async method
+        mock_session.commit = AsyncMock()  # noqa: async-mock-config - async method
+        mock_session.rollback = AsyncMock()  # noqa: async-mock-config - async method
         mock_session_maker = MagicMock()
         mock_session_maker.return_value.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session_maker.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -97,9 +99,11 @@ class TestSessionManagedAuditRepositoryCreate:
         )
 
         # Use MagicMock for session since SQLAlchemy async session has both
-        # sync methods (add, add_all) and async methods (flush, commit, execute)
+        # sync methods (add, add_all) and async methods (flush, commit, execute, rollback)
         mock_session = MagicMock()
         mock_session.flush = AsyncMock()  # noqa: async-mock-config - async method
+        mock_session.commit = AsyncMock()  # noqa: async-mock-config - async method
+        mock_session.rollback = AsyncMock()  # noqa: async-mock-config - async method
         mock_session_maker = MagicMock()
         mock_session_maker.return_value.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session_maker.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -129,9 +133,11 @@ class TestSessionManagedAuditRepositoryCreate:
         )
 
         # Use MagicMock for session since SQLAlchemy async session has both
-        # sync methods (add, add_all) and async methods (flush, commit, execute)
+        # sync methods (add, add_all) and async methods (flush, commit, execute, rollback)
         mock_session = MagicMock()
         mock_session.flush = AsyncMock()  # noqa: async-mock-config - async method
+        mock_session.commit = AsyncMock()  # noqa: async-mock-config - async method
+        mock_session.rollback = AsyncMock()  # noqa: async-mock-config - async method
         mock_session_maker = MagicMock()
         mock_session_maker.return_value.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session_maker.return_value.__aexit__ = AsyncMock(return_value=None)
