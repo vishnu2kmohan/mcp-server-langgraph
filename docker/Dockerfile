@@ -4,9 +4,9 @@
 # ==============================================================================
 #
 # VARIANTS:
-#   - base:    Lightweight (200MB) - API-based embeddings only (Google Gemini)
+#   - base:    Lightweight (250MB) - Vertex AI + Gemini API embeddings (no local ML)
 #   - full:    Complete (1.2GB)    - Includes sentence-transformers for local embeddings
-#   - test:    Test runner (1.6GB)  - Dev dependencies, no ML models
+#   - test:    Test runner (1.6GB)  - Dev dependencies, Vertex AI embeddings
 #
 # BUILD EXAMPLES:
 #   docker build --target final-base -t mcp-server-langgraph:base -f docker/Dockerfile .
@@ -103,8 +103,10 @@ COPY src/ ./src/
 # --frozen: Use lockfile exactly, fail if out of sync
 # --no-dev: Exclude development dependencies
 # --no-editable: Non-editable install for production
+# Include embeddings-vertex for Vertex AI embeddings (default provider)
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-base,sharing=private \
     uv sync --frozen --no-dev --no-editable \
+    --extra embeddings-vertex \
     --no-extra embeddings-local \
     --no-extra embeddings \
     --no-extra secrets \
@@ -121,8 +123,10 @@ FROM base-builder AS build-full
 COPY src/ ./src/
 
 # Install full dependencies (includes PyTorch, sentence-transformers)
+# Include embeddings-vertex for Vertex AI embeddings (default provider)
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-full,sharing=private \
     uv sync --frozen --no-dev --no-editable \
+    --extra embeddings-vertex \
     --extra embeddings-local \
     --no-extra secrets
 
@@ -136,8 +140,10 @@ COPY src/ ./src/
 COPY tests/ ./tests/
 
 # Install test dependencies (dev extras)
+# Include embeddings-vertex for Vertex AI embeddings (default provider)
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-test-main,sharing=private \
     uv sync --frozen --extra dev \
+    --extra embeddings-vertex \
     --no-extra embeddings-local \
     --no-extra embeddings \
     --no-extra all
