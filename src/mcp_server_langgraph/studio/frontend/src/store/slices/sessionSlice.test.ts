@@ -416,6 +416,85 @@ describe("sessionSlice", () => {
 
       expect(selectSessionError(store.getState())).toBe("Invalid session name");
     });
+
+    it("should increment totalCount when creating new session", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            id: "new-session-abc",
+            name: "New Session",
+            config: {
+              modelProvider: "openai",
+              modelName: "gpt-4",
+              temperature: 0.7,
+              maxTokens: 4096,
+            },
+            messages: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          }),
+      });
+
+      const store = createTestStore({
+        sessions: [
+          {
+            id: "s1",
+            name: "Existing Session",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            messageCount: 5,
+          },
+        ],
+        totalCount: 1,
+      });
+
+      await store.dispatch(createSession({ name: "New Session" }));
+
+      // Session count should reflect the new session
+      expect(selectSessions(store.getState())).toHaveLength(2);
+      expect(selectTotalCount(store.getState())).toBe(2);
+    });
+
+    it("should not increment totalCount when updating existing session (race condition)", async () => {
+      const existingSessionId = "existing-session-123";
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            id: existingSessionId,
+            name: "Updated Session",
+            config: {
+              modelProvider: "openai",
+              modelName: "gpt-4",
+              temperature: 0.7,
+              maxTokens: 4096,
+            },
+            messages: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          }),
+      });
+
+      const store = createTestStore({
+        sessions: [
+          {
+            id: existingSessionId,
+            name: "Existing Session",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            messageCount: 5,
+          },
+        ],
+        totalCount: 1,
+      });
+
+      await store.dispatch(createSession({ name: "Updated Session" }));
+
+      // Should not increment if session already exists (race condition case)
+      expect(selectSessions(store.getState())).toHaveLength(1);
+      expect(selectTotalCount(store.getState())).toBe(1);
+    });
   });
 
   describe("loadSession thunk", () => {
