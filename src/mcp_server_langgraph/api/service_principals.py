@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
-from mcp_server_langgraph.core.dependencies import get_openfga_client, get_service_principal_manager
+from mcp_server_langgraph.core.dependencies import get_openfga_client_from_request, get_service_principal_manager
 
 router = APIRouter(
     prefix="/api/v1/service-principals",
@@ -167,7 +167,7 @@ async def create_service_principal(
     request: CreateServicePrincipalRequest,
     current_user: dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> CreateServicePrincipalResponse:
     """
     Create a new service principal
@@ -398,7 +398,7 @@ async def associate_service_principal_with_user(
     inherit_permissions: bool = True,
     current_user: dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> ServicePrincipalResponse:
     """
     Associate service principal with a user for permission inheritance

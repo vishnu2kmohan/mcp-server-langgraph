@@ -30,7 +30,7 @@ from fastapi.responses import JSONResponse
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
-from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client
+from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client_from_request
 from mcp_server_langgraph.scim.schema import (
     SCIMError,
     SCIMGroup,
@@ -149,7 +149,7 @@ async def create_user(
     user_data: dict[str, Any],
     current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> SCIMUser:
     """
     Create a new user (SCIM 2.0)
@@ -246,7 +246,7 @@ async def replace_user(
     user_data: dict[str, Any],
     current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> SCIMUser | JSONResponse:
     """
     Replace user (SCIM 2.0 PUT)
@@ -286,7 +286,7 @@ async def update_user(
     patch_request: SCIMPatchRequest,
     current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> SCIMUser | JSONResponse:
     """
     Update user with PATCH operations (SCIM 2.0)
@@ -345,7 +345,7 @@ async def delete_user(
     user_id: str,
     current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> None:
     """
     Delete (deactivate) user (SCIM 2.0)
@@ -453,7 +453,7 @@ async def create_group(
     group_data: dict[str, Any],
     current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> SCIMGroup | JSONResponse:
     """
     Create a new group (SCIM 2.0)

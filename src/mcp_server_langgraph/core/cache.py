@@ -24,6 +24,7 @@ from typing import Any, ParamSpec, TypeVar
 from urllib.parse import urlparse, urlunparse
 
 import redis
+import redis.asyncio as aioredis
 from cachetools import TTLCache
 
 from mcp_server_langgraph.core.config import settings
@@ -158,25 +159,25 @@ class CacheService:
         # Declare redis with Optional type for proper type checking
         self.redis: redis.Redis[bytes] | None = None  # type: ignore[type-arg]
 
+        # Build Redis URL with database number using helper function
+        # This prevents malformed URLs from simple string concatenation
+        redis_url_with_db = _build_redis_url_with_db(redis_url, redis_db)
+
+        # Build connection kwargs
+        # NOTE: Only pass ssl=True when SSL is enabled. Passing ssl=False causes
+        # "AbstractConnection.__init__() got an unexpected keyword argument 'ssl'"
+        # because the non-SSL connection class doesn't accept the ssl parameter.
+        connection_kwargs: dict[str, Any] = {
+            "decode_responses": False,  # Keep binary for pickle
+            "socket_connect_timeout": 2,
+            "socket_timeout": 2,
+        }
+        if redis_password:
+            connection_kwargs["password"] = redis_password
+        if redis_ssl:
+            connection_kwargs["ssl"] = True
+
         try:
-            # Build Redis URL with database number using helper function
-            # This prevents malformed URLs from simple string concatenation
-            redis_url_with_db = _build_redis_url_with_db(redis_url, redis_db)
-
-            # Build connection kwargs
-            # NOTE: Only pass ssl=True when SSL is enabled. Passing ssl=False causes
-            # "AbstractConnection.__init__() got an unexpected keyword argument 'ssl'"
-            # because the non-SSL connection class doesn't accept the ssl parameter.
-            connection_kwargs: dict[str, Any] = {
-                "decode_responses": False,  # Keep binary for pickle
-                "socket_connect_timeout": 2,
-                "socket_timeout": 2,
-            }
-            if redis_password:
-                connection_kwargs["password"] = redis_password
-            if redis_ssl:
-                connection_kwargs["ssl"] = True
-
             # Create Redis client using from_url() with full configuration
             # This matches the pattern in dependencies.py:215-220 (API key manager)
             self.redis = redis.from_url(  # type: ignore[no-untyped-call]
@@ -200,6 +201,11 @@ class CacheService:
 
         # Cache stampede prevention locks
         self._refresh_locks: dict[str, asyncio.Lock] = {}
+
+        # Async Redis client (lazy initialized)
+        self.async_redis: aioredis.Redis | None = None  # type: ignore[type-arg]
+        self._async_redis_url = redis_url_with_db
+        self._async_redis_kwargs = connection_kwargs.copy()
 
         # Statistics
         self.stats = {
@@ -316,6 +322,161 @@ class CacheService:
                 logger.warning(f"L2 cache delete failed: {e}")
 
         self.stats["deletes"] += 1
+
+    # =========================================================================
+    # Async Methods (non-blocking, use redis.asyncio)
+    # =========================================================================
+
+    async def _ensure_async_redis(self) -> aioredis.Redis | None:  # type: ignore[type-arg]
+        """
+        Lazy initialization of async Redis client.
+
+        Returns:
+            Async Redis client or None if not available
+        """
+        if self.async_redis is None and self._async_redis_url:
+            try:
+                self.async_redis = await aioredis.from_url(  # type: ignore[no-untyped-call]
+                    self._async_redis_url,
+                    **self._async_redis_kwargs,
+                )
+            except Exception as e:
+                logger.warning(f"Async Redis initialization failed: {e}")
+                return None
+        return self.async_redis
+
+    async def aget(self, key: str, level: str = CacheLayer.L2) -> Any | None:
+        """
+        Async get value from cache (L1 → L2 → None).
+
+        Non-blocking version of get() using redis.asyncio.
+
+        Args:
+            key: Cache key
+            level: Cache level to search (l1 or l2)
+
+        Returns:
+            Cached value or None if not found
+        """
+        # Try L1 first (sync, in-memory)
+        if level in (CacheLayer.L1, CacheLayer.L2) and key in self.l1_cache:
+            self.stats["l1_hits"] += 1
+            logger.debug(f"L1 cache hit: {key}")
+            self._emit_cache_hit_metric(CacheLayer.L1, key)
+            return self.l1_cache[key]
+
+        self.stats["l1_misses"] += 1
+
+        # Try L2 if enabled (async)
+        if level == CacheLayer.L2:
+            async_redis = await self._ensure_async_redis()
+            if async_redis:
+                try:
+                    data = await async_redis.get(key)
+                    if data:
+                        value = pickle.loads(data)  # type: ignore[arg-type]
+
+                        # Promote to L1
+                        self.l1_cache[key] = value
+
+                        self.stats["l2_hits"] += 1
+                        logger.debug(f"L2 cache hit (async): {key}")
+                        self._emit_cache_hit_metric(CacheLayer.L2, key)
+
+                        return value
+                except Exception as e:
+                    logger.warning(f"L2 async cache get failed: {e}", extra={"key": key})
+
+        self.stats["l2_misses"] += 1
+        self._emit_cache_miss_metric(level, key)
+        return None
+
+    async def aset(  # type: ignore[no-untyped-def]
+        self,
+        key: str,
+        value: Any,
+        ttl: int | None = None,
+        level: str = CacheLayer.L2,
+    ):
+        """
+        Async set value in cache.
+
+        Non-blocking version of set() using redis.asyncio.
+
+        Args:
+            key: Cache key
+            value: Value to cache
+            ttl: Time-to-live in seconds (default: auto from key_prefix)
+            level: Cache level (l1, l2)
+        """
+        # Use default TTL for cache type
+        if ttl is None:
+            ttl = self._get_ttl_from_key(key)
+
+        # Set in L1 (sync, in-memory)
+        if level in (CacheLayer.L1, CacheLayer.L2):
+            self.l1_cache[key] = value
+
+        # Set in L2 (async)
+        if level == CacheLayer.L2:
+            async_redis = await self._ensure_async_redis()
+            if async_redis:
+                try:
+                    await async_redis.setex(key, ttl, pickle.dumps(value))
+                    logger.debug(f"L2 async cache set: {key} (TTL: {ttl}s)")
+                except Exception as e:
+                    logger.warning(f"L2 async cache set failed: {e}", extra={"key": key})
+
+        self.stats["sets"] += 1
+        self._emit_cache_set_metric(level, key)
+
+    async def adelete(self, key: str) -> None:
+        """
+        Async delete from all cache levels.
+
+        Non-blocking version of delete() using redis.asyncio.
+
+        Args:
+            key: Cache key to delete
+        """
+        # Delete from L1 (sync, in-memory)
+        self.l1_cache.pop(key, None)
+
+        # Delete from L2 (async)
+        async_redis = await self._ensure_async_redis()
+        if async_redis:
+            try:
+                await async_redis.delete(key)
+            except Exception as e:
+                logger.warning(f"L2 async cache delete failed: {e}")
+
+        self.stats["deletes"] += 1
+
+    async def aclear(self, pattern: str | None = None) -> None:
+        """
+        Async clear cache (all or by pattern).
+
+        Non-blocking version of clear() using redis.asyncio.
+
+        Args:
+            pattern: Redis key pattern (e.g., "user:*") or None for all
+        """
+        # Clear L1 (sync, in-memory)
+        self.l1_cache.clear()
+
+        # Clear L2 (async)
+        async_redis = await self._ensure_async_redis()
+        if async_redis:
+            try:
+                search_pattern = pattern if pattern else "*"
+                keys = await async_redis.keys(search_pattern)
+                if keys:
+                    await async_redis.delete(*keys)
+                    logger.info(f"Cleared L2 async cache by pattern: {search_pattern} ({len(keys)} keys)")
+                else:
+                    logger.info(f"No L2 cache keys matched pattern: {search_pattern}")
+            except Exception as e:
+                logger.warning(f"L2 async cache clear failed: {e}")
 
     def clear(self, pattern: str | None = None) -> None:
         """

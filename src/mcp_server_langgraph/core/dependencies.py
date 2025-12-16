@@ -7,7 +7,7 @@ Provides dependency injection for commonly used services.
 from collections.abc import AsyncGenerator
 from typing import Any
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mcp_server_langgraph.auth.api_keys import APIKeyManager
@@ -24,6 +24,11 @@ from mcp_server_langgraph.repositories.connections import (
 )
 from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
 from mcp_server_langgraph.storage.base import ProjectRepository
+
+# HTTP client for connection pooling
+import httpx
+
+from mcp_server_langgraph.core.http_client import HttpClientManager
 
 # Singleton instances (will be initialized on first use)
 _keycloak_client: KeycloakClient | None = None
@@ -106,6 +111,76 @@ def get_openfga_client() -> OpenFGAClient | None:
     return _openfga_client
 
 
+def get_openfga_client_from_request(request: Request) -> OpenFGAClient | None:
+    """
+    Get OpenFGA client from FastAPI request state (async-initialized pattern).
+
+    This is the preferred way to access OpenFGA client in FastAPI routes.
+    The client is initialized once during app lifespan startup and stored
+    in app.state.openfga_client.
+
+    Benefits over the sync singleton pattern:
+    - Cold start latency eliminated (init at startup, not first request)
+    - Proper async initialization (uses await, no event loop issues)
+    - Fail-fast behavior (errors at startup, not runtime)
+    - Request-scoped access pattern (proper FastAPI idiom)
+
+    Args:
+        request: FastAPI Request object (injected via Depends)
+
+    Returns:
+        OpenFGAClient if configured and initialized, None otherwise
+
+    Example:
+        @router.get("/resource")
+        async def get_resource(
+            openfga: OpenFGAClient = Depends(get_openfga_client_from_request),
+        ):
+            if openfga:
+                allowed = await openfga.check_permission(...)
+    """
+    return getattr(request.app.state, "openfga_client", None)
+
+
+async def get_http_client(request: Request) -> httpx.AsyncClient:
+    """
+    Get shared HTTP client from FastAPI request state.
+
+    This provides access to the shared httpx.AsyncClient with HTTP/2 and
+    connection pooling initialized at app startup. Use this for making
+    HTTP requests in FastAPI routes instead of creating new clients.
+
+    Benefits:
+    - Connection reuse (HTTP/2 multiplexing, keep-alive)
+    - Reduced connection overhead (~100ms saved per request)
+    - Centralized connection pool limits and configuration
+    - Proper cleanup on app shutdown
+
+    Args:
+        request: FastAPI Request object (injected via Depends)
+
+    Returns:
+        Shared httpx.AsyncClient instance
+
+    Raises:
+        RuntimeError: If HTTP client manager not initialized
+
+    Example:
+        @router.get("/external-data")
+        async def fetch_external_data(
+            http_client: httpx.AsyncClient = Depends(get_http_client),
+        ):
+            response = await http_client.get("https://api.example.com/data")
+            return response.json()
+    """
+    http_client_manager: HttpClientManager | None = getattr(request.app.state, "http_client_manager", None)
+    if http_client_manager is None:
+        msg = "HTTP client manager not initialized. Ensure app lifespan is configured."
+        raise RuntimeError(msg)
+
+    return await http_client_manager.get_client()
+
+
 def validate_production_auth_config(settings_obj: Settings) -> None:
     """
     Validate that production deployments have proper authorization configured.
@@ -170,14 +245,14 @@ def validate_production_auth_config(settings_obj: Settings) -> None:
 
 def get_service_principal_manager(
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> ServicePrincipalManager:
     """
     Get ServicePrincipalManager instance
 
     Args:
         keycloak: Keycloak client (injected)
-        openfga: OpenFGA client (injected)
+        openfga: OpenFGA client from request state (injected)
 
     Returns:
         ServicePrincipalManager instance
@@ -607,7 +682,6 @@ class OAuth2Service:
         code_verifier: str,
     ) -> dict[str, Any]:
         """Exchange authorization code for tokens."""
-        import httpx
 
         data = {
             "grant_type": "authorization_code",

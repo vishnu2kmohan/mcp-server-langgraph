@@ -36,6 +36,7 @@ from mcp_server_langgraph.middleware.audit import (
     get_audit_service,
     set_audit_service,
 )
+from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
 from mcp_server_langgraph.audit.factory import create_audit_scheduler
 from mcp_server_langgraph.audit.service import UnifiedAuditService
 from mcp_server_langgraph.audit.compliance_service import ComplianceService
@@ -49,6 +50,7 @@ from mcp_server_langgraph.api.v1.audit_websocket import set_audit_event_broadcas
 from mcp_server_langgraph.api.v1.notification_websocket import set_notification_broadcaster
 from mcp_server_langgraph.audit.broadcast import AuditEventBroadcaster
 from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
+from mcp_server_langgraph.core.http_client import HttpClientManager
 from mcp_server_langgraph.observability.telemetry import init_observability, logger
 
 
@@ -93,6 +95,56 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
                 logger.debug("Skipping startup validation (test mode)")
             except RuntimeError:
                 pass  # Graceful degradation if observability not initialized
+
+        # Initialize OpenFGA client (async initialization pattern)
+        # This replaces the lazy sync singleton with proper async startup init
+        openfga_client: OpenFGAClient | None = None
+        try:
+            # Check if OpenFGA is configured (store_id or store_name required)
+            has_store_config = config.openfga_store_id or config.openfga_store_name
+            if has_store_config:
+                # Construct OIDC issuer URL from settings if not explicitly provided
+                oidc_issuer = config.openfga_oidc_issuer
+                if not oidc_issuer and config.openfga_oidc_client_id and config.openfga_oidc_client_secret:
+                    oidc_issuer = f"{config.keycloak_server_url.rstrip('/')}/realms/{config.keycloak_realm}"
+
+                openfga_config = OpenFGAConfig(
+                    api_url=config.openfga_api_url,
+                    store_id=config.openfga_store_id,
+                    store_name=config.openfga_store_name,
+                    model_id=config.openfga_model_id,
+                    oidc_client_id=config.openfga_oidc_client_id,
+                    oidc_client_secret=config.openfga_oidc_client_secret,
+                    oidc_issuer=oidc_issuer,
+                    preshared_key=config.openfga_preshared_key,
+                )
+                openfga_client = OpenFGAClient(config=openfga_config)
+                # Async initialization: resolve store_id, model_id, obtain OIDC token
+                await openfga_client._ensure_initialized()
+                logger.info(
+                    "OpenFGA client initialized at startup",
+                    extra={
+                        "store_id": openfga_client.store_id,
+                        "model_id": openfga_client.model_id,
+                    },
+                )
+            else:
+                logger.warning(
+                    "OpenFGA not configured - authorization will be degraded. "
+                    "Set OPENFGA_STORE_ID or OPENFGA_STORE_NAME to enable."
+                )
+        except Exception as e:
+            logger.warning(f"Failed to initialize OpenFGA client: {e}")
+            openfga_client = None
+
+        # Store in app.state for access via get_openfga_client_from_request dependency
+        app.state.openfga_client = openfga_client
+
+        # Initialize HTTP client pool for connection reuse across auth modules
+        # This provides a shared httpx.AsyncClient with HTTP/2 and connection pooling
+        http_client_manager = HttpClientManager()
+        app.state.http_client_manager = http_client_manager
+        logger.info("HTTP client pool manager initialized")
 
         # Initialize audit service (required for middleware and scheduler)
         # Uses PostgresUnifiedAuditRepository if database_url is configured (production)
@@ -202,6 +254,21 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
                 logger.info("Audit integrity scheduler stopped")
             except Exception as e:
                 logger.warning(f"Error stopping audit scheduler: {e}")
+
+        # Close OpenFGA client to release resources (aiohttp ClientSession)
+        if openfga_client is not None:
+            try:
+                await openfga_client.close()
+                logger.info("OpenFGA client closed")
+            except Exception as e:
+                logger.warning(f"Error closing OpenFGA client: {e}")
+
+        # Close HTTP client pool to release connections
+        try:
+            await http_client_manager.close()
+            logger.info("HTTP client pool closed")
+        except Exception as e:
+            logger.warning(f"Error closing HTTP client pool: {e}")
 
     app = FastAPI(
         title="MCP Server LangGraph API",

@@ -30,7 +30,7 @@ from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddlewa
 from mcp_server_langgraph.api.v1.auth import AuthSecurityHeadersMiddleware
 from mcp_server_langgraph.auth.factory import create_auth_middleware, create_user_provider
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
-from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
 from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
@@ -91,6 +91,42 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning(f"Failed to instrument FastAPI app with OTEL: {e}")
 
+    # Initialize OpenFGA client (async initialization pattern)
+    # This must happen BEFORE get_mcp_server() so the server uses the async-initialized client
+    openfga_client: OpenFGAClient | None = None
+    try:
+        has_store_config = settings.openfga_store_id or settings.openfga_store_name
+        if has_store_config:
+            # Construct OIDC issuer URL from settings if not explicitly provided
+            oidc_issuer = settings.openfga_oidc_issuer
+            if not oidc_issuer and settings.openfga_oidc_client_id and settings.openfga_oidc_client_secret:
+                oidc_issuer = f"{settings.keycloak_server_url.rstrip('/')}/realms/{settings.keycloak_realm}"
+
+            openfga_config = OpenFGAConfig(
+                api_url=settings.openfga_api_url,
+                store_id=settings.openfga_store_id,
+                store_name=settings.openfga_store_name,
+                model_id=settings.openfga_model_id,
+                oidc_client_id=settings.openfga_oidc_client_id,
+                oidc_client_secret=settings.openfga_oidc_client_secret,
+                oidc_issuer=oidc_issuer,
+                preshared_key=settings.openfga_preshared_key,
+            )
+            openfga_client = OpenFGAClient(config=openfga_config)
+            await openfga_client._ensure_initialized()
+            logger.info(
+                "OpenFGA client initialized for MCP server (async pattern)",
+                extra={"store_id": openfga_client.store_id, "model_id": openfga_client.model_id},
+            )
+        else:
+            logger.warning("OpenFGA not configured for MCP server - authorization will use fallback mode")
+    except Exception as e:
+        logger.warning(f"Failed to initialize OpenFGA client for MCP server: {e}")
+        openfga_client = None
+
+    # Store in app.state for FastAPI dependencies
+    app.state.openfga_client = openfga_client
+
     # Initialize global auth middleware for FastAPI dependencies
     # This must happen AFTER observability is initialized (for logging)
     try:
@@ -98,7 +134,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
         if FASTAPI_AVAILABLE:
             # Get MCP server instance (creates it if needed)
-            mcp_server = get_mcp_server()
+            # Pass the async-initialized OpenFGA client to the server
+            mcp_server = get_mcp_server(openfga_client=openfga_client)
 
             # Set the auth middleware globally for FastAPI dependencies
             set_global_auth_middleware(mcp_server.auth)
@@ -121,6 +158,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     from mcp_server_langgraph.observability.telemetry import shutdown_observability
 
     logger.info("Application shutdown initiated")
+
+    # Cleanup OpenFGA client (async-initialized in lifespan)
+    try:
+        if openfga_client is not None:
+            await openfga_client.close()
+            logger.info("OpenFGA client closed for MCP server")
+    except Exception as e:
+        logger.warning(f"Error closing OpenFGA client: {e}")
 
     # Cleanup session service connections (Postgres and Redis)
     try:
@@ -1239,14 +1284,20 @@ class MCPAgentStreamableServer:
 # - Test dependency injection
 
 _mcp_server_instance: MCPAgentStreamableServer | None = None
+_async_openfga_client: OpenFGAClient | None = None
 
 
-def get_mcp_server() -> MCPAgentStreamableServer:
+def get_mcp_server(openfga_client: OpenFGAClient | None = None) -> MCPAgentStreamableServer:
     """
     Get or create the MCP server instance (lazy singleton)
 
     This ensures the server is only created after observability is initialized,
     avoiding import-time side effects and logging errors.
+
+    Args:
+        openfga_client: Optional pre-initialized OpenFGA client. If provided on first call,
+                       this client will be used instead of creating one synchronously.
+                       This enables async initialization in the FastAPI lifespan.
 
     Returns:
         MCPAgentStreamableServer singleton instance
@@ -1265,9 +1316,15 @@ def get_mcp_server() -> MCPAgentStreamableServer:
         )
         raise RuntimeError(msg)
 
-    global _mcp_server_instance
+    global _mcp_server_instance, _async_openfga_client
+
+    # Store the async-initialized client for use during server creation
+    if openfga_client is not None and _async_openfga_client is None:
+        _async_openfga_client = openfga_client
+
     if _mcp_server_instance is None:
-        _mcp_server_instance = MCPAgentStreamableServer()
+        # Use the async-initialized client if available
+        _mcp_server_instance = MCPAgentStreamableServer(openfga_client=_async_openfga_client)
     return _mcp_server_instance
 
 

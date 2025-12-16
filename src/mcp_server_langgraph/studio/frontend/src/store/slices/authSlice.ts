@@ -50,14 +50,58 @@ function isTokenExpired(expiresAt: number): boolean {
 }
 
 /**
+ * Decode JWT payload to extract expiration time
+ */
+function decodeJwtExp(token: string): number {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return Date.now() + 3600000; // Default 1 hour
+
+    const payload = parts[1];
+    // Base64url decode
+    const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    const parsed = JSON.parse(decoded);
+    // exp is in seconds, convert to milliseconds
+    return parsed.exp ? parsed.exp * 1000 : Date.now() + 3600000;
+  } catch {
+    return Date.now() + 3600000; // Default 1 hour on error
+  }
+}
+
+/**
  * Load tokens from localStorage
+ *
+ * Checks multiple storage locations:
+ * 1. AUTH_STORAGE_KEY (studio-auth) - structured token storage
+ * 2. OAuth2 PKCE keys (access_token, refresh_token) - raw token storage
  */
 function loadTokensFromStorage(): AuthTokens | null {
   try {
+    // First, check structured storage (studio-auth)
     const stored = localStorage.getItem(AUTH_STORAGE_KEY);
     if (stored) {
       const data = JSON.parse(stored);
-      return data.state?.tokens || null;
+      if (data.state?.tokens) {
+        return data.state.tokens;
+      }
+    }
+
+    // Fallback: check OAuth2 PKCE storage keys
+    const accessToken = localStorage.getItem("access_token");
+    if (accessToken) {
+      const refreshToken = localStorage.getItem("refresh_token");
+      const expiresAt = decodeJwtExp(accessToken);
+      // Refresh token typically expires later (e.g., 30 days)
+      const refreshExpiresAt = refreshToken
+        ? decodeJwtExp(refreshToken)
+        : expiresAt + 30 * 24 * 60 * 60 * 1000;
+
+      return {
+        accessToken,
+        refreshToken: refreshToken || "",
+        expiresAt,
+        refreshExpiresAt,
+      };
     }
   } catch {
     // Ignore localStorage errors

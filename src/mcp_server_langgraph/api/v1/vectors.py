@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
-from mcp_server_langgraph.core.dependencies import get_openfga_client
+from mcp_server_langgraph.core.dependencies import get_openfga_client_from_request
 from mcp_server_langgraph.observability.telemetry import logger
 
 router = APIRouter(prefix="", tags=["vectors"])
@@ -84,7 +84,8 @@ class UpsertPointsRequest(BaseModel):
 
 
 # Dependency providers
-# NOTE: get_openfga_client is imported from core.dependencies (centralized singleton)
+# NOTE: get_openfga_client_from_request accesses app.state.openfga_client
+# initialized during app lifespan (async initialization pattern)
 
 
 def get_qdrant_client() -> Any:
@@ -131,20 +132,26 @@ def get_embedding_model() -> Any:
 
 async def require_viewer_permission(
     current_user: dict[str, Any] = Depends(get_current_user),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> dict[str, Any]:
     """Require viewer permission on vector_store:default."""
     # get_current_user returns dict with 'user_id' already in "user:username" format
     user_id = current_user.get("user_id") or f"user:{current_user.get('username', 'unknown')}"
 
-    try:
-        allowed = await openfga.check_permission(
-            user=user_id,
-            relation="viewer",
-            object=DEFAULT_VECTOR_STORE,
+    # Handle case where OpenFGA is not configured
+    if openfga is None:
+        logger.warning(
+            "OpenFGA not configured - allowing access (degraded mode)",
+            extra={"user": user_id, "permission": "viewer", "object": DEFAULT_VECTOR_STORE},
         )
-    finally:
-        await openfga.close()
+        return current_user
+
+    allowed = await openfga.check_permission(
+        user=user_id,
+        relation="viewer",
+        object=DEFAULT_VECTOR_STORE,
+    )
+    # Note: Don't close the client - it's managed by app lifespan
 
     if not allowed:
         logger.warning(
@@ -161,20 +168,26 @@ async def require_viewer_permission(
 
 async def require_editor_permission(
     current_user: dict[str, Any] = Depends(get_current_user),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> dict[str, Any]:
     """Require editor permission on vector_store:default."""
     # get_current_user returns dict with 'user_id' already in "user:username" format
     user_id = current_user.get("user_id") or f"user:{current_user.get('username', 'unknown')}"
 
-    try:
-        allowed = await openfga.check_permission(
-            user=user_id,
-            relation="editor",
-            object=DEFAULT_VECTOR_STORE,
+    # Handle case where OpenFGA is not configured
+    if openfga is None:
+        logger.warning(
+            "OpenFGA not configured - allowing access (degraded mode)",
+            extra={"user": user_id, "permission": "editor", "object": DEFAULT_VECTOR_STORE},
         )
-    finally:
-        await openfga.close()
+        return current_user
+
+    allowed = await openfga.check_permission(
+        user=user_id,
+        relation="editor",
+        object=DEFAULT_VECTOR_STORE,
+    )
+    # Note: Don't close the client - it's managed by app lifespan
 
     if not allowed:
         logger.warning(
@@ -191,20 +204,26 @@ async def require_editor_permission(
 
 async def require_owner_permission(
     current_user: dict[str, Any] = Depends(get_current_user),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> dict[str, Any]:
     """Require owner permission on vector_store:default."""
     # get_current_user returns dict with 'user_id' already in "user:username" format
     user_id = current_user.get("user_id") or f"user:{current_user.get('username', 'unknown')}"
 
-    try:
-        allowed = await openfga.check_permission(
-            user=user_id,
-            relation="owner",
-            object=DEFAULT_VECTOR_STORE,
+    # Handle case where OpenFGA is not configured
+    if openfga is None:
+        logger.warning(
+            "OpenFGA not configured - allowing access (degraded mode)",
+            extra={"user": user_id, "permission": "owner", "object": DEFAULT_VECTOR_STORE},
         )
-    finally:
-        await openfga.close()
+        return current_user
+
+    allowed = await openfga.check_permission(
+        user=user_id,
+        relation="owner",
+        object=DEFAULT_VECTOR_STORE,
+    )
+    # Note: Don't close the client - it's managed by app lifespan
 
     if not allowed:
         logger.warning(

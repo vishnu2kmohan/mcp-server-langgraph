@@ -68,8 +68,13 @@ class TestMCPAgentStreamableServerInit:
                 MCPAgentStreamableServer()
 
     @pytest.mark.unit
-    def test_init_creates_openfga_client_when_configured(self):
-        """Test that OpenFGA client is created when store/model IDs are set."""
+    def test_init_uses_injected_openfga_client(self):
+        """Test that OpenFGA client is used when injected via constructor.
+
+        With the async initialization pattern, OpenFGA client is initialized
+        in the FastAPI lifespan and injected into the server constructor.
+        This test verifies the dependency injection pattern works correctly.
+        """
         with patch("mcp_server_langgraph.mcp.server_streamable.settings") as mock_settings:
             mock_settings.jwt_secret_key = "test-secret"
             mock_settings.environment = "development"
@@ -78,17 +83,21 @@ class TestMCPAgentStreamableServerInit:
             mock_settings.openfga_api_url = "http://localhost:8080"
             mock_settings.auth_provider = "inmemory"
 
-            with patch("mcp_server_langgraph.mcp.server_streamable.OpenFGAClient") as mock_openfga:
-                with patch("mcp_server_langgraph.mcp.server_streamable.create_auth_middleware"):
-                    from mcp_server_langgraph.mcp.server_streamable import MCPAgentStreamableServer
+            # Create a mock OpenFGA client to inject
+            mock_openfga_client = MagicMock()
+            mock_openfga_client.store_id = "test-store"
+            mock_openfga_client.model_id = "test-model"
 
-                    server = MCPAgentStreamableServer()
-                    mock_openfga.assert_called_once_with(
-                        api_url="http://localhost:8080",
-                        store_id="test-store",
-                        model_id="test-model",
-                    )
-                    assert server.openfga is not None
+            with patch("mcp_server_langgraph.mcp.server_streamable.create_auth_middleware"):
+                from mcp_server_langgraph.mcp.server_streamable import MCPAgentStreamableServer
+
+                # Inject the pre-initialized OpenFGA client (async initialization pattern)
+                server = MCPAgentStreamableServer(openfga_client=mock_openfga_client)
+
+                # Verify the injected client is used
+                assert server.openfga is mock_openfga_client
+                assert server.openfga.store_id == "test-store"
+                assert server.openfga.model_id == "test-model"
 
 
 @pytest.mark.xdist_group(name="server_streamable")

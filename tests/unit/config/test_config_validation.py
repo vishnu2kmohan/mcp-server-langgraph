@@ -320,8 +320,8 @@ class TestVertexLocationEnvVarAlias:
 
         settings = Settings()
 
-        # Default is us-central1 (common Vertex AI region)
-        assert settings.vertex_location == "us-central1"
+        # Default is global (required for latest Gemini models like gemini-3-pro-preview)
+        assert settings.vertex_location == "global"
 
 
 if __name__ == "__main__":

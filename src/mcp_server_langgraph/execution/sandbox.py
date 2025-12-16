@@ -4,6 +4,7 @@ Abstract sandbox interface for secure code execution
 Defines the contract for all sandbox implementations (Docker, Kubernetes, Process).
 """
 
+import asyncio
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -73,7 +74,7 @@ class Sandbox(ABC):
     @abstractmethod
     def execute(self, code: str) -> ExecutionResult:
         """
-        Execute Python code in the sandbox.
+        Execute Python code in the sandbox (synchronous).
 
         This method must be implemented by all sandbox subclasses.
 
@@ -86,6 +87,33 @@ class Sandbox(ABC):
         Raises:
             SandboxError: If sandbox setup or execution fails
         """
+
+    async def aexecute(self, code: str) -> ExecutionResult:
+        """
+        Execute Python code in the sandbox (async, non-blocking).
+
+        This method wraps the synchronous execute() in asyncio.to_thread()
+        to prevent blocking the event loop. This is necessary because
+        Docker and Kubernetes SDKs are synchronous.
+
+        Subclasses may override this method to provide native async
+        implementations if available.
+
+        Args:
+            code: Python source code to execute
+
+        Returns:
+            ExecutionResult with execution status and outputs
+
+        Raises:
+            SandboxError: If sandbox setup or execution fails
+
+        Example:
+            >>> sandbox = DockerSandbox(limits=ResourceLimits.testing())
+            >>> result = await sandbox.aexecute("print('Hello, World!')")
+            >>> assert result.success
+        """
+        return await asyncio.to_thread(self.execute, code)
 
     def _create_success_result(
         self,

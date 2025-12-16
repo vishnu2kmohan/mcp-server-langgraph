@@ -21,6 +21,7 @@ Configuration:
 - Model is configuration, not code (separation of concerns)
 """
 
+import asyncio
 import json
 import os
 from pathlib import Path
@@ -315,6 +316,28 @@ class OpenFGAClient:
         If model_id is not set, fetches the latest model for the store.
         """
         if not self._initialized:
+            # IMPORTANT: Obtain OIDC token FIRST if configured
+            # This is needed for store/model lookups when using OIDC authentication
+            credentials = None
+            auth_method = "none"
+
+            if self.config.oidc_client_id and self.config.oidc_client_secret and self.config.oidc_issuer:
+                # Obtain OIDC access token from Keycloak BEFORE store lookup
+                access_token = await self._get_oidc_access_token()
+                if access_token:
+                    credentials = Credentials(
+                        method="api_token",
+                        configuration=CredentialConfiguration(api_token=access_token),
+                    )
+                    auth_method = "oidc"
+            elif self.config.preshared_key:
+                # Fallback to preshared key (deprecated)
+                credentials = Credentials(
+                    method="api_token",
+                    configuration=CredentialConfiguration(api_token=self.config.preshared_key),
+                )
+                auth_method = "preshared"
+
             # Look up store by name if store_id is not set but store_name is
             store_id = self.config.store_id
             if not store_id and self.config.store_name:
@@ -349,28 +372,7 @@ class OpenFGAClient:
                         extra={"store_id": store_id},
                     )
 
-            # Build credentials based on configured authentication method
-            credentials = None
-            auth_method = "none"
-
-            # Prefer OIDC authentication over preshared key
-            if self.config.oidc_client_id and self.config.oidc_client_secret and self.config.oidc_issuer:
-                # Obtain OIDC access token from Keycloak
-                access_token = await self._get_oidc_access_token()
-                if access_token:
-                    credentials = Credentials(
-                        method="api_token",
-                        configuration=CredentialConfiguration(api_token=access_token),
-                    )
-                    auth_method = "oidc"
-            elif self.config.preshared_key:
-                # Fallback to preshared key (deprecated)
-                credentials = Credentials(
-                    method="api_token",
-                    configuration=CredentialConfiguration(api_token=self.config.preshared_key),
-                )
-                auth_method = "preshared"
-
+            # Create client with credentials obtained earlier
             configuration = ClientConfiguration(
                 api_url=self.config.api_url,
                 store_id=store_id,
@@ -406,7 +408,10 @@ class OpenFGAClient:
         """
         try:
             headers = {"Content-Type": "application/json"}
-            if self.config.preshared_key:
+            # Use OIDC token if available, otherwise preshared key
+            if self._oidc_access_token:
+                headers["Authorization"] = f"Bearer {self._oidc_access_token}"
+            elif self.config.preshared_key:
                 headers["Authorization"] = f"Bearer {self.config.preshared_key}"
 
             async with httpx.AsyncClient(timeout=10.0) as client:
@@ -1009,6 +1014,29 @@ class OpenFGAAuthorizationModel:
         cls._cached_model = None
 
     @classmethod
+    async def aget_model_definition(cls, model_path: str | Path | None = None) -> dict[str, Any]:
+        """
+        Async version of get_model_definition for non-blocking file I/O.
+
+        Uses asyncio.to_thread to run the sync file I/O in a thread pool,
+        preventing event loop blocking during model loading.
+
+        Note: This is low priority per the sync-to-async conversion plan -
+        initialization only, not on the hot path during request handling.
+
+        Args:
+            model_path: Path to model JSON file. If None, uses DEFAULT_MODEL_PATH.
+
+        Returns:
+            Authorization model definition as dict.
+
+        Raises:
+            FileNotFoundError: If model file does not exist.
+            json.JSONDecodeError: If model file is not valid JSON.
+        """
+        return await asyncio.to_thread(cls.get_model_definition, model_path)
+
+    @classmethod
     def get_type_names(cls) -> list[str]:
         """Get list of type names defined in the model."""
         model = cls.get_model_definition()
@@ -1125,6 +1153,29 @@ def load_sample_tuples(tuples_path: str | Path | None = None) -> list[dict[str, 
     raise FileNotFoundError(
         f"OpenFGA sample tuples file not found at {tuples_path}. Searched paths: {[str(p) for p in search_paths]}"
     )
+
+
+async def aload_sample_tuples(tuples_path: str | Path | None = None) -> list[dict[str, str]]:
+    """
+    Async version of load_sample_tuples for non-blocking file I/O.
+
+    Uses asyncio.to_thread to run the sync file I/O in a thread pool,
+    preventing event loop blocking during tuple loading.
+
+    Note: This is low priority per the sync-to-async conversion plan -
+    initialization only, not on the hot path during request handling.
+
+    Args:
+        tuples_path: Path to tuples config file. If None, uses default path.
+
+    Returns:
+        List of tuple dicts with user, relation, object keys.
+
+    Raises:
+        FileNotFoundError: If tuples config file does not exist.
+        json.JSONDecodeError: If tuples config file is not valid JSON.
+    """
+    return await asyncio.to_thread(load_sample_tuples, tuples_path)
 
 
 async def seed_sample_data(client: OpenFGAClient, tuples_path: str | Path | None = None) -> None:

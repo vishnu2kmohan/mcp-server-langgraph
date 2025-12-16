@@ -18,7 +18,7 @@ from enum import Enum
 from typing import Any, assert_never
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from litellm import acompletion, completion
+from litellm import acompletion
 from litellm.utils import ModelResponse  # type: ignore[attr-defined]
 
 from mcp_server_langgraph.core.container import TelemetryProvider
@@ -276,8 +276,21 @@ class LLMFactory:
         provider_config_map = {
             "anthropic": [("ANTHROPIC_API_KEY", "anthropic_api_key")],
             "openai": [("OPENAI_API_KEY", "openai_api_key")],
-            "google": [("GOOGLE_API_KEY", "google_api_key")],
-            "gemini": [("GOOGLE_API_KEY", "google_api_key")],
+            "google": [
+                ("GOOGLE_API_KEY", "google_api_key"),
+                # Also set Vertex AI location for Google provider (Gemini can route via Vertex)
+                ("VERTEXAI_LOCATION", "vertex_location"),
+            ],
+            "gemini": [
+                ("GOOGLE_API_KEY", "google_api_key"),
+                ("VERTEXAI_LOCATION", "vertex_location"),
+            ],
+            # Vertex AI uses ADC for auth but needs location/project env vars
+            # LiteLLM reads VERTEXAI_LOCATION and VERTEXAI_PROJECT directly
+            "vertex_ai": [
+                ("VERTEXAI_LOCATION", "vertex_location"),
+                ("VERTEXAI_PROJECT", "vertex_project"),
+            ],
             "azure": [
                 ("AZURE_API_KEY", "azure_api_key"),
                 ("AZURE_API_BASE", "azure_api_base"),
@@ -354,84 +367,6 @@ class LLMFactory:
                     formatted.append({"role": "user", "content": str(msg)})
 
         return formatted
-
-    def invoke(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
-        """
-        Synchronous LLM invocation
-
-        Args:
-            messages: List of messages
-            **kwargs: Additional parameters for the model
-
-        Returns:
-            AIMessage with the response
-        """
-        import time
-
-        start_time = time.perf_counter()
-
-        with self.telemetry.tracer.start_as_current_span("llm.invoke") as span:
-            span.set_attribute("llm.provider", self.provider)
-            span.set_attribute("llm.model", self.model_name)
-
-            formatted_messages = self._format_messages(messages)
-
-            # Merge kwargs with defaults
-            params = {
-                "model": self.model_name,
-                "messages": formatted_messages,
-                "temperature": kwargs.get("temperature", self.temperature),
-                "max_tokens": kwargs.get("max_tokens", self.max_tokens),
-                "timeout": kwargs.get("timeout", self.timeout),
-                **self.kwargs,
-            }
-
-            try:
-                response: ModelResponse = completion(**params)
-
-                content = response.choices[0].message.content  # type: ignore[union-attr]
-
-                # Record LLM metrics
-                duration_ms = (time.perf_counter() - start_time) * 1000
-                record_llm_request_duration(self.model_name, duration_ms, self.provider)
-
-                if response.usage:  # type: ignore[attr-defined]
-                    record_llm_token_usage(
-                        self.model_name,
-                        response.usage.prompt_tokens or 0,  # type: ignore[attr-defined]
-                        response.usage.completion_tokens or 0,  # type: ignore[attr-defined]
-                    )
-
-                # Track OTel metrics
-                self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
-
-                self.telemetry.logger.info(
-                    "LLM invocation successful",
-                    extra={
-                        "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
-                    },
-                )
-
-                return AIMessage(content=content)
-
-            except Exception as e:
-                # Record failure duration
-                duration_ms = (time.perf_counter() - start_time) * 1000
-                record_llm_request_duration(self.model_name, duration_ms, self.provider)
-
-                self.telemetry.logger.error(
-                    f"LLM invocation failed: {e}", extra={"model": self.model_name, "provider": self.provider}, exc_info=True
-                )
-
-                self.telemetry.metrics.failed_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
-                span.record_exception(e)
-
-                # Try fallback if enabled
-                if self.enable_fallback and self.fallback_models:
-                    return self._try_fallback(messages, **kwargs)
-
-                raise
 
     @circuit_breaker(name="llm", fail_max=5, timeout=60)
     @retry_with_backoff(max_attempts=3, exponential_base=2)
@@ -569,42 +504,6 @@ class LLMFactory:
                         metadata={"model": self.model_name, "provider": self.provider},
                         cause=e,
                     )
-
-    def _try_fallback(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
-        """Try fallback models if primary fails"""
-        for fallback_model in self.fallback_models:
-            if fallback_model == self.model_name:
-                continue  # Skip if it's the same model
-
-            self.telemetry.logger.warning(f"Trying fallback model: {fallback_model}", extra={"primary_model": self.model_name})
-
-            try:
-                formatted_messages = self._format_messages(messages)
-                # BUGFIX: Use provider-specific kwargs to avoid cross-provider parameter errors
-                provider_kwargs = self._get_provider_kwargs(fallback_model)
-                response = completion(
-                    model=fallback_model,
-                    messages=formatted_messages,
-                    temperature=self.temperature,
-                    max_tokens=self.max_tokens,
-                    timeout=self.timeout,
-                    **provider_kwargs,  # Forward provider-specific kwargs only
-                )
-
-                content = response.choices[0].message.content
-
-                self.telemetry.logger.info("Fallback successful", extra={"fallback_model": fallback_model})
-
-                self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.fallback", "model": fallback_model})
-
-                return AIMessage(content=content)
-
-            except Exception as e:
-                self.telemetry.logger.error(f"Fallback model {fallback_model} failed: {e}", exc_info=True)
-                continue
-
-        msg = "All models failed including fallbacks"
-        raise RuntimeError(msg)
 
     async def _try_fallback_async(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """Try fallback models asynchronously with exponential backoff.

@@ -25,9 +25,9 @@ from fastapi.responses import JSONResponse
 
 from mcp_server_langgraph.auth.factory import create_auth_middleware
 from mcp_server_langgraph.auth.middleware import get_current_user, set_global_auth_middleware
-from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
 from mcp_server_langgraph.core.config import settings
-from mcp_server_langgraph.core.dependencies import get_openfga_client
+from mcp_server_langgraph.core.dependencies import get_openfga_client_from_request
 from mcp_server_langgraph.observability.telemetry import (
     init_observability,
     instrument_fastapi_app,
@@ -63,6 +63,40 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     auth_middleware = create_auth_middleware(settings)
     set_global_auth_middleware(auth_middleware)
 
+    # Initialize OpenFGA client (async initialization pattern)
+    openfga_client: OpenFGAClient | None = None
+    try:
+        has_store_config = settings.openfga_store_id or settings.openfga_store_name
+        if has_store_config:
+            oidc_issuer = settings.openfga_oidc_issuer
+            if not oidc_issuer and settings.openfga_oidc_client_id and settings.openfga_oidc_client_secret:
+                oidc_issuer = f"{settings.keycloak_server_url.rstrip('/')}/realms/{settings.keycloak_realm}"
+
+            openfga_config = OpenFGAConfig(
+                api_url=settings.openfga_api_url,
+                store_id=settings.openfga_store_id,
+                store_name=settings.openfga_store_name,
+                model_id=settings.openfga_model_id,
+                oidc_client_id=settings.openfga_oidc_client_id,
+                oidc_client_secret=settings.openfga_oidc_client_secret,
+                oidc_issuer=oidc_issuer,
+                preshared_key=settings.openfga_preshared_key,
+            )
+            openfga_client = OpenFGAClient(config=openfga_config)
+            await openfga_client._ensure_initialized()
+            logger.info(
+                "OpenFGA client initialized for authz-proxy",
+                extra={"store_id": openfga_client.store_id, "model_id": openfga_client.model_id},
+            )
+        else:
+            logger.warning("OpenFGA not configured for authz-proxy")
+    except Exception as e:
+        logger.warning(f"Failed to initialize OpenFGA for authz-proxy: {e}")
+        openfga_client = None
+
+    # Store in app.state for get_openfga_client_from_request dependency
+    app.state.openfga_client = openfga_client
+
     logger.info(
         "authz-proxy initialized",
         extra={
@@ -72,6 +106,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
 
     yield
+
+    # Cleanup OpenFGA client
+    if openfga_client is not None:
+        try:
+            await openfga_client.close()
+            logger.info("OpenFGA client closed for authz-proxy")
+        except Exception as e:
+            logger.warning(f"Error closing OpenFGA client: {e}")
 
     logger.info("authz-proxy shutting down")
 
@@ -88,27 +130,36 @@ app = FastAPI(
 OPENFGA_PLAYGROUND_URL = os.getenv("OPENFGA_PLAYGROUND_URL", "http://openfga-test:3000")
 AUTHZ_OBJECT = "authz:playground"
 
-# NOTE: OpenFGA client is imported from core.dependencies (centralized singleton)
+# NOTE: OpenFGA client is initialized in lifespan and accessed via app.state
 # The client handles OIDC authentication, store lookup by name, and model ID resolution automatically
 
 
 async def require_admin_permission(
     current_user: dict[str, Any] = Depends(get_current_user),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
 ) -> dict[str, Any]:
     """Require admin permission on authz:playground."""
     # get_current_user returns dict with 'username' (normalized from preferred_username or sub)
     # and 'user_id' (already in "user:username" format)
     user_id = current_user.get("user_id") or f"user:{current_user.get('username', 'unknown')}"
 
-    try:
-        allowed = await openfga.check_permission(
-            user=user_id,
-            relation="admin",
-            object=AUTHZ_OBJECT,
+    # Handle case where OpenFGA is not configured
+    if openfga is None:
+        logger.warning(
+            "OpenFGA not configured - denying access (fail-closed)",
+            extra={"user": user_id, "permission": "admin", "object": AUTHZ_OBJECT},
         )
-    finally:
-        await openfga.close()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authorization service unavailable",
+        )
+
+    allowed = await openfga.check_permission(
+        user=user_id,
+        relation="admin",
+        object=AUTHZ_OBJECT,
+    )
+    # Note: Don't close the client - it's managed by app lifespan
 
     if not allowed:
         logger.warning(

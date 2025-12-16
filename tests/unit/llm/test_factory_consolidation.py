@@ -8,9 +8,10 @@ the separate create_summarization_model and create_verification_model functions.
 """
 
 import gc
+import os
 
 import pytest
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 from mcp_server_langgraph.llm.factory import (
     LLMFactory,
@@ -259,3 +260,76 @@ class TestVertexLocationAlwaysPassed:
 
         assert "vertex_location" in kwargs
         assert kwargs["vertex_location"] == "global"
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="vertex_ai_env_vars")
+class TestVertexAIEnvironmentVariables:
+    """Test that VERTEXAI_LOCATION env var is set correctly by _setup_environment.
+
+    LiteLLM reads VERTEXAI_LOCATION directly to determine the Vertex AI location.
+    Without this env var, LiteLLM defaults to us-central1 even if vertex_location
+    is passed as a parameter.
+    """
+
+    def teardown_method(self):
+        """Clean up environment variables after each test."""
+        gc.collect()
+        # Clean up VERTEXAI_* env vars
+        for key in ["VERTEXAI_LOCATION", "VERTEXAI_PROJECT"]:
+            if key in os.environ:
+                del os.environ[key]
+
+    @pytest.fixture
+    def mock_config_vertex(self):
+        """Config for Vertex AI provider with location set."""
+        config = MagicMock()
+        config.llm_provider = "vertex_ai"
+        config.model_name = "vertex_ai/gemini-3-pro-preview"
+        config.vertex_location = "global"
+        config.vertex_project = "test-project-123"
+        config.google_project_id = None
+        config.model_timeout = 60
+        config.enable_fallback = False
+        config.fallback_models = []
+        return config
+
+    def test_setup_environment_sets_vertexai_location(self, mock_config_vertex):
+        """_setup_environment MUST set VERTEXAI_LOCATION env var.
+
+        GIVEN: Config with vertex_location="global"
+        WHEN: LLMFactory._setup_environment is called
+        THEN: VERTEXAI_LOCATION env var should be set to "global"
+        """
+        factory = LLMFactory(
+            provider="vertex_ai",
+            model_name="vertex_ai/gemini-3-pro-preview",
+        )
+        factory._setup_environment(config=mock_config_vertex)
+
+        assert "VERTEXAI_LOCATION" in os.environ, "VERTEXAI_LOCATION must be set for LiteLLM to use correct location"
+        assert os.environ["VERTEXAI_LOCATION"] == "global"
+
+    def test_setup_environment_sets_vertexai_project(self, mock_config_vertex):
+        """_setup_environment should set VERTEXAI_PROJECT if configured."""
+        factory = LLMFactory(
+            provider="vertex_ai",
+            model_name="vertex_ai/gemini-3-pro-preview",
+        )
+        factory._setup_environment(config=mock_config_vertex)
+
+        assert "VERTEXAI_PROJECT" in os.environ
+        assert os.environ["VERTEXAI_PROJECT"] == "test-project-123"
+
+    def test_google_provider_sets_vertexai_location(self, mock_config_vertex):
+        """Google provider should also set VERTEXAI_LOCATION for Gemini routing."""
+        mock_config_vertex.llm_provider = "google"
+
+        factory = LLMFactory(
+            provider="google",
+            model_name="gemini-3-pro-preview",
+        )
+        factory._setup_environment(config=mock_config_vertex)
+
+        assert "VERTEXAI_LOCATION" in os.environ
+        assert os.environ["VERTEXAI_LOCATION"] == "global"
