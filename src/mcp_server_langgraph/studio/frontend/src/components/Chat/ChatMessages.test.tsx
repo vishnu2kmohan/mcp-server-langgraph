@@ -261,4 +261,57 @@ describe("ChatMessages", () => {
       expect(screen.queryByText("Sources:")).not.toBeInTheDocument();
     });
   });
+
+  describe("Mermaid Diagram Rendering", () => {
+    it("should render mermaid code blocks as diagrams", async () => {
+      const mermaidMessage = [
+        {
+          id: "msg-1",
+          role: "assistant" as const,
+          content:
+            "Here's a diagram:\n\n```mermaid\ngraph TD\n    A[Start] --> B[End]\n```",
+          timestamp: Date.now(),
+        },
+      ];
+      render(<ChatMessages messages={mermaidMessage} />);
+      // Should render the mermaid diagram container, not just code
+      // The MermaidDiagram component should be used for language-mermaid code blocks
+      const diagramContainer = document.querySelector(
+        ".bg-gray-50, .dark\\:bg-gray-800",
+      );
+      expect(diagramContainer).toBeInTheDocument();
+    });
+
+    it("should not render regular code blocks as mermaid diagrams", () => {
+      const jsCodeMessage = [
+        {
+          id: "msg-1",
+          role: "assistant" as const,
+          content: "```javascript\nconst x = 1;\nconst y = 2;\n```",
+          timestamp: Date.now(),
+        },
+      ];
+      render(<ChatMessages messages={jsCodeMessage} />);
+      // Should show the code block with language label (multi-line code triggers CodeBlock)
+      expect(screen.getByText("javascript")).toBeInTheDocument();
+      expect(screen.getByText(/const x = 1/)).toBeInTheDocument();
+    });
+  });
+
+  describe("Chart Rendering", () => {
+    it("should render chart code blocks as interactive charts", () => {
+      const chartMessage = [
+        {
+          id: "msg-1",
+          role: "assistant" as const,
+          content:
+            '```chart\n{"type": "bar", "title": "Sales", "data": [{"name": "Jan", "value": 100}]}\n```',
+          timestamp: Date.now(),
+        },
+      ];
+      render(<ChatMessages messages={chartMessage} />);
+      // Should render the chart title
+      expect(screen.getByText("Sales")).toBeInTheDocument();
+    });
+  });
 });

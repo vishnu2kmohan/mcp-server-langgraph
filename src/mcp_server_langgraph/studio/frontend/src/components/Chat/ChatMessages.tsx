@@ -108,7 +108,6 @@ const CHART_COLORS = [
  * Mermaid diagram renderer
  * Renders flowcharts, sequence diagrams, Gantt charts, etc.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function MermaidDiagram({ code }: { code: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const uniqueId = useId();
@@ -189,7 +188,6 @@ interface ChartData {
  * Interactive chart renderer
  * Parses JSON chart data and renders with Recharts
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function ChartBlock({ code }: { code: string }) {
   const [error, setError] = useState<string | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
@@ -352,7 +350,7 @@ function CodeBlock({
 function MarkdownContent({ content }: { content: string }) {
   const components = useMemo(
     () => ({
-      // Code blocks with syntax highlighting placeholder
+      // Code blocks with syntax highlighting and special renderers
       code: ({
         inline,
         className,
@@ -366,6 +364,16 @@ function MarkdownContent({ content }: { content: string }) {
         const match = /language-(\w+)/.exec(className || "");
         const language = match ? match[1] : undefined;
         const codeContent = String(children).replace(/\n$/, "");
+
+        // Handle mermaid diagrams
+        if (language === "mermaid" && !inline) {
+          return <MermaidDiagram code={codeContent} />;
+        }
+
+        // Handle chart blocks
+        if (language === "chart" && !inline) {
+          return <ChartBlock code={codeContent} />;
+        }
 
         if (!inline && codeContent.includes("\n")) {
           return <CodeBlock language={language}>{codeContent}</CodeBlock>;
