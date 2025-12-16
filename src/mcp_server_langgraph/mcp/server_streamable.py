@@ -2028,25 +2028,19 @@ async def root_metrics() -> Any:
     return await prometheus_metrics()
 
 
-from mcp_server_langgraph.api.api_keys import router as api_keys_router  # noqa: E402
-from mcp_server_langgraph.api.gdpr import router as gdpr_router  # noqa: E402
-from mcp_server_langgraph.api.scim import router as scim_router  # noqa: E402
-from mcp_server_langgraph.api.service_principals import router as service_principals_router  # noqa: E402
-from mcp_server_langgraph.api.studio import router as studio_router  # noqa: E402
-
-# Include REST API routes
+# Use RouterRegistry pattern for centralized router management
+# This eliminates maintenance burden of manually adding routers to both app.py and server_streamable.py
+from mcp_server_langgraph.api.router_registry import get_router_registry  # noqa: E402
+from mcp_server_langgraph.api.routers import register_default_routers  # noqa: E402
 from mcp_server_langgraph.api.version import router as version_router  # noqa: E402
-from mcp_server_langgraph.api.v1 import v1_router  # noqa: E402
-from mcp_server_langgraph.api.v1.notification_websocket import router as notification_ws_router  # noqa: E402
 
+# Register and mount all default routers via the registry pattern
+_registry = get_router_registry()
+register_default_routers(_registry)
+_registry.mount_all(app)
+
+# Version router is separate (not in default routers for backwards compatibility)
 app.include_router(version_router)
-app.include_router(v1_router, prefix="/api/v1")
-app.include_router(studio_router)  # Studio API (templates, suggestions) - has /api/v1/studio prefix
-app.include_router(gdpr_router)
-app.include_router(api_keys_router)
-app.include_router(service_principals_router)
-app.include_router(scim_router)
-app.include_router(notification_ws_router, prefix="/ws")
 
 
 # ==============================================================================
