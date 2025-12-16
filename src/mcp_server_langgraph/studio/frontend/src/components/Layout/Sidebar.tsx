@@ -323,14 +323,18 @@ export function Sidebar() {
   const username = authUser?.username ?? personaUsername ?? null;
   const persona: Persona = authUser?.persona ?? personaPersona ?? "user";
 
-  // Get display name: prefer displayName, then extract first name from username, fallback to username
+  // Get display name: prefer firstName from API, then displayName, then extract from username
   const getDisplayName = (): string => {
+    // Priority 1: Use firstName from Keycloak (most accurate)
+    if (authUser?.firstName) {
+      return authUser.firstName;
+    }
+    // Priority 2: Use first word of displayName (full name from Keycloak)
     if (authUser?.displayName) {
-      // Use display name's first word as first name
       return authUser.displayName.split(" ")[0];
     }
+    // Priority 3: Extract first name from username (handles formats like "john.doe" or "john_doe")
     if (username) {
-      // Extract first name from username (handles formats like "john.doe" or "john_doe")
       const firstName = username.split(/[._@]/)[0];
       // Capitalize first letter
       return firstName.charAt(0).toUpperCase() + firstName.slice(1);

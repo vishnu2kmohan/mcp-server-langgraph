@@ -169,7 +169,7 @@ export const initializeAuth = createAsyncThunk<
 
   try {
     const currentTokens = getState().auth.tokens;
-    const response = await fetch("/api/v1/auth/me", {
+    const response = await fetch("/api/v1/me", {
       headers: {
         Authorization: `Bearer ${currentTokens?.accessToken}`,
       },
@@ -182,15 +182,22 @@ export const initializeAuth = createAsyncThunk<
     }
 
     const data = await response.json();
+    // Map snake_case API response to camelCase User type
     const user: User = {
-      ...data.user,
-      persona: derivePersona(data.user.roles || []),
+      id: data.user_id || data.keycloak_id || "",
+      username: data.username || "",
+      email: data.email || "",
+      firstName: data.first_name,
+      lastName: data.last_name,
+      displayName: data.display_name,
+      roles: data.roles || [],
+      persona: data.persona || derivePersona(data.roles || []),
     };
 
     return {
       user,
-      organizations: data.organizations || [],
-      currentOrg: data.organizations?.[0] || null,
+      organizations: [],
+      currentOrg: null,
     };
   } catch {
     dispatch(logout());

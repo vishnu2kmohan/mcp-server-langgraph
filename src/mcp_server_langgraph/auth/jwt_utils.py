@@ -88,6 +88,10 @@ def extract_user_from_jwt_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "username": username,
         "roles": roles,
         "email": payload.get("email"),
+        # OIDC standard claims for name fields
+        "first_name": payload.get("given_name"),
+        "last_name": payload.get("family_name"),
+        "display_name": payload.get("name"),  # Full display name
     }
 
 

@@ -191,12 +191,12 @@ export function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown Panel */}
+      {/* Dropdown Panel - positioned above the bell to avoid occlusion in sidebar */}
       {isOpen && (
         <div
           ref={panelRef}
           role="menu"
-          className="absolute right-0 top-full mt-2 w-80 max-h-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-[55]"
+          className="absolute left-0 bottom-full mb-2 w-80 max-h-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-[60]"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">

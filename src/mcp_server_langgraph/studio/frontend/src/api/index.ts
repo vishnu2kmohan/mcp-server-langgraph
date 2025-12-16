@@ -1102,6 +1102,9 @@ export const api = createApi({
       {
         username: string;
         email?: string;
+        first_name?: string;
+        last_name?: string;
+        display_name?: string;
         roles: string[];
         persona: "admin" | "developer" | "user";
       },
@@ -1121,6 +1124,9 @@ export const api = createApi({
           user_id: string;
           username: string;
           email?: string;
+          first_name?: string;
+          last_name?: string;
+          display_name?: string;
           roles: string[];
           persona: "admin" | "developer" | "user";
           keycloak_id?: string;

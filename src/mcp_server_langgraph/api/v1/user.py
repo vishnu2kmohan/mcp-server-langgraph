@@ -73,6 +73,9 @@ class UserInfoResponse(BaseModel):
     user_id: str = Field(..., description="User identifier in OpenFGA format (user:username)")
     username: str = Field(..., description="Username")
     email: str | None = Field(None, description="Email address")
+    first_name: str | None = Field(None, description="First name from Keycloak (given_name claim)")
+    last_name: str | None = Field(None, description="Last name from Keycloak (family_name claim)")
+    display_name: str | None = Field(None, description="Full display name from Keycloak (name claim)")
     roles: list[str] = Field(default_factory=list, description="User roles from Keycloak")
     persona: Literal["admin", "developer", "user"] = Field(..., description="Computed persona for frontend RBAC")
     keycloak_id: str | None = Field(None, description="Keycloak UUID (for admin operations)")
@@ -136,6 +139,9 @@ async def get_me(
         user_id=user.get("user_id", ""),
         username=user.get("username", ""),
         email=user.get("email"),
+        first_name=user.get("first_name"),
+        last_name=user.get("last_name"),
+        display_name=user.get("display_name"),
         roles=roles,
         persona=persona,
         keycloak_id=user.get("keycloak_id"),
@@ -226,6 +232,9 @@ async def login(body: LoginRequest) -> LoginResponse:
                 user_id=user_id,
                 username=username,
                 email=email,
+                first_name=payload.get("given_name"),
+                last_name=payload.get("family_name"),
+                display_name=payload.get("name"),
                 roles=roles,
                 persona=persona,
                 keycloak_id=payload.get("sub"),

@@ -25,7 +25,11 @@ export interface User {
   username: string;
   /** Email address */
   email: string;
-  /** Display name (optional) */
+  /** First name from Keycloak (given_name claim) */
+  firstName?: string;
+  /** Last name from Keycloak (family_name claim) */
+  lastName?: string;
+  /** Display name (full name from Keycloak name claim) */
   displayName?: string;
   /** User's roles from realm/client */
   roles: string[];
