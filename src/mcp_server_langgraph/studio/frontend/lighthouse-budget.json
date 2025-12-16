@@ -1,0 +1,44 @@
+[
+  {
+    "path": "/*",
+    "budgets": [
+      {
+        "resourceType": "total",
+        "budget": 2500
+      },
+      {
+        "resourceType": "script",
+        "budget": 800
+      },
+      {
+        "resourceType": "stylesheet",
+        "budget": 100
+      },
+      {
+        "resourceType": "image",
+        "budget": 500
+      },
+      {
+        "resourceType": "font",
+        "budget": 300
+      },
+      {
+        "resourceType": "document",
+        "budget": 50
+      }
+    ],
+    "assertions": {
+      "categories:performance": ["warn", { "minScore": 0.85 }],
+      "categories:accessibility": ["error", { "minScore": 0.95 }],
+      "categories:best-practices": ["warn", { "minScore": 0.90 }],
+      "categories:seo": ["warn", { "minScore": 0.85 }],
+      "categories:pwa": ["warn", { "minScore": 0.90 }],
+      "first-contentful-paint": ["warn", { "maxNumericValue": 2000 }],
+      "largest-contentful-paint": ["warn", { "maxNumericValue": 3000 }],
+      "cumulative-layout-shift": ["warn", { "maxNumericValue": 0.1 }],
+      "total-blocking-time": ["warn", { "maxNumericValue": 300 }],
+      "speed-index": ["warn", { "maxNumericValue": 3500 }],
+      "interactive": ["warn", { "maxNumericValue": 4000 }]
+    }
+  }
+]

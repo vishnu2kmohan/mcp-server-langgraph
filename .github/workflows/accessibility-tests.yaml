@@ -1,0 +1,121 @@
+# Accessibility Testing Workflow
+# Runs automated a11y checks on pull requests to catch accessibility regressions
+#
+# Uses axe-core via Playwright for comprehensive WCAG 2.1 validation
+
+name: Accessibility Tests
+
+on:
+  pull_request:
+    paths:
+      - 'src/mcp_server_langgraph/studio/frontend/**'
+      - '.github/workflows/accessibility-tests.yaml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/mcp_server_langgraph/studio/frontend/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FRONTEND_DIR: src/mcp_server_langgraph/studio/frontend
+
+jobs:
+  accessibility:
+    name: WCAG Compliance Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npx playwright install --with-deps chromium
+
+      - name: Build Frontend
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run build
+
+      - name: Run Accessibility Tests
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run test:a11y
+        continue-on-error: true
+
+      - name: Run Unit Tests with Accessibility Checks
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm test -- --run src/utils/accessibility.test.ts
+
+      - name: Upload Accessibility Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-reports
+          path: |
+            ${{ env.FRONTEND_DIR }}/a11y-report/
+          retention-days: 14
+
+      - name: Comment PR with Accessibility Results
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request' && always()
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const reportPath = '${{ env.FRONTEND_DIR }}/a11y-report/summary.json';
+
+            let body = '## ♿ Accessibility Report\n\n';
+
+            if (fs.existsSync(reportPath)) {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+
+              if (report.violations === 0) {
+                body += '✅ **All accessibility checks passed!**\n\n';
+                body += `- Total rules checked: ${report.rulesChecked}\n`;
+                body += `- Pages tested: ${report.pagesChecked}\n`;
+              } else {
+                body += `⚠️ **${report.violations} accessibility violations found**\n\n`;
+                body += '| Issue | Impact | Count |\n';
+                body += '|-------|--------|-------|\n';
+
+                report.issues?.forEach(issue => {
+                  const impactEmoji = {
+                    critical: '🔴',
+                    serious: '🟠',
+                    moderate: '🟡',
+                    minor: '🟢'
+                  }[issue.impact] || '⚪';
+
+                  body += `| ${issue.description} | ${impactEmoji} ${issue.impact} | ${issue.count} |\n`;
+                });
+
+                body += '\n[📋 View Full Report](./a11y-report/)';
+              }
+            } else {
+              body += '📝 No accessibility report generated. Check workflow logs for details.';
+            }
+
+            body += '\n\n---\n_Powered by axe-core_';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
