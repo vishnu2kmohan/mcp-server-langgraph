@@ -29,6 +29,16 @@ export type {
 } from "./SessionGoalTracker";
 
 // =============================================================================
+// Interactive Renderers (enhanced media display components)
+// =============================================================================
+
+export { InteractiveMermaidDiagram } from "./InteractiveMermaidDiagram";
+export type { InteractiveMermaidDiagramProps } from "./InteractiveMermaidDiagram";
+
+export { InteractiveChart } from "./InteractiveChart";
+export type { InteractiveChartProps, ChartData } from "./InteractiveChart";
+
+// =============================================================================
 // Workspace Layout (DevTools-style dockable panels)
 // =============================================================================
 

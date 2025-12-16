@@ -151,6 +151,30 @@ describe("InteractiveChart", () => {
     });
   });
 
+  describe("Keyboard Shortcuts", () => {
+    it("should exit fullscreen with Escape key", async () => {
+      render(<InteractiveChart chartData={sampleChartData} />);
+
+      // Enter fullscreen
+      fireEvent.click(screen.getByLabelText("Toggle fullscreen"));
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("chart-container").classList.contains("fixed"),
+        ).toBe(true);
+      });
+
+      // Exit with Escape
+      const container = screen.getByTestId("chart-container");
+      fireEvent.keyDown(container, { key: "Escape" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("chart-container").classList.contains("fixed"),
+        ).toBe(false);
+      });
+    });
+  });
+
   describe("Accessibility", () => {
     it("should have proper aria labels for all controls", async () => {
       render(<InteractiveChart chartData={sampleChartData} />);
@@ -161,6 +185,13 @@ describe("InteractiveChart", () => {
       expect(screen.getByLabelText("Line chart")).toBeInTheDocument();
       expect(screen.getByLabelText("Bar chart")).toBeInTheDocument();
       expect(screen.getByLabelText("Pie chart")).toBeInTheDocument();
+    });
+
+    it("should be focusable for keyboard navigation", async () => {
+      render(<InteractiveChart chartData={sampleChartData} />);
+
+      const container = screen.getByTestId("chart-container");
+      expect(container).toHaveAttribute("tabIndex", "0");
     });
   });
 });

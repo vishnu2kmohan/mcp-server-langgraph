@@ -24,10 +24,12 @@ import {
 } from "lucide-react";
 
 // Initialize mermaid with dark theme support
+// suppressErrorRendering prevents Mermaid from rendering its own error SVG at the bottom of the page
 mermaid.initialize({
   startOnLoad: false,
   theme: "dark",
   securityLevel: "loose",
+  suppressErrorRendering: true,
 });
 
 export interface InteractiveMermaidDiagramProps {
@@ -189,6 +191,99 @@ export function InteractiveMermaidDiagram({
     setIsDragging(false);
   }, []);
 
+  // Touch state for pinch-to-zoom
+  const [touchState, setTouchState] = useState<{
+    initialDistance: number;
+    initialZoom: number;
+  } | null>(null);
+
+  // Calculate distance between two touch points
+  const getTouchDistance = useCallback((touches: React.TouchList) => {
+    if (touches.length < 2) return 0;
+    const dx = touches[1].clientX - touches[0].clientX;
+    const dy = touches[1].clientY - touches[0].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }, []);
+
+  // Touch handlers for pan and pinch-to-zoom
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 2) {
+        // Two fingers - start pinch
+        const distance = getTouchDistance(e.touches);
+        setTouchState({
+          initialDistance: distance,
+          initialZoom: zoom,
+        });
+      } else if (e.touches.length === 1) {
+        // Single finger - start pan
+        setIsDragging(true);
+        setDragStart({
+          x: e.touches[0].clientX - position.x,
+          y: e.touches[0].clientY - position.y,
+        });
+      }
+    },
+    [getTouchDistance, zoom, position],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 2 && touchState) {
+        // Pinch-to-zoom
+        e.preventDefault();
+        const currentDistance = getTouchDistance(e.touches);
+        const scale = currentDistance / touchState.initialDistance;
+        const newZoom = Math.min(
+          4,
+          Math.max(0.25, touchState.initialZoom * scale),
+        );
+        setZoom(newZoom);
+      } else if (e.touches.length === 1 && isDragging) {
+        // Pan
+        setPosition({
+          x: e.touches[0].clientX - dragStart.x,
+          y: e.touches[0].clientY - dragStart.y,
+        });
+      }
+    },
+    [touchState, getTouchDistance, isDragging, dragStart],
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    setTouchState(null);
+    setIsDragging(false);
+  }, []);
+
+  // Keyboard shortcuts
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      switch (e.key) {
+        case "+":
+        case "=":
+          e.preventDefault();
+          handleZoomIn();
+          break;
+        case "-":
+        case "_":
+          e.preventDefault();
+          handleZoomOut();
+          break;
+        case "0":
+          e.preventDefault();
+          handleResetZoom();
+          break;
+        case "Escape":
+          if (isFullscreen) {
+            e.preventDefault();
+            setIsFullscreen(false);
+          }
+          break;
+      }
+    },
+    [handleZoomIn, handleZoomOut, handleResetZoom, isFullscreen],
+  );
+
   // Error state
   if (error) {
     return (
@@ -219,6 +314,8 @@ export function InteractiveMermaidDiagram({
       data-testid="mermaid-container"
       ref={containerRef}
       className={containerClasses}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
     >
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-2 p-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
@@ -295,6 +392,9 @@ export function InteractiveMermaidDiagram({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{
           transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
           transformOrigin: "center center",

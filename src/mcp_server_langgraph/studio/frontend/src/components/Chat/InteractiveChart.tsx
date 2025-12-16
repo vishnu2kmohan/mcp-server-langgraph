@@ -97,12 +97,32 @@ export function InteractiveChart({
     setShowDataTable((prev) => !prev);
   }, []);
 
+  // Keyboard shortcuts
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      switch (e.key) {
+        case "Escape":
+          if (isFullscreen) {
+            e.preventDefault();
+            setIsFullscreen(false);
+          }
+          break;
+      }
+    },
+    [isFullscreen],
+  );
+
   const containerClasses = isFullscreen
     ? "fixed inset-0 z-50 bg-gray-900 p-4"
     : `my-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`;
 
   return (
-    <div data-testid="chart-container" className={containerClasses}>
+    <div
+      data-testid="chart-container"
+      className={containerClasses}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+    >
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-2 mb-3">
         {/* Title */}

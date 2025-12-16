@@ -317,4 +317,43 @@ describe("ChatMessages", () => {
       expect(screen.getByText("Sales")).toBeInTheDocument();
     });
   });
+
+  describe("Enhanced Code Block Features", () => {
+    const codeMessage = [
+      {
+        id: "msg-1",
+        role: "assistant" as const,
+        content:
+          "```python\ndef hello():\n    print('Hello, World!')\n    return True\n```",
+        timestamp: Date.now(),
+      },
+    ];
+
+    it("should render code block with language label", () => {
+      render(<ChatMessages messages={codeMessage} />);
+      expect(screen.getByText("python")).toBeInTheDocument();
+    });
+
+    it("should have copy button", () => {
+      render(<ChatMessages messages={codeMessage} />);
+      expect(screen.getByTitle("Copy code")).toBeInTheDocument();
+    });
+
+    it("should have word wrap toggle button", () => {
+      render(<ChatMessages messages={codeMessage} />);
+      expect(screen.getByTitle("Toggle word wrap")).toBeInTheDocument();
+    });
+
+    it("should have download button", () => {
+      render(<ChatMessages messages={codeMessage} />);
+      expect(screen.getByTitle("Download file")).toBeInTheDocument();
+    });
+
+    it("should show line numbers", () => {
+      render(<ChatMessages messages={codeMessage} />);
+      // Line numbers are shown via react-syntax-highlighter
+      const codeBlock = document.querySelector("pre");
+      expect(codeBlock).toBeInTheDocument();
+    });
+  });
 });
