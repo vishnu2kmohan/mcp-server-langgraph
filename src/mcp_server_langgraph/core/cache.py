@@ -203,7 +203,7 @@ class CacheService:
         self._refresh_locks: dict[str, asyncio.Lock] = {}
 
         # Async Redis client (lazy initialized)
-        self.async_redis: aioredis.Redis | None = None  # type: ignore[type-arg]
+        self.async_redis: aioredis.Redis | None = None
         self._async_redis_url = redis_url_with_db
         self._async_redis_kwargs = connection_kwargs.copy()
 
@@ -327,7 +327,7 @@ class CacheService:
     # Async Methods (non-blocking, use redis.asyncio)
     # =========================================================================
 
-    async def _ensure_async_redis(self) -> aioredis.Redis | None:  # type: ignore[type-arg]
+    async def _ensure_async_redis(self) -> aioredis.Redis | None:
         """
         Lazy initialization of async Redis client.
 
@@ -374,7 +374,7 @@ class CacheService:
                 try:
                     data = await async_redis.get(key)
                     if data:
-                        value = pickle.loads(data)  # type: ignore[arg-type]
+                        value = pickle.loads(data)
 
                         # Promote to L1
                         self.l1_cache[key] = value
