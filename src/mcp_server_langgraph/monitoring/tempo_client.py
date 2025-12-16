@@ -446,16 +446,19 @@ class TempoClient:
             root_trace_name = data.get("rootTraceName", "")
 
             # Parse start time (nanoseconds to datetime)
-            start_time_nanos = data.get("startTimeUnixNano", 0)
+            # Tempo API may return timestamps as strings in JSON
+            start_time_nanos = int(data.get("startTimeUnixNano", 0))
             start_time = datetime.fromtimestamp(
                 start_time_nanos / 1e9,
                 tz=UTC,
             )
 
             # Parse duration (nanoseconds to milliseconds)
-            duration_nanos = data.get("durationMs", 0) * 1e6  # API returns ms
-            if "durationMs" not in data:
-                duration_nanos = data.get("durationNanos", 0)
+            # Also handle string values from Tempo API
+            if "durationMs" in data:
+                duration_nanos = float(data.get("durationMs", 0)) * 1e6
+            else:
+                duration_nanos = int(data.get("durationNanos", 0))
 
             return TraceInfo(
                 trace_id=trace_id,
