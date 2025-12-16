@@ -27,3 +27,13 @@ export type {
   GoalResult,
   GoalAchievement,
 } from "./SessionGoalTracker";
+
+// =============================================================================
+// Workspace Layout (DevTools-style dockable panels)
+// =============================================================================
+
+export { ChatWorkspace, usePanelControl } from "./ChatWorkspace";
+export type {
+  ChatWorkspaceProps,
+  UsePanelControlReturn,
+} from "./ChatWorkspace";
