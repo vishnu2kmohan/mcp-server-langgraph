@@ -23,3 +23,15 @@ export type {
 
 export { LaTeXArtifact } from "./LaTeXArtifact";
 export type { LaTeXArtifactProps } from "./LaTeXArtifact";
+
+export { SVGArtifact } from "./SVGArtifact";
+export type { SVGArtifactProps } from "./SVGArtifact";
+
+export { AudioArtifact } from "./AudioArtifact";
+export type { AudioArtifactProps } from "./AudioArtifact";
+
+export { VideoArtifact } from "./VideoArtifact";
+export type { VideoArtifactProps } from "./VideoArtifact";
+
+export { ExecutableArtifact } from "./ExecutableArtifact";
+export type { ExecutableArtifactProps } from "./ExecutableArtifact";

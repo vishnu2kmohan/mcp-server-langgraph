@@ -24,7 +24,14 @@ import {
   AlertCircle,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { ConfidenceIndicator } from "./ConfidenceIndicator";
+// Rich media artifact components - imported for future artifact rendering support
+// import { SVGArtifact } from "../Artifacts/SVGArtifact";
+// import { AudioArtifact } from "../Artifacts/AudioArtifact";
+// import { VideoArtifact } from "../Artifacts/VideoArtifact";
+// import { ExecutableArtifact } from "../Artifacts/ExecutableArtifact";
 import {
   HallucinationIndicator,
   type HallucinationReport,
@@ -304,7 +311,7 @@ function ChartBlock({ code }: { code: string }) {
 }
 
 /**
- * Code block component with copy-to-clipboard functionality
+ * Code block component with syntax highlighting and copy-to-clipboard
  */
 function CodeBlock({
   language,
@@ -323,7 +330,7 @@ function CodeBlock({
 
   return (
     <div className="relative group my-2">
-      <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute right-2 top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={handleCopy}
           className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors"
@@ -333,13 +340,25 @@ function CodeBlock({
         </button>
       </div>
       {language && (
-        <div className="absolute left-3 top-2 text-xs text-gray-400 font-mono">
+        <div className="absolute left-3 top-2 z-10 text-xs text-gray-400 font-mono">
           {language}
         </div>
       )}
-      <pre className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 pt-8 overflow-x-auto">
-        <code className="text-sm text-gray-100 font-mono">{children}</code>
-      </pre>
+      <SyntaxHighlighter
+        style={oneDark}
+        language={language || "text"}
+        showLineNumbers
+        customStyle={{
+          margin: 0,
+          borderRadius: "0.5rem",
+          paddingTop: "2rem",
+        }}
+        codeTagProps={{
+          className: "text-sm font-mono",
+        }}
+      >
+        {children}
+      </SyntaxHighlighter>
     </div>
   );
 }
@@ -373,6 +392,32 @@ function MarkdownContent({ content }: { content: string }) {
         // Handle chart blocks
         if (language === "chart" && !inline) {
           return <ChartBlock code={codeContent} />;
+        }
+
+        // Handle SVG blocks
+        if (language === "svg" && !inline) {
+          return <SVGArtifact data={codeContent} />;
+        }
+
+        // Handle audio blocks (URL or base64)
+        if (language === "audio" && !inline) {
+          return <AudioArtifact data={codeContent.trim()} />;
+        }
+
+        // Handle video blocks (URL or base64)
+        if (language === "video" && !inline) {
+          return <VideoArtifact data={codeContent.trim()} />;
+        }
+
+        // Handle executable code blocks (run:python, run:javascript, etc.)
+        if (language?.startsWith("run:") && !inline) {
+          const execLanguage = language.replace("run:", "");
+          return (
+            <ExecutableArtifact
+              data={codeContent}
+              config={{ language: execLanguage, runtime: "docker" }}
+            />
+          );
         }
 
         if (!inline && codeContent.includes("\n")) {
