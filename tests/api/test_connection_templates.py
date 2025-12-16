@@ -184,7 +184,7 @@ class TestTemplateCategories:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_list_categories(self, client):
+    def test_list_categories_returns_available_template_categories(self, client):
         """Should return list of template categories."""
         response = client.get("/connection-templates/categories")
         assert response.status_code == 200
