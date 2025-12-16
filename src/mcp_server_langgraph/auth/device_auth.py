@@ -41,7 +41,7 @@ References:
 """
 
 import asyncio
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
@@ -173,7 +173,7 @@ class DeviceAuthClient:
 
                 metrics.successful_calls.add(1, {"operation": "request_device_code"})
 
-                return result
+                return cast(dict[str, Any], result)
 
     async def poll_for_token(self, device_code: str) -> dict[str, Any]:
         """
@@ -232,7 +232,7 @@ class DeviceAuthClient:
                 logger.info("Device authorization completed successfully")
                 metrics.successful_calls.add(1, {"operation": "device_auth_complete"})
 
-                return result
+                return cast(dict[str, Any], result)
 
     async def wait_for_authorization(
         self,
@@ -324,7 +324,7 @@ def generate_qr_code(url: str) -> str:
     try:
         import io
 
-        import qrcode
+        import qrcode  # type: ignore[import-untyped]
 
         qr = qrcode.QRCode(
             version=1,
