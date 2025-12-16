@@ -62,6 +62,7 @@ class MockConnectionRepository:
                 id=c.id,
                 name=c.name,
                 url=c.url,
+                transport=getattr(c, "transport", "streamable_http"),
                 auth_type=c.auth_type,
                 status=c.status,
                 server_name=c.server_name,
@@ -69,7 +70,6 @@ class MockConnectionRepository:
                 resource_count=c.resource_count or 0,
                 prompt_count=c.prompt_count or 0,
                 created_at=c.created_at,
-                updated_at=c.updated_at,
             )
             for c in self.connections.values()
         ]

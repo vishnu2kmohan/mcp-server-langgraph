@@ -12,6 +12,14 @@
 /** Authentication type for MCP connections */
 export type AuthType = "none" | "api_key" | "oauth2";
 
+/**
+ * Transport protocol for MCP connections (per MCP 2025-11-25 spec)
+ *
+ * - streamable_http: HTTP endpoint with SSE streaming (recommended for remote servers)
+ * - stdio: Standard I/O for local subprocess-based servers
+ */
+export type TransportProtocol = "streamable_http" | "stdio";
+
 /** Connection status */
 export type ConnectionStatus =
   | "disconnected"
@@ -42,8 +50,15 @@ export interface MCPConnection {
   name: string;
   description: string | null;
   url: string;
+  transport: TransportProtocol;
   auth_type: AuthType;
   oauth2_config: OAuth2Config | null;
+  /** For stdio transport: command to execute */
+  command: string | null;
+  /** For stdio transport: command arguments */
+  args: string[] | null;
+  /** For stdio transport: environment variables */
+  env: Record<string, string> | null;
   status: ConnectionStatus;
   last_error: string | null;
   last_connected_at: string | null;
@@ -65,6 +80,7 @@ export interface MCPConnectionSummary {
   id: string;
   name: string;
   url: string;
+  transport: TransportProtocol;
   auth_type: AuthType;
   status: ConnectionStatus;
   server_name: string | null;
@@ -84,12 +100,19 @@ export interface MCPConnectionCreate {
   name: string;
   description?: string | null;
   url: string;
+  transport?: TransportProtocol;
   auth_type?: AuthType;
   api_key?: string | null;
   oauth2_client_id?: string | null;
   oauth2_client_secret?: string | null;
   oauth2_scopes?: string[] | null;
   project_id?: string | null;
+  /** For stdio transport: command to execute */
+  command?: string | null;
+  /** For stdio transport: command arguments */
+  args?: string[] | null;
+  /** For stdio transport: environment variables */
+  env?: Record<string, string> | null;
 }
 
 /** Request model for updating an MCP connection */

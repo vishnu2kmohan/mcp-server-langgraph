@@ -14,6 +14,7 @@ import {
   saveWorkflow,
   executeWorkflow,
   loadWorkflow,
+  addNode,
   undo,
   redo,
   validate,
@@ -30,7 +31,9 @@ import {
   selectIsReadOnly,
   selectCanExecute,
 } from "../store/slices/workflowSlice";
+import type { WorkflowNodeType } from "../types/workflow";
 import { WorkflowCanvas } from "../components/Workflow/WorkflowCanvas";
+import { NodePalette, type NodeType } from "../components/Workflow/NodePalette";
 import { NodeInspector } from "../components/Workflow/NodeInspector";
 import { ExecutionPanel } from "../components/Workflow/ExecutionPanel";
 import {
@@ -457,6 +460,16 @@ export function WorkflowsPage() {
 
         {/* Main Content Area */}
         <div className="flex flex-1 overflow-hidden relative">
+          {/* Node Palette - Left Sidebar */}
+          {!isReadOnly && (
+            <NodePalette
+              onAddNode={(type: NodeType) => {
+                // Add node at center of canvas when clicked
+                dispatch(addNode(type as WorkflowNodeType, { x: 250, y: 250 }));
+              }}
+            />
+          )}
+
           {/* Canvas Area */}
           <div className="flex-1 relative">
             <WorkflowCanvas />

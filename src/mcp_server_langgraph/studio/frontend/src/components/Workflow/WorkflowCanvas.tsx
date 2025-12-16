@@ -12,13 +12,20 @@
  * - Execution visualization
  */
 
-import { useCallback, useMemo, type MouseEvent } from "react";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  type MouseEvent,
+  type DragEvent,
+} from "react";
 import ReactFlow, {
   Background,
   Controls,
   MiniMap,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   type Connection,
   type Edge,
   type Node,
@@ -30,6 +37,7 @@ import "reactflow/dist/style.css";
 
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
+  addNode as addNodeAction,
   addEdge as addEdgeAction,
   updateNodePositions,
   setSelectedNodes,
@@ -38,6 +46,7 @@ import {
   selectWorkflowEdges,
   selectNodeStatuses,
 } from "../../store/slices/workflowSlice";
+import type { WorkflowNodeType } from "../../types/workflow";
 import type { WorkflowNodeData } from "../../types/workflow";
 import {
   StartNode,
@@ -122,6 +131,54 @@ export function WorkflowCanvas() {
     [dispatch],
   );
 
+  // Reference to the React Flow wrapper for drop position calculation
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const { screenToFlowPosition } = useReactFlow();
+
+  // Handle drag over - allow drop
+  const onDragOver = useCallback((event: DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  // Handle drop from NodePalette
+  const onDrop = useCallback(
+    (event: DragEvent) => {
+      event.preventDefault();
+
+      // Get the node type from the drag data
+      const nodeType = event.dataTransfer.getData(
+        "application/reactflow",
+      ) as WorkflowNodeType;
+
+      // Validate node type
+      if (
+        !nodeType ||
+        ![
+          "start",
+          "end",
+          "llm",
+          "tool",
+          "conditional",
+          "approval",
+          "custom",
+        ].includes(nodeType)
+      ) {
+        return;
+      }
+
+      // Calculate the drop position in flow coordinates
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      // Dispatch action to add the node
+      dispatch(addNodeAction(nodeType, position));
+    },
+    [dispatch, screenToFlowPosition],
+  );
+
   // Color nodes in minimap based on type
   const getNodeColor = (node: Node<WorkflowNodeData>) => {
     const status = node.data.status || "idle";
@@ -138,7 +195,12 @@ export function WorkflowCanvas() {
   };
 
   return (
-    <div className="h-full w-full">
+    <div
+      ref={reactFlowWrapper}
+      className="h-full w-full"
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}

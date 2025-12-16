@@ -115,6 +115,12 @@ vi.mock("reactflow", () => {
     BackgroundVariant: {
       Dots: "dots",
     },
+    useReactFlow: () => ({
+      screenToFlowPosition: (pos: { x: number; y: number }) => pos,
+      getNodes: () => [],
+      getEdges: () => [],
+      fitView: vi.fn(),
+    }),
   };
 });
 

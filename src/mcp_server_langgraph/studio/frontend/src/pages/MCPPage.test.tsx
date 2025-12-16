@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { MCPPage } from "./MCPPage";
@@ -167,68 +167,25 @@ describe("MCPPage", () => {
 
       fireEvent.click(screen.getByText("Servers"));
 
-      // Should see add server UI - placeholder is "Enter server URL..."
-      expect(
-        screen.getByPlaceholderText(/Enter server URL/),
-      ).toBeInTheDocument();
+      // Should see add connection button
+      expect(screen.getByText("Add MCP Connection")).toBeInTheDocument();
     });
 
-    it("should call addServer when adding a server", async () => {
-      const { store } = renderWithStore();
-
-      fireEvent.click(screen.getByText("Servers"));
-
-      const input = screen.getByPlaceholderText(/Enter server URL/);
-      fireEvent.change(input, { target: { value: "http://localhost:3000" } });
-      fireEvent.click(screen.getByText("Add"));
-
-      // The dispatch should update the store - verify via state change
-      await waitFor(() => {
-        const state = store.getState();
-        // After dispatching addServer, a pending entry should be added
-        expect(Object.keys(state.mcp.servers).length).toBeGreaterThanOrEqual(0);
-      });
-    });
-
-    it("should not call addServer when URL is empty", async () => {
-      const { store } = renderWithStore();
-
-      fireEvent.click(screen.getByText("Servers"));
-
-      const input = screen.getByPlaceholderText(/Enter server URL/);
-      fireEvent.change(input, { target: { value: "" } });
-      fireEvent.click(screen.getByText("Add"));
-
-      // Store should remain unchanged
-      const state = store.getState();
-      expect(Object.keys(state.mcp.servers).length).toBe(0);
-    });
-
-    it("should clear input after clicking Add button", async () => {
+    it("should show Add MCP Connection button", () => {
       renderWithStore();
 
       fireEvent.click(screen.getByText("Servers"));
 
-      const input = screen.getByPlaceholderText(
-        /Enter server URL/,
-      ) as HTMLInputElement;
-      fireEvent.change(input, { target: { value: "http://localhost:3000" } });
+      const addButton = screen.getByText("Add MCP Connection");
+      expect(addButton).toBeInTheDocument();
+    });
 
-      // Before clicking, the input has value
-      expect(input.value).toBe("http://localhost:3000");
+    it("should show no servers message when empty", () => {
+      renderWithStore();
 
-      fireEvent.click(screen.getByText("Add"));
+      fireEvent.click(screen.getByText("Servers"));
 
-      // The component clears the input immediately after dispatching
-      // We can't rely on waitFor because the async thunk might fail in tests
-      // Just verify the UI interaction happens - component clears input on click
-      await waitFor(
-        () => {
-          // Either input is cleared, or an error is shown (due to async thunk failing in test)
-          expect(screen.queryByText("Add")).toBeInTheDocument();
-        },
-        { timeout: 500 },
-      );
+      expect(screen.getByText("No servers configured")).toBeInTheDocument();
     });
   });
 

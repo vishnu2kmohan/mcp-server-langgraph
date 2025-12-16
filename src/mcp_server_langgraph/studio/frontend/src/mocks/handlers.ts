@@ -21,6 +21,7 @@ import type {
   MCPConnectionSummary,
   ConnectionStatus,
   AuthType,
+  TransportProtocol,
 } from "../types/connection";
 import type { WorkflowSummary, Session, FeatureFlags } from "../types";
 
@@ -58,6 +59,7 @@ export const createMockConnection = (
   id: `conn-${crypto.randomUUID().slice(0, 8)}`,
   name: "Test Connection",
   url: "https://api.example.com",
+  transport: "streamable_http" as TransportProtocol,
   auth_type: "api_key" as AuthType,
   status: "connected" as ConnectionStatus,
   server_name: "Example MCP Server",

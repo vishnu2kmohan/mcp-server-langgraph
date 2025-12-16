@@ -35,3 +35,21 @@ export type { VideoArtifactProps } from "./VideoArtifact";
 
 export { ExecutableArtifact } from "./ExecutableArtifact";
 export type { ExecutableArtifactProps } from "./ExecutableArtifact";
+
+export {
+  MDXArtifact,
+  mdxComponents,
+  Accordion,
+  AccordionGroup,
+  Callout,
+  Note,
+  Warning,
+  Tip,
+  Card,
+  CardGroup,
+  Tabs,
+  Tab,
+  Steps,
+  Step,
+} from "./MDXArtifact";
+export type { MDXArtifactProps } from "./MDXArtifact";

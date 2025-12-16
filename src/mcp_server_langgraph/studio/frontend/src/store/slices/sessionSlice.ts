@@ -533,7 +533,7 @@ export const sessionSlice = createSlice({
             messageCount: 0,
           });
           // Increment totalCount for new session
-          state.totalCount += 1;
+          state.totalCount = (state.totalCount ?? 0) + 1;
         }
         state.currentSession = session;
         state.error = null;

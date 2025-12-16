@@ -1,7 +1,7 @@
 /**
  * NodePalette Tests
  *
- * Tests for the node palette sidebar component.
+ * Tests for the node palette sidebar component with drag-and-drop functionality.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -11,16 +11,6 @@ import { NodePalette } from "./NodePalette";
 describe("NodePalette", () => {
   const defaultProps = {
     onAddNode: vi.fn(),
-    onUndo: vi.fn(),
-    onRedo: vi.fn(),
-    canUndo: true,
-    canRedo: true,
-    onGenerateCode: vi.fn(),
-    onSaveToFile: vi.fn(),
-    onExportJSON: vi.fn(),
-    isGenerating: false,
-    isSaving: false,
-    isDarkMode: false,
   };
 
   beforeEach(() => {
@@ -37,121 +27,183 @@ describe("NodePalette", () => {
     it("should render all node type buttons", () => {
       render(<NodePalette {...defaultProps} />);
 
-      expect(screen.getByText("Tool")).toBeInTheDocument();
+      expect(screen.getByText("Start")).toBeInTheDocument();
+      expect(screen.getByText("End")).toBeInTheDocument();
       expect(screen.getByText("LLM")).toBeInTheDocument();
+      expect(screen.getByText("Tool")).toBeInTheDocument();
       expect(screen.getByText("Conditional")).toBeInTheDocument();
       expect(screen.getByText("Approval")).toBeInTheDocument();
       expect(screen.getByText("Custom")).toBeInTheDocument();
     });
 
-    it("should render undo/redo buttons", () => {
+    it("should render category headers", () => {
       render(<NodePalette {...defaultProps} />);
 
-      expect(screen.getByText("Undo")).toBeInTheDocument();
-      expect(screen.getByText("Redo")).toBeInTheDocument();
+      expect(screen.getByText("Flow Control")).toBeInTheDocument();
+      expect(screen.getByText("Processing")).toBeInTheDocument();
+      expect(screen.getByText("Control")).toBeInTheDocument();
+      expect(screen.getByText("Advanced")).toBeInTheDocument();
     });
 
-    it("should render action buttons", () => {
+    it("should render search input", () => {
       render(<NodePalette {...defaultProps} />);
 
-      expect(screen.getByText("Export Code")).toBeInTheDocument();
-      expect(screen.getByText("Save to File")).toBeInTheDocument();
-      expect(screen.getByText("Export JSON")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Search nodes..."),
+      ).toBeInTheDocument();
+    });
+
+    it("should render footer hint", () => {
+      render(<NodePalette {...defaultProps} />);
+
+      expect(screen.getByText(/Drag nodes to canvas/)).toBeInTheDocument();
+    });
+
+    it("should have data-testid on palette", () => {
+      render(<NodePalette {...defaultProps} />);
+
+      expect(screen.getByTestId("node-palette")).toBeInTheDocument();
     });
   });
 
-  describe("Node Type Selection", () => {
-    it('should call onAddNode with "tool" when Tool button is clicked', () => {
+  describe("Node Type Selection (Click to Add)", () => {
+    it('should call onAddNode with "start" when Start is clicked', () => {
       render(<NodePalette {...defaultProps} />);
 
-      fireEvent.click(screen.getByText("Tool"));
-      expect(defaultProps.onAddNode).toHaveBeenCalledWith("tool");
+      fireEvent.click(screen.getByTestId("node-start"));
+      expect(defaultProps.onAddNode).toHaveBeenCalledWith("start");
     });
 
-    it('should call onAddNode with "llm" when LLM button is clicked', () => {
+    it('should call onAddNode with "llm" when LLM is clicked', () => {
       render(<NodePalette {...defaultProps} />);
 
-      fireEvent.click(screen.getByText("LLM"));
+      fireEvent.click(screen.getByTestId("node-llm"));
       expect(defaultProps.onAddNode).toHaveBeenCalledWith("llm");
     });
 
-    it('should call onAddNode with "conditional" when Conditional button is clicked', () => {
+    it('should call onAddNode with "tool" when Tool is clicked', () => {
       render(<NodePalette {...defaultProps} />);
 
-      fireEvent.click(screen.getByText("Conditional"));
+      fireEvent.click(screen.getByTestId("node-tool"));
+      expect(defaultProps.onAddNode).toHaveBeenCalledWith("tool");
+    });
+
+    it('should call onAddNode with "conditional" when Conditional is clicked', () => {
+      render(<NodePalette {...defaultProps} />);
+
+      fireEvent.click(screen.getByTestId("node-conditional"));
       expect(defaultProps.onAddNode).toHaveBeenCalledWith("conditional");
     });
-  });
 
-  describe("Undo/Redo", () => {
-    it("should call onUndo when undo button is clicked", () => {
+    it('should call onAddNode with "end" when End is clicked', () => {
       render(<NodePalette {...defaultProps} />);
 
-      fireEvent.click(screen.getByText("Undo"));
-      expect(defaultProps.onUndo).toHaveBeenCalled();
-    });
-
-    it("should call onRedo when redo button is clicked", () => {
-      render(<NodePalette {...defaultProps} />);
-
-      fireEvent.click(screen.getByText("Redo"));
-      expect(defaultProps.onRedo).toHaveBeenCalled();
-    });
-
-    it("should disable undo button when canUndo is false", () => {
-      render(<NodePalette {...defaultProps} canUndo={false} />);
-
-      const undoButton = screen.getByText("Undo").closest("button");
-      expect(undoButton).toBeDisabled();
-    });
-
-    it("should disable redo button when canRedo is false", () => {
-      render(<NodePalette {...defaultProps} canRedo={false} />);
-
-      const redoButton = screen.getByText("Redo").closest("button");
-      expect(redoButton).toBeDisabled();
+      fireEvent.click(screen.getByTestId("node-end"));
+      expect(defaultProps.onAddNode).toHaveBeenCalledWith("end");
     });
   });
 
-  describe("Action Buttons", () => {
-    it("should call onGenerateCode when Export Code is clicked", () => {
+  describe("Search Functionality", () => {
+    it("should filter nodes when searching", () => {
       render(<NodePalette {...defaultProps} />);
 
-      fireEvent.click(screen.getByText("Export Code"));
-      expect(defaultProps.onGenerateCode).toHaveBeenCalled();
+      const searchInput = screen.getByPlaceholderText("Search nodes...");
+      fireEvent.change(searchInput, { target: { value: "LLM" } });
+
+      expect(screen.getByText("LLM")).toBeInTheDocument();
+      expect(screen.queryByText("Start")).not.toBeInTheDocument();
+      expect(screen.queryByText("Tool")).not.toBeInTheDocument();
     });
 
-    it("should call onSaveToFile when Save to File is clicked", () => {
+    it("should show message when no nodes match search", () => {
       render(<NodePalette {...defaultProps} />);
 
-      fireEvent.click(screen.getByText("Save to File"));
-      expect(defaultProps.onSaveToFile).toHaveBeenCalled();
+      const searchInput = screen.getByPlaceholderText("Search nodes...");
+      fireEvent.change(searchInput, { target: { value: "nonexistent" } });
+
+      expect(
+        screen.getByText("No nodes match your search"),
+      ).toBeInTheDocument();
     });
 
-    it("should call onExportJSON when Export JSON is clicked", () => {
+    it("should search by description", () => {
       render(<NodePalette {...defaultProps} />);
 
-      fireEvent.click(screen.getByText("Export JSON"));
-      expect(defaultProps.onExportJSON).toHaveBeenCalled();
+      const searchInput = screen.getByPlaceholderText("Search nodes...");
+      fireEvent.change(searchInput, { target: { value: "language model" } });
+
+      expect(screen.getByText("LLM")).toBeInTheDocument();
+    });
+  });
+
+  describe("Collapsed Mode", () => {
+    it("should render collapsed view when isCollapsed is true", () => {
+      render(<NodePalette {...defaultProps} isCollapsed={true} />);
+
+      // Should not show search or category headers
+      expect(
+        screen.queryByPlaceholderText("Search nodes..."),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText("Flow Control")).not.toBeInTheDocument();
     });
 
-    it("should show loading state when generating code", () => {
-      render(<NodePalette {...defaultProps} isGenerating={true} />);
+    it("should still have buttons in collapsed mode", () => {
+      render(<NodePalette {...defaultProps} isCollapsed={true} />);
 
-      expect(screen.getByText("Generating...")).toBeInTheDocument();
+      // Buttons should still be clickable
+      expect(
+        screen.getByRole("button", { name: /Add Start node/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Add LLM node/ }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("Drag and Drop", () => {
+    it("should have draggable attribute on node elements", () => {
+      render(<NodePalette {...defaultProps} />);
+
+      const startNode = screen.getByTestId("node-start");
+      expect(startNode).toHaveAttribute("draggable", "true");
     });
 
-    it("should show loading state when saving", () => {
-      render(<NodePalette {...defaultProps} isSaving={true} />);
+    it("should set data transfer on drag start", () => {
+      render(<NodePalette {...defaultProps} />);
 
-      expect(screen.getByText("Saving...")).toBeInTheDocument();
+      const startNode = screen.getByTestId("node-start");
+      const dataTransfer = {
+        setData: vi.fn(),
+        effectAllowed: "",
+      };
+
+      fireEvent.dragStart(startNode, { dataTransfer });
+
+      expect(dataTransfer.setData).toHaveBeenCalledWith(
+        "application/reactflow",
+        "start",
+      );
+    });
+  });
+
+  describe("Accessibility", () => {
+    it("should have proper aria-labels on nodes", () => {
+      render(<NodePalette {...defaultProps} />);
+
+      expect(
+        screen.getByRole("button", { name: "Add Start node" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Add LLM node" }),
+      ).toBeInTheDocument();
     });
 
-    it("should disable Export Code button when generating", () => {
-      render(<NodePalette {...defaultProps} isGenerating={true} />);
+    it("should have aria-label on search input", () => {
+      render(<NodePalette {...defaultProps} />);
 
-      const button = screen.getByText("Generating...").closest("button");
-      expect(button).toBeDisabled();
+      expect(
+        screen.getByRole("textbox", { name: "Search node types" }),
+      ).toBeInTheDocument();
     });
   });
 });

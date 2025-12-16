@@ -45,6 +45,13 @@ vi.mock("../../api", () => ({
   ],
 }));
 
+// Mock version config
+vi.mock("../../config/version", () => ({
+  getDisplayVersion: () => "v2.9.0-dev",
+  APP_VERSION: "2.9.0-dev",
+  IS_DEV: true,
+}));
+
 // Create a test store with auth, persona, notification, and ui state
 const createTestStore = (
   persona: Persona,
@@ -318,7 +325,8 @@ describe("Sidebar", () => {
 
     it("should display username from store", () => {
       renderWithStore("developer", "alice");
-      expect(screen.getByText("alice")).toBeInTheDocument();
+      // Username is capitalized for display
+      expect(screen.getByText("Alice")).toBeInTheDocument();
     });
 
     it("should display Guest when username is null", () => {
@@ -431,7 +439,7 @@ describe("Sidebar", () => {
 
     it("should render version number", () => {
       renderWithStore("admin");
-      expect(screen.getByText("v0.1.0")).toBeInTheDocument();
+      expect(screen.getByText("v2.9.0-dev")).toBeInTheDocument();
     });
   });
 
@@ -733,23 +741,24 @@ describe("Sidebar", () => {
 
     it("should hide username when collapsed", () => {
       renderWithStore("admin", "alice", "/", true);
-      // Username should not be visible in collapsed mode
-      expect(screen.queryByText("alice")).not.toBeInTheDocument();
+      // Username should not be visible in collapsed mode (displays as "Alice" capitalized)
+      expect(screen.queryByText("Alice")).not.toBeInTheDocument();
     });
 
     it("should show username when expanded", () => {
       renderWithStore("admin", "alice", "/", false);
-      expect(screen.getByText("alice")).toBeInTheDocument();
+      // Username is capitalized for display
+      expect(screen.getByText("Alice")).toBeInTheDocument();
     });
 
     it("should hide version number when collapsed", () => {
       renderWithStore("admin", "testuser", "/", true);
-      expect(screen.queryByText("v0.1.0")).not.toBeInTheDocument();
+      expect(screen.queryByText("v2.9.0-dev")).not.toBeInTheDocument();
     });
 
     it("should show version number when expanded", () => {
       renderWithStore("admin", "testuser", "/", false);
-      expect(screen.getByText("v0.1.0")).toBeInTheDocument();
+      expect(screen.getByText("v2.9.0-dev")).toBeInTheDocument();
     });
 
     it("should have tooltip on nav links when collapsed", () => {

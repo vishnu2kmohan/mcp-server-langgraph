@@ -395,8 +395,10 @@ def main() -> int:
         if check_docker_available():
             if not quiet:
                 print("▶ CI_PARITY=1 detected: Including integration tests (Docker available)")
-            # Add integration marker to expression (but still exclude meta-tests)
-            marker_expression = "(unit or api or property or validation or integration) and not llm and not meta"
+            # Add integration marker to expression (but still exclude meta-tests and e2e)
+            # E2E tests require full infrastructure (Keycloak, API server) and are run separately
+            # via scripts/test-e2e.sh in validate-pre-push-full
+            marker_expression = "(unit or api or property or validation or integration) and not llm and not meta and not e2e"
             pytest_args[marker_index] = marker_expression  # Use stored index instead of fragile .index()
         else:
             if not quiet:

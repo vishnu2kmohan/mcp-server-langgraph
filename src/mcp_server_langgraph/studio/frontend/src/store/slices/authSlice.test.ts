@@ -480,7 +480,7 @@ describe("authSlice", () => {
       const store = createTestStore({ tokens: mockTokens });
       await store.dispatch(initializeAuth());
 
-      expect(mockFetch).toHaveBeenCalledWith("/api/v1/auth/me", {
+      expect(mockFetch).toHaveBeenCalledWith("/api/v1/me", {
         headers: { Authorization: `Bearer ${mockTokens.accessToken}` },
         credentials: "include",
       });

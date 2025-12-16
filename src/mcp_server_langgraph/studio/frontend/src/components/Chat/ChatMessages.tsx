@@ -27,11 +27,11 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { ConfidenceIndicator } from "./ConfidenceIndicator";
-// Rich media artifact components - imported for future artifact rendering support
-// import { SVGArtifact } from "../Artifacts/SVGArtifact";
-// import { AudioArtifact } from "../Artifacts/AudioArtifact";
-// import { VideoArtifact } from "../Artifacts/VideoArtifact";
-// import { ExecutableArtifact } from "../Artifacts/ExecutableArtifact";
+// Rich media artifact components for artifact rendering support
+import { SVGArtifact } from "../Artifacts/SVGArtifact";
+import { AudioArtifact } from "../Artifacts/AudioArtifact";
+import { VideoArtifact } from "../Artifacts/VideoArtifact";
+import { ExecutableArtifact } from "../Artifacts/ExecutableArtifact";
 import {
   HallucinationIndicator,
   type HallucinationReport,

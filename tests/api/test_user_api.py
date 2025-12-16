@@ -60,11 +60,19 @@ def _create_test_app_with_user(user_data: dict[str, Any] | None = None) -> FastA
         get_current_user,
         set_global_auth_middleware,
     )
+    from mcp_server_langgraph.auth.user_provider import TokenVerification
 
     # Defensive: Set up mock global auth middleware in case override doesn't work
     # This prevents RuntimeError if the real get_current_user is called
+    # PYTEST-XDIST FIX (2025-12-16): verify_token must return TokenVerification
+    # not raw user_data, for fallback to work correctly
     mock_middleware = MagicMock()
-    mock_middleware.verify_token = AsyncMock(return_value=user_data or {})
+    mock_verification = TokenVerification(
+        valid=user_data is not None,
+        payload=user_data if user_data else None,
+        error=None if user_data else "Mocked unauthenticated",
+    )
+    mock_middleware.verify_token = AsyncMock(return_value=mock_verification)
     set_global_auth_middleware(mock_middleware)
 
     app = FastAPI()

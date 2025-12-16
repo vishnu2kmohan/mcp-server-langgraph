@@ -5,10 +5,9 @@
  * resources, prompts, and server connections.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
-  addServer,
   removeServer,
   clearMCPError,
   selectServerList,
@@ -40,6 +39,8 @@ import type {
   MCPPrompt,
   ServerEntry,
 } from "../types/mcp";
+import type { MCPConnectionCreate } from "../types/connection";
+import { AddConnectionDialog } from "../components/MCP";
 
 type MCPTab = "tools" | "resources" | "prompts" | "servers";
 
@@ -47,7 +48,8 @@ export function MCPPage() {
   const [activeTab, setActiveTab] = useState<MCPTab>("tools");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [newServerUrl, setNewServerUrl] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   const dispatch = useAppDispatch();
   const serverList = useAppSelector(selectServerList);
@@ -69,12 +71,54 @@ export function MCPPage() {
     setExpandedItems(next);
   };
 
-  const handleAddServer = async () => {
-    if (!newServerUrl.trim()) return;
-    const id = `server-${Date.now()}`;
-    await dispatch(addServer({ id, url: newServerUrl.trim() }));
-    setNewServerUrl("");
-  };
+  const handleOpenAddDialog = useCallback(() => {
+    setIsAddDialogOpen(true);
+  }, []);
+
+  const handleCloseAddDialog = useCallback(() => {
+    setIsAddDialogOpen(false);
+  }, []);
+
+  const handleCreateConnection = useCallback(
+    async (data: MCPConnectionCreate) => {
+      setIsCreating(true);
+      try {
+        // Call the backend API to create the connection
+        const response = await fetch("/api/v1/connections", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+
+        const connection = await response.json();
+
+        // Test the connection after creation
+        await fetch(`/api/v1/connections/${connection.id}/test`, {
+          method: "POST",
+        });
+
+        // Close dialog on success
+        setIsAddDialogOpen(false);
+
+        // Reload page to show new connection (temporary until we have proper state management)
+        window.location.reload();
+      } catch (err) {
+        console.error("Failed to create connection:", err);
+        // Error will be shown in dialog
+        throw err;
+      } finally {
+        setIsCreating(false);
+      }
+    },
+    [],
+  );
 
   const tabs = [
     { id: "tools" as const, label: "Tools", icon: Wrench, count: tools.length },
@@ -337,28 +381,16 @@ export function MCPPage() {
             {/* Servers Tab */}
             {activeTab === "servers" && (
               <>
-                {/* Add Server Form */}
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-4">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
-                    Add Server
-                  </h3>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newServerUrl}
-                      onChange={(e) => setNewServerUrl(e.target.value)}
-                      placeholder="Enter server URL..."
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    />
-                    <button
-                      onClick={handleAddServer}
-                      disabled={!newServerUrl.trim() || isConnecting}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      <Plus size={16} />
-                      Add
-                    </button>
-                  </div>
+                {/* Add Server Button */}
+                <div className="mb-4">
+                  <button
+                    onClick={handleOpenAddDialog}
+                    disabled={isConnecting}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    <Plus size={16} />
+                    Add MCP Connection
+                  </button>
                 </div>
 
                 {serverList.length === 0 ? (
@@ -426,6 +458,14 @@ export function MCPPage() {
           </div>
         )}
       </div>
+
+      {/* Add Connection Dialog */}
+      <AddConnectionDialog
+        isOpen={isAddDialogOpen}
+        onClose={handleCloseAddDialog}
+        onSubmit={handleCreateConnection}
+        isLoading={isCreating}
+      />
     </div>
   );
 }

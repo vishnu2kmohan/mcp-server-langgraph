@@ -8,6 +8,7 @@ Reference: Phase 2.3 OCP integration follow-up
 """
 
 from mcp_server_langgraph.api.router_registry import RouterRegistry
+from mcp_server_langgraph.core.config import settings
 
 
 def register_default_routers(registry: RouterRegistry) -> None:
@@ -60,3 +61,21 @@ def register_default_routers(registry: RouterRegistry) -> None:
 
     # Notification WebSocket (at /ws/notifications for frontend compatibility)
     registry.register(notification_ws_router, prefix="/ws", tags=["notifications"])
+
+    # OAuth 2.0 Protected Resource Metadata (RFC 9728 / MCP 2025-11-25)
+    # This enables OAuth clients to discover authorization servers
+    from mcp_server_langgraph.mcp.protected_resource import (
+        create_protected_resource_router,
+        get_default_mcp_scopes,
+    )
+
+    # Build authorization server URL from Keycloak settings
+    auth_server_url = f"{settings.keycloak_server_url}/realms/{settings.keycloak_realm}"
+    mcp_server_url = getattr(settings, "mcp_server_url", None) or "https://localhost"
+
+    protected_resource_router = create_protected_resource_router(
+        resource_url=mcp_server_url,
+        authorization_servers=[auth_server_url],
+        scopes_supported=get_default_mcp_scopes(),
+    )
+    registry.register(protected_resource_router, tags=["OAuth 2.0"])
