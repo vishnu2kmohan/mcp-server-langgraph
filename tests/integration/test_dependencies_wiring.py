@@ -124,6 +124,12 @@ class TestOpenFGAClientWiring:
             mock_settings.openfga_store_name = None  # Explicit None to prevent MagicMock
             mock_settings.openfga_model_id = "01HMODEL456"
             mock_settings.openfga_preshared_key = None  # Explicit None to prevent MagicMock
+            # OIDC settings must be explicit to prevent MagicMock from being passed to Pydantic
+            mock_settings.openfga_oidc_client_id = None
+            mock_settings.openfga_oidc_client_secret = None
+            mock_settings.openfga_oidc_issuer = None
+            mock_settings.keycloak_server_url = "http://localhost:8082"
+            mock_settings.keycloak_realm = "default"
             client = get_openfga_client()
             assert client is not None
             assert client.store_id == "01HTEST123"

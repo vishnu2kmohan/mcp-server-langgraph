@@ -41,6 +41,7 @@
     "react-markdown": "^9.0.1",
     "react-player": "^3.4.0",
     "react-redux": "^9.1.2",
+    "react-resizable-panels": "^3.0.6",
     "react-router": "^7.10.1",
     "react-syntax-highlighter": "^16.1.0",
     "reactflow": "^11.11.4",

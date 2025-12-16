@@ -5,6 +5,34 @@
  * Barrel file for clean imports: import { Component } from '../components/UI';
  */
 
+// =============================================================================
+// Primitive Components (Design System Foundation)
+// =============================================================================
+
+// Button - Primary interactive element
+export { Button } from "./Button";
+export type { ButtonProps, ButtonVariant, ButtonSize } from "./Button";
+
+// Badge - Status indicators and labels
+export { Badge } from "./Badge";
+export type { BadgeProps, BadgeVariant, BadgeSize } from "./Badge";
+
+// Card - Content container with variants
+export { Card, CardHeader, CardTitle, CardContent, CardFooter } from "./Card";
+export type {
+  CardProps,
+  CardVariant,
+  CardPadding,
+  CardHeaderProps,
+  CardTitleProps,
+  CardContentProps,
+  CardFooterProps,
+} from "./Card";
+
+// =============================================================================
+// Composite Components
+// =============================================================================
+
 // Pagination - Page-based and cursor-based navigation
 export { PagePagination } from "./Pagination";
 export type { PagePaginationProps } from "./Pagination";
