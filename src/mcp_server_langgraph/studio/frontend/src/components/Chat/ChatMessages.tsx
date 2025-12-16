@@ -28,7 +28,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { ConfidenceIndicator } from "./ConfidenceIndicator";
 // Rich media artifact components for artifact rendering support
-import { SVGArtifact } from "../Artifacts/SVGArtifact";
+import { InteractiveSVGArtifact } from "../Artifacts/InteractiveSVGArtifact";
 import { AudioArtifact } from "../Artifacts/AudioArtifact";
 import { VideoArtifact } from "../Artifacts/VideoArtifact";
 import { ExecutableArtifact } from "../Artifacts/ExecutableArtifact";
@@ -494,12 +494,17 @@ interface ChartData {
 }
 
 /**
- * Interactive chart renderer
+ * Interactive chart renderer with controls
  * Parses JSON chart data and renders with Recharts
+ * Features: chart type toggle, fullscreen, copy data, data table view
  */
 function ChartBlock({ code }: { code: string }) {
   const [error, setError] = useState<string | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
+  const [chartType, setChartType] = useState<"line" | "bar" | "pie">("bar");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showDataTable, setShowDataTable] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     try {
@@ -508,6 +513,7 @@ function ChartBlock({ code }: { code: string }) {
         throw new Error("Invalid chart data: missing type or data array");
       }
       setChartData(parsed);
+      setChartType(parsed.type);
       setError(null);
     } catch (err) {
       setError(
@@ -515,6 +521,28 @@ function ChartBlock({ code }: { code: string }) {
       );
     }
   }, [code]);
+
+  // Copy chart data as JSON
+  const handleCopy = useCallback(async () => {
+    if (!chartData) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(chartData, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  }, [chartData]);
+
+  // Toggle fullscreen
+  const handleToggleFullscreen = useCallback(() => {
+    setIsFullscreen((prev) => !prev);
+  }, []);
+
+  // Toggle data table
+  const handleToggleDataTable = useCallback(() => {
+    setShowDataTable((prev) => !prev);
+  }, []);
 
   if (error) {
     return (
@@ -533,81 +561,298 @@ function ChartBlock({ code }: { code: string }) {
   const xKey = chartData.xKey || "name";
   const yKey = chartData.yKey || "value";
 
+  const containerClasses = isFullscreen
+    ? "fixed inset-0 z-50 bg-gray-900 p-4"
+    : "my-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700";
+
   return (
-    <div className="my-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-      {chartData.title && (
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          {chartData.title}
-        </h4>
-      )}
-      <ResponsiveContainer width="100%" height={300}>
-        {chartData.type === "line" ? (
-          <LineChart data={chartData.data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey={xKey} stroke="#9ca3af" fontSize={12} />
-            <YAxis stroke="#9ca3af" fontSize={12} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#1f2937",
-                border: "1px solid #374151",
-                borderRadius: "8px",
-              }}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey={yKey}
-              stroke={CHART_COLORS[0]}
-              strokeWidth={2}
-              dot={{ fill: CHART_COLORS[0] }}
-            />
-          </LineChart>
-        ) : chartData.type === "bar" ? (
-          <BarChart data={chartData.data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey={xKey} stroke="#9ca3af" fontSize={12} />
-            <YAxis stroke="#9ca3af" fontSize={12} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#1f2937",
-                border: "1px solid #374151",
-                borderRadius: "8px",
-              }}
-            />
-            <Legend />
-            <Bar dataKey={yKey} fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
-          </BarChart>
-        ) : (
-          <PieChart>
-            <Pie
-              data={chartData.data}
-              dataKey={yKey}
-              nameKey={xKey}
-              cx="50%"
-              cy="50%"
-              outerRadius={100}
-              label={(props) =>
-                `${props.name ?? "Unknown"}: ${((props.percent ?? 0) * 100).toFixed(0)}%`
-              }
+    <div data-testid="chart-container" className={containerClasses}>
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        {/* Title */}
+        <div className="flex-1">
+          {chartData.title && (
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {chartData.title}
+            </h4>
+          )}
+        </div>
+
+        {/* Chart type toggles */}
+        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5">
+          <button
+            type="button"
+            onClick={() => setChartType("line")}
+            aria-label="Line chart"
+            className={`p-1.5 rounded ${
+              chartType === "line"
+                ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              {chartData.data.map((_, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={CHART_COLORS[index % CHART_COLORS.length]}
-                />
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+              <polyline points="16 7 22 7 22 13" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => setChartType("bar")}
+            aria-label="Bar chart"
+            className={`p-1.5 rounded ${
+              chartType === "bar"
+                ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => setChartType("pie")}
+            aria-label="Pie chart"
+            className={`p-1.5 rounded ${
+              chartType === "pie"
+                ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+              <path d="M22 12A10 10 0 0 0 12 2v10z" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={handleToggleDataTable}
+            aria-label="Toggle data table"
+            className={`p-1.5 rounded ${
+              showDataTable
+                ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <line x1="3" y1="9" x2="21" y2="9" />
+              <line x1="3" y1="15" x2="21" y2="15" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+              <line x1="15" y1="3" x2="15" y2="21" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={handleCopy}
+            aria-label="Copy data"
+            className="p-1.5 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+          >
+            {copied ? (
+              <Check size={14} className="text-green-500" />
+            ) : (
+              <Copy size={14} />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={handleToggleFullscreen}
+            aria-label="Toggle fullscreen"
+            className="p-1.5 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+          >
+            {isFullscreen ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="4 14 10 14 10 20" />
+                <polyline points="20 10 14 10 14 4" />
+                <line x1="14" y1="10" x2="21" y2="3" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className={isFullscreen ? "h-[calc(100vh-200px)]" : "h-64"}>
+        <ResponsiveContainer width="100%" height="100%">
+          {chartType === "line" ? (
+            <LineChart data={chartData.data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey={xKey} stroke="#9ca3af" fontSize={12} />
+              <YAxis stroke="#9ca3af" fontSize={12} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#1f2937",
+                  border: "1px solid #374151",
+                  borderRadius: "8px",
+                }}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey={yKey}
+                stroke={CHART_COLORS[0]}
+                strokeWidth={2}
+                dot={{ fill: CHART_COLORS[0] }}
+              />
+            </LineChart>
+          ) : chartType === "bar" ? (
+            <BarChart data={chartData.data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey={xKey} stroke="#9ca3af" fontSize={12} />
+              <YAxis stroke="#9ca3af" fontSize={12} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#1f2937",
+                  border: "1px solid #374151",
+                  borderRadius: "8px",
+                }}
+              />
+              <Legend />
+              <Bar
+                dataKey={yKey}
+                fill={CHART_COLORS[0]}
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          ) : (
+            <PieChart>
+              <Pie
+                data={chartData.data}
+                dataKey={yKey}
+                nameKey={xKey}
+                cx="50%"
+                cy="50%"
+                outerRadius={isFullscreen ? 200 : 80}
+                label={(props) =>
+                  `${props.name ?? "Unknown"}: ${((props.percent ?? 0) * 100).toFixed(0)}%`
+                }
+              >
+                {chartData.data.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={CHART_COLORS[index % CHART_COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#1f2937",
+                  border: "1px solid #374151",
+                  borderRadius: "8px",
+                }}
+              />
+              <Legend />
+            </PieChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+
+      {/* Data Table */}
+      {showDataTable && (
+        <div className="mt-4 overflow-x-auto">
+          <table className="min-w-full text-sm" role="table">
+            <thead>
+              <tr className="border-b border-gray-200 dark:border-gray-700">
+                <th className="px-4 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
+                  {xKey}
+                </th>
+                <th className="px-4 py-2 text-right font-medium text-gray-700 dark:text-gray-300">
+                  {yKey}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {chartData.data.map((row, index) => (
+                <tr
+                  key={index}
+                  className="border-b border-gray-100 dark:border-gray-800"
+                >
+                  <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
+                    {String(row[xKey])}
+                  </td>
+                  <td className="px-4 py-2 text-right text-gray-600 dark:text-gray-400">
+                    {String(row[yKey])}
+                  </td>
+                </tr>
               ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#1f2937",
-                border: "1px solid #374151",
-                borderRadius: "8px",
-              }}
-            />
-            <Legend />
-          </PieChart>
-        )}
-      </ResponsiveContainer>
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -696,9 +941,9 @@ function MarkdownContent({ content }: { content: string }) {
           return <ChartBlock code={codeContent} />;
         }
 
-        // Handle SVG blocks
+        // Handle SVG blocks with interactive controls
         if (language === "svg" && !inline) {
-          return <SVGArtifact data={codeContent} />;
+          return <InteractiveSVGArtifact data={codeContent} />;
         }
 
         // Handle audio blocks (URL or base64)

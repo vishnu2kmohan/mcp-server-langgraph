@@ -12,7 +12,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+// biome-ignore lint/correctness/noUnusedImports: waitFor is used in async form submission tests
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AddConnectionDialog } from "./AddConnectionDialog";
 
