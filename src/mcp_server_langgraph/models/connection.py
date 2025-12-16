@@ -2,6 +2,7 @@
 MCP Connection SQLAlchemy Models
 
 Implements MCP server connection management with:
+- Transport protocols: Streamable HTTP and stdio (per MCP 2025-11-25 spec)
 - OAuth 2.1 authentication (per MCP 2025-03-26 / 2025-06-18 spec)
 - API Key authentication
 - No authentication (local/development servers)
@@ -57,6 +58,18 @@ class MCPConnectionModel(ConnectionBase):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     url: Mapped[str] = mapped_column(String(2048), nullable=False)
+
+    # Transport protocol (MCP 2025-11-25): 'streamable_http' | 'stdio'
+    transport: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="streamable_http",
+    )
+
+    # Stdio transport configuration (only used when transport='stdio')
+    command: Mapped[str | None] = mapped_column(Text, nullable=True)
+    args: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    env: Mapped[dict[str, str] | None] = mapped_column(JSON, nullable=True)
 
     # Authentication type: 'none' | 'api_key' | 'oauth2'
     auth_type: Mapped[str] = mapped_column(
@@ -186,6 +199,7 @@ class MCPConnectionModel(ConnectionBase):
         Index("ix_mcp_connections_auth_type", "auth_type"),
         Index("ix_mcp_connections_status", "status"),
         Index("ix_mcp_connections_url", "url"),
+        Index("ix_mcp_connections_transport", "transport"),
         Index(
             "ix_mcp_connections_search_vector",
             "search_vector",

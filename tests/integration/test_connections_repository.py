@@ -152,6 +152,34 @@ async def setup_database(test_engine):
 
             await conn.run_sync(reflect_projects)
 
+            # Check if transport column exists (MCP 2025-11-25 migration)
+            # If missing, add it to match the model definition
+            result = await conn.execute(
+                text(
+                    """
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'mcp_connections' AND column_name = 'transport'
+                    )
+                    """
+                )
+            )
+            transport_exists = result.scalar()
+
+            if not transport_exists:
+                # Add transport and stdio columns to match model
+                await conn.execute(
+                    text(
+                        """
+                        ALTER TABLE mcp_connections
+                        ADD COLUMN IF NOT EXISTS transport VARCHAR(50) NOT NULL DEFAULT 'streamable_http',
+                        ADD COLUMN IF NOT EXISTS command TEXT,
+                        ADD COLUMN IF NOT EXISTS args TEXT[],
+                        ADD COLUMN IF NOT EXISTS env JSONB;
+                        """
+                    )
+                )
+
     yield
 
     # Only cleanup if we created the tables

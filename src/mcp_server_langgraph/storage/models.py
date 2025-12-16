@@ -255,6 +255,7 @@ class ProjectSummary(BaseModel):
 
 AuthType = Literal["none", "api_key", "oauth2"]
 ConnectionStatus = Literal["disconnected", "connecting", "connected", "error", "auth_required"]
+TransportProtocol = Literal["streamable_http", "stdio"]
 
 
 class OAuth2Config(BaseModel):
@@ -276,9 +277,17 @@ class MCPConnection(BaseModel):
     description: str | None = Field(default=None, description="Connection description")
     url: str = Field(description="MCP server URL")
 
+    # Transport (per MCP 2025-11-25 spec)
+    transport: TransportProtocol = Field(default="streamable_http", description="Transport protocol")
+
     # Authentication
     auth_type: AuthType = Field(default="none", description="Authentication method")
     oauth2_config: OAuth2Config | None = Field(default=None, description="OAuth2 configuration")
+
+    # Stdio transport configuration
+    command: str | None = Field(default=None, description="Command to execute (stdio transport)")
+    args: list[str] | None = Field(default=None, description="Command arguments (stdio transport)")
+    env: dict[str, str] | None = Field(default=None, description="Environment variables (stdio transport)")
 
     # Connection state
     status: ConnectionStatus = Field(default="disconnected", description="Connection status")
@@ -315,6 +324,7 @@ class MCPConnection(BaseModel):
             id=self.id,
             name=self.name,
             url=self.url,
+            transport=self.transport,
             auth_type=self.auth_type,
             status=self.status,
             server_name=self.server_name,
@@ -332,6 +342,7 @@ class MCPConnectionSummary(BaseModel):
     id: str = Field(description="Connection ID")
     name: str = Field(description="Display name")
     url: str = Field(description="MCP server URL")
+    transport: TransportProtocol = Field(description="Transport protocol")
     auth_type: AuthType = Field(description="Authentication method")
     status: ConnectionStatus = Field(description="Connection status")
     server_name: str | None = Field(default=None, description="MCP server name")
@@ -348,6 +359,11 @@ class MCPConnectionCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255, description="Display name")
     description: str | None = Field(default=None, max_length=2000, description="Description")
     url: str = Field(..., min_length=1, max_length=2048, description="MCP server URL")
+
+    # Transport (per MCP 2025-11-25 spec)
+    transport: TransportProtocol = Field(default="streamable_http", description="Transport protocol")
+
+    # Authentication
     auth_type: AuthType = Field(default="none", description="Authentication method")
 
     # API Key auth (stored securely in secrets provider)
@@ -357,6 +373,11 @@ class MCPConnectionCreate(BaseModel):
     oauth2_client_id: str | None = Field(default=None, description="OAuth2 client ID")
     oauth2_client_secret: str | None = Field(default=None, description="OAuth2 client secret (stored securely)")
     oauth2_scopes: list[str] | None = Field(default=None, description="OAuth2 scopes")
+
+    # Stdio transport configuration
+    command: str | None = Field(default=None, description="Command to execute (stdio transport)")
+    args: list[str] | None = Field(default=None, description="Command arguments (stdio transport)")
+    env: dict[str, str] | None = Field(default=None, description="Environment variables (stdio transport)")
 
     # Association
     project_id: str | None = Field(default=None, description="Project to associate with")

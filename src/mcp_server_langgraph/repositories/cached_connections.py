@@ -168,8 +168,13 @@ class CachedConnectionRepository(ConnectionRepository):
             cached = self._cache.get(cache_key)
             if cached is not None:
                 items, next_cursor = cached
+                # Ensure transport field has a default value for backward compatibility
+                # with cached data that predates the transport field requirement
                 return (
-                    [MCPConnectionSummary(**item) for item in items],
+                    [
+                        MCPConnectionSummary(**{**item, "transport": item.get("transport", "streamable_http")})
+                        for item in items
+                    ],
                     next_cursor,
                 )
 

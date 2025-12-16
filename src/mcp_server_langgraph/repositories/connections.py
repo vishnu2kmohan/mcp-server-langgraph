@@ -189,8 +189,12 @@ class PostgresConnectionRepository(ConnectionRepository):
             name=model.name,
             description=model.description,
             url=model.url,
+            transport=model.transport,  # type: ignore[arg-type]
             auth_type=model.auth_type,  # type: ignore[arg-type]
             oauth2_config=oauth2_config,
+            command=model.command,
+            args=model.args,
+            env=model.env,
             status=model.status,  # type: ignore[arg-type]
             last_error=model.last_error,
             last_connected_at=model.last_connected_at,
@@ -213,6 +217,7 @@ class PostgresConnectionRepository(ConnectionRepository):
             id=str(model.id),
             name=model.name,
             url=model.url,
+            transport=model.transport,  # type: ignore[arg-type]
             auth_type=model.auth_type,  # type: ignore[arg-type]
             status=model.status,  # type: ignore[arg-type]
             server_name=model.server_name,
@@ -237,6 +242,10 @@ class PostgresConnectionRepository(ConnectionRepository):
             name=data.name,
             description=data.description,
             url=data.url,
+            transport=data.transport,
+            command=data.command if data.transport == "stdio" else None,
+            args=data.args if data.transport == "stdio" else None,
+            env=data.env if data.transport == "stdio" else None,
             auth_type=data.auth_type,
             oauth2_client_id=data.oauth2_client_id if data.auth_type == "oauth2" else None,
             oauth2_scopes=data.oauth2_scopes if data.auth_type == "oauth2" else None,

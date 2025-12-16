@@ -677,11 +677,15 @@ class TestConnectionRepository:
         id: str | None = None,
         name: str = "Test Server",
         url: str = "https://mcp.example.com",
+        transport: str = "streamable_http",
         auth_type: str = "none",
         status: str = "disconnected",
         api_key_secret_id: str | None = None,
         oauth2_token_secret_id: str | None = None,
         oauth2_token_expires_at: datetime | None = None,
+        command: str | None = None,
+        args: list[str] | None = None,
+        env: dict[str, str] | None = None,
     ) -> MagicMock:
         """Create a mock MCPConnectionModel."""
         model = MagicMock()
@@ -689,6 +693,10 @@ class TestConnectionRepository:
         model.name = name
         model.description = None
         model.url = url
+        model.transport = transport
+        model.command = command
+        model.args = args
+        model.env = env
         model.auth_type = auth_type
         model.status = status
         model.api_key_secret_id = api_key_secret_id
