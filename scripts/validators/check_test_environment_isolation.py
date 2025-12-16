@@ -53,8 +53,8 @@ def check_file(file_path: Path) -> list[tuple[int, str]]:
             if line.strip().startswith("#"):
                 continue
 
-            # Detect os.environ[...] = ...
-            if re.search(r"os\.environ\[.*\]\s*=", line):
+            # Detect os.environ[...] = ... but NOT os.environ[...] == ... (assertions)
+            if re.search(r"os\.environ\[.*\]\s*=[^=]", line):
                 violations.append((i, line.strip()))
 
             # Detect os.environ.pop/del without try/finally or teardown context
