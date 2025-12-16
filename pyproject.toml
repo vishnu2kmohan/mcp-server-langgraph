@@ -778,6 +778,7 @@ markers = [
     "auth_flow: End-to-end authentication flow tests (Keycloak, OAuth2, OpenFGA)",
     "sso: SSO browser-based authentication flow tests (OAuth2 Authorization Code + PKCE)",
     "oauth2: OAuth2 protocol tests (Authorization Code + PKCE, token introspection, PAR)",
+    "oidc: OpenID Connect protocol tests (token validation, claims, discovery)",
     "grafana: Grafana OAuth2 integration tests (ADR-0068)",
     "api: API endpoint tests (REST API contract testing)",
     "openfga: OpenFGA integration tests",
