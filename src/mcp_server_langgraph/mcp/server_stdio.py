@@ -25,6 +25,7 @@ from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
+from mcp_server_langgraph.core.dependencies import get_openfga_client
 from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import format_response
@@ -202,31 +203,26 @@ class MCPAgentServer:
         self._setup_handlers()
 
     def _create_openfga_client(self, settings_override: Settings | None = None) -> OpenFGAClient | None:
-        """
-        Create OpenFGA client from settings.
+        """Create OpenFGA client from centralized dependency.
+
+        Uses the centralized get_openfga_client from core.dependencies which:
+        - Supports store_id OR store_name (dynamic lookup)
+        - Supports model_id (optional, fetches latest if not set)
+        - Handles OIDC authentication automatically
 
         Args:
-            settings_override: Optional settings override for testing/dependency injection.
-                              If None, uses global settings.
+            settings_override: Ignored (kept for API compatibility).
+                              The centralized dependency uses global settings.
 
         Returns:
             OpenFGAClient instance or None if not configured
         """
-        _settings = settings_override or settings
-
-        if _settings.openfga_store_id and _settings.openfga_model_id:
-            logger.info(
-                "Initializing OpenFGA client",
-                extra={"store_id": _settings.openfga_store_id, "model_id": _settings.openfga_model_id},
-            )
-            return OpenFGAClient(
-                api_url=_settings.openfga_api_url,
-                store_id=_settings.openfga_store_id,
-                model_id=_settings.openfga_model_id,
-            )
+        client = get_openfga_client()
+        if client:
+            logger.info("Initializing OpenFGA client")
         else:
             logger.warning("OpenFGA not configured, authorization will use fallback mode")
-            return None
+        return client
 
     async def list_tools_public(self) -> list[Tool]:
         """
@@ -917,7 +913,6 @@ class MCPAgentServer:
 async def main() -> None:
     """Main entry point"""
     # Initialize observability system before creating server
-    from mcp_server_langgraph.core.config import settings
     from mcp_server_langgraph.observability.telemetry import init_observability
 
     # Initialize with settings and enable file logging if configured

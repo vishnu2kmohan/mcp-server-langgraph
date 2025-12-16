@@ -726,13 +726,11 @@ def _get_provider_kwargs(config: Any, provider: str) -> dict[str, Any]:
         )
     elif provider in ["vertex_ai", "google"]:
         vertex_project = config.vertex_project or config.google_project_id
+        # Always pass vertex_location - LiteLLM defaults to us-central1 if not specified
+        # Location MUST be passed even when project is auto-detected via ADC
+        provider_kwargs["vertex_location"] = config.vertex_location
         if vertex_project:
-            provider_kwargs.update(
-                {
-                    "vertex_project": vertex_project,
-                    "vertex_location": config.vertex_location,
-                }
-            )
+            provider_kwargs["vertex_project"] = vertex_project
 
     return provider_kwargs
 

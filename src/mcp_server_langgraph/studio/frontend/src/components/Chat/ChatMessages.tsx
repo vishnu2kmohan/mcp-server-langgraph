@@ -24,6 +24,11 @@ import {
   AlertCircle,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { ConfidenceIndicator } from "./ConfidenceIndicator";
+import {
+  HallucinationIndicator,
+  type HallucinationReport,
+} from "./HallucinationIndicator";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -65,6 +70,10 @@ export interface Message {
   content: string;
   timestamp: number;
   sources?: Source[];
+  /** AI confidence score (0-1) for assistant messages */
+  confidence?: number;
+  /** Whether this message has been flagged for hallucination */
+  isReported?: boolean;
 }
 
 export interface ThinkingTrace {
@@ -79,6 +88,8 @@ export interface ChatMessagesProps {
   streamingContent?: string;
   isSending?: boolean;
   thinkingTrace?: ThinkingTrace;
+  /** Callback when user reports a hallucination */
+  onReportHallucination?: (report: HallucinationReport) => void;
 }
 
 // Chart color palette
@@ -506,6 +517,7 @@ export function ChatMessages({
   streamingContent = "",
   isSending = false,
   thinkingTrace,
+  onReportHallucination,
 }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showThinkingTrace, setShowThinkingTrace] = useState(false);
@@ -579,6 +591,25 @@ export function ChatMessages({
                   </div>
                 </div>
               )}
+            {/* AI-specific indicators for assistant messages */}
+            {message.role === "assistant" && (
+              <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3 flex-wrap">
+                {/* Confidence indicator */}
+                {message.confidence !== undefined && (
+                  <ConfidenceIndicator score={message.confidence} />
+                )}
+
+                {/* Hallucination report button */}
+                {onReportHallucination && (
+                  <HallucinationIndicator
+                    messageId={message.id}
+                    onReport={onReportHallucination}
+                    isReported={message.isReported}
+                  />
+                )}
+              </div>
+            )}
+
             <p
               className={`text-xs mt-1 ${
                 message.role === "user" ? "text-blue-200" : "text-gray-400"

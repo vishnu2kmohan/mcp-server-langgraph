@@ -312,6 +312,7 @@ class OpenFGAClient:
         3. No authentication (if neither is configured)
 
         If store_id is not set but store_name is, looks up the store by name.
+        If model_id is not set, fetches the latest model for the store.
         """
         if not self._initialized:
             # Look up store by name if store_id is not set but store_name is
@@ -329,6 +330,23 @@ class OpenFGAClient:
                     logger.warning(
                         "Could not find store by name",
                         extra={"store_name": self.config.store_name},
+                    )
+
+            # Look up latest model_id if not provided
+            model_id = self.config.model_id
+            if not model_id and store_id:
+                model_id = await self._lookup_latest_model_id(store_id)
+                if model_id:
+                    self.model_id = model_id
+                    self.config.model_id = model_id
+                    logger.info(
+                        "Resolved latest model for store",
+                        extra={"store_id": store_id, "model_id": model_id},
+                    )
+                else:
+                    logger.warning(
+                        "Could not find authorization model for store",
+                        extra={"store_id": store_id},
                     )
 
             # Build credentials based on configured authentication method
@@ -356,7 +374,7 @@ class OpenFGAClient:
             configuration = ClientConfiguration(
                 api_url=self.config.api_url,
                 store_id=store_id,
-                authorization_model_id=self.config.model_id,
+                authorization_model_id=model_id,
                 credentials=credentials,
             )
             self._client = OpenFgaClient(configuration)
@@ -366,6 +384,7 @@ class OpenFGAClient:
                 extra={
                     "api_url": self.config.api_url,
                     "store_id": store_id,
+                    "model_id": model_id,
                     "auth_method": auth_method,
                     "auth_enabled": credentials is not None,
                 },
@@ -411,6 +430,56 @@ class OpenFGAClient:
 
         except Exception as e:
             logger.warning(f"Error looking up store by name: {e}")
+            return None
+
+    async def _lookup_latest_model_id(self, store_id: str) -> str | None:
+        """
+        Look up the latest authorization model ID for a store.
+
+        This enables dynamic model discovery when OPENFGA_MODEL_ID is not set.
+        The seed container uploads new models on each run, making hardcoded
+        model_ids problematic in CI/CD environments.
+
+        Args:
+            store_id: The store ID to look up models for
+
+        Returns:
+            Latest model ID if found, None otherwise
+        """
+        try:
+            headers = {"Content-Type": "application/json"}
+
+            # Use OIDC token if available, otherwise preshared key
+            if self._oidc_access_token:
+                headers["Authorization"] = f"Bearer {self._oidc_access_token}"
+            elif self.config.preshared_key:
+                headers["Authorization"] = f"Bearer {self.config.preshared_key}"
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{self.config.api_url}/stores/{store_id}/authorization-models",
+                    headers=headers,
+                )
+
+                if response.status_code == 200:
+                    models = response.json().get("authorization_models", [])
+                    if models:
+                        # Models are returned sorted by creation date (newest first)
+                        latest_model_id: str = models[0]["id"]
+                        logger.debug(
+                            "Found latest authorization model",
+                            extra={"store_id": store_id, "model_id": latest_model_id, "total_models": len(models)},
+                        )
+                        return latest_model_id
+
+                logger.debug(
+                    "No authorization models found for store",
+                    extra={"store_id": store_id, "status": response.status_code},
+                )
+                return None
+
+        except Exception as e:
+            logger.warning(f"Error looking up latest model: {e}")
             return None
 
     async def close(self) -> None:

@@ -17,8 +17,14 @@ export async function registerServiceWorker(): Promise<boolean> {
   }
 
   try {
-    const registration = await navigator.serviceWorker.register("/sw.js", {
-      scope: "/",
+    // Use import.meta.env.BASE_URL to respect Vite's base path configuration
+    // In production: BASE_URL = '/studio/' -> sw.js at /studio/sw.js
+    // In development: BASE_URL = '/' -> sw.js at /sw.js
+    const basePath = import.meta.env.BASE_URL || "/";
+    const swPath = `${basePath}sw.js`;
+
+    const registration = await navigator.serviceWorker.register(swPath, {
+      scope: basePath,
     });
     console.log("Service worker registered:", registration);
     return true;

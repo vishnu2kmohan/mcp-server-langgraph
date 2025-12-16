@@ -44,3 +44,11 @@ export type { ConfirmDialogProps } from "./ConfirmDialog";
 
 // Offline Banner - PWA offline indicator
 export { OfflineBanner } from "./OfflineBanner";
+
+// Tier Usage Bar - Tier-based usage indicator
+export { TierUsageBar } from "./TierUsageBar";
+export type { TierUsageBarProps } from "./TierUsageBar";
+
+// Upgrade Prompt - Tier upgrade CTA
+export { UpgradePrompt } from "./UpgradePrompt";
+export type { UpgradePromptProps } from "./UpgradePrompt";

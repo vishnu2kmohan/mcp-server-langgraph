@@ -53,6 +53,10 @@ class KeycloakConfig(BaseModel):
     """Keycloak configuration"""
 
     server_url: str = Field(description="Keycloak server URL (e.g., http://localhost:8180)")
+    public_url: str | None = Field(
+        default=None,
+        description="Public Keycloak URL for browser redirects (e.g., http://localhost/authn). Falls back to server_url if not set.",
+    )
     realm: str = Field(description="Keycloak realm name for user authentication")
     admin_realm: str = Field(default="default", description="Keycloak realm for admin API operations")
     client_id: str = Field(description="OAuth2/OIDC client ID")
@@ -246,13 +250,21 @@ class TokenValidator:
 
                 # Verify and decode token
                 # Per RFC 9700 and OWASP JWT Cheat Sheet: validate iss, aud, exp, iat
-                expected_issuer = f"{self.config.server_url}/realms/{self.config.realm}"
+                # Accept tokens from both internal server_url and public_url (browser-issued tokens)
+                # This allows tokens issued via browser PKCE flow (using public URL) to be verified
+                # by backend services (using internal Docker URL)
+                expected_issuers = [f"{self.config.server_url}/realms/{self.config.realm}"]
+                if self.config.public_url:
+                    public_issuer = f"{self.config.public_url}/realms/{self.config.realm}"
+                    if public_issuer not in expected_issuers:
+                        expected_issuers.append(public_issuer)
+
                 payload = jwt.decode(
                     token,
                     public_key,  # type: ignore[arg-type]
                     algorithms=["RS256"],
                     audience=self.config.client_id,
-                    issuer=expected_issuer,
+                    issuer=expected_issuers,  # PyJWT accepts list of issuers
                     options={
                         "verify_signature": True,
                         "verify_exp": True,

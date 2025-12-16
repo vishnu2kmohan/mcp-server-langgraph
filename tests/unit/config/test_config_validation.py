@@ -262,5 +262,67 @@ class TestOAuth2ConfigValidation:
         assert settings.oauth2_redirect_uri.endswith("/studio/oauth/callback")
 
 
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="config_validation_tests")
+class TestVertexLocationEnvVarAlias:
+    """
+    Test vertex_location environment variable alias support.
+
+    Vertex AI location can be set via:
+    - VERTEX_LOCATION: Primary env var (takes precedence)
+    - GOOGLE_CLOUD_LOCATION: Standard GCP env var (fallback)
+
+    Note: Claude models via Vertex AI require specific regions (e.g., us-east5),
+    while Gemini models can use "global". VERTEX_LOCATION takes precedence
+    to allow Claude-specific region configuration.
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_vertex_location_from_vertex_location_env(self, monkeypatch):
+        """Test that VERTEX_LOCATION env var is read correctly."""
+        monkeypatch.setenv("VERTEX_LOCATION", "us-east5")
+
+        settings = Settings()
+
+        assert settings.vertex_location == "us-east5"
+
+    def test_vertex_location_from_google_cloud_location_env(self, monkeypatch):
+        """Test that GOOGLE_CLOUD_LOCATION env var is read as fallback."""
+        # Clear VERTEX_LOCATION to test fallback
+        monkeypatch.delenv("VERTEX_LOCATION", raising=False)
+        monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "global")
+
+        settings = Settings()
+
+        assert settings.vertex_location == "global"
+
+    def test_vertex_location_precedence(self, monkeypatch):
+        """Test that VERTEX_LOCATION takes precedence over GOOGLE_CLOUD_LOCATION.
+
+        This is important for Claude models which require specific regions,
+        while Gemini models can use "global".
+        """
+        monkeypatch.setenv("VERTEX_LOCATION", "us-east5")  # Claude-compatible
+        monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "global")  # Gemini-compatible
+
+        settings = Settings()
+
+        # VERTEX_LOCATION should take precedence
+        assert settings.vertex_location == "us-east5"
+
+    def test_vertex_location_default_value(self, monkeypatch):
+        """Test default vertex_location when no env vars are set."""
+        monkeypatch.delenv("VERTEX_LOCATION", raising=False)
+        monkeypatch.delenv("GOOGLE_CLOUD_LOCATION", raising=False)
+
+        settings = Settings()
+
+        # Default is us-central1 (common Vertex AI region)
+        assert settings.vertex_location == "us-central1"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

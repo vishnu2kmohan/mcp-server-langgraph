@@ -68,9 +68,25 @@ function getDefaultWebSocketUrl(): string {
   if (typeof window === "undefined") {
     return "ws://localhost:8000/ws/notifications";
   }
+
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
-  return `${protocol}//${host}/ws/notifications`;
+
+  // WebSocket URL routing:
+  // - Vite dev server (localhost:5173): Proxy to API server on port 8000
+  // - Gateway (localhost or localhost:80): Use gateway URL (Traefik routes /ws/* to backend)
+  // - Production: Use same origin (frontend and backend on same host)
+  let host = window.location.host;
+  if (host === "localhost:5173" || host.includes(":5173")) {
+    // Vite dev server only - proxy to API server port
+    host = "localhost:8000";
+  }
+  // For gateway (localhost, localhost:80) and production, use the same host
+
+  // Get access token for authentication
+  const token = localStorage.getItem("access_token");
+  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+
+  return `${protocol}//${host}/ws/notifications${tokenParam}`;
 }
 
 /**

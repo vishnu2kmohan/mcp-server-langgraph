@@ -82,11 +82,23 @@ def get_openfga_client() -> OpenFGAClient | None:
             )
             return None
 
+        # Construct OIDC issuer URL from settings if not explicitly provided
+        # Use openfga_oidc_issuer if set (required in Docker for gateway routing)
+        # Otherwise, construct from keycloak_server_url (works for local development)
+        oidc_issuer = settings.openfga_oidc_issuer
+        if not oidc_issuer and settings.openfga_oidc_client_id and settings.openfga_oidc_client_secret:
+            oidc_issuer = f"{settings.keycloak_server_url.rstrip('/')}/realms/{settings.keycloak_realm}"
+
         openfga_config = OpenFGAConfig(
             api_url=settings.openfga_api_url,
             store_id=settings.openfga_store_id,
             store_name=settings.openfga_store_name,
             model_id=settings.openfga_model_id,
+            # OIDC authentication (recommended for production)
+            oidc_client_id=settings.openfga_oidc_client_id,
+            oidc_client_secret=settings.openfga_oidc_client_secret,
+            oidc_issuer=oidc_issuer,
+            # Legacy preshared key (deprecated, fallback if OIDC not configured)
             preshared_key=settings.openfga_preshared_key,
         )
         _openfga_client = OpenFGAClient(config=openfga_config)

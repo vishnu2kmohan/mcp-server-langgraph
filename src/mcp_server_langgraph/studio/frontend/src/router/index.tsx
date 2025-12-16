@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, Outlet } from "react-router";
 import { App } from "../App";
+import { AuthGuard } from "./guards/AuthGuard";
 import { PersonaGuard } from "./guards/PersonaGuard";
 
 /**
@@ -12,6 +13,9 @@ import { PersonaGuard } from "./guards/PersonaGuard";
  * - /build, /chat - Legacy redirects
  *
  * All page components are lazy-loaded for optimal bundle splitting.
+ *
+ * Note: This is a CSR (Client-Side Rendered) app, not SSR.
+ * We disable partial hydration to avoid the "No HydrateFallback" warning.
  */
 export const router = createBrowserRouter(
   [
@@ -22,9 +26,14 @@ export const router = createBrowserRouter(
         // Root redirect to studio
         { index: true, element: <Navigate to="/studio" replace /> },
 
-        // Studio routes (lazy-loaded)
+        // Studio routes (lazy-loaded, authentication required)
         {
           path: "studio",
+          element: (
+            <AuthGuard>
+              <Outlet />
+            </AuthGuard>
+          ),
           children: [
             { index: true, element: <Navigate to="projects" replace /> },
             {
@@ -278,5 +287,10 @@ export const router = createBrowserRouter(
   {
     basename: "/",
     // Note: v7_startTransition and v7_relativeSplatPath are now default in React Router v7
+    future: {
+      // Disable partial hydration (not needed for CSR-only apps)
+      // Prevents "No HydrateFallback element provided" warning
+      v7_partialHydration: false,
+    },
   },
 );

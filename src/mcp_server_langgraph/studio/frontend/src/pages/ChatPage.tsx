@@ -53,6 +53,11 @@ import {
 } from "../components/Chat/ChatMessages";
 import { ChatInputForm } from "../components/Chat/ChatInputForm";
 import {
+  SessionGoalTracker,
+  type GoalSetData,
+  type GoalResult,
+} from "../components/Chat";
+import {
   Loader2,
   MessageSquare,
   PanelLeftOpen,
@@ -60,7 +65,8 @@ import {
   CloudOff,
   RefreshCw,
 } from "lucide-react";
-import { ConfirmDialog } from "../components/UI";
+import { ConfirmDialog, TierUsageBar, UpgradePrompt } from "../components/UI";
+import { useTierLimits } from "../hooks/useTierLimits";
 
 export function ChatPage() {
   const [input, setInput] = useState("");
@@ -69,8 +75,21 @@ export function ChatPage() {
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [upgradePromptDismissed, setUpgradePromptDismissed] = useState(false);
+  // Session goal tracking for multi-turn conversation (Priority 3.3)
+  const [sessionGoal, setSessionGoal] = useState<string | undefined>(undefined);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const navigate = useNavigate();
+
+  // Tier limits for session usage indicator
+  const {
+    tier,
+    maxSessions,
+    activeSessions,
+    isApproachingLimit,
+    isAtLimit,
+    nextTier,
+  } = useTierLimits();
   const [searchParams] = useSearchParams();
   const sessionIdFromUrl = searchParams.get("session");
   const dispatch = useAppDispatch();
@@ -448,6 +467,41 @@ export function ChatPage() {
     navigate("/studio/observability");
   };
 
+  // Session goal tracking handlers (Priority 3.3 - Multi-turn goal tracking)
+  const handleGoalSet = (data: GoalSetData) => {
+    setSessionGoal(data.goal);
+    setActivities((prev) => [
+      { timestamp: Date.now(), action: "goal set", details: data.goal },
+      ...prev.slice(0, 9),
+    ]);
+  };
+
+  const handleGoalComplete = (result: GoalResult) => {
+    const achievedText =
+      result.achieved === true
+        ? "achieved"
+        : result.achieved === "partial"
+          ? "partially achieved"
+          : "not achieved";
+    setActivities((prev) => [
+      {
+        timestamp: Date.now(),
+        action: `goal ${achievedText}`,
+        details: result.goal,
+      },
+      ...prev.slice(0, 9),
+    ]);
+    setSessionGoal(undefined);
+  };
+
+  const handleGoalClear = () => {
+    setSessionGoal(undefined);
+    setActivities((prev) => [
+      { timestamp: Date.now(), action: "goal cleared", details: "" },
+      ...prev.slice(0, 9),
+    ]);
+  };
+
   // Convert sessions to SessionPanel format
   // Handle potentially undefined/invalid dates defensively
   const sessionPanelData: Session[] = useMemo(() => {
@@ -549,6 +603,51 @@ export function ChatPage() {
           onClear={handleClear}
           onClearError={() => dispatch(clearError())}
         />
+
+        {/* Tier Usage Indicator (Bob's journey - surface tier limits) */}
+        {tier !== "dedicated" && (
+          <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <TierUsageBar
+              current={activeSessions}
+              max={maxSessions}
+              label="Active Sessions"
+              tier={tier}
+              variant="default"
+            />
+          </div>
+        )}
+
+        {/* Upgrade Prompt (shown when approaching or at limit) */}
+        {(isApproachingLimit || isAtLimit) &&
+          nextTier &&
+          !upgradePromptDismissed && (
+            <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-800">
+              <UpgradePrompt
+                show={true}
+                feature="unlimited sessions"
+                targetTier={nextTier}
+                currentUsage={activeSessions}
+                maxUsage={maxSessions}
+                urgency={isAtLimit ? "critical" : "warning"}
+                onUpgrade={() => navigate("/studio/settings?tab=billing")}
+                onDismiss={() => setUpgradePromptDismissed(true)}
+              />
+            </div>
+          )}
+
+        {/* Session Goal Tracker (Priority 3.3 - Multi-turn goal tracking) */}
+        {currentSession && (
+          <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <SessionGoalTracker
+              sessionId={currentSession.id}
+              currentGoal={sessionGoal}
+              onGoalSet={handleGoalSet}
+              onGoalComplete={handleGoalComplete}
+              onGoalClear={handleGoalClear}
+              compact
+            />
+          </div>
+        )}
 
         {/* Background Sync Status Indicator */}
         {((!isOnline && pendingCount > 0) || isSyncing) && (

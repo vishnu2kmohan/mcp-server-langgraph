@@ -39,20 +39,8 @@ vi.mock("../hooks/useWorkflowExecution", () => ({
   })),
 }));
 
-// Mock useOnboarding hook
-const mockComplete = vi.fn();
-const mockSkip = vi.fn();
-const mockReset = vi.fn();
-vi.mock("../hooks/useOnboarding", () => ({
-  useOnboarding: vi.fn(() => ({
-    isCompleted: true, // Default to completed so modal doesn't show
-    shouldShowModal: false,
-    isLoading: false,
-    complete: mockComplete,
-    skip: mockSkip,
-    reset: mockReset,
-  })),
-}));
+// Note: Onboarding is now handled globally in App.tsx with OnboardingWizard
+// No longer need to mock useOnboarding for WorkflowsPage tests
 
 // Use vi.hoisted() to ensure mock functions are available when vi.mock is hoisted
 const {
@@ -158,11 +146,9 @@ vi.mock("../components/Workflow/SuggestionChips", () => ({
 
 // Import the mocked function for test manipulation
 import { useWorkflowExecution } from "../hooks/useWorkflowExecution";
-import { useOnboarding } from "../hooks/useOnboarding";
 const mockUseWorkflowExecution = vi.mocked(useWorkflowExecution);
-const mockUseOnboarding = vi.mocked(useOnboarding);
-// Use the mock functions defined above for test manipulation
-const mockUseGetWorkflowTemplatesQuery = mockUseGetWorkflowTemplatesQueryFn;
+// Use the mock functions defined above for test manipulation (prefixed with _ since not used after onboarding removal)
+const _mockUseGetWorkflowTemplatesQuery = mockUseGetWorkflowTemplatesQueryFn;
 
 // Mock fetch for code generation
 // Note: We assign in beforeEach because MSW server.listen() overrides global.fetch
@@ -1145,230 +1131,8 @@ describe("WorkflowsPage", () => {
     });
   });
 
-  describe("Onboarding Modal", () => {
-    const mockTemplates = [
-      {
-        id: "chatbot-basic",
-        name: "Basic Chatbot",
-        description: "A simple conversational chatbot",
-        category: "conversational",
-        tags: ["chat", "simple"],
-      },
-      {
-        id: "api-agent",
-        name: "API Agent",
-        description: "An agent that calls external APIs",
-        category: "agent",
-        tags: ["api", "tools"],
-      },
-    ];
-
-    beforeEach(() => {
-      // Reset mocks to default (modal hidden)
-      mockUseOnboarding.mockReturnValue({
-        isCompleted: true,
-        shouldShowModal: false,
-        isLoading: false,
-        complete: mockComplete,
-        skip: mockSkip,
-        reset: mockReset,
-      });
-      mockUseGetWorkflowTemplatesQuery.mockReturnValue({
-        data: mockTemplates,
-        isLoading: false,
-        error: null,
-        refetch: vi.fn(),
-      });
-    });
-
-    it("should show onboarding modal for first-time users", () => {
-      mockUseOnboarding.mockReturnValue({
-        isCompleted: false,
-        shouldShowModal: true,
-        isLoading: false,
-        complete: mockComplete,
-        skip: mockSkip,
-        reset: mockReset,
-      });
-
-      renderWithProviders(<WorkflowsPage />);
-
-      expect(screen.getByRole("dialog")).toBeInTheDocument();
-      expect(screen.getByText(/welcome/i)).toBeInTheDocument();
-    });
-
-    it("should not show onboarding modal when completed", () => {
-      mockUseOnboarding.mockReturnValue({
-        isCompleted: true,
-        shouldShowModal: false,
-        isLoading: false,
-        complete: mockComplete,
-        skip: mockSkip,
-        reset: mockReset,
-      });
-
-      renderWithProviders(<WorkflowsPage />);
-
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    });
-
-    it("should display templates in the onboarding modal", () => {
-      mockUseOnboarding.mockReturnValue({
-        isCompleted: false,
-        shouldShowModal: true,
-        isLoading: false,
-        complete: mockComplete,
-        skip: mockSkip,
-        reset: mockReset,
-      });
-
-      renderWithProviders(<WorkflowsPage />);
-
-      expect(screen.getByText("Basic Chatbot")).toBeInTheDocument();
-      expect(screen.getByText("API Agent")).toBeInTheDocument();
-    });
-
-    it("should show loading state while templates are loading", () => {
-      mockUseOnboarding.mockReturnValue({
-        isCompleted: false,
-        shouldShowModal: true,
-        isLoading: false,
-        complete: mockComplete,
-        skip: mockSkip,
-        reset: mockReset,
-      });
-      mockUseGetWorkflowTemplatesQuery.mockReturnValue({
-        data: undefined,
-        isLoading: true,
-        error: null,
-        refetch: vi.fn(),
-      });
-
-      renderWithProviders(<WorkflowsPage />);
-
-      expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
-    });
-
-    it("should complete onboarding and create workflow when template is selected", async () => {
-      mockUseOnboarding.mockReturnValue({
-        isCompleted: false,
-        shouldShowModal: true,
-        isLoading: false,
-        complete: mockComplete,
-        skip: mockSkip,
-        reset: mockReset,
-      });
-
-      const { store } = renderWithProviders(<WorkflowsPage />);
-
-      // Click on a template
-      const templateButton = screen
-        .getByText("Basic Chatbot")
-        .closest("button");
-      fireEvent.click(templateButton!);
-
-      // Should complete onboarding
-      expect(mockComplete).toHaveBeenCalledTimes(1);
-
-      // Should create a workflow with the template name
-      await waitFor(() => {
-        const metadata = store.getState().workflow.metadata;
-        expect(metadata?.name).toBe("Basic Chatbot");
-      });
-    });
-
-    it('should complete onboarding and create blank workflow when "Start from scratch" is clicked', async () => {
-      mockUseOnboarding.mockReturnValue({
-        isCompleted: false,
-        shouldShowModal: true,
-        isLoading: false,
-        complete: mockComplete,
-        skip: mockSkip,
-        reset: mockReset,
-      });
-
-      const { store } = renderWithProviders(<WorkflowsPage />);
-
-      // Click "Start from scratch"
-      fireEvent.click(
-        screen.getByRole("button", { name: /start from scratch/i }),
-      );
-
-      // Should complete onboarding
-      expect(mockComplete).toHaveBeenCalledTimes(1);
-
-      // Should create a blank workflow
-      await waitFor(() => {
-        const metadata = store.getState().workflow.metadata;
-        expect(metadata?.name).toBe("New Workflow");
-      });
-    });
-
-    it("should skip onboarding when skip is clicked", () => {
-      mockUseOnboarding.mockReturnValue({
-        isCompleted: false,
-        shouldShowModal: true,
-        isLoading: false,
-        complete: mockComplete,
-        skip: mockSkip,
-        reset: mockReset,
-      });
-
-      renderWithProviders(<WorkflowsPage />);
-
-      // Click skip button
-      fireEvent.click(screen.getByRole("button", { name: /skip/i }));
-
-      // Should skip without persisting
-      expect(mockSkip).toHaveBeenCalledTimes(1);
-      expect(mockComplete).not.toHaveBeenCalled();
-    });
-
-    it("should show error message when templates fail to load", () => {
-      mockUseOnboarding.mockReturnValue({
-        isCompleted: false,
-        shouldShowModal: true,
-        isLoading: false,
-        complete: mockComplete,
-        skip: mockSkip,
-        reset: mockReset,
-      });
-      mockUseGetWorkflowTemplatesQuery.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        error: { status: 500, data: "Server Error" },
-        refetch: vi.fn(),
-      });
-
-      renderWithProviders(<WorkflowsPage />);
-
-      expect(screen.getByText(/failed to load templates/i)).toBeInTheDocument();
-    });
-
-    it("should call refetch when retry is clicked after error", () => {
-      const mockRefetch = vi.fn();
-      mockUseOnboarding.mockReturnValue({
-        isCompleted: false,
-        shouldShowModal: true,
-        isLoading: false,
-        complete: mockComplete,
-        skip: mockSkip,
-        reset: mockReset,
-      });
-      mockUseGetWorkflowTemplatesQuery.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        error: { status: 500, data: "Server Error" },
-        refetch: mockRefetch,
-      });
-
-      renderWithProviders(<WorkflowsPage />);
-
-      fireEvent.click(screen.getByRole("button", { name: /retry/i }));
-
-      expect(mockRefetch).toHaveBeenCalledTimes(1);
-    });
-  });
+  // Note: Onboarding Modal tests removed - onboarding is now handled globally
+  // in App.tsx with OnboardingWizard component. See App.test.tsx for onboarding tests.
 
   describe("Execution History Panel", () => {
     // useListWorkflowExecutionsQuery mock is defined at the top level

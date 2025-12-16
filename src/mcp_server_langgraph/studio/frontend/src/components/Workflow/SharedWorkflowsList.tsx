@@ -17,6 +17,8 @@ import {
   Inbox,
   Search,
   X,
+  Lock,
+  Edit3,
 } from "lucide-react";
 
 interface SharedWorkflow {
@@ -31,11 +33,13 @@ interface SharedWorkflow {
 export interface SharedWorkflowsListProps {
   onView?: (workflowId: string) => void;
   onExecute?: (workflowId: string) => void;
+  onEdit?: (workflowId: string) => void;
 }
 
 export function SharedWorkflowsList({
   onView,
   onExecute,
+  onEdit,
 }: SharedWorkflowsListProps) {
   const [workflows, setWorkflows] = useState<SharedWorkflow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,6 +106,14 @@ export function SharedWorkflowsList({
 
   const canExecute = (permission: string) => {
     return permission === "executor" || permission === "editor";
+  };
+
+  const canEdit = (permission: string) => {
+    return permission === "editor";
+  };
+
+  const isViewOnly = (permission: string) => {
+    return permission === "viewer";
   };
 
   // Get unique users who shared workflows
@@ -309,19 +321,38 @@ export function SharedWorkflowsList({
             {filteredWorkflows.map((workflow) => (
               <div
                 key={workflow.id}
-                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+                className={`flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border ${
+                  isViewOnly(workflow.permission)
+                    ? "border-amber-200 dark:border-amber-800"
+                    : "border-gray-200 dark:border-gray-700"
+                }`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
+                    {/* Lock icon for view-only workflows */}
+                    {isViewOnly(workflow.permission) && (
+                      <Lock
+                        size={14}
+                        className="text-amber-600 dark:text-amber-400 flex-shrink-0"
+                        data-testid={`lock-icon-${workflow.id}`}
+                      />
+                    )}
                     <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">
                       {workflow.name}
                     </h3>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${getPermissionBadgeStyle(workflow.permission)}`}
-                    >
-                      {workflow.permission.charAt(0).toUpperCase() +
-                        workflow.permission.slice(1)}
-                    </span>
+                    {/* Show "View Only" badge for viewer permission, otherwise show permission level */}
+                    {isViewOnly(workflow.permission) ? (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 flex items-center gap-1">
+                        View Only
+                      </span>
+                    ) : (
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${getPermissionBadgeStyle(workflow.permission)}`}
+                      >
+                        {workflow.permission.charAt(0).toUpperCase() +
+                          workflow.permission.slice(1)}
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 truncate mb-1">
                     {workflow.description}
@@ -340,6 +371,27 @@ export function SharedWorkflowsList({
                   >
                     <Eye size={14} />
                     View
+                  </button>
+                  {/* Edit button - disabled for viewer, enabled for editor */}
+                  <button
+                    onClick={() =>
+                      canEdit(workflow.permission) && onEdit?.(workflow.id)
+                    }
+                    disabled={!canEdit(workflow.permission)}
+                    aria-label="Edit"
+                    title={
+                      canEdit(workflow.permission)
+                        ? "Edit workflow"
+                        : "Shared with you as read-only"
+                    }
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg ${
+                      canEdit(workflow.permission)
+                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                        : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed opacity-60"
+                    }`}
+                  >
+                    <Edit3 size={14} />
+                    Edit
                   </button>
                   {canExecute(workflow.permission) && (
                     <button

@@ -194,8 +194,13 @@ def build_login_url(idp_alias: str) -> str:
 
     This URL will redirect the user directly to the specified IdP.
     """
+    # Use PUBLIC Keycloak URL for browser redirects
+    # keycloak_public_url is the externally accessible URL (e.g., http://localhost/authn)
+    # keycloak_server_url is the internal Docker network URL (e.g., http://keycloak-test:8080/authn)
+    keycloak_public_url = settings.keycloak_public_url or settings.keycloak_server_url
+
     # Base authorization URL
-    auth_url = f"{settings.keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/auth"
+    auth_url = f"{keycloak_public_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/auth"
 
     # Build query parameters
     params = {

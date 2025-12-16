@@ -107,9 +107,9 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg max-h-[90vh] flex flex-col">
       {/* Header */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-4 flex-shrink-0">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
           System Usability Survey
         </h2>
@@ -119,7 +119,7 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
       </div>
 
       {/* Progress */}
-      <div className="mb-6">
+      <div className="mb-4 flex-shrink-0">
         <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-1">
           <span>{answeredCount} of 10 questions answered</span>
         </div>
@@ -132,13 +132,13 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
       </div>
 
       {/* Scale Labels */}
-      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-4 px-8">
+      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2 px-8 flex-shrink-0">
         <span>Strongly Disagree</span>
         <span>Strongly Agree</span>
       </div>
 
-      {/* Questions */}
-      <div className="space-y-6">
+      {/* Questions - scrollable area */}
+      <div className="space-y-4 overflow-y-auto flex-1 min-h-0 pr-2">
         {SUS_QUESTIONS.map((question, index) => (
           <div
             key={index}
@@ -179,7 +179,7 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
         <button
           onClick={onDismiss}
           className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"

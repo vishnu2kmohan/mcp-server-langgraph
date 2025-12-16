@@ -122,12 +122,17 @@ export interface AuthSliceState {
 // Initial State
 // ============================================================================
 
+// Load tokens at module init time to determine initial state
+const storedTokens = loadTokensFromStorage();
+
 export const initialAuthState: AuthSliceState = {
   user: null,
-  tokens: loadTokensFromStorage(),
+  tokens: storedTokens,
   currentOrg: null,
   organizations: [],
-  isInitializing: false,
+  // If we have stored tokens, start in initializing state
+  // This prevents AuthGuard from redirecting to login before we can validate the tokens
+  isInitializing: storedTokens !== null,
   isLoading: false,
   error: null,
 };

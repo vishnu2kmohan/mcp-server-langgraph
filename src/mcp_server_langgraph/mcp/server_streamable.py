@@ -34,6 +34,7 @@ from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
+from mcp_server_langgraph.core.dependencies import get_openfga_client
 from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
 from mcp_server_langgraph.core.security import sanitize_for_logging
 from mcp_server_langgraph.mcp.elicitation import (
@@ -407,43 +408,19 @@ class MCPAgentStreamableServer:
         self._setup_handlers()
 
     def _create_openfga_client(self) -> OpenFGAClient | None:
-        """Create OpenFGA client from settings with OIDC authentication"""
-        if self.settings.openfga_store_id and self.settings.openfga_model_id:
-            # Determine auth method for logging
-            auth_method = "none"
-            if self.settings.openfga_oidc_client_id and self.settings.openfga_oidc_client_secret:
-                auth_method = "oidc"
-            elif self.settings.openfga_preshared_key:
-                auth_method = "preshared (deprecated)"
+        """Create OpenFGA client from centralized dependency.
 
-            logger.info(
-                "Initializing OpenFGA client",
-                extra={
-                    "store_id": self.settings.openfga_store_id,
-                    "model_id": self.settings.openfga_model_id,
-                    "auth_method": auth_method,
-                },
-            )
-
-            # Construct OIDC issuer URL from Keycloak settings
-            oidc_issuer = None
-            if self.settings.openfga_oidc_client_id and self.settings.openfga_oidc_client_secret:
-                oidc_issuer = f"{self.settings.keycloak_server_url.rstrip('/')}/realms/{self.settings.keycloak_realm}"
-
-            return OpenFGAClient(
-                api_url=self.settings.openfga_api_url,
-                store_id=self.settings.openfga_store_id,
-                model_id=self.settings.openfga_model_id,
-                # OIDC authentication (recommended)
-                oidc_client_id=self.settings.openfga_oidc_client_id,
-                oidc_client_secret=self.settings.openfga_oidc_client_secret,
-                oidc_issuer=oidc_issuer,
-                # Legacy preshared key (deprecated, fallback if OIDC not configured)
-                preshared_key=self.settings.openfga_preshared_key,
-            )
+        Uses the centralized get_openfga_client from core.dependencies which:
+        - Supports store_id OR store_name (dynamic lookup)
+        - Supports model_id (optional, fetches latest if not set)
+        - Handles OIDC authentication automatically
+        """
+        client = get_openfga_client()
+        if client:
+            logger.info("Initializing OpenFGA client")
         else:
             logger.warning("OpenFGA not configured, authorization will use fallback mode")
-            return None
+        return client
 
     async def list_tools_public(self) -> list[Tool]:
         """
@@ -1998,17 +1975,21 @@ from mcp_server_langgraph.api.api_keys import router as api_keys_router  # noqa:
 from mcp_server_langgraph.api.gdpr import router as gdpr_router  # noqa: E402
 from mcp_server_langgraph.api.scim import router as scim_router  # noqa: E402
 from mcp_server_langgraph.api.service_principals import router as service_principals_router  # noqa: E402
+from mcp_server_langgraph.api.studio import router as studio_router  # noqa: E402
 
 # Include REST API routes
 from mcp_server_langgraph.api.version import router as version_router  # noqa: E402
 from mcp_server_langgraph.api.v1 import v1_router  # noqa: E402
+from mcp_server_langgraph.api.v1.notification_websocket import router as notification_ws_router  # noqa: E402
 
 app.include_router(version_router)
 app.include_router(v1_router, prefix="/api/v1")
+app.include_router(studio_router)  # Studio API (templates, suggestions) - has /api/v1/studio prefix
 app.include_router(gdpr_router)
 app.include_router(api_keys_router)
 app.include_router(service_principals_router)
 app.include_router(scim_router)
+app.include_router(notification_ws_router, prefix="/ws")
 
 
 # ==============================================================================

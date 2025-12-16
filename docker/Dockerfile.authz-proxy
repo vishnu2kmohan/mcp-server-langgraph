@@ -39,6 +39,11 @@ COPY src/mcp_server_langgraph/secret_providers/ ./src/mcp_server_langgraph/secre
 # Transitive deps from core/ module (core/agent.py, core/context_manager.py)
 COPY src/mcp_server_langgraph/llm/ ./src/mcp_server_langgraph/llm/
 COPY src/mcp_server_langgraph/utils/ ./src/mcp_server_langgraph/utils/
+# Transitive deps from core/dependencies.py (repository and storage abstractions)
+COPY src/mcp_server_langgraph/repositories/ ./src/mcp_server_langgraph/repositories/
+COPY src/mcp_server_langgraph/storage/ ./src/mcp_server_langgraph/storage/
+COPY src/mcp_server_langgraph/models/ ./src/mcp_server_langgraph/models/
+COPY src/mcp_server_langgraph/database/ ./src/mcp_server_langgraph/database/
 # Note: config/ is NOT needed at runtime (model.json only used by openfga-seed)
 
 # Install project

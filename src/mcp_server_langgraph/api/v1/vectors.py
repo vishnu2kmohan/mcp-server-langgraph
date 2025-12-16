@@ -27,7 +27,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.middleware import get_current_user
-from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.core.dependencies import get_openfga_client
 from mcp_server_langgraph.observability.telemetry import logger
 
 router = APIRouter(prefix="", tags=["vectors"])
@@ -83,16 +84,7 @@ class UpsertPointsRequest(BaseModel):
 
 
 # Dependency providers
-def get_openfga_client() -> OpenFGAClient:
-    """Get OpenFGA client instance with preshared key authentication."""
-    config = OpenFGAConfig(
-        api_url=os.getenv("OPENFGA_API_URL", "http://localhost:8080"),
-        store_id=os.getenv("OPENFGA_STORE_ID"),
-        store_name=os.getenv("OPENFGA_STORE_NAME"),
-        model_id=os.getenv("OPENFGA_MODEL_ID"),
-        preshared_key=os.getenv("OPENFGA_PRESHARED_KEY"),
-    )
-    return OpenFGAClient(config=config)
+# NOTE: get_openfga_client is imported from core.dependencies (centralized singleton)
 
 
 def get_qdrant_client() -> Any:

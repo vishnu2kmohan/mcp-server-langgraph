@@ -487,7 +487,7 @@ test-infra-up:
 
 test-infra-up-build:
 	@echo "Rebuilding and starting full test infrastructure..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d --build
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml up --build -d
 	@echo "✓ Full test infrastructure rebuilt and started!"
 
 test-infra-down:

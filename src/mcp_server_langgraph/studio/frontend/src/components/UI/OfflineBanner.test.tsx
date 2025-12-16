@@ -96,7 +96,8 @@ describe("OfflineBanner", () => {
     it("should have high z-index to appear above other content", () => {
       render(<OfflineBanner />);
       const banner = screen.getByRole("alert");
-      expect(banner).toHaveClass("z-50");
+      // z-[70] is the standardized system alert z-index level
+      expect(banner).toHaveClass("z-[70]");
     });
   });
 

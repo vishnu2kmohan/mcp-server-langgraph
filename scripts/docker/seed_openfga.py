@@ -12,9 +12,14 @@ Usage:
 
 Environment Variables:
     OPENFGA_API_URL: OpenFGA HTTP API URL (default: http://openfga:8080)
-    OPENFGA_PRESHARED_KEY: Preshared key for authentication (required if auth enabled)
+    OPENFGA_PRESHARED_KEY: Preshared key for authentication (deprecated, use OIDC)
+    OPENFGA_OIDC_CLIENT_ID: OIDC client ID for authentication
+    OPENFGA_OIDC_CLIENT_SECRET: OIDC client secret for authentication
+    KEYCLOAK_SERVER_URL: Keycloak server URL (required for OIDC)
+    KEYCLOAK_REALM: Keycloak realm (default: default)
 
 Reference: ADR-0068 - Gateway-Level Authentication
+Reference: ADR-0070 - OpenFGA OIDC Authentication Migration
 """
 
 import json
@@ -28,18 +33,99 @@ import httpx
 # Configuration
 OPENFGA_API_URL = os.getenv("OPENFGA_API_URL", "http://openfga:8080")
 OPENFGA_PRESHARED_KEY = os.getenv("OPENFGA_PRESHARED_KEY")
+
+# OIDC Configuration (ADR-0070)
+OPENFGA_OIDC_CLIENT_ID = os.getenv("OPENFGA_OIDC_CLIENT_ID")
+OPENFGA_OIDC_CLIENT_SECRET = os.getenv("OPENFGA_OIDC_CLIENT_SECRET")
+KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
+KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM", "default")
+
 STORE_NAME = "mcp-server-langgraph-test"
 MODEL_PATH = Path("/app/config/openfga/model.json")
 TUPLES_PATH = Path("/app/config/openfga/sample-tuples.json")
 MAX_RETRIES = 30
 RETRY_DELAY = 2
 
+# Token cache (simple in-memory cache for script lifetime)
+_oidc_token_cache: dict[str, str | int] = {}
+
+
+def get_oidc_access_token() -> str | None:
+    """
+    Obtain OIDC access token from Keycloak using client credentials grant.
+
+    Implements OAuth 2.0 client credentials grant (RFC 6749 Section 4.4)
+    for service-to-service authentication.
+
+    Returns:
+        Access token string, or None if token acquisition fails
+    """
+    # Check cache first (with 60s buffer before expiration)
+    if _oidc_token_cache.get("access_token") and _oidc_token_cache.get("expires_at"):
+        if time.time() < (_oidc_token_cache["expires_at"] - 60):  # type: ignore
+            return str(_oidc_token_cache["access_token"])
+
+    # Validate required configuration
+    if not all([KEYCLOAK_SERVER_URL, OPENFGA_OIDC_CLIENT_ID, OPENFGA_OIDC_CLIENT_SECRET]):
+        print("✗ OIDC configuration incomplete (missing KEYCLOAK_SERVER_URL, CLIENT_ID, or CLIENT_SECRET)")
+        return None
+
+    # Construct token endpoint
+    token_endpoint = f"{KEYCLOAK_SERVER_URL.rstrip('/')}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/token"
+
+    try:
+        # Request token via client credentials grant
+        response = httpx.post(
+            token_endpoint,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": OPENFGA_OIDC_CLIENT_ID,
+                "client_secret": OPENFGA_OIDC_CLIENT_SECRET,
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            timeout=10.0,
+        )
+
+        if response.status_code != 200:
+            print(f"✗ Failed to obtain OIDC token: HTTP {response.status_code}")
+            print(f"  Response: {response.text}")
+            return None
+
+        token_data = response.json()
+        access_token = token_data.get("access_token")
+        expires_in = token_data.get("expires_in", 3600)
+
+        if not access_token:
+            print("✗ No access_token in Keycloak token response")
+            return None
+
+        # Cache token with expiration time
+        _oidc_token_cache["access_token"] = access_token
+        _oidc_token_cache["expires_at"] = time.time() + expires_in
+
+        print("✓ OIDC access token obtained")
+        return access_token
+
+    except Exception as e:
+        print(f"✗ Error obtaining OIDC token: {e}")
+        return None
+
 
 def get_headers() -> dict[str, str]:
     """Get HTTP headers including auth if configured."""
     headers = {"Content-Type": "application/json"}
-    if OPENFGA_PRESHARED_KEY:
+
+    # Prefer OIDC authentication (ADR-0070)
+    if OPENFGA_OIDC_CLIENT_ID and OPENFGA_OIDC_CLIENT_SECRET:
+        token = get_oidc_access_token()
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        else:
+            print("⚠ Failed to obtain OIDC token, requests may be rejected")
+    # Fallback to preshared key (deprecated)
+    elif OPENFGA_PRESHARED_KEY:
         headers["Authorization"] = f"Bearer {OPENFGA_PRESHARED_KEY}"
+
     return headers
 
 
@@ -298,7 +384,14 @@ def main() -> int:
     print("OpenFGA Seeding Script")
     print("=" * 60)
     print(f"API URL: {OPENFGA_API_URL}")
-    print(f"Auth: {'Enabled' if OPENFGA_PRESHARED_KEY else 'Disabled'}")
+
+    # Show authentication method
+    if OPENFGA_OIDC_CLIENT_ID and OPENFGA_OIDC_CLIENT_SECRET:
+        print(f"Auth: OIDC (client: {OPENFGA_OIDC_CLIENT_ID})")
+    elif OPENFGA_PRESHARED_KEY:
+        print("Auth: Preshared Key (deprecated)")
+    else:
+        print("Auth: Disabled")
 
     # Step 1: Wait for OpenFGA
     if not wait_for_openfga():

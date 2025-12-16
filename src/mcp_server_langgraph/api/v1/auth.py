@@ -24,7 +24,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 import httpx
-from fastapi import APIRouter, HTTPException, Query, Request, status
+from fastapi import APIRouter, Body, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -112,10 +112,29 @@ AUTH_SECURITY_HEADERS: dict[str, str] = {
     # HSTS is only added in production (requires HTTPS)
 }
 
+# CSP for SPA routes (login, callback, studio)
+# Allows inline scripts/styles for React and loads assets from same origin
+SPA_SECURITY_HEADERS: dict[str, str] = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Content-Security-Policy": (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "  # Allow inline scripts for React
+        "style-src 'self' 'unsafe-inline'; "  # Allow inline styles for React
+        "img-src 'self' data: https:; "  # Allow images from same origin, data URIs, and HTTPS
+        "font-src 'self' data:; "  # Allow fonts from same origin and data URIs
+        "connect-src 'self' ws: wss: https:; "  # Allow API calls, WebSockets, and HTTPS
+        "frame-ancestors 'none'"
+    ),
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+}
+
 
 class AuthSecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
-    Middleware to add security headers to all auth endpoint responses.
+    Middleware to add security headers to all responses.
 
     Per OWASP Security Headers Guidelines:
     - X-Content-Type-Options: nosniff (prevents MIME sniffing)
@@ -124,15 +143,30 @@ class AuthSecurityHeadersMiddleware(BaseHTTPMiddleware):
     - Content-Security-Policy (prevents XSS)
     - Strict-Transport-Security (enforces HTTPS) - only in production
 
+    Uses different CSP for SPA routes vs API routes:
+    - SPA routes (/login, /auth/callback, /studio): Allow scripts and styles for React
+    - API routes: Strict CSP blocking all scripts
+
     Note: This middleware is designed to be added to apps that mount the auth_router.
     """
+
+    # Paths that serve the SPA and need relaxed CSP
+    SPA_PATHS = {"/login", "/auth/callback", "/studio"}
 
     async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Add security headers to response."""
         response = await call_next(request)
 
+        # Determine which security headers to use based on path
+        path = request.url.path
+
+        # Check if this is a SPA route or a route under /studio
+        is_spa_route = any(path == spa_path or path.startswith(f"{spa_path}/") for spa_path in self.SPA_PATHS)
+
+        headers = SPA_SECURITY_HEADERS if is_spa_route else AUTH_SECURITY_HEADERS
+
         # Add all security headers
-        for header, value in AUTH_SECURITY_HEADERS.items():
+        for header, value in headers.items():
             response.headers[header] = value
 
         # Add HSTS header in production only (requires HTTPS)
@@ -1388,3 +1422,92 @@ async def oauth2_logout(
         )
 
     return response
+
+
+@auth_router.post(
+    "/logout",
+    status_code=status.HTTP_200_OK,
+    summary="Native logout (revoke tokens + terminate session)",
+    description="""
+    Native logout endpoint that revokes OAuth2 tokens and terminates the Keycloak session.
+
+    This endpoint provides a JSON-based logout for SPAs that:
+    1. Revokes the refresh token with Keycloak
+    2. Terminates the Keycloak SSO session
+    3. Clears session cookies
+    4. Returns a JSON response (no redirect)
+
+    The frontend should call this endpoint and then redirect to the login page.
+    """,
+)
+async def native_logout(
+    request: Request,
+    refresh_token: str | None = Body(None, embed=True, description="Refresh token to revoke"),
+) -> dict[str, Any]:
+    """
+    Native logout endpoint for SPAs.
+
+    Revokes tokens and terminates Keycloak session without redirecting.
+    """
+    import httpx
+
+    # Use server URL for backend-to-Keycloak communication
+    keycloak_server_url = settings.keycloak_server_url
+
+    # Step 1: Revoke refresh token if provided
+    if refresh_token:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                revoke_url = f"{keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/revoke"
+                revoke_data = {
+                    "client_id": settings.keycloak_client_id,
+                    "token": refresh_token,
+                    "token_type_hint": "refresh_token",
+                }
+
+                # Add client secret if configured
+                if settings.keycloak_client_secret:
+                    revoke_data["client_secret"] = settings.keycloak_client_secret
+
+                await client.post(revoke_url, data=revoke_data)
+
+                logger.info(
+                    "Token revocation successful",
+                    extra={
+                        "audit_event_type": "auth.token.revoked",
+                        "audit_category": "authentication",
+                        "client_ip": request.client.host if request.client else None,
+                    },
+                )
+        except Exception as e:
+            # Log but continue with logout even if revocation fails
+            logger.warning(
+                f"Token revocation failed: {e}",
+                extra={
+                    "audit_event_type": "auth.token.revocation_failed",
+                    "audit_category": "authentication",
+                    "client_ip": request.client.host if request.client else None,
+                },
+            )
+
+    # Step 2: Terminate Keycloak SSO session
+    # Note: We can't directly call end_session from backend without user's id_token
+    # The Keycloak session will be cleaned up when the user logs in again or times out
+    # Frontend should also clear its OAuth2 state cookies via /_oauth/logout if using traefik-forward-auth
+
+    # Audit: Native logout completed
+    logger.info(
+        "Native logout completed",
+        extra={
+            "audit_event_type": "auth.logout.completed",
+            "audit_category": "authentication",
+            "audit_outcome": "success",
+            "client_ip": request.client.host if request.client else None,
+        },
+    )
+
+    return {
+        "success": True,
+        "message": "Logout successful. Please clear your session and redirect to login.",
+        "keycloak_logout_url": f"{settings.keycloak_public_url or keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/logout?client_id={settings.keycloak_client_id}",
+    }

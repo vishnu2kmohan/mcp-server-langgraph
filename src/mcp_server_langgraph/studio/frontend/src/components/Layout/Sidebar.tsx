@@ -323,6 +323,22 @@ export function Sidebar() {
   const username = authUser?.username ?? personaUsername ?? null;
   const persona: Persona = authUser?.persona ?? personaPersona ?? "user";
 
+  // Get display name: prefer displayName, then extract first name from username, fallback to username
+  const getDisplayName = (): string => {
+    if (authUser?.displayName) {
+      // Use display name's first word as first name
+      return authUser.displayName.split(" ")[0];
+    }
+    if (username) {
+      // Extract first name from username (handles formats like "john.doe" or "john_doe")
+      const firstName = username.split(/[._@]/)[0];
+      // Capitalize first letter
+      return firstName.charAt(0).toUpperCase() + firstName.slice(1);
+    }
+    return "Guest";
+  };
+  const displayName = getDisplayName();
+
   // Get sidebar items based on persona (derived from auth or persona state)
   const sidebarItemIds = PERSONA_SIDEBAR_ITEMS[persona];
 
@@ -373,19 +389,43 @@ export function Sidebar() {
 
   const handleLogout = async () => {
     try {
+      // Get refresh token from localStorage to revoke it
+      const refreshToken = localStorage.getItem("refresh_token");
+
       // Call native logout API to revoke tokens with Keycloak
-      await logoutMutation().unwrap();
-    } catch {
+      const response = await logoutMutation({
+        refresh_token: refreshToken || undefined,
+      }).unwrap();
+
+      // Reset auth and persona state to clear cached user data
+      dispatch(authLogout());
+      dispatch(resetPersona());
+
+      // Redirect to Keycloak logout to terminate SSO session
+      // This ensures the user must re-authenticate on next login
+      if (response.keycloak_logout_url) {
+        // Build logout URL with post_logout_redirect_uri to return to login page
+        const logoutUrl = new URL(response.keycloak_logout_url);
+        logoutUrl.searchParams.set(
+          "post_logout_redirect_uri",
+          `${window.location.origin}/login`,
+        );
+        window.location.href = logoutUrl.toString();
+      } else {
+        // Fallback: navigate to login page if Keycloak URL not provided
+        navigate("/login");
+      }
+    } catch (error) {
       // Continue with local logout even if API fails
-      console.warn("Token revocation failed, continuing with local logout");
+      console.warn("Logout API failed, continuing with local logout", error);
+
+      // Reset auth and persona state
+      dispatch(authLogout());
+      dispatch(resetPersona());
+
+      // Navigate to login page
+      navigate("/login");
     }
-
-    // Reset auth and persona state to clear cached user data
-    dispatch(authLogout());
-    dispatch(resetPersona());
-
-    // Navigate to login page (native experience, no Keycloak UI redirect)
-    navigate("/login");
   };
 
   const handleThemeToggle = () => {
@@ -446,31 +486,38 @@ export function Sidebar() {
         {/* Header */}
         <div className={isCollapsed ? "p-3" : "px-4 py-4"}>
           {isCollapsed ? (
-            /* Collapsed: Show only expand button centered */
-            <button
-              onClick={() => dispatch(toggleSidebarCollapsed())}
-              className="hidden md:flex w-full items-center justify-center p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-150"
-              aria-label="Expand sidebar"
-              title="Expand sidebar (Cmd+B)"
-            >
-              <PanelLeft
-                size={18}
-                className="text-gray-500 dark:text-gray-400"
+            /* Collapsed: Show logo + expand button */
+            <div className="flex flex-col items-center gap-2">
+              <img
+                src="/studio/icons/icon.svg"
+                alt="Agent Studio"
+                className="w-8 h-8"
               />
-            </button>
+              <button
+                onClick={() => dispatch(toggleSidebarCollapsed())}
+                className="hidden md:flex w-full items-center justify-center p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-150"
+                aria-label="Expand sidebar"
+                title="Expand sidebar (Cmd+B)"
+              >
+                <PanelLeft
+                  size={16}
+                  className="text-gray-500 dark:text-gray-400"
+                />
+              </button>
+            </div>
           ) : (
             /* Expanded: Logo + Title (centered) + Close/Collapse */
             <div className="flex items-center w-full">
               {/* Logo and title - centered */}
-              <div className="flex items-center gap-2 flex-1 justify-center">
+              <div className="flex items-center gap-3 flex-1 justify-center">
                 <img
-                  src="/icons/icon.svg"
+                  src="/studio/icons/icon.svg"
                   alt="Agent Studio"
-                  className="w-7 h-7"
+                  className="w-8 h-8"
                 />
-                <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                <span className="text-lg font-semibold text-gray-900 dark:text-white">
                   Agent Studio
-                </h1>
+                </span>
               </div>
               <div className="flex items-center gap-1">
                 {/* Mobile close button */}
@@ -558,10 +605,10 @@ export function Sidebar() {
               <button
                 onClick={() => navigate("/studio/settings")}
                 className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm hover:ring-2 hover:ring-blue-300 dark:hover:ring-blue-700 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                title={`${username || "Guest"}${persona !== "user" ? ` (${persona})` : ""} - Go to Settings`}
+                title={`${displayName} - Go to Settings`}
               >
                 <span className="text-sm font-semibold text-white">
-                  {username ? username.charAt(0).toUpperCase() : "?"}
+                  {displayName.charAt(0).toUpperCase()}
                 </span>
               </button>
 
@@ -628,25 +675,13 @@ export function Sidebar() {
                 {/* Avatar with initials */}
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
                   <span className="text-sm font-semibold text-white">
-                    {username ? username.charAt(0).toUpperCase() : "?"}
+                    {displayName.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                    {username || "Guest"}
+                    {displayName}
                   </p>
-                  {/* Only show role badge for admin/developer */}
-                  {persona !== "user" && (
-                    <span
-                      className={`inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded ${
-                        persona === "admin"
-                          ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                          : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                      }`}
-                    >
-                      {persona}
-                    </span>
-                  )}
                 </div>
               </button>
 

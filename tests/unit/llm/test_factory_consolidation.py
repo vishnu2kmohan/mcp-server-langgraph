@@ -14,6 +14,7 @@ from unittest.mock import Mock
 
 from mcp_server_langgraph.llm.factory import (
     LLMFactory,
+    _get_provider_kwargs,
     create_llm_from_config,
     create_model,
     ModelType,
@@ -186,3 +187,75 @@ class TestBackwardCompatibility:
         factory = create_verification_model(mock_config)
         # Use type name check to avoid xdist module reimport issues with isinstance
         assert type(factory).__name__ == "LLMFactory"
+
+
+@pytest.mark.xdist_group(name="vertex_location_always_passed")
+class TestVertexLocationAlwaysPassed:
+    """
+    Test that vertex_location is always passed to LiteLLM for Vertex AI.
+
+    Regression test for bug where vertex_location was only passed when
+    vertex_project was also set. This caused LiteLLM to use its default
+    location (us-central1) even when VERTEX_LOCATION=global was configured.
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def mock_config_vertex_no_project(self):
+        """Config with vertex_location but NO vertex_project (uses ADC)."""
+        config = Mock()
+        config.vertex_project = None
+        config.google_project_id = None
+        config.vertex_location = "global"  # Should be passed even without project
+        return config
+
+    @pytest.fixture
+    def mock_config_vertex_with_project(self):
+        """Config with both vertex_location and vertex_project."""
+        config = Mock()
+        config.vertex_project = "my-gcp-project"
+        config.google_project_id = None
+        config.vertex_location = "us-east5"
+        return config
+
+    def test_vertex_location_passed_without_project(self, mock_config_vertex_no_project):
+        """vertex_location MUST be passed even when vertex_project is not set.
+
+        GIVEN: Config with vertex_location="global" but no vertex_project
+        WHEN: _get_provider_kwargs is called for vertex_ai provider
+        THEN: vertex_location should be in the returned kwargs
+        """
+        kwargs = _get_provider_kwargs(mock_config_vertex_no_project, "vertex_ai")
+
+        assert "vertex_location" in kwargs, (
+            "vertex_location must be passed to LiteLLM even without vertex_project. "
+            "LiteLLM can auto-detect project via ADC but NOT location."
+        )
+        assert kwargs["vertex_location"] == "global"
+
+    def test_vertex_project_not_passed_when_not_set(self, mock_config_vertex_no_project):
+        """vertex_project should NOT be passed when not configured (let ADC handle it)."""
+        kwargs = _get_provider_kwargs(mock_config_vertex_no_project, "vertex_ai")
+
+        assert "vertex_project" not in kwargs, (
+            "vertex_project should not be passed when not configured. LiteLLM will use ADC to auto-detect the project."
+        )
+
+    def test_both_vertex_location_and_project_passed(self, mock_config_vertex_with_project):
+        """Both vertex_location and vertex_project should be passed when configured."""
+        kwargs = _get_provider_kwargs(mock_config_vertex_with_project, "vertex_ai")
+
+        assert "vertex_location" in kwargs
+        assert kwargs["vertex_location"] == "us-east5"
+        assert "vertex_project" in kwargs
+        assert kwargs["vertex_project"] == "my-gcp-project"
+
+    def test_google_provider_also_passes_location(self, mock_config_vertex_no_project):
+        """'google' provider should also pass vertex_location for Gemini via Vertex."""
+        kwargs = _get_provider_kwargs(mock_config_vertex_no_project, "google")
+
+        assert "vertex_location" in kwargs
+        assert kwargs["vertex_location"] == "global"

@@ -246,8 +246,12 @@ describe("SharedWorkflowsList", () => {
       renderWithRouter(<SharedWorkflowsList />);
 
       await waitFor(() => {
-        // Each permission appears in workflow badge + filter dropdown option
-        // Use getAllByText since they appear multiple times
+        // Viewer permission shows "View Only" badge, others show permission name
+        // "View Only" appears in workflow badge for viewer permission
+        expect(screen.getAllByText("View Only").length).toBeGreaterThanOrEqual(
+          1,
+        );
+        // "Viewer" still appears in filter dropdown option
         expect(screen.getAllByText("Viewer").length).toBeGreaterThanOrEqual(1);
         expect(screen.getAllByText("Executor").length).toBeGreaterThanOrEqual(
           1,
@@ -401,11 +405,9 @@ describe("SharedWorkflowsList", () => {
       renderWithRouter(<SharedWorkflowsList />);
 
       await waitFor(() => {
-        // Get all Viewer elements (badge + dropdown option) and check the badge
-        const badges = screen.getAllByText("Viewer");
-        // The first one should be the badge with styling
-        const badge = badges.find((el) => el.classList.contains("bg-gray-100"));
-        expect(badge).toBeTruthy();
+        // Viewer permission now shows "View Only" badge with amber styling
+        const badge = screen.getByText("View Only");
+        expect(badge).toHaveClass("bg-amber-100");
       });
     });
 
@@ -710,6 +712,184 @@ describe("SharedWorkflowsList", () => {
       // Should have the All option plus unique users
       const options = sharedByFilter.querySelectorAll("option");
       expect(options.length).toBe(3); // All + alice + charlie
+    });
+  });
+
+  // =========================================================================
+  // Read-Only Badge Tests (Priority 0.1 - Bob's Critical UX Gap)
+  // =========================================================================
+
+  describe("Read-Only Badge and Edit Button", () => {
+    const mockViewerWorkflow = {
+      id: "wf-viewer",
+      name: "Viewer Only Workflow",
+      description: "User can only view this workflow",
+      shared_by: "alice@example.com",
+      permission: "viewer",
+      shared_at: "2024-01-15T10:30:00Z",
+    };
+
+    const mockEditorWorkflow = {
+      id: "wf-editor",
+      name: "Editor Workflow",
+      description: "User can edit this workflow",
+      shared_by: "alice@example.com",
+      permission: "editor",
+      shared_at: "2024-01-15T10:30:00Z",
+    };
+
+    it("should display 'View Only' badge with lock icon for viewer permission", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ workflows: [mockViewerWorkflow] }),
+      });
+
+      renderWithRouter(<SharedWorkflowsList />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Viewer Only Workflow")).toBeInTheDocument();
+      });
+
+      // Should show "View Only" text prominently
+      expect(screen.getByText("View Only")).toBeInTheDocument();
+
+      // Should have lock icon for viewer permission
+      expect(screen.getByTestId("lock-icon-wf-viewer")).toBeInTheDocument();
+    });
+
+    it("should show disabled Edit button with tooltip for viewer permission", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ workflows: [mockViewerWorkflow] }),
+      });
+
+      renderWithRouter(<SharedWorkflowsList />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Viewer Only Workflow")).toBeInTheDocument();
+      });
+
+      // Should have Edit button that is disabled
+      const editButton = screen.getByRole("button", { name: /edit/i });
+      expect(editButton).toBeDisabled();
+
+      // Check for tooltip explaining why editing is disabled
+      expect(editButton).toHaveAttribute(
+        "title",
+        "Shared with you as read-only",
+      );
+    });
+
+    it("should show enabled Edit button for editor permission", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ workflows: [mockEditorWorkflow] }),
+      });
+
+      renderWithRouter(<SharedWorkflowsList />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Editor Workflow")).toBeInTheDocument();
+      });
+
+      // Should have Edit button that is enabled
+      const editButton = screen.getByRole("button", { name: /edit/i });
+      expect(editButton).not.toBeDisabled();
+
+      // Should have different tooltip
+      expect(editButton).toHaveAttribute("title", "Edit workflow");
+    });
+
+    it("should not show lock icon for editor permission", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ workflows: [mockEditorWorkflow] }),
+      });
+
+      renderWithRouter(<SharedWorkflowsList />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Editor Workflow")).toBeInTheDocument();
+      });
+
+      // Should NOT have lock icon
+      expect(
+        screen.queryByTestId("lock-icon-wf-editor"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should call onEdit callback when Edit button is clicked for editor", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ workflows: [mockEditorWorkflow] }),
+      });
+
+      const onEdit = vi.fn();
+      renderWithRouter(<SharedWorkflowsList onEdit={onEdit} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Editor Workflow")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+
+      expect(onEdit).toHaveBeenCalledWith("wf-editor");
+    });
+
+    it("should display both viewer and editor workflows with correct indicators", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          workflows: [mockViewerWorkflow, mockEditorWorkflow],
+        }),
+      });
+
+      renderWithRouter(<SharedWorkflowsList />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Viewer Only Workflow")).toBeInTheDocument();
+        expect(screen.getByText("Editor Workflow")).toBeInTheDocument();
+      });
+
+      // Viewer workflow should have lock icon
+      expect(screen.getByTestId("lock-icon-wf-viewer")).toBeInTheDocument();
+
+      // Editor workflow should not have lock icon
+      expect(
+        screen.queryByTestId("lock-icon-wf-editor"),
+      ).not.toBeInTheDocument();
+
+      // Both should have edit buttons, but only editor's is enabled
+      const editButtons = screen.getAllByRole("button", { name: /edit/i });
+      expect(editButtons).toHaveLength(2);
+
+      // Find the disabled one (viewer) and enabled one (editor)
+      const disabledButton = editButtons.find((btn) =>
+        btn.hasAttribute("disabled"),
+      );
+      const enabledButton = editButtons.find(
+        (btn) => !btn.hasAttribute("disabled"),
+      );
+
+      expect(disabledButton).toBeTruthy();
+      expect(enabledButton).toBeTruthy();
+    });
+
+    it("should have visual distinction for read-only workflows", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ workflows: [mockViewerWorkflow] }),
+      });
+
+      renderWithRouter(<SharedWorkflowsList />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Viewer Only Workflow")).toBeInTheDocument();
+      });
+
+      // The View Only badge should have distinctive styling
+      const viewOnlyBadge = screen.getByText("View Only");
+      expect(viewOnlyBadge).toHaveClass("bg-amber-100");
     });
   });
 });

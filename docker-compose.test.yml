@@ -321,6 +321,10 @@ services:
         condition: service_healthy
       openfga-migrate-test:
         condition: service_completed_successfully
+      keycloak-test:
+        condition: service_healthy
+      traefik-gateway:
+        condition: service_healthy
     # Map localhost to traefik-gateway so OpenFGA can resolve JWKS URIs from Keycloak discovery
     # Keycloak returns jwks_uri: http://localhost/authn/... which OpenFGA needs to resolve
     extra_hosts:
@@ -355,7 +359,7 @@ services:
       interval: 3s  # Codex Fix: interval must be >= timeout
       timeout: 3s
       retries: 15
-      start_period: 5s
+      start_period: 15s  # Increased from 5s to allow Keycloak OIDC endpoints to be fully ready
     deploy:
       resources:
         limits:
@@ -403,10 +407,25 @@ services:
         - ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed:latest
         - ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed:local
     depends_on:
+      keycloak-test:
+        condition: service_healthy
       openfga-test:
         condition: service_healthy
+      traefik-gateway:
+        condition: service_healthy
+    # Map localhost to host gateway for Keycloak token acquisition
+    extra_hosts:
+      - "localhost:host-gateway"
     environment:
       - OPENFGA_API_URL=http://openfga-test:8080
+      # OIDC Authentication (ADR-0070 - OpenFGA OIDC Migration)
+      # Seed script uses client credentials grant to obtain tokens from Keycloak
+      # Must use gateway URL (localhost) to get tokens with correct issuer
+      - OPENFGA_OIDC_CLIENT_ID=openfga-server
+      - OPENFGA_OIDC_CLIENT_SECRET=test-openfga-server-secret
+      - KEYCLOAK_SERVER_URL=http://localhost/authn
+      - KEYCLOAK_REALM=default
+      # Deprecated: Preshared key authentication (kept for rollback compatibility)
       - OPENFGA_PRESHARED_KEY=${OPENFGA_PRESHARED_KEY:-test-openfga-preshared-key}
     deploy:
       resources:
@@ -1025,11 +1044,10 @@ services:
       - POSTGRES_HOST=postgres-test
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres-test:5432/mcp_test
       - WORKFLOW_STORAGE_BACKEND=postgres
-      # Backend URL for token operations (uses Traefik gateway for consistent issuer)
-      # When MCP server accesses Keycloak via traefik-gateway:80, the issuer in tokens is
-      # http://localhost/authn/realms/default - matching tokens obtained from external tests.
-      # This fixes issuer mismatch errors on token refresh/introspection.
-      - KEYCLOAK_SERVER_URL=http://traefik-gateway/authn
+      # Keycloak URL for backend-to-Keycloak communication (Docker network)
+      # Backend uses this for token exchange, introspection, admin API calls
+      # Must be reachable from inside Docker container
+      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       # Public URL for browser redirects in OAuth2/PKCE flow (externally accessible)
       - KEYCLOAK_PUBLIC_URL=http://localhost/authn
       # Frontend URL for OAuth2 callback redirects (must be gateway URL, not internal port)
@@ -1037,11 +1055,23 @@ services:
       # which is inaccessible from the browser (internal Vite port).
       - FRONTEND_URL=http://localhost
       - OPENFGA_API_URL=http://openfga-test:8080
+      # Dynamic lookup: Use store name instead of hardcoded IDs
+      # The OpenFGA client will look up store_id by name and fetch the latest model_id
+      # This ensures CI/CD works without stale hardcoded values
+      - OPENFGA_STORE_NAME=mcp-server-langgraph-test
+      # OIDC issuer URL for OpenFGA token acquisition (via gateway for correct issuer in tokens)
+      # The gateway routes to Keycloak and Keycloak returns tokens with iss: http://localhost/authn/realms/default
+      # which matches OpenFGA's OPENFGA_AUTHN_OIDC_ISSUER setting
+      - OPENFGA_OIDC_ISSUER=http://gateway/authn/realms/default
       - REDIS_URL=redis://redis-test:6379/1
       - REDIS_SESSION_URL=redis://redis-test:6379/0
       - CHECKPOINT_REDIS_URL=redis://redis-test:6379/1
       - QDRANT_URL=http://qdrant-test:6333
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
+      # LGTM Stack URLs (must reference container names for Docker networking)
+      - TEMPO_URL=http://tempo-test:3200
+      - LOKI_URL=http://loki-test:3100
+      - MIMIR_URL=http://mimir-test:9009
       # GCP credentials for Vertex AI (mounted from host for local development)
       - GOOGLE_APPLICATION_CREDENTIALS=/app/.config/gcloud/application_default_credentials.json
     volumes:
@@ -1151,6 +1181,22 @@ services:
       - "traefik.http.middlewares.root-redirect.redirectregex.replacement=/login"
       - "traefik.http.middlewares.root-redirect.redirectregex.permanent=false"
       - "traefik.http.routers.root.service=mcp-api"
+      # Route: /ws/* -> mcp-server:8000/ws/* (WebSocket endpoints)
+      # WebSocket connections for real-time notifications and updates
+      # Authentication: WebSocket auth via token query param or header
+      - "traefik.http.routers.ws.rule=PathPrefix(`/ws`)"
+      - "traefik.http.routers.ws.entrypoints=web"
+      - "traefik.http.routers.ws.priority=10"
+      - "traefik.http.routers.ws.service=mcp-api"
+      # NO forward-auth - WebSocket handles auth via token param
+      # NO strip - FastAPI serves /ws/* directly
+      # Route: /health/* -> mcp-server:8000/health/* (Health endpoints)
+      # Kubernetes probes and monitoring tools access /health/live, /health/ready, /health/startup
+      - "traefik.http.routers.health.rule=PathPrefix(`/health`)"
+      - "traefik.http.routers.health.entrypoints=web"
+      - "traefik.http.routers.health.priority=100"
+      - "traefik.http.routers.health.service=mcp-api"
+      # NO forward-auth middleware - health endpoints are publicly accessible
 
   # ==============================================================================
   # OBSERVABILITY SERVICES (Grafana LGTM Stack)

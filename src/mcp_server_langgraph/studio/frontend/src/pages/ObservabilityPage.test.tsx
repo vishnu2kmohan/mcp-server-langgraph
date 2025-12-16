@@ -23,18 +23,21 @@ vi.mock("../api", () => ({
   useListTracesQuery: vi.fn(),
   useListLogsQuery: vi.fn(),
   useGetMetricsQuery: vi.fn(),
+  useGetTraceQuery: vi.fn(),
 }));
 
 import {
   useListTracesQuery,
   useListLogsQuery,
   useGetMetricsQuery,
+  useGetTraceQuery,
 } from "../api";
 
 // Cast to vi.Mock for type safety
 const mockUseListTracesQuery = useListTracesQuery as ReturnType<typeof vi.fn>;
 const mockUseListLogsQuery = useListLogsQuery as ReturnType<typeof vi.fn>;
 const mockUseGetMetricsQuery = useGetMetricsQuery as ReturnType<typeof vi.fn>;
+const mockUseGetTraceQuery = useGetTraceQuery as ReturnType<typeof vi.fn>;
 
 // Default mock data
 const mockTraces = [
@@ -108,6 +111,13 @@ describe("ObservabilityPage", () => {
       isLoading: false,
       error: null,
       refetch: mockRefetchMetrics,
+    });
+
+    // Default mock: trace detail query (used by TraceViewer)
+    mockUseGetTraceQuery.mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: null,
     });
   });
 

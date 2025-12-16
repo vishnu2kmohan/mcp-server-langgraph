@@ -46,7 +46,9 @@ from mcp_server_langgraph.audit.config import load_alerting_config, create_notif
 from mcp_server_langgraph.audit.notifications import NotificationRouter, create_notification_callback
 from mcp_server_langgraph.api.v1.compliance_reports import set_compliance_service
 from mcp_server_langgraph.api.v1.audit_websocket import set_audit_event_broadcaster
+from mcp_server_langgraph.api.v1.notification_websocket import set_notification_broadcaster
 from mcp_server_langgraph.audit.broadcast import AuditEventBroadcaster
+from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 from mcp_server_langgraph.observability.telemetry import init_observability, logger
 
 
@@ -134,6 +136,11 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
             # Make broadcaster available to WebSocket endpoint
             set_audit_event_broadcaster(audit_broadcaster)
             logger.info("Audit service initialized successfully with WebSocket streaming")
+
+            # Initialize notification broadcaster for real-time user notifications
+            notification_broadcaster = NotificationBroadcaster()
+            set_notification_broadcaster(notification_broadcaster)
+            logger.info("Notification WebSocket broadcaster initialized")
 
             # Initialize compliance service (depends on audit service)
             compliance_service_instance = ComplianceService(

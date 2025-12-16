@@ -20,8 +20,12 @@ import {
   useListTracesQuery,
   useListLogsQuery,
   useGetMetricsQuery,
+  useGetTraceQuery,
+  type TraceSpan as ApiTraceSpan,
 } from "../api";
 import { SkeletonList, ErrorState } from "../components/UI";
+import { TraceViewer } from "../components/Observability/TraceViewer";
+import type { Trace, Span, SpanEvent } from "../components/Observability/types";
 
 type ObservabilityTab = "traces" | "logs" | "metrics";
 
@@ -33,6 +37,9 @@ export function ObservabilityPage() {
   const [sessionIdFilter, setSessionIdFilter] = useState<string>("");
   const [timeRange, setTimeRange] = useState<string>("1h");
   const [cursor, setCursor] = useState<string | undefined>(undefined);
+
+  // Selected trace for detail view
+  const [selectedTraceId, setSelectedTraceId] = useState<string | null>(null);
 
   // Calculate time range for query
   const getTimeRange = () => {
@@ -80,17 +87,51 @@ export function ObservabilityPage() {
     refetch: refetchMetrics,
   } = useGetMetricsQuery(undefined, { skip: activeTab !== "metrics" });
 
+  // Fetch selected trace details
+  const { data: selectedTraceData, isLoading: isTraceDetailLoading } =
+    useGetTraceQuery(selectedTraceId ?? "", {
+      skip: !selectedTraceId,
+    });
+
+  // Map API trace to TraceViewer format
+  const selectedTrace: Trace | null = selectedTraceData
+    ? {
+        trace_id: selectedTraceData.trace_id,
+        spans:
+          selectedTraceData.spans?.map(
+            (span: ApiTraceSpan, idx: number): Span => ({
+              span_id: span.span_id || `span-${idx}`,
+              name: span.name || "Unknown",
+              start_time: new Date(span.start_time).getTime(),
+              duration_ms: span.duration_ms || 0,
+              status: span.status as "ok" | "error" | "unset",
+              depth: span.depth || 0,
+              attributes: span.attributes || {},
+              events: (span.events as SpanEvent[]) || [],
+              error_message: span.error_message ?? undefined,
+              parent_span_id: span.parent_span_id ?? undefined,
+            }),
+          ) || [],
+        start_time: selectedTraceData.start_time
+          ? new Date(selectedTraceData.start_time).getTime()
+          : Date.now(),
+        end_time: selectedTraceData.end_time
+          ? new Date(selectedTraceData.end_time).getTime()
+          : Date.now(),
+        duration_ms: selectedTraceData.duration_ms ?? 0,
+        service_name: selectedTraceData.service_name,
+      }
+    : null;
+
   // Map traces to component format
   const traces =
     tracesData?.items.map((trace) => ({
       id: trace.trace_id,
       name: trace.name,
-      duration:
-        new Date(trace.end_time).getTime() -
-        new Date(trace.start_time).getTime(),
-      status: trace.status as "success" | "error" | "running",
-      timestamp: trace.start_time,
-      spans: 1, // Could be expanded in the future
+      duration: trace.duration_ms ?? 0,
+      status: (trace.status ?? "success") as "success" | "error" | "running",
+      timestamp: trace.start_time ?? new Date().toISOString(),
+      spans: trace.span_count ?? 0,
     })) ?? [];
 
   // Map logs to component format
@@ -301,7 +342,12 @@ export function ObservabilityPage() {
                     {traces.map((trace) => (
                       <div
                         key={trace.id}
-                        className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 cursor-pointer transition-colors"
+                        onClick={() => setSelectedTraceId(trace.id)}
+                        className={`p-4 bg-white dark:bg-gray-800 rounded-lg border transition-colors cursor-pointer ${
+                          selectedTraceId === trace.id
+                            ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800"
+                            : "border-gray-200 dark:border-gray-700 hover:border-blue-500"
+                        }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -349,6 +395,32 @@ export function ObservabilityPage() {
                             "Load More"
                           )}
                         </button>
+                      </div>
+                    )}
+
+                    {/* TraceViewer Panel (Developer journey - trace debugging) */}
+                    {selectedTraceId && (
+                      <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Trace Details
+                          </span>
+                          <button
+                            onClick={() => setSelectedTraceId(null)}
+                            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                          >
+                            Close
+                          </button>
+                        </div>
+                        <TraceViewer
+                          trace={selectedTrace}
+                          isLoading={isTraceDetailLoading}
+                          grafanaUrl={
+                            selectedTraceId
+                              ? `${window.location.origin}/grafana/explore?traceId=${selectedTraceId}`
+                              : undefined
+                          }
+                        />
                       </div>
                     )}
                   </>

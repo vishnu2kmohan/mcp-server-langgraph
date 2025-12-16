@@ -38,14 +38,8 @@ import {
   type WorkflowExecution,
 } from "../components/Workflow/ExecutionHistoryPanel";
 import { SuggestionChips } from "../components/Workflow/SuggestionChips";
-import {
-  OnboardingModal,
-  type WorkflowTemplate,
-} from "../components/Onboarding/OnboardingModal";
 import { useWorkflowExecution } from "../hooks/useWorkflowExecution";
-import { useOnboarding } from "../hooks/useOnboarding";
 import {
-  useGetWorkflowTemplatesQuery,
   useGetWorkflowSuggestionsMutation,
   useListWorkflowExecutionsQuery,
 } from "../api";
@@ -85,19 +79,6 @@ export function WorkflowsPage() {
   // AI Suggestions mutation
   const [getSuggestions, { isLoading: isLoadingSuggestions }] =
     useGetWorkflowSuggestionsMutation();
-
-  // Onboarding state
-  const {
-    shouldShowModal,
-    complete: completeOnboarding,
-    skip: skipOnboarding,
-  } = useOnboarding();
-  const {
-    data: templates,
-    isLoading: isLoadingTemplates,
-    error: templatesError,
-    refetch: refetchTemplates,
-  } = useGetWorkflowTemplatesQuery();
 
   // Redux selectors
   const metadata = useAppSelector(selectWorkflowMetadata);
@@ -260,36 +241,6 @@ export function WorkflowsPage() {
     setShowExecutionPanel(true);
     await dispatch(executeWorkflow());
   }, [dispatch, validation.isValid]);
-
-  // Handle template selection from onboarding modal
-  const handleSelectTemplate = useCallback(
-    (template: WorkflowTemplate | null) => {
-      completeOnboarding();
-      if (template) {
-        // Create workflow from template
-        dispatch(
-          createWorkflow({
-            name: template.name,
-            description: template.description,
-          }),
-        );
-      } else {
-        // Start from scratch
-        dispatch(
-          createWorkflow({
-            name: "New Workflow",
-            description: "Created in visual builder",
-          }),
-        );
-      }
-    },
-    [dispatch, completeOnboarding],
-  );
-
-  // Handle onboarding skip
-  const handleSkipOnboarding = useCallback(() => {
-    skipOnboarding();
-  }, [skipOnboarding]);
 
   if (isLoading) {
     return (
@@ -552,16 +503,7 @@ export function WorkflowsPage() {
         )}
       </div>
 
-      {/* Onboarding Modal - First-time user template picker */}
-      <OnboardingModal
-        isOpen={shouldShowModal}
-        onClose={handleSkipOnboarding}
-        onSelectTemplate={handleSelectTemplate}
-        templates={templates || []}
-        isLoading={isLoadingTemplates}
-        error={templatesError ? "Failed to load templates" : null}
-        onRetry={refetchTemplates}
-      />
+      {/* Global OnboardingWizard handles first-time user onboarding in App.tsx */}
     </ReactFlowProvider>
   );
 }

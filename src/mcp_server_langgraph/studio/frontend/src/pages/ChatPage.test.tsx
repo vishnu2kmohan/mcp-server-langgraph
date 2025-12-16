@@ -30,6 +30,7 @@ import * as mcpConnectionModule from "../hooks/useMCPConnection";
 import * as voiceInputModule from "../hooks/useVoiceInput";
 import * as fileUploadModule from "../hooks/useFileUpload";
 import * as backgroundSyncModule from "../hooks/useBackgroundSync";
+import * as tierLimitsModule from "../hooks/useTierLimits";
 import type { SessionState, Session } from "../types/session";
 
 // Mock the streaming chat hook
@@ -47,6 +48,9 @@ vi.mock("../hooks/useFileUpload");
 // Mock the background sync hook
 vi.mock("../hooks/useBackgroundSync");
 
+// Mock the tier limits hook
+vi.mock("../hooks/useTierLimits");
+
 // Mock scrollIntoView
 Element.prototype.scrollIntoView = vi.fn();
 
@@ -55,6 +59,7 @@ const mockUseMCPConnection = vi.mocked(mcpConnectionModule.useMCPConnection);
 const mockUseVoiceInput = vi.mocked(voiceInputModule.useVoiceInput);
 const mockUseFileUpload = vi.mocked(fileUploadModule.useFileUpload);
 const mockUseBackgroundSync = vi.mocked(backgroundSyncModule.useBackgroundSync);
+const mockUseTierLimits = vi.mocked(tierLimitsModule.useTierLimits);
 
 // Create a test store with custom session state
 const createTestStore = (sessionState: Partial<SessionState> = {}) => {
@@ -184,6 +189,19 @@ describe("ChatPage", () => {
       syncNow: vi.fn(),
       clearQueue: vi.fn(),
       getQueue: vi.fn(() => []),
+    });
+
+    // Default tier limits mock
+    mockUseTierLimits.mockReturnValue({
+      tier: "shared" as const,
+      maxSessions: 5,
+      maxWorkflows: 3,
+      maxConnectionsPerProject: 2,
+      activeSessions: 1,
+      isApproachingLimit: false,
+      isAtLimit: false,
+      nextTier: "hybrid",
+      isLoading: false,
     });
   });
 

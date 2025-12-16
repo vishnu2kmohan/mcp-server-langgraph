@@ -122,7 +122,12 @@ class Settings(BaseSettings):
     # Latest models: gemini-3-pro-preview (Nov 2025), gemini-2.5-flash
     google_api_key: str | None = None
     google_project_id: str | None = None
-    google_location: str = "us-central1"
+    # Google AI Studio location - defaults to "global" for latest Gemini models
+    # Note: For Vertex AI, use vertex_location instead (supports VERTEX_LOCATION env var)
+    google_location: str = Field(
+        default="global",
+        validation_alias=AliasChoices("GOOGLE_LOCATION", "GOOGLE_CLOUD_LOCATION"),
+    )
 
     # Vertex AI (Google Cloud AI Platform)
     # Supports both Anthropic Claude and Google Gemini models via Vertex AI
@@ -132,7 +137,13 @@ class Settings(BaseSettings):
     # Anthropic via Vertex AI: vertex_ai/claude-sonnet-4-5@20250929
     # Google via Vertex AI: vertex_ai/gemini-3-pro-preview
     vertex_project: str | None = None  # GCP project ID for Vertex AI (falls back to google_project_id)
-    vertex_location: str = "us-central1"  # Vertex AI location/region
+    # Vertex AI location/region - supports both VERTEX_LOCATION and GOOGLE_CLOUD_LOCATION env vars
+    # GOOGLE_CLOUD_LOCATION is the standard GCP env var used by gcloud and other GCP tools
+    # Default to "global" for latest Gemini models (gemini-3-pro-preview requires global location)
+    vertex_location: str = Field(
+        default="global",
+        validation_alias=AliasChoices("VERTEX_LOCATION", "GOOGLE_CLOUD_LOCATION"),
+    )
 
     # Azure OpenAI
     azure_api_key: str | None = None
@@ -293,6 +304,9 @@ class Settings(BaseSettings):
     # OIDC authentication (recommended for production)
     openfga_oidc_client_id: str | None = None  # OIDC client ID for client credentials grant
     openfga_oidc_client_secret: str | None = None  # OIDC client secret for client credentials grant
+    # OIDC issuer URL for OpenFGA token acquisition (e.g., http://gateway/authn/realms/default)
+    # If not set, constructed from keycloak_server_url + keycloak_realm
+    openfga_oidc_issuer: str | None = None
     # Legacy preshared key (deprecated, use OIDC instead)
     openfga_preshared_key: str | None = None  # Preshared key for API authentication (ADR-0068)
 

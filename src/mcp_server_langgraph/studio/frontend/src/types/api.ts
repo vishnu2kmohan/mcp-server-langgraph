@@ -143,14 +143,15 @@ export interface ApiError {
 // =============================================================================
 
 export interface FeatureFlags {
-  enable_workflows_feature: boolean;
-  enable_sessions_feature: boolean;
-  enable_cost_dashboard: boolean;
-  enable_cost_dashboard_users: boolean;
-  enable_observability_ui: boolean;
-  enable_code_export: boolean;
-  enable_ai_suggestions: boolean;
-  enable_mcp_websocket: boolean;
+  enable_workflows_feature?: boolean;
+  enable_sessions_feature?: boolean;
+  enable_cost_dashboard?: boolean;
+  enable_cost_dashboard_users?: boolean;
+  enable_observability_ui?: boolean;
+  enable_code_export?: boolean;
+  enable_ai_suggestions?: boolean;
+  enable_mcp_websocket?: boolean;
+  [key: string]: boolean | undefined;
 }
 
 // =============================================================================
@@ -383,15 +384,48 @@ export interface CostData {
 // Observability
 // =============================================================================
 
+/**
+ * Single span within a trace
+ */
 export interface TraceSpan {
-  trace_id: string;
   span_id: string;
-  parent_span_id?: string;
+  parent_span_id?: string | null;
   name: string;
   start_time: string;
-  end_time: string;
+  end_time?: string | null;
+  duration_ms?: number | null;
   status: string;
   attributes: Record<string, unknown>;
+  events?: unknown[];
+  error_message?: string;
+  depth?: number;
+}
+
+/**
+ * Full trace with all spans (returned by GET /api/v1/observability/traces/{id})
+ */
+export interface TraceDetail {
+  trace_id: string;
+  name: string;
+  start_time: string | null;
+  end_time: string | null;
+  duration_ms: number | null;
+  span_count: number | null;
+  spans: TraceSpan[];
+  service_name?: string;
+}
+
+/**
+ * Trace list item (returned by GET /api/v1/observability/traces - list endpoint)
+ */
+export interface TraceListItem {
+  trace_id: string;
+  name: string;
+  start_time: string | null;
+  duration_ms: number | null;
+  span_count: number | null;
+  status?: string;
+  end_time?: string | null;
 }
 
 export interface ObservabilityData {

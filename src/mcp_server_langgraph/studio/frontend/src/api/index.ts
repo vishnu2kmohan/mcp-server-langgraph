@@ -19,6 +19,8 @@ import type {
   CostSummary,
   ModelCostData,
   TraceSpan,
+  TraceDetail,
+  TraceListItem,
   LogEntry,
   ObservabilityMetrics,
   PaginatedResponse,
@@ -104,6 +106,8 @@ export type {
   CostSummary,
   ModelCostData,
   TraceSpan,
+  TraceDetail,
+  TraceListItem,
   LogEntry,
   ObservabilityMetrics,
   PaginatedResponse,
@@ -241,7 +245,7 @@ export const api = createApi({
         }),
       }),
       providesTags: (result) =>
-        result
+        result?.items
           ? [
               ...result.items.map(({ id }) => ({
                 type: "Workflow" as const,
@@ -394,7 +398,7 @@ export const api = createApi({
         }),
       }),
       providesTags: (result) =>
-        result
+        result?.items
           ? [
               ...result.items.map(({ session_id }) => ({
                 type: "Session" as const,
@@ -481,7 +485,10 @@ export const api = createApi({
     }),
 
     // Observability
-    listTraces: builder.query<PaginatedResponse<TraceSpan>, TraceListParams>({
+    listTraces: builder.query<
+      PaginatedResponse<TraceListItem>,
+      TraceListParams
+    >({
       query: (params) => ({
         url: "/observability/traces",
         params: filterParams({
@@ -499,7 +506,7 @@ export const api = createApi({
       providesTags: ["Trace"],
     }),
 
-    getTrace: builder.query<TraceSpan, string>({
+    getTrace: builder.query<TraceDetail, string>({
       query: (id) => `/observability/traces/${id}`,
       providesTags: (_result, _error, id) => [{ type: "Trace", id }],
     }),
@@ -546,7 +553,7 @@ export const api = createApi({
         }),
       }),
       providesTags: (result) =>
-        result
+        result?.items
           ? [
               ...result.items.map(({ id }) => ({
                 type: "Project" as const,
@@ -776,7 +783,7 @@ export const api = createApi({
         }),
       }),
       providesTags: (result) =>
-        result
+        result?.items
           ? [
               ...result.items.map(({ id }) => ({
                 type: "Connection" as const,
@@ -947,7 +954,7 @@ export const api = createApi({
         }),
       }),
       providesTags: (result) =>
-        result
+        result?.items
           ? [
               ...result.items.map(({ user_id }) => ({
                 type: "AdminUser" as const,
@@ -1011,7 +1018,7 @@ export const api = createApi({
         }),
       }),
       providesTags: (result, _error, params) =>
-        result
+        result?.items
           ? [
               ...result.items.map(({ id }) => ({
                 type: "Execution" as const,
@@ -1130,7 +1137,7 @@ export const api = createApi({
 
     // Native Logout (token revocation - no Keycloak UI redirect)
     logout: builder.mutation<
-      { success: boolean; message: string },
+      { success: boolean; message: string; keycloak_logout_url?: string },
       { refresh_token?: string } | void
     >({
       query: (body) => ({
