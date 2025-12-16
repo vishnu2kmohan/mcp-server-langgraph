@@ -108,8 +108,13 @@ class TestLLMMetrics:
             assert isinstance(duration, float)
             assert duration >= 0
 
-    def test_invoke_records_token_usage_metrics(self) -> None:
-        """Verify sync LLM invocation records token usage metrics."""
+    @pytest.mark.asyncio
+    async def test_invoke_records_token_usage_metrics(self) -> None:
+        """Verify LLM invocation records token usage metrics.
+
+        NOTE: Sync invoke() was removed as part of async-first conversion.
+        All LLM operations now use async ainvoke().
+        """
         from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(
@@ -128,13 +133,13 @@ class TestLLMMetrics:
         mock_response.usage.total_tokens = 100
 
         with (
-            patch("mcp_server_langgraph.llm.factory.completion") as mock_completion,
+            patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion,
             patch("mcp_server_langgraph.llm.factory.record_llm_token_usage") as mock_token_usage,
             patch("mcp_server_langgraph.llm.factory.record_llm_request_duration") as mock_duration,
         ):
-            mock_completion.return_value = mock_response
+            mock_acompletion.return_value = mock_response
 
-            factory.invoke([{"role": "user", "content": "Hello"}])
+            await factory.ainvoke([{"role": "user", "content": "Hello"}])
 
             # Verify token usage metrics were recorded
             mock_token_usage.assert_called_once()

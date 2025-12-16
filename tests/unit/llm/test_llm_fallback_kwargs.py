@@ -71,8 +71,13 @@ class TestLLMFallbackKwargs:
                 yield
 
     @pytest.mark.unit
-    def test_fallback_forwards_kwargs_sync(self, mock_litellm_responses):
-        """Test that sync fallback forwards provider-specific kwargs to same-provider fallback."""
+    @pytest.mark.asyncio
+    async def test_fallback_forwards_kwargs_azure(self, mock_litellm_responses):
+        """Test that async fallback forwards provider-specific kwargs to same-provider fallback.
+
+        NOTE: Sync invoke() was removed as part of async-first conversion (see sync-to-async plan).
+        All LLM operations now use async ainvoke().
+        """
         # Test Azure-specific kwargs with Azure fallback (same provider)
         azure_kwargs = {
             "api_base": "https://my-azure-endpoint.openai.azure.com",
@@ -89,10 +94,10 @@ class TestLLMFallbackKwargs:
         ):
             # Use patch.object on the already-imported factory module
             # This ensures the mock takes effect regardless of import order in parallel test execution
-            with patch.object(factory_module, "completion") as mock_completion:
+            with patch.object(factory_module, "acompletion", new_callable=AsyncMock) as mock_acompletion:
                 # First call (primary) fails with a generic exception
                 # Second call (fallback) succeeds
-                mock_completion.side_effect = [RuntimeError("Primary model failed"), mock_litellm_responses]
+                mock_acompletion.side_effect = [RuntimeError("Primary model failed"), mock_litellm_responses]
 
                 factory = LLMFactory(
                     provider="azure",
@@ -104,13 +109,13 @@ class TestLLMFallbackKwargs:
                 )
 
                 messages = [HumanMessage(content="test message")]
-                result = factory.invoke(messages)  # noqa: F841
+                result = await factory.ainvoke(messages)  # noqa: F841
 
                 # Should have tried twice (primary + fallback)
-                assert mock_completion.call_count == 2
+                assert mock_acompletion.call_count == 2
 
                 # Check that fallback call received the provider-specific kwargs (same provider)
-                fallback_call = mock_completion.call_args_list[1]
+                fallback_call = mock_acompletion.call_args_list[1]
 
                 # Check that api_base is forwarded for same-provider fallback
                 assert fallback_call[1]["api_base"] == azure_kwargs["api_base"]
@@ -173,38 +178,13 @@ class TestLLMFallbackKwargs:
                 assert fallback_call[1]["model"] == "bedrock/anthropic.claude-instant-v1"
 
     @pytest.mark.unit
-    def test_fallback_forwards_ollama_kwargs_sync(self, mock_litellm_responses):
-        """Test that sync fallback forwards Ollama-specific kwargs."""
-        ollama_kwargs = {
-            "api_base": "http://localhost:11434",
-        }
-
-        # Use patch.object on the already-imported factory module
-        # This ensures the mock takes effect regardless of import order in parallel test execution
-        with patch.object(factory_module, "completion") as mock_completion:
-            mock_completion.side_effect = [RuntimeError("Primary model failed"), mock_litellm_responses]
-
-            factory = LLMFactory(
-                provider="ollama",
-                model_name="ollama/llama3.1:8b",
-                enable_fallback=True,
-                fallback_models=["ollama/qwen2.5:7b"],
-                **ollama_kwargs,
-            )
-
-            messages = [HumanMessage(content="test message")]
-            result = factory.invoke(messages)  # noqa: F841
-
-            assert mock_completion.call_count == 2
-
-            # Check that fallback call received the api_base
-            fallback_call = mock_completion.call_args_list[1]
-            assert fallback_call[1]["api_base"] == ollama_kwargs["api_base"]
-
-    @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_fallback_forwards_ollama_kwargs_async(self, mock_litellm_responses):
-        """Test that async fallback forwards Ollama-specific kwargs."""
+    async def test_fallback_forwards_ollama_kwargs(self, mock_litellm_responses):
+        """Test that async fallback forwards Ollama-specific kwargs.
+
+        NOTE: Sync invoke() was removed as part of async-first conversion (see sync-to-async plan).
+        All LLM operations now use async ainvoke().
+        """
         ollama_kwargs = {
             "api_base": "http://localhost:11434",
         }
@@ -212,10 +192,6 @@ class TestLLMFallbackKwargs:
         # Use patch.object on the already-imported factory module
         # This ensures the mock takes effect regardless of import order in parallel test execution
         with patch.object(factory_module, "acompletion", new_callable=AsyncMock) as mock_acompletion:
-            # First call (primary) fails with a generic exception
-            # Second call (fallback) succeeds
-            # Note: The exception is caught inside ainvoke and fallback is tried immediately,
-            # so retry decorator doesn't kick in for fallback logic
             mock_acompletion.side_effect = [RuntimeError("Primary model failed"), mock_litellm_responses]
 
             factory = LLMFactory(
@@ -229,7 +205,6 @@ class TestLLMFallbackKwargs:
             messages = [HumanMessage(content="test message")]
             result = await factory.ainvoke(messages)  # noqa: F841
 
-            # Should have tried twice (primary + fallback)
             assert mock_acompletion.call_count == 2
 
             # Check that fallback call received the api_base
