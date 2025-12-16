@@ -1281,7 +1281,10 @@ async def backchannel_logout(
     # Extract logout_token from form data if not provided
     if logout_token is None:
         form_data = await request.form()
-        logout_token = form_data.get("logout_token")
+        token_value = form_data.get("logout_token")
+        # form_data.get returns UploadFile | str | None, we only accept str
+        if isinstance(token_value, str):
+            logout_token = token_value
 
     if not logout_token:
         logger.warning(
