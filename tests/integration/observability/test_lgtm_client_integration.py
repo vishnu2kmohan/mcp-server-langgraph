@@ -283,7 +283,7 @@ class TestTempoTracingClient:
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not tempo_available(), reason="Tempo not available")
-    async def test_tempo_client_health_check(self) -> None:
+    async def test_tempo_client_health_check(self, monkeypatch) -> None:
         """
         GIVEN TempoTracingClient configured with test environment
         WHEN health_check() is called
@@ -293,8 +293,8 @@ class TestTempoTracingClient:
             TempoTracingClient,
         )
 
-        # Set environment variable for the client
-        os.environ["TEMPO_URL"] = f"http://localhost:{TEST_TEMPO_PORT}"
+        # Set environment variable for the client (monkeypatch auto-cleans up)
+        monkeypatch.setenv("TEMPO_URL", f"http://localhost:{TEST_TEMPO_PORT}")
 
         try:
             client = TempoTracingClient()
@@ -303,11 +303,10 @@ class TestTempoTracingClient:
             assert is_healthy is True
         finally:
             await client.close()
-            os.environ.pop("TEMPO_URL", None)
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not tempo_available(), reason="Tempo not available")
-    async def test_tempo_client_search_traces_empty(self) -> None:
+    async def test_tempo_client_search_traces_empty(self, monkeypatch) -> None:
         """
         GIVEN TempoTracingClient configured with test environment
         WHEN search_traces() is called with no filters
@@ -317,7 +316,7 @@ class TestTempoTracingClient:
             TempoTracingClient,
         )
 
-        os.environ["TEMPO_URL"] = f"http://localhost:{TEST_TEMPO_PORT}"
+        monkeypatch.setenv("TEMPO_URL", f"http://localhost:{TEST_TEMPO_PORT}")
 
         try:
             client = TempoTracingClient()
@@ -335,11 +334,10 @@ class TestTempoTracingClient:
             assert isinstance(result.traces, list)
         finally:
             await client.close()
-            os.environ.pop("TEMPO_URL", None)
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not tempo_available(), reason="Tempo not available")
-    async def test_tempo_client_get_nonexistent_trace(self) -> None:
+    async def test_tempo_client_get_nonexistent_trace(self, monkeypatch) -> None:
         """
         GIVEN TempoTracingClient configured with test environment
         WHEN get_trace() is called with nonexistent trace ID
@@ -349,7 +347,7 @@ class TestTempoTracingClient:
             TempoTracingClient,
         )
 
-        os.environ["TEMPO_URL"] = f"http://localhost:{TEST_TEMPO_PORT}"
+        monkeypatch.setenv("TEMPO_URL", f"http://localhost:{TEST_TEMPO_PORT}")
         prefix = get_worker_prefix()
 
         try:
@@ -363,11 +361,10 @@ class TestTempoTracingClient:
             assert result is None
         finally:
             await client.close()
-            os.environ.pop("TEMPO_URL", None)
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not tempo_available(), reason="Tempo not available")
-    async def test_tempo_client_search_by_service_name(self) -> None:
+    async def test_tempo_client_search_by_service_name(self, monkeypatch) -> None:
         """
         GIVEN TempoTracingClient configured with test environment
         WHEN search_traces() is called with service_name filter
@@ -377,7 +374,7 @@ class TestTempoTracingClient:
             TempoTracingClient,
         )
 
-        os.environ["TEMPO_URL"] = f"http://localhost:{TEST_TEMPO_PORT}"
+        monkeypatch.setenv("TEMPO_URL", f"http://localhost:{TEST_TEMPO_PORT}")
 
         try:
             client = TempoTracingClient()
@@ -394,11 +391,10 @@ class TestTempoTracingClient:
             assert isinstance(result.traces, list)
         finally:
             await client.close()
-            os.environ.pop("TEMPO_URL", None)
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not tempo_available(), reason="Tempo not available")
-    async def test_tempo_client_get_error_traces(self) -> None:
+    async def test_tempo_client_get_error_traces(self, monkeypatch) -> None:
         """
         GIVEN TempoTracingClient configured with test environment
         WHEN get_error_traces() is called
@@ -408,7 +404,7 @@ class TestTempoTracingClient:
             TempoTracingClient,
         )
 
-        os.environ["TEMPO_URL"] = f"http://localhost:{TEST_TEMPO_PORT}"
+        monkeypatch.setenv("TEMPO_URL", f"http://localhost:{TEST_TEMPO_PORT}")
 
         try:
             client = TempoTracingClient()
@@ -424,7 +420,6 @@ class TestTempoTracingClient:
             assert isinstance(result.traces, list)
         finally:
             await client.close()
-            os.environ.pop("TEMPO_URL", None)
 
 
 # ==============================================================================
@@ -446,7 +441,7 @@ class TestPrometheusMetricsClient:
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not mimir_available(), reason="Mimir not available")
-    async def test_mimir_client_health_check(self) -> None:
+    async def test_mimir_client_health_check(self, monkeypatch) -> None:
         """
         GIVEN PrometheusMetricsClient configured with test environment
         WHEN health_check() is called
@@ -456,7 +451,7 @@ class TestPrometheusMetricsClient:
             PrometheusMetricsClient,
         )
 
-        os.environ["MIMIR_URL"] = f"http://localhost:{TEST_MIMIR_PORT}"
+        monkeypatch.setenv("MIMIR_URL", f"http://localhost:{TEST_MIMIR_PORT}")
 
         try:
             client = PrometheusMetricsClient()
@@ -465,11 +460,10 @@ class TestPrometheusMetricsClient:
             assert is_healthy is True
         finally:
             await client.close()
-            os.environ.pop("MIMIR_URL", None)
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not mimir_available(), reason="Mimir not available")
-    async def test_mimir_client_query_instant(self) -> None:
+    async def test_mimir_client_query_instant(self, monkeypatch) -> None:
         """
         GIVEN PrometheusMetricsClient configured with test environment
         WHEN query_instant() is called with 'up' query
@@ -479,7 +473,7 @@ class TestPrometheusMetricsClient:
             PrometheusMetricsClient,
         )
 
-        os.environ["MIMIR_URL"] = f"http://localhost:{TEST_MIMIR_PORT}"
+        monkeypatch.setenv("MIMIR_URL", f"http://localhost:{TEST_MIMIR_PORT}")
 
         try:
             client = PrometheusMetricsClient()
@@ -492,11 +486,10 @@ class TestPrometheusMetricsClient:
             assert isinstance(result.series, list)
         finally:
             await client.close()
-            os.environ.pop("MIMIR_URL", None)
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not mimir_available(), reason="Mimir not available")
-    async def test_mimir_client_query_range(self) -> None:
+    async def test_mimir_client_query_range(self, monkeypatch) -> None:
         """
         GIVEN PrometheusMetricsClient configured with test environment
         WHEN query_range() is called
@@ -506,7 +499,7 @@ class TestPrometheusMetricsClient:
             PrometheusMetricsClient,
         )
 
-        os.environ["MIMIR_URL"] = f"http://localhost:{TEST_MIMIR_PORT}"
+        monkeypatch.setenv("MIMIR_URL", f"http://localhost:{TEST_MIMIR_PORT}")
 
         try:
             client = PrometheusMetricsClient()
@@ -524,11 +517,10 @@ class TestPrometheusMetricsClient:
             assert isinstance(result.series, list)
         finally:
             await client.close()
-            os.environ.pop("MIMIR_URL", None)
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not mimir_available(), reason="Mimir not available")
-    async def test_mimir_client_invalid_query_raises_error(self) -> None:
+    async def test_mimir_client_invalid_query_raises_error(self, monkeypatch) -> None:
         """
         GIVEN PrometheusMetricsClient configured with test environment
         WHEN query_instant() is called with invalid PromQL
@@ -538,7 +530,7 @@ class TestPrometheusMetricsClient:
             PrometheusMetricsClient,
         )
 
-        os.environ["MIMIR_URL"] = f"http://localhost:{TEST_MIMIR_PORT}"
+        monkeypatch.setenv("MIMIR_URL", f"http://localhost:{TEST_MIMIR_PORT}")
 
         try:
             client = PrometheusMetricsClient()
@@ -549,7 +541,6 @@ class TestPrometheusMetricsClient:
                 await client.query_instant("invalid{{{query")
         finally:
             await client.close()
-            os.environ.pop("MIMIR_URL", None)
 
 
 # ==============================================================================
