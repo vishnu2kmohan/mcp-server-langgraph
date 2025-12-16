@@ -608,7 +608,7 @@ class TestLGTMClientLifecycle:
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not tempo_available(), reason="Tempo not available")
-    async def test_tempo_client_context_manager_pattern(self) -> None:
+    async def test_tempo_client_context_manager_pattern(self, monkeypatch) -> None:
         """
         GIVEN TempoTracingClient
         WHEN used with async context manager pattern
@@ -618,20 +618,17 @@ class TestLGTMClientLifecycle:
             TempoTracingClient,
         )
 
-        os.environ["TEMPO_URL"] = f"http://localhost:{TEST_TEMPO_PORT}"
+        monkeypatch.setenv("TEMPO_URL", f"http://localhost:{TEST_TEMPO_PORT}")
 
-        try:
-            client = TempoTracingClient()
-            await client.initialize()
+        client = TempoTracingClient()
+        await client.initialize()
 
-            # Perform operation
-            is_healthy = await client.health_check()
-            assert is_healthy is True
+        # Perform operation
+        is_healthy = await client.health_check()
+        assert is_healthy is True
 
-            await client.close()
-            assert client._initialized is False
-        finally:
-            os.environ.pop("TEMPO_URL", None)
+        await client.close()
+        assert client._initialized is False
 
 
 # ==============================================================================
@@ -672,7 +669,7 @@ class TestLGTMClientErrorHandling:
             await client.close()
 
     @pytest.mark.asyncio
-    async def test_tempo_client_unreachable_service(self) -> None:
+    async def test_tempo_client_unreachable_service(self, monkeypatch) -> None:
         """
         GIVEN TempoTracingClient configured with unreachable URL
         WHEN health_check() is called
@@ -682,7 +679,7 @@ class TestLGTMClientErrorHandling:
             TempoTracingClient,
         )
 
-        os.environ["TEMPO_URL"] = "http://localhost:65535"
+        monkeypatch.setenv("TEMPO_URL", "http://localhost:65535")
 
         try:
             client = TempoTracingClient()
@@ -691,4 +688,3 @@ class TestLGTMClientErrorHandling:
             assert is_healthy is False
         finally:
             await client.close()
-            os.environ.pop("TEMPO_URL", None)
