@@ -16,13 +16,44 @@ import requests
 
 
 def _openfga_available() -> bool:
-    """Check if OpenFGA is available."""
+    """Check if OpenFGA is available AND accessible with pre-shared key auth.
+
+    This validates:
+    1. OpenFGA server is running (healthz endpoint)
+    2. Pre-shared key authentication works (stores endpoint)
+
+    If OIDC is enabled and pre-shared key is disabled, tests using pre-shared key
+    auth should skip gracefully.
+    """
+    import os
+
     try:
+        # Check 1: Server is running
         response = requests.get(
             "http://localhost:9080/healthz",
             timeout=5,
         )
-        return response.status_code == 200
+        if response.status_code != 200:
+            return False
+
+        # Check 2: Pre-shared key auth works
+        # Tests in test_openfga_seeding_flow.py use pre-shared key auth
+        # If OIDC is enabled and pre-shared key is disabled, skip these tests
+        preshared_key = os.getenv("OPENFGA_PRESHARED_KEY", "test-openfga-preshared-key")
+        stores_response = requests.get(
+            "http://localhost:9080/stores",
+            headers={
+                "Authorization": f"Bearer {preshared_key}",
+                "Content-Type": "application/json",
+            },
+            timeout=5,
+        )
+        # Accept 200 (success) or 401 (pre-shared key disabled/OIDC mode)
+        if stores_response.status_code == 401:
+            # Pre-shared key auth not working (likely OIDC mode)
+            return False
+
+        return stores_response.status_code == 200
     except Exception:
         return False
 

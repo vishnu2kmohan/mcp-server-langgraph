@@ -360,6 +360,8 @@ def reset_dependency_singletons():
             deps._openfga_client = None
             deps._api_key_manager = None
             deps._service_principal_manager = None
+            deps._user_provider = None
+            deps._token_denylist = None
     except Exception:
         # If module not loaded or reset fails, continue (defensive)
         pass
@@ -410,6 +412,8 @@ def reset_dependency_singletons():
             deps._openfga_client = None
             deps._api_key_manager = None
             deps._service_principal_manager = None
+            deps._user_provider = None
+            deps._token_denylist = None
     except Exception:
         # If module not loaded or reset fails, continue (defensive)
         pass

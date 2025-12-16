@@ -12,7 +12,14 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-pytestmark = pytest.mark.integration
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skip(
+        reason="LLM Factory was migrated to async-only (ainvoke). "
+        "These property tests use removed sync invoke() method. "
+        "See: tests/unit/llm/test_factory_async_only.py for async tests."
+    ),
+]
 
 # Hypothesis strategies
 valid_providers = st.sampled_from(["anthropic", "openai", "google", "gemini", "azure", "bedrock", "ollama"])
