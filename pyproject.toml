@@ -225,19 +225,29 @@ release-tools = [
 # EMBEDDING OPTIONS - Choose based on deployment strategy
 # ==============================================================================
 #
-# embeddings-api:   Lightweight (~0MB overhead) - Uses Google Gemini API
-#                   Already included in core dependencies via langchain-google-genai
-#                   Recommended for: Cloud deployments, cost-sensitive environments
+# embeddings-api:     Lightweight (~0MB overhead) - Uses Google Gemini API
+#                     Already included in core dependencies via langchain-google-genai
+#                     Recommended for: Cloud deployments, cost-sensitive environments
+#                     Requires: GOOGLE_API_KEY environment variable
 #
-# embeddings-local: Heavy (~800MB overhead) - Self-hosted sentence-transformers
-#                   Includes: PyTorch, transformers, tokenizers
-#                   Recommended for: Air-gapped environments, data residency requirements
+# embeddings-vertex:  Lightweight - Uses Google Vertex AI (GCP credentials/WIF)
+#                     Recommended for: GKE with Workload Identity Federation
+#                     Uses GCP OAuth scopes instead of API key
+#
+# embeddings-local:   Heavy (~800MB overhead) - Self-hosted sentence-transformers
+#                     Includes: PyTorch, transformers, tokenizers
+#                     Recommended for: Air-gapped environments, data residency requirements
 #
 # ==============================================================================
 
 embeddings-api = [
     # API-based embeddings (already in core deps, listed for clarity)
     # No additional dependencies required
+]
+
+embeddings-vertex = [
+    # Vertex AI embeddings for GCP environments with Workload Identity
+    "langchain-google-vertexai>=3.0.0",  # Vertex AI embeddings (uses GCP OAuth)
 ]
 
 embeddings-local = [

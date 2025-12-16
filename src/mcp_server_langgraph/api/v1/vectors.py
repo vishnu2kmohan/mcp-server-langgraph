@@ -103,8 +103,17 @@ def get_embedding_model() -> Any:
 
     Uses LangChain embeddings based on configured provider.
 
+    Supported providers:
+    - openai: OpenAI embeddings (requires OPENAI_API_KEY)
+    - google: Google Generative AI (requires GOOGLE_API_KEY)
+    - google_vertex: Google Vertex AI (uses GCP credentials/WIF)
+    - huggingface/local: HuggingFace local models
+
     Returns:
         Embeddings model instance with embed_query method.
+
+    Raises:
+        ValueError: If provider requires API key that is not set.
     """
     from mcp_server_langgraph.core.config import settings
 
@@ -116,9 +125,32 @@ def get_embedding_model() -> Any:
 
         return OpenAIEmbeddings(model=model_name)
     elif provider == "google":
+        # Google Generative AI requires GOOGLE_API_KEY (API key auth)
+        # For GCP WIF/OAuth environments, use "google_vertex" provider instead
+        google_api_key = os.getenv("GOOGLE_API_KEY")
+        if not google_api_key:
+            logger.warning(
+                "GOOGLE_API_KEY not set for 'google' embedding provider. "
+                "For GCP environments with Workload Identity, use 'google_vertex' provider instead. "
+                "Attempting with default credentials (may fail with scope errors)."
+            )
+
         from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
         return GoogleGenerativeAIEmbeddings(model=model_name)
+    elif provider == "google_vertex":
+        # Vertex AI works with GCP credentials including Workload Identity Federation
+        try:
+            from langchain_google_vertexai import VertexAIEmbeddings
+
+            # Vertex AI uses GCP project from environment
+            project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT_ID")
+            return VertexAIEmbeddings(model_name=model_name, project=project_id)
+        except ImportError:
+            raise ValueError(
+                "Vertex AI embeddings require 'langchain-google-vertexai' package. "
+                "Install with: pip install langchain-google-vertexai"
+            )
     elif provider in ("huggingface", "local"):
         from langchain_huggingface import HuggingFaceEmbeddings
 

@@ -222,8 +222,10 @@ class Settings(BaseSettings):
     dynamic_context_top_k: int = 3  # Number of top results from semantic search
 
     # Embedding Configuration
-    embedding_provider: str = "google"  # "google" (Gemini API) or "local" (sentence-transformers)
-    embedding_model_name: str = "models/text-embedding-004"  # Google: text-embedding-004, Local: all-MiniLM-L6-v2
+    # Providers: "openai", "google" (API key), "google_vertex" (GCP WIF), "huggingface", "local"
+    # Default to google_vertex for better GCP Workload Identity compatibility
+    embedding_provider: str = "google_vertex"  # Uses GCP credentials/WIF (no API key needed)
+    embedding_model_name: str = "text-embedding-005"  # Vertex AI: text-embedding-005 (latest)
     embedding_dimensions: int = 768  # Google: 768 (128-3072 supported), Local: 384
     embedding_task_type: str = "RETRIEVAL_DOCUMENT"  # Google task type optimization
     embedding_model: str = (
