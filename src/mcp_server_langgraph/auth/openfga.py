@@ -25,7 +25,7 @@ import asyncio
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import httpx
 from openfga_sdk import ClientConfiguration, OpenFgaClient
@@ -287,7 +287,7 @@ class OpenFGAClient:
                     },
                 )
 
-                return access_token
+                return cast(str, access_token)
 
         except httpx.HTTPStatusError as e:
             msg = f"Failed to obtain OIDC access token: HTTP {e.response.status_code}"

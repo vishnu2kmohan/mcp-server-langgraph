@@ -474,7 +474,7 @@ class AuthMiddleware:
                 )
 
             # If token is DPoP-bound, verify the key thumbprint matches
-            if is_dpop_bound:
+            if is_dpop_bound and cnf:
                 expected_jkt = cnf["jkt"]
                 proof_jwk = dpop_result.get("jwk")
 
