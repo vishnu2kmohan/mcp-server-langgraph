@@ -42,6 +42,7 @@ def mock_settings():
     settings.keycloak_admin_realm = "master"  # Admin API realm
     settings.keycloak_verify_ssl = True
     settings.keycloak_timeout = 10
+    settings.keycloak_public_url = "http://localhost:9082"  # Public URL for auth redirects
     # Redis settings
     settings.redis_url = "redis://localhost:6379/1"
     settings.redis_password = None
