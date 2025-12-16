@@ -507,7 +507,7 @@ class TestAuditLogRetention:
         async def add_old_logs():
             old_time = datetime.now(UTC) - timedelta(days=100)
             for i in range(5):
-                log = await mock_audit_repo.log_event(
+                _ = await mock_audit_repo.log_event(
                     event_type="connection.created",
                     resource_type="connection",
                     resource_id=f"conn-{i}",
@@ -555,7 +555,7 @@ class TestAuditLogExport:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_export_json(self, client, mock_audit_repo):
+    def test_export_json_format_returns_valid_response(self, client, mock_audit_repo):
         """Should export audit logs as JSON."""
         import asyncio
 
@@ -583,7 +583,7 @@ class TestAuditLogExport:
         assert data["total"] == 3
         assert "exported_at" in data
 
-    def test_export_csv(self, client, mock_audit_repo):
+    def test_export_csv_format_returns_valid_response(self, client, mock_audit_repo):
         """Should export audit logs as CSV."""
         import asyncio
 

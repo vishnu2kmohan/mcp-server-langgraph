@@ -404,7 +404,7 @@ class TestBulkStatusUpdate:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_bulk_disconnect(self, client, mock_repo):
+    def test_bulk_disconnect_with_valid_ids_succeeds(self, client, mock_repo):
         """Should disconnect multiple connections."""
         import asyncio
 

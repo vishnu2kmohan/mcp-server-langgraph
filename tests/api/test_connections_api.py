@@ -552,7 +552,7 @@ class TestUpdateConnection:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_update_connection(self, client, mock_repo):
+    def test_update_connection_with_valid_data_succeeds(self, client, mock_repo):
         """Should update connection fields."""
         import asyncio
 
@@ -590,7 +590,7 @@ class TestDeleteConnection:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_delete_connection(self, client, mock_repo):
+    def test_delete_connection_with_valid_id_succeeds(self, client, mock_repo):
         """Should delete connection."""
         import asyncio
 
@@ -808,7 +808,7 @@ class TestConnectionFiltering:
         data = response.json()
         assert all(c["auth_type"] == "oauth2" for c in data["items"])
 
-    def test_search_connections(self, client, mock_repo):
+    def test_search_connections_by_name_filters_correctly(self, client, mock_repo):
         """Should search connections by name."""
         import asyncio
 
@@ -926,7 +926,7 @@ class TestConnectionSorting:
         import asyncio
 
         async def create():
-            conn1 = await mock_repo.create(
+            _ = await mock_repo.create(
                 MCPConnectionCreate(name="Disconnected Server", url="https://dc.example.com"),
                 owner_id="user-123",
             )
@@ -991,7 +991,7 @@ class TestConnectionPagination:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_limit_parameter(self, client, mock_repo):
+    def test_limit_parameter_restricts_result_count(self, client, mock_repo):
         """Should limit number of returned connections."""
         import asyncio
 
@@ -1019,7 +1019,7 @@ class TestConnectionPagination:
         response = client.get("/connections?limit=101")
         assert response.status_code == 422  # Validation error
 
-    def test_default_limit(self, client, mock_repo):
+    def test_default_limit_returns_twenty_results(self, client, mock_repo):
         """Should use default limit of 20."""
         import asyncio
 
