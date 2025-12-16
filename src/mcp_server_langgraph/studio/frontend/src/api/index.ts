@@ -1181,6 +1181,18 @@ export const api = createApi({
         body,
       }),
     }),
+
+    // Session Title Generation (AI-powered auto-naming)
+    generateSessionTitle: builder.mutation<
+      { title: string; confidence: number },
+      { messages: Array<{ role: string; content: string }>; session_id: string }
+    >({
+      query: (body) => ({
+        url: "/sessions/generate-title",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -1283,4 +1295,6 @@ export const {
   useGetIdentityProvidersQuery,
   // Feedback
   useSubmitFeedbackMutation,
+  // Session Title Generation
+  useGenerateSessionTitleMutation,
 } = api;
