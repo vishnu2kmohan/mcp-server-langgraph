@@ -20,7 +20,7 @@ Flow:
 
 import hashlib
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlencode
 
 import httpx
@@ -594,7 +594,7 @@ async def oauth2_callback(
 async def pushed_authorization_request(
     request: Request,
     body: PARRequest,
-) -> dict[str, Any]:
+) -> dict[str, Any] | JSONResponse:
     """
     Pushed Authorization Request (PAR) endpoint - RFC 9126.
 
@@ -786,7 +786,7 @@ async def token_introspection(
                 },
             )
 
-            return introspect_response
+            return cast(dict[str, Any], introspect_response)
 
     except httpx.HTTPError as e:
         logger.error(
