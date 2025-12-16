@@ -360,7 +360,8 @@ async def delete_user(
         await keycloak.update_user(user_id, {"enabled": False})
 
         # Remove OpenFGA tuples
-        await openfga.delete_tuples_for_object(f"user:{user_id}")
+        if openfga:
+            await openfga.delete_tuples_for_object(f"user:{user_id}")
 
     except Exception as e:
         # For 204 responses, we must raise HTTPException not return error body
