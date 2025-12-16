@@ -394,7 +394,11 @@ export function ChatPage() {
   };
 
   const handleNewSession = async () => {
-    dispatch(createSession({ name: "New Chat" }));
+    const result = await dispatch(createSession({ name: "New Chat" }));
+    // Update URL with new session ID so it persists across navigation
+    if (createSession.fulfilled.match(result) && result.payload?.id) {
+      navigate(`/studio/chat?session=${result.payload.id}`, { replace: true });
+    }
     setActivities([
       { timestamp: Date.now(), action: "session created", details: "" },
     ]);
@@ -402,6 +406,8 @@ export function ChatPage() {
 
   const handleSessionSelect = async (sessionId: string) => {
     dispatch(loadSession(sessionId));
+    // Update URL with session ID so it persists across navigation
+    navigate(`/studio/chat?session=${sessionId}`, { replace: true });
     setActivities([
       { timestamp: Date.now(), action: "session loaded", details: "" },
     ]);
