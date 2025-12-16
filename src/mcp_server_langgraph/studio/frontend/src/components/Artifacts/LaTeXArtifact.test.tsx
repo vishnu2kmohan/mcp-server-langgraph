@@ -214,4 +214,164 @@ describe("LaTeXArtifact", () => {
       expect(screen.queryByTestId("latex-title")).not.toBeInTheDocument();
     });
   });
+
+  describe("Zoom Controls", () => {
+    it("should have zoom in button", () => {
+      render(<LaTeXArtifact content="x^2" />);
+      expect(screen.getByLabelText("Zoom in")).toBeInTheDocument();
+    });
+
+    it("should have zoom out button", () => {
+      render(<LaTeXArtifact content="x^2" />);
+      expect(screen.getByLabelText("Zoom out")).toBeInTheDocument();
+    });
+
+    it("should have reset zoom button", () => {
+      render(<LaTeXArtifact content="x^2" />);
+      expect(screen.getByLabelText("Reset zoom")).toBeInTheDocument();
+    });
+
+    it("should display zoom level", () => {
+      render(<LaTeXArtifact content="x^2" />);
+      expect(screen.getByText("100%")).toBeInTheDocument();
+    });
+
+    it("should increase zoom when zoom in clicked", async () => {
+      render(<LaTeXArtifact content="x^2" />);
+      const zoomIn = screen.getByLabelText("Zoom in");
+      fireEvent.click(zoomIn);
+      await waitFor(() => {
+        expect(screen.getByText("125%")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Fullscreen", () => {
+    it("should have fullscreen toggle button", () => {
+      render(<LaTeXArtifact content="x^2" />);
+      expect(screen.getByLabelText("Toggle fullscreen")).toBeInTheDocument();
+    });
+
+    it("should toggle fullscreen mode", async () => {
+      render(<LaTeXArtifact content="x^2" />);
+      const container = screen
+        .getByTestId("latex-artifact")
+        .closest(".rounded-lg");
+      expect(container).not.toHaveClass("fixed");
+
+      fireEvent.click(screen.getByLabelText("Toggle fullscreen"));
+      await waitFor(() => {
+        const updatedContainer = screen
+          .getByTestId("latex-artifact")
+          .closest("div[class*='fixed']");
+        expect(updatedContainer).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Keyboard Shortcuts", () => {
+    it("should zoom in with + key", async () => {
+      render(<LaTeXArtifact content="x^2" />);
+
+      const container = screen.getByTestId("latex-container");
+      fireEvent.keyDown(container, { key: "+" });
+
+      await waitFor(() => {
+        expect(screen.getByText("125%")).toBeInTheDocument();
+      });
+    });
+
+    it("should zoom out with - key", async () => {
+      render(<LaTeXArtifact content="x^2" />);
+
+      const container = screen.getByTestId("latex-container");
+      fireEvent.keyDown(container, { key: "-" });
+
+      await waitFor(() => {
+        expect(screen.getByText("80%")).toBeInTheDocument();
+      });
+    });
+
+    it("should reset zoom with 0 key", async () => {
+      render(<LaTeXArtifact content="x^2" />);
+
+      // First zoom in
+      fireEvent.click(screen.getByLabelText("Zoom in"));
+      await waitFor(() => {
+        expect(screen.getByText("125%")).toBeInTheDocument();
+      });
+
+      // Then reset with 0
+      const container = screen.getByTestId("latex-container");
+      fireEvent.keyDown(container, { key: "0" });
+
+      await waitFor(() => {
+        expect(screen.getByText("100%")).toBeInTheDocument();
+      });
+    });
+
+    it("should exit fullscreen with Escape key", async () => {
+      render(<LaTeXArtifact content="x^2" />);
+
+      // Enter fullscreen
+      fireEvent.click(screen.getByLabelText("Toggle fullscreen"));
+      await waitFor(() => {
+        const container = screen.getByTestId("latex-container");
+        expect(container.classList.contains("fixed")).toBe(true);
+      });
+
+      // Exit with Escape
+      const container = screen.getByTestId("latex-container");
+      fireEvent.keyDown(container, { key: "Escape" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("latex-container").classList.contains("fixed"),
+        ).toBe(false);
+      });
+    });
+
+    it("should be focusable for keyboard navigation", async () => {
+      render(<LaTeXArtifact content="x^2" />);
+
+      const container = screen.getByTestId("latex-container");
+      expect(container).toHaveAttribute("tabIndex", "0");
+    });
+  });
+
+  describe("Touch Gestures", () => {
+    it("should handle pinch-to-zoom with two fingers", async () => {
+      render(<LaTeXArtifact content="x^2" />);
+
+      const container = screen.getByTestId("latex-container");
+
+      // Initial zoom is 100%
+      expect(screen.getByText("100%")).toBeInTheDocument();
+
+      // Simulate pinch start (two fingers)
+      fireEvent.touchStart(container, {
+        touches: [
+          { clientX: 100, clientY: 100, identifier: 0 },
+          { clientX: 200, clientY: 200, identifier: 1 },
+        ],
+      });
+
+      // Simulate pinch out (fingers moving apart to zoom in)
+      fireEvent.touchMove(container, {
+        touches: [
+          { clientX: 50, clientY: 50, identifier: 0 },
+          { clientX: 250, clientY: 250, identifier: 1 },
+        ],
+      });
+
+      fireEvent.touchEnd(container);
+
+      // Zoom should have increased
+      await waitFor(() => {
+        const zoomText = screen.getByText(/\d+%/);
+        const zoomValue = parseInt(zoomText.textContent || "100");
+        expect(zoomValue).toBeGreaterThan(100);
+      });
+    });
+  });
 });

@@ -213,4 +213,133 @@ describe("InteractiveSVGArtifact", () => {
       expect(screen.getByTestId("svg-container")).toBeInTheDocument();
     });
   });
+
+  describe("Keyboard Shortcuts", () => {
+    it("should zoom in with + key", async () => {
+      render(<InteractiveSVGArtifact data={sampleSVG} />);
+
+      const container = screen.getByTestId("svg-container");
+      fireEvent.keyDown(container, { key: "+" });
+
+      await waitFor(() => {
+        expect(screen.getByText("125%")).toBeInTheDocument();
+      });
+    });
+
+    it("should zoom out with - key", async () => {
+      render(<InteractiveSVGArtifact data={sampleSVG} />);
+
+      const container = screen.getByTestId("svg-container");
+      fireEvent.keyDown(container, { key: "-" });
+
+      await waitFor(() => {
+        expect(screen.getByText("80%")).toBeInTheDocument();
+      });
+    });
+
+    it("should reset zoom with 0 key", async () => {
+      render(<InteractiveSVGArtifact data={sampleSVG} />);
+
+      // First zoom in
+      fireEvent.click(screen.getByLabelText("Zoom in"));
+      await waitFor(() => {
+        expect(screen.getByText("125%")).toBeInTheDocument();
+      });
+
+      // Then reset with 0
+      const container = screen.getByTestId("svg-container");
+      fireEvent.keyDown(container, { key: "0" });
+
+      await waitFor(() => {
+        expect(screen.getByText("100%")).toBeInTheDocument();
+      });
+    });
+
+    it("should exit fullscreen with Escape key", async () => {
+      render(<InteractiveSVGArtifact data={sampleSVG} />);
+
+      // Enter fullscreen
+      fireEvent.click(screen.getByLabelText("Toggle fullscreen"));
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("svg-container").classList.contains("fixed"),
+        ).toBe(true);
+      });
+
+      // Exit with Escape
+      const container = screen.getByTestId("svg-container");
+      fireEvent.keyDown(container, { key: "Escape" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("svg-container").classList.contains("fixed"),
+        ).toBe(false);
+      });
+    });
+  });
+
+  describe("Touch Gestures", () => {
+    it("should have touch event handlers on viewport", async () => {
+      render(<InteractiveSVGArtifact data={sampleSVG} />);
+
+      const viewport = screen.getByTestId("svg-viewport");
+      expect(viewport).toBeInTheDocument();
+      // The viewport should be responsive to touch events
+      expect(viewport.classList.contains("touch-none")).toBe(false);
+    });
+
+    it("should handle single touch for pan", async () => {
+      render(<InteractiveSVGArtifact data={sampleSVG} />);
+
+      const viewport = screen.getByTestId("svg-viewport");
+
+      // Simulate touch start and move for pan
+      fireEvent.touchStart(viewport, {
+        touches: [{ clientX: 100, clientY: 100, identifier: 0 }],
+      });
+
+      fireEvent.touchMove(viewport, {
+        touches: [{ clientX: 150, clientY: 150, identifier: 0 }],
+      });
+
+      fireEvent.touchEnd(viewport);
+
+      // Pan should work without errors
+      expect(screen.getByTestId("svg-viewport")).toBeInTheDocument();
+    });
+
+    it("should handle pinch-to-zoom with two fingers", async () => {
+      render(<InteractiveSVGArtifact data={sampleSVG} />);
+
+      const viewport = screen.getByTestId("svg-viewport");
+
+      // Initial zoom is 100%
+      expect(screen.getByText("100%")).toBeInTheDocument();
+
+      // Simulate pinch start (two fingers)
+      fireEvent.touchStart(viewport, {
+        touches: [
+          { clientX: 100, clientY: 100, identifier: 0 },
+          { clientX: 200, clientY: 200, identifier: 1 },
+        ],
+      });
+
+      // Simulate pinch out (fingers moving apart to zoom in)
+      fireEvent.touchMove(viewport, {
+        touches: [
+          { clientX: 50, clientY: 50, identifier: 0 },
+          { clientX: 250, clientY: 250, identifier: 1 },
+        ],
+      });
+
+      fireEvent.touchEnd(viewport);
+
+      // Zoom should have increased (pinch out = zoom in)
+      await waitFor(() => {
+        const zoomText = screen.getByText(/\d+%/);
+        const zoomValue = parseInt(zoomText.textContent || "100");
+        expect(zoomValue).toBeGreaterThan(100);
+      });
+    });
+  });
 });

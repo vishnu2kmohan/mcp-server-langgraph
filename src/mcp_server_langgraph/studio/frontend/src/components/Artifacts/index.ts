@@ -27,6 +27,9 @@ export type { LaTeXArtifactProps } from "./LaTeXArtifact";
 export { SVGArtifact } from "./SVGArtifact";
 export type { SVGArtifactProps } from "./SVGArtifact";
 
+export { InteractiveSVGArtifact } from "./InteractiveSVGArtifact";
+export type { InteractiveSVGArtifactProps } from "./InteractiveSVGArtifact";
+
 export { AudioArtifact } from "./AudioArtifact";
 export type { AudioArtifactProps } from "./AudioArtifact";
 
