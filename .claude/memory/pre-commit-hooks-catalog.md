@@ -1,8 +1,8 @@
 # Pre-commit Hooks Catalog
 
-**Last Updated**: 2025-11-23
+**Last Updated**: 2025-12-16
 **Purpose**: Complete catalog of all pre-commit hooks and validation strategy
-**Total Hooks**: 78 hooks across 3 stages
+**Total Hooks**: 83 hooks across 3 stages (including 5 frontend hooks)
 **Config File**: `.pre-commit-config.yaml` (1,597 lines)
 
 ---
@@ -167,6 +167,45 @@ git commit --no-verify -m "message"
 **Current**: 0 errors, blocks pre-push
 
 **Why blocking now**: Agent.py type errors fixed with `type: ignore[arg-type]` for list variance issues
+
+---
+
+### Frontend Validation (5 hooks)
+
+#### 17. `frontend-lint`
+**Stage**: pre-commit
+**Purpose**: ESLint validation for React/TypeScript
+**Files**: `src/mcp_server_langgraph/studio/frontend/src/**/*.{ts,tsx}`
+**Duration**: ~2-4s
+
+#### 18. `frontend-format-check`
+**Stage**: pre-commit
+**Purpose**: Prettier formatting check
+**Files**: `src/mcp_server_langgraph/studio/frontend/src/**/*.{ts,tsx,css}`
+**Duration**: ~1-2s
+
+#### 19. `frontend-typecheck`
+**Stage**: pre-push
+**Purpose**: TypeScript type checking (`tsc --noEmit`)
+**Files**: `src/mcp_server_langgraph/studio/frontend/**/*.{ts,tsx}`
+**Duration**: ~3-5s (cached), ~30s (first run)
+
+#### 20. `frontend-build`
+**Stage**: pre-push
+**Purpose**: Full production build validation (`tsc && vite build`)
+**Files**: `src/mcp_server_langgraph/studio/frontend/**/*.{ts,tsx,css,json}`
+**Duration**: ~20-40s
+**Added**: 2025-12-16
+**Catches**:
+- Missing API exports
+- Vite-specific build errors
+- Asset processing issues
+
+#### 21. `frontend-test`
+**Stage**: pre-push
+**Purpose**: Vitest unit tests (3,300+ tests)
+**Files**: `src/mcp_server_langgraph/studio/frontend/src/**/*.{ts,tsx}`
+**Duration**: ~20-30s
 
 ---
 

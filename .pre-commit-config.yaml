@@ -332,6 +332,35 @@ repos:
       Complements Docker build validation with faster, targeted TypeScript checking.
 
       '
+  - id: frontend-build
+    name: Frontend Production Build Validation
+    entry: >
+      bash -c 'cd src/mcp_server_langgraph/studio/frontend &&
+      if [ ! -d "node_modules" ]; then
+        echo "Installing frontend dependencies..." && npm ci --silent;
+      fi &&
+      npm run build 2>&1 || (echo "" && echo "ERROR - Frontend build failed." && echo "Run: cd src/mcp_server_langgraph/studio/frontend && npm run build" && exit 1)'
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/.*\.(ts|tsx|css|json)$
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Validates frontend production build succeeds (tsc + vite build).
+
+      Added 2025-12-16 to catch build errors before they reach Docker build.
+
+      Runs the full production build: TypeScript compilation + Vite bundling.
+      This catches issues that typecheck alone might miss:
+      - Missing API exports (useGenerateSessionTitleMutation issue)
+      - Vite-specific build errors
+      - Asset processing issues
+
+      Duration: ~20-40s depending on caching.
+
+      Provides full CI parity for frontend validation.
+
+      '
   - id: frontend-test
     name: Frontend Unit Tests (Vitest)
     entry: >
