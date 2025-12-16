@@ -244,7 +244,7 @@ async def validate_all_services(
 
     # Qdrant validation
     if not skip_qdrant:
-        url = qdrant_url or os.getenv("QDRANT_URL", "http://localhost:6333")
+        url = qdrant_url or os.getenv("QDRANT_URL") or "http://localhost:6333"
         results["qdrant"] = await validate_qdrant_connection(url=url)
 
     return results

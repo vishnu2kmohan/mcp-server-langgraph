@@ -40,10 +40,10 @@ import hashlib
 import json
 import secrets
 from datetime import datetime, UTC
-from typing import Any
+from typing import Any, cast
 
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey, EllipticCurvePublicKey
 import jwt
 from jwt.algorithms import ECAlgorithm
 
@@ -241,7 +241,7 @@ def verify_dpop_proof(
             return {"valid": False, "error": "Missing jwk in header"}
 
         # Reconstruct public key from JWK
-        public_key = ECAlgorithm.from_jwk(jwk)
+        public_key = cast(EllipticCurvePublicKey, ECAlgorithm.from_jwk(jwk))
 
         # Verify signature and decode
         payload = jwt.decode(
