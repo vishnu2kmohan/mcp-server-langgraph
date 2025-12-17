@@ -470,7 +470,7 @@ class WorkflowServiceAdapter:
         }
 
     # ==========================================================================
-    # Workflow Generation (stub - requires LLM integration)
+    # Workflow Generation (LLM-powered)
     # ==========================================================================
 
     async def generate_workflow(
@@ -478,14 +478,65 @@ class WorkflowServiceAdapter:
         session_id: str | None = None,
         prompt: str | None = None,
     ) -> dict[str, Any]:
-        """Generate a workflow from session or prompt using AI."""
-        if session_id:
-            # TODO: Fetch session messages and analyze
-            # For now, raise not found to test error handling
-            raise ValueError(f"Session {session_id} not found")
+        """
+        Generate a workflow from session or prompt using AI.
 
-        # TODO: Use LLM to generate workflow from prompt
-        # For now, return a stub workflow
+        Uses the WorkflowGenerator service to create workflow definitions
+        via LLM-based analysis. Falls back to a stub if LLM is unavailable.
+
+        Args:
+            session_id: Generate from session message history.
+            prompt: Generate from text prompt.
+
+        Returns:
+            Dict with workflow, confidence, and suggestions.
+
+        Raises:
+            ValueError: If session not found.
+        """
+        from mcp_server_langgraph.services.workflow_generator import (
+            WorkflowGenerationError,
+            WorkflowGenerator,
+            workflow_to_api_format,
+        )
+
+        # Try to create LLM-powered generator
+        try:
+            from mcp_server_langgraph.core.config import settings
+            from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+            llm = create_llm_from_config(settings)
+            generator = WorkflowGenerator(llm=llm)
+        except Exception:
+            # Fallback to stub if LLM is unavailable
+            return self._generate_stub_workflow(prompt)
+
+        try:
+            if session_id:
+                # Fetch session messages
+                from mcp_server_langgraph.api.v1.sessions import get_session_service
+
+                session_service = get_session_service()
+                messages = await session_service.get_session_messages(session_id)
+
+                if messages is None:
+                    raise ValueError(f"Session {session_id} not found")
+
+                # Generate from session messages
+                result = await generator.generate_from_session(messages)
+            else:
+                # Generate from prompt
+                result = await generator.generate_from_prompt(prompt or "")
+
+            # Convert to API format
+            return workflow_to_api_format(result)
+
+        except WorkflowGenerationError:
+            # Fallback to stub on generation failure
+            return self._generate_stub_workflow(prompt)
+
+    def _generate_stub_workflow(self, prompt: str | None) -> dict[str, Any]:
+        """Generate a simple stub workflow when LLM is unavailable."""
         import uuid
         from datetime import datetime
 
@@ -870,6 +921,46 @@ async def list_workflows(
     return CursorPaginatedResponse(data=workflows, pagination=pagination)
 
 
+# Note: Specific literal routes MUST come before parameterized routes
+# to avoid `/workflows/shared-with-me` matching `/workflows/{workflow_id}`
+
+
+@workflows_router.get("/workflows/shared-with-me")
+async def list_shared_with_me(
+    service: WorkflowService,
+    current_user: CurrentUser,
+) -> list[WorkflowResponse]:
+    """
+    List workflows shared with the current user.
+
+    Returns workflows that other users have shared with the authenticated user.
+    """
+    user_id = _get_user_id(current_user)
+    workflows = await service.list_shared_with_me(user_id=user_id)
+    return [WorkflowResponse(**w) for w in workflows]
+
+
+@workflows_router.get("/workflows/public/{share_link}")
+async def get_public_workflow(
+    share_link: str,
+    service: WorkflowService,
+) -> WorkflowResponse:
+    """
+    Access a public workflow by its share link.
+
+    No authentication required for public workflows.
+    """
+    workflow = await service.get_public_workflow(share_link)
+
+    if workflow is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Public workflow not found or link expired",
+        )
+
+    return WorkflowResponse(**workflow)
+
+
 @workflows_router.get("/workflows/{workflow_id}")
 async def get_workflow(
     workflow_id: str,
@@ -952,42 +1043,8 @@ async def delete_workflow(
 # ==============================================================================
 # Workflow Sharing Endpoints
 # ==============================================================================
-
-
-@workflows_router.get("/workflows/shared-with-me")
-async def list_shared_with_me(
-    service: WorkflowService,
-    current_user: CurrentUser,
-) -> list[WorkflowResponse]:
-    """
-    List workflows shared with the current user.
-
-    Returns workflows that other users have shared with the authenticated user.
-    """
-    user_id = _get_user_id(current_user)
-    workflows = await service.list_shared_with_me(user_id=user_id)
-    return [WorkflowResponse(**w) for w in workflows]
-
-
-@workflows_router.get("/workflows/public/{share_link}")
-async def get_public_workflow(
-    share_link: str,
-    service: WorkflowService,
-) -> WorkflowResponse:
-    """
-    Access a public workflow by its share link.
-
-    No authentication required for public workflows.
-    """
-    workflow = await service.get_public_workflow(share_link)
-
-    if workflow is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Public workflow not found or link expired",
-        )
-
-    return WorkflowResponse(**workflow)
+# Note: shared-with-me and public/{share_link} routes are defined earlier
+# to ensure they are matched before /{workflow_id} pattern.
 
 
 @workflows_router.get("/workflows/{workflow_id}/shares")

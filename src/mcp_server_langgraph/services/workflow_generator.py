@@ -1,0 +1,431 @@
+"""
+Workflow Generator Service
+
+LLM-powered service for generating workflow definitions from:
+- Text prompts describing desired functionality
+- Session message history capturing user interactions
+
+Uses structured output parsing to ensure valid workflow graphs.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import uuid
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
+
+from langchain_core.messages import HumanMessage, SystemMessage
+from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.llm.factory import LLMFactory
+
+logger = logging.getLogger(__name__)
+
+
+# ==============================================================================
+# Exceptions
+# ==============================================================================
+
+
+class WorkflowGenerationError(Exception):
+    """Raised when workflow generation fails."""
+
+    pass
+
+
+# ==============================================================================
+# Pydantic Models for Structured LLM Output
+# ==============================================================================
+
+
+class GeneratedNode(BaseModel):
+    """A node in a generated workflow."""
+
+    id: str = Field(description="Unique identifier for the node")
+    type: str = Field(description="Node type: start, end, llm, tool, router, condition")
+    label: str = Field(description="Human-readable label for the node")
+    config: dict[str, Any] = Field(default_factory=dict, description="Node configuration")
+
+
+class GeneratedEdge(BaseModel):
+    """An edge connecting nodes in a generated workflow."""
+
+    source: str = Field(description="Source node ID")
+    target: str = Field(description="Target node ID")
+    condition: str | None = Field(default=None, description="Edge condition (for routers)")
+
+
+class GeneratedWorkflowOutput(BaseModel):
+    """Structured output from LLM for workflow generation."""
+
+    name: str = Field(description="Workflow name")
+    description: str = Field(description="Workflow description")
+    nodes: list[GeneratedNode] = Field(description="List of workflow nodes")
+    edges: list[GeneratedEdge] = Field(description="List of edges connecting nodes")
+    reasoning: str = Field(description="Explanation of the workflow design")
+
+
+class WorkflowGenerationResult(BaseModel):
+    """Result of workflow generation including metadata."""
+
+    workflow: GeneratedWorkflowOutput = Field(description="Generated workflow")
+    confidence: float = Field(ge=0.0, le=1.0, description="Generation confidence")
+    suggestions: list[str] = Field(default_factory=list, description="Improvement suggestions")
+
+
+# ==============================================================================
+# System Prompt
+# ==============================================================================
+
+SYSTEM_PROMPT = """You are an expert workflow designer for LangGraph-based AI agent systems.
+
+Your task is to design workflow graphs that accomplish user goals. A workflow consists of:
+
+## Node Types
+- **start**: Entry point of the workflow. Every workflow must have exactly one start node.
+- **end**: Exit point of the workflow. Every workflow must have at least one end node.
+- **llm**: An LLM processing node that can generate text, analyze input, or make decisions.
+  - Config: {"model": "model-name", "temperature": 0.7, "system_prompt": "..."}
+- **tool**: Invokes an external tool or API.
+  - Config: {"tool_name": "...", "parameters": {...}}
+- **router**: Routes flow based on conditions. Connect to multiple targets with condition labels.
+- **condition**: Evaluates a condition and branches the flow.
+  - Config: {"condition": "expression"}
+- **memory**: Saves or retrieves from memory/context.
+  - Config: {"action": "save|retrieve", "key": "..."}
+
+## Design Principles
+1. Start with a single 'start' node
+2. End with at least one 'end' node
+3. Use 'llm' nodes for AI processing
+4. Use 'router' nodes for conditional branching
+5. Use 'tool' nodes for external integrations
+6. Keep workflows focused and minimal
+7. Ensure all nodes are connected (no orphans)
+8. Ensure the graph is acyclic (no infinite loops without conditions)
+
+## Output Format
+Respond with valid JSON matching this structure:
+{
+  "name": "Workflow Name",
+  "description": "Description of what this workflow does",
+  "nodes": [
+    {"id": "unique_id", "type": "node_type", "label": "Human Label", "config": {...}}
+  ],
+  "edges": [
+    {"source": "from_node_id", "target": "to_node_id", "condition": null}
+  ],
+  "reasoning": "Explanation of design decisions"
+}
+
+IMPORTANT: Respond ONLY with the JSON object, no markdown code blocks or additional text."""
+
+
+# ==============================================================================
+# Workflow Generator
+# ==============================================================================
+
+
+class WorkflowGenerator:
+    """
+    LLM-powered workflow generator.
+
+    Generates workflow definitions from text prompts or session message history.
+    Uses structured output parsing to ensure valid workflow graphs.
+    """
+
+    def __init__(self, llm: LLMFactory) -> None:
+        """
+        Initialize the workflow generator.
+
+        Args:
+            llm: LLM factory instance for making API calls.
+        """
+        self._llm = llm
+
+    def get_system_prompt(self) -> str:
+        """Get the system prompt for workflow generation."""
+        return SYSTEM_PROMPT
+
+    async def generate_from_prompt(self, prompt: str) -> WorkflowGenerationResult:
+        """
+        Generate a workflow from a text prompt.
+
+        Args:
+            prompt: User's description of the desired workflow.
+
+        Returns:
+            WorkflowGenerationResult with the generated workflow.
+
+        Raises:
+            WorkflowGenerationError: If generation or parsing fails.
+        """
+        user_message = f"Create a workflow for the following requirement:\n\n{prompt}"
+
+        return await self._generate(user_message)
+
+    async def generate_from_session(self, messages: list[dict[str, Any]]) -> WorkflowGenerationResult:
+        """
+        Generate a workflow from session message history.
+
+        Analyzes the conversation to understand user intent and creates
+        a workflow that captures the discussed functionality.
+
+        Args:
+            messages: List of message dicts with 'role' and 'content' keys.
+
+        Returns:
+            WorkflowGenerationResult with the generated workflow.
+
+        Raises:
+            WorkflowGenerationError: If generation or parsing fails.
+        """
+        # Format session messages into a summary
+        conversation = "\n".join(f"[{m.get('role', 'user').upper()}]: {m.get('content', '')}" for m in messages)
+
+        user_message = f"""Analyze this conversation and create a workflow that captures the discussed functionality:
+
+<conversation>
+{conversation}
+</conversation>
+
+Based on this conversation, design a workflow that implements what the user is trying to accomplish."""
+
+        return await self._generate(user_message)
+
+    async def _generate(self, user_message: str) -> WorkflowGenerationResult:
+        """
+        Internal method to generate workflow from any user message.
+
+        Args:
+            user_message: Formatted user message for the LLM.
+
+        Returns:
+            WorkflowGenerationResult with the generated workflow.
+
+        Raises:
+            WorkflowGenerationError: If generation or parsing fails.
+        """
+        messages = [
+            SystemMessage(content=self.get_system_prompt()),
+            HumanMessage(content=user_message),
+        ]
+
+        try:
+            response = await self._llm.ainvoke(messages)
+            content = response.content
+
+            # Parse JSON response
+            workflow_output = self._parse_response(content)
+
+            # Calculate confidence based on workflow completeness
+            confidence = self._calculate_confidence(workflow_output)
+
+            # Generate improvement suggestions
+            suggestions = self._generate_suggestions(workflow_output)
+
+            return WorkflowGenerationResult(
+                workflow=workflow_output,
+                confidence=confidence,
+                suggestions=suggestions,
+            )
+
+        except json.JSONDecodeError as e:
+            logger.exception("Failed to parse LLM response as JSON")
+            raise WorkflowGenerationError(f"LLM returned invalid JSON: {e}") from e
+        except Exception as e:
+            logger.exception("Workflow generation failed")
+            raise WorkflowGenerationError(f"Generation failed: {e}") from e
+
+    def _parse_response(self, content: str) -> GeneratedWorkflowOutput:
+        """
+        Parse LLM response content into structured output.
+
+        Args:
+            content: Raw LLM response content.
+
+        Returns:
+            Parsed GeneratedWorkflowOutput.
+
+        Raises:
+            json.JSONDecodeError: If content is not valid JSON.
+            ValueError: If JSON doesn't match expected structure.
+        """
+        # Strip any markdown code blocks if present
+        content = content.strip()
+        if content.startswith("```"):
+            # Find the JSON content between code blocks
+            lines = content.split("\n")
+            json_lines = []
+            in_block = False
+            for line in lines:
+                if line.startswith("```"):
+                    in_block = not in_block
+                    continue
+                if in_block or not content.startswith("```"):
+                    json_lines.append(line)
+            content = "\n".join(json_lines)
+
+        data = json.loads(content)
+        return GeneratedWorkflowOutput(**data)
+
+    def _calculate_confidence(self, workflow: GeneratedWorkflowOutput) -> float:
+        """
+        Calculate confidence score based on workflow completeness.
+
+        Factors:
+        - Has start node
+        - Has end node
+        - All nodes are connected
+        - No orphan nodes
+        - Has meaningful description
+
+        Args:
+            workflow: The generated workflow.
+
+        Returns:
+            Confidence score between 0.0 and 1.0.
+        """
+        score = 0.0
+        factors = 0
+
+        # Check for start node
+        factors += 1
+        if any(n.type == "start" for n in workflow.nodes):
+            score += 1.0
+
+        # Check for end node
+        factors += 1
+        if any(n.type == "end" for n in workflow.nodes):
+            score += 1.0
+
+        # Check minimum node count (at least 3 for a useful workflow)
+        factors += 1
+        if len(workflow.nodes) >= 3:
+            score += 1.0
+
+        # Check edges connect nodes
+        factors += 1
+        node_ids = {n.id for n in workflow.nodes}
+        valid_edges = all(e.source in node_ids and e.target in node_ids for e in workflow.edges)
+        if valid_edges and len(workflow.edges) > 0:
+            score += 1.0
+
+        # Check description exists
+        factors += 1
+        if len(workflow.description) > 10:
+            score += 1.0
+
+        return score / factors if factors > 0 else 0.0
+
+    def _generate_suggestions(self, workflow: GeneratedWorkflowOutput) -> list[str]:
+        """
+        Generate improvement suggestions for the workflow.
+
+        Args:
+            workflow: The generated workflow.
+
+        Returns:
+            List of improvement suggestions.
+        """
+        suggestions = []
+
+        # Check for error handling
+        has_error_node = any("error" in n.label.lower() for n in workflow.nodes)
+        if not has_error_node:
+            suggestions.append("Consider adding error handling nodes")
+
+        # Check for memory/context
+        has_memory = any(n.type == "memory" for n in workflow.nodes)
+        if not has_memory:
+            suggestions.append("Consider adding memory nodes for context persistence")
+
+        # Check for validation
+        has_validation = any("validat" in n.label.lower() for n in workflow.nodes)
+        if not has_validation:
+            suggestions.append("Consider adding input validation")
+
+        # Suggest logging for complex workflows
+        if len(workflow.nodes) > 5:
+            suggestions.append("Consider adding logging nodes for observability")
+
+        return suggestions
+
+
+# ==============================================================================
+# Factory Function
+# ==============================================================================
+
+
+async def create_workflow_generator() -> WorkflowGenerator:
+    """
+    Factory function to create a WorkflowGenerator with configured LLM.
+
+    Uses the application's LLM configuration to create the generator.
+
+    Returns:
+        Configured WorkflowGenerator instance.
+    """
+    from mcp_server_langgraph.core.config import settings
+    from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+    llm = create_llm_from_config(settings)
+
+    return WorkflowGenerator(llm=llm)
+
+
+# ==============================================================================
+# Conversion Helpers
+# ==============================================================================
+
+
+def workflow_to_api_format(
+    result: WorkflowGenerationResult,
+) -> dict[str, Any]:
+    """
+    Convert WorkflowGenerationResult to API response format.
+
+    Args:
+        result: The workflow generation result.
+
+    Returns:
+        Dict matching the API's GenerateWorkflowResponse format.
+    """
+    workflow = result.workflow
+    now = datetime.now().isoformat()
+    workflow_id = str(uuid.uuid4())
+
+    return {
+        "workflow": {
+            "id": workflow_id,
+            "name": workflow.name,
+            "description": workflow.description,
+            "nodes": [
+                {
+                    "id": node.id,
+                    "type": node.type,
+                    "position": {"x": i * 200, "y": 100},  # Simple layout
+                    "data": {
+                        "label": node.label,
+                        **node.config,
+                    },
+                }
+                for i, node in enumerate(workflow.nodes)
+            ],
+            "edges": [
+                {
+                    "source": edge.source,
+                    "target": edge.target,
+                    "label": edge.condition,
+                }
+                for edge in workflow.edges
+            ],
+            "created_at": now,
+            "updated_at": now,
+        },
+        "confidence": result.confidence,
+        "suggestions": result.suggestions,
+    }

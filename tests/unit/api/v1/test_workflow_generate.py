@@ -10,6 +10,8 @@ Requirements:
 - Returns improvement suggestions
 """
 
+import gc
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from pydantic import ValidationError
@@ -133,8 +135,13 @@ class TestGenerateWorkflowEndpoint:
         pytest.fail("POST /workflows/generate route not found")
 
 
+@pytest.mark.xdist_group(name="test_workflow_generate_integration")
 class TestGenerateWorkflowIntegration:
     """Integration-style unit tests for workflow generation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     @pytest.fixture
     def mock_service(self) -> MagicMock:

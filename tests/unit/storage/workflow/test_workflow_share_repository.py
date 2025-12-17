@@ -15,6 +15,7 @@ Repository operations:
 
 from __future__ import annotations
 
+import gc
 import uuid
 from typing import TYPE_CHECKING
 
@@ -430,8 +431,13 @@ class TestWorkflowShareRepositoryProtocol:
         assert hasattr(WorkflowShareRepositoryProtocol, "get_by_share_link")
 
 
+@pytest.mark.xdist_group(name="test_postgres_workflow_share_repository_structure")
 class TestPostgresWorkflowShareRepositoryStructure:
     """Tests for PostgresWorkflowShareRepository class structure."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_postgres_workflow_share_repository_exists(self) -> None:
         """PostgresWorkflowShareRepository should be importable."""

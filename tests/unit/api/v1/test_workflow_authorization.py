@@ -12,6 +12,7 @@ Authorization requirements:
 
 from __future__ import annotations
 
+import gc
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock
 
@@ -25,8 +26,13 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="test_workflow_authorization")
 class TestRequireWorkflowOwnerDependency:
     """Tests for require_workflow_owner authorization dependency."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_require_workflow_owner_function_exists(self) -> None:
         """require_workflow_owner should be importable."""
@@ -198,8 +204,13 @@ class TestRequireWorkflowOwnerDependency:
         assert result["id"] == "wf-123"
 
 
+@pytest.mark.xdist_group(name="test_workflow_sharing_endpoint_authorization")
 class TestWorkflowSharingEndpointAuthorization:
     """Tests for authorization on workflow sharing endpoints."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     @pytest.fixture
     def mock_service(self) -> MagicMock:

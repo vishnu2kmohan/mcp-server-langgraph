@@ -19,6 +19,8 @@ Requirements:
 - 403 for non-owners attempting to share
 """
 
+import gc
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from fastapi import status
@@ -191,8 +193,13 @@ class TestPublicWorkflowAccessEndpoint:
         pytest.fail("GET /workflows/public/{share_link} route not found")
 
 
+@pytest.mark.xdist_group(name="test_workflow_sharing_integration")
 class TestWorkflowSharingIntegration:
     """Integration-style unit tests for workflow sharing functionality."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     @pytest.fixture
     def mock_service(self) -> MagicMock:
