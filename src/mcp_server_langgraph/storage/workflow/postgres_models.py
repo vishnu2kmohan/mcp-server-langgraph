@@ -14,7 +14,7 @@ Optimized for:
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, Index, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, JSON, String, Text
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -61,6 +61,10 @@ class WorkflowModel(WorkflowBase):
     # Full-Text Search vector (populated by trigger)
     # Weighted: name (A) > description (B)
     search_vector: Mapped[str | None] = mapped_column(TSVECTOR, nullable=True)
+
+    # Sharing fields
+    is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    share_link: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -122,3 +126,54 @@ class WorkflowModel(WorkflowBase):
     def __repr__(self) -> str:
         """String representation."""
         return f"<Workflow(id={self.id!r}, name={self.name!r}, status={self.status!r})>"
+
+
+class WorkflowShareModel(WorkflowBase):
+    """
+    SQLAlchemy model for workflow sharing permissions.
+
+    Table: workflow_shares (user-to-workflow permissions)
+
+    Stores sharing relationships between workflows and users with
+    permission levels: view, edit, execute.
+    """
+
+    __tablename__ = "workflow_shares"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    workflow_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("workflows.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    permission: Mapped[str] = mapped_column(String(20), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    # Composite indices for efficient queries
+    __table_args__ = (
+        # Unique constraint on workflow_id + user_id
+        Index(
+            "ix_workflow_shares_workflow_user",
+            "workflow_id",
+            "user_id",
+            unique=True,
+        ),
+        # Composite index for permission-based queries
+        Index(
+            "ix_workflow_shares_user_permission",
+            "user_id",
+            "permission",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        """String representation."""
+        return f"<WorkflowShare(workflow_id={self.workflow_id!r}, user_id={self.user_id!r}, permission={self.permission!r})>"

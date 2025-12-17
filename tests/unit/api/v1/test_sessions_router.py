@@ -43,7 +43,7 @@ def sample_session() -> dict:
     """Sample session data for testing."""
     return {
         "id": str(uuid4()),
-        "title": "Test Chat Session",
+        "name": "Test Chat Session",
         "workflow_id": str(uuid4()),
         "messages": [
             {"role": "user", "content": "Hello"},
@@ -163,7 +163,7 @@ class TestSessionsGetEndpoint:
             data = response.json()
 
             assert data["id"] == sample_session["id"]
-            assert data["title"] == sample_session["title"]
+            assert data["name"] == sample_session["name"]
             assert "messages" in data
 
     def test_get_session_not_found_returns_404(self, test_app: FastAPI) -> None:
@@ -207,7 +207,7 @@ class TestSessionsCreateEndpoint:
             response = client.post(
                 "/api/v1/sessions",
                 json={
-                    "title": sample_session["title"],
+                    "name": sample_session["name"],
                     "workflow_id": sample_session["workflow_id"],
                 },
             )
@@ -229,14 +229,14 @@ class TestSessionsCreateEndpoint:
             response = client.post(
                 "/api/v1/sessions",
                 json={
-                    "title": sample_session["title"],
+                    "name": sample_session["name"],
                     "workflow_id": sample_session["workflow_id"],
                 },
             )
             data = response.json()
 
             assert "id" in data
-            assert data["title"] == sample_session["title"]
+            assert data["name"] == sample_session["name"]
 
 
 @pytest.mark.xdist_group(name="test_sessions_router")

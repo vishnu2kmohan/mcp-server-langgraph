@@ -67,3 +67,30 @@ class SortOrder(str, Enum):
 
     ASC = "asc"
     DESC = "desc"
+
+
+class SharePermission(str, Enum):
+    """Permission levels for workflow sharing."""
+
+    VIEW = "view"
+    EDIT = "edit"
+    EXECUTE = "execute"
+
+
+class WorkflowShare(BaseModel):
+    """Workflow share for storing user permissions."""
+
+    model_config = ConfigDict(ser_json_timedelta="iso8601")
+
+    id: str
+    workflow_id: str
+    user_id: str
+    email: str
+    permission: str = SharePermission.VIEW.value
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_by: str
+
+    @field_serializer("created_at")
+    def serialize_datetime(self, value: datetime) -> str:
+        """Serialize datetime to ISO 8601 format."""
+        return value.isoformat()
