@@ -198,6 +198,9 @@ class TestWorkflowSharingIntegration:
     def mock_service(self) -> MagicMock:
         """Create a mock WorkflowServiceAdapter with sharing methods."""
         service = MagicMock()
+        # Mock get_workflow for authorization check - returns workflow dict owned by mock user
+        # Must be a dict since require_workflow_owner calls workflow.get("user_id")
+        service.get_workflow = AsyncMock(return_value={"id": "wf-123", "user_id": "owner-123", "name": "Test Workflow"})
         service.get_workflow_shares = AsyncMock(
             return_value={
                 "shares": [
@@ -219,8 +222,16 @@ class TestWorkflowSharingIntegration:
         service.get_public_workflow = AsyncMock(return_value=None)
         return service
 
+    @pytest.fixture
+    def mock_current_user(self) -> dict[str, str]:
+        """Create a mock current user for authorization.
+
+        Uses 'sub' as the user ID key (matches _get_user_id implementation).
+        """
+        return {"sub": "owner-123", "email": "owner@example.com"}
+
     @pytest.mark.asyncio
-    async def test_get_shares_returns_shares_list(self, mock_service: MagicMock) -> None:
+    async def test_get_shares_returns_shares_list(self, mock_service: MagicMock, mock_current_user: dict[str, str]) -> None:
         """GET /workflows/{id}/shares should return shares list."""
         from mcp_server_langgraph.api.v1.workflows import get_workflow_shares
 
@@ -240,6 +251,7 @@ class TestWorkflowSharingIntegration:
         result = await get_workflow_shares(
             workflow_id="wf-123",
             service=mock_service,
+            current_user=mock_current_user,
         )
 
         # THEN should return shares response
@@ -248,7 +260,7 @@ class TestWorkflowSharingIntegration:
         mock_service.get_workflow_shares.assert_called_once_with("wf-123")
 
     @pytest.mark.asyncio
-    async def test_add_share_calls_service(self, mock_service: MagicMock) -> None:
+    async def test_add_share_calls_service(self, mock_service: MagicMock, mock_current_user: dict[str, str]) -> None:
         """POST /workflows/{id}/shares should add a share."""
         from mcp_server_langgraph.api.v1.workflows import (
             add_workflow_share,
@@ -263,13 +275,14 @@ class TestWorkflowSharingIntegration:
             workflow_id="wf-123",
             request=request,
             service=mock_service,
+            current_user=mock_current_user,
         )
 
         # THEN service should be called
         mock_service.add_workflow_share.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_remove_share_returns_none(self, mock_service: MagicMock) -> None:
+    async def test_remove_share_returns_none(self, mock_service: MagicMock, mock_current_user: dict[str, str]) -> None:
         """DELETE /workflows/{id}/shares/{user_id} should return None (204)."""
         from mcp_server_langgraph.api.v1.workflows import remove_workflow_share
 
@@ -278,6 +291,7 @@ class TestWorkflowSharingIntegration:
             workflow_id="wf-123",
             user_id="user-456",
             service=mock_service,
+            current_user=mock_current_user,
         )
 
         # THEN should return None and call service
@@ -285,7 +299,7 @@ class TestWorkflowSharingIntegration:
         mock_service.remove_workflow_share.assert_called_once_with("wf-123", "user-456")
 
     @pytest.mark.asyncio
-    async def test_update_public_returns_link(self, mock_service: MagicMock) -> None:
+    async def test_update_public_returns_link(self, mock_service: MagicMock, mock_current_user: dict[str, str]) -> None:
         """PUT /workflows/{id}/public should return share link when made public."""
         from mcp_server_langgraph.api.v1.workflows import (
             update_workflow_public,
@@ -306,6 +320,7 @@ class TestWorkflowSharingIntegration:
             workflow_id="wf-123",
             request=request,
             service=mock_service,
+            current_user=mock_current_user,
         )
 
         # THEN should return public status and link
@@ -313,19 +328,20 @@ class TestWorkflowSharingIntegration:
         assert result["share_link"] == "abc123xyz"
 
     @pytest.mark.asyncio
-    async def test_workflow_not_found_raises_404(self, mock_service: MagicMock) -> None:
+    async def test_workflow_not_found_raises_404(self, mock_service: MagicMock, mock_current_user: dict[str, str]) -> None:
         """Should raise 404 if workflow not found."""
         from fastapi import HTTPException
         from mcp_server_langgraph.api.v1.workflows import get_workflow_shares
 
-        # GIVEN workflow doesn't exist
-        mock_service.get_workflow_shares = AsyncMock(return_value=None)
+        # GIVEN workflow doesn't exist (get_workflow returns None)
+        mock_service.get_workflow = AsyncMock(return_value=None)
 
         # WHEN/THEN should raise 404
         with pytest.raises(HTTPException) as exc_info:
             await get_workflow_shares(
                 workflow_id="nonexistent",
                 service=mock_service,
+                current_user=mock_current_user,
             )
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
