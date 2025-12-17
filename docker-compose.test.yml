@@ -351,7 +351,10 @@ services:
       #   OpenFGA must expect the same issuer for token validation to succeed
       #   The extra_hosts mapping allows OpenFGA to resolve localhost to host-gateway
       - OPENFGA_AUTHN_METHOD=oidc
+      #- OPENFGA_AUTHN_OIDC_ISSUER=http://keycloak-test:8080/authn/realms/default
       - OPENFGA_AUTHN_OIDC_ISSUER=http://localhost/authn/realms/default
+      - OPENFGA_AUTHN_OIDC_ISSUER_ALIASES=http://keycloak-test:8080/authn/realms/default,http://keycloak:8080/authn/realms/default
+      #- OPENFGA_AUTHN_OIDC_ISSUER_ALIASES=http://localhost/authn/realms/default,http://keycloak:8080/authn/realms/default
       - OPENFGA_AUTHN_OIDC_AUDIENCE=openfga-server
       - TESTING=true
     healthcheck:
@@ -1062,7 +1065,7 @@ services:
       # OIDC issuer URL for OpenFGA token acquisition (via gateway for correct issuer in tokens)
       # The gateway routes to Keycloak and Keycloak returns tokens with iss: http://localhost/authn/realms/default
       # which matches OpenFGA's OPENFGA_AUTHN_OIDC_ISSUER setting
-      - OPENFGA_OIDC_ISSUER=http://gateway/authn/realms/default
+      - OPENFGA_OIDC_ISSUER=http://localhost/authn/realms/default
       - REDIS_URL=redis://redis-test:6379/1
       - REDIS_SESSION_URL=redis://redis-test:6379/0
       - CHECKPOINT_REDIS_URL=redis://redis-test:6379/1

@@ -487,6 +487,8 @@ test-infra-up:
 
 test-infra-up-build:
 	@echo "Rebuilding and starting full test infrastructure..."
+	@echo "→ Generating frontend package-lock.json..."
+	@npm install --package-lock-only --prefix src/mcp_server_langgraph/studio/frontend
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml up --build -d
 	@echo "✓ Full test infrastructure rebuilt and started!"
 

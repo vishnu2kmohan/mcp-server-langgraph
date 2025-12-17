@@ -20,6 +20,8 @@ export default defineConfig({
       workbox: {
         // Precache all static assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // Allow larger chunks to be precached (ChatPage is ~2.5MB)
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MiB
         // Runtime caching strategies
         runtimeCaching: [
           {
