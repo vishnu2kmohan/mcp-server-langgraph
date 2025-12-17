@@ -28,9 +28,14 @@ from mcp_server_langgraph.api.pagination import (
     CursorPaginatedResponse,
     CursorPaginationMetadata,
 )
+from mcp_server_langgraph.auth.middleware import get_current_user
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.storage.workflow import PostgresWorkflowManager, RedisWorkflowManager
+    from mcp_server_langgraph.storage.workflow.share_repository import WorkflowShareRepositoryProtocol
+
+# Type alias for authenticated user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 
 workflows_router = APIRouter(tags=["workflows"])
@@ -169,14 +174,17 @@ class WorkflowServiceAdapter:
     def __init__(
         self,
         manager: PostgresWorkflowManager | RedisWorkflowManager,
+        share_repository: WorkflowShareRepositoryProtocol | None = None,
     ) -> None:
         """
         Initialize the adapter.
 
         Args:
             manager: Workflow storage manager (PostgreSQL or Redis)
+            share_repository: Optional share repository for sharing operations
         """
         self._manager = manager
+        self._share_repository = share_repository
 
     async def list_workflows(
         self,
@@ -308,7 +316,7 @@ class WorkflowServiceAdapter:
         return await self._manager.delete_workflow(workflow_id)
 
     # ==========================================================================
-    # Sharing Methods (stub implementations - require workflow_shares table)
+    # Sharing Methods
     # ==========================================================================
 
     async def get_workflow_shares(self, workflow_id: str) -> dict[str, Any] | None:
@@ -318,8 +326,23 @@ class WorkflowServiceAdapter:
         if workflow is None:
             return None
 
-        # TODO: Query workflow_shares table when migration is applied
-        # For now, return empty shares (workflow exists but no shares)
+        # Use share repository if available
+        if self._share_repository is not None:
+            shares = await self._share_repository.get_shares(workflow_id)
+            return {
+                "shares": [
+                    {
+                        "user_id": s.user_id,
+                        "email": s.email,
+                        "permission": s.permission,
+                    }
+                    for s in shares
+                ],
+                "is_public": getattr(workflow, "is_public", False),
+                "share_link": getattr(workflow, "share_link", None),
+            }
+
+        # Fallback: return empty shares
         return {
             "shares": [],
             "is_public": getattr(workflow, "is_public", False),
@@ -331,21 +354,48 @@ class WorkflowServiceAdapter:
         workflow_id: str,
         email: str,
         permission: str,
+        user_id: str | None = None,
+        created_by: str | None = None,
     ) -> bool:
         """Add a share to a workflow. Returns False if workflow not found."""
         # First verify workflow exists
         workflow = await self._manager.get_workflow(workflow_id)
-        # TODO: Insert into workflow_shares table when migration is applied
-        # For now, return True if workflow exists (pretend share was added)
-        return workflow is not None
+        if workflow is None:
+            return False
+
+        # Use share repository if available
+        if self._share_repository is not None:
+            import uuid
+
+            from mcp_server_langgraph.storage.workflow.models import WorkflowShare
+
+            share = WorkflowShare(
+                id=str(uuid.uuid4()),
+                workflow_id=workflow_id,
+                user_id=user_id or email,  # Use email as user_id if not provided
+                email=email,
+                permission=permission,
+                created_by=created_by or "system",
+            )
+            await self._share_repository.create_share(share)
+            return True
+
+        # Fallback: pretend share was added
+        return True
 
     async def remove_workflow_share(self, workflow_id: str, user_id: str) -> bool:
         """Remove a share from a workflow. Returns False if not found."""
         # First verify workflow exists
         workflow = await self._manager.get_workflow(workflow_id)
-        # TODO: Delete from workflow_shares table when migration is applied
-        # For now, return True if workflow exists (idempotent)
-        return workflow is not None
+        if workflow is None:
+            return False
+
+        # Use share repository if available
+        if self._share_repository is not None:
+            return await self._share_repository.delete_share(workflow_id, user_id)
+
+        # Fallback: return True (idempotent)
+        return True
 
     async def update_workflow_public(self, workflow_id: str, is_public: bool) -> dict[str, Any] | None:
         """Update public visibility of a workflow. Returns None if not found."""
@@ -354,8 +404,11 @@ class WorkflowServiceAdapter:
         if workflow is None:
             return None
 
-        # TODO: Update workflow.is_public and generate share_link
-        # For now, return mock response
+        # Use share repository if available
+        if self._share_repository is not None:
+            return await self._share_repository.update_workflow_public(workflow_id, is_public)
+
+        # Fallback: return mock response
         import secrets
 
         share_link = secrets.token_urlsafe(16) if is_public else None
@@ -364,17 +417,57 @@ class WorkflowServiceAdapter:
             "share_link": share_link,
         }
 
-    async def list_shared_with_me(self) -> list[dict[str, Any]]:
+    async def list_shared_with_me(self, user_id: str | None = None) -> list[dict[str, Any]]:
         """List workflows shared with the current user."""
-        # TODO: Query workflow_shares table for current user
-        # For now, return empty list
-        return []
+        if user_id is None or self._share_repository is None:
+            return []
+
+        # Get workflow IDs shared with user
+        workflow_ids = await self._share_repository.list_shared_with_user(user_id)
+
+        # Fetch workflow details
+        workflows = []
+        for wf_id in workflow_ids:
+            workflow = await self._manager.get_workflow(wf_id)
+            if workflow is not None:
+                workflows.append(
+                    {
+                        "id": workflow.id,
+                        "name": workflow.name,
+                        "description": workflow.description,
+                        "nodes": workflow.nodes,
+                        "edges": workflow.edges,
+                        "created_at": workflow.created_at.isoformat(),
+                        "updated_at": workflow.updated_at.isoformat(),
+                    }
+                )
+
+        return workflows
 
     async def get_public_workflow(self, share_link: str) -> dict[str, Any] | None:
         """Get a public workflow by share link. Returns None if not found."""
-        # TODO: Query workflows by share_link
-        # For now, return None (no public workflows)
-        return None
+        if self._share_repository is None:
+            return None
+
+        # Look up workflow by share link
+        workflow_id = await self._share_repository.get_by_share_link(share_link)
+        if workflow_id is None:
+            return None
+
+        # Fetch workflow details
+        workflow = await self._manager.get_workflow(workflow_id)
+        if workflow is None:
+            return None
+
+        return {
+            "id": workflow.id,
+            "name": workflow.name,
+            "description": workflow.description,
+            "nodes": workflow.nodes,
+            "edges": workflow.edges,
+            "created_at": workflow.created_at.isoformat(),
+            "updated_at": workflow.updated_at.isoformat(),
+        }
 
     # ==========================================================================
     # Workflow Generation (stub - requires LLM integration)
@@ -470,7 +563,14 @@ def get_workflow_service() -> WorkflowServiceAdapter:
                 asyncio.set_event_loop(loop)
             # Use Any type to allow different manager types across branches
             manager: Any = loop.run_until_complete(init_postgres_manager())
-            _workflow_service = WorkflowServiceAdapter(manager)
+
+            # Create share repository (use in-memory for now, can be replaced with Postgres impl)
+            from mcp_server_langgraph.storage.workflow.share_repository import (
+                InMemoryWorkflowShareRepository,
+            )
+
+            share_repo = InMemoryWorkflowShareRepository()
+            _workflow_service = WorkflowServiceAdapter(manager, share_repository=share_repo)
             logger.info("Workflow service initialized with PostgreSQL storage")
 
         elif storage_backend == "redis" and settings.redis_url:
@@ -492,12 +592,22 @@ def get_workflow_service() -> WorkflowServiceAdapter:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
             manager = loop.run_until_complete(init_redis_manager())
-            _workflow_service = WorkflowServiceAdapter(manager)
+
+            # Create share repository
+            from mcp_server_langgraph.storage.workflow.share_repository import (
+                InMemoryWorkflowShareRepository,
+            )
+
+            share_repo = InMemoryWorkflowShareRepository()
+            _workflow_service = WorkflowServiceAdapter(manager, share_repository=share_repo)
             logger.info("Workflow service initialized with Redis storage")
 
         else:
             # Fallback to in-memory storage for development/testing
             from mcp_server_langgraph.storage.workflow.manager import RedisWorkflowManager
+            from mcp_server_langgraph.storage.workflow.share_repository import (
+                InMemoryWorkflowShareRepository,
+            )
 
             # Use a mock Redis for in-memory mode (fakeredis)
             try:
@@ -510,7 +620,8 @@ def get_workflow_service() -> WorkflowServiceAdapter:
                 raise RuntimeError("No workflow storage backend configured")
 
             manager = RedisWorkflowManager(redis_client=redis_client)
-            _workflow_service = WorkflowServiceAdapter(manager)
+            share_repo = InMemoryWorkflowShareRepository()
+            _workflow_service = WorkflowServiceAdapter(manager, share_repository=share_repo)
             logger.info("Workflow service initialized with in-memory storage (fakeredis)")
 
     return _workflow_service
@@ -530,6 +641,185 @@ def reset_workflow_service() -> None:
 
 # Type alias for dependency injection
 WorkflowService = Annotated[WorkflowServiceAdapter, Depends(get_workflow_service)]
+
+
+# ==============================================================================
+# Authorization Helpers
+# ==============================================================================
+
+
+def _get_user_id(current_user: dict[str, Any]) -> str:
+    """
+    Extract user ID from the current user context.
+
+    Tries 'sub' claim first, then falls back to 'preferred_username'.
+    """
+    return current_user.get("sub") or current_user.get("preferred_username") or "anonymous"
+
+
+def _is_admin(current_user: dict[str, Any]) -> bool:
+    """Check if the current user has admin role."""
+    roles = current_user.get("roles", [])
+    return "admin" in roles
+
+
+async def require_workflow_owner(
+    workflow_id: str,
+    current_user: dict[str, Any],
+    service: WorkflowServiceAdapter,
+) -> dict[str, Any]:
+    """
+    Authorization dependency that requires the user to own the workflow.
+
+    Args:
+        workflow_id: The workflow ID to check.
+        current_user: The authenticated user context.
+        service: The workflow service adapter.
+
+    Returns:
+        The workflow data if authorized.
+
+    Raises:
+        HTTPException: 404 if workflow not found, 403 if not owner.
+    """
+    # Fetch the workflow
+    workflow = await service.get_workflow(workflow_id)
+
+    if workflow is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} not found",
+        )
+
+    # Check if admin (admins can access any workflow)
+    if _is_admin(current_user):
+        return workflow
+
+    # Check ownership
+    user_id = _get_user_id(current_user)
+    workflow_owner = workflow.get("user_id")
+
+    if workflow_owner != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to manage this workflow. Only the owner can perform this action.",
+        )
+
+    return workflow
+
+
+# ==============================================================================
+# Authorized Endpoint Handlers (for sharing operations)
+# ==============================================================================
+
+
+async def get_workflow_shares_authorized(
+    workflow_id: str,
+    current_user: dict[str, Any],
+    service: WorkflowServiceAdapter,
+) -> WorkflowSharesResponse:
+    """
+    Get workflow shares with ownership authorization.
+
+    Only the workflow owner can view shares.
+    """
+    # Check ownership first
+    await require_workflow_owner(workflow_id, current_user, service)
+
+    # Get shares
+    result = await service.get_workflow_shares(workflow_id)
+
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} not found",
+        )
+
+    return WorkflowSharesResponse(
+        shares=[WorkflowShare(**s) for s in result.get("shares", [])],
+        is_public=result.get("is_public", False),
+        share_link=result.get("share_link"),
+    )
+
+
+async def add_workflow_share_authorized(
+    workflow_id: str,
+    request: AddWorkflowShareRequest,
+    current_user: dict[str, Any],
+    service: WorkflowServiceAdapter,
+) -> dict[str, str]:
+    """
+    Add a workflow share with ownership authorization.
+
+    Only the workflow owner can add shares.
+    """
+    # Check ownership first
+    await require_workflow_owner(workflow_id, current_user, service)
+
+    # Add share
+    success = await service.add_workflow_share(
+        workflow_id=workflow_id,
+        email=request.email,
+        permission=request.permission,
+    )
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} not found",
+        )
+
+    return {"status": "shared", "email": request.email, "permission": request.permission}
+
+
+async def remove_workflow_share_authorized(
+    workflow_id: str,
+    user_id: str,
+    current_user: dict[str, Any],
+    service: WorkflowServiceAdapter,
+) -> None:
+    """
+    Remove a workflow share with ownership authorization.
+
+    Only the workflow owner can remove shares.
+    """
+    # Check ownership first
+    await require_workflow_owner(workflow_id, current_user, service)
+
+    # Remove share
+    success = await service.remove_workflow_share(workflow_id, user_id)
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} or share not found",
+        )
+
+
+async def update_workflow_public_authorized(
+    workflow_id: str,
+    request: UpdateWorkflowPublicRequest,
+    current_user: dict[str, Any],
+    service: WorkflowServiceAdapter,
+) -> dict[str, Any]:
+    """
+    Update workflow public visibility with ownership authorization.
+
+    Only the workflow owner can change public status.
+    """
+    # Check ownership first
+    await require_workflow_owner(workflow_id, current_user, service)
+
+    # Update public status
+    result = await service.update_workflow_public(workflow_id, request.is_public)
+
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} not found",
+        )
+
+    return result
 
 
 # Endpoints
@@ -667,13 +957,15 @@ async def delete_workflow(
 @workflows_router.get("/workflows/shared-with-me")
 async def list_shared_with_me(
     service: WorkflowService,
+    current_user: CurrentUser,
 ) -> list[WorkflowResponse]:
     """
     List workflows shared with the current user.
 
     Returns workflows that other users have shared with the authenticated user.
     """
-    workflows = await service.list_shared_with_me()
+    user_id = _get_user_id(current_user)
+    workflows = await service.list_shared_with_me(user_id=user_id)
     return [WorkflowResponse(**w) for w in workflows]
 
 
@@ -702,6 +994,7 @@ async def get_public_workflow(
 async def get_workflow_shares(
     workflow_id: str,
     service: WorkflowService,
+    current_user: CurrentUser,
 ) -> WorkflowSharesResponse:
     """
     Get all shares for a workflow.
@@ -709,18 +1002,10 @@ async def get_workflow_shares(
     Returns the list of users the workflow is shared with and public status.
     Only the workflow owner can view shares.
     """
-    result = await service.get_workflow_shares(workflow_id)
-
-    if result is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Workflow {workflow_id} not found",
-        )
-
-    return WorkflowSharesResponse(
-        shares=[WorkflowShare(**s) for s in result.get("shares", [])],
-        is_public=result.get("is_public", False),
-        share_link=result.get("share_link"),
+    return await get_workflow_shares_authorized(
+        workflow_id=workflow_id,
+        current_user=current_user,
+        service=service,
     )
 
 
@@ -729,25 +1014,19 @@ async def add_workflow_share(
     workflow_id: str,
     request: AddWorkflowShareRequest,
     service: WorkflowService,
+    current_user: CurrentUser,
 ) -> dict[str, str]:
     """
     Share a workflow with another user.
 
     Only the workflow owner can share. The user is identified by email.
     """
-    success = await service.add_workflow_share(
+    return await add_workflow_share_authorized(
         workflow_id=workflow_id,
-        email=request.email,
-        permission=request.permission,
+        request=request,
+        current_user=current_user,
+        service=service,
     )
-
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Workflow {workflow_id} not found",
-        )
-
-    return {"status": "shared", "email": request.email, "permission": request.permission}
 
 
 @workflows_router.delete(
@@ -758,19 +1037,19 @@ async def remove_workflow_share(
     workflow_id: str,
     user_id: str,
     service: WorkflowService,
+    current_user: CurrentUser,
 ) -> None:
     """
     Remove a share from a workflow.
 
     Only the workflow owner can remove shares.
     """
-    success = await service.remove_workflow_share(workflow_id, user_id)
-
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Workflow {workflow_id} or share not found",
-        )
+    await remove_workflow_share_authorized(
+        workflow_id=workflow_id,
+        user_id=user_id,
+        current_user=current_user,
+        service=service,
+    )
 
 
 @workflows_router.put("/workflows/{workflow_id}/public")
@@ -778,6 +1057,7 @@ async def update_workflow_public(
     workflow_id: str,
     request: UpdateWorkflowPublicRequest,
     service: WorkflowService,
+    current_user: CurrentUser,
 ) -> dict[str, Any]:
     """
     Toggle public visibility of a workflow.
@@ -785,15 +1065,12 @@ async def update_workflow_public(
     When made public, a share_link is generated for anonymous access.
     Only the workflow owner can change public status.
     """
-    result = await service.update_workflow_public(workflow_id, request.is_public)
-
-    if result is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Workflow {workflow_id} not found",
-        )
-
-    return result
+    return await update_workflow_public_authorized(
+        workflow_id=workflow_id,
+        request=request,
+        current_user=current_user,
+        service=service,
+    )
 
 
 # ==============================================================================
