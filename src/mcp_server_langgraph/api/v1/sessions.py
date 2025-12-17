@@ -18,10 +18,31 @@ import logging
 import uuid
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
+from enum import Enum
 from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
+
+
+# Enums for type-safe status and role values
+
+
+class SessionStatus(str, Enum):
+    """Session status enum for type safety."""
+
+    active = "active"
+    archived = "archived"
+    deleted = "deleted"
+
+
+class MessageRole(str, Enum):
+    """Message role enum for type safety."""
+
+    user = "user"
+    assistant = "assistant"
+    system = "system"
+
 
 from mcp_server_langgraph.api.pagination import (
     CursorPaginatedResponse,
@@ -51,7 +72,8 @@ class MessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     """Response model for a message."""
 
-    role: str = Field(description="Message role")
+    message_id: str = Field(description="Unique message ID")
+    role: MessageRole = Field(description="Message role")
     content: str = Field(description="Message content")
     timestamp: str | None = Field(default=None, description="Message timestamp")
 
@@ -67,12 +89,12 @@ class SessionResponse(BaseModel):
     """Response model for a session."""
 
     id: str = Field(description="Session ID")
-    title: str | None = Field(default=None, description="Session title")
+    name: str | None = Field(default=None, description="Session name")
     workflow_id: str | None = Field(default=None, description="Associated workflow ID")
     messages: list[dict[str, Any]] = Field(default_factory=list, description="Session messages")
     created_at: str | None = Field(default=None, description="Creation timestamp")
     updated_at: str | None = Field(default=None, description="Last update timestamp")
-    status: str = Field(default="active", description="Session status")
+    status: SessionStatus = Field(default=SessionStatus.active, description="Session status")
 
 
 # Service Interface (ABC for proper typing)
@@ -164,15 +186,15 @@ class InMemorySessionService(SessionService):
         if status:
             sessions = [s for s in sessions if s.get("status") == status]
 
-        # Apply search (case-insensitive on title)
+        # Apply search (case-insensitive on name)
         if search:
             search_lower = search.lower()
-            sessions = [s for s in sessions if s.get("title") and search_lower in s.get("title", "").lower()]
+            sessions = [s for s in sessions if s.get("name") and search_lower in s.get("name", "").lower()]
 
         # Apply sorting
         reverse = sort_order == "desc"
-        if sort_by == "title":
-            sessions.sort(key=lambda s: (s.get("title") or "").lower(), reverse=reverse)
+        if sort_by == "title":  # Keep 'title' as sort_by param for API compatibility
+            sessions.sort(key=lambda s: (s.get("name") or "").lower(), reverse=reverse)
         elif sort_by == "updated_at":
             sessions.sort(key=lambda s: s.get("updated_at", ""), reverse=reverse)
         else:  # Default: created_at
@@ -205,14 +227,17 @@ class InMemorySessionService(SessionService):
         session_id = str(uuid.uuid4())
         now = datetime.now(UTC).isoformat()
 
+        # Support both 'title' (legacy) and 'name' (new) input
+        name = session_data.get("name") or session_data.get("title")
+
         session: dict[str, Any] = {
             "id": session_id,
-            "title": session_data.get("title"),
+            "name": name,
             "workflow_id": session_data.get("workflow_id"),
             "messages": [],
             "created_at": now,
             "updated_at": now,
-            "status": "active",
+            "status": SessionStatus.active,
         }
 
         self._sessions[session_id] = session
@@ -240,6 +265,7 @@ class InMemorySessionService(SessionService):
             return None
 
         message = {
+            "message_id": str(uuid.uuid4()),
             "role": message_data["role"],
             "content": message_data["content"],
             "timestamp": datetime.now(UTC).isoformat(),
@@ -305,10 +331,11 @@ class RedisSessionService(SessionService):
                 session = Session.model_validate_json(data)
                 session_dict: dict[str, Any] = {
                     "id": session.session_id,
-                    "title": session.name,
+                    "name": session.name,
                     "workflow_id": None,  # Not supported in current model
                     "messages": [
                         {
+                            "message_id": m.message_id,
                             "role": m.role,
                             "content": m.content,
                             "timestamp": m.timestamp.isoformat(),
@@ -317,7 +344,7 @@ class RedisSessionService(SessionService):
                     ],
                     "created_at": session.created_at.isoformat(),
                     "updated_at": session.updated_at.isoformat(),
-                    "status": "active",
+                    "status": SessionStatus.active,
                 }
                 sessions.append(session_dict)
 
@@ -327,15 +354,15 @@ class RedisSessionService(SessionService):
         if status:
             sessions = [s for s in sessions if s.get("status") == status]
 
-        # Apply search (case-insensitive on title)
+        # Apply search (case-insensitive on name)
         if search:
             search_lower = search.lower()
-            sessions = [s for s in sessions if s.get("title") and search_lower in s.get("title", "").lower()]
+            sessions = [s for s in sessions if s.get("name") and search_lower in s.get("name", "").lower()]
 
         # Apply sorting
         reverse = sort_order == "desc"
-        if sort_by == "title":
-            sessions.sort(key=lambda s: (s.get("title") or "").lower(), reverse=reverse)
+        if sort_by == "title":  # Keep 'title' as sort_by param for API compatibility
+            sessions.sort(key=lambda s: (s.get("name") or "").lower(), reverse=reverse)
         elif sort_by == "updated_at":
             sessions.sort(key=lambda s: s.get("updated_at", ""), reverse=reverse)
         else:  # Default: created_at
@@ -364,10 +391,11 @@ class RedisSessionService(SessionService):
 
         return {
             "id": session.session_id,
-            "title": session.name,
+            "name": session.name,
             "workflow_id": None,
             "messages": [
                 {
+                    "message_id": m.message_id,
                     "role": m.role,
                     "content": m.content,
                     "timestamp": m.timestamp.isoformat(),
@@ -376,24 +404,26 @@ class RedisSessionService(SessionService):
             ],
             "created_at": session.created_at.isoformat(),
             "updated_at": session.updated_at.isoformat(),
-            "status": "active",
+            "status": SessionStatus.active,
         }
 
     async def create_session(self, session_data: dict[str, Any]) -> dict[str, Any]:
         """Create a new session."""
+        # Support both 'title' (legacy) and 'name' (new) input
+        name = session_data.get("name") or session_data.get("title") or "New Session"
         session = await self._manager.create_session(
-            name=session_data.get("title") or "New Session",
+            name=name,
             user_id=None,  # TODO: Get from auth context
         )
 
         return {
             "id": session.session_id,
-            "title": session.name,
+            "name": session.name,
             "workflow_id": session_data.get("workflow_id"),
             "messages": [],
             "created_at": session.created_at.isoformat(),
             "updated_at": session.updated_at.isoformat(),
-            "status": "active",
+            "status": SessionStatus.active,
         }
 
     async def delete_session(self, session_id: str) -> bool:
@@ -408,6 +438,7 @@ class RedisSessionService(SessionService):
 
         return [
             {
+                "message_id": m.message_id,
                 "role": m.role,
                 "content": m.content,
                 "timestamp": m.timestamp.isoformat(),
@@ -427,6 +458,7 @@ class RedisSessionService(SessionService):
             return None
 
         return {
+            "message_id": message.message_id,
             "role": message.role,
             "content": message.content,
             "timestamp": message.timestamp.isoformat(),
@@ -467,12 +499,12 @@ class PostgresSessionService(SessionService):
             session_dicts.append(
                 {
                     "id": s.session_id,
-                    "title": s.name,
+                    "name": s.name,
                     "workflow_id": None,  # Not supported in current model
                     "messages": [],  # Not loaded for list performance
                     "created_at": s.created_at.isoformat(),
                     "updated_at": s.updated_at.isoformat(),
-                    "status": "active",
+                    "status": SessionStatus.active,
                 }
             )
 
@@ -509,10 +541,11 @@ class PostgresSessionService(SessionService):
 
         return {
             "id": session.session_id,
-            "title": session.name,
+            "name": session.name,
             "workflow_id": None,
             "messages": [
                 {
+                    "message_id": m.message_id,
                     "role": m.role,
                     "content": m.content,
                     "timestamp": m.timestamp.isoformat(),
@@ -521,24 +554,26 @@ class PostgresSessionService(SessionService):
             ],
             "created_at": session.created_at.isoformat(),
             "updated_at": session.updated_at.isoformat(),
-            "status": "active",
+            "status": SessionStatus.active,
         }
 
     async def create_session(self, session_data: dict[str, Any]) -> dict[str, Any]:
         """Create a new session."""
+        # Support both 'title' (legacy) and 'name' (new) input
+        name = session_data.get("name") or session_data.get("title") or "New Session"
         session = await self._manager.create_session(
-            name=session_data.get("title") or "New Session",
+            name=name,
             user_id=None,  # TODO: Get from auth context
         )
 
         return {
             "id": session.session_id,
-            "title": session.name,
+            "name": session.name,
             "workflow_id": session_data.get("workflow_id"),
             "messages": [],
             "created_at": session.created_at.isoformat(),
             "updated_at": session.updated_at.isoformat(),
-            "status": "active",
+            "status": SessionStatus.active,
         }
 
     async def delete_session(self, session_id: str) -> bool:
@@ -553,6 +588,7 @@ class PostgresSessionService(SessionService):
 
         return [
             {
+                "message_id": m.message_id,
                 "role": m.role,
                 "content": m.content,
                 "timestamp": m.timestamp.isoformat(),
@@ -572,6 +608,7 @@ class PostgresSessionService(SessionService):
             return None
 
         return {
+            "message_id": message.message_id,
             "role": message.role,
             "content": message.content,
             "timestamp": message.timestamp.isoformat(),

@@ -315,15 +315,15 @@ export function App() {
       // Add new tab for the session
       dispatch(
         addTab({
-          id: `chat-${session.session_id}`,
+          id: `chat-${session.id}`,
           type: "chat",
           title: session.name || "New Chat",
-          entityId: session.session_id,
+          entityId: session.id,
         }),
       );
       // Set as active and navigate
-      dispatch(setActiveTabId(`chat-${session.session_id}`));
-      navigate(`/studio/chat/${session.session_id}`);
+      dispatch(setActiveTabId(`chat-${session.id}`));
+      navigate(`/studio/chat/${session.id}`);
     } catch (error) {
       console.error("Failed to create chat session:", error);
     }

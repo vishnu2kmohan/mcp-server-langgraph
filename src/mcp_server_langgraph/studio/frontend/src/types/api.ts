@@ -242,11 +242,11 @@ export interface GenerateWorkflowCodeResponse {
 // =============================================================================
 
 export interface Session {
-  session_id: string;
+  id: string; // Changed from session_id to match REST convention
   name: string;
   workflow_id?: string;
   user_id?: string;
-  status: string;
+  status: "active" | "archived" | "deleted"; // Constrained to valid values
   created_at: string;
   updated_at: string;
 }

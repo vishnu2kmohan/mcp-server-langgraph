@@ -45,7 +45,7 @@ export const createMockWorkflow = (
 export const createMockSession = (
   overrides: Partial<Session> = {},
 ): Session => ({
-  session_id: `session-${crypto.randomUUID().slice(0, 8)}`,
+  id: `session-${crypto.randomUUID().slice(0, 8)}`, // Changed from session_id
   name: "Test Session",
   status: "active",
   created_at: new Date().toISOString(),
@@ -103,8 +103,8 @@ export const mockWorkflows: WorkflowSummary[] = [
 ];
 
 export const mockSessions: Session[] = [
-  createMockSession({ session_id: "session-1", name: "Session 1" }),
-  createMockSession({ session_id: "session-2", name: "Session 2" }),
+  createMockSession({ id: "session-1", name: "Session 1" }),
+  createMockSession({ id: "session-2", name: "Session 2" }),
 ];
 
 export const mockConnections: MCPConnectionSummary[] = [

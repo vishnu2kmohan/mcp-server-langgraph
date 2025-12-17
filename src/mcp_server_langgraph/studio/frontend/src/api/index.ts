@@ -400,9 +400,9 @@ export const api = createApi({
       providesTags: (result) =>
         result?.items
           ? [
-              ...result.items.map(({ session_id }) => ({
+              ...result.items.map(({ id }) => ({
                 type: "Session" as const,
-                id: session_id,
+                id,
               })),
               { type: "Session", id: "LIST" },
             ]

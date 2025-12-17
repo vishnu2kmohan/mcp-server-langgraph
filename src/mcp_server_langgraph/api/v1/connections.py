@@ -57,12 +57,19 @@ class ConnectionListResponse(BaseModel):
 
 
 class ConnectionResponse(BaseModel):
-    """Full connection response (without secrets)."""
+    """Full connection response (without secrets).
+
+    SECURITY: This model intentionally excludes sensitive fields:
+    - env: Contains environment variables (may include secrets)
+    - oauth2_config: Contains OAuth2 configuration
+    - command/args: System paths (security exposure risk)
+    """
 
     id: str
     name: str
     description: str | None = None
     url: str
+    transport: str  # Required: "streamable_http" or "stdio"
     auth_type: str
     status: str
     server_name: str | None = None
@@ -72,6 +79,32 @@ class ConnectionResponse(BaseModel):
     prompt_count: int = 0
     created_at: str
     updated_at: str
+
+
+def to_connection_response(connection: MCPConnection) -> ConnectionResponse:
+    """Convert MCPConnection to sanitized ConnectionResponse.
+
+    SECURITY: This function filters out sensitive fields:
+    - env: Environment variables (may contain secrets)
+    - oauth2_config: OAuth2 configuration with potential secrets
+    - command/args: System paths
+    """
+    return ConnectionResponse(
+        id=connection.id,
+        name=connection.name,
+        description=connection.description,
+        url=connection.url,
+        transport=connection.transport,
+        auth_type=connection.auth_type,
+        status=connection.status,
+        server_name=connection.server_name,
+        server_version=connection.server_version,
+        tool_count=connection.tool_count,
+        resource_count=connection.resource_count,
+        prompt_count=connection.prompt_count,
+        created_at=connection.created_at.isoformat() if connection.created_at else "",
+        updated_at=connection.updated_at.isoformat() if connection.updated_at else "",
+    )
 
 
 class OAuth2CallbackRequest(BaseModel):

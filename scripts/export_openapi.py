@@ -44,9 +44,10 @@ def export_openapi() -> None:
     output_path = Path(__file__).parent.parent / "api" / "openapi.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Write the schema
+    # Write the schema with sort_keys=True for deterministic output
+    # This prevents CI flakiness from non-deterministic key ordering
     with open(output_path, "w") as f:
-        json.dump(openapi_schema, f, indent=2)
+        json.dump(openapi_schema, f, indent=2, sort_keys=True)
 
     print(f"OpenAPI schema exported to: {output_path}")
     print(f"Schema contains {len(openapi_schema.get('paths', {}))} paths")

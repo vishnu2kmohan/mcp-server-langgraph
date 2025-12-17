@@ -678,6 +678,41 @@ async def add_connection_to_project(
     return _project_to_detail_response(result)
 
 
+@projects_router.delete(
+    "/{project_id}/connections/{connection_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove connection from project",
+    description="Remove a connection from this project. The connection itself is not deleted.",
+)
+async def remove_connection_from_project(
+    project_id: str,
+    connection_id: str,
+    repo: ProjectRepository = Depends(get_project_repository),
+) -> None:
+    """Remove a connection from a project.
+
+    This disassociates the connection from the project but does not delete
+    the connection itself. The operation is idempotent - returns success
+    even if the connection was not in the project.
+
+    Args:
+        project_id: The project to remove the connection from
+        connection_id: The connection to remove
+
+    Returns:
+        None (204 No Content on success)
+
+    Raises:
+        HTTPException: 404 if project not found
+    """
+    result = await repo.remove_connection(project_id, connection_id)
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project {project_id} not found",
+        )
+
+
 # ============================================================================
 # Member Management
 # ============================================================================
