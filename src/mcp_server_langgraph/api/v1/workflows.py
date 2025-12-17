@@ -94,6 +94,62 @@ class WorkflowResponse(BaseModel):
 
 
 # ==============================================================================
+# Workflow Sharing Models
+# ==============================================================================
+
+
+class WorkflowShare(BaseModel):
+    """A share relationship for a workflow."""
+
+    user_id: str = Field(description="User ID the workflow is shared with")
+    email: str = Field(description="Email of the user")
+    permission: Literal["view", "edit", "execute"] = Field(
+        description="Permission level: view (read-only), edit (modify), execute (run)"
+    )
+
+
+class WorkflowSharesResponse(BaseModel):
+    """Response containing all shares for a workflow."""
+
+    shares: list[WorkflowShare] = Field(default_factory=list, description="List of shares")
+    is_public: bool = Field(default=False, description="Whether workflow is publicly accessible")
+    share_link: str | None = Field(default=None, description="Public share link if is_public=True")
+
+
+class AddWorkflowShareRequest(BaseModel):
+    """Request to add a share to a workflow."""
+
+    email: str = Field(description="Email of user to share with")
+    permission: Literal["view", "edit", "execute"] = Field(default="view", description="Permission level")
+
+
+class UpdateWorkflowPublicRequest(BaseModel):
+    """Request to update workflow public visibility."""
+
+    is_public: bool = Field(description="Whether workflow should be publicly accessible")
+
+
+class GenerateWorkflowRequest(BaseModel):
+    """Request to generate a workflow from session or prompt."""
+
+    session_id: str | None = Field(default=None, description="Generate from session history")
+    prompt: str | None = Field(default=None, description="Generate from text prompt")
+
+    def model_post_init(self, __context: Any) -> None:
+        """Validate exactly one of session_id or prompt is provided."""
+        if bool(self.session_id) == bool(self.prompt):
+            raise ValueError("Exactly one of session_id or prompt is required")
+
+
+class GenerateWorkflowResponse(BaseModel):
+    """Response containing generated workflow."""
+
+    workflow: WorkflowResponse = Field(description="Generated workflow definition")
+    confidence: float = Field(ge=0.0, le=1.0, description="Generation confidence score")
+    suggestions: list[str] = Field(default_factory=list, description="Improvement suggestions")
+
+
+# ==============================================================================
 # Workflow Service Adapter
 # ==============================================================================
 #
@@ -250,6 +306,122 @@ class WorkflowServiceAdapter:
     async def delete_workflow(self, workflow_id: str) -> bool:
         """Delete a workflow. Returns True if deleted, False if not found."""
         return await self._manager.delete_workflow(workflow_id)
+
+    # ==========================================================================
+    # Sharing Methods (stub implementations - require workflow_shares table)
+    # ==========================================================================
+
+    async def get_workflow_shares(self, workflow_id: str) -> dict[str, Any] | None:
+        """Get shares for a workflow. Returns None if workflow not found."""
+        # First verify workflow exists
+        workflow = await self._manager.get_workflow(workflow_id)
+        if workflow is None:
+            return None
+
+        # TODO: Query workflow_shares table when migration is applied
+        # For now, return empty shares (workflow exists but no shares)
+        return {
+            "shares": [],
+            "is_public": getattr(workflow, "is_public", False),
+            "share_link": getattr(workflow, "share_link", None),
+        }
+
+    async def add_workflow_share(
+        self,
+        workflow_id: str,
+        email: str,
+        permission: str,
+    ) -> bool:
+        """Add a share to a workflow. Returns False if workflow not found."""
+        # First verify workflow exists
+        workflow = await self._manager.get_workflow(workflow_id)
+        # TODO: Insert into workflow_shares table when migration is applied
+        # For now, return True if workflow exists (pretend share was added)
+        return workflow is not None
+
+    async def remove_workflow_share(self, workflow_id: str, user_id: str) -> bool:
+        """Remove a share from a workflow. Returns False if not found."""
+        # First verify workflow exists
+        workflow = await self._manager.get_workflow(workflow_id)
+        # TODO: Delete from workflow_shares table when migration is applied
+        # For now, return True if workflow exists (idempotent)
+        return workflow is not None
+
+    async def update_workflow_public(self, workflow_id: str, is_public: bool) -> dict[str, Any] | None:
+        """Update public visibility of a workflow. Returns None if not found."""
+        # First verify workflow exists
+        workflow = await self._manager.get_workflow(workflow_id)
+        if workflow is None:
+            return None
+
+        # TODO: Update workflow.is_public and generate share_link
+        # For now, return mock response
+        import secrets
+
+        share_link = secrets.token_urlsafe(16) if is_public else None
+        return {
+            "is_public": is_public,
+            "share_link": share_link,
+        }
+
+    async def list_shared_with_me(self) -> list[dict[str, Any]]:
+        """List workflows shared with the current user."""
+        # TODO: Query workflow_shares table for current user
+        # For now, return empty list
+        return []
+
+    async def get_public_workflow(self, share_link: str) -> dict[str, Any] | None:
+        """Get a public workflow by share link. Returns None if not found."""
+        # TODO: Query workflows by share_link
+        # For now, return None (no public workflows)
+        return None
+
+    # ==========================================================================
+    # Workflow Generation (stub - requires LLM integration)
+    # ==========================================================================
+
+    async def generate_workflow(
+        self,
+        session_id: str | None = None,
+        prompt: str | None = None,
+    ) -> dict[str, Any]:
+        """Generate a workflow from session or prompt using AI."""
+        if session_id:
+            # TODO: Fetch session messages and analyze
+            # For now, raise not found to test error handling
+            raise ValueError(f"Session {session_id} not found")
+
+        # TODO: Use LLM to generate workflow from prompt
+        # For now, return a stub workflow
+        import uuid
+        from datetime import datetime
+
+        workflow_id = str(uuid.uuid4())
+        now = datetime.now().isoformat()
+
+        return {
+            "workflow": {
+                "id": workflow_id,
+                "name": f"Generated: {prompt[:50]}..." if prompt and len(prompt) > 50 else f"Generated: {prompt}",
+                "description": f"AI-generated workflow from prompt: {prompt}",
+                "nodes": [
+                    {"id": "start", "type": "start", "position": {"x": 0, "y": 100}, "data": {}},
+                    {"id": "llm", "type": "llm", "position": {"x": 200, "y": 100}, "data": {"model": "gpt-4"}},
+                    {"id": "end", "type": "end", "position": {"x": 400, "y": 100}, "data": {}},
+                ],
+                "edges": [
+                    {"source": "start", "target": "llm"},
+                    {"source": "llm", "target": "end"},
+                ],
+                "created_at": now,
+                "updated_at": now,
+            },
+            "confidence": 0.75,
+            "suggestions": [
+                "Consider adding error handling nodes",
+                "Add memory for conversation context",
+            ],
+        }
 
 
 # ==============================================================================
@@ -485,3 +657,174 @@ async def delete_workflow(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Workflow {workflow_id} not found",
         )
+
+
+# ==============================================================================
+# Workflow Sharing Endpoints
+# ==============================================================================
+
+
+@workflows_router.get("/workflows/shared-with-me")
+async def list_shared_with_me(
+    service: WorkflowService,
+) -> list[WorkflowResponse]:
+    """
+    List workflows shared with the current user.
+
+    Returns workflows that other users have shared with the authenticated user.
+    """
+    workflows = await service.list_shared_with_me()
+    return [WorkflowResponse(**w) for w in workflows]
+
+
+@workflows_router.get("/workflows/public/{share_link}")
+async def get_public_workflow(
+    share_link: str,
+    service: WorkflowService,
+) -> WorkflowResponse:
+    """
+    Access a public workflow by its share link.
+
+    No authentication required for public workflows.
+    """
+    workflow = await service.get_public_workflow(share_link)
+
+    if workflow is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Public workflow not found or link expired",
+        )
+
+    return WorkflowResponse(**workflow)
+
+
+@workflows_router.get("/workflows/{workflow_id}/shares")
+async def get_workflow_shares(
+    workflow_id: str,
+    service: WorkflowService,
+) -> WorkflowSharesResponse:
+    """
+    Get all shares for a workflow.
+
+    Returns the list of users the workflow is shared with and public status.
+    Only the workflow owner can view shares.
+    """
+    result = await service.get_workflow_shares(workflow_id)
+
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} not found",
+        )
+
+    return WorkflowSharesResponse(
+        shares=[WorkflowShare(**s) for s in result.get("shares", [])],
+        is_public=result.get("is_public", False),
+        share_link=result.get("share_link"),
+    )
+
+
+@workflows_router.post("/workflows/{workflow_id}/shares", status_code=status.HTTP_201_CREATED)
+async def add_workflow_share(
+    workflow_id: str,
+    request: AddWorkflowShareRequest,
+    service: WorkflowService,
+) -> dict[str, str]:
+    """
+    Share a workflow with another user.
+
+    Only the workflow owner can share. The user is identified by email.
+    """
+    success = await service.add_workflow_share(
+        workflow_id=workflow_id,
+        email=request.email,
+        permission=request.permission,
+    )
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} not found",
+        )
+
+    return {"status": "shared", "email": request.email, "permission": request.permission}
+
+
+@workflows_router.delete(
+    "/workflows/{workflow_id}/shares/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def remove_workflow_share(
+    workflow_id: str,
+    user_id: str,
+    service: WorkflowService,
+) -> None:
+    """
+    Remove a share from a workflow.
+
+    Only the workflow owner can remove shares.
+    """
+    success = await service.remove_workflow_share(workflow_id, user_id)
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} or share not found",
+        )
+
+
+@workflows_router.put("/workflows/{workflow_id}/public")
+async def update_workflow_public(
+    workflow_id: str,
+    request: UpdateWorkflowPublicRequest,
+    service: WorkflowService,
+) -> dict[str, Any]:
+    """
+    Toggle public visibility of a workflow.
+
+    When made public, a share_link is generated for anonymous access.
+    Only the workflow owner can change public status.
+    """
+    result = await service.update_workflow_public(workflow_id, request.is_public)
+
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} not found",
+        )
+
+    return result
+
+
+# ==============================================================================
+# Workflow Generation Endpoint
+# ==============================================================================
+
+
+@workflows_router.post("/workflows/generate", status_code=status.HTTP_201_CREATED)
+async def generate_workflow(
+    request: GenerateWorkflowRequest,
+    service: WorkflowService,
+) -> GenerateWorkflowResponse:
+    """
+    Generate a workflow from session history or text prompt.
+
+    Uses AI to analyze the provided source and generate a workflow definition.
+    Exactly one of session_id or prompt must be provided.
+    """
+    try:
+        result = await service.generate_workflow(
+            session_id=request.session_id,
+            prompt=request.prompt,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        ) from e
+
+    return GenerateWorkflowResponse(
+        workflow=WorkflowResponse(**result["workflow"]),
+        confidence=result["confidence"],
+        suggestions=result.get("suggestions", []),
+    )

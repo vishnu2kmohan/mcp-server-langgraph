@@ -3323,6 +3323,73 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/workflows/generate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Generate Workflow
+     * @description Generate a workflow from session history or text prompt.
+     *
+     *     Uses AI to analyze the provided source and generate a workflow definition.
+     *     Exactly one of session_id or prompt must be provided.
+     */
+    post: operations["generate_workflow_api_v1_workflows_generate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/public/{share_link}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Public Workflow
+     * @description Access a public workflow by its share link.
+     *
+     *     No authentication required for public workflows.
+     */
+    get: operations["get_public_workflow_api_v1_workflows_public__share_link__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/shared-with-me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Shared With Me
+     * @description List workflows shared with the current user.
+     *
+     *     Returns workflows that other users have shared with the authenticated user.
+     */
+    get: operations["list_shared_with_me_api_v1_workflows_shared_with_me_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/workflows/{workflow_id}": {
     parameters: {
       query?: never;
@@ -3416,6 +3483,80 @@ export interface paths {
     put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/{workflow_id}/public": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Workflow Public
+     * @description Toggle public visibility of a workflow.
+     *
+     *     When made public, a share_link is generated for anonymous access.
+     *     Only the workflow owner can change public status.
+     */
+    put: operations["update_workflow_public_api_v1_workflows__workflow_id__public_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/{workflow_id}/shares": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Workflow Shares
+     * @description Get all shares for a workflow.
+     *
+     *     Returns the list of users the workflow is shared with and public status.
+     *     Only the workflow owner can view shares.
+     */
+    get: operations["get_workflow_shares_api_v1_workflows__workflow_id__shares_get"];
+    put?: never;
+    /**
+     * Add Workflow Share
+     * @description Share a workflow with another user.
+     *
+     *     Only the workflow owner can share. The user is identified by email.
+     */
+    post: operations["add_workflow_share_api_v1_workflows__workflow_id__shares_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/{workflow_id}/shares/{user_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove Workflow Share
+     * @description Remove a share from a workflow.
+     *
+     *     Only the workflow owner can remove shares.
+     */
+    delete: operations["remove_workflow_share_api_v1_workflows__workflow_id__shares__user_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -3627,6 +3768,24 @@ export interface components {
       role: string;
       /** User Id */
       user_id: string;
+    };
+    /**
+     * AddWorkflowShareRequest
+     * @description Request to add a share to a workflow.
+     */
+    AddWorkflowShareRequest: {
+      /**
+       * Email
+       * @description Email of user to share with
+       */
+      email: string;
+      /**
+       * Permission
+       * @description Permission level
+       * @default view
+       * @enum {string}
+       */
+      permission: "view" | "edit" | "execute";
     };
     /**
      * AdoptionMetrics
@@ -4889,6 +5048,40 @@ export interface components {
        * @description Whether feedback was submitted successfully
        */
       success: boolean;
+    };
+    /**
+     * GenerateWorkflowRequest
+     * @description Request to generate a workflow from session or prompt.
+     */
+    GenerateWorkflowRequest: {
+      /**
+       * Prompt
+       * @description Generate from text prompt
+       */
+      prompt?: string | null;
+      /**
+       * Session Id
+       * @description Generate from session history
+       */
+      session_id?: string | null;
+    };
+    /**
+     * GenerateWorkflowResponse
+     * @description Response containing generated workflow.
+     */
+    GenerateWorkflowResponse: {
+      /**
+       * Confidence
+       * @description Generation confidence score
+       */
+      confidence: number;
+      /**
+       * Suggestions
+       * @description Improvement suggestions
+       */
+      suggestions?: string[];
+      /** @description Generated workflow definition */
+      workflow: components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
     };
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -7526,6 +7719,17 @@ export interface components {
       roles?: string[] | null;
     };
     /**
+     * UpdateWorkflowPublicRequest
+     * @description Request to update workflow public visibility.
+     */
+    UpdateWorkflowPublicRequest: {
+      /**
+       * Is Public
+       * @description Whether workflow should be publicly accessible
+       */
+      is_public: boolean;
+    };
+    /**
      * UpdateWorkflowRequest
      * @description Request to update an existing workflow.
      */
@@ -7856,6 +8060,50 @@ export interface components {
       id: string;
       /** Name */
       name: string;
+    };
+    /**
+     * WorkflowShare
+     * @description A share relationship for a workflow.
+     */
+    WorkflowShare: {
+      /**
+       * Email
+       * @description Email of the user
+       */
+      email: string;
+      /**
+       * Permission
+       * @description Permission level: view (read-only), edit (modify), execute (run)
+       * @enum {string}
+       */
+      permission: "view" | "edit" | "execute";
+      /**
+       * User Id
+       * @description User ID the workflow is shared with
+       */
+      user_id: string;
+    };
+    /**
+     * WorkflowSharesResponse
+     * @description Response containing all shares for a workflow.
+     */
+    WorkflowSharesResponse: {
+      /**
+       * Is Public
+       * @description Whether workflow is publicly accessible
+       * @default false
+       */
+      is_public: boolean;
+      /**
+       * Share Link
+       * @description Public share link if is_public=True
+       */
+      share_link?: string | null;
+      /**
+       * Shares
+       * @description List of shares
+       */
+      shares?: components["schemas"]["WorkflowShare"][];
     };
     /**
      * WorkflowUpdateRequest
@@ -13111,6 +13359,90 @@ export interface operations {
       };
     };
   };
+  generate_workflow_api_v1_workflows_generate_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GenerateWorkflowRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GenerateWorkflowResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_public_workflow_api_v1_workflows_public__share_link__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        share_link: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_shared_with_me_api_v1_workflows_shared_with_me_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"][];
+        };
+      };
+    };
+  };
   get_workflow_api_v1_workflows__workflow_id__get: {
     parameters: {
       query?: never;
@@ -13264,6 +13596,141 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ExecutionResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_workflow_public_api_v1_workflows__workflow_id__public_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateWorkflowPublicRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_workflow_shares_api_v1_workflows__workflow_id__shares_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowSharesResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  add_workflow_share_api_v1_workflows__workflow_id__shares_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AddWorkflowShareRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: string;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  remove_workflow_share_api_v1_workflows__workflow_id__shares__user_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

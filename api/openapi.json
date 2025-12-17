@@ -61,6 +61,32 @@
         "title": "AddMemberRequest",
         "type": "object"
       },
+      "AddWorkflowShareRequest": {
+        "description": "Request to add a share to a workflow.",
+        "properties": {
+          "email": {
+            "description": "Email of user to share with",
+            "title": "Email",
+            "type": "string"
+          },
+          "permission": {
+            "default": "view",
+            "description": "Permission level",
+            "enum": [
+              "view",
+              "edit",
+              "execute"
+            ],
+            "title": "Permission",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "AddWorkflowShareRequest",
+        "type": "object"
+      },
       "AdoptionMetrics": {
         "description": "Adoption metrics",
         "properties": {
@@ -2307,6 +2333,67 @@
           "received_at"
         ],
         "title": "FeedbackResponse",
+        "type": "object"
+      },
+      "GenerateWorkflowRequest": {
+        "description": "Request to generate a workflow from session or prompt.",
+        "properties": {
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Generate from text prompt",
+            "title": "Prompt"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Generate from session history",
+            "title": "Session Id"
+          }
+        },
+        "title": "GenerateWorkflowRequest",
+        "type": "object"
+      },
+      "GenerateWorkflowResponse": {
+        "description": "Response containing generated workflow.",
+        "properties": {
+          "confidence": {
+            "description": "Generation confidence score",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "suggestions": {
+            "description": "Improvement suggestions",
+            "items": {
+              "type": "string"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/mcp_server_langgraph__api__v1__workflows__WorkflowResponse",
+            "description": "Generated workflow definition"
+          }
+        },
+        "required": [
+          "workflow",
+          "confidence"
+        ],
+        "title": "GenerateWorkflowResponse",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -7392,6 +7479,21 @@
         "title": "UpdateUserRequest",
         "type": "object"
       },
+      "UpdateWorkflowPublicRequest": {
+        "description": "Request to update workflow public visibility.",
+        "properties": {
+          "is_public": {
+            "description": "Whether workflow should be publicly accessible",
+            "title": "Is Public",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "is_public"
+        ],
+        "title": "UpdateWorkflowPublicRequest",
+        "type": "object"
+      },
       "UpdateWorkflowRequest": {
         "description": "Request to update an existing workflow.",
         "properties": {
@@ -7943,6 +8045,71 @@
           "name"
         ],
         "title": "WorkflowRef",
+        "type": "object"
+      },
+      "WorkflowShare": {
+        "description": "A share relationship for a workflow.",
+        "properties": {
+          "email": {
+            "description": "Email of the user",
+            "title": "Email",
+            "type": "string"
+          },
+          "permission": {
+            "description": "Permission level: view (read-only), edit (modify), execute (run)",
+            "enum": [
+              "view",
+              "edit",
+              "execute"
+            ],
+            "title": "Permission",
+            "type": "string"
+          },
+          "user_id": {
+            "description": "User ID the workflow is shared with",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "email",
+          "permission"
+        ],
+        "title": "WorkflowShare",
+        "type": "object"
+      },
+      "WorkflowSharesResponse": {
+        "description": "Response containing all shares for a workflow.",
+        "properties": {
+          "is_public": {
+            "default": false,
+            "description": "Whether workflow is publicly accessible",
+            "title": "Is Public",
+            "type": "boolean"
+          },
+          "share_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Public share link if is_public=True",
+            "title": "Share Link"
+          },
+          "shares": {
+            "description": "List of shares",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowShare"
+            },
+            "title": "Shares",
+            "type": "array"
+          }
+        },
+        "title": "WorkflowSharesResponse",
         "type": "object"
       },
       "WorkflowUpdateRequest": {
@@ -16916,6 +17083,120 @@
         ]
       }
     },
+    "/api/v1/workflows/generate": {
+      "post": {
+        "description": "Generate a workflow from session history or text prompt.\n\nUses AI to analyze the provided source and generate a workflow definition.\nExactly one of session_id or prompt must be provided.",
+        "operationId": "generate_workflow_api_v1_workflows_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateWorkflowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateWorkflowResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate Workflow",
+        "tags": [
+          "v1",
+          "workflows"
+        ]
+      }
+    },
+    "/api/v1/workflows/public/{share_link}": {
+      "get": {
+        "description": "Access a public workflow by its share link.\n\nNo authentication required for public workflows.",
+        "operationId": "get_public_workflow_api_v1_workflows_public__share_link__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "share_link",
+            "required": true,
+            "schema": {
+              "title": "Share Link",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/mcp_server_langgraph__api__v1__workflows__WorkflowResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Public Workflow",
+        "tags": [
+          "v1",
+          "workflows"
+        ]
+      }
+    },
+    "/api/v1/workflows/shared-with-me": {
+      "get": {
+        "description": "List workflows shared with the current user.\n\nReturns workflows that other users have shared with the authenticated user.",
+        "operationId": "list_shared_with_me_api_v1_workflows_shared_with_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/mcp_server_langgraph__api__v1__workflows__WorkflowResponse"
+                  },
+                  "title": "Response List Shared With Me Api V1 Workflows Shared With Me Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Shared With Me",
+        "tags": [
+          "v1",
+          "workflows"
+        ]
+      }
+    },
     "/api/v1/workflows/{workflow_id}": {
       "delete": {
         "description": "Delete a workflow.\n\nThis permanently removes the workflow and cannot be undone.",
@@ -17191,6 +17472,208 @@
         "tags": [
           "v1",
           "workflow-executions"
+        ]
+      }
+    },
+    "/api/v1/workflows/{workflow_id}/public": {
+      "put": {
+        "description": "Toggle public visibility of a workflow.\n\nWhen made public, a share_link is generated for anonymous access.\nOnly the workflow owner can change public status.",
+        "operationId": "update_workflow_public_api_v1_workflows__workflow_id__public_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workflow_id",
+            "required": true,
+            "schema": {
+              "title": "Workflow Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkflowPublicRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Update Workflow Public Api V1 Workflows  Workflow Id  Public Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Workflow Public",
+        "tags": [
+          "v1",
+          "workflows"
+        ]
+      }
+    },
+    "/api/v1/workflows/{workflow_id}/shares": {
+      "get": {
+        "description": "Get all shares for a workflow.\n\nReturns the list of users the workflow is shared with and public status.\nOnly the workflow owner can view shares.",
+        "operationId": "get_workflow_shares_api_v1_workflows__workflow_id__shares_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workflow_id",
+            "required": true,
+            "schema": {
+              "title": "Workflow Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowSharesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Workflow Shares",
+        "tags": [
+          "v1",
+          "workflows"
+        ]
+      },
+      "post": {
+        "description": "Share a workflow with another user.\n\nOnly the workflow owner can share. The user is identified by email.",
+        "operationId": "add_workflow_share_api_v1_workflows__workflow_id__shares_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workflow_id",
+            "required": true,
+            "schema": {
+              "title": "Workflow Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddWorkflowShareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Add Workflow Share Api V1 Workflows  Workflow Id  Shares Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Workflow Share",
+        "tags": [
+          "v1",
+          "workflows"
+        ]
+      }
+    },
+    "/api/v1/workflows/{workflow_id}/shares/{user_id}": {
+      "delete": {
+        "description": "Remove a share from a workflow.\n\nOnly the workflow owner can remove shares.",
+        "operationId": "remove_workflow_share_api_v1_workflows__workflow_id__shares__user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workflow_id",
+            "required": true,
+            "schema": {
+              "title": "Workflow Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Workflow Share",
+        "tags": [
+          "v1",
+          "workflows"
         ]
       }
     },
