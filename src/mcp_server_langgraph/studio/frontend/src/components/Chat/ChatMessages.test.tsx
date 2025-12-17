@@ -318,6 +318,100 @@ describe("ChatMessages", () => {
     });
   });
 
+  describe("Interactive Artifacts Feature Flag", () => {
+    it("should render mermaid diagrams when enableInteractiveArtifacts is true", () => {
+      const mermaidMessage = [
+        {
+          id: "msg-1",
+          role: "assistant" as const,
+          content:
+            "Here's a diagram:\n\n```mermaid\ngraph TD\n    A[Start] --> B[End]\n```",
+          timestamp: Date.now(),
+        },
+      ];
+      render(
+        <ChatMessages messages={mermaidMessage} enableInteractiveArtifacts />,
+      );
+      // When enabled, mermaid diagrams should be rendered (not just code)
+      const diagramContainer = document.querySelector(
+        ".bg-gray-50, .dark\\:bg-gray-800",
+      );
+      expect(diagramContainer).toBeInTheDocument();
+    });
+
+    it("should render chart blocks as interactive charts when enableInteractiveArtifacts is true", () => {
+      const chartMessage = [
+        {
+          id: "msg-1",
+          role: "assistant" as const,
+          content:
+            '```chart\n{"type": "bar", "title": "Test Chart", "data": [{"name": "A", "value": 10}]}\n```',
+          timestamp: Date.now(),
+        },
+      ];
+      render(
+        <ChatMessages messages={chartMessage} enableInteractiveArtifacts />,
+      );
+      expect(screen.getByText("Test Chart")).toBeInTheDocument();
+    });
+
+    it("should render mermaid as plain code when enableInteractiveArtifacts is false", () => {
+      const mermaidMessage = [
+        {
+          id: "msg-1",
+          role: "assistant" as const,
+          content:
+            "Here's a diagram:\n\n```mermaid\ngraph TD\n    A[Start] --> B[End]\n```",
+          timestamp: Date.now(),
+        },
+      ];
+      render(
+        <ChatMessages
+          messages={mermaidMessage}
+          enableInteractiveArtifacts={false}
+        />,
+      );
+      // When disabled, should show mermaid language label (plain code block)
+      expect(screen.getByText("mermaid")).toBeInTheDocument();
+    });
+
+    it("should render chart as plain code when enableInteractiveArtifacts is false", () => {
+      // Using multi-line content so it renders as CodeBlock with language label
+      const chartMessage = [
+        {
+          id: "msg-1",
+          role: "assistant" as const,
+          content:
+            '```chart\n{\n  "type": "bar",\n  "title": "Test Chart",\n  "data": []\n}\n```',
+          timestamp: Date.now(),
+        },
+      ];
+      render(
+        <ChatMessages
+          messages={chartMessage}
+          enableInteractiveArtifacts={false}
+        />,
+      );
+      // When disabled, should show chart language label (plain code block)
+      expect(screen.getByText("chart")).toBeInTheDocument();
+    });
+
+    it("should default to enabled for interactive artifacts", () => {
+      // By default (no prop), interactive artifacts should be enabled
+      const chartMessage = [
+        {
+          id: "msg-1",
+          role: "assistant" as const,
+          content:
+            '```chart\n{"type": "bar", "title": "Default Enabled", "data": [{"name": "A", "value": 5}]}\n```',
+          timestamp: Date.now(),
+        },
+      ];
+      render(<ChatMessages messages={chartMessage} />);
+      expect(screen.getByText("Default Enabled")).toBeInTheDocument();
+    });
+  });
+
   describe("Enhanced Code Block Features", () => {
     const codeMessage = [
       {

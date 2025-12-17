@@ -151,6 +151,8 @@ export interface FeatureFlags {
   enable_code_export?: boolean;
   enable_ai_suggestions?: boolean;
   enable_mcp_websocket?: boolean;
+  /** Enable interactive artifact rendering in chat messages (Sandpack for JSX/TSX/MDX) */
+  enable_interactive_artifacts?: boolean;
   [key: string]: boolean | undefined;
 }
 

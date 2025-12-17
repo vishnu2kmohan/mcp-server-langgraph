@@ -309,4 +309,192 @@ describe("ChatMessage", () => {
       expect(link).toHaveClass("text-blue-600");
     });
   });
+
+  describe("Interactive Artifacts", () => {
+    it("should render a chart artifact from code block", () => {
+      const content = `Here is the data:
+
+\`\`\`chart
+{"type": "bar", "data": [{"label": "A", "value": 10}]}
+\`\`\`
+
+Hope this helps!`;
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content={content}
+          timestamp={new Date()}
+          renderArtifacts={true}
+        />,
+      );
+
+      expect(screen.getByTestId("artifact-chart")).toBeInTheDocument();
+    });
+
+    it("should render a mermaid diagram from code block", () => {
+      const content = `Here is the diagram:
+
+\`\`\`mermaid
+graph TD
+    A --> B
+\`\`\``;
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content={content}
+          timestamp={new Date()}
+          renderArtifacts={true}
+        />,
+      );
+
+      // Mermaid renders an SVG
+      expect(screen.getByText("Here is the diagram:")).toBeInTheDocument();
+    });
+
+    it("should render executable code with Run button", () => {
+      const content = `Here is a component:
+
+\`\`\`tsx
+export default function App() {
+  return <div>Hello World</div>;
+}
+\`\`\``;
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content={content}
+          timestamp={new Date()}
+          renderArtifacts={true}
+        />,
+      );
+
+      expect(screen.getByRole("button", { name: /run/i })).toBeInTheDocument();
+    });
+
+    it("should not render artifacts when renderArtifacts is false", () => {
+      const content = `\`\`\`chart
+{"type": "bar", "data": []}
+\`\`\``;
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content={content}
+          timestamp={new Date()}
+          renderArtifacts={false}
+        />,
+      );
+
+      expect(screen.queryByTestId("artifact-chart")).not.toBeInTheDocument();
+    });
+
+    it("should render JSON artifact", () => {
+      const content = `Here is the config:
+
+\`\`\`json
+{"key": "value", "nested": {"a": 1}}
+\`\`\``;
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content={content}
+          timestamp={new Date()}
+          renderArtifacts={true}
+        />,
+      );
+
+      expect(screen.getByTestId("artifact-json")).toBeInTheDocument();
+    });
+
+    it("should render SVG artifact", () => {
+      const content = `Here is the icon:
+
+\`\`\`svg
+<svg width="100" height="100"><circle cx="50" cy="50" r="40" fill="red"/></svg>
+\`\`\``;
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content={content}
+          timestamp={new Date()}
+          renderArtifacts={true}
+        />,
+      );
+
+      expect(screen.getByTestId("artifact-svg")).toBeInTheDocument();
+    });
+
+    it("should render regular code as code artifact", () => {
+      const content = `Here is the code:
+
+\`\`\`python
+def hello():
+    print("world")
+\`\`\``;
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content={content}
+          timestamp={new Date()}
+          renderArtifacts={true}
+        />,
+      );
+
+      expect(screen.getByTestId("artifact-code")).toBeInTheDocument();
+    });
+
+    it("should render multiple artifacts in one message", () => {
+      const content = `Chart:
+
+\`\`\`chart
+{"type": "bar", "data": [{"label": "A", "value": 10}]}
+\`\`\`
+
+And JSON:
+
+\`\`\`json
+{"key": "value"}
+\`\`\``;
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content={content}
+          timestamp={new Date()}
+          renderArtifacts={true}
+        />,
+      );
+
+      expect(screen.getByTestId("artifact-chart")).toBeInTheDocument();
+      expect(screen.getByTestId("artifact-json")).toBeInTheDocument();
+    });
+
+    it("should preserve text segments between artifacts", () => {
+      const content = `Introduction text.
+
+\`\`\`json
+{"key": "value"}
+\`\`\`
+
+Conclusion text.`;
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content={content}
+          timestamp={new Date()}
+          renderArtifacts={true}
+        />,
+      );
+
+      expect(screen.getByText("Introduction text.")).toBeInTheDocument();
+      expect(screen.getByText("Conclusion text.")).toBeInTheDocument();
+    });
+  });
 });

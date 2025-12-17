@@ -47,3 +47,10 @@ export type {
   ChatWorkspaceProps,
   UsePanelControlReturn,
 } from "./ChatWorkspace";
+
+// =============================================================================
+// Dockable Document Components (for MainDock integration)
+// =============================================================================
+
+export { ChatDocument } from "./ChatDocument";
+export type { ChatDocumentProps } from "./ChatDocument";

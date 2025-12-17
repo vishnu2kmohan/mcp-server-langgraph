@@ -2,9 +2,12 @@
  * ChatMessage Component
  *
  * Displays a single chat message with role-based styling.
+ * Supports interactive artifact rendering for code blocks.
  */
 
 import { Loader2, ExternalLink } from "lucide-react";
+import { parseArtifacts } from "../../utils/artifactParser";
+import { ArtifactRenderer } from "../Artifacts/ArtifactRenderer";
 
 /**
  * Source citation for AI responses
@@ -21,6 +24,8 @@ export interface ChatMessageProps {
   showTimestamp?: boolean;
   isLoading?: boolean;
   renderMarkdown?: boolean;
+  /** Enable interactive artifact rendering for code blocks */
+  renderArtifacts?: boolean;
   /** Source citations for AI responses (only displayed for assistant messages) */
   sources?: SourceCitation[];
 }
@@ -32,6 +37,7 @@ export function ChatMessage({
   showTimestamp = true,
   isLoading = false,
   renderMarkdown = false,
+  renderArtifacts = false,
   sources,
 }: ChatMessageProps) {
   const isUser = role === "user";
@@ -52,6 +58,47 @@ export function ChatMessage({
         >
           <Loader2 className="w-4 h-4 animate-spin" />
           <span className="text-gray-500">Thinking...</span>
+        </div>
+      );
+    }
+
+    // Interactive artifact rendering - parses code blocks into renderable artifacts
+    if (renderArtifacts) {
+      const segments = parseArtifacts(content);
+      return (
+        <div className="space-y-3">
+          {segments.map((segment, index) => {
+            if (segment.type === "text") {
+              // Render text segments with optional markdown
+              if (renderMarkdown) {
+                const rendered = segment.content
+                  .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                  .replace(/\*(.*?)\*/g, "<em>$1</em>");
+                return (
+                  <div
+                    key={index}
+                    dangerouslySetInnerHTML={{ __html: rendered }}
+                    className="prose prose-sm max-w-none"
+                  />
+                );
+              }
+              return (
+                <p key={index} className="whitespace-pre-wrap">
+                  {segment.content}
+                </p>
+              );
+            } else if (segment.type === "artifact" && segment.artifact) {
+              // Render artifact using ArtifactRenderer
+              return (
+                <ArtifactRenderer
+                  key={segment.artifact.id || index}
+                  artifact={segment.artifact}
+                  className="my-2"
+                />
+              );
+            }
+            return null;
+          })}
         </div>
       );
     }

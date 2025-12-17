@@ -12,3 +12,6 @@ export type { NodePaletteProps, NodeType } from "./NodePalette";
 
 export { CodePanel } from "./CodePanel";
 export type { CodePanelProps } from "./CodePanel";
+
+export { WorkflowDocument } from "./WorkflowDocument";
+export type { WorkflowDocumentProps } from "./WorkflowDocument";

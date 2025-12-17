@@ -76,6 +76,8 @@ export interface ChatMessagesProps {
   thinkingTrace?: ThinkingTrace;
   /** Callback when user reports a hallucination */
   onReportHallucination?: (report: HallucinationReport) => void;
+  /** Enable interactive artifact rendering (mermaid, charts, SVG, etc.). Default: true */
+  enableInteractiveArtifacts?: boolean;
 }
 
 /**
@@ -272,10 +274,19 @@ function CodeBlock({
   );
 }
 
+interface MarkdownContentProps {
+  content: string;
+  /** Enable interactive artifact rendering. Default: true */
+  enableInteractiveArtifacts?: boolean;
+}
+
 /**
  * Markdown renderer with custom components
  */
-function MarkdownContent({ content }: { content: string }) {
+function MarkdownContent({
+  content,
+  enableInteractiveArtifacts = true,
+}: MarkdownContentProps) {
   const components = useMemo(
     () => ({
       // Code blocks with syntax highlighting and special renderers
@@ -293,40 +304,43 @@ function MarkdownContent({ content }: { content: string }) {
         const language = match ? match[1] : undefined;
         const codeContent = String(children).replace(/\n$/, "");
 
-        // Handle mermaid diagrams
-        if (language === "mermaid" && !inline) {
-          return <InteractiveMermaidDiagram code={codeContent} />;
-        }
+        // Interactive artifacts - only render when enabled
+        if (enableInteractiveArtifacts) {
+          // Handle mermaid diagrams
+          if (language === "mermaid" && !inline) {
+            return <InteractiveMermaidDiagram code={codeContent} />;
+          }
 
-        // Handle chart blocks
-        if (language === "chart" && !inline) {
-          return <ChartCodeBlock code={codeContent} />;
-        }
+          // Handle chart blocks
+          if (language === "chart" && !inline) {
+            return <ChartCodeBlock code={codeContent} />;
+          }
 
-        // Handle SVG blocks with interactive controls
-        if (language === "svg" && !inline) {
-          return <InteractiveSVGArtifact data={codeContent} />;
-        }
+          // Handle SVG blocks with interactive controls
+          if (language === "svg" && !inline) {
+            return <InteractiveSVGArtifact data={codeContent} />;
+          }
 
-        // Handle audio blocks (URL or base64)
-        if (language === "audio" && !inline) {
-          return <AudioArtifact data={codeContent.trim()} />;
-        }
+          // Handle audio blocks (URL or base64)
+          if (language === "audio" && !inline) {
+            return <AudioArtifact data={codeContent.trim()} />;
+          }
 
-        // Handle video blocks (URL or base64)
-        if (language === "video" && !inline) {
-          return <VideoArtifact data={codeContent.trim()} />;
-        }
+          // Handle video blocks (URL or base64)
+          if (language === "video" && !inline) {
+            return <VideoArtifact data={codeContent.trim()} />;
+          }
 
-        // Handle executable code blocks (run:python, run:javascript, etc.)
-        if (language?.startsWith("run:") && !inline) {
-          const execLanguage = language.replace("run:", "");
-          return (
-            <ExecutableArtifact
-              data={codeContent}
-              config={{ language: execLanguage, runtime: "docker" }}
-            />
-          );
+          // Handle executable code blocks (run:python, run:javascript, etc.)
+          if (language?.startsWith("run:") && !inline) {
+            const execLanguage = language.replace("run:", "");
+            return (
+              <ExecutableArtifact
+                data={codeContent}
+                config={{ language: execLanguage, runtime: "docker" }}
+              />
+            );
+          }
         }
 
         if (!inline && codeContent.includes("\n")) {
@@ -459,7 +473,7 @@ function MarkdownContent({ content }: { content: string }) {
         <hr className="my-4 border-gray-300 dark:border-gray-600" {...props} />
       ),
     }),
-    [],
+    [enableInteractiveArtifacts],
   );
 
   return (
@@ -480,6 +494,7 @@ export function ChatMessages({
   isSending = false,
   thinkingTrace,
   onReportHallucination,
+  enableInteractiveArtifacts = true,
 }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showThinkingTrace, setShowThinkingTrace] = useState(false);
@@ -527,7 +542,10 @@ export function ChatMessages({
                 message.role === "user" ? "prose-invert" : ""
               }`}
             >
-              <MarkdownContent content={message.content} />
+              <MarkdownContent
+                content={message.content}
+                enableInteractiveArtifacts={enableInteractiveArtifacts}
+              />
             </div>
             {/* Source Citations - only for assistant messages with sources */}
             {message.role === "assistant" &&
@@ -589,7 +607,10 @@ export function ChatMessages({
           <div className="max-w-[70%] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 rounded-lg text-gray-900 dark:text-gray-100">
             {streamingContent ? (
               <div className="relative prose prose-sm dark:prose-invert max-w-none">
-                <MarkdownContent content={streamingContent} />
+                <MarkdownContent
+                  content={streamingContent}
+                  enableInteractiveArtifacts={enableInteractiveArtifacts}
+                />
                 <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse align-middle" />
               </div>
             ) : (

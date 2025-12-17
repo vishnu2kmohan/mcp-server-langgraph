@@ -1,10 +1,20 @@
 /**
- * ChatPage - Unified Workspace
+ * ChatPage - Unified Workspace (DEPRECATED)
  *
- * Unified chat interface page with integrated session management,
- * real-time messaging, trace visualization, and context panel.
+ * @deprecated This component is bypassed by the new AppShell architecture.
+ * The App.tsx component now renders AppShell with MainDock for studio routes,
+ * which uses ChatDocument instead of this full ChatPage.
  *
- * Layout:
+ * The new architecture provides:
+ * - LeftSidebar: Session management (replaces SessionPanel)
+ * - MainDock: Chat content via ChatDocument
+ * - RightSidebar: Context-sensitive property panels (replaces ContextPanel)
+ * - BottomPanel: Activity log, problems, inspector
+ *
+ * This file is kept for backward compatibility but should be removed
+ * once the migration is fully validated.
+ *
+ * Legacy Layout (not used in studio routes):
  * - Left: SessionPanel (collapsible session list)
  * - Center: Chat area with messages and input
  * - Right: ContextPanel (tools, activity, cost)
@@ -67,6 +77,7 @@ import {
 } from "lucide-react";
 import { ConfirmDialog, TierUsageBar, UpgradePrompt } from "../components/UI";
 import { useTierLimits } from "../hooks/useTierLimits";
+import { useFeatureFlag } from "../contexts/FeatureFlagContext";
 
 export function ChatPage() {
   const [input, setInput] = useState("");
@@ -90,6 +101,10 @@ export function ChatPage() {
     isAtLimit,
     nextTier,
   } = useTierLimits();
+
+  // Feature flag for interactive artifacts (mermaid, charts, SVG, etc.)
+  // Note: Backend returns "interactive_artifacts" (not "enable_interactive_artifacts")
+  const enableInteractiveArtifacts = useFeatureFlag("interactive_artifacts");
   const [searchParams] = useSearchParams();
   const sessionIdFromUrl = searchParams.get("session");
   const dispatch = useAppDispatch();
@@ -702,6 +717,7 @@ export function ChatPage() {
               streamingContent={streamingContent}
               isSending={isSending}
               thinkingTrace={thinkingTrace}
+              enableInteractiveArtifacts={enableInteractiveArtifacts}
             />
 
             {/* Input Form with voice and file support */}
