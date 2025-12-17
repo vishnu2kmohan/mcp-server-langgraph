@@ -25,12 +25,16 @@ import type {
   JSONArtifact as JSONArtifactType,
   ImageArtifact as ImageArtifactType,
   TextArtifact as TextArtifactType,
+  SVGArtifact as SVGArtifactType,
+  ExecutableArtifact as ExecutableArtifactType,
 } from "../../types/artifacts";
 import { ChartArtifact } from "./ChartArtifact";
 import { TableArtifact } from "./TableArtifact";
 import { CodeArtifact } from "./CodeArtifact";
 import { JSONArtifact } from "./JSONArtifact";
 import { MermaidArtifact } from "./MermaidArtifact";
+import { InteractiveSVGArtifact } from "./InteractiveSVGArtifact";
+import { SandpackExecutor } from "./SandpackExecutor";
 
 export interface ArtifactRendererProps {
   artifact?: Artifact;
@@ -350,6 +354,48 @@ export function ArtifactRenderer({
           />
         </div>
       );
+
+    case "svg": {
+      const svgData = artifactToRender as SVGArtifactType;
+      return (
+        <div data-testid="artifact-svg" className={className}>
+          <InteractiveSVGArtifact
+            data={svgData.data}
+            title={artifactToRender.title}
+            config={{
+              enableZoom: svgData.config?.enableZoom,
+              enablePan: svgData.config?.enablePan,
+            }}
+          />
+        </div>
+      );
+    }
+
+    case "executable": {
+      const execData = artifactToRender as ExecutableArtifactType;
+      // Determine if this is MDX (check metadata or language)
+      const isMDX =
+        execData.metadata?.isMDX || execData.config.language === "mdx";
+      const language = execData.config.language as
+        | "tsx"
+        | "jsx"
+        | "javascript"
+        | "typescript"
+        | "mdx";
+
+      return (
+        <div data-testid="artifact-executable" className={className}>
+          <SandpackExecutor
+            code={execData.data}
+            language={isMDX ? "mdx" : language}
+            title={artifactToRender.title}
+            showRunButton={true}
+            autoRun={false}
+            theme="dark"
+          />
+        </div>
+      );
+    }
 
     case "text":
     default:

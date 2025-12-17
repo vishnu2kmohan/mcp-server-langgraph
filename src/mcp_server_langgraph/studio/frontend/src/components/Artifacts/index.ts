@@ -39,6 +39,15 @@ export type { VideoArtifactProps } from "./VideoArtifact";
 export { ExecutableArtifact } from "./ExecutableArtifact";
 export type { ExecutableArtifactProps } from "./ExecutableArtifact";
 
+export { SandpackExecutor } from "./SandpackExecutor";
+export type { SandpackExecutorProps } from "./SandpackExecutor";
+
+export { MermaidArtifact } from "./MermaidArtifact";
+export type { MermaidArtifactProps } from "./MermaidArtifact";
+
+export { ArtifactRenderer, detectArtifactType } from "./ArtifactRenderer";
+export type { ArtifactRendererProps } from "./ArtifactRenderer";
+
 export {
   MDXArtifact,
   mdxComponents,
