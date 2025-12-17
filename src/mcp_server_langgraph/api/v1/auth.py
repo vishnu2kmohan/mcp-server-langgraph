@@ -1437,7 +1437,7 @@ async def oauth2_logout(
     This endpoint provides a JSON-based logout for SPAs that:
     1. Revokes the refresh token with Keycloak
     2. Terminates the Keycloak SSO session
-    3. Clears session cookies
+    3. Clears session cookies (mcp_session and OAuth2 state cookies)
     4. Returns a JSON response (no redirect)
 
     The frontend should call this endpoint and then redirect to the login page.
@@ -1446,13 +1446,16 @@ async def oauth2_logout(
 async def native_logout(
     request: Request,
     refresh_token: str | None = Body(None, embed=True, description="Refresh token to revoke"),
-) -> dict[str, Any]:
+) -> JSONResponse:
     """
     Native logout endpoint for SPAs.
 
     Revokes tokens and terminates Keycloak session without redirecting.
+    Returns a JSONResponse that also clears session cookies.
     """
     import httpx
+
+    from mcp_server_langgraph.studio.security import SESSION_COOKIE_NAME
 
     # Use server URL for backend-to-Keycloak communication
     keycloak_server_url = settings.keycloak_server_url
@@ -1509,8 +1512,35 @@ async def native_logout(
         },
     )
 
-    return {
-        "success": True,
-        "message": "Logout successful. Please clear your session and redirect to login.",
-        "keycloak_logout_url": f"{settings.keycloak_public_url or keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/logout?client_id={settings.keycloak_client_id}",
-    }
+    # Create JSONResponse with session cookie deletion
+    # This is critical for multi-user logout - without clearing the session cookie,
+    # users get logged back in as the previous user
+    response = JSONResponse(
+        content={
+            "success": True,
+            "message": "Logout successful. Please clear your session and redirect to login.",
+            "keycloak_logout_url": f"{settings.keycloak_public_url or keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/logout?client_id={settings.keycloak_client_id}",
+        }
+    )
+
+    # Step 3: Clear session cookies
+    # Delete the studio session cookie (set by OAuth2 callback)
+    # and OAuth2 state cookies that might still be present
+    cookies_to_delete = [
+        SESSION_COOKIE_NAME,  # studio_session - main session cookie
+        "oauth2_code_verifier",
+        "oauth2_state",
+        "oauth2_redirect_uri",
+        "session_id",  # Legacy session ID if present
+    ]
+
+    for cookie_name in cookies_to_delete:
+        response.delete_cookie(
+            key=cookie_name,
+            httponly=True,
+            secure=settings.environment != "development",
+            samesite="lax",
+            path="/",
+        )
+
+    return response

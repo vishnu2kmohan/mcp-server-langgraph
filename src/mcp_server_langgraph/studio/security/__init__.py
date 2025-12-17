@@ -33,7 +33,7 @@ SECURITY_HEADERS: dict[str, str] = {
 }
 
 # Session cookie name for studio frontend authentication
-SESSION_COOKIE_NAME = "mcp_session"
+SESSION_COOKIE_NAME = "studio_session"
 
 # Cookie configuration
 COOKIE_CONFIG: dict[str, Any] = {

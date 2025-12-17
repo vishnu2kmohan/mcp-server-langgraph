@@ -1163,3 +1163,111 @@ class TestOAuth2Logout:
         assert response.status_code == 302
         location = response.headers.get("location", "")
         assert "id_token_hint=" in location
+
+
+@pytest.mark.api
+@pytest.mark.auth
+class TestNativeLogout:
+    """
+    Tests for POST /auth/logout (native logout for SPAs).
+
+    Per ADR-0071: Native logout should:
+    - Revoke the refresh token with Keycloak
+    - Clear the session cookie (mcp_session)
+    - Return a JSON response with keycloak_logout_url
+    """
+
+    @pytest.fixture(autouse=True)
+    def cleanup(self):
+        """Force GC to prevent accumulation in xdist workers."""
+        yield
+        gc.collect()
+
+    def test_native_logout_returns_success(self, client):
+        """
+        GIVEN: User wants to log out via SPA
+        WHEN: POST /auth/logout is called
+        THEN: Should return 200 OK with success message
+        """
+        response = client.post(
+            "/auth/logout",
+            json={},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert "keycloak_logout_url" in data
+
+    def test_native_logout_clears_session_cookie(self, client):
+        """
+        GIVEN: User has a session cookie
+        WHEN: POST /auth/logout is called
+        THEN: Response should delete the mcp_session cookie
+
+        This is critical for multi-user logout - without clearing
+        the session cookie, users get logged back in as the previous user.
+        """
+        from mcp_server_langgraph.studio.security import SESSION_COOKIE_NAME
+
+        # Set a session cookie on the request
+        client.cookies.set(SESSION_COOKIE_NAME, "test-session-value")
+
+        response = client.post(
+            "/auth/logout",
+            json={},
+        )
+
+        assert response.status_code == 200
+
+        # Check that the session cookie is deleted (Max-Age=0 or expires in past)
+        set_cookie_headers = response.headers.get_list("set-cookie")
+        session_cookie_deleted = False
+
+        for cookie_header in set_cookie_headers:
+            if SESSION_COOKIE_NAME in cookie_header:
+                # Cookie is deleted if Max-Age=0 or expires in past
+                if "max-age=0" in cookie_header.lower() or "expires=" in cookie_header.lower():
+                    session_cookie_deleted = True
+                    break
+
+        assert session_cookie_deleted, (
+            f"Session cookie '{SESSION_COOKIE_NAME}' should be deleted in logout response. "
+            f"Set-Cookie headers: {set_cookie_headers}"
+        )
+
+    def test_native_logout_with_refresh_token(self, client):
+        """
+        GIVEN: User provides a refresh token to revoke
+        WHEN: POST /auth/logout is called with refresh_token
+        THEN: Should attempt token revocation and return success
+        """
+        response = client.post(
+            "/auth/logout",
+            json={"refresh_token": "mock-refresh-token"},
+        )
+
+        # Should still return success even if Keycloak is not available
+        # (revocation failure is logged but doesn't fail the logout)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+
+    def test_native_logout_returns_keycloak_logout_url(self, client):
+        """
+        GIVEN: User logs out via native endpoint
+        WHEN: POST /auth/logout is called
+        THEN: Response should include Keycloak logout URL for frontend redirect
+        """
+        response = client.post(
+            "/auth/logout",
+            json={},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "keycloak_logout_url" in data
+
+        logout_url = data["keycloak_logout_url"]
+        assert "/protocol/openid-connect/logout" in logout_url
+        assert "client_id=" in logout_url
