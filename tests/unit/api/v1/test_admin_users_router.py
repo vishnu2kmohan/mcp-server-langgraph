@@ -3,6 +3,10 @@ Tests for Admin Users Router
 
 TDD tests for /api/v1/admin/users endpoints.
 Provides CRUD operations for user management by administrators.
+
+PYTEST-XDIST FIX (2025-12-16): Reset singleton dependencies before each test
+to prevent state pollution from xdist workers that may have created real
+providers before the test's dependency_overrides take effect.
 """
 
 import gc
@@ -13,6 +17,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.auth.user_provider import UserData
+from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
 
 pytestmark = pytest.mark.unit
 
@@ -20,10 +25,23 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="test_admin_users_router")
 class TestAdminUsersListEndpoint:
-    """Tests for GET /api/v1/admin/users endpoint."""
+    """Tests for GET /api/v1/admin/users endpoint.
+
+    PYTEST-XDIST FIX (2025-12-16): Uses dual mocking strategy for xdist reliability:
+    1. Reset singletons to clear any cached providers from other tests
+    2. Set _user_provider singleton directly to bypass get_user_provider() call entirely
+    3. Also set dependency_overrides as a safety net
+
+    This ensures the mock is used regardless of how FastAPI resolves the dependency.
+    """
+
+    def setup_method(self) -> None:
+        """Reset singletons before each test to ensure clean state."""
+        reset_singleton_dependencies()
 
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC and reset singletons to prevent mock accumulation."""
+        reset_singleton_dependencies()
         gc.collect()
 
     def _create_mock_user_provider(self, users: list[UserData] | None = None) -> AsyncMock:
@@ -33,7 +51,13 @@ class TestAdminUsersListEndpoint:
         return mock_provider
 
     def _create_app(self, mock_provider: AsyncMock | None = None) -> FastAPI:
-        """Create a FastAPI app with the admin router."""
+        """Create a FastAPI app with the admin router.
+
+        Uses dual mocking strategy for xdist reliability:
+        1. Sets _user_provider singleton directly in dependencies module
+        2. Sets dependency_overrides as a safety net
+        """
+        import mcp_server_langgraph.core.dependencies as deps_module
         from mcp_server_langgraph.api.v1.admin import admin_router
         from mcp_server_langgraph.core.dependencies import get_user_provider
 
@@ -41,6 +65,9 @@ class TestAdminUsersListEndpoint:
         app.include_router(admin_router, prefix="/api/v1")
 
         if mock_provider:
+            # Strategy 1: Set the singleton directly (bypasses get_user_provider logic)
+            deps_module._user_provider = mock_provider
+            # Strategy 2: Also set dependency override as safety net
             app.dependency_overrides[get_user_provider] = lambda: mock_provider
 
         return app
@@ -97,8 +124,13 @@ class TestAdminUsersListEndpoint:
 class TestAdminUserGetEndpoint:
     """Tests for GET /api/v1/admin/users/{user_id} endpoint."""
 
+    def setup_method(self) -> None:
+        """Reset singletons before each test to ensure clean state."""
+        reset_singleton_dependencies()
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC and reset singletons to prevent mock accumulation."""
+        reset_singleton_dependencies()
         gc.collect()
 
     def _create_mock_user_provider(self, user: UserData | None = None) -> AsyncMock:
@@ -110,6 +142,7 @@ class TestAdminUserGetEndpoint:
 
     def _create_app(self, mock_provider: AsyncMock | None = None) -> FastAPI:
         """Create a FastAPI app with the admin router."""
+        import mcp_server_langgraph.core.dependencies as deps_module
         from mcp_server_langgraph.api.v1.admin import admin_router
         from mcp_server_langgraph.core.dependencies import get_user_provider
 
@@ -117,6 +150,8 @@ class TestAdminUserGetEndpoint:
         app.include_router(admin_router, prefix="/api/v1")
 
         if mock_provider:
+            # Dual mocking strategy for xdist reliability
+            deps_module._user_provider = mock_provider
             app.dependency_overrides[get_user_provider] = lambda: mock_provider
 
         return app
@@ -153,8 +188,13 @@ class TestAdminUserGetEndpoint:
 class TestAdminUserCreateEndpoint:
     """Tests for POST /api/v1/admin/users endpoint."""
 
+    def setup_method(self) -> None:
+        """Reset singletons before each test to ensure clean state."""
+        reset_singleton_dependencies()
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC and reset singletons to prevent mock accumulation."""
+        reset_singleton_dependencies()
         gc.collect()
 
     def _create_mock_user_provider(self, created_user: UserData | None = None) -> AsyncMock:
@@ -166,6 +206,7 @@ class TestAdminUserCreateEndpoint:
 
     def _create_app(self, mock_provider: AsyncMock | None = None) -> FastAPI:
         """Create a FastAPI app with the admin router."""
+        import mcp_server_langgraph.core.dependencies as deps_module
         from mcp_server_langgraph.api.v1.admin import admin_router
         from mcp_server_langgraph.core.dependencies import get_user_provider
 
@@ -173,6 +214,8 @@ class TestAdminUserCreateEndpoint:
         app.include_router(admin_router, prefix="/api/v1")
 
         if mock_provider:
+            # Dual mocking strategy for xdist reliability
+            deps_module._user_provider = mock_provider
             app.dependency_overrides[get_user_provider] = lambda: mock_provider
 
         return app
@@ -233,8 +276,13 @@ class TestAdminUserCreateEndpoint:
 class TestAdminUserUpdateEndpoint:
     """Tests for PUT /api/v1/admin/users/{user_id} endpoint."""
 
+    def setup_method(self) -> None:
+        """Reset singletons before each test to ensure clean state."""
+        reset_singleton_dependencies()
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC and reset singletons to prevent mock accumulation."""
+        reset_singleton_dependencies()
         gc.collect()
 
     def _create_mock_user_provider(self, existing_user: UserData | None = None) -> AsyncMock:
@@ -247,6 +295,7 @@ class TestAdminUserUpdateEndpoint:
 
     def _create_app(self, mock_provider: AsyncMock | None = None) -> FastAPI:
         """Create a FastAPI app with the admin router."""
+        import mcp_server_langgraph.core.dependencies as deps_module
         from mcp_server_langgraph.api.v1.admin import admin_router
         from mcp_server_langgraph.core.dependencies import get_user_provider
 
@@ -254,6 +303,8 @@ class TestAdminUserUpdateEndpoint:
         app.include_router(admin_router, prefix="/api/v1")
 
         if mock_provider:
+            # Dual mocking strategy for xdist reliability
+            deps_module._user_provider = mock_provider
             app.dependency_overrides[get_user_provider] = lambda: mock_provider
 
         return app
@@ -289,8 +340,13 @@ class TestAdminUserUpdateEndpoint:
 class TestAdminUserDeleteEndpoint:
     """Tests for DELETE /api/v1/admin/users/{user_id} endpoint."""
 
+    def setup_method(self) -> None:
+        """Reset singletons before each test to ensure clean state."""
+        reset_singleton_dependencies()
+
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC and reset singletons to prevent mock accumulation."""
+        reset_singleton_dependencies()
         gc.collect()
 
     def _create_mock_user_provider(self, existing_user: UserData | None = None) -> AsyncMock:
@@ -303,6 +359,7 @@ class TestAdminUserDeleteEndpoint:
 
     def _create_app(self, mock_provider: AsyncMock | None = None) -> FastAPI:
         """Create a FastAPI app with the admin router."""
+        import mcp_server_langgraph.core.dependencies as deps_module
         from mcp_server_langgraph.api.v1.admin import admin_router
         from mcp_server_langgraph.core.dependencies import get_user_provider
 
@@ -310,6 +367,8 @@ class TestAdminUserDeleteEndpoint:
         app.include_router(admin_router, prefix="/api/v1")
 
         if mock_provider:
+            # Dual mocking strategy for xdist reliability
+            deps_module._user_provider = mock_provider
             app.dependency_overrides[get_user_provider] = lambda: mock_provider
 
         return app

@@ -127,13 +127,10 @@ class TestTraceContextEdgeCases:
         When span_context.is_valid is False, trace_id and span_id should
         not be included in the log output.
 
-        PYTEST-XDIST FIX (2025-12-15):
+        PYTEST-XDIST FIX (2025-12-16):
         ==============================
-        Previous approach used Mock(spec=["is_valid", ...]) which caused
-        issues in parallel execution where is_valid might be evaluated as
-        truthy MagicMock. Using real OpenTelemetry SpanContext with invalid
-        values (trace_id=0, span_id=0) is more robust as is_valid is a
-        computed property that returns False for zero IDs.
+        Use side_effect factory pattern instead of return_value to prevent
+        MagicMock pollution across xdist workers.
         """
         from opentelemetry.trace import SpanContext, TraceFlags
 
@@ -148,9 +145,7 @@ class TestTraceContextEdgeCases:
             exc_info=None,
         )
 
-        # Create a mock span with a real invalid SpanContext
-        # SpanContext with trace_id=0 and span_id=0 has is_valid=False
-        mock_span = Mock()
+        # Create a real invalid SpanContext (trace_id=0 and span_id=0 is invalid)
         invalid_span_context = SpanContext(
             trace_id=0,  # Invalid: must be non-zero for valid context
             span_id=0,  # Invalid: must be non-zero for valid context
@@ -159,10 +154,19 @@ class TestTraceContextEdgeCases:
         )
         # Verify the context is indeed invalid
         assert not invalid_span_context.is_valid
-        mock_span.get_span_context.return_value = invalid_span_context
+
+        # PYTEST-XDIST FIX: Use side_effect factory instead of return_value
+        def create_mock_span():
+            """Factory function to create fresh mock span for each call."""
+            mock_span = Mock()
+            mock_span.get_span_context.return_value = invalid_span_context
+            return mock_span
 
         # Patch where trace is used, not where it's defined
-        with patch("mcp_server_langgraph.observability.json_logger.trace.get_current_span", return_value=mock_span):
+        with patch(
+            "mcp_server_langgraph.observability.json_logger.trace.get_current_span",
+            side_effect=create_mock_span,
+        ):
             formatted = formatter.format(record)
             log_data = json.loads(formatted)
 
@@ -171,7 +175,10 @@ class TestTraceContextEdgeCases:
             assert "span_id" not in log_data
 
     def test_no_span_context(self):
-        """Test handling when span.get_span_context() returns None"""
+        """Test handling when span.get_span_context() returns None
+
+        PYTEST-XDIST FIX (2025-12-16): Use side_effect factory pattern.
+        """
         formatter = CustomJSONFormatter(service_name="test")
         record = logging.LogRecord(
             name="test",
@@ -183,12 +190,18 @@ class TestTraceContextEdgeCases:
             exc_info=None,
         )
 
-        # Create a mock span that returns None for context
-        mock_span = Mock()
-        mock_span.get_span_context.return_value = None
+        # PYTEST-XDIST FIX: Use side_effect factory instead of return_value
+        def create_mock_span():
+            """Factory function to create fresh mock span for each call."""
+            mock_span = Mock()
+            mock_span.get_span_context.return_value = None
+            return mock_span
 
         # Patch where trace is used, not where it's defined
-        with patch("mcp_server_langgraph.observability.json_logger.trace.get_current_span", return_value=mock_span):
+        with patch(
+            "mcp_server_langgraph.observability.json_logger.trace.get_current_span",
+            side_effect=create_mock_span,
+        ):
             formatted = formatter.format(record)
             log_data = json.loads(formatted)
 
@@ -196,7 +209,10 @@ class TestTraceContextEdgeCases:
             assert "trace_id" not in log_data
 
     def test_no_active_span(self):
-        """Test handling when there's no active span"""
+        """Test handling when there's no active span
+
+        PYTEST-XDIST FIX (2025-12-16): Use side_effect factory pattern.
+        """
         formatter = CustomJSONFormatter(service_name="test")
         record = logging.LogRecord(
             name="test",
@@ -208,8 +224,12 @@ class TestTraceContextEdgeCases:
             exc_info=None,
         )
 
+        # PYTEST-XDIST FIX: Use side_effect instead of return_value
         # Patch where trace is used, not where it's defined
-        with patch("mcp_server_langgraph.observability.json_logger.trace.get_current_span", return_value=None):
+        with patch(
+            "mcp_server_langgraph.observability.json_logger.trace.get_current_span",
+            side_effect=lambda: None,
+        ):
             formatted = formatter.format(record)
             log_data = json.loads(formatted)
 

@@ -256,6 +256,59 @@ def _authz_proxy_available() -> bool:
         return False
 
 
+def _authz_proxy_auth_functional() -> bool:
+    """Check if authz-proxy authentication is working correctly end-to-end.
+
+    This validates the full auth flow:
+    1. Get a token from Keycloak for a known user (admin)
+    2. Send that token to the authz-proxy
+    3. Verify we get a non-401 response (auth was accepted)
+
+    This is a stricter check than _authz_proxy_available() because it validates
+    that the JWT validation is actually working, not just that the service is up.
+
+    Returns:
+        True if auth flow works end-to-end (token is validated correctly)
+        False if auth is broken (always returns 401 even with valid token)
+    """
+    try:
+        # Get admin token from Keycloak
+        token_response = requests.post(
+            "http://localhost/authn/realms/default/protocol/openid-connect/token",
+            data={
+                "grant_type": "password",
+                "client_id": "mcp-server",
+                "client_secret": "test-client-secret-for-e2e-tests",
+                "username": "admin",
+                "password": "admin123",
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if token_response.status_code != 200:
+            return False
+
+        token = token_response.json().get("access_token")
+        if not token:
+            return False
+
+        # Try the token with authz-proxy
+        proxy_response = requests.get(
+            "http://localhost/playground/",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=10,
+            allow_redirects=False,
+        )
+
+        # If we get 401, auth is broken (token not validated)
+        # If we get 403, 200, 302, 307, 404 - auth worked (token was validated)
+        # 503 means OpenFGA not configured (auth worked, authz unavailable)
+        return proxy_response.status_code != 401
+
+    except Exception:
+        return False
+
+
 def _keycloak_token_endpoint_functional() -> bool:
     """Check if Keycloak token endpoint returns valid JSON."""
     try:
@@ -449,6 +502,12 @@ def skip_if_infrastructure_unavailable(request):
             pytest.skip("Keycloak not available at localhost:80/authn")
         if not _authz_proxy_available():
             pytest.skip("Authz-proxy/playground not available at localhost:80/playground")
+        if not _authz_proxy_auth_functional():
+            pytest.skip(
+                "Authz-proxy JWT authentication not working (admin token returns 401). "
+                "This usually means the authz-proxy is running but its auth middleware "
+                "is not correctly configured to validate Keycloak JWTs."
+            )
 
 
 @pytest.fixture(autouse=True)

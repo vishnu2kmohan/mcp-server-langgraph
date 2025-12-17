@@ -100,13 +100,23 @@ class TestLitellmCleanupWarnings:
                 + "\n".join(f"  - {w.message}" for w in litellm_warnings)
             )
 
+    @pytest.mark.skip(
+        reason="LLMFactory was refactored to async-only (2025-12). "
+        "Sync completion and invoke() were removed. "
+        "See plan: curious-sauteeing-sun.md for details."
+    )
     def test_litellm_sync_completion_cleanup_no_warning(self):
         """
         Verify that using litellm's sync completion does not produce cleanup warnings.
 
         Synchronous calls should not create async cleanup issues, but we test
         to ensure no regression.
+
+        NOTE (2025-12-16): This test is SKIPPED because the LLMFactory was refactored
+        to async-only. The sync `completion` import and `invoke()` method were removed
+        as part of the async-first architecture migration.
         """
+        # Original test code preserved for reference but will not run
         with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
             mock_response = configured_async_mock(return_value=None)
             mock_response.choices = [configured_async_mock(return_value=None)]

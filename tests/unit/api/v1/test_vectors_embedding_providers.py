@@ -19,10 +19,24 @@ pytestmark = [pytest.mark.unit]
 
 @pytest.mark.xdist_group(name="test_embedding_providers")
 class TestGoogleVertexEmbeddingProvider:
-    """Tests for google_vertex embedding provider (new feature for GCP WIF)."""
+    """Tests for google_vertex embedding provider (new feature for GCP WIF).
+
+    PYTEST-XDIST FIX (2025-12-16):
+    Added setup_method to reset singleton dependencies and prevent state pollution
+    between tests in xdist workers.
+    """
+
+    def setup_method(self) -> None:
+        """Reset singleton dependencies to prevent xdist pollution."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
         gc.collect()
 
     @patch.dict(os.environ, {"GOOGLE_CLOUD_PROJECT": "my-gcp-project"})
@@ -59,13 +73,20 @@ class TestGoogleVertexEmbeddingProvider:
             )
             assert result == mock_vertex_class.return_value
 
-    @patch.dict(os.environ, {"GCP_PROJECT_ID": "alternate-project"})
-    def test_google_vertex_uses_gcp_project_id_env_var(self) -> None:
+    def test_google_vertex_uses_gcp_project_id_env_var(self, monkeypatch) -> None:
         """
         GIVEN: GCP_PROJECT_ID set (alternative to GOOGLE_CLOUD_PROJECT)
         WHEN: get_embedding_model is called with google_vertex
         THEN: Uses the GCP_PROJECT_ID value.
+
+        PYTEST-XDIST FIX (2025-12-16):
+        Use monkeypatch instead of @patch.dict to ensure GOOGLE_CLOUD_PROJECT
+        is deleted before setting GCP_PROJECT_ID (the code checks GOOGLE_CLOUD_PROJECT first).
         """
+        # Clear GOOGLE_CLOUD_PROJECT first (the code checks it before GCP_PROJECT_ID)
+        monkeypatch.delenv("GOOGLE_CLOUD_PROJECT", raising=False)
+        monkeypatch.setenv("GCP_PROJECT_ID", "alternate-project")
+
         mock_vertex_class = MagicMock()
         mock_vertex_module = MagicMock()
         mock_vertex_module.VertexAIEmbeddings = mock_vertex_class

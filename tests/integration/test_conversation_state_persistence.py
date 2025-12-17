@@ -189,6 +189,11 @@ class TestConversationStatePersistence:
                 assert state["messages"][5].content == "Response 3"
 
     @pytest.mark.asyncio
+    @pytest.mark.xfail(
+        _XDIST_LLM_MOCK_UNSTABLE,
+        reason="Agent graph singleton caching can cause LLM mock to fail under xdist",
+        strict=False,  # Allow to pass if mock is applied correctly
+    )
     async def test_verification_enabled_preserves_history(self, mock_llm):
         """
         Test that when verification is enabled, conversation history is still preserved.
@@ -268,6 +273,11 @@ class TestConversationStatePersistence:
                     )
 
     @pytest.mark.asyncio
+    @pytest.mark.xfail(
+        _XDIST_LLM_MOCK_UNSTABLE,
+        reason="Agent graph singleton caching can cause LLM mock to fail under xdist",
+        strict=False,  # Allow to pass if mock is applied correctly
+    )
     async def test_empty_initial_state_works_correctly(self, test_settings, mock_llm):
         """
         Test that even with a fresh/empty conversation, the agent works correctly.

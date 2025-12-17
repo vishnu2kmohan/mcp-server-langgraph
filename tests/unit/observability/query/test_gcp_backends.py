@@ -36,16 +36,45 @@ def _create_mock_logging_v2() -> MagicMock:
 
 
 def _create_mock_monitoring_v3() -> MagicMock:
-    """Create a mock google.cloud.monitoring_v3 module."""
+    """Create a mock google.cloud.monitoring_v3 module.
+
+    PYTEST-XDIST FIX (2025-12-16):
+    ==============================
+    Use a custom MagicMock subclass for ListTimeSeriesRequest that ignores the
+    'name' parameter. When MagicMock class is used directly, the 'name' parameter
+    passed to the constructor (e.g., name="projects/test-project") sets MagicMock's
+    internal name attribute, causing child mock names like "projects/test-project.aggregation"
+    to pollute other tests in xdist.
+    """
     mock_monitoring = MagicMock()
     mock_monitoring.MetricServiceAsyncClient = MagicMock
     mock_monitoring.TimeInterval = MagicMock
-    mock_monitoring.Aggregation = MagicMock()
-    mock_monitoring.Aggregation.Aligner = MagicMock()
-    mock_monitoring.Aggregation.Aligner.ALIGN_MEAN = 1
-    mock_monitoring.ListTimeSeriesRequest = MagicMock
-    mock_monitoring.ListTimeSeriesRequest.TimeSeriesView = MagicMock()
-    mock_monitoring.ListTimeSeriesRequest.TimeSeriesView.FULL = 1
+
+    # Create Aggregation with proper nested structure
+    mock_aggregation_class = MagicMock()
+    mock_aggregation_class.Aligner = MagicMock()
+    mock_aggregation_class.Aligner.ALIGN_MEAN = 1
+    mock_monitoring.Aggregation = mock_aggregation_class
+
+    # Create a mock class that ignores the 'name' parameter when called
+    # This prevents 'name="projects/test-project"' from polluting MagicMock's internal name
+    class SafeListTimeSeriesRequestMock(MagicMock):
+        """MagicMock that ignores 'name' param to prevent mock name pollution."""
+
+        def __call__(self, *args, **kwargs):
+            # Remove 'name' from kwargs before passing to MagicMock
+            # This prevents it from being used as the mock's internal name
+            safe_kwargs = {k: v for k, v in kwargs.items() if k != "name"}
+            result = super().__call__(*args, **safe_kwargs)
+            # But we still need to store 'name' as an attribute on the result
+            if "name" in kwargs:
+                result.name = kwargs["name"]
+            return result
+
+    mock_list_request = SafeListTimeSeriesRequestMock()
+    mock_list_request.TimeSeriesView = MagicMock()
+    mock_list_request.TimeSeriesView.FULL = 1
+    mock_monitoring.ListTimeSeriesRequest = mock_list_request
     return mock_monitoring
 
 
@@ -65,10 +94,25 @@ def _create_mock_duration_pb2() -> MagicMock:
 
 @pytest.mark.xdist_group(name="gcp_observability")
 class TestCloudTraceClient:
-    """Tests for GCP Cloud Trace backend implementation."""
+    """Tests for GCP Cloud Trace backend implementation.
+
+    PYTEST-XDIST FIX (2025-12-16):
+    ==============================
+    Added setup_method to reset singleton dependencies and clean up any
+    module-level mock pollution that might leak between xdist workers.
+    """
+
+    def setup_method(self) -> None:
+        """Reset singleton dependencies to prevent xdist pollution."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
         gc.collect()
 
     @pytest.mark.asyncio
@@ -177,10 +221,25 @@ class TestCloudTraceClient:
 
 @pytest.mark.xdist_group(name="gcp_observability")
 class TestCloudLoggingClient:
-    """Tests for GCP Cloud Logging backend implementation."""
+    """Tests for GCP Cloud Logging backend implementation.
+
+    PYTEST-XDIST FIX (2025-12-16):
+    ==============================
+    Added setup_method to reset singleton dependencies and clean up any
+    module-level mock pollution that might leak between xdist workers.
+    """
+
+    def setup_method(self) -> None:
+        """Reset singleton dependencies to prevent xdist pollution."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
         gc.collect()
 
     @pytest.mark.asyncio
@@ -265,10 +324,25 @@ class TestCloudLoggingClient:
 
 @pytest.mark.xdist_group(name="gcp_observability")
 class TestCloudMonitoringClient:
-    """Tests for GCP Cloud Monitoring backend implementation."""
+    """Tests for GCP Cloud Monitoring backend implementation.
+
+    PYTEST-XDIST FIX (2025-12-16):
+    ==============================
+    Added setup_method to reset singleton dependencies and clean up any
+    module-level mock pollution that might leak between xdist workers.
+    """
+
+    def setup_method(self) -> None:
+        """Reset singleton dependencies to prevent xdist pollution."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
         gc.collect()
 
     @pytest.mark.asyncio

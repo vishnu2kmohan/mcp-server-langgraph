@@ -105,6 +105,7 @@
               "troubleshooting/installation",
               "troubleshooting/deployment",
               "troubleshooting/authentication",
+              "troubleshooting/openfga-oidc-troubleshooting",
               "troubleshooting/performance",
               "troubleshooting/ci-cd",
               "troubleshooting/database",
@@ -510,7 +511,8 @@
               "architecture/adr-0037-identity-federation",
               "architecture/adr-0038-scim-implementation",
               "architecture/adr-0039-openfga-permission-inheritance",
-              "architecture/adr-0068-gateway-level-authentication"
+              "architecture/adr-0068-gateway-level-authentication",
+              "architecture/adr-0070-openfga-oidc-authentication"
             ]
           },
           {

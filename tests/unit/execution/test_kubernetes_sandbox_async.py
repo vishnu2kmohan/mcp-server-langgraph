@@ -43,10 +43,25 @@ class TestKubernetesSandboxAsyncExecute:
     2. aexecute() returns correct ExecutionResult
     3. aexecute() does not block the event loop
     4. aexecute() propagates timeouts and errors correctly
+
+    PYTEST-XDIST FIX (2025-12-16):
+    ==============================
+    Added setup_method to reset singleton dependencies and clean up any
+    module-level mock pollution that might leak between xdist workers
+    (e.g., GCP tests that mock global state with 'projects/test-project').
     """
 
-    def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+    def setup_method(self) -> None:
+        """Reset singleton dependencies to prevent xdist pollution."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
         gc.collect()
 
     async def test_aexecute_method_exists_and_is_async(self):
@@ -87,6 +102,10 @@ class TestKubernetesSandboxAsyncExecute:
         RED: Verify aexecute() returns an ExecutionResult instance.
 
         The async method should return the same type as sync execute().
+
+        PYTEST-XDIST FIX (2025-12-16):
+        Use lambda functions instead of MagicMock for return values to prevent
+        mock pollution from leaking between xdist workers.
         """
         limits = ResourceLimits.testing()
 
@@ -100,23 +119,29 @@ class TestKubernetesSandboxAsyncExecute:
             # Mock API clients
             mock_batch_api = MagicMock()
             mock_core_api = MagicMock()
-            mock_core_api.read_namespace = MagicMock()
+            mock_core_api.read_namespace = lambda *args, **kwargs: MagicMock()
 
-            # Mock job creation and status
-            mock_job = MagicMock()
-            mock_job.status.succeeded = True
-            mock_job.status.failed = None
-            mock_batch_api.create_namespaced_job = MagicMock()
-            mock_batch_api.read_namespaced_job = MagicMock(return_value=mock_job)
-            mock_batch_api.delete_namespaced_job = MagicMock()
+            # Mock job creation and status - use lambdas
+            def create_mock_job():
+                mock_job = MagicMock()
+                mock_job.status.succeeded = True
+                mock_job.status.failed = None
+                return mock_job
 
-            # Mock pod logs
-            mock_pod = MagicMock()
-            mock_pod.metadata.name = "test-pod"
-            mock_pods = MagicMock()
-            mock_pods.items = [mock_pod]
-            mock_core_api.list_namespaced_pod = MagicMock(return_value=mock_pods)
-            mock_core_api.read_namespaced_pod_log = MagicMock(return_value="Hello, World!\n")
+            mock_batch_api.create_namespaced_job = lambda *args, **kwargs: None
+            mock_batch_api.read_namespaced_job = lambda *args, **kwargs: create_mock_job()
+            mock_batch_api.delete_namespaced_job = lambda *args, **kwargs: None
+
+            # Mock pod logs - use lambdas
+            def create_mock_pods():
+                mock_pod = MagicMock()
+                mock_pod.metadata.name = "test-pod"
+                mock_pods = MagicMock()
+                mock_pods.items = [mock_pod]
+                return mock_pods
+
+            mock_core_api.list_namespaced_pod = lambda *args, **kwargs: create_mock_pods()
+            mock_core_api.read_namespaced_pod_log = lambda *args, **kwargs: "Hello, World!\n"
 
             mock_client.BatchV1Api.return_value = mock_batch_api
             mock_client.CoreV1Api.return_value = mock_core_api
@@ -143,26 +168,33 @@ class TestKubernetesSandboxAsyncExecute:
             mock_config.load_incluster_config = MagicMock()
             mock_config.ConfigException = Exception
 
-            # Mock API clients
+            # PYTEST-XDIST FIX (2025-12-16): Use lambdas instead of MagicMock return_value
+            # to prevent mock pollution from leaking between xdist workers
             mock_batch_api = MagicMock()
             mock_core_api = MagicMock()
-            mock_core_api.read_namespace = MagicMock()
+            mock_core_api.read_namespace = lambda *args, **kwargs: MagicMock()
 
-            # Mock successful job
-            mock_job = MagicMock()
-            mock_job.status.succeeded = True
-            mock_job.status.failed = None
-            mock_batch_api.create_namespaced_job = MagicMock()
-            mock_batch_api.read_namespaced_job = MagicMock(return_value=mock_job)
-            mock_batch_api.delete_namespaced_job = MagicMock()
+            # Mock successful job - use lambdas
+            def create_mock_job():
+                mock_job = MagicMock()
+                mock_job.status.succeeded = True
+                mock_job.status.failed = None
+                return mock_job
 
-            # Mock pod logs
-            mock_pod = MagicMock()
-            mock_pod.metadata.name = "test-pod"
-            mock_pods = MagicMock()
-            mock_pods.items = [mock_pod]
-            mock_core_api.list_namespaced_pod = MagicMock(return_value=mock_pods)
-            mock_core_api.read_namespaced_pod_log = MagicMock(return_value="Hello, World!\n")
+            mock_batch_api.create_namespaced_job = lambda *args, **kwargs: None
+            mock_batch_api.read_namespaced_job = lambda *args, **kwargs: create_mock_job()
+            mock_batch_api.delete_namespaced_job = lambda *args, **kwargs: None
+
+            # Mock pod logs - use lambdas
+            def create_mock_pods():
+                mock_pod = MagicMock()
+                mock_pod.metadata.name = "test-pod"
+                mock_pods = MagicMock()
+                mock_pods.items = [mock_pod]
+                return mock_pods
+
+            mock_core_api.list_namespaced_pod = lambda *args, **kwargs: create_mock_pods()
+            mock_core_api.read_namespaced_pod_log = lambda *args, **kwargs: "Hello, World!\n"
 
             mock_client.BatchV1Api.return_value = mock_batch_api
             mock_client.CoreV1Api.return_value = mock_core_api
@@ -223,17 +255,21 @@ class TestKubernetesSandboxAsyncExecute:
                 mock_job.status.failed = None
                 return mock_job
 
-            mock_batch_api.create_namespaced_job = MagicMock()
+            # PYTEST-XDIST FIX (2025-12-16): Use lambdas instead of MagicMock return_value
+            mock_batch_api.create_namespaced_job = lambda *args, **kwargs: None
             mock_batch_api.read_namespaced_job = read_job_with_delay
-            mock_batch_api.delete_namespaced_job = MagicMock()
+            mock_batch_api.delete_namespaced_job = lambda *args, **kwargs: None
 
-            # Mock pod logs
-            mock_pod = MagicMock()
-            mock_pod.metadata.name = "test-pod"
-            mock_pods = MagicMock()
-            mock_pods.items = [mock_pod]
-            mock_core_api.list_namespaced_pod = MagicMock(return_value=mock_pods)
-            mock_core_api.read_namespaced_pod_log = MagicMock(return_value="output")
+            # Mock pod logs - use lambdas
+            def create_mock_pods():
+                mock_pod = MagicMock()
+                mock_pod.metadata.name = "test-pod"
+                mock_pods = MagicMock()
+                mock_pods.items = [mock_pod]
+                return mock_pods
+
+            mock_core_api.list_namespaced_pod = lambda *args, **kwargs: create_mock_pods()
+            mock_core_api.read_namespaced_pod_log = lambda *args, **kwargs: "output"
 
             mock_client.BatchV1Api.return_value = mock_batch_api
             mock_client.CoreV1Api.return_value = mock_core_api
@@ -302,19 +338,23 @@ class TestKubernetesSandboxAsyncExecute:
 
             # Mock time to simulate timeout
             mock_time.time.side_effect = [0.0, 0.5, 1.5, 2.0]  # Exceeds 1s timeout
-            mock_time.sleep = MagicMock()
+            mock_time.sleep = lambda *args: None
 
+            # PYTEST-XDIST FIX (2025-12-16): Use lambdas instead of MagicMock return_value
             mock_batch_api = MagicMock()
             mock_core_api = MagicMock()
-            mock_core_api.read_namespace = MagicMock()
+            mock_core_api.read_namespace = lambda *args, **kwargs: MagicMock()
 
-            # Mock job that never completes
-            mock_job = MagicMock()
-            mock_job.status.succeeded = None
-            mock_job.status.failed = None
-            mock_batch_api.create_namespaced_job = MagicMock()
-            mock_batch_api.read_namespaced_job = MagicMock(return_value=mock_job)
-            mock_batch_api.delete_namespaced_job = MagicMock()
+            # Mock job that never completes - use lambdas
+            def create_pending_job():
+                mock_job = MagicMock()
+                mock_job.status.succeeded = None
+                mock_job.status.failed = None
+                return mock_job
+
+            mock_batch_api.create_namespaced_job = lambda *args, **kwargs: None
+            mock_batch_api.read_namespaced_job = lambda *args, **kwargs: create_pending_job()
+            mock_batch_api.delete_namespaced_job = lambda *args, **kwargs: None
 
             mock_client.BatchV1Api.return_value = mock_batch_api
             mock_client.CoreV1Api.return_value = mock_core_api
@@ -332,6 +372,10 @@ class TestKubernetesSandboxAsyncExecute:
         RED: Verify multiple aexecute() calls can run concurrently.
 
         This tests that the async implementation allows concurrent executions.
+
+        PYTEST-XDIST FIX (2025-12-16):
+        Use lambda functions instead of MagicMock for return values to prevent
+        mock pollution from leaking between xdist workers.
         """
         limits = ResourceLimits.testing()
         execution_count = 3
@@ -345,23 +389,29 @@ class TestKubernetesSandboxAsyncExecute:
 
             mock_batch_api = MagicMock()
             mock_core_api = MagicMock()
-            mock_core_api.read_namespace = MagicMock()
+            mock_core_api.read_namespace = lambda *args, **kwargs: MagicMock()
 
-            # Mock successful job
-            mock_job = MagicMock()
-            mock_job.status.succeeded = True
-            mock_job.status.failed = None
-            mock_batch_api.create_namespaced_job = MagicMock()
-            mock_batch_api.read_namespaced_job = MagicMock(return_value=mock_job)
-            mock_batch_api.delete_namespaced_job = MagicMock()
+            # Mock successful job - use lambdas
+            def create_mock_job():
+                mock_job = MagicMock()
+                mock_job.status.succeeded = True
+                mock_job.status.failed = None
+                return mock_job
 
-            # Mock pod logs
-            mock_pod = MagicMock()
-            mock_pod.metadata.name = "test-pod"
-            mock_pods = MagicMock()
-            mock_pods.items = [mock_pod]
-            mock_core_api.list_namespaced_pod = MagicMock(return_value=mock_pods)
-            mock_core_api.read_namespaced_pod_log = MagicMock(return_value="output")
+            mock_batch_api.create_namespaced_job = lambda *args, **kwargs: None
+            mock_batch_api.read_namespaced_job = lambda *args, **kwargs: create_mock_job()
+            mock_batch_api.delete_namespaced_job = lambda *args, **kwargs: None
+
+            # Mock pod logs - use lambdas
+            def create_mock_pods():
+                mock_pod = MagicMock()
+                mock_pod.metadata.name = "test-pod"
+                mock_pods = MagicMock()
+                mock_pods.items = [mock_pod]
+                return mock_pods
+
+            mock_core_api.list_namespaced_pod = lambda *args, **kwargs: create_mock_pods()
+            mock_core_api.read_namespaced_pod_log = lambda *args, **kwargs: "output"
 
             mock_client.BatchV1Api.return_value = mock_batch_api
             mock_client.CoreV1Api.return_value = mock_core_api

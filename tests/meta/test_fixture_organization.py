@@ -148,10 +148,12 @@ def test_no_duplicate_autouse_fixtures():
     # Find fixtures with multiple definitions
     duplicates: dict[str, list[tuple[str, int]]] = {}
 
-    # Allow-list: Fixtures that are intentionally duplicated per-class
+    # Allow-list: Fixtures that are intentionally duplicated per-class/file
     # setup_auth: Used with disable_auth_skip fixture for per-class auth configuration
-    # These are class-scoped fixtures that apply the disable_auth_skip pattern
-    allowed_duplicates = {"setup_auth"}
+    # teardown_gc: Used for xdist memory safety - forces gc.collect() after each test
+    #              to prevent Mock accumulation across xdist workers. This is intentionally
+    #              per-file to ensure proper cleanup in parallel execution.
+    allowed_duplicates = {"setup_auth", "teardown_gc"}
 
     for fixture_name, locations in autouse_fixtures.items():
         if fixture_name in allowed_duplicates:

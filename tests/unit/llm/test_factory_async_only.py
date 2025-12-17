@@ -12,7 +12,7 @@ Following memory safety patterns for pytest-xdist (see CLAUDE.md).
 
 import asyncio
 import gc
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -31,8 +31,21 @@ class TestLLMFactorySyncMethodsRemoved:
     Breaking change: Users must migrate from invoke() to ainvoke().
     """
 
+    def setup_method(self):
+        """Reset singleton dependencies to prevent xdist pollution.
+
+        PYTEST-XDIST FIX (2025-12-16): In parallel execution, other tests may
+        pollute singleton state. Reset before each test to ensure clean state.
+        """
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
         gc.collect()
 
     def test_sync_invoke_method_removed(self):
@@ -78,8 +91,21 @@ class TestLLMFactoryAsyncAPI:
     TDD tests for LLMFactory.ainvoke() - the only LLM invocation API.
     """
 
+    def setup_method(self):
+        """Reset singleton dependencies to prevent xdist pollution.
+
+        PYTEST-XDIST FIX (2025-12-16): In parallel execution, other tests may
+        pollute singleton state. Reset before each test to ensure clean state.
+        """
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
         gc.collect()
 
     async def test_ainvoke_method_exists_and_is_async(self):
@@ -98,27 +124,39 @@ class TestLLMFactoryAsyncAPI:
     async def test_ainvoke_returns_ai_message(self):
         """
         Verify ainvoke() returns an AIMessage instance.
+
+        PYTEST-XDIST FIX (2025-12-16): Use side_effect with factory function
+        instead of AsyncMock(return_value=...) to prevent mock pollution across
+        xdist workers.
         """
         from langchain_core.messages import AIMessage, HumanMessage
 
-        factory = LLMFactory(
-            provider="openai",
-            model_name="gpt-4o",
-            api_key="test-key",
-        )
-
-        with patch("mcp_server_langgraph.llm.factory.acompletion") as mock_acompletion:
-            # Mock the LiteLLM response
+        def create_mock_response():
+            """Factory function to create fresh mock response for each call."""
             mock_response = MagicMock()
-            mock_response.choices = [MagicMock()]
-            mock_response.choices[0].message.content = "Hello, I am an AI assistant."
-            mock_response.usage = MagicMock()
-            mock_response.usage.prompt_tokens = 10
-            mock_response.usage.completion_tokens = 15
-            mock_response.usage.total_tokens = 25
+            mock_choice = MagicMock()
+            mock_choice.message.content = "Hello, I am an AI assistant."
+            mock_response.choices = [mock_choice]
+            mock_usage = MagicMock()
+            mock_usage.prompt_tokens = 10
+            mock_usage.completion_tokens = 15
+            mock_usage.total_tokens = 25
+            mock_response.usage = mock_usage
+            return mock_response
 
-            mock_acompletion.return_value = mock_response
+        async def mock_acompletion(**kwargs):
+            """Async factory function that returns fresh mock response."""
+            return create_mock_response()
 
+        with patch(
+            "mcp_server_langgraph.llm.factory.acompletion",
+            side_effect=mock_acompletion,
+        ):
+            factory = LLMFactory(
+                provider="openai",
+                model_name="gpt-4o",
+                api_key="test-key",
+            )
             messages = [HumanMessage(content="Hello")]
             result = await factory.ainvoke(messages)
 
@@ -128,6 +166,9 @@ class TestLLMFactoryAsyncAPI:
     async def test_ainvoke_with_dict_messages(self):
         """
         Verify ainvoke() handles dict-formatted messages.
+
+        PYTEST-XDIST FIX (2025-12-16): Use side_effect with factory function
+        and mutable call_tracker to prevent mock pollution across xdist workers.
         """
         from langchain_core.messages import AIMessage
 
@@ -137,23 +178,36 @@ class TestLLMFactoryAsyncAPI:
             api_key="test-key",
         )
 
-        with patch("mcp_server_langgraph.llm.factory.acompletion") as mock_acompletion:
+        # PYTEST-XDIST FIX: Track calls via mutable container
+        call_tracker = {"kwargs": None}
+
+        def create_mock_response():
+            """Factory function to create fresh mock response."""
             mock_response = MagicMock()
-            mock_response.choices = [MagicMock()]
-            mock_response.choices[0].message.content = "Response"
+            mock_choice = MagicMock()
+            mock_choice.message.content = "Response"
+            mock_response.choices = [mock_choice]
             mock_response.usage = None
+            return mock_response
 
-            mock_acompletion.return_value = mock_response
+        async def mock_acompletion(**kwargs):
+            """Async factory function that tracks call and returns fresh mock."""
+            call_tracker["kwargs"] = kwargs
+            return create_mock_response()
 
+        with patch(
+            "mcp_server_langgraph.llm.factory.acompletion",
+            side_effect=mock_acompletion,
+        ):
             # Dict-formatted messages (already in LiteLLM format)
             messages = [{"role": "user", "content": "Hello"}]
             result = await factory.ainvoke(messages)
 
             assert isinstance(result, AIMessage)
             # Verify the message was formatted correctly
-            call_args = mock_acompletion.call_args
-            assert call_args.kwargs["messages"][0]["role"] == "user"
-            assert call_args.kwargs["messages"][0]["content"] == "Hello"
+            assert call_tracker["kwargs"] is not None
+            assert call_tracker["kwargs"]["messages"][0]["role"] == "user"
+            assert call_tracker["kwargs"]["messages"][0]["content"] == "Hello"
 
     async def test_try_fallback_async_method_exists(self):
         """
@@ -185,23 +239,25 @@ class TestLLMFactoryAsyncAPI:
 
         call_count = [0]
 
-        with patch("mcp_server_langgraph.llm.factory.acompletion") as mock_acompletion:
+        async def acompletion_side_effect(**kwargs):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                # Primary fails
+                raise Exception("Primary model failed")
+            else:
+                # Fallback succeeds
+                mock_response = MagicMock()
+                mock_response.choices = [MagicMock()]
+                mock_response.choices[0].message.content = "Fallback response"
+                mock_response.usage = None
+                return mock_response
 
-            async def acompletion_side_effect(**kwargs):
-                call_count[0] += 1
-                if call_count[0] == 1:
-                    # Primary fails
-                    raise Exception("Primary model failed")
-                else:
-                    # Fallback succeeds
-                    mock_response = MagicMock()
-                    mock_response.choices = [MagicMock()]
-                    mock_response.choices[0].message.content = "Fallback response"
-                    mock_response.usage = None
-                    return mock_response
-
-            mock_acompletion.side_effect = acompletion_side_effect
-
+        # Use AsyncMock with side_effect for async function
+        mock_acompletion = AsyncMock(side_effect=acompletion_side_effect)
+        with patch(
+            "mcp_server_langgraph.llm.factory.acompletion",
+            new=mock_acompletion,
+        ):
             messages = [HumanMessage(content="Hello")]
             result = await factory.ainvoke(messages)
 
@@ -212,6 +268,9 @@ class TestLLMFactoryAsyncAPI:
     async def test_ainvoke_has_resilience_decorators(self):
         """
         Verify ainvoke() has circuit_breaker, retry, timeout, and bulkhead decorators.
+
+        PYTEST-XDIST FIX (2025-12-16): Use side_effect with factory function
+        instead of AsyncMock(return_value=...) to prevent mock pollution.
         """
         # Check that the method has the expected attributes from decorators
         # The decorators add metadata to the wrapped function
@@ -226,15 +285,25 @@ class TestLLMFactoryAsyncAPI:
         assert callable(factory.ainvoke)
         assert asyncio.iscoroutinefunction(factory.ainvoke)
 
+        def create_mock_response():
+            """Factory function to create fresh mock response."""
+            mock_response = MagicMock()
+            mock_choice = MagicMock()
+            mock_choice.message.content = "Response"
+            mock_response.choices = [mock_choice]
+            mock_response.usage = None
+            return mock_response
+
+        async def mock_acompletion(**kwargs):
+            """Async factory function that returns fresh mock."""
+            return create_mock_response()
+
         # Verify it's the decorated version by checking the function still works
         # (decorated functions maintain their coroutine nature)
-        with patch("mcp_server_langgraph.llm.factory.acompletion") as mock_acompletion:
-            mock_response = MagicMock()
-            mock_response.choices = [MagicMock()]
-            mock_response.choices[0].message.content = "Response"
-            mock_response.usage = None
-            mock_acompletion.return_value = mock_response
-
+        with patch(
+            "mcp_server_langgraph.llm.factory.acompletion",
+            side_effect=mock_acompletion,
+        ):
             result = await factory.ainvoke([{"role": "user", "content": "test"}])
             assert result is not None
 

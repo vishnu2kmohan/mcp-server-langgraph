@@ -148,16 +148,20 @@ class LokiLoggingClient(LoggingQueryClient):
         """
         Get logs correlated with a specific trace.
 
-        Uses trace_id label or JSON field matching.
+        Uses trace_id label matching. If trace_id is stored as a JSON field
+        rather than a label, logs may not be found by this query - callers
+        should use get_logs_by_attribute("trace_id", trace_id) as fallback.
         """
         if not start:
             start = datetime.now(UTC) - timedelta(hours=1)
         if not end:
             end = datetime.now(UTC)
 
-        # LogQL query for trace correlation
-        # Try both label and JSON field matching
-        logql = f'{{trace_id="{trace_id}"}} or {{}} | json | trace_id="{trace_id}"'
+        # LogQL query for trace correlation using label selector
+        # Note: Loki requires at least one label in stream selector, so we use
+        # trace_id as the label. If no logs exist with this label, empty result
+        # is returned (not an error).
+        logql = f'{{trace_id="{trace_id}"}}'
 
         return await self.search_logs(
             query=logql,
@@ -176,9 +180,13 @@ class LokiLoggingClient(LoggingQueryClient):
     ) -> LogSearchResult:
         """
         Get logs matching a specific attribute value.
+
+        Uses the attribute as a label selector. For JSON field matching,
+        callers should use search_logs() with a custom LogQL query.
         """
-        # Use JSON parsing to extract attribute
-        logql = f'{{}} | json | {attribute}="{value}"'
+        # Use attribute as a label selector (Loki requires at least one label)
+        # This matches logs where the attribute is indexed as a label
+        logql = f'{{{attribute}="{value}"}}'
 
         return await self.search_logs(
             query=logql,

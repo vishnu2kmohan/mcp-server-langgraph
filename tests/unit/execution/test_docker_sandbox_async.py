@@ -46,10 +46,29 @@ class TestDockerSandboxAsyncExecute:
     2. aexecute() returns correct ExecutionResult
     3. aexecute() does not block the event loop
     4. aexecute() propagates timeouts and errors correctly
+
+    PYTEST-XDIST FIX (2025-12-16):
+    ==============================
+    Added setup_method to reset singleton state and clear any polluted mocks
+    from other xdist workers (e.g., GCP/Vertex AI tests that mock global state).
     """
 
-    def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+    def setup_method(self) -> None:
+        """Reset state to prevent xdist pollution.
+
+        PYTEST-XDIST FIX (2025-12-16):
+        Reset singleton dependencies before each test. Note: We don't reload
+        modules here as that can interfere with patch.object() in tests.
+        """
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        reset_singleton_dependencies()
         gc.collect()
 
     async def test_aexecute_method_exists_and_is_async(self):
@@ -79,24 +98,28 @@ class TestDockerSandboxAsyncExecute:
         RED: Verify aexecute() returns an ExecutionResult instance.
 
         The async method should return the same type as sync execute().
+
+        PYTEST-XDIST FIX (2025-12-16):
+        Use lambda functions instead of MagicMock for return values to prevent
+        mock pollution from other tests in xdist workers.
         """
         limits = ResourceLimits.testing()
 
         with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
-            mock_client.ping = MagicMock()
-            mock_client.images.get = MagicMock()
+            mock_client.ping = lambda: None
+            mock_client.images.get = lambda *args: MagicMock()
 
-            # Mock container operations
+            # Mock container operations - use lambdas to prevent xdist pollution
             mock_container = MagicMock()
-            mock_container.start = MagicMock()
-            mock_container.wait = MagicMock(return_value={"StatusCode": 0})
-            mock_container.logs = MagicMock(return_value=b"Hello, World!\n")
-            mock_container.stats = MagicMock(return_value={})
-            mock_container.remove = MagicMock()
-            mock_container.reload = MagicMock()
+            mock_container.start = lambda: None
+            mock_container.wait = lambda **kwargs: {"StatusCode": 0}
+            mock_container.logs = lambda **kwargs: b"Hello, World!\n"
+            mock_container.stats = lambda **kwargs: {}
+            mock_container.remove = lambda **kwargs: None
+            mock_container.reload = lambda: None
             mock_container.status = "exited"
-            mock_client.containers.create = MagicMock(return_value=mock_container)
+            mock_client.containers.create = lambda **kwargs: mock_container
 
             mock_docker.return_value = mock_client
 
@@ -110,6 +133,11 @@ class TestDockerSandboxAsyncExecute:
         RED: Verify aexecute() returns success=True for valid code.
 
         Tests the happy path - simple print statement should succeed.
+
+        PYTEST-XDIST FIX (2025-12-16):
+        Use lambda functions instead of MagicMock for return values to prevent
+        mock pollution from other tests in xdist workers. MagicMock's auto-attribute
+        creation can leak state across tests.
         """
         limits = ResourceLimits.testing()
 
@@ -118,16 +146,16 @@ class TestDockerSandboxAsyncExecute:
             mock_client.ping = MagicMock()
             mock_client.images.get = MagicMock()
 
-            # Mock successful execution
+            # Mock successful execution - use lambda to avoid MagicMock return_value pollution
             mock_container = MagicMock()
             mock_container.start = MagicMock()
-            mock_container.wait = MagicMock(return_value={"StatusCode": 0})
-            mock_container.logs = MagicMock(return_value=b"Hello, World!\n")
-            mock_container.stats = MagicMock(return_value={})
+            mock_container.wait = lambda **kwargs: {"StatusCode": 0}
+            mock_container.logs = lambda **kwargs: b"Hello, World!\n"
+            mock_container.stats = lambda **kwargs: {}
             mock_container.remove = MagicMock()
             mock_container.reload = MagicMock()
             mock_container.status = "exited"
-            mock_client.containers.create = MagicMock(return_value=mock_container)
+            mock_client.containers.create = lambda **kwargs: mock_container
 
             mock_docker.return_value = mock_client
 
@@ -166,15 +194,17 @@ class TestDockerSandboxAsyncExecute:
                 time.sleep(0.1)  # 100ms blocking operation
                 return {"StatusCode": 0}
 
+            # PYTEST-XDIST FIX (2025-12-16): Use lambdas instead of MagicMock return_value
+            # to prevent mock pollution from leaking between xdist workers
             mock_container = MagicMock()
-            mock_container.start = MagicMock()
+            mock_container.start = lambda: None
             mock_container.wait = slow_wait
-            mock_container.logs = MagicMock(return_value=b"output")
-            mock_container.stats = MagicMock(return_value={})
-            mock_container.remove = MagicMock()
-            mock_container.reload = MagicMock()
+            mock_container.logs = lambda **kwargs: b"output"
+            mock_container.stats = lambda **kwargs: {}
+            mock_container.remove = lambda **kwargs: None
+            mock_container.reload = lambda: None
             mock_container.status = "exited"
-            mock_client.containers.create = MagicMock(return_value=mock_container)
+            mock_client.containers.create = lambda **kwargs: mock_container
 
             mock_docker.return_value = mock_client
 
@@ -218,24 +248,28 @@ class TestDockerSandboxAsyncExecute:
         RED: Verify aexecute() returns success=False for code that errors.
 
         Tests error handling for code that raises exceptions.
+
+        PYTEST-XDIST FIX (2025-12-16):
+        Use lambda functions instead of MagicMock for return values to prevent
+        mock pollution from other tests in xdist workers.
         """
         limits = ResourceLimits.testing()
 
         with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
-            mock_client.ping = MagicMock()
-            mock_client.images.get = MagicMock()
+            mock_client.ping = lambda: None
+            mock_client.images.get = lambda *args: MagicMock()
 
-            # Mock failed execution (non-zero exit code)
+            # Mock failed execution (non-zero exit code) - use lambdas
             mock_container = MagicMock()
-            mock_container.start = MagicMock()
-            mock_container.wait = MagicMock(return_value={"StatusCode": 1})
-            mock_container.logs = MagicMock(return_value=b"Traceback (most recent call last):\nRuntimeError: test error")
-            mock_container.stats = MagicMock(return_value={})
-            mock_container.remove = MagicMock()
-            mock_container.reload = MagicMock()
+            mock_container.start = lambda: None
+            mock_container.wait = lambda **kwargs: {"StatusCode": 1}
+            mock_container.logs = lambda **kwargs: b"Traceback (most recent call last):\nRuntimeError: test error"
+            mock_container.stats = lambda **kwargs: {}
+            mock_container.remove = lambda **kwargs: None
+            mock_container.reload = lambda: None
             mock_container.status = "exited"
-            mock_client.containers.create = MagicMock(return_value=mock_container)
+            mock_client.containers.create = lambda **kwargs: mock_container
 
             mock_docker.return_value = mock_client
 
@@ -250,25 +284,32 @@ class TestDockerSandboxAsyncExecute:
         RED: Verify aexecute() handles timeouts correctly.
 
         Timed out executions should return timed_out=True.
+
+        PYTEST-XDIST FIX (2025-12-16):
+        Use lambda functions instead of MagicMock for return values to prevent
+        mock pollution from other tests in xdist workers.
         """
         limits = ResourceLimits(timeout_seconds=1)
 
         with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
-            mock_client.ping = MagicMock()
-            mock_client.images.get = MagicMock()
+            mock_client.ping = lambda: None
+            mock_client.images.get = lambda *args: MagicMock()
 
-            # Mock timeout (wait raises exception)
+            # Mock timeout (wait raises exception) - use lambdas
+            def raise_timeout(**kwargs):
+                raise Exception("Timeout")
+
             mock_container = MagicMock()
-            mock_container.start = MagicMock()
-            mock_container.wait = MagicMock(side_effect=Exception("Timeout"))
-            mock_container.stop = MagicMock()
-            mock_container.kill = MagicMock()
-            mock_container.logs = MagicMock(return_value=b"")
-            mock_container.remove = MagicMock()
-            mock_container.reload = MagicMock()
+            mock_container.start = lambda: None
+            mock_container.wait = raise_timeout
+            mock_container.stop = lambda **kwargs: None
+            mock_container.kill = lambda **kwargs: None
+            mock_container.logs = lambda **kwargs: b""
+            mock_container.remove = lambda **kwargs: None
+            mock_container.reload = lambda: None
             mock_container.status = "running"
-            mock_client.containers.create = MagicMock(return_value=mock_container)
+            mock_client.containers.create = lambda **kwargs: mock_container
 
             mock_docker.return_value = mock_client
 
@@ -306,28 +347,32 @@ class TestDockerSandboxAsyncExecute:
         RED: Verify multiple aexecute() calls can run concurrently.
 
         This tests that the async implementation allows concurrent executions.
+
+        PYTEST-XDIST FIX (2025-12-16):
+        Use lambda functions instead of MagicMock for return values to prevent
+        mock pollution from other tests in xdist workers.
         """
         limits = ResourceLimits.testing()
         execution_count = 3
 
         with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
-            mock_client.ping = MagicMock()
-            mock_client.images.get = MagicMock()
+            mock_client.ping = lambda: None
+            mock_client.images.get = lambda *args: MagicMock()
 
-            # Mock successful execution with slight delay
+            # Mock successful execution - use lambdas to prevent xdist pollution
             def create_mock_container():
                 mock_container = MagicMock()
-                mock_container.start = MagicMock()
-                mock_container.wait = MagicMock(return_value={"StatusCode": 0})
-                mock_container.logs = MagicMock(return_value=b"output")
-                mock_container.stats = MagicMock(return_value={})
-                mock_container.remove = MagicMock()
-                mock_container.reload = MagicMock()
+                mock_container.start = lambda: None
+                mock_container.wait = lambda **kwargs: {"StatusCode": 0}
+                mock_container.logs = lambda **kwargs: b"output"
+                mock_container.stats = lambda **kwargs: {}
+                mock_container.remove = lambda **kwargs: None
+                mock_container.reload = lambda: None
                 mock_container.status = "exited"
                 return mock_container
 
-            mock_client.containers.create = MagicMock(side_effect=lambda **kwargs: create_mock_container())
+            mock_client.containers.create = lambda **kwargs: create_mock_container()
 
             mock_docker.return_value = mock_client
 
