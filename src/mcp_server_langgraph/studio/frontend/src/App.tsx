@@ -1,8 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { Toaster } from "sonner";
-import { Sidebar } from "./components/Layout/Sidebar";
+import { LeftSidebar } from "./components/Layout/LeftSidebar";
 import { CommandPalette } from "./components/Layout/CommandPalette";
+import { AppShell } from "./components/Layout/AppShell";
+import { RightSidebar } from "./components/Layout/RightSidebar";
+import { BottomPanel } from "./components/Layout/BottomPanel";
+import { MainDock } from "./components/Layout/MainDock";
+import { ChatDocument } from "./components/Chat/ChatDocument";
+import { WorkflowDocument } from "./components/Workflow";
+import { ProjectDocument } from "./components/Project";
+import { SettingsDocument } from "./components/Settings";
+import { CostDocument, ObservabilityDocument } from "./components/Insights";
+import type { TabState } from "./store/slices/workspaceSlice";
 import { OfflineBanner } from "./components/UI";
 import { UpdatePrompt } from "./components/PWA";
 import {
@@ -18,11 +28,20 @@ import { SUSSurvey, type SUSSurveyResult } from "./components/Feedback";
 import { useAppDispatch } from "./store/hooks";
 import { setUserInfo, setPersonaLoading } from "./store/slices/personaSlice";
 import { initializeAuth } from "./store/slices/authSlice";
+import { loadWorkspaceFromStorage } from "./store/slices/workspaceSlice";
 import { useNotificationWebSocket } from "./hooks/useNotificationWebSocket";
 import { usePWAUpdate } from "./hooks/usePWAUpdate";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { useTheme } from "./hooks/useTheme";
-import { useGetCurrentUserQuery, useGetWorkflowTemplatesQuery } from "./api";
+import { useRouteTabSync } from "./hooks/useRouteTabSync";
+import { useTabNavigation } from "./hooks/useTabNavigation";
+import {
+  useGetCurrentUserQuery,
+  useGetWorkflowTemplatesQuery,
+  useCreateSessionMutation,
+  useCreateProjectMutation,
+} from "./api";
+import { addTab, setActiveTabId } from "./store/slices/workspaceSlice";
 
 /**
  * Default tour steps for first-time users (Priority 2.2)
@@ -116,11 +135,44 @@ export function App() {
     dispatch(initializeAuth());
   }, [dispatch]);
 
+  // Load workspace layout state from localStorage on startup
+  // This restores panel sizes, collapsed states, tabs, and focus mode
+  useEffect(() => {
+    dispatch(loadWorkspaceFromStorage());
+  }, [dispatch]);
+
   // Connect to notification WebSocket for studio/admin routes
   useNotificationWebSocket({ enabled: isStudioRoute });
 
   // Apply theme to document (defaults to dark, respects user preference)
   useTheme();
+
+  // Sync routes with workspace tabs (only in studio routes)
+  // This creates/activates tabs when navigating to different sections
+  useRouteTabSync();
+
+  // Tab navigation for MainDock (bidirectional sync)
+  const handleTabNavigate = useTabNavigation();
+
+  // Tab content renderer - maps tab types to document components
+  const renderTabContent = useCallback((tab: TabState): ReactNode => {
+    switch (tab.type) {
+      case "chat":
+        return <ChatDocument sessionId={tab.entityId || ""} />;
+      case "workflow":
+        return <WorkflowDocument workflowId={tab.entityId || ""} />;
+      case "project":
+        return <ProjectDocument projectId={tab.entityId || ""} />;
+      case "settings":
+        return <SettingsDocument />;
+      case "cost":
+        return <CostDocument />;
+      case "observability":
+        return <ObservabilityDocument />;
+      default:
+        return <div className="p-4 text-gray-500">Unknown tab type</div>;
+    }
+  }, []);
 
   // PWA update management
   const { needsUpdate, isUpdating, updateApp, dismissUpdate } = usePWAUpdate();
@@ -252,6 +304,52 @@ export function App() {
     { skip: !isStudioRoute },
   );
 
+  // Mutations for creating new resources
+  const [createSession] = useCreateSessionMutation();
+  const [createProject] = useCreateProjectMutation();
+
+  // Handler for creating a new chat session
+  const handleNewChat = useCallback(async () => {
+    try {
+      const session = await createSession({ name: "New Chat" }).unwrap();
+      // Add new tab for the session
+      dispatch(
+        addTab({
+          id: `chat-${session.session_id}`,
+          type: "chat",
+          title: session.name || "New Chat",
+          entityId: session.session_id,
+        }),
+      );
+      // Set as active and navigate
+      dispatch(setActiveTabId(`chat-${session.session_id}`));
+      navigate(`/studio/chat/${session.session_id}`);
+    } catch (error) {
+      console.error("Failed to create chat session:", error);
+    }
+  }, [createSession, dispatch, navigate]);
+
+  // Handler for creating a new project
+  const handleNewProject = useCallback(async () => {
+    try {
+      const project = await createProject({ name: "New Project" }).unwrap();
+      // Add new tab for the project
+      dispatch(
+        addTab({
+          id: `project-${project.id}`,
+          type: "project",
+          title: project.name,
+          entityId: project.id,
+        }),
+      );
+      // Set as active and navigate
+      dispatch(setActiveTabId(`project-${project.id}`));
+      navigate(`/studio/projects/${project.id}`);
+    } catch (error) {
+      console.error("Failed to create project:", error);
+    }
+  }, [createProject, dispatch, navigate]);
+
   // Update persona state when user data is fetched
   useEffect(() => {
     if (!isStudioRoute) return;
@@ -281,13 +379,24 @@ export function App() {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <OfflineBanner />
       {isStudioRoute ? (
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 overflow-auto">
-            <Outlet />
-          </main>
+        <>
+          <AppShell
+            leftSidebar={
+              <LeftSidebar
+                onNewChat={handleNewChat}
+                onNewProject={handleNewProject}
+              />
+            }
+            rightSidebar={<RightSidebar />}
+            bottomPanel={<BottomPanel />}
+          >
+            <MainDock
+              renderContent={renderTabContent}
+              onTabNavigate={handleTabNavigate}
+            />
+          </AppShell>
           <CommandPalette />
-        </div>
+        </>
       ) : (
         <Outlet />
       )}

@@ -5,18 +5,42 @@
  * All state management has been consolidated to Redux slices.
  */
 
-import { configureStore } from "@reduxjs/toolkit";
+import {
+  configureStore,
+  createListenerMiddleware,
+  isAnyOf,
+} from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { api } from "../api";
 import uiReducer from "./slices/uiSlice";
 import personaReducer from "./slices/personaSlice";
-import sessionReducer from "./slices/sessionSlice";
+import sessionReducer, { deleteSession } from "./slices/sessionSlice";
 import projectReducer from "./slices/projectSlice";
 import workflowReducer from "./slices/workflowSlice";
 import artifactReducer from "./slices/artifactSlice";
 import mcpReducer from "./slices/mcpSlice";
 import authReducer from "./slices/authSlice";
 import notificationReducer from "./slices/notificationSlice";
+import workspaceReducer, {
+  workspacePersistenceMiddleware,
+  removeTabsByEntityId,
+} from "./slices/workspaceSlice";
+
+// =============================================================================
+// Listener Middleware for Cross-Slice Side Effects
+// =============================================================================
+
+const listenerMiddleware = createListenerMiddleware();
+
+// Clean up orphan tabs when a session is deleted
+listenerMiddleware.startListening({
+  matcher: isAnyOf(deleteSession.fulfilled),
+  effect: (action, listenerApi) => {
+    // When a session is deleted, remove any tabs that reference it
+    const sessionId = action.payload as string;
+    listenerApi.dispatch(removeTabsByEntityId(sessionId));
+  },
+});
 
 export const store = configureStore({
   reducer: {
@@ -40,9 +64,14 @@ export const store = configureStore({
     auth: authReducer,
     // Notifications state
     notifications: notificationReducer,
+    // Workspace layout state (JupyterLab-inspired)
+    workspace: workspaceReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(api.middleware),
+    getDefaultMiddleware()
+      .prepend(listenerMiddleware.middleware)
+      .concat(api.middleware)
+      .concat(workspacePersistenceMiddleware),
   devTools: process.env.NODE_ENV !== "production",
 });
 

@@ -18,6 +18,19 @@ export {
   PanelContent,
 } from "./DockableLayout";
 
+// =============================================================================
+// Bottom Panel Sub-Components
+// =============================================================================
+
+export { ActivityLog } from "./ActivityLog";
+export type { ActivityLogProps } from "./ActivityLog";
+
+export { ProblemsPanel } from "./ProblemsPanel";
+export type { ProblemsPanelProps } from "./ProblemsPanel";
+
+export { InspectorPanel } from "./InspectorPanel";
+export type { InspectorPanelProps } from "./InspectorPanel";
+
 export type {
   DockableLayoutProps,
   DockablePanelGroupProps,

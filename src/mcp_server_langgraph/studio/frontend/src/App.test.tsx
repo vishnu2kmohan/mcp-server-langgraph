@@ -19,6 +19,9 @@ import personaReducer from "./store/slices/personaSlice";
 import authReducer from "./store/slices/authSlice";
 import notificationReducer from "./store/slices/notificationSlice";
 import uiReducer from "./store/slices/uiSlice";
+import workspaceReducer from "./store/slices/workspaceSlice";
+import sessionReducer from "./store/slices/sessionSlice";
+import mcpReducer from "./store/slices/mcpSlice";
 
 // Mock sonner Toaster
 vi.mock("sonner", () => ({
@@ -68,6 +71,20 @@ vi.mock("./api", () => ({
   }),
   useLogoutMutation: () => [
     vi.fn(() => ({ unwrap: () => Promise.resolve() })),
+    { isLoading: false },
+  ],
+  useCreateSessionMutation: () => [
+    vi.fn(() => ({
+      unwrap: () =>
+        Promise.resolve({ session_id: "test-session-id", name: "New Chat" }),
+    })),
+    { isLoading: false },
+  ],
+  useCreateProjectMutation: () => [
+    vi.fn(() => ({
+      unwrap: () =>
+        Promise.resolve({ id: "test-project-id", name: "New Project" }),
+    })),
     { isLoading: false },
   ],
 }));
@@ -124,7 +141,17 @@ vi.mock("./hooks/usePWAUpdate", () => ({
   usePWAUpdate: () => mockUsePWAUpdate(),
 }));
 
-// Create a test store with auth, persona, notification, and ui reducers
+// Mock useTabNavigation hook
+vi.mock("./hooks/useTabNavigation", () => ({
+  useTabNavigation: () => vi.fn(),
+}));
+
+// Mock useRouteTabSync hook
+vi.mock("./hooks/useRouteTabSync", () => ({
+  useRouteTabSync: () => {},
+}));
+
+// Create a test store with auth, persona, notification, ui, workspace, session, and mcp reducers
 const createTestStore = () => {
   return configureStore({
     reducer: {
@@ -132,6 +159,9 @@ const createTestStore = () => {
       auth: authReducer,
       notifications: notificationReducer,
       ui: uiReducer,
+      workspace: workspaceReducer,
+      session: sessionReducer,
+      mcp: mcpReducer,
     },
   });
 };
@@ -371,7 +401,7 @@ describe("App", () => {
   });
 
   describe("Mobile Responsive Layout", () => {
-    it("should render main content area that takes full width", () => {
+    it("should render main content area that takes full height", () => {
       // RTK Query mock already provides user data for studio routes
       const { container } = renderWithStore(
         <MemoryRouter
@@ -386,10 +416,10 @@ describe("App", () => {
         </MemoryRouter>,
       );
 
-      // Main content area should have flex-1 to take remaining space
+      // Main content area should have h-full for full height within Panel
       const mainElement = container.querySelector("main");
       expect(mainElement).toBeInTheDocument();
-      expect(mainElement).toHaveClass("flex-1");
+      expect(mainElement).toHaveClass("h-full");
     });
 
     it("should have overflow-auto on main content for mobile scrolling", () => {
@@ -711,6 +741,85 @@ describe("App", () => {
         name: /later|remind/i,
       });
       expect(dismissButton).toBeInTheDocument();
+    });
+  });
+
+  describe("JupyterLab layout", () => {
+    it("should render LeftSidebar in AppShell for studio routes", async () => {
+      renderWithStore(
+        <MemoryRouter
+          initialEntries={["/studio/chat"]}
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        >
+          <Routes>
+            <Route element={<App />}>
+              <Route path="studio/chat" element={<div>Chat Page</div>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>,
+      );
+
+      // LeftSidebar should be rendered with activity-bar and sidebar-content
+      await waitFor(() => {
+        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
+      });
+    });
+
+    it("should render MainDock for studio routes", async () => {
+      renderWithStore(
+        <MemoryRouter
+          initialEntries={["/studio/chat"]}
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        >
+          <Routes>
+            <Route element={<App />}>
+              <Route path="studio/chat" element={<div>Chat Page</div>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>,
+      );
+
+      // MainDock should be rendered
+      await waitFor(() => {
+        expect(screen.getByTestId("main-dock")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("workspace persistence", () => {
+    it("should load workspace state from localStorage on mount", async () => {
+      // Setup saved workspace state
+      const savedWorkspace = {
+        version: 1,
+        leftSidebarWidth: 350,
+        leftSidebarCollapsed: true,
+        focusMode: true,
+      };
+      localStorage.setItem(
+        "agent-studio-workspace",
+        JSON.stringify(savedWorkspace),
+      );
+
+      const { store } = renderWithStore(
+        <MemoryRouter
+          initialEntries={["/studio/chat"]}
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        >
+          <Routes>
+            <Route element={<App />}>
+              <Route path="studio/chat" element={<div>Chat Page</div>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>,
+      );
+
+      // Wait for the effect to run
+      await waitFor(() => {
+        expect(store.getState().workspace.leftSidebarWidth).toBe(350);
+        expect(store.getState().workspace.leftSidebarCollapsed).toBe(true);
+        expect(store.getState().workspace.focusMode).toBe(true);
+      });
     });
   });
 });

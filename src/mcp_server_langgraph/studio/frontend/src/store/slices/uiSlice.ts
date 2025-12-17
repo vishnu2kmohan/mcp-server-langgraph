@@ -23,16 +23,25 @@ interface UIState {
 // Load collapsed state from localStorage
 const getInitialCollapsedState = (): boolean => {
   if (typeof window === "undefined") return false;
-  const stored = localStorage.getItem("sidebar-collapsed");
-  return stored === "true";
+  try {
+    const stored = localStorage.getItem("sidebar-collapsed");
+    return stored === "true";
+  } catch {
+    // localStorage may not be available in some environments
+    return false;
+  }
 };
 
 // Load theme from localStorage, defaulting to "dark" for better UX
 const getInitialTheme = (): "light" | "dark" | "system" => {
   if (typeof window === "undefined") return "dark";
-  const stored = localStorage.getItem("theme");
-  if (stored === "light" || stored === "dark" || stored === "system") {
-    return stored;
+  try {
+    const stored = localStorage.getItem("theme");
+    if (stored === "light" || stored === "dark" || stored === "system") {
+      return stored;
+    }
+  } catch {
+    // localStorage may not be available in some environments
   }
   return "dark"; // Default to dark mode
 };
