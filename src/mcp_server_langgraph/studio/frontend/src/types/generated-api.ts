@@ -4339,6 +4339,54 @@ export interface components {
       type: string;
     };
     /**
+     * ConnectionResponse
+     * @description Full connection response (without secrets).
+     *
+     *     SECURITY: This model intentionally excludes sensitive fields:
+     *     - env: Contains environment variables (may include secrets)
+     *     - oauth2_config: Contains OAuth2 configuration
+     *     - command/args: System paths (security exposure risk)
+     */
+    ConnectionResponse: {
+      /** Auth Type */
+      auth_type: string;
+      /** Created At */
+      created_at: string;
+      /** Description */
+      description?: string | null;
+      /** Id */
+      id: string;
+      /** Name */
+      name: string;
+      /**
+       * Prompt Count
+       * @default 0
+       */
+      prompt_count: number;
+      /**
+       * Resource Count
+       * @default 0
+       */
+      resource_count: number;
+      /** Server Name */
+      server_name?: string | null;
+      /** Server Version */
+      server_version?: string | null;
+      /** Status */
+      status: string;
+      /**
+       * Tool Count
+       * @default 0
+       */
+      tool_count: number;
+      /** Transport */
+      transport: string;
+      /** Updated At */
+      updated_at: string;
+      /** Url */
+      url: string;
+    };
+    /**
      * ConnectionTemplate
      * @description MCP connection template definition.
      */
@@ -5399,147 +5447,6 @@ export interface components {
       success: boolean;
     };
     /**
-     * MCPConnection
-     * @description Full MCP connection entity for storage.
-     */
-    MCPConnection: {
-      /**
-       * Args
-       * @description Command arguments (stdio transport)
-       */
-      args?: string[] | null;
-      /**
-       * Auth Type
-       * @description Authentication method
-       * @default none
-       * @enum {string}
-       */
-      auth_type: "none" | "api_key" | "oauth2";
-      /**
-       * Command
-       * @description Command to execute (stdio transport)
-       */
-      command?: string | null;
-      /**
-       * Created At
-       * @description Creation timestamp
-       */
-      created_at?: string | null;
-      /**
-       * Description
-       * @description Connection description
-       */
-      description?: string | null;
-      /**
-       * Env
-       * @description Environment variables (stdio transport)
-       */
-      env?: {
-        [key: string]: string;
-      } | null;
-      /**
-       * Id
-       * @description Unique connection ID
-       */
-      id: string;
-      /**
-       * Last Connected At
-       * @description Last successful connection
-       */
-      last_connected_at?: string | null;
-      /**
-       * Last Error
-       * @description Last error message
-       */
-      last_error?: string | null;
-      /**
-       * Name
-       * @description Display name
-       */
-      name: string;
-      /** @description OAuth2 configuration */
-      oauth2_config?: components["schemas"]["OAuth2Config"] | null;
-      /**
-       * Organization Id
-       * @description Organization ID
-       */
-      organization_id?: string | null;
-      /**
-       * Owner Id
-       * @description Owner user ID
-       */
-      owner_id: string;
-      /**
-       * Project Id
-       * @description Project ID
-       */
-      project_id?: string | null;
-      /**
-       * Prompt Count
-       * @description Number of prompts available
-       * @default 0
-       */
-      prompt_count: number;
-      /**
-       * Resource Count
-       * @description Number of resources available
-       * @default 0
-       */
-      resource_count: number;
-      /**
-       * Server Capabilities
-       * @description Server capabilities
-       */
-      server_capabilities?: {
-        [key: string]: unknown;
-      } | null;
-      /**
-       * Server Name
-       * @description MCP server name
-       */
-      server_name?: string | null;
-      /**
-       * Server Version
-       * @description MCP server version
-       */
-      server_version?: string | null;
-      /**
-       * Status
-       * @description Connection status
-       * @default disconnected
-       * @enum {string}
-       */
-      status:
-        | "disconnected"
-        | "connecting"
-        | "connected"
-        | "error"
-        | "auth_required";
-      /**
-       * Tool Count
-       * @description Number of tools available
-       * @default 0
-       */
-      tool_count: number;
-      /**
-       * Transport
-       * @description Transport protocol
-       * @default streamable_http
-       * @enum {string}
-       */
-      transport: "streamable_http" | "stdio";
-      /**
-       * Updated At
-       * @description Last update timestamp
-       */
-      updated_at?: string | null;
-      /**
-       * Url
-       * @description MCP server URL
-       */
-      url: string;
-    };
-    /**
      * MCPConnectionCreate
      * @description Request model for creating an MCP connection.
      */
@@ -6042,32 +5949,6 @@ export interface components {
        * @constant
        */
       status: "success";
-    };
-    /**
-     * OAuth2Config
-     * @description OAuth2 configuration (client credentials only, not tokens).
-     */
-    OAuth2Config: {
-      /**
-       * Authorization Url
-       * @description Authorization endpoint URL
-       */
-      authorization_url?: string | null;
-      /**
-       * Client Id
-       * @description OAuth2 client ID
-       */
-      client_id?: string | null;
-      /**
-       * Scopes
-       * @description OAuth2 scopes
-       */
-      scopes?: string[];
-      /**
-       * Token Url
-       * @description Token endpoint URL
-       */
-      token_url?: string | null;
     };
     /**
      * OAuth2StartResponse
@@ -7230,8 +7111,13 @@ export interface components {
      */
     SessionCreateRequest: {
       /**
+       * Name
+       * @description Session name
+       */
+      name?: string | null;
+      /**
        * Title
-       * @description Session title
+       * @description Session title (deprecated, use 'name')
        */
       title?: string | null;
       /**
@@ -10011,7 +9897,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["MCPConnection"];
+          "application/json": components["schemas"]["ConnectionResponse"];
         };
       };
       /** @description Validation Error */
@@ -10352,7 +10238,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["MCPConnection"];
+          "application/json": components["schemas"]["ConnectionResponse"];
         };
       };
       /** @description Validation Error */
@@ -10389,7 +10275,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["MCPConnection"];
+          "application/json": components["schemas"]["ConnectionResponse"];
         };
       };
       /** @description Validation Error */
@@ -12386,8 +12272,8 @@ export interface operations {
         status?: string | null;
         /** @description Search in title */
         search?: string | null;
-        /** @description Field to sort by */
-        sort_by?: "title" | "created_at" | "updated_at";
+        /** @description Field to sort by (use 'name', 'title' is deprecated) */
+        sort_by?: "name" | "title" | "created_at" | "updated_at";
         /** @description Sort order */
         sort_order?: "asc" | "desc";
       };
