@@ -24,6 +24,32 @@ from mcp_server_langgraph.api.v1.sessions import (
 pytestmark = pytest.mark.unit
 
 
+class TestSessionCreateRequestContract:
+    """Tests for SessionCreateRequest model contract."""
+
+    @pytest.mark.unit
+    def test_session_create_request_uses_name_field(self) -> None:
+        """SessionCreateRequest should have 'name' field (not just 'title')."""
+        from mcp_server_langgraph.api.v1.sessions import SessionCreateRequest
+
+        schema = SessionCreateRequest.model_json_schema()
+        properties = schema.get("properties", {})
+
+        # 'name' should be in properties
+        assert "name" in properties, "SessionCreateRequest should have 'name' field"
+
+    @pytest.mark.unit
+    def test_session_create_request_accepts_name(self) -> None:
+        """SessionCreateRequest should accept 'name' parameter."""
+        from mcp_server_langgraph.api.v1.sessions import SessionCreateRequest
+
+        # GIVEN a request with 'name'
+        request = SessionCreateRequest(name="My New Session")
+
+        # THEN name should be accessible
+        assert request.name == "My New Session"
+
+
 class TestSessionResponseContract:
     """Tests for SessionResponse model contract."""
 

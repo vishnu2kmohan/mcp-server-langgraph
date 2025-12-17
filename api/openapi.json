@@ -1134,6 +1134,103 @@
         "title": "ConnectionRef",
         "type": "object"
       },
+      "ConnectionResponse": {
+        "description": "Full connection response (without secrets).\n\nSECURITY: This model intentionally excludes sensitive fields:\n- env: Contains environment variables (may include secrets)\n- oauth2_config: Contains OAuth2 configuration\n- command/args: System paths (security exposure risk)",
+        "properties": {
+          "auth_type": {
+            "title": "Auth Type",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "prompt_count": {
+            "default": 0,
+            "title": "Prompt Count",
+            "type": "integer"
+          },
+          "resource_count": {
+            "default": 0,
+            "title": "Resource Count",
+            "type": "integer"
+          },
+          "server_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Name"
+          },
+          "server_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Version"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "tool_count": {
+            "default": 0,
+            "title": "Tool Count",
+            "type": "integer"
+          },
+          "transport": {
+            "title": "Transport",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "url",
+          "transport",
+          "auth_type",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ConnectionResponse",
+        "type": "object"
+      },
       "ConnectionTemplate": {
         "description": "MCP connection template definition.",
         "properties": {
@@ -3008,265 +3105,6 @@
         "title": "LogoutResponse",
         "type": "object"
       },
-      "MCPConnection": {
-        "description": "Full MCP connection entity for storage.",
-        "properties": {
-          "args": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Command arguments (stdio transport)",
-            "title": "Args"
-          },
-          "auth_type": {
-            "default": "none",
-            "description": "Authentication method",
-            "enum": [
-              "none",
-              "api_key",
-              "oauth2"
-            ],
-            "title": "Auth Type",
-            "type": "string"
-          },
-          "command": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Command to execute (stdio transport)",
-            "title": "Command"
-          },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Creation timestamp",
-            "title": "Created At"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Connection description",
-            "title": "Description"
-          },
-          "env": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Environment variables (stdio transport)",
-            "title": "Env"
-          },
-          "id": {
-            "description": "Unique connection ID",
-            "title": "Id",
-            "type": "string"
-          },
-          "last_connected_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Last successful connection",
-            "title": "Last Connected At"
-          },
-          "last_error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Last error message",
-            "title": "Last Error"
-          },
-          "name": {
-            "description": "Display name",
-            "title": "Name",
-            "type": "string"
-          },
-          "oauth2_config": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/OAuth2Config"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "OAuth2 configuration"
-          },
-          "organization_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Organization ID",
-            "title": "Organization Id"
-          },
-          "owner_id": {
-            "description": "Owner user ID",
-            "title": "Owner Id",
-            "type": "string"
-          },
-          "project_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Project ID",
-            "title": "Project Id"
-          },
-          "prompt_count": {
-            "default": 0,
-            "description": "Number of prompts available",
-            "title": "Prompt Count",
-            "type": "integer"
-          },
-          "resource_count": {
-            "default": 0,
-            "description": "Number of resources available",
-            "title": "Resource Count",
-            "type": "integer"
-          },
-          "server_capabilities": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Server capabilities",
-            "title": "Server Capabilities"
-          },
-          "server_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "MCP server name",
-            "title": "Server Name"
-          },
-          "server_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "MCP server version",
-            "title": "Server Version"
-          },
-          "status": {
-            "default": "disconnected",
-            "description": "Connection status",
-            "enum": [
-              "disconnected",
-              "connecting",
-              "connected",
-              "error",
-              "auth_required"
-            ],
-            "title": "Status",
-            "type": "string"
-          },
-          "tool_count": {
-            "default": 0,
-            "description": "Number of tools available",
-            "title": "Tool Count",
-            "type": "integer"
-          },
-          "transport": {
-            "default": "streamable_http",
-            "description": "Transport protocol",
-            "enum": [
-              "streamable_http",
-              "stdio"
-            ],
-            "title": "Transport",
-            "type": "string"
-          },
-          "updated_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Last update timestamp",
-            "title": "Updated At"
-          },
-          "url": {
-            "description": "MCP server URL",
-            "title": "Url",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "url",
-          "owner_id"
-        ],
-        "title": "MCPConnection",
-        "type": "object"
-      },
       "MCPConnectionCreate": {
         "description": "Request model for creating an MCP connection.",
         "properties": {
@@ -4093,57 +3931,6 @@
           "connection_id"
         ],
         "title": "OAuth2CallbackResponse",
-        "type": "object"
-      },
-      "OAuth2Config": {
-        "description": "OAuth2 configuration (client credentials only, not tokens).",
-        "properties": {
-          "authorization_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Authorization endpoint URL",
-            "title": "Authorization Url"
-          },
-          "client_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "OAuth2 client ID",
-            "title": "Client Id"
-          },
-          "scopes": {
-            "description": "OAuth2 scopes",
-            "items": {
-              "type": "string"
-            },
-            "title": "Scopes",
-            "type": "array"
-          },
-          "token_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Token endpoint URL",
-            "title": "Token Url"
-          }
-        },
-        "title": "OAuth2Config",
         "type": "object"
       },
       "OAuth2StartResponse": {
@@ -6620,6 +6407,19 @@
       "SessionCreateRequest": {
         "description": "Request body for creating a session.",
         "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Session name",
+            "title": "Name"
+          },
           "title": {
             "anyOf": [
               {
@@ -6630,7 +6430,7 @@
                 "type": "null"
               }
             ],
-            "description": "Session title",
+            "description": "Session title (deprecated, use 'name')",
             "title": "Title"
           },
           "workflow_id": {
@@ -11482,7 +11282,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MCPConnection"
+                  "$ref": "#/components/schemas/ConnectionResponse"
                 }
               }
             },
@@ -12229,7 +12029,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MCPConnection"
+                  "$ref": "#/components/schemas/ConnectionResponse"
                 }
               }
             },
@@ -12297,7 +12097,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MCPConnection"
+                  "$ref": "#/components/schemas/ConnectionResponse"
                 }
               }
             },
@@ -15675,14 +15475,15 @@
             }
           },
           {
-            "description": "Field to sort by",
+            "description": "Field to sort by (use 'name', 'title' is deprecated)",
             "in": "query",
             "name": "sort_by",
             "required": false,
             "schema": {
               "default": "created_at",
-              "description": "Field to sort by",
+              "description": "Field to sort by (use 'name', 'title' is deprecated)",
               "enum": [
+                "name",
                 "title",
                 "created_at",
                 "updated_at"

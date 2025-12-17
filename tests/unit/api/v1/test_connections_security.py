@@ -243,6 +243,40 @@ class TestMCPConnectionToResponseConversion:
         assert response.prompt_count == 2
 
 
+class TestConnectionEndpointReturnTypes:
+    """Tests for endpoint return type annotations (must return ConnectionResponse)."""
+
+    @pytest.mark.unit
+    def test_create_connection_returns_connection_response(self) -> None:
+        """POST /connections must return ConnectionResponse type."""
+        from mcp_server_langgraph.api.v1.connections import ConnectionResponse, create_connection
+
+        return_annotation = create_connection.__annotations__.get("return")
+        assert return_annotation == ConnectionResponse, (
+            f"SECURITY: create_connection must return ConnectionResponse, got {return_annotation}"
+        )
+
+    @pytest.mark.unit
+    def test_get_connection_returns_connection_response(self) -> None:
+        """GET /connections/{id} must return ConnectionResponse type."""
+        from mcp_server_langgraph.api.v1.connections import ConnectionResponse, get_connection
+
+        return_annotation = get_connection.__annotations__.get("return")
+        assert return_annotation == ConnectionResponse, (
+            f"SECURITY: get_connection must return ConnectionResponse, got {return_annotation}"
+        )
+
+    @pytest.mark.unit
+    def test_update_connection_returns_connection_response(self) -> None:
+        """PUT /connections/{id} must return ConnectionResponse type."""
+        from mcp_server_langgraph.api.v1.connections import ConnectionResponse, update_connection
+
+        return_annotation = update_connection.__annotations__.get("return")
+        assert return_annotation == ConnectionResponse, (
+            f"SECURITY: update_connection must return ConnectionResponse, got {return_annotation}"
+        )
+
+
 class TestConnectionEndpointSecurity:
     """Tests for endpoint-level security (integration-style unit tests)."""
 

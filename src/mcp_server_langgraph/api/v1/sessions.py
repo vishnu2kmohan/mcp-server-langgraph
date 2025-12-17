@@ -81,8 +81,14 @@ class MessageResponse(BaseModel):
 class SessionCreateRequest(BaseModel):
     """Request body for creating a session."""
 
-    title: str | None = Field(default=None, description="Session title", max_length=255)
+    name: str | None = Field(default=None, description="Session name", max_length=255)
     workflow_id: str | None = Field(default=None, description="Associated workflow ID")
+    # Deprecated: use 'name' instead. Kept for backward compatibility.
+    title: str | None = Field(default=None, description="Session title (deprecated, use 'name')", max_length=255)
+
+    def get_name(self) -> str | None:
+        """Get session name, preferring 'name' over deprecated 'title'."""
+        return self.name or self.title
 
 
 class SessionResponse(BaseModel):
@@ -193,7 +199,7 @@ class InMemorySessionService(SessionService):
 
         # Apply sorting
         reverse = sort_order == "desc"
-        if sort_by == "title":  # Keep 'title' as sort_by param for API compatibility
+        if sort_by in ("title", "name"):  # 'title' is deprecated alias for 'name'
             sessions.sort(key=lambda s: (s.get("name") or "").lower(), reverse=reverse)
         elif sort_by == "updated_at":
             sessions.sort(key=lambda s: s.get("updated_at", ""), reverse=reverse)
@@ -361,7 +367,7 @@ class RedisSessionService(SessionService):
 
         # Apply sorting
         reverse = sort_order == "desc"
-        if sort_by == "title":  # Keep 'title' as sort_by param for API compatibility
+        if sort_by in ("title", "name"):  # 'title' is deprecated alias for 'name'
             sessions.sort(key=lambda s: (s.get("name") or "").lower(), reverse=reverse)
         elif sort_by == "updated_at":
             sessions.sort(key=lambda s: s.get("updated_at", ""), reverse=reverse)
@@ -515,12 +521,12 @@ class PostgresSessionService(SessionService):
         # Apply search (case-insensitive on title)
         if search:
             search_lower = search.lower()
-            session_dicts = [s for s in session_dicts if s.get("title") and search_lower in s.get("title", "").lower()]
+            session_dicts = [s for s in session_dicts if s.get("name") and search_lower in s.get("name", "").lower()]
 
         # Apply sorting (post-query sorting since manager doesn't support it yet)
         reverse = sort_order == "desc"
-        if sort_by == "title":
-            session_dicts.sort(key=lambda s: (s.get("title") or "").lower(), reverse=reverse)
+        if sort_by in ("title", "name"):  # 'title' is deprecated alias for 'name'
+            session_dicts.sort(key=lambda s: (s.get("name") or "").lower(), reverse=reverse)
         elif sort_by == "updated_at":
             session_dicts.sort(key=lambda s: s.get("updated_at", ""), reverse=reverse)
         else:  # Default: created_at
@@ -716,7 +722,9 @@ async def list_sessions(
     workflow_id: str | None = Query(default=None, description="Filter by workflow ID"),
     status: str | None = Query(default=None, description="Filter by session status (active, archived)"),
     search: str | None = Query(default=None, min_length=1, max_length=500, description="Search in title"),
-    sort_by: Literal["title", "created_at", "updated_at"] = Query(default="created_at", description="Field to sort by"),
+    sort_by: Literal["name", "title", "created_at", "updated_at"] = Query(
+        default="created_at", description="Field to sort by (use 'name', 'title' is deprecated)"
+    ),
     sort_order: Literal["asc", "desc"] = Query(default="desc", description="Sort order"),
 ) -> CursorPaginatedResponse[dict[str, Any]]:
     """

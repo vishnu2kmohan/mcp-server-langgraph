@@ -428,3 +428,47 @@ class TestWorkflowShareRepositoryProtocol:
         assert hasattr(WorkflowShareRepositoryProtocol, "list_shared_with_user")
         assert hasattr(WorkflowShareRepositoryProtocol, "update_workflow_public")
         assert hasattr(WorkflowShareRepositoryProtocol, "get_by_share_link")
+
+
+class TestPostgresWorkflowShareRepositoryStructure:
+    """Tests for PostgresWorkflowShareRepository class structure."""
+
+    def test_postgres_workflow_share_repository_exists(self) -> None:
+        """PostgresWorkflowShareRepository should be importable."""
+        from mcp_server_langgraph.storage.workflow.share_repository import (
+            PostgresWorkflowShareRepository,
+        )
+
+        assert PostgresWorkflowShareRepository is not None
+
+    def test_postgres_repository_implements_protocol(self) -> None:
+        """PostgresWorkflowShareRepository should implement the protocol."""
+        from mcp_server_langgraph.storage.workflow.share_repository import (
+            PostgresWorkflowShareRepository,
+        )
+
+        # Check that it implements all required methods
+        assert hasattr(PostgresWorkflowShareRepository, "create_share")
+        assert hasattr(PostgresWorkflowShareRepository, "get_shares")
+        assert hasattr(PostgresWorkflowShareRepository, "get_share")
+        assert hasattr(PostgresWorkflowShareRepository, "delete_share")
+        assert hasattr(PostgresWorkflowShareRepository, "list_shared_with_user")
+        assert hasattr(PostgresWorkflowShareRepository, "update_workflow_public")
+        assert hasattr(PostgresWorkflowShareRepository, "get_by_share_link")
+
+    def test_postgres_repository_accepts_engine(self) -> None:
+        """PostgresWorkflowShareRepository should accept SQLAlchemy engine."""
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.storage.workflow.share_repository import (
+            PostgresWorkflowShareRepository,
+        )
+
+        # GIVEN a mock engine
+        mock_engine = MagicMock()
+
+        # WHEN creating the repository
+        repo = PostgresWorkflowShareRepository(engine=mock_engine)
+
+        # THEN it should store the engine
+        assert repo._engine == mock_engine

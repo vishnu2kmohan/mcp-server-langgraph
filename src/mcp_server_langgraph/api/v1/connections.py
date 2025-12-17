@@ -201,7 +201,7 @@ async def create_connection(
     user_id: str = Depends(get_current_user_id),
     repo: ConnectionRepository = Depends(get_connection_repository),
     audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
-) -> MCPConnection:
+) -> ConnectionResponse:
     """
     Create a new MCP connection.
 
@@ -224,14 +224,14 @@ async def create_connection(
         user_agent=request.headers.get("user-agent"),
     )
 
-    return connection
+    return to_connection_response(connection)
 
 
 @connections_router.get("/{connection_id}")
 async def get_connection(
     connection_id: str,
     repo: ConnectionRepository = Depends(get_connection_repository),
-) -> MCPConnection:
+) -> ConnectionResponse:
     """
     Get a specific MCP connection by ID.
 
@@ -243,7 +243,7 @@ async def get_connection(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Connection {connection_id} not found",
         )
-    return connection
+    return to_connection_response(connection)
 
 
 @connections_router.put("/{connection_id}")
@@ -254,7 +254,7 @@ async def update_connection(
     user_id: str = Depends(get_current_user_id),
     repo: ConnectionRepository = Depends(get_connection_repository),
     audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
-) -> MCPConnection:
+) -> ConnectionResponse:
     """
     Update an MCP connection.
 
@@ -279,7 +279,7 @@ async def update_connection(
         user_agent=request.headers.get("user-agent"),
     )
 
-    return connection
+    return to_connection_response(connection)
 
 
 @connections_router.delete("/{connection_id}", status_code=status.HTTP_204_NO_CONTENT)
