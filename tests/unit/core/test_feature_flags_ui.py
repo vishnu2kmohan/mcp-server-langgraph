@@ -122,6 +122,18 @@ class TestUIFeatureFlags:
 
         assert flags.enable_mcp_websocket is False
 
+    def test_enable_interactive_artifacts_default_true(self) -> None:
+        """
+        GIVEN default feature flags
+        WHEN FeatureFlags is instantiated
+        THEN enable_interactive_artifacts should be True
+        """
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert flags.enable_interactive_artifacts is True
+
 
 @pytest.mark.xdist_group(name="test_feature_flags_ui")
 class TestUIFeatureFlagsEnvironmentOverride:
@@ -186,6 +198,20 @@ class TestUIFeatureFlagsEnvironmentOverride:
         flags = FeatureFlags()
 
         assert flags.enable_mcp_websocket is True
+
+    def test_interactive_artifacts_can_be_disabled_via_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """
+        GIVEN FF_ENABLE_INTERACTIVE_ARTIFACTS=false in environment
+        WHEN FeatureFlags is instantiated
+        THEN enable_interactive_artifacts should be False
+        """
+        monkeypatch.setenv("FF_ENABLE_INTERACTIVE_ARTIFACTS", "false")
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert flags.enable_interactive_artifacts is False
 
 
 @pytest.mark.xdist_group(name="test_feature_flags_ui")
@@ -295,3 +321,17 @@ class TestGetUIFeaturesForRole:
         assert "mcp_websocket" in features
         # Experimental, so False by default
         assert features["mcp_websocket"] is False
+
+    def test_features_dict_includes_interactive_artifacts(self) -> None:
+        """
+        GIVEN default feature flags
+        WHEN get_ui_features_for_role is called
+        THEN result should include interactive_artifacts key set to True
+        """
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        features = flags.get_ui_features_for_role("user")
+
+        assert "interactive_artifacts" in features
+        assert features["interactive_artifacts"] is True

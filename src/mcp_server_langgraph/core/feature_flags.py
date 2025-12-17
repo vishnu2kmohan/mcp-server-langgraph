@@ -228,6 +228,11 @@ class FeatureFlags(BaseSettings):
         description="Enable MCP 2025-11-25 WebSocket protocol (experimental)",
     )
 
+    enable_interactive_artifacts: bool = Field(
+        default=True,
+        description="Enable interactive artifact rendering in chat (Sandpack for JSX/TSX/MDX, Mermaid diagrams, charts)",
+    )
+
     # Experimental Features
     enable_experimental_features: bool = Field(
         default=False,
@@ -328,6 +333,7 @@ class FeatureFlags(BaseSettings):
             "code_export": self.enable_code_export,
             "ai_suggestions": self.enable_ai_suggestions,
             "mcp_websocket": self.enable_mcp_websocket,
+            "interactive_artifacts": self.enable_interactive_artifacts,
         }
 
 

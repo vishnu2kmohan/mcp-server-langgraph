@@ -44,7 +44,8 @@ async def get_features(
             "observability": true,
             "code_export": true,
             "ai_suggestions": true,
-            "mcp_websocket": false
+            "mcp_websocket": false,
+            "interactive_artifacts": true
         }
     """
     flags = get_feature_flags()
