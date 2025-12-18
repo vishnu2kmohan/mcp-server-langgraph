@@ -50,7 +50,7 @@ def set_audit_event_broadcaster(broadcaster: AuditEventBroadcaster | None) -> No
 
 async def validate_websocket_auth(websocket: WebSocket) -> dict[str, Any] | None:
     """
-    Validate WebSocket authentication.
+    Validate WebSocket authentication using JWT token.
 
     Args:
         websocket: The WebSocket connection.
@@ -66,12 +66,24 @@ async def validate_websocket_auth(websocket: WebSocket) -> dict[str, Any] | None
     if not token:
         return None
 
-    # TODO: Implement actual token validation
-    # For now, return a mock user for testing
-    return {
-        "user_id": "test-user",
-        "roles": ["admin"],
-    }
+    try:
+        from mcp_server_langgraph.auth.jwt_utils import decode_jwt_token
+
+        # Validate JWT token and extract user claims
+        payload = decode_jwt_token(token)
+        if not payload:
+            logger.warning("Invalid JWT token for WebSocket connection")
+            return None
+
+        return {
+            "user_id": payload.get("sub") or payload.get("user_id") or "unknown",
+            "roles": payload.get("roles", []),
+            "email": payload.get("email"),
+            "preferred_username": payload.get("preferred_username"),
+        }
+    except Exception as e:
+        logger.warning(f"Failed to validate WebSocket auth token: {e}")
+        return None
 
 
 def has_audit_access(user: dict[str, Any]) -> bool:

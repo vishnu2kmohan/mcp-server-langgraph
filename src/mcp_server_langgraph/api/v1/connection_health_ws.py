@@ -137,13 +137,46 @@ health_ws_manager = HealthWebSocketManager()
 # ============================================================================
 
 
+async def validate_websocket_auth(websocket: WebSocket) -> dict[str, Any] | None:
+    """
+    Validate WebSocket authentication using JWT token.
+
+    Args:
+        websocket: The WebSocket connection.
+
+    Returns:
+        User dict if authenticated, None otherwise.
+    """
+    token = websocket.query_params.get("token")
+    if not token:
+        token = websocket.headers.get("Authorization", "").replace("Bearer ", "")
+
+    if not token:
+        return None
+
+    try:
+        from mcp_server_langgraph.auth.jwt_utils import decode_jwt_token
+
+        payload = decode_jwt_token(token)
+        if not payload:
+            logger.warning("Invalid JWT token for WebSocket connection")
+            return None
+
+        return {
+            "user_id": payload.get("sub") or payload.get("user_id") or "unknown",
+            "roles": payload.get("roles", []),
+            "email": payload.get("email"),
+        }
+    except Exception as e:
+        logger.warning(f"Failed to validate WebSocket auth token: {e}")
+        return None
+
+
 async def get_all_connection_statuses(
     repo: ConnectionRepository,
-    owner_id: str = "__admin__",  # TODO: Implement proper WebSocket auth for owner_id
+    owner_id: str,
 ) -> list[dict[str, Any]]:
     """Get health status for all connections belonging to owner."""
-    # TODO: This needs proper WebSocket authentication to get owner_id
-    # For now, pass owner_id to satisfy the interface even if it won't match
     connections, _ = await repo.list(owner_id=owner_id, limit=1000)
 
     return [
@@ -166,6 +199,7 @@ async def handle_message(
     message: dict[str, Any],
     client_id: str,
     repo: ConnectionRepository,
+    owner_id: str,
 ) -> dict[str, Any]:
     """Handle incoming WebSocket message."""
     msg_type = message.get("type", "")
@@ -174,7 +208,7 @@ async def handle_message(
         return {"type": "pong", "timestamp": datetime.now(UTC).isoformat()}
 
     elif msg_type == "refresh":
-        connections = await get_all_connection_statuses(repo)
+        connections = await get_all_connection_statuses(repo, owner_id)
         return {"type": "connection_status", "connections": connections}
 
     elif msg_type == "subscribe":
@@ -224,6 +258,10 @@ async def connection_health_websocket(
     """
     WebSocket endpoint for real-time connection health monitoring.
 
+    Authentication:
+    - Token via query param: ws://host/connections/health/ws?token=JWT
+    - Token via header: Authorization: Bearer JWT
+
     Message types:
     - ping: Heartbeat check, responds with pong
     - refresh: Request fresh status for all connections
@@ -239,13 +277,24 @@ async def connection_health_websocket(
     - pong: Response to ping
     - error: Error message
     """
+    # Accept WebSocket first to allow sending error messages
+    await websocket.accept()
+
+    # Authenticate the connection
+    user = await validate_websocket_auth(websocket)
+    if not user:
+        await websocket.send_json({"type": "error", "message": "Authentication required"})
+        await websocket.close(code=4001)
+        return
+
+    owner_id = user["user_id"]
     client_id = str(id(websocket))
 
     await health_ws_manager.connect(websocket, client_id)
 
     try:
         # Send initial connection status
-        connections = await get_all_connection_statuses(repo)
+        connections = await get_all_connection_statuses(repo, owner_id)
         await websocket.send_json({"type": "connection_status", "connections": connections})
 
         # Message loop
@@ -259,7 +308,7 @@ async def connection_health_websocket(
                     await websocket.send_json({"type": "error", "message": "Invalid JSON"})
                     continue
 
-                response = await handle_message(message, client_id, repo)
+                response = await handle_message(message, client_id, repo, owner_id)
                 await websocket.send_json(response)
 
             except WebSocketDisconnect:
