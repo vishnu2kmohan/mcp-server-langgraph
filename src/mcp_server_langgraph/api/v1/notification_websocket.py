@@ -6,11 +6,12 @@ Provides real-time streaming of notifications to connected clients.
 Features:
 - Real-time notification streaming
 - User-specific notifications
-- Authentication required
+- JWT authentication required (query param or header)
 - Graceful connection lifecycle management
 
 Usage:
-    Connect to: wss://host/ws/notifications
+    Connect to: wss://host/ws/notifications?token=<jwt>
+    Or with header: Authorization: Bearer <jwt>
 
 Message Format:
     Receive notifications as JSON:
@@ -31,6 +32,8 @@ from typing import Any
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
 from starlette.websockets import WebSocketState
 
+from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
+from mcp_server_langgraph.auth.middleware import get_auth_middleware
 from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 
 logger = logging.getLogger(__name__)
@@ -57,29 +60,60 @@ def set_notification_broadcaster(broadcaster: NotificationBroadcaster | None) ->
 
 async def validate_websocket_auth(websocket: WebSocket) -> dict[str, Any] | None:
     """
-    Validate WebSocket authentication.
+    Validate WebSocket authentication using JWT.
+
+    Extracts JWT token from query params or Authorization header,
+    validates using AuthMiddleware, and returns user data.
+
+    Token sources (in order of precedence):
+    1. Query parameter: ?token=<jwt>
+    2. Authorization header: Bearer <jwt>
 
     Args:
         websocket: The WebSocket connection.
 
     Returns:
         User dict if authenticated, None otherwise.
+        User dict contains: user_id, username, roles, email, etc.
     """
-    # Check for token in query params or headers
+    # Check for token in query params (takes precedence for WebSocket)
     token = websocket.query_params.get("token")
+
+    # Fallback to Authorization header
     if not token:
-        token = websocket.headers.get("Authorization", "").replace("Bearer ", "")
+        auth_header = websocket.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]  # Remove "Bearer " prefix
 
     if not token:
+        logger.debug("WebSocket auth failed: no token provided")
         return None
 
-    # TODO: Implement actual token validation
-    # For now, return a mock user for testing
-    return {
-        "user_id": "test-user",
-        "username": "testuser",
-        "roles": ["user"],
-    }
+    try:
+        # Use AuthMiddleware for token validation
+        auth_middleware = get_auth_middleware()
+        result = await auth_middleware.verify_token(token)
+
+        if not result.valid or not result.payload:
+            logger.warning(
+                "WebSocket auth failed: token verification failed",
+                extra={"error": result.error},
+            )
+            return None
+
+        # Extract user information from JWT payload
+        user_data = extract_user_from_jwt_payload(result.payload)
+
+        logger.debug(
+            "WebSocket auth success",
+            extra={"user_id": user_data.get("user_id")},
+        )
+
+        return user_data
+
+    except Exception as e:
+        logger.warning(f"WebSocket auth error: {e}", exc_info=True)
+        return None
 
 
 @router.websocket("/notifications")
