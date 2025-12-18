@@ -11,24 +11,23 @@ Implements Anthropic's gather-action-verify-repeat agentic loop:
 """
 
 import operator
-from typing import Annotated, Any, Literal, Sequence, TypedDict
+from typing import Annotated, Any, Sequence, TypedDict
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import END, START, StateGraph
 
 from mcp_server_langgraph.core.config import settings
-from mcp_server_langgraph.core.context_manager import ContextManager
 from mcp_server_langgraph.core.url_utils import ensure_redis_password_encoded
-from mcp_server_langgraph.llm.factory import create_llm_from_config
-from mcp_server_langgraph.llm.verifier import OutputVerifier
 from mcp_server_langgraph.observability.telemetry import logger
 
 # Import Dynamic Context Loader if enabled
 try:
-    from mcp_server_langgraph.core.dynamic_context_loader import DynamicContextLoader, search_and_load_context
+    from mcp_server_langgraph.core.dynamic_context_loader import (  # noqa: F401
+        DynamicContextLoader,
+        search_and_load_context,
+    )
 
     DYNAMIC_CONTEXT_AVAILABLE = True
 except ImportError:
@@ -272,635 +271,35 @@ def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentSta
     }
 
 
-def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any:  # noqa: C901
-    """
-    Create the LangGraph agent using functional API with LiteLLM and observability.
-
-    Implements Anthropic's agentic loop:
-    1. Gather Context: compact_context node
-    2. Take Action: route_input → use_tools → generate_response
-    3. Verify Work: verify_response node
-    4. Repeat: refine_response loop (max 3 iterations)
-
-    Args:
-        settings_override: Optional Settings instance to override global settings.
-                          If None, uses the global settings object.
-    """
-
-    # Use override settings if provided, otherwise use global settings
-    effective_settings = settings_override if settings_override is not None else settings
-
-    # Initialize the model via LiteLLM factory
-    model = create_llm_from_config(effective_settings)
-
-    # Initialize Pydantic AI agent if available
-    pydantic_agent = _initialize_pydantic_agent()
-
-    # Initialize context manager for compaction
-    context_manager = ContextManager(compaction_threshold=8000, target_after_compaction=4000, recent_message_count=5)
-
-    # Initialize output verifier for quality checks
-    output_verifier = OutputVerifier(quality_threshold=0.7)
-
-    # Initialize dynamic context loader if enabled
-    enable_dynamic_loading = getattr(effective_settings, "enable_dynamic_context_loading", False)
-    context_loader = None
-    if enable_dynamic_loading and DYNAMIC_CONTEXT_AVAILABLE:
-        try:
-            context_loader = DynamicContextLoader()
-            logger.info("Dynamic context loader initialized")
-        except Exception as e:
-            logger.warning(f"Failed to initialize dynamic context loader: {e}", exc_info=True)
-            enable_dynamic_loading = False
-
-    # Feature flags for new capabilities
-    enable_context_compaction = getattr(effective_settings, "enable_context_compaction", True)
-    enable_verification = getattr(effective_settings, "enable_verification", True)
-    max_refinement_attempts = getattr(effective_settings, "max_refinement_attempts", 3)
-
-    # Define node functions
-
-    async def load_dynamic_context(state: AgentState) -> AgentState:
-        """
-        Load relevant context dynamically based on user request.
-
-        Implements Anthropic's Just-in-Time loading strategy.
-        """
-        if not enable_dynamic_loading or not context_loader:
-            # NOTE: Not modifying any state - return empty dict to avoid duplication
-            return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
-
-        last_message = state["messages"][-1]
-
-        if isinstance(last_message, HumanMessage):
-            try:
-                logger.info("Loading dynamic context")
-
-                # Search for relevant context
-                query = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
-                loaded_contexts = await search_and_load_context(
-                    query=query,
-                    loader=context_loader,
-                    top_k=getattr(effective_settings, "dynamic_context_top_k", 3),
-                    max_tokens=getattr(effective_settings, "dynamic_context_max_tokens", 2000),
-                )
-
-                if loaded_contexts:
-                    # Convert to messages and prepend
-                    context_messages = context_loader.to_messages(loaded_contexts)
-
-                    # Insert context before user message
-                    current_messages = list(state["messages"])
-                    messages_before = current_messages[:-1]
-                    user_message = current_messages[-1]
-                    state["messages"] = messages_before + context_messages + [user_message]
-
-                    logger.info(
-                        "Dynamic context loaded",
-                        extra={
-                            "contexts_loaded": len(loaded_contexts),
-                            "total_tokens": sum(c.token_count for c in loaded_contexts),
-                        },
-                    )
-
-            except Exception as e:
-                logger.error(f"Dynamic context loading failed: {e}", exc_info=True)
-                # Continue without dynamic context
-
-        # NOTE: We modified state["messages"] in place (line 356 inserts context).
-        # Don't return "messages" - operator.add would duplicate them!
-        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
-
-    async def compact_context(state: AgentState) -> AgentState:
-        """
-        Compact conversation context when approaching token limits.
-
-        Implements Anthropic's "Compaction" technique for long-horizon tasks.
-        """
-        if not enable_context_compaction:
-            # NOTE: Not modifying any state - exclude messages to avoid duplication
-            return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
-
-        messages_list = list(state["messages"])
-
-        if context_manager.needs_compaction(messages_list):
-            try:
-                logger.info("Applying context compaction")
-                result = await context_manager.compact_conversation(messages_list)
-
-                state["messages"] = result.compacted_messages
-                state["compaction_applied"] = True
-                state["original_message_count"] = len(messages_list)
-
-                logger.info(
-                    "Context compacted",
-                    extra={
-                        "original_messages": len(messages_list),
-                        "compacted_messages": len(result.compacted_messages),
-                        "compression_ratio": result.compression_ratio,
-                    },
-                )
-            except Exception as e:
-                logger.error(f"Context compaction failed: {e}", exc_info=True)
-                # Continue without compaction on error
-                state["compaction_applied"] = False
-        else:
-            state["compaction_applied"] = False
-
-        # NOTE: We modified state["messages"] in place (line 388).
-        # Don't return "messages" - operator.add would duplicate them!
-        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
-
-    async def route_input(state: AgentState) -> AgentState:
-        """
-        Route based on message type with Pydantic AI for type-safe decisions.
-
-        Also captures original user request for verification later.
-        """
-        last_message = state["messages"][-1]
-
-        # Capture original user request for verification
-        if isinstance(last_message, HumanMessage):
-            user_request = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
-            state["user_request"] = user_request
-
-        if isinstance(last_message, HumanMessage):
-            # Use Pydantic AI for intelligent routing if available
-            if pydantic_agent:
-                try:
-                    # Route message asynchronously
-                    decision = await pydantic_agent.route_message(
-                        last_message.content,
-                        context={"user_id": state.get("user_id", "unknown"), "message_count": str(len(state["messages"]))},
-                    )
-
-                    # Update state with type-safe decision
-                    state["next_action"] = decision.action
-                    state["routing_confidence"] = decision.confidence
-                    state["reasoning"] = decision.reasoning
-
-                    logger.info(
-                        "Pydantic AI routing decision",
-                        extra={"action": decision.action, "confidence": decision.confidence, "reasoning": decision.reasoning},
-                    )
-                except Exception as e:
-                    logger.error(f"Pydantic AI routing failed, using fallback: {e}", exc_info=True)
-                    # Fallback to simple routing
-                    fallback_result = _fallback_routing(state, last_message)
-                    # Merge fallback result into state
-                    for key, value in fallback_result.items():
-                        state[key] = value  # type: ignore[literal-required]
-            else:
-                # Fallback routing if Pydantic AI not available
-                fallback_result = _fallback_routing(state, last_message)
-                # Merge fallback result into state
-                for key, value in fallback_result.items():
-                    state[key] = value  # type: ignore[literal-required]
-
-        # NOTE: Don't return "messages" - operator.add would duplicate them!
-        # This applies to both Pydantic AI and fallback paths.
-        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
-
-    async def use_tools(state: AgentState) -> AgentState:
-        """
-        Execute tools based on LangChain tool calls.
-
-        Supports both serial and parallel execution based on settings.
-
-        Implementation status:
-        - ✅ Message state preservation (appends instead of replacing)
-        - ✅ Tool call extraction from AIMessage.tool_calls
-        - ✅ Real tool execution with error handling
-        - ✅ Support for both sync and async tools
-        - ✅ Parallel execution wired with enable_parallel_execution flag
-
-        Features:
-        - Serial execution (default): Tools executed one at a time
-        - Parallel execution (if enabled): Independent tools run concurrently
-        - Automatic dependency detection and topological sorting
-        - Graceful error handling with informative error messages
-        - Comprehensive logging and telemetry
-
-        For implementation reference, see:
-        - LangChain tool binding: https://python.langchain.com/docs/how_to/tool_calling/
-        - Parallel execution: docs/adr/ADR-0023-anthropic-tool-design-best-practices.md
-        """
-        messages = state["messages"]
-        last_message = messages[-1]
-
-        # Check if the last message contains tool calls
-        tool_calls = getattr(last_message, "tool_calls", None) if hasattr(last_message, "tool_calls") else None
-
-        if not tool_calls or len(tool_calls) == 0:
-            # No tool calls found - this shouldn't happen if routed to use_tools
-            # Return a message indicating no tools were called
-            logger.warning(
-                "use_tools node reached but no tool calls found in last message",
-                extra={"message_type": type(last_message).__name__},
-            )
-            tool_response = AIMessage(
-                content="No tool calls found. Proceeding with direct response.",
-            )
-            # NOTE: Return only new message, not state["messages"] + [tool_response]
-            # operator.add automatically appends to existing messages
-            return {**state, "messages": [tool_response], "next_action": "respond"}
-
-        logger.info(
-            "Executing tools",
-            extra={
-                "tool_count": len(tool_calls),
-                "tools": [tc.get("name", "unknown") for tc in tool_calls],
-                "parallel_enabled": effective_settings.enable_parallel_execution,
-            },
-        )
-
-        # Check if parallel execution is enabled (use effective_settings for DI support)
-        enable_parallel = getattr(effective_settings, "enable_parallel_execution", False)
-
-        if enable_parallel and len(tool_calls) > 1:
-            # Use parallel execution for multiple tool calls
-            logger.info(f"Using parallel execution for {len(tool_calls)} tools")
-            tool_messages = await _execute_tools_parallel(tool_calls)
-        else:
-            # Use serial execution (default or single tool)
-            if enable_parallel:
-                logger.info("Parallel execution enabled but only 1 tool call - using serial execution")
-            tool_messages = await _execute_tools_serial(tool_calls)
-
-        # NOTE: Return only new messages, not state["messages"] + tool_messages
-        # operator.add automatically appends to existing messages
-        return {**state, "messages": tool_messages, "next_action": "respond"}
-
-    async def _execute_tools_serial(tool_calls: list[dict]) -> list:  # type: ignore[type-arg]
-        """Execute tools serially (one at a time)"""
-        from langchain_core.messages import ToolMessage
-
-        from mcp_server_langgraph.tools import get_tool_by_name
-
-        tool_messages: list = []  # type: ignore[type-arg]
-        for tool_call in tool_calls:
-            tool_name = tool_call.get("name", "unknown")
-            tool_call_id = tool_call.get("id", str(len(tool_messages)))
-            tool_args = tool_call.get("args", {})
-
-            try:
-                # Find the tool by name
-                tool = get_tool_by_name(tool_name)
-
-                if tool is None:
-                    from mcp_server_langgraph.tools import ALL_TOOLS
-
-                    result_content = f"Error: Tool '{tool_name}' not found. Available tools: {[t.name for t in ALL_TOOLS]}"
-                    logger.error(f"Tool '{tool_name}' not found", extra={"available_tools": [t.name for t in ALL_TOOLS]})
-                else:
-                    # Execute the tool (tools can be sync or async)
-                    logger.info(f"Invoking tool '{tool_name}'", extra={"args": tool_args})
-
-                    if hasattr(tool, "ainvoke"):
-                        # Async tool
-                        result_content = await tool.ainvoke(tool_args)
-                    else:
-                        # Sync tool - invoke directly
-                        result_content = tool.invoke(tool_args)
-
-                    logger.info(
-                        f"Tool '{tool_name}' executed successfully",
-                        extra={"tool": tool_name, "result_length": len(str(result_content))},
-                    )
-
-            except Exception as e:
-                result_content = f"Error executing tool '{tool_name}': {e!s}"
-                logger.error(
-                    f"Tool execution failed: {tool_name}",
-                    extra={"tool": tool_name, "args": tool_args, "error": str(e)},
-                    exc_info=True,
-                )
-
-            # Create tool message with result
-            tool_message = ToolMessage(
-                content=str(result_content),
-                tool_call_id=tool_call_id,
-                name=tool_name,
-            )
-            tool_messages.append(tool_message)
-
-        return tool_messages
-
-    async def _execute_tools_parallel(tool_calls: list[dict]) -> list:  # type: ignore[type-arg]
-        """Execute tools in parallel using ParallelToolExecutor"""
-        from langchain_core.messages import ToolMessage
-
-        from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
-        from mcp_server_langgraph.tools import get_tool_by_name
-
-        # Create parallel executor (use effective_settings for DI support)
-        max_parallelism = getattr(effective_settings, "max_parallel_tools", 5)
-        executor = ParallelToolExecutor(max_parallelism=max_parallelism)
-
-        # Convert tool_calls to ToolInvocation objects
-        invocations: list[ToolInvocation] = []
-        for tool_call in tool_calls:
-            tool_name = tool_call.get("name", "unknown")
-            tool_args = tool_call.get("args", {})
-            tool_call_id = tool_call.get("id", f"call_{len(invocations)}")
-
-            invocation = ToolInvocation(tool_name=tool_name, arguments=tool_args, invocation_id=tool_call_id, dependencies=[])
-            invocations.append(invocation)
-
-        # Define tool executor function for parallel executor
-        async def execute_single_tool(tool_name: str, arguments: dict):  # type: ignore[type-arg, no-untyped-def]
-            """Execute a single tool"""
-            tool = get_tool_by_name(tool_name)
-            if tool is None:
-                msg = f"Tool '{tool_name}' not found"
-                raise ValueError(msg)
-
-            if hasattr(tool, "ainvoke"):
-                return await tool.ainvoke(arguments)
-            else:
-                return tool.invoke(arguments)
-
-        # Execute tools in parallel
-        try:
-            results = await executor.execute_parallel(invocations, execute_single_tool)
-
-            # Convert results to ToolMessage objects
-            tool_messages = []
-            for result in results:
-                # Find the original tool_call to get the correct ID
-                original_call = next((tc for tc in tool_calls if tc.get("id") == result.invocation_id), None)
-                tool_call_id = original_call.get("id") if original_call else result.invocation_id
-
-                if result.error:
-                    content = f"Error executing tool '{result.tool_name}': {result.error!s}"
-                else:
-                    content = str(result.result)
-
-                tool_message = ToolMessage(content=content, tool_call_id=tool_call_id, name=result.tool_name)
-                tool_messages.append(tool_message)
-
-            return tool_messages
-
-        except Exception as e:
-            logger.error(f"Parallel tool execution failed: {e}", exc_info=True)
-            # Fall back to serial execution on failure
-            logger.warning("Falling back to serial execution due to parallel execution failure")
-            return await _execute_tools_serial(tool_calls)
-
-    async def generate_response(state: AgentState) -> AgentState:
-        """Generate final response using LLM with Pydantic AI validation"""
-        messages = state["messages"]
-
-        messages_list = list(messages)
-
-        # Add refinement context if this is a refinement attempt
-        refinement_attempts = state.get("refinement_attempts") or 0
-        if refinement_attempts > 0 and state.get("verification_feedback"):
-            refinement_prompt = SystemMessage(
-                content=f"<refinement_guidance>\n"
-                f"Previous response had issues. Please refine based on this feedback:\n"
-                f"{state['verification_feedback']}\n"
-                f"</refinement_guidance>"
-            )
-            messages_list = [refinement_prompt] + messages_list
-
-        # Use Pydantic AI for structured response if available
-        if pydantic_agent:
-            try:
-                # Generate type-safe response
-                typed_response = await pydantic_agent.generate_response(
-                    messages_list,
-                    context={
-                        "user_id": state.get("user_id", "unknown"),
-                        "routing_confidence": str(state.get("routing_confidence", 0.0)),
-                        "refinement_attempt": str(refinement_attempts),
-                    },
-                )
-
-                # Convert to AIMessage
-                response = AIMessage(content=typed_response.content)
-
-                logger.info(
-                    "Pydantic AI response generated",
-                    extra={
-                        "confidence": typed_response.confidence,
-                        "requires_clarification": typed_response.requires_clarification,
-                        "sources": typed_response.sources,
-                        "refinement_attempt": refinement_attempts,
-                    },
-                )
-            except Exception as e:
-                logger.error(f"Pydantic AI response generation failed, using fallback: {e}", exc_info=True)
-                # Fallback to standard LLM (use async invoke)
-                # Type cast needed: list is invariant, so list[BaseMessage] != list[BaseMessage | dict[str, Any]]
-                response = await model.ainvoke(messages_list)  # type: ignore[arg-type]
-        else:
-            # Standard LLM response (use async invoke)
-            # Type cast needed: list is invariant, so list[BaseMessage] != list[BaseMessage | dict[str, Any]]
-            response = await model.ainvoke(messages_list)  # type: ignore[arg-type]
-
-        # NOTE: Returning [response] (not state["messages"] + [response]) is correct here.
-        # Lang Graph's operator.add annotation on AgentState.messages (line 77) automatically
-        # merges/appends this list to the existing messages. Manually appending would cause
-        # duplication. See: https://langchain-ai.github.io/langgraph/reference/graphs/#stategraph
-        return {**state, "messages": [response], "next_action": "verify" if enable_verification else "end"}
-
-    async def verify_response(state: AgentState) -> AgentState:
-        """
-        Verify response quality using LLM-as-judge pattern.
-
-        Implements Anthropic's "Verify Work" step in the agent loop.
-        """
-        if not enable_verification:
-            state["next_action"] = "end"
-            # NOTE: Don't return "messages" - operator.add would duplicate them!
-            return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
-
-        # Get the response to verify (last message)
-        response_message = state["messages"][-1]
-        response_content = response_message.content if hasattr(response_message, "content") else str(response_message)
-        # Ensure response_text is a string (content can be str or list)
-        response_text = response_content if isinstance(response_content, str) else str(response_content)
-
-        # Get user request
-        user_request = state.get("user_request") or ""
-
-        # Get conversation context (excluding the response we're verifying)
-        conversation_context = list(state["messages"])[:-1]
-
-        try:
-            logger.info("Verifying response quality")
-            verification_result = await output_verifier.verify_response(
-                response=response_text, user_request=user_request, conversation_context=conversation_context
-            )
-
-            state["verification_passed"] = verification_result.passed
-            state["verification_score"] = verification_result.overall_score
-            state["verification_feedback"] = verification_result.feedback
-
-            # Determine next action
-            refinement_attempts = state.get("refinement_attempts", 0)
-
-            if verification_result.passed:
-                state["next_action"] = "end"
-                logger.info(
-                    "Verification passed", extra={"score": verification_result.overall_score, "attempts": refinement_attempts}
-                )
-            elif (refinement_attempts or 0) < max_refinement_attempts:
-                state["next_action"] = "refine"
-                logger.info(
-                    "Verification failed, refining response",
-                    extra={
-                        "score": verification_result.overall_score,
-                        "attempt": (refinement_attempts or 0) + 1,
-                        "max_attempts": max_refinement_attempts,
-                    },
-                )
-            else:
-                # Max attempts reached, accept response
-                state["next_action"] = "end"
-                logger.warning(
-                    "Max refinement attempts reached, accepting response",
-                    extra={"score": verification_result.overall_score, "attempts": refinement_attempts},
-                )
-
-        except Exception as e:
-            logger.error(f"Verification failed: {e}", exc_info=True)
-            # On verification error, accept response (fail-open)
-            state["verification_passed"] = True
-            state["next_action"] = "end"
-
-        # NOTE: Don't return "messages" - operator.add would duplicate them!
-        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
-
-    async def refine_response(state: AgentState) -> AgentState:
-        """
-        Refine response based on verification feedback.
-
-        Implements iterative refinement loop (part of "Repeat" in agentic loop).
-        """
-        # Increment refinement attempts
-        refinement_attempts = state.get("refinement_attempts", 0) or 0
-        state["refinement_attempts"] = refinement_attempts + 1
-
-        # Remove the failed response from messages
-        # It will be regenerated with refinement guidance
-        state["messages"] = state["messages"][:-1]
-
-        # Set next action to respond (will regenerate with feedback)
-        state["next_action"] = "respond"
-
-        feedback = state.get("verification_feedback") or ""
-        feedback_preview = feedback[:100] if isinstance(feedback, str) else ""
-        logger.info(
-            "Refining response",
-            extra={"attempt": state["refinement_attempts"], "feedback": feedback_preview},
-        )
-
-        # NOTE: We modified state["messages"] in place (line 786 removes last message).
-        # Don't return "messages" - operator.add would duplicate them!
-        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
-
-    def should_continue(state: AgentState) -> Literal["use_tools", "respond", "end"]:
-        """Conditional edge function for routing"""
-        next_action = state.get("next_action", "respond") or "respond"
-        # Default to "respond" if next_action is empty or not set
-        if not next_action or next_action not in ["use_tools", "respond", "end"]:
-            return "respond"
-        return next_action  # type: ignore[return-value]
-
-    def should_verify(state: AgentState) -> Literal["verify", "refine", "end"]:
-        """Conditional edge function for verification loop"""
-        next_action = state.get("next_action", "end") or "end"
-        # Default to "end" if next_action is empty or invalid
-        if not next_action or next_action not in ["verify", "refine", "end"]:
-            return "end"
-        return next_action  # type: ignore[return-value]
-
-    # Build the graph with full agentic loop
-    workflow = StateGraph(AgentState)
-
-    # Add nodes (Load → Gather → Route → Act → Verify → Repeat)
-    workflow.add_node("load_context", load_dynamic_context)  # Just-in-Time Context Loading
-    workflow.add_node("compact", compact_context)  # Gather Context (Compaction)
-    workflow.add_node("router", route_input)  # Route Decision
-    workflow.add_node("tools", use_tools)  # Take Action (tools)
-    workflow.add_node("respond", generate_response)  # Take Action (response)
-    workflow.add_node("verify", verify_response)  # Verify Work
-    workflow.add_node("refine", refine_response)  # Repeat (refinement)
-
-    # Add edges for full agentic loop with dynamic context loading
-    workflow.add_edge(START, "load_context")  # Start with JIT context loading
-    workflow.add_edge("load_context", "compact")  # Then compaction
-    workflow.add_edge("compact", "router")  # Then route
-    workflow.add_conditional_edges(
-        "router",
-        should_continue,
-        {
-            "use_tools": "tools",
-            "respond": "respond",
-        },
-    )
-    workflow.add_edge("tools", "respond")
-    workflow.add_conditional_edges(
-        "verify",
-        should_verify,
-        {
-            "verify": "verify",  # Not used (defensive)
-            "refine": "refine",  # Refinement needed
-            "end": END,  # Verification passed
-        },
-    )
-    workflow.add_edge("respond", "verify")  # Always verify responses
-    workflow.add_edge("refine", "respond")  # Refine loops back to respond
-
-    # Compile with optional checkpointing (use effective_settings for DI support)
-    enable_checkpointing = getattr(effective_settings, "enable_checkpointing", True)
-    if enable_checkpointing:
-        checkpointer = _create_checkpointer(effective_settings)
-        return workflow.compile(checkpointer=checkpointer)
-    else:
-        # Compile without checkpointing (useful for testing with mocks)
-        logger.info("Checkpointing disabled - graph will not persist conversation state")
-        return workflow.compile()
-
-
-# IMPORTANT: Do NOT create agent_graph at module level
-# The lazy initialization pattern in telemetry.py requires observability to be initialized first
-# Entry points (mcp/server_stdio.py, mcp/server_streamable.py) must call init_observability()
-# before accessing agent_graph
+# ==============================================================================
+# DEPRECATED: _create_agent_graph_singleton
+# ==============================================================================
+# This function has been replaced by the compile-time graph builder pattern.
+# See: agent_graph_builder.py and agent_config.py
 #
-# Legacy module-level export for backward compatibility (will be None until explicitly created)
-_agent_graph_cache = None
-
-
-def get_agent_graph() -> None:
-    """
-    Get or create the agent graph singleton.
-
-    DEPRECATED: Use create_agent() or create_agent_graph() instead.
-    This function provides lazy initialization that respects observability initialization.
-    Call this instead of accessing agent_graph directly.
-
-    Returns:
-        Compiled LangGraph StateGraph
-
-    Raises:
-        RuntimeError: If observability is not initialized
-    """
-    global _agent_graph_cache
-    if _agent_graph_cache is None:
-        _agent_graph_cache = _create_agent_graph_singleton()
-    return _agent_graph_cache  # type: ignore[no-any-return]
-
-
-# Backward compatibility: agent_graph will be None until get_agent_graph() is called
-agent_graph = None
+# The new pattern uses build_agent_graph(config, checkpointer, settings) which:
+# - Evaluates feature flags at compile time (not runtime) - OCP compliant
+# - Supports graph versioning for checkpoint compatibility
+# - Enables better testability via AgentConfig
+#
+# Migration path:
+#   OLD: agent = _create_agent_graph_singleton(settings)
+#   NEW: config = AgentConfig.from_settings(settings)
+#        agent = build_agent_graph(config, checkpointer, settings)
+#
+# For backwards compatibility, use create_agent() or create_agent_graph() instead.
+# ==============================================================================
 
 
 # ==============================================================================
-# Dependency Injection API (NEW)
+# Dependency Injection API
 # ==============================================================================
+# IMPORTANT: Do NOT create agent_graph at module level
+# Entry points (mcp/server_stdio.py, mcp/server_streamable.py) must call init_observability()
+# before creating agent graphs via create_agent_graph()
+#
+# The legacy get_agent_graph() singleton has been removed (2025-12).
+# All consumers should use create_agent_graph() with DI pattern instead.
 
 
 def create_agent_graph(
@@ -959,14 +358,31 @@ def create_agent_graph_impl(settings_to_use: Any) -> Any:
     This properly threads the settings through to the agent graph creation,
     enabling dependency injection for testing and multi-tenant deployments.
 
+    Uses the new compile-time graph builder (build_agent_graph) which
+    implements the Open/Closed Principle - feature flags are evaluated
+    at graph construction time, not at runtime.
+
     Args:
         settings_to_use: Settings instance to use
 
     Returns:
         Compiled LangGraph StateGraph
     """
-    # Pass settings to the singleton function for proper dependency injection
-    return _create_agent_graph_singleton(settings_override=settings_to_use)
+    from mcp_server_langgraph.core.agent_config import AgentConfig
+    from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
+
+    # Create AgentConfig from settings
+    config = AgentConfig.from_settings(settings_to_use)
+
+    # Create checkpointer (Redis or Memory based on settings)
+    checkpointer = _create_checkpointer(settings_to_use)
+
+    # Build the graph using compile-time composition
+    return build_agent_graph(
+        config=config,
+        checkpointer=checkpointer,
+        settings=settings_to_use,
+    )
 
 
 def create_agent(
