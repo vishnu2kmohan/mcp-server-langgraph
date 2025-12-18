@@ -21,6 +21,7 @@ import artifactReducer from "./slices/artifactSlice";
 import mcpReducer from "./slices/mcpSlice";
 import authReducer from "./slices/authSlice";
 import notificationReducer from "./slices/notificationSlice";
+import observabilityReducer from "./slices/observabilitySlice";
 import workspaceReducer, {
   workspacePersistenceMiddleware,
   removeTabsByEntityId,
@@ -64,6 +65,8 @@ export const store = configureStore({
     auth: authReducer,
     // Notifications state
     notifications: notificationReducer,
+    // Observability filter state
+    observability: observabilityReducer,
     // Workspace layout state (JupyterLab-inspired)
     workspace: workspaceReducer,
   },

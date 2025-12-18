@@ -12,6 +12,7 @@ Usage:
     DELETE /api/v1/sessions/{id} - Delete a session
     GET /api/v1/sessions/{id}/messages - Get messages in a session
     POST /api/v1/sessions/{id}/messages - Add a message to a session
+    POST /api/v1/sessions/generate-title - Generate a session title from a message
 """
 
 import logging
@@ -864,3 +865,31 @@ async def clear_messages(session_id: str) -> None:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Session {session_id} not found",
         )
+
+
+class GenerateTitleRequest(BaseModel):
+    """Request body for generating a session title."""
+
+    message: str = Field(description="The user's first message to generate a title from", min_length=1, max_length=2000)
+
+
+class GenerateTitleResponse(BaseModel):
+    """Response model for generated title."""
+
+    title: str = Field(description="Generated session title")
+
+
+@sessions_router.post("/sessions/generate-title")
+async def generate_title(request: GenerateTitleRequest) -> GenerateTitleResponse:
+    """
+    Generate a session title from a user message.
+
+    Uses AI to analyze the message and generate a concise, descriptive title.
+    This is typically called after the user sends their first message in a session.
+
+    Returns a title of max 50 characters.
+    """
+    from mcp_server_langgraph.studio.ai.title_generator import generate_session_title
+
+    title = await generate_session_title(request.message)
+    return GenerateTitleResponse(title=title)

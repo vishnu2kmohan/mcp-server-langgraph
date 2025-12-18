@@ -33,6 +33,7 @@ import {
   addMessage,
   clearError,
   setCurrentSession,
+  renameSession,
   selectCurrentSession,
   selectSessions,
   selectIsLoadingSession,
@@ -45,6 +46,7 @@ import {
 } from "../store/slices/sessionSlice";
 import { useStreamingChat } from "../hooks/useStreamingChat";
 import { useMCPConnection } from "../hooks/useMCPConnection";
+import { useAutoSessionTitle } from "../hooks/useAutoSessionTitle";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import { useFileUpload } from "../hooks/useFileUpload";
 import { useDebounce } from "../hooks/useDebounce";
@@ -146,6 +148,7 @@ export function ChatPage() {
     clearContent,
     usage,
     model,
+    traceId,
     error: streamingError,
   } = useStreamingChat();
 
@@ -180,6 +183,9 @@ export function ChatPage() {
 
   // Background sync hook for offline message queueing
   const { isOnline, isSyncing, pendingCount } = useBackgroundSync();
+
+  // Auto-generate session title from first user message
+  const { onUserMessage: autoGenerateTitle } = useAutoSessionTitle();
 
   // Session cost computed from streaming usage data
   const sessionCost = useMemo<SessionCost>(() => {
@@ -350,6 +356,14 @@ export function ChatPage() {
       ...prev.slice(0, 9),
     ]);
 
+    // Auto-generate session title from first user message
+    autoGenerateTitle(
+      currentSession.id,
+      currentSession.name,
+      content,
+      messages.length,
+    );
+
     // Start streaming response
     startStream(currentSession.id, content);
   };
@@ -458,6 +472,18 @@ export function ChatPage() {
     ]);
   };
 
+  const handleSessionRename = async (sessionId: string, newName: string) => {
+    await dispatch(renameSession({ sessionId, name: newName }));
+    setActivities((prev) => [
+      {
+        timestamp: Date.now(),
+        action: "session renamed",
+        details: newName,
+      },
+      ...prev.slice(0, 9),
+    ]);
+  };
+
   const handleRefreshTools = () => {
     // Reconnect to refresh tools list
     connect();
@@ -486,6 +512,10 @@ export function ChatPage() {
 
   const handleViewAllTraces = () => {
     navigate("/studio/observability");
+  };
+
+  const handleViewTrace = (viewTraceId: string) => {
+    navigate(`/studio/observability?trace_id=${viewTraceId}`);
   };
 
   // Session goal tracking handlers (Priority 3.3 - Multi-turn goal tracking)
@@ -597,6 +627,7 @@ export function ChatPage() {
         enableBulkSelect={true}
         onBulkDelete={handleBulkDelete}
         onDelete={handleSessionDelete}
+        onRename={handleSessionRename}
         enableSearch={true}
         onSearch={handleSearch}
         enableStatusFilter={true}
@@ -748,9 +779,11 @@ export function ChatPage() {
         tools={tools}
         activities={activities}
         sessionCost={sessionCost}
+        currentTraceId={traceId}
         onRefreshTools={handleRefreshTools}
         onViewCostDetails={handleViewCostDetails}
         onViewAllTraces={handleViewAllTraces}
+        onViewTrace={handleViewTrace}
       />
 
       {/* Clear Messages Confirmation Dialog */}

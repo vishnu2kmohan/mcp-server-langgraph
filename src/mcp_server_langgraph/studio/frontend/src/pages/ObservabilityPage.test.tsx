@@ -12,25 +12,32 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ObservabilityPage } from "./ObservabilityPage";
-import { TestRouter } from "../test-utils";
+import { TestProvider } from "../test-utils";
 
 // Mock the RTK Query hooks
 const mockRefetchTraces = vi.fn();
 const mockRefetchLogs = vi.fn();
 const mockRefetchMetrics = vi.fn();
+const mockRefetchAlerts = vi.fn();
 
-vi.mock("../api", () => ({
-  useListTracesQuery: vi.fn(),
-  useListLogsQuery: vi.fn(),
-  useGetMetricsQuery: vi.fn(),
-  useGetTraceQuery: vi.fn(),
-}));
+vi.mock("../api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../api")>();
+  return {
+    ...actual,
+    useListTracesQuery: vi.fn(),
+    useListLogsQuery: vi.fn(),
+    useGetMetricsQuery: vi.fn(),
+    useGetTraceQuery: vi.fn(),
+    useListAlertsQuery: vi.fn(),
+  };
+});
 
 import {
   useListTracesQuery,
   useListLogsQuery,
   useGetMetricsQuery,
   useGetTraceQuery,
+  useListAlertsQuery,
 } from "../api";
 
 // Cast to vi.Mock for type safety
@@ -38,6 +45,7 @@ const mockUseListTracesQuery = useListTracesQuery as ReturnType<typeof vi.fn>;
 const mockUseListLogsQuery = useListLogsQuery as ReturnType<typeof vi.fn>;
 const mockUseGetMetricsQuery = useGetMetricsQuery as ReturnType<typeof vi.fn>;
 const mockUseGetTraceQuery = useGetTraceQuery as ReturnType<typeof vi.fn>;
+const mockUseListAlertsQuery = useListAlertsQuery as ReturnType<typeof vi.fn>;
 
 // Default mock data
 const mockTraces = [
@@ -87,6 +95,33 @@ const mockMetrics = {
   active_sessions: 8,
 };
 
+const mockAlerts = [
+  {
+    alert_id: "alert-1",
+    name: "High Memory Usage",
+    severity: "warning",
+    state: "firing",
+    message: "Memory usage is above 80%",
+    labels: { service: "mcp-server", severity: "warning" },
+    annotations: { summary: "High memory alert" },
+    started_at: new Date().toISOString(),
+    ended_at: null,
+    generator_url: "http://grafana/alerting/1",
+  },
+  {
+    alert_id: "alert-2",
+    name: "API Latency High",
+    severity: "critical",
+    state: "firing",
+    message: "API latency exceeds threshold",
+    labels: { service: "api-gateway", severity: "critical" },
+    annotations: { summary: "High latency detected" },
+    started_at: new Date(Date.now() - 300000).toISOString(),
+    ended_at: null,
+    generator_url: null,
+  },
+];
+
 describe("ObservabilityPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -113,6 +148,13 @@ describe("ObservabilityPage", () => {
       refetch: mockRefetchMetrics,
     });
 
+    mockUseListAlertsQuery.mockReturnValue({
+      data: { items: mockAlerts, total: 2 },
+      isLoading: false,
+      error: null,
+      refetch: mockRefetchAlerts,
+    });
+
     // Default mock: trace detail query (used by TraceViewer)
     mockUseGetTraceQuery.mockReturnValue({
       data: null,
@@ -124,9 +166,9 @@ describe("ObservabilityPage", () => {
   describe("Header", () => {
     it("should display page title", () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText("Observability")).toBeInTheDocument();
@@ -134,9 +176,9 @@ describe("ObservabilityPage", () => {
 
     it("should display page description", () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       expect(
@@ -146,9 +188,9 @@ describe("ObservabilityPage", () => {
 
     it("should have refresh button", () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText("Refresh")).toBeInTheDocument();
@@ -158,9 +200,9 @@ describe("ObservabilityPage", () => {
   describe("Tabs", () => {
     it("should have Traces tab", () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText("Traces")).toBeInTheDocument();
@@ -168,9 +210,9 @@ describe("ObservabilityPage", () => {
 
     it("should have Logs tab", () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText("Logs")).toBeInTheDocument();
@@ -178,9 +220,9 @@ describe("ObservabilityPage", () => {
 
     it("should have Metrics tab", () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText("Metrics")).toBeInTheDocument();
@@ -188,9 +230,9 @@ describe("ObservabilityPage", () => {
 
     it("should switch to Logs tab when clicked", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       // Traces should be visible by default
@@ -217,9 +259,9 @@ describe("ObservabilityPage", () => {
       });
 
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       // Should show skeleton placeholders instead of spinner
@@ -235,9 +277,9 @@ describe("ObservabilityPage", () => {
       });
 
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       // Should have multiple skeleton items (3 by default)
@@ -249,9 +291,9 @@ describe("ObservabilityPage", () => {
   describe("Traces Tab", () => {
     it("should display traces after loading", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -261,9 +303,9 @@ describe("ObservabilityPage", () => {
 
     it("should show trace status badges", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -276,9 +318,9 @@ describe("ObservabilityPage", () => {
 
     it("should show trace duration", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -298,9 +340,9 @@ describe("ObservabilityPage", () => {
       });
 
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -312,9 +354,9 @@ describe("ObservabilityPage", () => {
   describe("Logs Tab", () => {
     it("should fetch and display logs when switching to Logs tab", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -330,9 +372,9 @@ describe("ObservabilityPage", () => {
 
     it("should display log entries with level badges", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -349,9 +391,9 @@ describe("ObservabilityPage", () => {
 
     it("should show service name for each log entry", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -375,9 +417,9 @@ describe("ObservabilityPage", () => {
       });
 
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -395,9 +437,9 @@ describe("ObservabilityPage", () => {
   describe("Metrics Tab", () => {
     it("should fetch and display metrics when switching to Metrics tab", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -413,9 +455,9 @@ describe("ObservabilityPage", () => {
 
     it("should display request count metric", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -432,9 +474,9 @@ describe("ObservabilityPage", () => {
 
     it("should display error count metric", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -451,9 +493,9 @@ describe("ObservabilityPage", () => {
 
     it("should display latency metrics", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -470,9 +512,9 @@ describe("ObservabilityPage", () => {
 
     it("should display token usage metric", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -500,9 +542,9 @@ describe("ObservabilityPage", () => {
       });
 
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -521,9 +563,9 @@ describe("ObservabilityPage", () => {
       });
 
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -547,9 +589,9 @@ describe("ObservabilityPage", () => {
       });
 
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -568,9 +610,9 @@ describe("ObservabilityPage", () => {
       });
 
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -591,9 +633,9 @@ describe("ObservabilityPage", () => {
       });
 
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -605,9 +647,9 @@ describe("ObservabilityPage", () => {
   describe("Traces Filters", () => {
     it("should have status filter buttons", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -628,9 +670,9 @@ describe("ObservabilityPage", () => {
 
     it("should have session ID filter input", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -642,9 +684,9 @@ describe("ObservabilityPage", () => {
 
     it("should have time range filter", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -659,9 +701,9 @@ describe("ObservabilityPage", () => {
 
     it("should call hook with status filter when status is selected", async () => {
       render(
-        <TestRouter>
+        <TestProvider>
           <ObservabilityPage />
-        </TestRouter>,
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -675,6 +717,137 @@ describe("ObservabilityPage", () => {
         expect(mockUseListTracesQuery).toHaveBeenCalledWith(
           expect.objectContaining({ status: "error" }),
         );
+      });
+    });
+  });
+
+  describe("Alerts Tab", () => {
+    it("should show Alerts tab in navigation", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      expect(
+        screen.getByRole("button", { name: /alerts/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should switch to alerts tab when clicked", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("High Memory Usage")).toBeInTheDocument();
+      });
+    });
+
+    it("should display alert severity badges", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("High Memory Usage")).toBeInTheDocument();
+      });
+
+      // Check for severity badges
+      expect(screen.getByText("warning")).toBeInTheDocument();
+      expect(screen.getByText("critical")).toBeInTheDocument();
+    });
+
+    it("should display alert state badges", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("High Memory Usage")).toBeInTheDocument();
+      });
+
+      // Check for state badges (both alerts are firing)
+      const firingBadges = screen.getAllByText("firing");
+      expect(firingBadges.length).toBe(2);
+    });
+
+    it("should have state filter buttons", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("High Memory Usage")).toBeInTheDocument();
+      });
+
+      // State filter buttons
+      expect(
+        screen.getByRole("button", { name: /^All$/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /^Firing$/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /^Pending$/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /^Resolved$/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should display alert labels", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("High Memory Usage")).toBeInTheDocument();
+      });
+
+      // Check for service labels
+      expect(screen.getByText("service=mcp-server")).toBeInTheDocument();
+      expect(screen.getByText("service=api-gateway")).toBeInTheDocument();
+    });
+
+    it("should show empty state when no alerts", async () => {
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: [], total: 0 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("No alerts found")).toBeInTheDocument();
       });
     });
   });

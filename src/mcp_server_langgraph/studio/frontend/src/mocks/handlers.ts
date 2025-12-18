@@ -674,6 +674,44 @@ export const handlers = [
       active_subscriptions: 5,
     });
   }),
+
+  // ==========================================================================
+  // Notification Preferences
+  // ==========================================================================
+
+  // Get notification preferences
+  http.get("/api/v1/notifications/preferences", async () => {
+    await delay(50);
+    return HttpResponse.json({
+      info_enabled: true,
+      success_enabled: true,
+      warning_enabled: true,
+      error_enabled: true,
+    });
+  }),
+
+  // Update notification preferences
+  http.patch("/api/v1/notifications/preferences", async ({ request }) => {
+    await delay(50);
+    const body = (await request.json()) as Record<string, boolean>;
+    return HttpResponse.json({
+      info_enabled: body.info_enabled ?? true,
+      success_enabled: body.success_enabled ?? true,
+      warning_enabled: body.warning_enabled ?? true,
+      error_enabled: body.error_enabled ?? true,
+    });
+  }),
+
+  // Reset notification preferences to defaults
+  http.post("/api/v1/notifications/preferences/reset", async () => {
+    await delay(50);
+    return HttpResponse.json({
+      info_enabled: true,
+      success_enabled: true,
+      warning_enabled: true,
+      error_enabled: true,
+    });
+  }),
 ];
 
 // =============================================================================

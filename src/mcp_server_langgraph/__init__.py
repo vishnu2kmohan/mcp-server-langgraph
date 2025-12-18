@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 # TYPE_CHECKING imports satisfy static analysis (CodeQL, mypy) while keeping lazy loading
 # These imports only run during type checking, not at runtime
 if TYPE_CHECKING:
-    from mcp_server_langgraph.core.agent import agent_graph as agent_graph
+    from mcp_server_langgraph.core.agent import create_agent_graph as create_agent_graph
     from mcp_server_langgraph.observability.telemetry import tracer as tracer
 
 # Read version from installed package metadata (standard Python pattern)
@@ -32,7 +32,7 @@ __all__ = [
     "AuthMiddleware",
     "OpenFGAClient",
     "__version__",
-    "agent_graph",
+    "create_agent_graph",
     "create_llm_from_config",
     "logger",
     "metrics",
@@ -71,10 +71,10 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]  # noqa: C901
         from mcp_server_langgraph.core.agent import AgentState
 
         return AgentState
-    elif name == "agent_graph":
-        from mcp_server_langgraph.core.agent import agent_graph
+    elif name == "create_agent_graph":
+        from mcp_server_langgraph.core.agent import create_agent_graph
 
-        return agent_graph
+        return create_agent_graph
 
     # Heavy LLM modules (require langchain_core, sentence_transformers, etc.)
     elif name == "create_llm_from_config":

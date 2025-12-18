@@ -366,11 +366,55 @@ export function App() {
         }),
       );
     } else if (userError) {
-      // Error fetching - stop loading, default to user persona
+      // Error fetching - try to extract persona from JWT token
       console.warn(
         "Failed to fetch user info for persona detection:",
         userError,
       );
+
+      // Attempt to decode the JWT token to get roles/persona
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        try {
+          const parts = token.split(".");
+          if (parts.length === 3) {
+            const payload = JSON.parse(
+              atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+            );
+
+            // Extract roles
+            let roles: string[] = [];
+            if (payload.realm_access?.roles) {
+              roles = payload.realm_access.roles;
+            } else if (Array.isArray(payload.roles)) {
+              roles = payload.roles;
+            }
+
+            // Derive persona from roles
+            let persona: "admin" | "developer" | "user" = "user";
+            if (roles.includes("admin")) {
+              persona = "admin";
+            } else if (roles.includes("developer")) {
+              persona = "developer";
+            }
+
+            dispatch(
+              setUserInfo({
+                username:
+                  payload.preferred_username || payload.username || "Unknown",
+                email: payload.email,
+                roles,
+                persona,
+              }),
+            );
+            return;
+          }
+        } catch (e) {
+          console.warn("Failed to decode JWT for persona:", e);
+        }
+      }
+
+      // Fallback: stop loading with default persona
       dispatch(setPersonaLoading(false));
     }
   }, [isStudioRoute, userData, userError, dispatch]);

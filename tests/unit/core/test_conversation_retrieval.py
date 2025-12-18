@@ -6,7 +6,7 @@ history from the LangGraph checkpointer.
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
@@ -41,8 +41,9 @@ class TestConversationRetrieval:
     @pytest.mark.asyncio
     async def test_conversation_retrieval_success(self, mock_auth, mock_openfga):
         """Test successful conversation retrieval."""
-        server = MCPAgentServer(openfga_client=mock_openfga)
-        server.auth = mock_auth
+        # Create mock graph and inject into server
+        mock_graph = MagicMock()
+        mock_graph.checkpointer = MagicMock()
         mock_state = MagicMock()
         mock_state.values = {
             "messages": [
@@ -54,70 +55,77 @@ class TestConversationRetrieval:
             "next_action": "end",
             "user_id": "alice",
         }
-        with patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph") as mock_get_graph:
-            mock_graph = MagicMock()
-            mock_graph.checkpointer = MagicMock()
-            mock_graph.aget_state = AsyncMock(return_value=mock_state)
-            mock_get_graph.return_value = mock_graph
-            mock_span = MagicMock()
-            arguments = {"thread_id": "test-thread-123", "user_id": "alice"}
-            result = await server._handle_get_conversation(arguments, mock_span, "alice")
-            assert len(result) == 1
-            assert "Conversation history for thread test-thread-123" in result[0].text
-            assert "Total messages: 4" in result[0].text
-            assert "Hello, how are you?" in result[0].text
+        mock_graph.aget_state = AsyncMock(return_value=mock_state)
+
+        server = MCPAgentServer(openfga_client=mock_openfga, agent_graph=mock_graph)
+        server.auth = mock_auth
+
+        mock_span = MagicMock()
+        arguments = {"thread_id": "test-thread-123", "user_id": "alice"}
+        result = await server._handle_get_conversation(arguments, mock_span, "alice")
+        assert len(result) == 1
+        assert "Conversation history for thread test-thread-123" in result[0].text
+        assert "Total messages: 4" in result[0].text
+        assert "Hello, how are you?" in result[0].text
 
     @pytest.mark.asyncio
     async def test_conversation_retrieval_no_checkpointer(self, mock_auth, mock_openfga):
         """Test conversation retrieval when checkpointing is disabled."""
-        server = MCPAgentServer(openfga_client=mock_openfga)
+        # Create mock graph with checkpointer disabled
+        mock_graph = MagicMock()
+        mock_graph.checkpointer = None
+
+        server = MCPAgentServer(openfga_client=mock_openfga, agent_graph=mock_graph)
         server.auth = mock_auth
-        with patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph") as mock_get_graph:
-            mock_graph = MagicMock()
-            mock_graph.checkpointer = None
-            mock_get_graph.return_value = mock_graph
-            mock_span = MagicMock()
-            arguments = {"thread_id": "test-thread-123", "user_id": "alice"}
-            result = await server._handle_get_conversation(arguments, mock_span, "alice")
-            assert len(result) == 1
-            assert "Checkpointing is disabled" in result[0].text
-            assert "ENABLE_CHECKPOINTING=true" in result[0].text
+
+        mock_span = MagicMock()
+        arguments = {"thread_id": "test-thread-123", "user_id": "alice"}
+        result = await server._handle_get_conversation(arguments, mock_span, "alice")
+        assert len(result) == 1
+        assert "Checkpointing is disabled" in result[0].text
+        assert "ENABLE_CHECKPOINTING=true" in result[0].text
 
     @pytest.mark.asyncio
     async def test_conversation_retrieval_not_found(self, mock_auth, mock_openfga):
         """Test conversation retrieval when thread doesn't exist."""
-        server = MCPAgentServer(openfga_client=mock_openfga)
-        server.auth = mock_auth
+        # Create mock state with no values (thread doesn't exist)
         mock_state = MagicMock()
         mock_state.values = None
-        with patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph") as mock_get_graph:
-            mock_graph = MagicMock()
-            mock_graph.checkpointer = MagicMock()
-            mock_graph.aget_state = AsyncMock(return_value=mock_state)
-            mock_get_graph.return_value = mock_graph
-            mock_span = MagicMock()
-            arguments = {"thread_id": "nonexistent-thread", "user_id": "alice"}
-            result = await server._handle_get_conversation(arguments, mock_span, "alice")
-            assert len(result) == 1
-            assert "No conversation history found" in result[0].text
+
+        # Create mock graph with checkpointer enabled
+        mock_graph = MagicMock()
+        mock_graph.checkpointer = MagicMock()
+        mock_graph.aget_state = AsyncMock(return_value=mock_state)
+
+        server = MCPAgentServer(openfga_client=mock_openfga, agent_graph=mock_graph)
+        server.auth = mock_auth
+
+        mock_span = MagicMock()
+        arguments = {"thread_id": "nonexistent-thread", "user_id": "alice"}
+        result = await server._handle_get_conversation(arguments, mock_span, "alice")
+        assert len(result) == 1
+        assert "No conversation history found" in result[0].text
 
     @pytest.mark.asyncio
     async def test_conversation_retrieval_empty_messages(self, mock_auth, mock_openfga):
         """Test conversation retrieval when thread exists but has no messages."""
-        server = MCPAgentServer(openfga_client=mock_openfga)
-        server.auth = mock_auth
+        # Create mock state with empty messages list
         mock_state = MagicMock()
         mock_state.values = {"messages": [], "next_action": "end"}
-        with patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph") as mock_get_graph:
-            mock_graph = MagicMock()
-            mock_graph.checkpointer = MagicMock()
-            mock_graph.aget_state = AsyncMock(return_value=mock_state)
-            mock_get_graph.return_value = mock_graph
-            mock_span = MagicMock()
-            arguments = {"thread_id": "empty-thread", "user_id": "alice"}
-            result = await server._handle_get_conversation(arguments, mock_span, "alice")
-            assert len(result) == 1
-            assert "has no messages yet" in result[0].text
+
+        # Create mock graph with checkpointer enabled
+        mock_graph = MagicMock()
+        mock_graph.checkpointer = MagicMock()
+        mock_graph.aget_state = AsyncMock(return_value=mock_state)
+
+        server = MCPAgentServer(openfga_client=mock_openfga, agent_graph=mock_graph)
+        server.auth = mock_auth
+
+        mock_span = MagicMock()
+        arguments = {"thread_id": "empty-thread", "user_id": "alice"}
+        result = await server._handle_get_conversation(arguments, mock_span, "alice")
+        assert len(result) == 1
+        assert "has no messages yet" in result[0].text
 
     @pytest.mark.asyncio
     async def test_conversation_retrieval_authorization_failure(self, mock_auth, mock_openfga):
@@ -133,16 +141,17 @@ class TestConversationRetrieval:
     @pytest.mark.asyncio
     async def test_conversation_retrieval_error_handling(self, mock_auth, mock_openfga):
         """Test conversation retrieval error handling."""
-        server = MCPAgentServer(openfga_client=mock_openfga)
+        # Create mock graph that raises an error
+        mock_graph = MagicMock()
+        mock_graph.checkpointer = MagicMock()
+        mock_graph.aget_state = AsyncMock(side_effect=Exception("Database error"))
+
+        server = MCPAgentServer(openfga_client=mock_openfga, agent_graph=mock_graph)
         server.auth = mock_auth
-        with patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph") as mock_get_graph:
-            mock_graph = MagicMock()
-            mock_graph.checkpointer = MagicMock()
-            mock_graph.aget_state = AsyncMock(side_effect=Exception("Database error"))
-            mock_get_graph.return_value = mock_graph
-            mock_span = MagicMock()
-            arguments = {"thread_id": "test-thread-123", "user_id": "alice"}
-            result = await server._handle_get_conversation(arguments, mock_span, "alice")
-            assert len(result) == 1
-            assert "Error retrieving conversation" in result[0].text
-            assert "Database error" in result[0].text
+
+        mock_span = MagicMock()
+        arguments = {"thread_id": "test-thread-123", "user_id": "alice"}
+        result = await server._handle_get_conversation(arguments, mock_span, "alice")
+        assert len(result) == 1
+        assert "Error retrieving conversation" in result[0].text
+        assert "Database error" in result[0].text

@@ -40,9 +40,11 @@ export interface ContextPanelProps {
   tools: Tool[];
   activities: ActivityItem[];
   sessionCost?: SessionCost;
+  currentTraceId?: string | null;
   onRefreshTools?: () => void;
   onViewCostDetails?: () => void;
   onViewAllTraces?: () => void;
+  onViewTrace?: (traceId: string) => void;
 }
 
 /**
@@ -79,9 +81,11 @@ export function ContextPanel({
   tools,
   activities,
   sessionCost,
+  currentTraceId,
   onRefreshTools,
   onViewCostDetails,
   onViewAllTraces,
+  onViewTrace,
 }: ContextPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -216,14 +220,24 @@ export function ContextPanel({
                   ))}
                 </div>
               )}
-              {onViewAllTraces && (
-                <button
-                  onClick={onViewAllTraces}
-                  className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  View all traces →
-                </button>
-              )}
+              <div className="mt-2 flex flex-col gap-1">
+                {currentTraceId && onViewTrace && (
+                  <button
+                    onClick={() => onViewTrace(currentTraceId)}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline text-left"
+                  >
+                    View current trace →
+                  </button>
+                )}
+                {onViewAllTraces && (
+                  <button
+                    onClick={onViewAllTraces}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline text-left"
+                  >
+                    View all traces →
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

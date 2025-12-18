@@ -764,6 +764,51 @@ async def require_workflow_owner(
 # ==============================================================================
 
 
+async def _notify_workflow_shared(
+    workflow_id: str,
+    target_email: str,
+    permission: str,
+    sharer_username: str,
+    service: WorkflowServiceAdapter,
+) -> None:
+    """
+    Send real-time notification when a workflow is shared.
+
+    Notifies the target user via WebSocket if they are connected.
+    Gracefully handles errors to avoid failing the share operation.
+    """
+    import logging
+
+    from mcp_server_langgraph.api.v1.notification_websocket import (
+        get_notification_broadcaster,
+    )
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        # Get workflow name for the notification message
+        workflow = await service.get_workflow(workflow_id)
+        workflow_name = workflow.get("name", "a workflow") if workflow else "a workflow"
+
+        # Get broadcaster and send notification
+        broadcaster = get_notification_broadcaster()
+
+        # The target user is identified by email (which is used as user_id in shares)
+        # Use notify_user() which respects user's notification preferences
+        await broadcaster.notify_user(
+            user_id=target_email,
+            notification_type="info",
+            title="Workflow Shared With You",
+            message=f"{sharer_username} shared '{workflow_name}' with you ({permission} access).",
+            action={"label": "View Workflow", "url": f"/workflows/{workflow_id}"},
+        )
+
+        logger.info(f"Notification sent for workflow share: {workflow_id} -> {target_email}")
+    except Exception as e:
+        # Don't fail the share operation if notification fails
+        logger.warning(f"Failed to send workflow share notification: {e}")
+
+
 async def get_workflow_shares_authorized(
     workflow_id: str,
     current_user: dict[str, Any],
@@ -819,6 +864,15 @@ async def add_workflow_share_authorized(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Workflow {workflow_id} not found",
         )
+
+    # Send real-time notification to the target user
+    await _notify_workflow_shared(
+        workflow_id=workflow_id,
+        target_email=request.email,
+        permission=request.permission,
+        sharer_username=current_user.get("username", "Someone"),
+        service=service,
+    )
 
     return {"status": "shared", "email": request.email, "permission": request.permission}
 

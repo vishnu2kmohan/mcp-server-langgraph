@@ -11,6 +11,17 @@ import { createMemoryRouter, RouterProvider } from "react-router";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { api } from "./api";
+import uiReducer from "./store/slices/uiSlice";
+import personaReducer from "./store/slices/personaSlice";
+import sessionReducer from "./store/slices/sessionSlice";
+import projectReducer from "./store/slices/projectSlice";
+import workflowReducer from "./store/slices/workflowSlice";
+import artifactReducer from "./store/slices/artifactSlice";
+import mcpReducer from "./store/slices/mcpSlice";
+import authReducer from "./store/slices/authSlice";
+import notificationReducer from "./store/slices/notificationSlice";
+import observabilityReducer from "./store/slices/observabilitySlice";
+import workspaceReducer from "./store/slices/workspaceSlice";
 
 /**
  * Props for TestRouter component.
@@ -76,13 +87,25 @@ export function createTestRouter(
 }
 
 /**
- * Creates a test store with RTK Query API.
+ * Creates a test store with RTK Query API and all required reducers.
+ * Mirrors the main store configuration for comprehensive testing.
  */
 // eslint-disable-next-line react-refresh/only-export-components
 export function createTestStore() {
   return configureStore({
     reducer: {
       [api.reducerPath]: api.reducer,
+      ui: uiReducer,
+      persona: personaReducer,
+      session: sessionReducer,
+      project: projectReducer,
+      workflow: workflowReducer,
+      artifact: artifactReducer,
+      mcp: mcpReducer,
+      auth: authReducer,
+      notifications: notificationReducer,
+      observability: observabilityReducer,
+      workspace: workspaceReducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(api.middleware),

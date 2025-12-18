@@ -11,6 +11,7 @@ import { selectUser } from "../store/slices/authSlice";
 import { selectPersona, setPersona } from "../store/slices/personaSlice";
 import type { Persona } from "../store/slices/personaSlice";
 import { usePushNotifications } from "../hooks/usePushNotifications";
+import { NotificationPreferencesSettings } from "../components/Settings/NotificationPreferencesSettings";
 import {
   User,
   Key,
@@ -61,7 +62,7 @@ export function SettingsPage() {
   );
   const [email, setEmail] = useState(user?.email || "");
   const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
-  const [notifications, setNotifications] = useState({
+  const [_notifications, _setNotifications] = useState({
     sessionComplete: true,
     errors: true,
     updates: false,
@@ -392,45 +393,8 @@ export function SettingsPage() {
                   )}
                 </div>
 
-                {/* In-App Notification Settings */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Notification Preferences
-                  </h3>
-                  {Object.entries(notifications).map(([key, enabled]) => (
-                    <label
-                      key={key}
-                      className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
-                    >
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">
-                          {key === "sessionComplete" && "Session Complete"}
-                          {key === "errors" && "Error Alerts"}
-                          {key === "updates" && "Product Updates"}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {key === "sessionComplete" &&
-                            "Get notified when long-running sessions finish"}
-                          {key === "errors" &&
-                            "Receive alerts for errors and failures"}
-                          {key === "updates" &&
-                            "Stay informed about new features"}
-                        </p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={enabled}
-                        onChange={(e) =>
-                          setNotifications({
-                            ...notifications,
-                            [key]: e.target.checked,
-                          })
-                        }
-                        className="w-5 h-5 text-blue-600 rounded"
-                      />
-                    </label>
-                  ))}
-                </div>
+                {/* Real-Time Notification Preferences (API-backed) */}
+                <NotificationPreferencesSettings />
               </div>
             )}
 

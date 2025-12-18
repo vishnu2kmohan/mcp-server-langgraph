@@ -16,6 +16,7 @@ import type {
   SessionConfig,
   ChatMessage,
 } from "../../types/session";
+import { DEFAULT_SESSION_CONFIG } from "../../types/session";
 
 /**
  * Generate unique message ID
@@ -174,6 +175,36 @@ export const fetchMoreSessions = createAsyncThunk<
 });
 
 /**
+ * Transform API session response to ClientSession format.
+ * Converts snake_case to camelCase and applies default config.
+ */
+function transformApiSession(
+  apiSession: Record<string, unknown>,
+  providedConfig?: Partial<SessionConfig>,
+): ClientSession {
+  return {
+    id: apiSession.id as string,
+    name: (apiSession.name as string) || "Untitled",
+    config: {
+      ...DEFAULT_SESSION_CONFIG,
+      ...providedConfig,
+    },
+    messages: Array.isArray(apiSession.messages)
+      ? (apiSession.messages as ChatMessage[])
+      : [],
+    createdAt:
+      typeof apiSession.created_at === "string"
+        ? new Date(apiSession.created_at).getTime()
+        : Date.now(),
+    updatedAt:
+      typeof apiSession.updated_at === "string"
+        ? new Date(apiSession.updated_at).getTime()
+        : Date.now(),
+    organizationId: apiSession.organization_id as string | undefined,
+  };
+}
+
+/**
  * Create a new session
  */
 export const createSession = createAsyncThunk<
@@ -196,8 +227,8 @@ export const createSession = createAsyncThunk<
       throw new Error(errorData.detail || "Failed to create session");
     }
 
-    const session: ClientSession = await response.json();
-    return session;
+    const apiSession = await response.json();
+    return transformApiSession(apiSession, config);
   } catch (error) {
     return rejectWithValue(
       error instanceof Error ? error.message : "Failed to create session",
@@ -223,8 +254,8 @@ export const loadSession = createAsyncThunk<
       throw new Error(errorData.detail || "Failed to load session");
     }
 
-    const session: ClientSession = await response.json();
-    return session;
+    const apiSession = await response.json();
+    return transformApiSession(apiSession);
   } catch (error) {
     return rejectWithValue(
       error instanceof Error ? error.message : "Failed to load session",

@@ -23,7 +23,7 @@ from pydantic import AnyUrl, BaseModel, Field
 from mcp_server_langgraph.auth.factory import create_auth_middleware
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
-from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
+from mcp_server_langgraph.core.agent import AgentState, cleanup_checkpointer, create_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.core.dependencies import get_openfga_client
 from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
@@ -114,6 +114,7 @@ class MCPAgentServer:
         openfga_client: OpenFGAClient | None = None,
         auth: AuthMiddleware | None = None,
         settings: Settings | None = None,
+        agent_graph: Any | None = None,
     ) -> None:
         """
         Initialize MCP Agent Server with optional dependency injection.
@@ -128,6 +129,10 @@ class MCPAgentServer:
                      If provided, enables dynamic feature toggling (e.g., code execution).
                      If None, uses global settings. This allows tests to inject custom
                      configuration without module reloading.
+            agent_graph: Optional pre-created agent graph instance.
+                        If provided, uses this graph instead of creating one.
+                        This enables dependency injection for testing.
+                        If None, creates a new graph using create_agent_graph().
 
         Example:
             # Default creation (production):
@@ -141,6 +146,10 @@ class MCPAgentServer:
             test_settings = Settings(enable_code_execution=True)
             server = MCPAgentServer(settings=test_settings)
 
+            # Custom agent graph injection (testing):
+            mock_graph = create_mock_agent_graph()
+            server = MCPAgentServer(agent_graph=mock_graph)
+
         OpenAI Codex Finding (2025-11-16):
         ===================================
         Added `auth` parameter for constructor-based dependency injection.
@@ -152,6 +161,11 @@ class MCPAgentServer:
         Enables runtime configuration without module reloading. Fixes code execution
         tool visibility issues in integration tests where ENABLE_CODE_EXECUTION env
         var changes didn't take effect due to module-level settings caching.
+
+        Added `agent_graph` parameter (2025-12-18):
+        ============================================
+        Migrated from deprecated get_agent_graph() singleton to create_agent_graph() DI.
+        This eliminates deprecation warnings and enables proper instance-level lifecycle.
         """
         # Store settings for runtime configuration
         # NOTE: When settings=None, we must reference the module-level 'settings'
@@ -161,6 +175,12 @@ class MCPAgentServer:
         self.settings = settings if settings is not None else sys.modules[__name__].settings
 
         self.server = Server("langgraph-agent")
+
+        # Initialize agent graph (DI or create new)
+        if agent_graph is not None:
+            self.agent_graph = agent_graph
+        else:
+            self.agent_graph = create_agent_graph(settings=self.settings)
 
         # Initialize OpenFGA client
         self.openfga = openfga_client or self._create_openfga_client()
@@ -473,6 +493,19 @@ class MCPAgentServer:
             with tracer.start_as_current_span("mcp.list_resources"):
                 return [Resource(uri=AnyUrl("agent://config"), name="Agent Configuration", mimeType="application/json")]
 
+    def cleanup(self) -> None:
+        """
+        Cleanup server resources.
+
+        Releases checkpointer resources (Redis connections, etc.) held by the agent graph.
+        Call this when shutting down the server to prevent resource leaks.
+
+        Added 2025-12-18: Part of migration from get_agent_graph() singleton to DI pattern.
+        """
+        if hasattr(self.agent_graph, "checkpointer") and self.agent_graph.checkpointer is not None:
+            cleanup_checkpointer(self.agent_graph.checkpointer)
+            logger.debug("Agent graph checkpointer cleaned up")
+
     async def _handle_chat(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
         """
         Handle agent_chat tool invocation.
@@ -507,7 +540,7 @@ class MCPAgentServer:
             conversation_resource = f"conversation:{thread_id}"
 
             # Check if conversation exists by trying to get state from checkpointer
-            graph = get_agent_graph()  # type: ignore[func-returns-value]
+            graph = self.agent_graph
             conversation_exists = False
             if hasattr(graph, "checkpointer") and graph.checkpointer is not None:
                 try:
@@ -566,7 +599,7 @@ class MCPAgentServer:
             config = {"configurable": {"thread_id": thread_id}}
 
             try:
-                result = await get_agent_graph().ainvoke(initial_state, config)  # type: ignore[func-returns-value]
+                result = await self.agent_graph.ainvoke(initial_state, config)
 
                 # Extract response
                 response_message = result["messages"][-1]
@@ -635,7 +668,7 @@ class MCPAgentServer:
             # Retrieve conversation state from checkpointer
             try:
                 # Get the checkpointer from agent_graph
-                graph = get_agent_graph()  # type: ignore[func-returns-value]
+                graph = self.agent_graph
                 if not hasattr(graph, "checkpointer") or graph.checkpointer is None:
                     logger.warning("Checkpointing not enabled, cannot retrieve conversation history")
                     return [

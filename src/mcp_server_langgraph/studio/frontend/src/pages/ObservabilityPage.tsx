@@ -7,7 +7,8 @@
  * Uses RTK Query for data fetching with automatic caching and updates.
  */
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router";
 import {
   Activity,
   FileText,
@@ -15,31 +16,94 @@ import {
   RefreshCw,
   Clock,
   Server,
+  AlertTriangle,
+  Bell,
+  ExternalLink,
 } from "lucide-react";
 import {
   useListTracesQuery,
   useListLogsQuery,
   useGetMetricsQuery,
   useGetTraceQuery,
+  useListAlertsQuery,
   type TraceSpan as ApiTraceSpan,
 } from "../api";
 import { SkeletonList, ErrorState } from "../components/UI";
 import { TraceViewer } from "../components/Observability/TraceViewer";
 import type { Trace, Span, SpanEvent } from "../components/Observability/types";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import {
+  setStatusFilter as setStatusFilterAction,
+  setSessionIdFilter as setSessionIdFilterAction,
+  setUserIdFilter as setUserIdFilterAction,
+  setWorkflowIdFilter as setWorkflowIdFilterAction,
+  setProjectIdFilter as setProjectIdFilterAction,
+  setTimeRange as setTimeRangeAction,
+  setActiveTab as setActiveTabAction,
+  setSelectedTraceId as setSelectedTraceIdAction,
+  selectStatusFilter,
+  selectSessionIdFilter,
+  selectUserIdFilter,
+  selectWorkflowIdFilter,
+  selectProjectIdFilter,
+  selectTimeRange,
+  selectActiveTab,
+  selectSelectedTraceId,
+} from "../store/slices/observabilitySlice";
 
-type ObservabilityTab = "traces" | "logs" | "metrics";
+type ObservabilityTab = "traces" | "logs" | "metrics" | "alerts";
 
 export function ObservabilityPage() {
-  const [activeTab, setActiveTab] = useState<ObservabilityTab>("traces");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dispatch = useAppDispatch();
 
-  // Traces filter state
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [sessionIdFilter, setSessionIdFilter] = useState<string>("");
-  const [timeRange, setTimeRange] = useState<string>("1h");
+  // Redux state for persistent filters
+  const activeTab = useAppSelector(selectActiveTab);
+  const statusFilter = useAppSelector(selectStatusFilter);
+  const sessionIdFilter = useAppSelector(selectSessionIdFilter);
+  const userIdFilter = useAppSelector(selectUserIdFilter);
+  const workflowIdFilter = useAppSelector(selectWorkflowIdFilter);
+  const projectIdFilter = useAppSelector(selectProjectIdFilter);
+  const timeRange = useAppSelector(selectTimeRange);
+  const selectedTraceId = useAppSelector(selectSelectedTraceId);
+
+  // Pagination cursor (local state - not persisted)
   const [cursor, setCursor] = useState<string | undefined>(undefined);
 
-  // Selected trace for detail view
-  const [selectedTraceId, setSelectedTraceId] = useState<string | null>(null);
+  // Dispatch helpers (wrap actions for cleaner code)
+  const setActiveTab = (tab: ObservabilityTab) =>
+    dispatch(setActiveTabAction(tab));
+  const setStatusFilter = (value: string) =>
+    dispatch(setStatusFilterAction(value));
+  const setSessionIdFilter = (value: string) =>
+    dispatch(setSessionIdFilterAction(value));
+  const setUserIdFilter = (value: string) =>
+    dispatch(setUserIdFilterAction(value));
+  const setWorkflowIdFilter = (value: string) =>
+    dispatch(setWorkflowIdFilterAction(value));
+  const setProjectIdFilter = (value: string) =>
+    dispatch(setProjectIdFilterAction(value));
+  const setTimeRange = (value: string) => dispatch(setTimeRangeAction(value));
+  const setSelectedTraceId = useCallback(
+    (value: string | null) => dispatch(setSelectedTraceIdAction(value)),
+    [dispatch],
+  );
+
+  // Auto-select trace from URL param (for "View Trace" links from ChatPage)
+  useEffect(() => {
+    const traceIdFromUrl = searchParams.get("trace_id");
+    if (traceIdFromUrl && !selectedTraceId) {
+      setSelectedTraceId(traceIdFromUrl);
+      // Clear the URL param to avoid re-selecting on future renders
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("trace_id");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, selectedTraceId, setSearchParams, setSelectedTraceId]);
+
+  // Alerts filter state (local - not persisted)
+  const [alertStateFilter, setAlertStateFilter] = useState<string>("");
+  const [alertSeverityFilter, setAlertSeverityFilter] = useState<string>("");
 
   // Calculate time range for query
   const getTimeRange = () => {
@@ -69,6 +133,9 @@ export function ObservabilityPage() {
     limit: 50,
     status: statusFilter || undefined,
     session_id: sessionIdFilter || undefined,
+    user_id: userIdFilter || undefined,
+    workflow_id: workflowIdFilter || undefined,
+    project_id: projectIdFilter || undefined,
     start_time: getTimeRange(),
     cursor,
   });
@@ -86,6 +153,24 @@ export function ObservabilityPage() {
     error: metricsError,
     refetch: refetchMetrics,
   } = useGetMetricsQuery(undefined, { skip: activeTab !== "metrics" });
+
+  const {
+    data: alertsData,
+    isLoading: isAlertsLoading,
+    error: alertsError,
+    refetch: refetchAlerts,
+  } = useListAlertsQuery(
+    {
+      state:
+        (alertStateFilter as "pending" | "firing" | "resolved" | "silenced") ||
+        undefined,
+      severity:
+        (alertSeverityFilter as "info" | "warning" | "error" | "critical") ||
+        undefined,
+      limit: 50,
+    },
+    { skip: activeTab !== "alerts" },
+  );
 
   // Fetch selected trace details
   const { data: selectedTraceData, isLoading: isTraceDetailLoading } =
@@ -140,10 +225,14 @@ export function ObservabilityPage() {
   // Metrics data
   const metrics = metricsData ?? null;
 
+  // Alerts data
+  const alerts = alertsData?.items ?? [];
+
   const tabs = [
     { id: "traces" as const, label: "Traces", icon: Activity },
     { id: "logs" as const, label: "Logs", icon: FileText },
     { id: "metrics" as const, label: "Metrics", icon: BarChart3 },
+    { id: "alerts" as const, label: "Alerts", icon: Bell },
   ];
 
   const getLogLevelColor = (level: "info" | "warn" | "error" | "debug") => {
@@ -170,23 +259,58 @@ export function ObservabilityPage() {
     }
   };
 
+  const getAlertSeverityColor = (
+    severity: "info" | "warning" | "error" | "critical",
+  ) => {
+    switch (severity) {
+      case "critical":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      case "error":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
+      case "warning":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+      case "info":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
+    }
+  };
+
+  const getAlertStateColor = (
+    state: "pending" | "firing" | "resolved" | "silenced",
+  ) => {
+    switch (state) {
+      case "firing":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+      case "resolved":
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      case "silenced":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+    }
+  };
+
   const isLoading =
     activeTab === "traces"
       ? isTracesLoading
       : activeTab === "logs"
         ? isLogsLoading
-        : isMetricsLoading;
+        : activeTab === "alerts"
+          ? isAlertsLoading
+          : isMetricsLoading;
 
   const error =
     activeTab === "traces"
       ? tracesError
       : activeTab === "logs"
         ? logsError
-        : metricsError;
+        : activeTab === "alerts"
+          ? alertsError
+          : metricsError;
 
   const handleRefresh = () => {
     if (activeTab === "traces") refetchTraces();
     else if (activeTab === "logs") refetchLogs();
+    else if (activeTab === "alerts") refetchAlerts();
     else refetchMetrics();
   };
 
@@ -285,14 +409,41 @@ export function ObservabilityPage() {
               </button>
             </div>
 
-            {/* Session ID filter */}
-            <input
-              type="text"
-              value={sessionIdFilter}
-              onChange={(e) => setSessionIdFilter(e.target.value)}
-              placeholder="Filter by session ID..."
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+            {/* Entity ID filters */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={sessionIdFilter}
+                onChange={(e) => setSessionIdFilter(e.target.value)}
+                placeholder="Session ID"
+                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                aria-label="Filter by session ID"
+              />
+              <input
+                type="text"
+                value={userIdFilter}
+                onChange={(e) => setUserIdFilter(e.target.value)}
+                placeholder="User ID"
+                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                aria-label="Filter by user ID"
+              />
+              <input
+                type="text"
+                value={workflowIdFilter}
+                onChange={(e) => setWorkflowIdFilter(e.target.value)}
+                placeholder="Workflow ID"
+                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                aria-label="Filter by workflow ID"
+              />
+              <input
+                type="text"
+                value={projectIdFilter}
+                onChange={(e) => setProjectIdFilter(e.target.value)}
+                placeholder="Project ID"
+                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                aria-label="Filter by project ID"
+              />
+            </div>
 
             {/* Time range filter */}
             <select
@@ -529,6 +680,194 @@ export function ObservabilityPage() {
             {activeTab === "metrics" && !metrics && !isMetricsLoading && (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                 No metrics data available
+              </div>
+            )}
+
+            {/* Alerts Tab */}
+            {activeTab === "alerts" && (
+              <div className="space-y-4">
+                {/* Alerts Filters */}
+                <div className="flex items-center gap-4 flex-wrap p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  {/* State filter */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      State:
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setAlertStateFilter("")}
+                        className={`px-2 py-1 text-xs rounded ${
+                          alertStateFilter === ""
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                        }`}
+                      >
+                        All
+                      </button>
+                      <button
+                        onClick={() => setAlertStateFilter("firing")}
+                        className={`px-2 py-1 text-xs rounded ${
+                          alertStateFilter === "firing"
+                            ? "bg-red-600 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                        }`}
+                      >
+                        Firing
+                      </button>
+                      <button
+                        onClick={() => setAlertStateFilter("pending")}
+                        className={`px-2 py-1 text-xs rounded ${
+                          alertStateFilter === "pending"
+                            ? "bg-yellow-600 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                        }`}
+                      >
+                        Pending
+                      </button>
+                      <button
+                        onClick={() => setAlertStateFilter("resolved")}
+                        className={`px-2 py-1 text-xs rounded ${
+                          alertStateFilter === "resolved"
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                        }`}
+                      >
+                        Resolved
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Severity filter */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Severity:
+                    </span>
+                    <select
+                      value={alertSeverityFilter}
+                      onChange={(e) => setAlertSeverityFilter(e.target.value)}
+                      className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">All Severities</option>
+                      <option value="critical">Critical</option>
+                      <option value="error">Error</option>
+                      <option value="warning">Warning</option>
+                      <option value="info">Info</option>
+                    </select>
+                  </div>
+
+                  {/* Alert count */}
+                  {alertsData && (
+                    <span className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
+                      {alerts.length} alerts
+                    </span>
+                  )}
+                </div>
+
+                {/* Alerts List */}
+                {alerts.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <AlertTriangle
+                      size={48}
+                      className="mx-auto mb-4 opacity-50"
+                    />
+                    <p>No alerts found</p>
+                    <p className="text-sm mt-2">
+                      Active alerts from Grafana Alerting will appear here
+                    </p>
+                  </div>
+                ) : (
+                  alerts.map((alert) => (
+                    <div
+                      key={alert.alert_id}
+                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle
+                            size={20}
+                            className={
+                              alert.severity === "critical"
+                                ? "text-red-500"
+                                : alert.severity === "error"
+                                  ? "text-orange-500"
+                                  : alert.severity === "warning"
+                                    ? "text-yellow-500"
+                                    : "text-blue-500"
+                            }
+                          />
+                          <div>
+                            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                              {alert.name}
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {alert.message ||
+                                alert.annotations?.summary ||
+                                "No description"}
+                            </p>
+                            <div className="flex items-center gap-3 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                              {alert.started_at && (
+                                <span className="flex items-center gap-1">
+                                  <Clock size={14} />
+                                  Started{" "}
+                                  {new Date(alert.started_at).toLocaleString()}
+                                </span>
+                              )}
+                              {alert.labels?.service && (
+                                <span className="flex items-center gap-1">
+                                  <Server size={14} />
+                                  {alert.labels.service}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${getAlertSeverityColor(alert.severity)}`}
+                          >
+                            {alert.severity}
+                          </span>
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${getAlertStateColor(alert.state)}`}
+                          >
+                            {alert.state}
+                          </span>
+                          {alert.generator_url && (
+                            <a
+                              href={alert.generator_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                              title="View in Grafana"
+                            >
+                              <ExternalLink size={16} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Labels */}
+                      {Object.keys(alert.labels).length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {Object.entries(alert.labels)
+                            .filter(
+                              ([key]) =>
+                                !["alertname", "severity"].includes(key),
+                            )
+                            .slice(0, 5)
+                            .map(([key, value]) => (
+                              <span
+                                key={key}
+                                className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded"
+                              >
+                                {key}={value}
+                              </span>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </>

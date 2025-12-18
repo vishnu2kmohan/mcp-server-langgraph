@@ -26,6 +26,24 @@ vi.stubGlobal(
   })),
 );
 
+// Use shared react-resizable-panels mock to avoid layout calculation errors
+// See: src/mocks/components/react-resizable-panels.ts
+vi.mock("react-resizable-panels", async () => {
+  const { mockReactResizablePanels } =
+    await import("../../mocks/components/react-resizable-panels");
+  return mockReactResizablePanels;
+});
+
+// Mock the API module to control useGetHealthQuery responses (used by StatusBar)
+const mockUseGetHealthQuery = vi.fn();
+vi.mock("../../api", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../../api")>();
+  return {
+    ...original,
+    useGetHealthQuery: (...args: unknown[]) => mockUseGetHealthQuery(...args),
+  };
+});
+
 // Import after mocks
 import { AppShell } from "./AppShell";
 import workspaceReducer, {
@@ -37,6 +55,11 @@ import notificationReducer from "../../store/slices/notificationSlice";
 import sessionReducer, {
   initialSessionState,
 } from "../../store/slices/sessionSlice";
+import authReducer from "../../store/slices/authSlice";
+import uiReducer from "../../store/slices/uiSlice";
+import projectReducer from "../../store/slices/projectSlice";
+import workflowReducer from "../../store/slices/workflowSlice";
+import { api } from "../../api";
 
 // Default workspace state for tests
 const defaultWorkspaceState: WorkspaceState = {
@@ -78,11 +101,16 @@ const defaultMCPState: MCPSliceState = {
 function createTestStore(workspaceOverrides: Partial<WorkspaceState> = {}) {
   return configureStore({
     reducer: {
+      [api.reducerPath]: api.reducer,
       workspace: workspaceReducer,
       mcp: mcpReducer,
       persona: personaReducer,
       notifications: notificationReducer,
       session: sessionReducer,
+      auth: authReducer,
+      ui: uiReducer,
+      project: projectReducer,
+      workflow: workflowReducer,
     },
     preloadedState: {
       workspace: { ...defaultWorkspaceState, ...workspaceOverrides },
@@ -97,6 +125,8 @@ function createTestStore(workspaceOverrides: Partial<WorkspaceState> = {}) {
       notifications: { notifications: [] },
       session: initialSessionState,
     },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(api.middleware),
   });
 }
 
@@ -124,6 +154,12 @@ describe("AppShell", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    // Mock health query for StatusBar (returns healthy by default)
+    mockUseGetHealthQuery.mockReturnValue({
+      data: { status: "healthy" },
+      isLoading: false,
+      isError: false,
+    });
   });
 
   describe("basic rendering", () => {

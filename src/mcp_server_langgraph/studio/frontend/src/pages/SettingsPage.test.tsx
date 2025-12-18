@@ -37,6 +37,33 @@ vi.mock("../hooks/usePushNotifications", () => ({
   usePushNotifications: () => mockUsePushNotifications(),
 }));
 
+// Mock API hooks used by child components (NotificationPreferencesSettings)
+vi.mock("../api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../api")>();
+  return {
+    ...actual,
+    useGetNotificationPreferencesQuery: () => ({
+      data: {
+        info_enabled: true,
+        success_enabled: true,
+        warning_enabled: true,
+        error_enabled: true,
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    }),
+    useUpdateNotificationPreferencesMutation: () => [
+      vi.fn(() => ({ unwrap: () => Promise.resolve({ success: true }) })),
+      { isLoading: false },
+    ],
+    useResetNotificationPreferencesMutation: () => [
+      vi.fn(() => ({ unwrap: () => Promise.resolve({ success: true }) })),
+      { isLoading: false },
+    ],
+  };
+});
+
 // Create test store
 const createTestStore = (
   persona: Persona = "user",
@@ -308,34 +335,29 @@ describe("SettingsPage", () => {
 
       fireEvent.click(screen.getByText("Notifications"));
 
-      expect(screen.getByText("Session Complete")).toBeInTheDocument();
-      expect(screen.getByText("Error Alerts")).toBeInTheDocument();
-      expect(screen.getByText("Product Updates")).toBeInTheDocument();
+      // New component has real-time notification types
+      expect(screen.getByText("Info Notifications")).toBeInTheDocument();
+      expect(screen.getByText("Success Notifications")).toBeInTheDocument();
+      expect(screen.getByText("Warning Notifications")).toBeInTheDocument();
+      expect(screen.getByText("Error Notifications")).toBeInTheDocument();
     });
 
-    it("should have checkboxes for notification settings", () => {
+    it("should have toggle switches for notification settings", () => {
       renderWithStore();
 
       fireEvent.click(screen.getByText("Notifications"));
 
-      const checkboxes = screen.getAllByRole("checkbox");
-      expect(checkboxes.length).toBe(3);
+      // New component has 4 notification type toggles with role="switch"
+      const switches = screen.getAllByRole("switch");
+      expect(switches.length).toBe(4);
     });
 
-    it("should toggle notification when checkbox clicked", () => {
+    it("should show reset to defaults button", () => {
       renderWithStore();
 
       fireEvent.click(screen.getByText("Notifications"));
 
-      const checkboxes = screen.getAllByRole("checkbox");
-      const updatesCheckbox = checkboxes[2] as HTMLInputElement;
-
-      // Initially updates is false
-      expect(updatesCheckbox.checked).toBe(false);
-
-      fireEvent.click(updatesCheckbox);
-
-      expect(updatesCheckbox.checked).toBe(true);
+      expect(screen.getByText("Reset to Defaults")).toBeInTheDocument();
     });
   });
 

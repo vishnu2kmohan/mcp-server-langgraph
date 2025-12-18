@@ -19,6 +19,7 @@ from mcp_server_langgraph.storage.models import MCPConnection
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="test_connection_response_security")
 class TestConnectionResponseSecurity:
     """Tests for secure ConnectionResponse model."""
 
@@ -123,6 +124,7 @@ class TestConnectionResponseSecurity:
             assert response.status == status_value
 
 
+@pytest.mark.xdist_group(name="test_mcp_connection_to_response_conversion")
 class TestMCPConnectionToResponseConversion:
     """Tests for secure conversion from MCPConnection to ConnectionResponse."""
 
@@ -243,6 +245,7 @@ class TestMCPConnectionToResponseConversion:
         assert response.prompt_count == 2
 
 
+@pytest.mark.xdist_group(name="test_connection_endpoint_return_types")
 class TestConnectionEndpointReturnTypes:
     """Tests for endpoint return type annotations (must return ConnectionResponse)."""
 
@@ -277,6 +280,7 @@ class TestConnectionEndpointReturnTypes:
         )
 
 
+@pytest.mark.xdist_group(name="test_connection_endpoint_security")
 class TestConnectionEndpointSecurity:
     """Tests for endpoint-level security (integration-style unit tests)."""
 

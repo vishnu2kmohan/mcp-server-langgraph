@@ -31,8 +31,12 @@ def _mock_settings():
     return mock
 
 
-def _create_server_with_mocks():
-    """Create an MCPAgentStreamableServer with mocked dependencies."""
+def _create_server_with_mocks(agent_graph=None):
+    """Create an MCPAgentStreamableServer with mocked dependencies.
+
+    Args:
+        agent_graph: Optional mock agent graph to inject. If None, creates a default mock.
+    """
     with patch("mcp_server_langgraph.mcp.server_streamable.settings") as mock_settings:
         mock_settings.jwt_secret_key = "test-secret"
         mock_settings.environment = "development"
@@ -54,10 +58,19 @@ def _create_server_with_mocks():
             mock_auth.authorize = AsyncMock(return_value=True)
             mock_auth_factory.return_value = mock_auth
 
-            from mcp_server_langgraph.mcp.server_streamable import MCPAgentStreamableServer
+            # Patch create_agent_graph if no agent_graph provided
+            with patch("mcp_server_langgraph.mcp.server_streamable.create_agent_graph") as mock_create:
+                if agent_graph is None:
+                    default_graph = MagicMock()
+                    default_graph.checkpointer = None
+                    mock_create.return_value = default_graph
+                else:
+                    mock_create.return_value = agent_graph
 
-            server = MCPAgentStreamableServer()
-            return server, mock_auth
+                from mcp_server_langgraph.mcp.server_streamable import MCPAgentStreamableServer
+
+                server = MCPAgentStreamableServer()
+                return server, mock_auth
 
 
 @pytest.mark.xdist_group(name="server_streamable_handlers")
@@ -102,7 +115,7 @@ class TestHandleChatMethod:
         mock_span.set_attribute = MagicMock()
         mock_span.record_exception = MagicMock()
 
-        # Mock the agent graph
+        # Mock the agent graph - inject directly into server
         mock_graph = MagicMock()
         mock_graph.checkpointer = MagicMock()
         # Simulate no existing conversation
@@ -111,26 +124,26 @@ class TestHandleChatMethod:
         mock_response = MagicMock()
         mock_response.content = "Hello, how can I help you?"
         mock_graph.ainvoke = AsyncMock(return_value={"messages": [mock_response]})
+        server.agent_graph = mock_graph  # DI pattern: inject directly
 
-        with patch("mcp_server_langgraph.mcp.server_streamable.get_agent_graph", return_value=mock_graph):
-            with patch("mcp_server_langgraph.mcp.server_streamable.tracer") as mock_tracer:
-                mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
-                mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
+        with patch("mcp_server_langgraph.mcp.server_streamable.tracer") as mock_tracer:
+            mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
+            mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
 
-                with patch(
-                    "mcp_server_langgraph.mcp.server_streamable.format_response", return_value="Hello, how can I help you?"
-                ):
-                    with patch("mcp_server_langgraph.mcp.server_streamable.metrics"):
-                        result = await server._handle_chat(
-                            arguments={
-                                "message": "Hello",
-                                "thread_id": "new-conv-123",
-                                "token": "test-token",
-                                "user_id": "alice",
-                            },
-                            span=mock_span,
-                            user_id="alice",
-                        )
+            with patch(
+                "mcp_server_langgraph.mcp.server_streamable.format_response", return_value="Hello, how can I help you?"
+            ):
+                with patch("mcp_server_langgraph.mcp.server_streamable.metrics"):
+                    result = await server._handle_chat(
+                        arguments={
+                            "message": "Hello",
+                            "thread_id": "new-conv-123",
+                            "token": "test-token",
+                            "user_id": "alice",
+                        },
+                        span=mock_span,
+                        user_id="alice",
+                    )
 
         # Should return TextContent with response
         assert len(result) == 1
@@ -151,7 +164,7 @@ class TestHandleChatMethod:
         mock_span.set_attribute = MagicMock()
         mock_span.record_exception = MagicMock()
 
-        # Mock the agent graph
+        # Mock the agent graph - inject directly into server
         mock_graph = MagicMock()
         mock_graph.checkpointer = MagicMock()
         # Simulate existing conversation
@@ -162,26 +175,24 @@ class TestHandleChatMethod:
         mock_response = MagicMock()
         mock_response.content = "Continued conversation"
         mock_graph.ainvoke = AsyncMock(return_value={"messages": [mock_response]})
+        server.agent_graph = mock_graph  # DI pattern: inject directly
 
-        with patch("mcp_server_langgraph.mcp.server_streamable.get_agent_graph", return_value=mock_graph):
-            with patch("mcp_server_langgraph.mcp.server_streamable.tracer") as mock_tracer:
-                mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
-                mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
+        with patch("mcp_server_langgraph.mcp.server_streamable.tracer") as mock_tracer:
+            mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
+            mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
 
-                with patch(
-                    "mcp_server_langgraph.mcp.server_streamable.format_response", return_value="Continued conversation"
-                ):
-                    with patch("mcp_server_langgraph.mcp.server_streamable.metrics"):
-                        await server._handle_chat(
-                            arguments={
-                                "message": "Continue",
-                                "thread_id": "existing-conv",
-                                "token": "test-token",
-                                "user_id": "alice",
-                            },
-                            span=mock_span,
-                            user_id="alice",
-                        )
+            with patch("mcp_server_langgraph.mcp.server_streamable.format_response", return_value="Continued conversation"):
+                with patch("mcp_server_langgraph.mcp.server_streamable.metrics"):
+                    await server._handle_chat(
+                        arguments={
+                            "message": "Continue",
+                            "thread_id": "existing-conv",
+                            "token": "test-token",
+                            "user_id": "alice",
+                        },
+                        span=mock_span,
+                        user_id="alice",
+                    )
 
         # Should check authorization for existing conversations
         mock_auth.authorize.assert_called_once()
@@ -203,30 +214,30 @@ class TestHandleChatMethod:
         mock_span.set_attribute = MagicMock()
         mock_span.record_exception = MagicMock()
 
-        # Mock the agent graph
+        # Mock the agent graph - inject directly into server
         mock_graph = MagicMock()
         mock_graph.checkpointer = MagicMock()
         # Simulate existing conversation
         mock_state = MagicMock()
         mock_state.values = {"messages": []}
         mock_graph.aget_state = AsyncMock(return_value=mock_state)
+        server.agent_graph = mock_graph  # DI pattern: inject directly
 
-        with patch("mcp_server_langgraph.mcp.server_streamable.get_agent_graph", return_value=mock_graph):
-            with patch("mcp_server_langgraph.mcp.server_streamable.tracer") as mock_tracer:
-                mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
-                mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
+        with patch("mcp_server_langgraph.mcp.server_streamable.tracer") as mock_tracer:
+            mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
+            mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
 
-                with pytest.raises(PermissionError, match="Not authorized to edit conversation"):
-                    await server._handle_chat(
-                        arguments={
-                            "message": "Trying to edit",
-                            "thread_id": "protected-conv",
-                            "token": "test-token",
-                            "user_id": "bob",
-                        },
-                        span=mock_span,
-                        user_id="bob",
-                    )
+            with pytest.raises(PermissionError, match="Not authorized to edit conversation"):
+                await server._handle_chat(
+                    arguments={
+                        "message": "Trying to edit",
+                        "thread_id": "protected-conv",
+                        "token": "test-token",
+                        "user_id": "bob",
+                    },
+                    span=mock_span,
+                    user_id="bob",
+                )
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -239,23 +250,23 @@ class TestHandleChatMethod:
         mock_span.set_attribute = MagicMock()
         mock_span.record_exception = MagicMock()
 
-        # Mock the agent graph to raise error
+        # Mock the agent graph to raise error - inject directly into server
         mock_graph = MagicMock()
         mock_graph.checkpointer = None
         mock_graph.ainvoke = AsyncMock(side_effect=RuntimeError("Agent crashed"))
+        server.agent_graph = mock_graph  # DI pattern: inject directly
 
-        with patch("mcp_server_langgraph.mcp.server_streamable.get_agent_graph", return_value=mock_graph):
-            with patch("mcp_server_langgraph.mcp.server_streamable.tracer") as mock_tracer:
-                mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
-                mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
+        with patch("mcp_server_langgraph.mcp.server_streamable.tracer") as mock_tracer:
+            mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
+            mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
 
-                with patch("mcp_server_langgraph.mcp.server_streamable.metrics"):
-                    with pytest.raises(RuntimeError, match="Agent crashed"):
-                        await server._handle_chat(
-                            arguments={"message": "Hello", "token": "test-token", "user_id": "alice"},
-                            span=mock_span,
-                            user_id="alice",
-                        )
+            with patch("mcp_server_langgraph.mcp.server_streamable.metrics"):
+                with pytest.raises(RuntimeError, match="Agent crashed"):
+                    await server._handle_chat(
+                        arguments={"message": "Hello", "token": "test-token", "user_id": "alice"},
+                        span=mock_span,
+                        user_id="alice",
+                    )
 
         # Should record exception on span
         mock_span.record_exception.assert_called_once()
@@ -295,7 +306,7 @@ class TestHandleGetConversationMethod:
         mock_span = MagicMock()
         mock_span.set_attribute = MagicMock()
 
-        # Mock conversation history
+        # Mock conversation history - inject directly into server
         mock_graph = MagicMock()
         mock_graph.checkpointer = MagicMock()
         mock_state = MagicMock()
@@ -304,13 +315,13 @@ class TestHandleGetConversationMethod:
         mock_message.type = "human"
         mock_state.values = {"messages": [mock_message]}
         mock_graph.aget_state = AsyncMock(return_value=mock_state)
+        server.agent_graph = mock_graph  # DI pattern: inject directly
 
-        with patch("mcp_server_langgraph.mcp.server_streamable.get_agent_graph", return_value=mock_graph):
-            result = await server._handle_get_conversation(
-                arguments={"thread_id": "test-conv"},
-                span=mock_span,
-                user_id="alice",
-            )
+        result = await server._handle_get_conversation(
+            arguments={"thread_id": "test-conv"},
+            span=mock_span,
+            user_id="alice",
+        )
 
         assert len(result) >= 1
         assert isinstance(result[0], TextContent)
@@ -546,26 +557,26 @@ class TestOpenFGATupleSeeding:
         mock_span.set_attribute = MagicMock()
         mock_span.record_exception = MagicMock()
 
-        # Mock the agent graph for new conversation
+        # Mock the agent graph for new conversation - inject directly into server
         mock_graph = MagicMock()
         mock_graph.checkpointer = MagicMock()
         mock_graph.aget_state = AsyncMock(return_value=None)  # No existing conversation
         mock_response = MagicMock()
         mock_response.content = "New conversation started"
         mock_graph.ainvoke = AsyncMock(return_value={"messages": [mock_response]})
+        server.agent_graph = mock_graph  # DI pattern: inject directly
 
-        with patch("mcp_server_langgraph.mcp.server_streamable.get_agent_graph", return_value=mock_graph):
-            with patch("mcp_server_langgraph.mcp.server_streamable.tracer") as mock_tracer:
-                mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
-                mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
+        with patch("mcp_server_langgraph.mcp.server_streamable.tracer") as mock_tracer:
+            mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
+            mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
 
-                with patch("mcp_server_langgraph.mcp.server_streamable.format_response", return_value="Response"):
-                    with patch("mcp_server_langgraph.mcp.server_streamable.metrics"):
-                        await server._handle_chat(
-                            arguments={"message": "Hello", "thread_id": "new-conv", "token": "test", "user_id": "alice"},
-                            span=mock_span,
-                            user_id="alice",
-                        )
+            with patch("mcp_server_langgraph.mcp.server_streamable.format_response", return_value="Response"):
+                with patch("mcp_server_langgraph.mcp.server_streamable.metrics"):
+                    await server._handle_chat(
+                        arguments={"message": "Hello", "thread_id": "new-conv", "token": "test", "user_id": "alice"},
+                        span=mock_span,
+                        user_id="alice",
+                    )
 
         # Should have called write_tuples to seed ownership
         mock_openfga.write_tuples.assert_called_once()

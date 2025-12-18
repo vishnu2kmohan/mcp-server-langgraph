@@ -95,6 +95,10 @@ export interface SessionListParams
 export interface TraceListParams
   extends CursorPaginationParams, SortParams, SearchParams {
   session_id?: string;
+  user_id?: string;
+  workflow_id?: string;
+  project_id?: string;
+  organization_id?: string;
   status?: string;
   start_time?: string;
   end_time?: string;
@@ -467,6 +471,55 @@ export interface AlertEntry {
   severity: "info" | "warning" | "critical";
   message: string;
   created_at: string;
+}
+
+/**
+ * Observability alert from LGTM stack (Grafana Alerting)
+ */
+export interface ObservabilityAlert {
+  alert_id: string;
+  name: string;
+  severity: "info" | "warning" | "error" | "critical";
+  state: "pending" | "firing" | "resolved" | "silenced";
+  message: string;
+  labels: Record<string, string>;
+  annotations: Record<string, string>;
+  started_at: string | null;
+  ended_at: string | null;
+  generator_url: string | null;
+}
+
+/**
+ * Observability alerting rule (Grafana Unified Alerting)
+ */
+export interface ObservabilityAlertRule {
+  rule_id: string;
+  name: string;
+  expression: string;
+  severity: "info" | "warning" | "error" | "critical";
+  labels: Record<string, string>;
+  annotations: Record<string, string>;
+  evaluation_interval_seconds: number;
+  for_duration_seconds: number | null;
+  enabled: boolean;
+}
+
+/**
+ * Alert list query parameters
+ */
+export interface AlertListParams {
+  state?: "pending" | "firing" | "resolved" | "silenced";
+  severity?: "info" | "warning" | "error" | "critical";
+  service_name?: string;
+  limit?: number;
+}
+
+/**
+ * Alert rules list query parameters
+ */
+export interface AlertRulesListParams {
+  enabled_only?: boolean;
+  limit?: number;
 }
 
 /**
@@ -868,4 +921,29 @@ export interface WorkflowExecutionListResponse {
   items: WorkflowExecution[];
   total: number;
   next_cursor?: string | null;
+}
+
+// =============================================================================
+// Notification Preferences
+// =============================================================================
+
+/**
+ * User notification preferences
+ */
+export interface NotificationPreferences {
+  user_id: string;
+  info_enabled: boolean;
+  success_enabled: boolean;
+  warning_enabled: boolean;
+  error_enabled: boolean;
+}
+
+/**
+ * Request to update notification preferences (partial update)
+ */
+export interface UpdateNotificationPreferencesRequest {
+  info_enabled?: boolean;
+  success_enabled?: boolean;
+  warning_enabled?: boolean;
+  error_enabled?: boolean;
 }

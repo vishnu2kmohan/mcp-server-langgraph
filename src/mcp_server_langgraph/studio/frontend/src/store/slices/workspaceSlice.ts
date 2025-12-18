@@ -503,6 +503,21 @@ export const workspaceSlice = createSlice({
     },
 
     /**
+     * Update a tab's title
+     */
+    updateTabTitle: (
+      state,
+      action: PayloadAction<{ tabId: string; title: string }>,
+    ) => {
+      const { tabId, title } = action.payload;
+      const tab = state.tabs.find((t) => t.id === tabId);
+      if (tab) {
+        tab.title = title;
+        state.lastUpdated = Date.now();
+      }
+    },
+
+    /**
      * Split a tab into a new pane
      * Creates a horizontal or vertical split with the dragged tab in a new pane
      * Supports nested splits by finding the tab in the tree and splitting its container
@@ -821,6 +836,7 @@ export const {
   removeTabsByEntityId,
   setActiveTabId,
   reorderTabs,
+  updateTabTitle,
   splitTab,
   updateSplitSizes,
   moveTabToGroup,

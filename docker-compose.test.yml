@@ -1071,10 +1071,17 @@ services:
       - CHECKPOINT_REDIS_URL=redis://redis-test:6379/1
       - QDRANT_URL=http://qdrant-test:6333
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
+      # LGTM Stack configuration (Loki, Grafana, Tempo, Mimir)
+      # Backend selection for observability query clients (concrete implementations, not stubs)
+      - OBSERVABILITY_TRACING_BACKEND=tempo
+      - OBSERVABILITY_LOGGING_BACKEND=loki
+      - OBSERVABILITY_METRICS_BACKEND=prometheus
+      - OBSERVABILITY_ALERTING_BACKEND=grafana
       # LGTM Stack URLs (must reference container names for Docker networking)
       - TEMPO_URL=http://tempo-test:3200
       - LOKI_URL=http://loki-test:3100
       - MIMIR_URL=http://mimir-test:9009
+      - GRAFANA_URL=http://grafana-test:3000
       # GCP credentials for Vertex AI (mounted from host for local development)
       - GOOGLE_APPLICATION_CREDENTIALS=/app/.config/gcloud/application_default_credentials.json
     volumes:

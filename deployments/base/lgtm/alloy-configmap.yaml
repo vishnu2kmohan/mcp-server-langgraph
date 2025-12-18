@@ -56,8 +56,84 @@ data:
     otelcol.processor.batch "default" {
       output {
         metrics = [otelcol.exporter.prometheus.mimir.input]
-        logs    = [otelcol.exporter.loki.default.input]
+        logs    = [otelcol.processor.attributes.observability_labels.input]
         traces  = [otelcol.exporter.otlp.tempo.input]
+      }
+    }
+
+    // =============================================================================
+    // OBSERVABILITY LABEL EXTRACTION
+    // =============================================================================
+    // Extract bounded labels from OTLP logs for Loki indexing
+    // These labels enable efficient querying by entity filters
+
+    otelcol.processor.attributes "observability_labels" {
+      // Extract user_id as Loki label (bounded by user count)
+      action {
+        key    = "loki.attribute.labels"
+        value  = "user_id"
+        action = "insert"
+      }
+
+      // Extract session_id as Loki label (bounded by session TTL)
+      action {
+        key    = "loki.attribute.labels"
+        value  = "session_id"
+        action = "insert"
+      }
+
+      // Extract workflow_name as Loki label (bounded by workflow types)
+      // Note: workflow_id is NOT indexed to avoid cardinality explosion
+      action {
+        key    = "loki.attribute.labels"
+        value  = "workflow_name"
+        action = "insert"
+      }
+
+      // Extract project_id as Loki label (bounded by project count)
+      action {
+        key    = "loki.attribute.labels"
+        value  = "project_id"
+        action = "insert"
+      }
+
+      // Extract organization_id as Loki label (bounded by org count)
+      action {
+        key    = "loki.attribute.labels"
+        value  = "organization_id"
+        action = "insert"
+      }
+
+      // Extract trace_id for trace correlation
+      action {
+        key    = "loki.attribute.labels"
+        value  = "trace_id"
+        action = "insert"
+      }
+
+      // Extract model_family for LLM metrics (bounded by get_model_family)
+      action {
+        key    = "loki.attribute.labels"
+        value  = "model_family"
+        action = "insert"
+      }
+
+      // Extract operation type (bounded by BOUNDED_OPERATIONS)
+      action {
+        key    = "loki.attribute.labels"
+        value  = "operation"
+        action = "insert"
+      }
+
+      // Extract status (bounded by BOUNDED_STATUSES)
+      action {
+        key    = "loki.attribute.labels"
+        value  = "status"
+        action = "insert"
+      }
+
+      output {
+        logs = [otelcol.exporter.loki.default.input]
       }
     }
 

@@ -203,7 +203,6 @@ class AsyncMockUsageChecker(ast.NodeVisitor):
     # Whitelist of known synchronous functions that match async patterns
     SYNC_FUNCTION_WHITELIST = [
         "_get_sandbox",
-        "get_agent_graph",
         "create_auth_middleware",
         "create_summarization_model",
         "get_admin_token",

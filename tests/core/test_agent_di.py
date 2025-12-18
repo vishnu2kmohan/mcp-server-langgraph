@@ -112,33 +112,6 @@ class TestAgentGraphFactory:
         assert hasattr(graph, "invoke")
 
 
-@pytest.mark.xdist_group(name="testbackwardcompatibility")
-class TestBackwardCompatibility:
-    """Test that old singleton pattern still works during migration"""
-
-    def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
-        gc.collect()
-
-    def test_get_agent_graph_still_works(self):
-        """Test that old get_agent_graph() function still works"""
-        from mcp_server_langgraph.core.agent import get_agent_graph
-
-        agent = get_agent_graph()
-
-        assert agent is not None
-
-    def test_get_agent_graph_returns_singleton(self):
-        """Test that old function still returns singleton"""
-        from mcp_server_langgraph.core.agent import get_agent_graph
-
-        agent1 = get_agent_graph()
-        agent2 = get_agent_graph()
-
-        # Old function should still return same instance for backward compat
-        assert agent1 is agent2
-
-
 @pytest.mark.xdist_group(name="testagentstatemanagement")
 class TestAgentStateManagement:
     """Test that agent state works with container pattern"""

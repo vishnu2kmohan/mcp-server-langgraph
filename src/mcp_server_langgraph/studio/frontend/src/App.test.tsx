@@ -32,62 +32,93 @@ vi.mock("sonner", () => ({
   ),
 }));
 
+// Use shared react-resizable-panels mock to avoid layout calculation errors
+// This is needed because App renders AppShell which uses react-resizable-panels
+// See: src/mocks/components/react-resizable-panels.ts
+vi.mock("react-resizable-panels", async () => {
+  const { mockReactResizablePanels } =
+    await import("./mocks/components/react-resizable-panels");
+  return mockReactResizablePanels;
+});
+
 // Mock RTK Query hooks (used by App and Sidebar)
 const mockUseGetCurrentUserQuery = vi.fn();
 
-vi.mock("./api", () => ({
-  useGetFeatureFlagsQuery: () => ({
-    data: {
-      workflows: true,
-      cost: true,
-      observability: true,
-      projects: true,
-      chat: true,
-    },
-    isLoading: false,
-    error: null,
-  }),
-  useGetCurrentUserQuery: (arg: undefined, options: { skip: boolean }) => {
-    // Track the call
-    mockUseGetCurrentUserQuery(arg, options);
-    // Return mock data based on skip option
-    if (options?.skip) {
-      return { data: undefined, error: undefined };
-    }
-    return {
+vi.mock("./api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./api")>();
+  return {
+    ...actual,
+    useGetFeatureFlagsQuery: () => ({
       data: {
-        username: "alice",
-        email: "alice@example.com",
-        roles: ["developer"],
+        workflows: true,
+        cost: true,
+        observability: true,
+        projects: true,
+        chat: true,
       },
-      error: undefined,
-    };
-  },
-  useGetWorkflowTemplatesQuery: () => ({
-    data: [],
-    isLoading: false,
-    error: null,
-    refetch: vi.fn(),
-  }),
-  useLogoutMutation: () => [
-    vi.fn(() => ({ unwrap: () => Promise.resolve() })),
-    { isLoading: false },
-  ],
-  useCreateSessionMutation: () => [
-    vi.fn(() => ({
-      unwrap: () =>
-        Promise.resolve({ session_id: "test-session-id", name: "New Chat" }),
-    })),
-    { isLoading: false },
-  ],
-  useCreateProjectMutation: () => [
-    vi.fn(() => ({
-      unwrap: () =>
-        Promise.resolve({ id: "test-project-id", name: "New Project" }),
-    })),
-    { isLoading: false },
-  ],
-}));
+      isLoading: false,
+      error: null,
+    }),
+    useGetCurrentUserQuery: (arg: undefined, options: { skip: boolean }) => {
+      // Track the call
+      mockUseGetCurrentUserQuery(arg, options);
+      // Return mock data based on skip option
+      if (options?.skip) {
+        return { data: undefined, error: undefined };
+      }
+      return {
+        data: {
+          username: "alice",
+          email: "alice@example.com",
+          roles: ["developer"],
+        },
+        error: undefined,
+      };
+    },
+    useGetWorkflowTemplatesQuery: () => ({
+      data: [],
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    }),
+    useLogoutMutation: () => [
+      vi.fn(() => ({ unwrap: () => Promise.resolve() })),
+      { isLoading: false },
+    ],
+    useCreateSessionMutation: () => [
+      vi.fn(() => ({
+        unwrap: () =>
+          Promise.resolve({ session_id: "test-session-id", name: "New Chat" }),
+      })),
+      { isLoading: false },
+    ],
+    useCreateProjectMutation: () => [
+      vi.fn(() => ({
+        unwrap: () =>
+          Promise.resolve({ id: "test-project-id", name: "New Project" }),
+      })),
+      { isLoading: false },
+    ],
+    // Add mocks for hooks used by child components
+    useGetHealthQuery: () => ({
+      data: { status: "healthy", version: "1.0.0" },
+      isLoading: false,
+      isError: false,
+    }),
+    useListSessionsQuery: () => ({
+      data: { items: [], total: 0 },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+    }),
+    useListProjectsQuery: () => ({
+      data: { items: [], total: 0 },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+    }),
+  };
+});
 
 // Mock useOnboarding hook (onboarding is disabled for most tests)
 vi.mock("./hooks/useOnboarding", () => ({

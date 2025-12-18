@@ -376,7 +376,7 @@ class TestHandleChat:
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
-    @patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph")
+    @patch("mcp_server_langgraph.mcp.server_stdio.create_agent_graph")
     @patch("mcp_server_langgraph.mcp.server_stdio.tracer")
     @patch("mcp_server_langgraph.mcp.server_stdio.format_response")
     async def test_handle_chat_new_conversation(
@@ -423,7 +423,7 @@ class TestHandleChat:
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
-    @patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph")
+    @patch("mcp_server_langgraph.mcp.server_stdio.create_agent_graph")
     @patch("mcp_server_langgraph.mcp.server_stdio.tracer")
     async def test_handle_chat_existing_conversation_authorized(
         self,
@@ -469,7 +469,7 @@ class TestHandleChat:
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
-    @patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph")
+    @patch("mcp_server_langgraph.mcp.server_stdio.create_agent_graph")
     @patch("mcp_server_langgraph.mcp.server_stdio.tracer")
     async def test_handle_chat_existing_conversation_unauthorized(
         self,
@@ -544,7 +544,7 @@ class TestResponseFormatting:
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
-    @patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph")
+    @patch("mcp_server_langgraph.mcp.server_stdio.create_agent_graph")
     @patch("mcp_server_langgraph.mcp.server_stdio.tracer")
     @patch("mcp_server_langgraph.mcp.server_stdio.format_response")
     async def test_concise_format_applied(
@@ -596,7 +596,7 @@ class TestErrorHandling:
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
-    @patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph")
+    @patch("mcp_server_langgraph.mcp.server_stdio.create_agent_graph")
     @patch("mcp_server_langgraph.mcp.server_stdio.tracer")
     @patch("mcp_server_langgraph.mcp.server_stdio.metrics")
     async def test_handle_chat_agent_error(

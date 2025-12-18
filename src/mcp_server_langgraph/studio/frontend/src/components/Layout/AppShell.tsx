@@ -16,8 +16,13 @@
  * - Full workspace persistence via Redux
  */
 
-import { useEffect, useCallback, type ReactNode } from "react";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { useEffect, useCallback, useRef, type ReactNode } from "react";
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+  type ImperativePanelHandle,
+} from "react-resizable-panels";
 import {
   Maximize2,
   Minimize2,
@@ -77,11 +82,33 @@ export function AppShell({
 }: AppShellProps) {
   const dispatch = useAppDispatch();
 
+  // Panel refs for programmatic collapse/expand
+  const rightPanelRef = useRef<ImperativePanelHandle>(null);
+  const bottomPanelRef = useRef<ImperativePanelHandle>(null);
+
   // Selectors
   const leftCollapsed = useAppSelector(selectLeftSidebarCollapsed);
   const rightCollapsed = useAppSelector(selectRightSidebarCollapsed);
   const bottomCollapsed = useAppSelector(selectBottomPanelCollapsed);
   const focusMode = useAppSelector(selectFocusMode);
+
+  // Sync right panel collapse state with redux
+  useEffect(() => {
+    if (rightCollapsed || focusMode) {
+      rightPanelRef.current?.collapse();
+    } else {
+      rightPanelRef.current?.expand();
+    }
+  }, [rightCollapsed, focusMode]);
+
+  // Sync bottom panel collapse state with redux
+  useEffect(() => {
+    if (bottomCollapsed || focusMode) {
+      bottomPanelRef.current?.collapse();
+    } else {
+      bottomPanelRef.current?.expand();
+    }
+  }, [bottomCollapsed, focusMode]);
 
   // Keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -366,6 +393,7 @@ export function AppShell({
 
             {/* Bottom Panel */}
             <Panel
+              ref={bottomPanelRef}
               id="bottom"
               order={2}
               defaultSize={25}
@@ -376,7 +404,6 @@ export function AppShell({
               onResize={handleBottomResize}
               className={cn(
                 "transition-all duration-300",
-                !showBottomPanel && "!h-0",
                 // Mobile: Fixed overlay positioning (bottom sheet)
                 "max-md:fixed max-md:left-0 max-md:right-0 max-md:bottom-0 max-md:z-50",
                 "max-md:h-64 max-md:shadow-xl",
@@ -417,6 +444,7 @@ export function AppShell({
 
         {/* Right Sidebar Panel */}
         <Panel
+          ref={rightPanelRef}
           id="right-sidebar"
           order={3}
           defaultSize={20}
@@ -427,7 +455,6 @@ export function AppShell({
           onResize={handleRightResize}
           className={cn(
             "transition-all duration-300",
-            !showRightSidebar && "!w-0",
             // Mobile: Fixed overlay positioning
             "max-md:fixed max-md:right-0 max-md:top-10 max-md:bottom-0 max-md:z-50",
             "max-md:w-80 max-md:shadow-xl",

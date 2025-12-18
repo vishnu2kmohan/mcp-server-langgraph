@@ -29,6 +29,7 @@ interface StreamingChatState {
   error: string | null;
   usage: StreamingUsage | null;
   model: string | null;
+  traceId: string | null;
 }
 
 /**
@@ -68,6 +69,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
     error: null,
     usage: null,
     model: null,
+    traceId: null,
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -82,6 +84,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
       content?: string;
       usage?: StreamingUsage;
       model?: string;
+      traceId?: string;
       done?: boolean;
     } | null => {
       // Check for done signal
@@ -99,6 +102,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
             content?: string;
             usage?: StreamingUsage;
             model?: string;
+            traceId?: string;
           } = {};
 
           // Handle content - support both direct content and delta.content formats
@@ -120,6 +124,11 @@ export function useStreamingChat(): UseStreamingChatReturn {
           // Handle model
           if (data.model) {
             result.model = data.model;
+          }
+
+          // Handle trace_id for observability correlation
+          if (data.trace_id) {
+            result.traceId = data.trace_id;
           }
 
           return result;
@@ -155,6 +164,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
         error: null,
         usage: null,
         model: null,
+        traceId: null,
       });
 
       // Build request body matching ChatCompletionRequest
@@ -236,6 +246,10 @@ export function useStreamingChat(): UseStreamingChatReturn {
                   updates.model = parsed.model;
                 }
 
+                if (parsed.traceId) {
+                  updates.traceId = parsed.traceId;
+                }
+
                 return { ...prev, ...updates };
               });
             }
@@ -281,6 +295,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
       error: null,
       usage: null,
       model: null,
+      traceId: null,
     }));
   }, []);
 

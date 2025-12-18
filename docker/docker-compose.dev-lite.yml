@@ -1,0 +1,109 @@
+# Docker Compose for MCP Server LangGraph - Lightweight Development Stack
+# ==================================================================
+# Minimal development environment for day-to-day coding
+# Uses in-memory auth and console observability to reduce resource usage
+#
+# USAGE:
+#   # Start lightweight services
+#   docker compose -f docker/docker-compose.dev-lite.yml up -d
+#
+#   # Or use Makefile
+#   make dev-lite-up
+#
+#   # Stop services
+#   docker compose -f docker/docker-compose.dev-lite.yml down
+#
+# WHAT'S INCLUDED (minimal):
+#   - PostgreSQL: Database for GDPR data and checkpoints
+#   - Redis: Session and checkpoint storage
+#
+# WHAT'S EXCLUDED (use full stack when needed):
+#   - Keycloak (use AUTH_PROVIDER=inmemory)
+#   - OpenFGA (use ENABLE_MOCK_AUTHORIZATION=true)
+#   - Qdrant (disable dynamic context loading)
+#   - LGTM Stack (Loki, Tempo, Mimir, Grafana, Alloy)
+#
+# RESOURCE USAGE:
+#   - Full stack: ~4GB RAM
+#   - Dev-lite: ~512MB RAM (87% reduction!)
+#   - Startup time: <5 seconds vs ~15 seconds
+#
+# ENVIRONMENT SETUP:
+#   Copy the .env.dev-lite template or set these env vars:
+#   - AUTH_PROVIDER=inmemory
+#   - ENABLE_MOCK_AUTHORIZATION=true
+#   - OBSERVABILITY_BACKEND=console
+#   - ENABLE_CONSOLE_EXPORT=true
+#
+# PORTS:
+#   5432 - PostgreSQL
+#   6379 - Redis
+
+services:
+  # ==============================================================================
+  # DATABASE (essential for GDPR and data persistence)
+  # ==============================================================================
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-lite-data:/var/lib/postgresql/data
+      - ../migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    networks:
+      - dev-lite-network
+
+  # ==============================================================================
+  # CACHE/SESSION STORAGE (essential for checkpoints and sessions)
+  # ==============================================================================
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-lite-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    networks:
+      - dev-lite-network
+
+volumes:
+  postgres-lite-data:
+    driver: local
+  redis-lite-data:
+    driver: local
+
+networks:
+  dev-lite-network:
+    driver: bridge

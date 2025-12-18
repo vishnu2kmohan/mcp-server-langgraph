@@ -61,19 +61,15 @@ class TestAgentHelpers:
         """
         Test that each call creates a new agent instance.
 
-        NOTE: Currently skipped because get_agent_graph() is a singleton.
-        This test will pass after Phase 3 refactoring when agents use containers.
+        After DI refactoring, create_test_agent uses create_agent_graph which
+        returns new instances each time (no more singleton pattern).
         """
-        import pytest
-
-        pytest.skip("get_agent_graph() is currently a singleton - will fix in Phase 3")
-
         from mcp_server_langgraph.core.test_helpers import create_test_agent
 
         agent1 = create_test_agent()
         agent2 = create_test_agent()
 
-        # Should be different instances
+        # Should be different instances (DI pattern, not singleton)
         assert agent1 is not agent2
 
 

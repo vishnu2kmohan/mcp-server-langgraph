@@ -244,8 +244,13 @@ class TestWorkflowGeneratorIntegration:
         assert 0.0 <= result.confidence <= 1.0
 
 
+@pytest.mark.xdist_group(name="workflow_generator_prompt_building")
 class TestWorkflowGeneratorPromptBuilding:
     """Tests for prompt building logic."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_system_prompt_includes_workflow_instructions(self) -> None:
         """System prompt should include workflow generation instructions."""
@@ -281,8 +286,13 @@ class TestWorkflowGeneratorPromptBuilding:
         assert "llm" in system_prompt.lower()
 
 
+@pytest.mark.xdist_group(name="workflow_generator_factory")
 class TestCreateWorkflowGeneratorFactory:
     """Tests for workflow generator factory function."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_create_workflow_generator_function_exists(self) -> None:
         """create_workflow_generator factory function should exist."""

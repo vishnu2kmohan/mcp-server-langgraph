@@ -10,7 +10,13 @@
  * - Accessibility (ARIA tab structure)
  */
 
-import { useCallback, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useState,
+  useRef,
+  useEffect,
+  type ReactNode,
+} from "react";
 import {
   X,
   MessageSquare,
@@ -19,6 +25,7 @@ import {
   Activity,
   DollarSign,
   FolderKanban,
+  Check,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
@@ -29,6 +36,7 @@ import {
   removeTab,
   reorderTabs,
   splitTab,
+  updateTabTitle,
   type TabState,
 } from "../../store/slices/workspaceSlice";
 import { SplitContainer } from "./SplitContainer";
@@ -98,6 +106,11 @@ export function MainDock({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  // Tab rename state
+  const [editingTabId, setEditingTabId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
   // Handle tab selection
   const handleSelectTab = useCallback(
     (tabId: string) => {
@@ -165,6 +178,51 @@ export function MainDock({
     setDraggedIndex(null);
     setDragOverIndex(null);
   }, []);
+
+  // Tab rename handlers
+  const handleDoubleClick = useCallback(
+    (tabId: string, currentTitle: string) => {
+      setEditingTabId(tabId);
+      setEditingTitle(currentTitle);
+    },
+    [],
+  );
+
+  const handleRenameSubmit = useCallback(
+    (tabId: string) => {
+      if (editingTitle.trim()) {
+        dispatch(updateTabTitle({ tabId, title: editingTitle.trim() }));
+      }
+      setEditingTabId(null);
+      setEditingTitle("");
+    },
+    [dispatch, editingTitle],
+  );
+
+  const handleRenameCancel = useCallback(() => {
+    setEditingTabId(null);
+    setEditingTitle("");
+  }, []);
+
+  const handleRenameKeyDown = useCallback(
+    (e: React.KeyboardEvent, tabId: string) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleRenameSubmit(tabId);
+      } else if (e.key === "Escape") {
+        handleRenameCancel();
+      }
+    },
+    [handleRenameSubmit, handleRenameCancel],
+  );
+
+  // Focus input when editing starts
+  useEffect(() => {
+    if (editingTabId && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingTabId]);
 
   // Handle split from SplitContainer drop zones
   const handleSplit = useCallback(
@@ -269,6 +327,7 @@ export function MainDock({
           const icon = getTabIcon(tab.type);
           const isDragging = draggedIndex === index;
           const isDragOver = dragOverIndex === index;
+          const isEditing = editingTabId === tab.id;
 
           return (
             <div
@@ -276,15 +335,16 @@ export function MainDock({
               role="tab"
               tabIndex={0}
               aria-selected={isActive}
-              draggable="true"
-              onDragStart={(e) => handleDragStart(index, e)}
+              draggable={!isEditing}
+              onDragStart={(e) => !isEditing && handleDragStart(index, e)}
               onDragOver={(e) => handleDragOver(index, e)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(index, e)}
               onDragEnd={handleDragEnd}
-              onClick={() => handleSelectTab(tab.id)}
+              onClick={() => !isEditing && handleSelectTab(tab.id)}
+              onDoubleClick={() => handleDoubleClick(tab.id, tab.title)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
+                if (!isEditing && (e.key === "Enter" || e.key === " ")) {
                   e.preventDefault();
                   handleSelectTab(tab.id);
                 }
@@ -308,21 +368,61 @@ export function MainDock({
               )}
             >
               {icon && <span className="flex-shrink-0">{icon}</span>}
-              <span className="truncate max-w-32">{tab.title}</span>
-              <button
-                type="button"
-                aria-label={`Close ${tab.title}`}
-                onClick={(e) => handleCloseTab(tab.id, e)}
-                className={cn(
-                  "p-0.5 rounded opacity-0 group-hover:opacity-100",
-                  "hover:bg-gray-200 dark:hover:bg-gray-600",
-                  "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300",
-                  "focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-primary-500",
-                  "transition-opacity",
-                )}
-              >
-                <X size={12} />
-              </button>
+              {isEditing ? (
+                <div className="flex items-center gap-1">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onKeyDown={(e) => handleRenameKeyDown(e, tab.id)}
+                    onBlur={() => handleRenameSubmit(tab.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-24 px-1 py-0.5 text-sm border border-primary-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    data-testid={`tab-rename-input-${tab.id}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRenameSubmit(tab.id);
+                    }}
+                    className="p-0.5 text-green-600 hover:text-green-700 dark:text-green-400"
+                    aria-label="Save tab name"
+                  >
+                    <Check size={12} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRenameCancel();
+                    }}
+                    className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    aria-label="Cancel rename"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ) : (
+                <span className="truncate max-w-32">{tab.title}</span>
+              )}
+              {!isEditing && (
+                <button
+                  type="button"
+                  aria-label={`Close ${tab.title}`}
+                  onClick={(e) => handleCloseTab(tab.id, e)}
+                  className={cn(
+                    "p-0.5 rounded opacity-0 group-hover:opacity-100",
+                    "hover:bg-gray-200 dark:hover:bg-gray-600",
+                    "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300",
+                    "focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-primary-500",
+                    "transition-opacity",
+                  )}
+                >
+                  <X size={12} />
+                </button>
+              )}
             </div>
           );
         })}

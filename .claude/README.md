@@ -73,7 +73,7 @@ This directory contains optimized workflow resources for Claude Code sessions.
 │   ├── recent-work.md               # Last 15 commits + current state (auto)
 │   ├── coding-standards.md          # Quick coding standards cheat sheet
 │   ├── code-patterns.md             # Design patterns library (10 patterns)
-│   ├── testing-patterns.md          # Test patterns (5,475+ tests, async, meta)
+│   ├── testing-patterns.md          # Test patterns (8,700+ tests, async, meta)
 │   ├── pytest-markers.md            # 🆕 46 pytest markers catalog
 │   ├── xdist-safety-patterns.md     # 🆕 Memory safety (prevents 217GB→1.8GB OOM)
 │   └── test-constants-pattern.md    # 🆕 Centralized test constants

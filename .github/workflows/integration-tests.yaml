@@ -75,7 +75,7 @@ jobs:
         # Matrix strategy with test categories for parallel execution
         # Each category runs its tests with pytest-xdist for intra-job parallelism
         # This replaces pytest-split (2025-11-28) to enable pytest 9.x upgrade
-        test-category: [auth, api, database, infrastructure]
+        test-category: [auth, api, database, infrastructure, observability]
         include:
           - test-category: auth
             markers: "integration and auth"
@@ -89,8 +89,13 @@ jobs:
           - test-category: infrastructure
             # Exclude deployment tests - they require Helm CLI and dependencies
             # Helm template tests run in ci.yaml which has proper Helm setup
-            markers: "integration and not auth and not api and not database and not gdpr and not deployment"
+            markers: "integration and not auth and not api and not database and not gdpr and not deployment and not observability and not grafana"
             label: "infra"
+          - test-category: observability
+            # Grafana and LGTM stack integration tests
+            # Requires Grafana service in docker-compose.test.yml
+            markers: "integration and (observability or grafana or lgtm)"
+            label: "observability"
 
     steps:
     - name: Checkout code

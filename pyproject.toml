@@ -26,11 +26,12 @@ classifiers = [
 requires-python = ">=3.11,<3.14"
 keywords = ["mcp", "model-context-protocol", "langgraph", "llm", "agent", "anthropic", "openai", "openfga", "authorization", "observability", "opentelemetry", "langchain", "litellm", "multi-llm", "ai-agent"]
 dependencies = [
-    "langgraph>=1.0.4",  # Updated 2025-11-28: Minor bugfixes
-    "langgraph-checkpoint-redis>=0.2.1",  # Updated 2025-11-28: Redis checkpointer for distributed conversation state
-    "langchain-core>=1.1.0",  # Updated from 1.0.4 for security fixes
-    "langsmith>=0.4.49",  # Updated 2025-11-28: Many improvements
-    "litellm>=1.80.5",  # Updated 2025-11-28: Minor updates, Gemini 3 Pro support
+    # LangChain Ecosystem (pin <2.0.0 to prevent breaking changes)
+    "langgraph>=1.0.4,<2.0.0",  # Updated 2025-11-28: Minor bugfixes
+    "langgraph-checkpoint-redis>=0.2.1,<1.0.0",  # Redis checkpointer for distributed conversation state
+    "langchain-core>=1.1.0,<2.0.0",  # Updated from 1.0.4 for security fixes
+    "langsmith>=0.4.49,<1.0.0",  # Updated 2025-11-28: Many improvements
+    "litellm>=1.80.5,<2.0.0",  # Updated 2025-11-28: Minor updates, Gemini 3 Pro support
     "mcp>=1.23.3",  # Updated 2025-12-10: MCP spec 2025-11-25 support (Tasks, Sampling with Tools, Icons, XAA)
     "PyJWT>=2.10.1",
     "cryptography>=46.0.3",
@@ -42,7 +43,7 @@ dependencies = [
     "opentelemetry-instrumentation-httpx>=0.59b0",    # httpx HTTP client instrumentation
     # OTEL exporters moved to optional-dependencies[observability-*]
     # Choose observability-grpc OR observability-http based on your backend
-    "openfga-sdk>=0.9.8",  # Updated 2025-11-28: Minor updates
+    "openfga-sdk>=0.9.8,<1.0.0",  # Updated 2025-11-28: Minor updates
     # infisical-python moved to optional-dependencies[secrets]
     # Application falls back to environment variables if not installed
     "python-dotenv>=1.1.1",
@@ -81,8 +82,8 @@ dependencies = [
     "slowapi>=0.1.9",  # Rate limiting for FastAPI (ADR-0027)
     # LLM Provider SDKs (required for LiteLLM multi-provider support)
     "google-cloud-aiplatform>=1.38.0",  # Vertex AI SDK (default: Anthropic Claude on Vertex)
-    "anthropic>=0.46.0",  # Anthropic Claude direct API
-    "openai>=1.82.0",  # OpenAI models (GPT-4, o1, etc.)
+    "anthropic>=0.46.0,<1.0.0",  # Anthropic Claude direct API
+    "openai>=1.82.0,<3.0.0",  # OpenAI models (GPT-4, o1, etc.) - 2.x required by litellm
     "boto3>=1.35.0",  # AWS Bedrock (Claude, Titan, Mistral on AWS)
     "azure-identity>=1.15.0",  # Azure OpenAI authentication
 ]
@@ -845,6 +846,7 @@ markers = [
     "admin_journey: Admin user journey tests (user management, audit logs)",
     "connections_journey: MCP connections journey tests (OAuth2, connection lifecycle)",
     "power_user_journey: Power user journey tests (premium features, advanced workflows)",
+    "workflow_sharing: Workflow sharing feature tests (collaboration, permissions, OpenFGA)",
     "standard_user_journey: Standard user journey tests (basic features, tier limits)",
     "hipaa: HIPAA compliance tests (45 CFR 164.312(b), ePHI audit logging)",
     "fedramp: FedRAMP compliance tests (NIST 800-53 AU controls, federal authorization)",

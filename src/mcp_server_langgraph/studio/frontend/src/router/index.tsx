@@ -101,10 +101,24 @@ export const router = createBrowserRouter(
             },
             {
               path: "chat",
-              lazy: async () => {
-                const { ChatPage } = await import("../pages/ChatPage");
-                return { Component: ChatPage };
-              },
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { ChatPage } = await import("../pages/ChatPage");
+                    return { Component: ChatPage };
+                  },
+                },
+                // Redirect /studio/chat/:sessionId to /studio/chat?session=:sessionId
+                {
+                  path: ":sessionId",
+                  lazy: async () => {
+                    const { ChatSessionRedirect } =
+                      await import("../components/Chat/ChatSessionRedirect");
+                    return { Component: ChatSessionRedirect };
+                  },
+                },
+              ],
             },
             // Sessions merged into ChatPage - redirect for backward compatibility
             {

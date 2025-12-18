@@ -394,11 +394,11 @@ def create_behavioral_agent_graph(
         >>> with pytest.raises(ValueError):
         ...     await agent.ainvoke({"messages": [HumanMessage("Hello")]})
 
-    Replaces:
-        @patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph")
-        @patch("mcp_server_langgraph.mcp.server_stdio.settings")
-        def test_agent(mock_settings, mock_get_graph):
-            # 15+ lines of setup...
+    Replaces old patch-heavy patterns - now use DI injection:
+        # Simply inject the mock graph via constructor
+        server = MCPAgentServer(openfga_client=mock_client, agent_graph=mock_graph)
+        # Or set directly on the server instance
+        server.agent_graph = create_behavioral_agent_graph(response="Hello")
     """
     from langchain_core.messages import AIMessage, HumanMessage
     from unittest.mock import MagicMock

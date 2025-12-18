@@ -51,7 +51,7 @@
 │
 ├── context/                           # Living context files
 │   ├── recent-work.md                 # Last 15 commits (auto-updated)
-│   ├── testing-patterns.md            # 5,475+ test patterns
+│   ├── testing-patterns.md            # 8,700+ test patterns
 │   ├── code-patterns.md               # Design patterns library
 │   ├── pytest-markers.md              # 46 markers catalog (NEW)
 │   ├── xdist-safety-patterns.md       # Memory safety (NEW)
@@ -93,13 +93,13 @@ mcp-server-langgraph/
 │   ├── mcp/                      # MCP server implementations
 │   ├── observability/            # Telemetry & metrics
 │   └── secrets/                  # Secrets management
-├── tests/                        # 5,475+ comprehensive tests
+├── tests/                        # 8,700+ comprehensive tests
 ├── deployments/                  # Kubernetes, Helm, Kustomize
 ├── monitoring/                   # Grafana dashboards
 └── .claude/                      # Workflow automation
 ```
 
-**Test Suite**: 5,475+ tests, 46 pytest markers, 99.3% pass rate
+**Test Suite**: 8,700+ tests, 46 pytest markers, 99.3% pass rate
 **Coverage**: 75% (targeting 80%+)
 
 ---
@@ -130,7 +130,7 @@ mcp-server-langgraph/
 
 3. **Context** (`.claude/context/`): Living documentation
    - Auto-updated from git history
-   - Test patterns from 5,475+ tests
+   - Test patterns from 8,700+ tests
    - Design patterns from codebase
    - **NEW**: pytest markers, xdist safety, test constants
 

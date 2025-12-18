@@ -11,13 +11,10 @@
 
 import { useMemo } from "react";
 import { useAppSelector } from "../../store/hooks";
-import {
-  selectIsConnected,
-  selectIsConnecting,
-} from "../../store/slices/mcpSlice";
 import { selectPersona } from "../../store/slices/personaSlice";
 import { selectUnreadCount } from "../../store/slices/notificationSlice";
 import { selectCurrentSession } from "../../store/slices/sessionSlice";
+import { useGetHealthQuery } from "../../api";
 
 // Cost per 1K tokens by provider (simplified estimates)
 const COST_PER_1K_TOKENS: Record<string, { input: number; output: number }> = {
@@ -49,9 +46,17 @@ function cn(...classes: (string | undefined | boolean)[]): string {
 // =============================================================================
 
 export function StatusBar({ className }: StatusBarProps) {
+  // API Health check with polling every 30 seconds
+  const {
+    data: healthData,
+    isLoading: isHealthLoading,
+    isError: isHealthError,
+  } = useGetHealthQuery(undefined, {
+    pollingInterval: 30000, // Poll every 30 seconds
+    refetchOnMountOrArgChange: true,
+  });
+
   // Selectors
-  const isConnected = useAppSelector(selectIsConnected);
-  const isConnecting = useAppSelector(selectIsConnecting);
   const persona = useAppSelector(selectPersona);
   const unreadCount = useAppSelector(selectUnreadCount);
   const currentSession = useAppSelector(selectCurrentSession);
@@ -90,18 +95,30 @@ export function StatusBar({ className }: StatusBarProps) {
     return inputCost + outputCost;
   }, [currentSession?.config, tokenStats]);
 
-  // Determine connection status text and color
+  // Determine API health status text and color
+  const isConnected = healthData?.status === "healthy";
+  const isDegraded = healthData?.status === "degraded";
+  const isConnecting = isHealthLoading;
+
   const connectionStatus = isConnecting
     ? "Connecting..."
-    : isConnected
-      ? "Connected"
-      : "Disconnected";
+    : isHealthError
+      ? "Disconnected"
+      : isDegraded
+        ? "Degraded"
+        : isConnected
+          ? "Connected"
+          : "Disconnected";
 
   const connectionColor = isConnecting
     ? "text-yellow-500"
-    : isConnected
-      ? "text-green-500"
-      : "text-gray-400";
+    : isHealthError
+      ? "text-red-500"
+      : isDegraded
+        ? "text-yellow-500"
+        : isConnected
+          ? "text-green-500"
+          : "text-gray-400";
 
   return (
     <div
@@ -125,8 +142,14 @@ export function StatusBar({ className }: StatusBarProps) {
             className={cn(
               "w-2 h-2 rounded-full",
               isConnecting && "bg-yellow-500 animate-pulse",
+              isHealthError && "bg-red-500",
+              isDegraded && "bg-yellow-500",
               isConnected && "bg-green-500",
-              !isConnecting && !isConnected && "bg-gray-400",
+              !isConnecting &&
+                !isConnected &&
+                !isDegraded &&
+                !isHealthError &&
+                "bg-gray-400",
             )}
           />
           <span>{connectionStatus}</span>

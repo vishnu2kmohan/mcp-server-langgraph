@@ -11,6 +11,8 @@ Contract Requirements:
 - MessageResponse.role is a constrained enum
 """
 
+import gc
+
 import pytest
 from pydantic import ValidationError
 
@@ -24,6 +26,7 @@ from mcp_server_langgraph.api.v1.sessions import (
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="test_session_create_request_contract")
 class TestSessionCreateRequestContract:
     """Tests for SessionCreateRequest model contract."""
 
@@ -50,6 +53,7 @@ class TestSessionCreateRequestContract:
         assert request.name == "My New Session"
 
 
+@pytest.mark.xdist_group(name="test_session_response_contract")
 class TestSessionResponseContract:
     """Tests for SessionResponse model contract."""
 
@@ -144,6 +148,7 @@ class TestSessionResponseContract:
             assert response.status.value == status_value  # type: ignore[union-attr]
 
 
+@pytest.mark.xdist_group(name="test_message_response_contract")
 class TestMessageResponseContract:
     """Tests for MessageResponse model contract."""
 
@@ -244,8 +249,13 @@ class TestMessageResponseContract:
             assert response.role.value == role_value  # type: ignore[union-attr]
 
 
+@pytest.mark.xdist_group(name="test_session_service_contract")
 class TestSessionServiceContract:
     """Tests for session service response contract."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -343,6 +353,7 @@ class TestSessionServiceContract:
         assert len(message_ids) == len(set(message_ids))  # All unique
 
 
+@pytest.mark.xdist_group(name="test_session_response_serialization")
 class TestSessionResponseSerialization:
     """Tests for proper JSON serialization of session responses."""
 

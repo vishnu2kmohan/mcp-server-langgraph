@@ -51,7 +51,7 @@ async def test_feature():
 
 | Metric | Value |
 |--------|-------|
-| Tests | 5,475+ |
+| Tests | 8,700+ |
 | Coverage | 75% (target: 80%) |
 | Pytest markers | 46 |
 | Slash commands | 39 |
@@ -94,7 +94,7 @@ async def test_feature():
 **Context files** (in `.claude/context/`):
 - `recent-work.md` - Auto-updated via git hook
 - `coding-standards.md` - Quick coding reference
-- `testing-patterns.md` - 5,475+ test patterns
+- `testing-patterns.md` - 8,700+ test patterns
 - `code-patterns.md` - Design patterns library
 
 **Memory files** (in `.claude/memory/` - MANDATORY):
@@ -141,7 +141,7 @@ mcp-server-langgraph/
 │   ├── llm/                      # LLM factory (multi-provider)
 │   ├── mcp/                      # MCP server implementations
 │   └── observability/            # OpenTelemetry + metrics
-├── tests/                        # 5,475+ tests
+├── tests/                        # 8,700+ tests
 ├── deployments/                  # K8s, Helm, Kustomize
 ├── .claude/                      # Claude Code automation
 │   ├── commands/                 # 39 slash commands

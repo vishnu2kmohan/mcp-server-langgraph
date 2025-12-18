@@ -352,3 +352,151 @@ class TestWorkflowSharingIntegration:
             )
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.xdist_group(name="test_workflow_share_notifications")
+class TestWorkflowShareNotifications:
+    """Tests for workflow share notification integration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def mock_service(self) -> MagicMock:
+        """Create a mock WorkflowServiceAdapter with sharing methods."""
+        service = MagicMock()
+        service.get_workflow = AsyncMock(return_value={"id": "wf-123", "user_id": "owner-123", "name": "Test Workflow"})
+        service.add_workflow_share = AsyncMock(return_value=True)
+        return service
+
+    @pytest.fixture
+    def mock_current_user(self) -> dict[str, str]:
+        """Create a mock current user for authorization."""
+        return {"sub": "owner-123", "username": "alice", "email": "alice@example.com"}
+
+    @pytest.mark.asyncio
+    async def test_add_share_sends_notification(self, mock_service: MagicMock, mock_current_user: dict[str, str]) -> None:
+        """
+        GIVEN a successful workflow share
+        WHEN add_workflow_share_authorized is called
+        THEN a notification is sent to the target user.
+        """
+        from unittest.mock import patch
+
+        from mcp_server_langgraph.api.v1.workflows import (
+            AddWorkflowShareRequest,
+            add_workflow_share_authorized,
+        )
+
+        request = AddWorkflowShareRequest(email="bob@example.com", permission="edit")
+
+        # Mock the notification broadcaster
+        mock_broadcaster = AsyncMock()
+        mock_broadcaster.broadcast_to_user = AsyncMock()
+
+        with patch(
+            "mcp_server_langgraph.api.v1.notification_websocket.get_notification_broadcaster",
+            return_value=mock_broadcaster,
+        ):
+            result = await add_workflow_share_authorized(
+                workflow_id="wf-123",
+                request=request,
+                current_user=mock_current_user,
+                service=mock_service,
+            )
+
+            # THEN share is created
+            assert result["status"] == "shared"
+            assert result["email"] == "bob@example.com"
+
+            # AND notification was sent to target user
+            mock_broadcaster.broadcast_to_user.assert_called_once()
+            call_args = mock_broadcaster.broadcast_to_user.call_args
+            assert call_args.kwargs["user_id"] == "bob@example.com"
+            assert call_args.kwargs["notification_type"] == "info"
+            assert "Test Workflow" in call_args.kwargs["message"]
+            assert "alice" in call_args.kwargs["message"]
+            assert call_args.kwargs["action"]["url"] == "/workflows/wf-123"
+
+    @pytest.mark.asyncio
+    async def test_notification_failure_does_not_fail_share(
+        self, mock_service: MagicMock, mock_current_user: dict[str, str]
+    ) -> None:
+        """
+        GIVEN notification broadcaster fails
+        WHEN add_workflow_share_authorized is called
+        THEN share still succeeds.
+        """
+        from unittest.mock import patch
+
+        from mcp_server_langgraph.api.v1.workflows import (
+            AddWorkflowShareRequest,
+            add_workflow_share_authorized,
+        )
+
+        request = AddWorkflowShareRequest(email="bob@example.com", permission="view")
+
+        # Mock broadcaster that raises exception
+        mock_broadcaster = AsyncMock()
+        mock_broadcaster.broadcast_to_user = AsyncMock(side_effect=Exception("WebSocket error"))
+
+        with patch(
+            "mcp_server_langgraph.api.v1.notification_websocket.get_notification_broadcaster",
+            return_value=mock_broadcaster,
+        ):
+            # Should not raise
+            result = await add_workflow_share_authorized(
+                workflow_id="wf-123",
+                request=request,
+                current_user=mock_current_user,
+                service=mock_service,
+            )
+
+            # Share should still succeed
+            assert result["status"] == "shared"
+            mock_service.add_workflow_share.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_notification_includes_workflow_name(
+        self, mock_service: MagicMock, mock_current_user: dict[str, str]
+    ) -> None:
+        """
+        GIVEN a workflow with a specific name
+        WHEN sharing
+        THEN notification message includes workflow name.
+        """
+        from unittest.mock import patch
+
+        from mcp_server_langgraph.api.v1.workflows import (
+            AddWorkflowShareRequest,
+            add_workflow_share_authorized,
+        )
+
+        # Workflow with specific name
+        mock_service.get_workflow = AsyncMock(
+            return_value={
+                "id": "wf-456",
+                "user_id": "owner-123",
+                "name": "My Important Analysis",
+            }
+        )
+
+        request = AddWorkflowShareRequest(email="carol@example.com", permission="execute")
+        mock_broadcaster = AsyncMock()
+        mock_broadcaster.broadcast_to_user = AsyncMock()
+
+        with patch(
+            "mcp_server_langgraph.api.v1.notification_websocket.get_notification_broadcaster",
+            return_value=mock_broadcaster,
+        ):
+            await add_workflow_share_authorized(
+                workflow_id="wf-456",
+                request=request,
+                current_user=mock_current_user,
+                service=mock_service,
+            )
+
+            call_args = mock_broadcaster.broadcast_to_user.call_args
+            assert "My Important Analysis" in call_args.kwargs["message"]
+            assert "execute" in call_args.kwargs["message"]

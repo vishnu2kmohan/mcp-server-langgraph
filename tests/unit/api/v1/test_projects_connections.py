@@ -10,6 +10,8 @@ Requirements:
 - Idempotent: Returns 204 even if connection not in project
 """
 
+import gc
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
@@ -21,8 +23,13 @@ from mcp_server_langgraph.api.v1.projects import projects_router
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="test_remove_connection_from_project")
 class TestRemoveConnectionFromProject:
     """Tests for DELETE /{project_id}/connections/{connection_id} endpoint."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     @pytest.fixture
     def mock_repo(self) -> MagicMock:
@@ -70,8 +77,13 @@ class TestRemoveConnectionFromProject:
         pytest.fail("DELETE /projects/{project_id}/connections/{connection_id} route not found")
 
 
+@pytest.mark.xdist_group(name="test_remove_connection_integration")
 class TestRemoveConnectionIntegration:
     """Integration-style unit tests for remove connection functionality."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio

@@ -51,14 +51,9 @@ class TestMCPServerBehavioralPattern:
         - Internal module import paths
         - Specific function call sequences
 
-        Contrast with old approach (50 @patch decorators):
-            @patch("mcp_server_langgraph.mcp.server_stdio.settings")
-            @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
-            @patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph")
-            @patch("mcp_server_langgraph.mcp.server_stdio.tracer")
-            @patch("mcp_server_langgraph.mcp.server_stdio.format_response")
-            async def test_handle_chat(...):
-                # 5 patches! Very brittle!
+        Contrast with old approach (now deprecated and removed):
+            # Old singleton patching was brittle and caused xdist issues
+            # Now we use DI injection instead
 
         New behavioral approach (0 @patch decorators):
             # Just create mocks with desired behavior
@@ -232,48 +227,7 @@ class TestMCPServerBehavioralPattern:
 # ==============================================================================
 
 """
-OLD PATTERN (Brittle - 50 @patch decorators):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-@patch("mcp_server_langgraph.mcp.server_stdio.settings")
-@patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
-@patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph")
-@patch("mcp_server_langgraph.mcp.server_stdio.tracer")
-@patch("mcp_server_langgraph.mcp.server_stdio.format_response")
-async def test_handle_chat_new_conversation(
-    self, mock_format, mock_tracer, mock_graph, mock_auth, mock_settings
-):
-    # 10+ lines of mock setup
-    mock_settings.OPENFGA_ENABLED = False
-    mock_auth_instance = AsyncMock()
-    mock_auth_instance.verify_token.return_value = MagicMock(
-        valid=True,
-        payload={"sub": "alice", "exp": 9999999999}
-    )
-    mock_auth_instance.authorize.return_value = True
-    mock_auth.return_value = mock_auth_instance
-
-    mock_graph_instance = AsyncMock()
-    mock_graph_instance.aget_state.return_value = MagicMock(
-        values={"messages": []}
-    )
-    mock_graph_instance.ainvoke.return_value = {
-        "messages": [
-            HumanMessage(content="Hello"),
-            AIMessage(content="Hi!")
-        ]
-    }
-    mock_graph.return_value = mock_graph_instance
-
-    # Test code...
-
-Problems:
-- ❌ 5 @patch decorators (very brittle)
-- ❌ Couples to import paths (breaks on refactoring)
-- ❌ 10+ lines of mock setup (verbose)
-- ❌ Unclear behavioral intent
-- ❌ Hard to maintain
-
-NEW PATTERN (Robust - 0 @patch decorators):
+DEPENDENCY INJECTION PATTERN (Current - 0 @patch decorators):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 async def test_handle_chat_new_conversation(self):
     # Create behavioral mocks
@@ -296,11 +250,11 @@ Benefits:
 - ✅ 3 lines of setup (concise)
 - ✅ Clear behavioral intent
 - ✅ Easy to maintain
+- ✅ Works reliably with pytest-xdist
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-NEXT STEPS (Phase 2.8 - Refactoring):
-1. Adapt MCPAgentServer to accept dependencies via constructor
-2. Refactor tests/unit/mcp/test_mcp_stdio_server.py (50 @patch → <10)
-3. Apply pattern to other unit test files
-4. Validate all tests pass
+STATUS (2025-12): Migration Complete
+- get_agent_graph() singleton removed
+- All MCP server tests use DI injection
+- xdist cache workarounds removed
 """

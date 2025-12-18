@@ -42,8 +42,6 @@ export interface UseSessionAutoNameResult {
   isSuccess: boolean;
   /** The generated title (if available) */
   generatedTitle?: string;
-  /** Confidence score of the generated title */
-  confidence?: number;
   /** Whether the session has a default name */
   hasDefaultName: boolean;
   /** Error message if generation failed */
@@ -107,20 +105,15 @@ export function useSessionAutoName({
     // Mark as attempted immediately to prevent re-triggering
     hasAttemptedRef.current.add(sessionId);
 
-    // Generate title from first few messages (up to 3)
-    const messagesToSend = messages
-      .filter((m) => m.role === "user" || m.role === "assistant")
-      .slice(0, 3);
-
+    // Generate title from first user message
     generateTitle({
-      messages: messagesToSend,
-      session_id: sessionId,
+      message: firstUserMessage.content,
     });
-  }, [shouldGenerate, sessionId, firstUserMessage, messages, generateTitle]);
+  }, [shouldGenerate, sessionId, firstUserMessage, generateTitle]);
 
   // Handle successful title generation
   useEffect(() => {
-    if (isSuccess && data?.title && data?.confidence > 0.5 && sessionId) {
+    if (isSuccess && data?.title && sessionId) {
       dispatch(renameSession({ sessionId, name: data.title }));
     }
   }, [isSuccess, data, sessionId, dispatch]);
@@ -129,7 +122,6 @@ export function useSessionAutoName({
     isGenerating: isLoading,
     isSuccess,
     generatedTitle: data?.title,
-    confidence: data?.confidence,
     hasDefaultName,
     error: error ? String(error) : undefined,
   };

@@ -4,7 +4,7 @@
  * TDD tests for the status bar at the bottom of the AppShell.
  * Tests cover:
  * - Basic rendering
- * - Connection status display
+ * - Connection status display (via RTK Query health endpoint)
  * - Persona/role indicator
  * - Notification count badge
  * - Responsive design classes
@@ -25,6 +25,17 @@ vi.stubGlobal(
   })),
 );
 
+// Mock the API module to control useGetHealthQuery responses
+// This must be before component imports
+const mockUseGetHealthQuery = vi.fn();
+vi.mock("../../api", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../../api")>();
+  return {
+    ...original,
+    useGetHealthQuery: (...args: unknown[]) => mockUseGetHealthQuery(...args),
+  };
+});
+
 // Import after mocks
 import { StatusBar } from "./StatusBar";
 import mcpReducer, { type MCPSliceState } from "../../store/slices/mcpSlice";
@@ -34,6 +45,10 @@ import sessionReducer, {
   type SessionState,
   initialSessionState,
 } from "../../store/slices/sessionSlice";
+import authReducer from "../../store/slices/authSlice";
+import uiReducer from "../../store/slices/uiSlice";
+import workspaceReducer from "../../store/slices/workspaceSlice";
+import { api } from "../../api";
 
 // Default MCP state
 const defaultMCPState: MCPSliceState = {
@@ -50,7 +65,7 @@ const defaultMCPState: MCPSliceState = {
   error: null,
 };
 
-// Create a test store
+// Create a test store with all required reducers
 function createTestStore(
   overrides: {
     mcp?: Partial<MCPSliceState>;
@@ -61,10 +76,14 @@ function createTestStore(
 ) {
   return configureStore({
     reducer: {
+      [api.reducerPath]: api.reducer,
       mcp: mcpReducer,
       persona: personaReducer,
       notifications: notificationReducer,
       session: sessionReducer,
+      auth: authReducer,
+      ui: uiReducer,
+      workspace: workspaceReducer,
     },
     preloadedState: {
       mcp: { ...defaultMCPState, ...overrides.mcp },
@@ -89,6 +108,8 @@ function createTestStore(
       },
       session: { ...initialSessionState, ...overrides.session },
     },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(api.middleware),
   });
 }
 
@@ -107,6 +128,12 @@ function renderWithProviders(
 describe("StatusBar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: healthy/connected state
+    mockUseGetHealthQuery.mockReturnValue({
+      data: { status: "healthy" },
+      isLoading: false,
+      isError: false,
+    });
   });
 
   describe("basic rendering", () => {
@@ -123,39 +150,44 @@ describe("StatusBar", () => {
   });
 
   describe("connection status", () => {
-    it("should show disconnected status when no servers connected", () => {
+    it("should show disconnected status when health check fails", () => {
+      // Mock health query as error state (API unreachable)
+      mockUseGetHealthQuery.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+      });
       renderWithProviders(<StatusBar />);
       expect(screen.getByTestId("connection-status")).toBeInTheDocument();
       expect(screen.getByText(/disconnected/i)).toBeInTheDocument();
     });
 
-    it("should show connected status when server is connected", () => {
-      const store = createTestStore({
-        mcp: {
-          servers: {
-            "server-1": {
-              id: "server-1",
-              url: "http://localhost:3000",
-              status: "connected",
-              tools: [],
-              resources: [],
-              prompts: [],
-            },
-          },
-        },
-      });
-      renderWithProviders(<StatusBar />, { store });
+    it("should show connected status when health check succeeds", () => {
+      // Default mock already returns healthy status
+      renderWithProviders(<StatusBar />);
       expect(screen.getByText(/connected/i)).toBeInTheDocument();
     });
 
-    it("should show connecting status when connecting", () => {
-      const store = createTestStore({
-        mcp: {
-          isConnecting: true,
-        },
+    it("should show connecting status when health check is loading", () => {
+      // Mock health query as loading state
+      mockUseGetHealthQuery.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isError: false,
       });
-      renderWithProviders(<StatusBar />, { store });
+      renderWithProviders(<StatusBar />);
       expect(screen.getByText(/connecting/i)).toBeInTheDocument();
+    });
+
+    it("should show degraded status when health check returns degraded", () => {
+      // Mock health query as degraded state
+      mockUseGetHealthQuery.mockReturnValue({
+        data: { status: "degraded" },
+        isLoading: false,
+        isError: false,
+      });
+      renderWithProviders(<StatusBar />);
+      expect(screen.getByText(/degraded/i)).toBeInTheDocument();
     });
   });
 

@@ -72,6 +72,8 @@ concurrency:
 permissions:
   contents: write
   packages: write
+  id-token: write  # Required for SLSA provenance attestation
+  attestations: write  # Required for GitHub attestations
 
 jobs:
   create-release:
@@ -160,6 +162,7 @@ jobs:
         echo "name=$PLATFORM_NAME" >> $GITHUB_OUTPUT
 
     - name: Build and push platform-specific image
+      id: docker_build
       uses: docker/build-push-action@v6.18.0
       with:
         context: .
@@ -186,6 +189,13 @@ jobs:
         name: sbom-${{ matrix.platform }}
         path: sbom-${{ matrix.platform }}.spdx.json
         retention-days: 90
+
+    - name: Generate SLSA Provenance Attestation
+      uses: actions/attest-build-provenance@v2
+      with:
+        subject-name: ghcr.io/${{ github.repository }}
+        subject-digest: ${{ steps.docker_build.outputs.digest }}
+        push-to-registry: true
 
   create-manifest:
     name: Create Multi-Arch Manifest

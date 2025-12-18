@@ -23,6 +23,10 @@ import type {
   TraceListItem,
   LogEntry,
   ObservabilityMetrics,
+  ObservabilityAlert,
+  ObservabilityAlertRule,
+  AlertListParams,
+  AlertRulesListParams,
   PaginatedResponse,
   PagePaginatedResponse,
   ChatCompletionRequest,
@@ -85,6 +89,9 @@ import type {
   WorkflowExecution,
   WorkflowExecutionListParams,
   WorkflowExecutionListResponse,
+  // Notification Preferences
+  NotificationPreferences,
+  UpdateNotificationPreferencesRequest,
 } from "../types/api";
 import type {
   MCPConnection,
@@ -110,6 +117,10 @@ export type {
   TraceListItem,
   LogEntry,
   ObservabilityMetrics,
+  ObservabilityAlert,
+  ObservabilityAlertRule,
+  AlertListParams,
+  AlertRulesListParams,
   PaginatedResponse,
   PagePaginatedResponse,
   ChatCompletionRequest,
@@ -211,6 +222,8 @@ export const api = createApi({
     "Message",
     "Cost",
     "Trace",
+    "Alert",
+    "AlertRule",
     "FeatureFlags",
     "Project",
     "Connection",
@@ -219,6 +232,7 @@ export const api = createApi({
     "AuditLog",
     "AdminUser",
     "Execution",
+    "NotificationPreferences",
   ],
   endpoints: (builder) => ({
     // Feature Flags
@@ -437,6 +451,17 @@ export const api = createApi({
       ],
     }),
 
+    generateSessionTitle: builder.mutation<
+      { title: string },
+      { message: string }
+    >({
+      query: (body) => ({
+        url: "/sessions/generate-title",
+        method: "POST",
+        body,
+      }),
+    }),
+
     // Messages
     getSessionMessages: builder.query<Message[], string>({
       query: (sessionId) => `/sessions/${sessionId}/messages`,
@@ -495,6 +520,10 @@ export const api = createApi({
           cursor: params.cursor,
           limit: params.limit ?? 50,
           session_id: params.session_id,
+          user_id: params.user_id,
+          workflow_id: params.workflow_id,
+          project_id: params.project_id,
+          organization_id: params.organization_id,
           status: params.status,
           search: params.search,
           sort_by: params.sort_by,
@@ -532,6 +561,42 @@ export const api = createApi({
     getMetrics: builder.query<ObservabilityMetrics, void>({
       query: () => "/observability/metrics",
       providesTags: ["Trace"], // Metrics are related to traces
+    }),
+
+    // Alerts (LGTM Stack - Grafana Unified Alerting)
+    listAlerts: builder.query<
+      PaginatedResponse<ObservabilityAlert>,
+      AlertListParams
+    >({
+      query: (params) => ({
+        url: "/observability/alerts",
+        params: filterParams({
+          state: params.state,
+          severity: params.severity,
+          service_name: params.service_name,
+          limit: params.limit ?? 100,
+        }),
+      }),
+      providesTags: ["Alert"],
+    }),
+
+    getAlert: builder.query<ObservabilityAlert, string>({
+      query: (id) => `/observability/alerts/${id}`,
+      providesTags: (_result, _error, id) => [{ type: "Alert", id }],
+    }),
+
+    listAlertRules: builder.query<
+      ObservabilityAlertRule[],
+      AlertRulesListParams
+    >({
+      query: (params) => ({
+        url: "/observability/alerts/rules",
+        params: filterParams({
+          enabled_only: params?.enabled_only ?? true,
+          limit: params?.limit ?? 100,
+        }),
+      }),
+      providesTags: ["AlertRule"],
     }),
 
     // Projects
@@ -1182,16 +1247,33 @@ export const api = createApi({
       }),
     }),
 
-    // Session Title Generation (AI-powered auto-naming)
-    generateSessionTitle: builder.mutation<
-      { title: string; confidence: number },
-      { messages: Array<{ role: string; content: string }>; session_id: string }
+    // Notification Preferences
+    getNotificationPreferences: builder.query<NotificationPreferences, void>({
+      query: () => "/notifications/preferences",
+      providesTags: ["NotificationPreferences"],
+    }),
+
+    updateNotificationPreferences: builder.mutation<
+      NotificationPreferences,
+      UpdateNotificationPreferencesRequest
     >({
       query: (body) => ({
-        url: "/sessions/generate-title",
-        method: "POST",
+        url: "/notifications/preferences",
+        method: "PUT",
         body,
       }),
+      invalidatesTags: ["NotificationPreferences"],
+    }),
+
+    resetNotificationPreferences: builder.mutation<
+      NotificationPreferences,
+      void
+    >({
+      query: () => ({
+        url: "/notifications/preferences/reset",
+        method: "POST",
+      }),
+      invalidatesTags: ["NotificationPreferences"],
     }),
   }),
 });
@@ -1218,6 +1300,7 @@ export const {
   useGetSessionQuery,
   useCreateSessionMutation,
   useDeleteSessionMutation,
+  useGenerateSessionTitleMutation,
   // Messages
   useGetSessionMessagesQuery,
   // Chat
@@ -1231,6 +1314,10 @@ export const {
   useGetTraceQuery,
   useListLogsQuery,
   useGetMetricsQuery,
+  // Alerts (LGTM Stack)
+  useListAlertsQuery,
+  useGetAlertQuery,
+  useListAlertRulesQuery,
   // Projects
   useListProjectsQuery,
   useGetProjectQuery,
@@ -1295,6 +1382,8 @@ export const {
   useGetIdentityProvidersQuery,
   // Feedback
   useSubmitFeedbackMutation,
-  // Session Title Generation
-  useGenerateSessionTitleMutation,
+  // Notification Preferences
+  useGetNotificationPreferencesQuery,
+  useUpdateNotificationPreferencesMutation,
+  useResetNotificationPreferencesMutation,
 } = api;

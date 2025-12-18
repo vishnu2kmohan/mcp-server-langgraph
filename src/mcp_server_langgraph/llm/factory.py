@@ -401,6 +401,11 @@ class LLMFactory:
         start_time = time.perf_counter()
 
         with self.telemetry.tracer.start_as_current_span("llm.ainvoke") as span:
+            # OTEL GenAI semantic conventions (https://opentelemetry.io/docs/specs/semconv/gen-ai/)
+            span.set_attribute("gen_ai.system", self.provider)
+            span.set_attribute("gen_ai.request.model", self.model_name)
+
+            # Legacy attributes for backward compatibility
             span.set_attribute("llm.provider", self.provider)
             span.set_attribute("llm.model", self.model_name)
 
@@ -430,6 +435,9 @@ class LLMFactory:
                         response.usage.prompt_tokens or 0,  # type: ignore[attr-defined]
                         response.usage.completion_tokens or 0,  # type: ignore[attr-defined]
                     )
+                    # OTEL GenAI token usage attributes
+                    span.set_attribute("gen_ai.usage.input_tokens", response.usage.prompt_tokens or 0)
+                    span.set_attribute("gen_ai.usage.output_tokens", response.usage.completion_tokens or 0)
 
                 self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
 

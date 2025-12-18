@@ -9,7 +9,7 @@ These repositories implement the WorkflowShareRepositoryProtocol.
 """
 
 import secrets
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, cast, runtime_checkable
 
 from mcp_server_langgraph.storage.workflow.models import WorkflowShare
 
@@ -328,7 +328,9 @@ class PostgresWorkflowShareRepository:
                         WorkflowShareModel.user_id == user_id,
                     )
                 )
-                return result.rowcount > 0
+                # CursorResult has rowcount, cast for type safety
+                rowcount: int = cast(int, getattr(result, "rowcount", 0))
+                return rowcount > 0
 
     async def list_shared_with_user(self, user_id: str) -> list[str]:
         """List workflow IDs shared with a user."""

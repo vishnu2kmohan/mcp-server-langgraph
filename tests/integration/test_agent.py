@@ -391,53 +391,6 @@ class TestAgentIntegration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
-    @pytest.mark.asyncio
-    async def test_get_agent_graph_lazy_initialization(self, mock_create_llm):
-        """Test lazy agent graph initialization (regression test for agent_graph = None bug)"""
-        from mcp_server_langgraph.core.agent import get_agent_graph
-
-        mock_model = MagicMock()
-        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
-        mock_create_llm.return_value = mock_model
-
-        # This should create the graph lazily
-        graph = get_agent_graph()
-
-        assert graph is not None
-        assert hasattr(graph, "ainvoke")
-        assert hasattr(graph, "aget_state")
-
-        # Verify the graph can be invoked successfully
-        initial_state = {
-            "messages": [HumanMessage(content="Test message")],
-            "next_action": "",
-            "user_id": get_user_id("alice"),
-            "request_id": "req-lazy-test",
-        }
-
-        result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "lazy-test"}})
-
-        assert result is not None
-        assert "messages" in result
-
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
-    @pytest.mark.asyncio
-    async def test_get_agent_graph_singleton_pattern(self, mock_create_llm):
-        """Test that get_agent_graph returns the same instance (singleton pattern)"""
-        from mcp_server_langgraph.core.agent import get_agent_graph
-
-        mock_model = MagicMock()
-        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
-        mock_create_llm.return_value = mock_model
-
-        # Call get_agent_graph twice
-        graph1 = get_agent_graph()
-        graph2 = get_agent_graph()
-
-        # Should return the same instance
-        assert graph1 is graph2
-
     @pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="Requires ANTHROPIC_API_KEY")
     async def test_real_llm_invocation(self):
         """

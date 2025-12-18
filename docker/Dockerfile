@@ -21,6 +21,11 @@
 #   - 62% smaller base image (530MB → 200MB)
 #   - 88% smaller test image (13.3GB → 1.6GB)
 #
+# SUPPLY CHAIN SECURITY:
+#   - SBOM (Software Bill of Materials) generated in /sbom/requirements.txt
+#   - Build timestamp in /sbom/build-timestamp.txt
+#   - Package name in /sbom/package-name.txt
+#
 # OPENSHIFT COMPATIBILITY:
 #   - Uses numeric UID (1001) in USER directive
 #   - Files owned by UID:0 (root group) for arbitrary UID support
@@ -112,6 +117,19 @@ RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-base,sharing=private \
     --no-extra secrets \
     --no-extra all
 
+# Generate SBOM (Software Bill of Materials) for supply chain security
+# Creates requirements.txt format for easy consumption
+RUN mkdir -p /sbom && \
+    uv export --frozen --no-dev \
+    --extra embeddings-vertex \
+    --no-extra embeddings-local \
+    --no-extra embeddings \
+    --no-extra secrets \
+    --no-extra all \
+    --output-file /sbom/requirements.txt && \
+    echo "mcp-server-langgraph" > /sbom/package-name.txt && \
+    date -u +"%Y-%m-%dT%H:%M:%SZ" > /sbom/build-timestamp.txt
+
 # ==============================================================================
 # STAGE: build-full
 # Build full variant packages (production, with local embeddings)
@@ -130,6 +148,16 @@ RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-full,sharing=private \
     --extra embeddings-local \
     --no-extra secrets
 
+# Generate SBOM (Software Bill of Materials) for supply chain security
+RUN mkdir -p /sbom && \
+    uv export --frozen --no-dev \
+    --extra embeddings-vertex \
+    --extra embeddings-local \
+    --no-extra secrets \
+    --output-file /sbom/requirements.txt && \
+    echo "mcp-server-langgraph" > /sbom/package-name.txt && \
+    date -u +"%Y-%m-%dT%H:%M:%SZ" > /sbom/build-timestamp.txt
+
 # ==============================================================================
 # STAGE: build-test
 # Build test variant packages (development dependencies)
@@ -147,6 +175,17 @@ RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-test-main,sharing=priv
     --no-extra embeddings-local \
     --no-extra embeddings \
     --no-extra all
+
+# Generate SBOM (Software Bill of Materials) for supply chain security
+RUN mkdir -p /sbom && \
+    uv export --frozen --extra dev \
+    --extra embeddings-vertex \
+    --no-extra embeddings-local \
+    --no-extra embeddings \
+    --no-extra all \
+    --output-file /sbom/requirements.txt && \
+    echo "mcp-server-langgraph[dev]" > /sbom/package-name.txt && \
+    date -u +"%Y-%m-%dT%H:%M:%SZ" > /sbom/build-timestamp.txt
 
 # ==============================================================================
 # STAGE: runtime-slim-production
@@ -224,6 +263,9 @@ COPY --chown=1001:0 src/ ./src/
 # SPAStaticFiles in server_streamable.py serves from studio/frontend/dist
 COPY --from=frontend-builder --chown=1001:0 /app/frontend/dist ./src/mcp_server_langgraph/studio/frontend/dist
 
+# Copy SBOM (Software Bill of Materials) for supply chain security
+COPY --from=build-base --chown=1001:0 /sbom /sbom
+
 # Drop privileges - use numeric UID for OpenShift compatibility
 # Note: --chown=1001:0 already sets correct ownership, no need for recursive chmod
 USER 1001
@@ -259,6 +301,9 @@ COPY --chown=1001:0 src/ ./src/
 # Copy built frontend from frontend-builder stage
 # SPAStaticFiles in server_streamable.py serves from studio/frontend/dist
 COPY --from=frontend-builder --chown=1001:0 /app/frontend/dist ./src/mcp_server_langgraph/studio/frontend/dist
+
+# Copy SBOM (Software Bill of Materials) for supply chain security
+COPY --from=build-full --chown=1001:0 /sbom /sbom
 
 # Drop privileges - use numeric UID for OpenShift compatibility
 # Note: --chown=1001:0 already sets correct ownership, no need for recursive chmod
@@ -300,6 +345,9 @@ COPY --from=frontend-builder --chown=1001:0 /app/frontend/dist ./src/mcp_server_
 # Meta-tests that require these directories run on the host, not in the container.
 # Only adr/ is copied for documentation purposes.
 COPY --chown=1001:0 adr/ ./adr/
+
+# Copy SBOM (Software Bill of Materials) for supply chain security
+COPY --from=build-test --chown=1001:0 /sbom /sbom
 
 # Drop privileges - use numeric UID for OpenShift compatibility
 # Note: --chown=1001:0 already sets correct ownership, no need for recursive chmod

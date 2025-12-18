@@ -10,8 +10,14 @@
  * - Persistence via Redux workspaceSlice
  */
 
-import { useCallback, useRef, type ReactNode } from "react";
-import { NavLink } from "react-router";
+import {
+  useCallback,
+  useRef,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
+import { NavLink, useNavigate } from "react-router";
 import {
   MessageSquare,
   GitBranch,
@@ -27,12 +33,23 @@ import {
   ChevronRight,
   ChevronDown,
   Plus,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Sun,
+  Moon,
+  Command,
+  User,
+  LogOut,
 } from "lucide-react";
+import { useTheme } from "../../hooks/useTheme";
+import { selectUser } from "../../store/slices/authSlice";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   selectActiveActivityId,
   selectExpandedGroups,
+  selectLeftSidebarCollapsed,
   setActiveActivityId,
+  setLeftSidebarCollapsed,
   toggleExpandedGroup,
 } from "../../store/slices/workspaceSlice";
 
@@ -182,14 +199,80 @@ const NAV_ITEMS: NavItem[] = [
 // =============================================================================
 
 export function LeftSidebar({
-  collapsed = false,
+  collapsed: collapsedProp,
   className,
   onNewChat,
   onNewProject,
 }: LeftSidebarProps) {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const activeActivityId = useAppSelector(selectActiveActivityId);
   const expandedGroups = useAppSelector(selectExpandedGroups);
+  const collapsedFromStore = useAppSelector(selectLeftSidebarCollapsed);
+  const user = useAppSelector(selectUser);
+  const { isDark, toggleTheme } = useTheme();
+
+  // User menu state
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Use prop if provided, otherwise use Redux state
+  const collapsed = collapsedProp ?? collapsedFromStore;
+
+  // Toggle content panel collapse
+  const handleToggleCollapse = useCallback(() => {
+    dispatch(setLeftSidebarCollapsed(!collapsed));
+  }, [dispatch, collapsed]);
+
+  // Open command palette (Cmd+K)
+  const handleOpenCommandPalette = useCallback(() => {
+    // Dispatch keyboard event to trigger CommandPalette
+    const event = new KeyboardEvent("keydown", {
+      key: "k",
+      metaKey: true,
+      ctrlKey: false,
+      bubbles: true,
+    });
+    document.dispatchEvent(event);
+  }, []);
+
+  // Handle user menu toggle
+  const handleUserMenuToggle = useCallback(() => {
+    setIsUserMenuOpen((prev) => !prev);
+  }, []);
+
+  // Handle logout
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
+    setIsUserMenuOpen(false);
+    navigate("/login");
+  }, [navigate]);
+
+  // Handle settings navigation
+  const handleGoToSettings = useCallback(() => {
+    setIsUserMenuOpen(false);
+    navigate("/studio/settings");
+  }, [navigate]);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    if (isUserMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isUserMenuOpen]);
 
   // Refs for scrolling to groups
   const groupRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -275,6 +358,133 @@ export function LeftSidebar({
             {group.icon}
           </button>
         ))}
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Theme Toggle */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          className={cn(
+            "p-2 rounded-lg transition-all",
+            "focus:outline-none focus:ring-2 focus:ring-primary-500",
+            "text-gray-500 dark:text-gray-400",
+            "hover:bg-gray-200 dark:hover:bg-gray-700",
+          )}
+        >
+          {isDark ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+
+        {/* Command Palette */}
+        <button
+          type="button"
+          onClick={handleOpenCommandPalette}
+          aria-label="Open command palette (⌘K)"
+          title="Command Palette (⌘K)"
+          className={cn(
+            "p-2 rounded-lg transition-all",
+            "focus:outline-none focus:ring-2 focus:ring-primary-500",
+            "text-gray-500 dark:text-gray-400",
+            "hover:bg-gray-200 dark:hover:bg-gray-700",
+          )}
+        >
+          <Command size={20} />
+        </button>
+
+        {/* User Menu */}
+        <div ref={userMenuRef} className="relative">
+          <button
+            type="button"
+            onClick={handleUserMenuToggle}
+            aria-label="User menu"
+            title={user?.username ?? "User"}
+            className={cn(
+              "p-2 rounded-lg transition-all",
+              "focus:outline-none focus:ring-2 focus:ring-primary-500",
+              isUserMenuOpen
+                ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+            )}
+          >
+            <User size={20} />
+          </button>
+
+          {/* User Dropdown Menu */}
+          {isUserMenuOpen && (
+            <div
+              className={cn(
+                "absolute left-12 bottom-0 z-50",
+                "w-48 py-1 rounded-lg shadow-lg",
+                "bg-white dark:bg-gray-800",
+                "border border-gray-200 dark:border-gray-700",
+              )}
+            >
+              {/* User Info */}
+              <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {user?.username ?? "Guest"}
+                </p>
+                {user?.email && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {user.email}
+                  </p>
+                )}
+              </div>
+
+              {/* Menu Items */}
+              <button
+                type="button"
+                onClick={handleGoToSettings}
+                className={cn(
+                  "w-full px-3 py-2 text-left text-sm",
+                  "text-gray-700 dark:text-gray-300",
+                  "hover:bg-gray-100 dark:hover:bg-gray-700",
+                  "flex items-center gap-2",
+                )}
+              >
+                <Settings size={16} />
+                Settings
+              </button>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className={cn(
+                  "w-full px-3 py-2 text-left text-sm",
+                  "text-red-600 dark:text-red-400",
+                  "hover:bg-gray-100 dark:hover:bg-gray-700",
+                  "flex items-center gap-2",
+                )}
+              >
+                <LogOut size={16} />
+                Sign out
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Collapse/Expand Toggle */}
+        <button
+          type="button"
+          onClick={handleToggleCollapse}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={cn(
+            "p-2 rounded-lg transition-all",
+            "focus:outline-none focus:ring-2 focus:ring-primary-500",
+            "text-gray-500 dark:text-gray-400",
+            "hover:bg-gray-200 dark:hover:bg-gray-700",
+          )}
+        >
+          {collapsed ? (
+            <PanelLeftOpen size={20} />
+          ) : (
+            <PanelLeftClose size={20} />
+          )}
+        </button>
       </div>
 
       {/* Content Panel */}

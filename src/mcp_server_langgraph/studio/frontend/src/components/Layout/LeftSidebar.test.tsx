@@ -21,6 +21,13 @@ import { LeftSidebar } from "./LeftSidebar";
 import workspaceReducer, {
   type WorkspaceState,
 } from "../../store/slices/workspaceSlice";
+import authReducer from "../../store/slices/authSlice";
+import uiReducer from "../../store/slices/uiSlice";
+import sessionReducer from "../../store/slices/sessionSlice";
+import projectReducer from "../../store/slices/projectSlice";
+import workflowReducer from "../../store/slices/workflowSlice";
+import notificationReducer from "../../store/slices/notificationSlice";
+import { api } from "../../api";
 
 // Default workspace state for tests
 const defaultWorkspaceState: WorkspaceState = {
@@ -43,15 +50,24 @@ const defaultWorkspaceState: WorkspaceState = {
   lastUpdated: 0,
 };
 
-// Create a test store
+// Create a test store with all required reducers
 function createTestStore(workspaceOverrides: Partial<WorkspaceState> = {}) {
   return configureStore({
     reducer: {
+      [api.reducerPath]: api.reducer,
       workspace: workspaceReducer,
+      auth: authReducer,
+      ui: uiReducer,
+      session: sessionReducer,
+      project: projectReducer,
+      workflow: workflowReducer,
+      notifications: notificationReducer,
     },
     preloadedState: {
       workspace: { ...defaultWorkspaceState, ...workspaceOverrides },
     },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(api.middleware),
   });
 }
 

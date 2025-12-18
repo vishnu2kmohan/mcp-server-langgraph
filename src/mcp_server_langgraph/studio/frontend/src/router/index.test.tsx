@@ -242,7 +242,7 @@ describe("Router", () => {
       expect(typeof indexRoute?.lazy).toBe("function");
     });
 
-    it("should have lazy function for chat route", () => {
+    it("should have lazy function for chat route (via index child)", () => {
       const rootRoute = router.routes.find((r: RouteObject) => r.path === "/");
       const studioRoute = rootRoute?.children?.find(
         (r: RouteObject) => r.path === "studio",
@@ -250,8 +250,10 @@ describe("Router", () => {
       const chatRoute = studioRoute?.children?.find(
         (r: RouteObject) => r.path === "chat",
       );
-      expect(chatRoute?.lazy).toBeDefined();
-      expect(typeof chatRoute?.lazy).toBe("function");
+      // Chat now has children with lazy on index route
+      const indexRoute = chatRoute?.children?.find((r: RouteObject) => r.index);
+      expect(indexRoute?.lazy).toBeDefined();
+      expect(typeof indexRoute?.lazy).toBe("function");
     });
 
     it("should have lazy function for admin dashboard route", () => {
@@ -346,7 +348,7 @@ describe("Router", () => {
       }
     });
 
-    it("should load chat page via lazy function", async () => {
+    it("should load chat page via lazy function (via child)", async () => {
       const rootRoute = router.routes.find((r: RouteObject) => r.path === "/");
       const studioRoute = rootRoute?.children?.find(
         (r: RouteObject) => r.path === "studio",
@@ -354,10 +356,12 @@ describe("Router", () => {
       const chatRoute = studioRoute?.children?.find(
         (r: RouteObject) => r.path === "chat",
       );
-      expect(chatRoute?.lazy).toBeDefined();
+      // Chat now has children with index route that has lazy
+      const indexRoute = chatRoute?.children?.find((r: RouteObject) => r.index);
+      expect(indexRoute?.lazy).toBeDefined();
 
-      if (chatRoute?.lazy) {
-        const result = await chatRoute.lazy();
+      if (indexRoute?.lazy) {
+        const result = await indexRoute.lazy();
         expect(result).toHaveProperty("Component");
       }
     });
@@ -510,8 +514,10 @@ describe("Router", () => {
         (r: RouteObject) => r.path === "chat",
       );
 
-      // Chat route should have lazy (no guard needed)
-      expect(chatRoute?.lazy).toBeDefined();
+      // Chat route now has children with lazy on index route (no guard needed)
+      expect(chatRoute?.children).toBeDefined();
+      const indexRoute = chatRoute?.children?.find((r: RouteObject) => r.index);
+      expect(indexRoute?.lazy).toBeDefined();
       expect(chatRoute?.element).toBeUndefined();
     });
 

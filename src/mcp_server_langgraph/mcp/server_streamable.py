@@ -32,7 +32,7 @@ from mcp_server_langgraph.auth.factory import create_auth_middleware, create_use
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
 from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
-from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
+from mcp_server_langgraph.core.agent import AgentState, cleanup_checkpointer, create_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.core.dependencies import get_openfga_client
 from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
@@ -180,16 +180,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning(f"Error closing session service connections: {e}")
 
-    # Cleanup checkpointer resources (Redis connections, etc.)
+    # Cleanup checkpointer resources (Redis connections, etc.) via server's cleanup method
     try:
-        from mcp_server_langgraph.core.agent import cleanup_checkpointer
-
-        agent_graph = get_agent_graph()  # type: ignore[func-returns-value]
-        if agent_graph and hasattr(agent_graph, "checkpointer") and agent_graph.checkpointer:
-            cleanup_checkpointer(agent_graph.checkpointer)
-            logger.info("Checkpointer resources cleaned up")
+        mcp_server_for_cleanup = get_mcp_server()
+        if hasattr(mcp_server_for_cleanup, "cleanup"):
+            mcp_server_for_cleanup.cleanup()
+            logger.info("MCP server resources cleaned up (including checkpointer)")
     except Exception as e:
-        logger.warning(f"Error cleaning up checkpointer: {e}")
+        logger.warning(f"Error cleaning up MCP server resources: {e}")
 
     # Shutdown observability (flush spans, close exporters)
     shutdown_observability()
@@ -390,6 +388,7 @@ class MCPAgentStreamableServer:
         self,
         openfga_client: OpenFGAClient | None = None,
         settings: Settings | None = None,
+        agent_graph: Any | None = None,
     ) -> None:
         """
         Initialize MCP Agent Streamable Server with optional dependency injection.
@@ -401,6 +400,10 @@ class MCPAgentStreamableServer:
                      If provided, enables dynamic feature toggling (e.g., code execution).
                      If None, uses global settings. This allows tests to inject custom
                      configuration without module reloading.
+            agent_graph: Optional pre-created agent graph instance.
+                        If provided, uses this graph instead of creating one.
+                        This enables dependency injection for testing.
+                        If None, creates a new graph using create_agent_graph().
 
         Example:
             # Default creation (production):
@@ -409,6 +412,15 @@ class MCPAgentStreamableServer:
             # Custom settings injection (testing):
             test_settings = Settings(enable_code_execution=True)
             server = MCPAgentStreamableServer(settings=test_settings)
+
+            # Custom agent graph injection (testing):
+            mock_graph = create_mock_agent_graph()
+            server = MCPAgentStreamableServer(agent_graph=mock_graph)
+
+        Added `agent_graph` parameter (2025-12-18):
+        ============================================
+        Migrated from deprecated get_agent_graph() singleton to create_agent_graph() DI.
+        This eliminates deprecation warnings and enables proper instance-level lifecycle.
         """
         # Store settings for runtime configuration
         # NOTE: When settings=None, we must reference the module-level 'settings'
@@ -418,6 +430,12 @@ class MCPAgentStreamableServer:
         self.settings = settings if settings is not None else sys.modules[__name__].settings
 
         self.server = Server("langgraph-agent")
+
+        # Initialize agent graph (DI or create new)
+        if agent_graph is not None:
+            self.agent_graph = agent_graph
+        else:
+            self.agent_graph = create_agent_graph(settings=self.settings)
 
         # Initialize OpenFGA client
         self.openfga = openfga_client or self._create_openfga_client()
@@ -466,6 +484,19 @@ class MCPAgentStreamableServer:
         else:
             logger.warning("OpenFGA not configured, authorization will use fallback mode")
         return client
+
+    def cleanup(self) -> None:
+        """
+        Cleanup server resources.
+
+        Releases checkpointer resources (Redis connections, etc.) held by the agent graph.
+        Call this when shutting down the server to prevent resource leaks.
+
+        Added 2025-12-18: Part of migration from get_agent_graph() singleton to DI pattern.
+        """
+        if hasattr(self.agent_graph, "checkpointer") and self.agent_graph.checkpointer is not None:
+            cleanup_checkpointer(self.agent_graph.checkpointer)
+            logger.debug("Agent graph checkpointer cleaned up")
 
     async def list_tools_public(self) -> list[Tool]:
         """
@@ -904,7 +935,7 @@ class MCPAgentStreamableServer:
             conversation_resource = f"conversation:{thread_id}"
 
             # Check if conversation exists by trying to get state from checkpointer
-            graph = get_agent_graph()  # type: ignore[func-returns-value]
+            graph = self.agent_graph
             conversation_exists = False
             if hasattr(graph, "checkpointer") and graph.checkpointer is not None:
                 try:
@@ -964,7 +995,7 @@ class MCPAgentStreamableServer:
             config = {"configurable": {"thread_id": thread_id}}
 
             try:
-                result = await get_agent_graph().ainvoke(initial_state, config)  # type: ignore[func-returns-value]
+                result = await self.agent_graph.ainvoke(initial_state, config)
 
                 # Seed OpenFGA tuples for new conversations
                 if not conversation_exists and self.openfga is not None:
@@ -1042,7 +1073,7 @@ class MCPAgentStreamableServer:
                 raise PermissionError(msg)
 
             # Retrieve conversation from checkpointer
-            graph = get_agent_graph()  # type: ignore[func-returns-value]
+            graph = self.agent_graph
 
             if not hasattr(graph, "checkpointer") or graph.checkpointer is None:
                 logger.warning("No checkpointer available, cannot retrieve conversation history")

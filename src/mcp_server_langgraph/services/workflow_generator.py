@@ -215,11 +215,14 @@ Based on this conversation, design a workflow that implements what the user is t
         ]
 
         try:
-            response = await self._llm.ainvoke(messages)
+            response = await self._llm.ainvoke(messages)  # type: ignore[arg-type]
             content = response.content
 
+            # Ensure content is a string (handle multimodal response edge case)
+            content_str = content if isinstance(content, str) else str(content)
+
             # Parse JSON response
-            workflow_output = self._parse_response(content)
+            workflow_output = self._parse_response(content_str)
 
             # Calculate confidence based on workflow completeness
             confidence = self._calculate_confidence(workflow_output)

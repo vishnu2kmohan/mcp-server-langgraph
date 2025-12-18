@@ -657,6 +657,17 @@ jobs:
         uv tool install pre-commit
         echo "✓ pre-commit installed via uv tool"
 
+    - name: Validate lockfile is up-to-date
+      run: |
+        # Early lockfile validation - catches drift before running hooks
+        # Uses uv lock --check (not --locked, which is for uv run/sync)
+        uv lock --check || {
+          echo "::error::uv.lock is out of date with pyproject.toml"
+          echo "Run 'uv lock' locally and commit the updated lockfile"
+          exit 1
+        }
+        echo "✓ Lockfile is current and valid"
+
     - name: Run pre-commit hooks
       run: |
         pre-commit run --all-files --show-diff-on-failure

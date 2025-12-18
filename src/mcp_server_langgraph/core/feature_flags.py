@@ -131,8 +131,8 @@ class FeatureFlags(BaseSettings):
     )
 
     enable_request_batching: bool = Field(
-        default=False,
-        description="Batch multiple requests to reduce LLM API calls (experimental)",
+        default=True,
+        description="Batch multiple requests to reduce LLM API calls",
     )
 
     max_batch_size: int = Field(
@@ -223,9 +223,14 @@ class FeatureFlags(BaseSettings):
         description="Enable AI-powered suggestions in UI",
     )
 
+    enable_notification_preferences: bool = Field(
+        default=True,
+        description="Enable notification preferences UI for users to customize notification types",
+    )
+
     enable_mcp_websocket: bool = Field(
-        default=False,
-        description="Enable MCP 2025-11-25 WebSocket protocol (experimental)",
+        default=True,
+        description="Enable MCP 2025-11-25 WebSocket protocol for real-time bidirectional communication",
     )
 
     enable_interactive_artifacts: bool = Field(
@@ -240,13 +245,13 @@ class FeatureFlags(BaseSettings):
     )
 
     enable_multi_agent_collaboration: bool = Field(
-        default=False,
-        description="Enable multiple agents working together (experimental)",
+        default=True,
+        description="Enable multiple agents working together",
     )
 
     enable_tool_reflection: bool = Field(
-        default=False,
-        description="Enable agents to reflect on tool usage effectiveness (experimental)",
+        default=True,
+        description="Enable agents to reflect on tool usage effectiveness",
     )
 
     model_config = SettingsConfigDict(
@@ -332,6 +337,7 @@ class FeatureFlags(BaseSettings):
             "observability": self.enable_observability_ui,
             "code_export": self.enable_code_export,
             "ai_suggestions": self.enable_ai_suggestions,
+            "notification_preferences": self.enable_notification_preferences,
             "mcp_websocket": self.enable_mcp_websocket,
             "interactive_artifacts": self.enable_interactive_artifacts,
         }

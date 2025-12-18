@@ -18,6 +18,7 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import StreamingResponse
 from litellm import acompletion
+from opentelemetry import trace
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.config import settings
@@ -68,6 +69,7 @@ class ChatCompletionResponse(BaseModel):
     message: ChatMessage = Field(description="Assistant's response message")
     usage: ChatUsage | None = Field(default=None, description="Token usage")
     model: str | None = Field(default=None, description="Model used")
+    trace_id: str | None = Field(default=None, description="OpenTelemetry trace ID for observability correlation")
 
 
 # Service Interface
@@ -131,6 +133,21 @@ class ChatServiceImpl(ChatService):
             self._mcp_bridge = get_mcp_bridge()
         return self._mcp_bridge
 
+    def _get_current_trace_id(self) -> str | None:
+        """Get the current OpenTelemetry trace ID for observability correlation.
+
+        Returns:
+            32-character hex string trace ID, or None if no active trace.
+        """
+        span = trace.get_current_span()
+        if span is None:
+            return None
+        span_context = span.get_span_context()
+        if span_context is None or not span_context.trace_id:
+            return None
+        # Format as 32-character hex string (padded with zeros)
+        return format(span_context.trace_id, "032x")
+
     async def _create_completion_via_mcp(
         self,
         session_id: str,
@@ -159,6 +176,9 @@ class ChatServiceImpl(ChatService):
             user_id=user_id,
         )
 
+        # Prefer trace_id from MCP response, fallback to current span
+        trace_id = response.trace_id or self._get_current_trace_id()
+
         return {
             "id": f"chatcmpl-{uuid4().hex[:8]}",
             "message": {
@@ -167,6 +187,7 @@ class ChatServiceImpl(ChatService):
             },
             "usage": response.usage,
             "model": "mcp-agent",
+            "trace_id": trace_id,
         }
 
     async def _read_resources_for_context(
@@ -279,11 +300,15 @@ class ChatServiceImpl(ChatService):
                 "total_tokens": getattr(response.usage, "total_tokens", None),
             }
 
+        # Get current trace_id for observability correlation
+        trace_id = self._get_current_trace_id()
+
         return {
             "id": response.id or f"chatcmpl-{uuid4().hex[:8]}",
             "message": message_data,
             "usage": usage_data,
             "model": response.model or model,
+            "trace_id": trace_id,
         }
 
     async def create_completion(self, session_id: str, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:

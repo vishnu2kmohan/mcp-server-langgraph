@@ -170,6 +170,42 @@ class TestChatServiceImpl:
         # Should have a model (either from settings or default)
         assert "model" in call_kwargs
 
+    @pytest.mark.asyncio
+    async def test_create_completion_includes_trace_id(
+        self,
+        sample_messages: list[dict],
+        mock_llm_response: MagicMock,
+    ) -> None:
+        """GIVEN a ChatServiceImpl response within a traced context
+        WHEN create_completion() is called
+        THEN it includes the current trace_id for observability correlation
+        """
+        from unittest.mock import MagicMock as MockClass
+
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        # Create a mock span context with a valid trace ID
+        mock_span = MockClass()
+        mock_span_context = MockClass()
+        mock_span_context.trace_id = 0x12345678901234567890123456789ABC
+        mock_span.get_span_context.return_value = mock_span_context
+
+        with (
+            patch("mcp_server_langgraph.api.v1.chat.acompletion") as mock_acompletion,
+            patch("mcp_server_langgraph.api.v1.chat.trace") as mock_trace,
+        ):
+            mock_acompletion.return_value = mock_llm_response
+            mock_trace.get_current_span.return_value = mock_span
+
+            service = ChatServiceImpl()
+            result = await service.create_completion(
+                session_id="test-session",
+                messages=sample_messages,
+            )
+
+        assert "trace_id" in result
+        assert result["trace_id"] == "12345678901234567890123456789abc"
+
     # =========================================================================
     # create_stream() tests
     # =========================================================================

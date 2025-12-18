@@ -10,25 +10,18 @@ Tests:
 """
 
 import gc
-import os
 
 import pytest
 from langchain_core.messages import AIMessage
 from mcp.types import TextContent
 
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
-from mcp_server_langgraph.core import agent as agent_module
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 from tests.conftest import get_user_id
 
 # Mark as integration test to ensure it runs in CI (Integration test)
 pytestmark = pytest.mark.integration
 
-# PYTEST-XDIST FIX: Tests that mock get_agent_graph are unstable under xdist parallel execution
-# because the agent graph is a global singleton that can be polluted by other workers.
-# The mocker.patch() on get_agent_graph can fail when another worker has already imported
-# the module and cached a different mock object.
-_XDIST_AGENT_GRAPH_MOCK_UNSTABLE = os.getenv("PYTEST_XDIST_WORKER") is not None
 # Test authentication token (valid JWT format for testing)
 TEST_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsImV4cCI6OTk5OTk5OTk5OX0.test"
 
@@ -52,21 +45,11 @@ def mcp_server(mock_openfga_client):
 class TestResponseFormatControl:
     """Test response_format parameter in agent_chat tool."""
 
-    def setup_method(self) -> None:
-        """Clear agent graph cache before each test for proper isolation."""
-        agent_module._agent_graph_cache = None
-
     def teardown_method(self) -> None:
-        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
-        agent_module._agent_graph_cache = None
+        """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
-    @pytest.mark.xfail(
-        _XDIST_AGENT_GRAPH_MOCK_UNSTABLE,
-        reason="Agent graph singleton caching can cause mock to fail under xdist",
-        strict=False,  # Allow to pass if mock is applied correctly
-    )
     async def test_chat_with_concise_format(self, mcp_server, mocker):
         """Test agent_chat with concise response format."""
         # Mock the agent graph to return a long response
@@ -77,11 +60,8 @@ class TestResponseFormatControl:
         # Bypass checkpointer code path (mock returns MagicMock for checkpointer which is not None,
         # leading to aget_state being called which is a MagicMock that can't be awaited)
         mock_graph.checkpointer = None
-        # Patch get_agent_graph to return our mock
-        mocker.patch(
-            "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
-            return_value=mock_graph,
-        )
+        # Inject mock graph via DI (no more singleton patching issues)
+        mcp_server.agent_graph = mock_graph
 
         # Mock span context
         mock_span = mocker.Mock()
@@ -106,11 +86,6 @@ class TestResponseFormatControl:
         assert len(response_text) < len(long_response)
 
     @pytest.mark.asyncio
-    @pytest.mark.xfail(
-        _XDIST_AGENT_GRAPH_MOCK_UNSTABLE,
-        reason="Agent graph singleton caching can cause mock to fail under xdist",
-        strict=False,
-    )
     async def test_chat_with_detailed_format(self, mcp_server, mocker):
         """Test agent_chat with detailed response format."""
         # Mock agent response
@@ -120,10 +95,8 @@ class TestResponseFormatControl:
         mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=medium_response)]}
         # Bypass checkpointer code path to avoid MagicMock await issues
         mock_graph.checkpointer = None
-        mocker.patch(
-            "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
-            return_value=mock_graph,
-        )
+        # Inject mock graph via DI (no more singleton patching issues)
+        mcp_server.agent_graph = mock_graph
 
         mock_span = mocker.Mock()
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
@@ -145,11 +118,6 @@ class TestResponseFormatControl:
         assert "[Response truncated" not in response_text
 
     @pytest.mark.asyncio
-    @pytest.mark.xfail(
-        _XDIST_AGENT_GRAPH_MOCK_UNSTABLE,
-        reason="Agent graph singleton caching can cause mock to fail under xdist",
-        strict=False,
-    )
     async def test_chat_default_format_is_concise(self, mcp_server, mocker):
         """Test that default response_format is concise."""
         short_response = "Short answer"
@@ -158,10 +126,8 @@ class TestResponseFormatControl:
         mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=short_response)]}
         # Bypass checkpointer code path to avoid MagicMock await issues
         mock_graph.checkpointer = None
-        mocker.patch(
-            "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
-            return_value=mock_graph,
-        )
+        # Inject mock graph via DI (no more singleton patching issues)
+        mcp_server.agent_graph = mock_graph
 
         mock_span = mocker.Mock()
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
@@ -183,13 +149,8 @@ class TestResponseFormatControl:
 class TestSearchFocusedTools:
     """Test conversation_search replacing list_conversations."""
 
-    def setup_method(self) -> None:
-        """Clear agent graph cache before each test for proper isolation."""
-        agent_module._agent_graph_cache = None
-
     def teardown_method(self) -> None:
-        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
-        agent_module._agent_graph_cache = None
+        """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
@@ -298,13 +259,8 @@ class TestSearchFocusedTools:
 class TestToolNamingAndBackwardCompatibility:
     """Test tool namespacing and backward compatibility."""
 
-    def setup_method(self) -> None:
-        """Clear agent graph cache before each test for proper isolation."""
-        agent_module._agent_graph_cache = None
-
     def teardown_method(self) -> None:
-        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
-        agent_module._agent_graph_cache = None
+        """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
@@ -344,13 +300,8 @@ class TestToolNamingAndBackwardCompatibility:
 class TestEnhancedErrorMessages:
     """Test enhanced, actionable error messages."""
 
-    def setup_method(self) -> None:
-        """Clear agent graph cache before each test for proper isolation."""
-        agent_module._agent_graph_cache = None
-
     def teardown_method(self) -> None:
-        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
-        agent_module._agent_graph_cache = None
+        """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
@@ -384,13 +335,8 @@ class TestEnhancedErrorMessages:
 class TestToolDescriptions:
     """Test enhanced tool descriptions."""
 
-    def setup_method(self) -> None:
-        """Clear agent graph cache before each test for proper isolation."""
-        agent_module._agent_graph_cache = None
-
     def teardown_method(self) -> None:
-        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
-        agent_module._agent_graph_cache = None
+        """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
@@ -438,13 +384,8 @@ class TestToolDescriptions:
 class TestInputValidation:
     """Test input validation for new parameters."""
 
-    def setup_method(self) -> None:
-        """Clear agent graph cache before each test for proper isolation."""
-        agent_module._agent_graph_cache = None
-
     def teardown_method(self) -> None:
-        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
-        agent_module._agent_graph_cache = None
+        """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
@@ -514,21 +455,11 @@ class TestInputValidation:
 class TestEndToEndToolImprovements:
     """End-to-end integration tests for tool improvements."""
 
-    def setup_method(self) -> None:
-        """Clear agent graph cache before each test for proper isolation."""
-        agent_module._agent_graph_cache = None
-
     def teardown_method(self) -> None:
-        """Force GC and clear cache to prevent mock accumulation in xdist workers."""
-        agent_module._agent_graph_cache = None
+        """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
-    @pytest.mark.xfail(
-        _XDIST_AGENT_GRAPH_MOCK_UNSTABLE,
-        reason="Agent graph singleton caching can cause mock to fail under xdist",
-        strict=False,
-    )
     async def test_complete_agent_chat_flow(self, mcp_server, mocker):
         """Test complete agent_chat flow with all improvements."""
         # Mock a realistic agent response
@@ -546,10 +477,8 @@ class TestEndToEndToolImprovements:
         mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=agent_response)]}
         # Bypass checkpointer code path to avoid MagicMock await issues
         mock_graph.checkpointer = None
-        mocker.patch(
-            "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
-            return_value=mock_graph,
-        )
+        # Inject mock graph via DI (no more singleton patching issues)
+        mcp_server.agent_graph = mock_graph
 
         mock_span = mocker.Mock()
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
