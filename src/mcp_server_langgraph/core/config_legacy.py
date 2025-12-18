@@ -245,6 +245,18 @@ class Settings(BaseSettings):
     enable_parallel_execution: bool = False  # Enable parallel tool execution
     max_parallel_tools: int = 5  # Maximum concurrent tool executions
 
+    # Streaming Configuration - MCP WebSocket Streaming
+    streaming_enabled: bool = True  # Enable or disable streaming support globally
+    streaming_metrics_cleanup_interval: int = 300  # Interval in seconds between stream metrics cleanup (5 min)
+    streaming_max_age_seconds: int = 3600  # Maximum age in seconds for completed streams before cleanup (1 hour)
+    streaming_idle_cleanup_interval: int = 60  # Interval in seconds between idle connection cleanup
+    streaming_max_chunk_size: int = 65536  # Maximum size in bytes for a streaming chunk (64KB)
+    streaming_max_notifications_per_second: int = 100  # Rate limit for outbound streaming notifications
+    streaming_max_connections_per_user: int = 5  # Maximum WebSocket connections per user
+    streaming_max_message_size: int = 1_000_000  # Maximum incoming message size (1MB)
+    streaming_max_messages_per_minute: int = 600  # Maximum messages per user per minute
+    streaming_idle_timeout_seconds: int = 1800  # Idle timeout before disconnect (30 minutes)
+
     # Enhanced Note-Taking - Anthropic Best Practice
     enable_llm_extraction: bool = False  # Use LLM for structured note extraction
     extraction_categories: list[str] = [
@@ -427,7 +439,7 @@ class Settings(BaseSettings):
 
     # Audit Integrity (FedRAMP AU-9 compliance)
     # Secret for HMAC-SHA256 hash chain computation
-    audit_integrity_secret: str = "default-audit-secret-change-in-production"
+    audit_integrity_secret: str = "default-audit-secret-change-in-production"  # noqa: S105
 
     # Audit Integrity Scheduler (FedRAMP AU-9 compliance)
     # Runs periodic verification of audit log hash chains
@@ -512,7 +524,7 @@ class Settings(BaseSettings):
             errors.append("Mock authorization must be disabled in production. Set ENABLE_MOCK_AUTHORIZATION=false")
 
         # Check 3: JWT secret key must be set
-        if not self.jwt_secret_key or self.jwt_secret_key == "change-this-in-production":
+        if not self.jwt_secret_key or self.jwt_secret_key == "change-this-in-production":  # noqa: S105
             errors.append(
                 "JWT_SECRET_KEY must be set to a secure value in production. "
                 "Generate a strong secret key and set it via environment variable."

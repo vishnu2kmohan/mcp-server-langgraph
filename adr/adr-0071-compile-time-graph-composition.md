@@ -1,0 +1,123 @@
+# ADR-0071: Compile-Time Graph Composition
+
+## Status
+
+Accepted
+
+## Date
+
+2025-12-18
+
+## Context
+
+The MCP Server LangGraph agent implementation had accumulated 14+ runtime feature flags that were checked inside node functions during graph execution. This pattern violated the Open/Closed Principle (OCP) and created several problems:
+
+1. **Runtime overhead**: Every node function checked multiple `if enable_*` conditions
+2. **Testing friction**: Mocking required understanding internal conditional paths
+3. **Complexity**: 1,000+ line agent.py with deeply nested conditionals
+4. **Checkpoint incompatibility**: No mechanism to detect graph topology changes
+
+Example of the problematic pattern:
+```python
+async def compact_context(state):
+    if not enable_context_compaction:  # Runtime check!
+        return state
+    # ... actual logic
+```
+
+## Decision
+
+Implement compile-time graph composition using the following architecture:
+
+### 1. Immutable AgentConfig
+
+```python
+@dataclass(frozen=True)
+class AgentConfig:
+    """Immutable config that determines graph topology"""
+    enable_context_compaction: bool = True
+    enable_verification: bool = True
+    enable_dynamic_context_loading: bool = False
+    enable_checkpointing: bool = True
+    max_refinement_attempts: int = 3
+    # ... other fields
+
+    @property
+    def graph_version(self) -> str:
+        """Deterministic hash of topology-affecting fields"""
+        topology_values = (
+            self.enable_context_compaction,
+            self.enable_verification,
+            self.enable_dynamic_context_loading,
+            self.enable_checkpointing,
+        )
+        return sha256(str(topology_values).encode()).hexdigest()[:8]
+```
+
+### 2. Build-Time Graph Construction
+
+```python
+def build_agent_graph(config: AgentConfig, checkpointer=None, settings=None):
+    workflow = StateGraph(AgentState)
+
+    # Core nodes (always present)
+    workflow.add_node("router", route_input)
+    workflow.add_node("tools", use_tools)
+    workflow.add_node("respond", generate_response)
+
+    # Conditional nodes added at BUILD time
+    if config.enable_context_compaction:
+        workflow.add_node("compact", compact_context)
+        workflow.add_edge(START, "compact")
+        workflow.add_edge("compact", "router")
+    else:
+        workflow.add_edge(START, "router")
+
+    if config.enable_verification:
+        workflow.add_node("verify", verify_response)
+        workflow.add_node("refine", refine_response)
+        workflow.add_edge("respond", "verify")
+    else:
+        workflow.add_edge("respond", END)
+
+    return workflow.compile(checkpointer=checkpointer)
+```
+
+### 3. Graph Versioning for Checkpoints
+
+The `graph_version` property generates a deterministic 8-character hash based on topology-affecting fields. This version is stored in checkpoint metadata and validated at restore time to prevent incompatible checkpoint restoration.
+
+## Consequences
+
+### Positive
+
+1. **OCP Compliance**: Node functions no longer check feature flags - they just execute
+2. **50% Code Reduction**: agent.py reduced from 1,023 to 461 lines
+3. **Testability**: AgentConfig is a simple immutable dataclass, easy to test
+4. **Type Safety**: Frozen dataclass prevents accidental mutation
+5. **Checkpoint Safety**: Graph version prevents restoring incompatible checkpoints
+6. **Clarity**: Graph topology is visible in build_agent_graph, not scattered in conditionals
+
+### Negative
+
+1. **Migration Required**: Existing code using `_create_agent_graph_singleton` needs migration
+2. **Learning Curve**: Developers must understand compile-time vs runtime patterns
+
+### Neutral
+
+1. **Two AgentState Definitions**: Both agent.py and agent_graph_builder.py define AgentState (they're identical)
+
+## Implementation
+
+Files created/modified:
+- `src/mcp_server_langgraph/core/agent_config.py` (new)
+- `src/mcp_server_langgraph/core/agent_graph_builder.py` (new)
+- `src/mcp_server_langgraph/core/agent.py` (modified - removed dead code)
+- `tests/unit/core/test_agent_config.py` (new - 13 tests)
+- `tests/unit/core/test_agent_graph_builder.py` (new - 13 tests)
+
+## References
+
+- [Open/Closed Principle](https://en.wikipedia.org/wiki/Open%E2%80%93closed_principle)
+- [LangGraph StateGraph](https://langchain-ai.github.io/langgraph/reference/graphs/)
+- [Anthropic Agentic Loop](https://docs.anthropic.com/en/docs/build-with-claude/agentic-systems)

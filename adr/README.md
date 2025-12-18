@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2025-12-11
-**Total ADRs**: 66
+**Last Updated**: 2025-12-18
+**Total ADRs**: 70
 
 ## Overview
 
@@ -35,6 +35,7 @@ Each ADR follows this structure:
 | [ADR-0038](adr-0038-scim-implementation.md) | 38. SCIM 2.0 Implementation Approach | Accepted | 2025-01-28 |
 | [ADR-0039](adr-0039-openfga-permission-inheritance.md) | 39. OpenFGA Permission Inheritance for Service Principals | Accepted | 2025-01-28 |
 | [ADR-0068](adr-0068-gateway-level-authentication.md) | Gateway-Level Authentication with Traefik ForwardAuth | Unknown | Unknown |
+| [ADR-0070](adr-0070-openfga-oidc-authentication.md) | OpenFGA OIDC Authentication Migration | Accepted | 2025-12-15 |
 
 ### Core Architecture
 
@@ -60,6 +61,9 @@ Each ADR follows this structure:
 | [ADR-0050](adr-0050-dependency-singleton-pattern-justification.md) | 50. Dependency Singleton Pattern Justification | Accepted | 2025-11-10 |
 | [ADR-0061](adr-0061-fastapi-web-framework.md) | 61. FastAPI as Web Framework | Accepted | 2025-11-29 |
 | [ADR-0069](adr-0069-mcp-2025-11-25-upgrade.md) | MCP Specification Upgrade to 2025-11-25 | Accepted | Unknown |
+| [ADR-0071](adr-0071-compile-time-graph-composition.md) | Compile-Time Graph Composition | Accepted | 2025-12-18 |
+| [ADR-0072](adr-0072-bootstrap-phase-architecture.md) | Bootstrap Phase Architecture | Accepted | 2025-12-18 |
+| [ADR-0073](adr-0073-configuration-domain-decomposition.md) | Configuration Domain Decomposition | Accepted | 2025-12-18 |
 
 ### Data & Storage
 
