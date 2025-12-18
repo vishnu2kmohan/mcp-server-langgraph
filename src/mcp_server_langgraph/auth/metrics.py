@@ -166,6 +166,15 @@ auth_session_limit_reached = meter.create_counter(
 )
 
 
+# Session Lifecycle Event Metrics (aligned with OTEL span events)
+
+session_lifecycle_events = meter.create_counter(
+    name="session.events.total",
+    description="Session lifecycle events (session.start, session.end) with bounded labels",
+    unit="1",
+)
+
+
 # Helper functions for common metric patterns
 # These functions record both OpenTelemetry and Prometheus metrics
 # to ensure metrics appear in both OTLP and /metrics endpoints
@@ -274,3 +283,39 @@ def record_authorization_check(result: str, resource_type: str = "unknown", dura
     from mcp_server_langgraph.auth import prometheus_metrics
 
     prometheus_metrics.record_authorization_check(result, resource_type, duration_ms / 1000 if duration_ms else None)
+
+
+def record_session_lifecycle_event(
+    event: str,
+    user_id: str | None = None,
+    session_id: str | None = None,
+    reason: str | None = None,
+) -> None:
+    """
+    Record session lifecycle event metrics aligned with OTEL span events.
+
+    Args:
+        event: Either "session.start" or "session.end"
+        user_id: User identifier (optional, for user-level tracking)
+        session_id: Session identifier (optional, for session-level tracking)
+        reason: End reason (only for session.end events: "revoked", "timeout", "error")
+
+    This creates metrics compatible with the session lifecycle dashboard
+    and Grafana Alloy label extraction.
+    """
+    attributes: dict[str, str] = {"event": event}
+
+    if user_id:
+        attributes["user_id"] = user_id
+    if session_id:
+        attributes["session_id"] = session_id
+    if reason and event == "session.end":
+        attributes["reason"] = reason
+
+    # OpenTelemetry metrics
+    session_lifecycle_events.add(1, attributes)
+
+    # Prometheus metrics (for /metrics endpoint)
+    from mcp_server_langgraph.auth import prometheus_metrics
+
+    prometheus_metrics.record_session_lifecycle_event(event, reason)

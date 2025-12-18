@@ -8,6 +8,7 @@ Environment Variables:
     OBSERVABILITY_TRACING_BACKEND: tempo|jaeger|xray|cloudtrace|appinsights
     OBSERVABILITY_LOGGING_BACKEND: loki|elasticsearch|cloudwatch|cloudlogging
     OBSERVABILITY_METRICS_BACKEND: prometheus|mimir|cloudwatch|cloudmonitoring|datadog
+    OBSERVABILITY_ALERTING_BACKEND: grafana|cloudmonitoring|cloudwatch|azuremonitor
 
     # Backend-specific URLs
     TEMPO_URL: http://tempo:3200 (default)
@@ -15,6 +16,7 @@ Environment Variables:
     LOKI_URL: http://loki:3100 (default)
     PROMETHEUS_URL: http://prometheus:9090 (default)
     MIMIR_URL: http://mimir:9009 (default)
+    GRAFANA_URL: http://grafana:3000 (default)
 
 Cloud Provider Configuration:
     # AWS X-Ray
@@ -29,12 +31,15 @@ Cloud Provider Configuration:
     APPLICATIONINSIGHTS_CONNECTION_STRING: InstrumentationKey=...
 
 Example:
-    # Development with Grafana stack
+    # Development with Grafana stack (LGTM)
     export OBSERVABILITY_TRACING_BACKEND=tempo
+    export OBSERVABILITY_ALERTING_BACKEND=grafana
     export TEMPO_URL=http://localhost:3200
+    export GRAFANA_URL=http://localhost:3000
 
     # Production with GCP
     export OBSERVABILITY_TRACING_BACKEND=cloudtrace
+    export OBSERVABILITY_ALERTING_BACKEND=cloudmonitoring
     export GOOGLE_CLOUD_PROJECT=my-prod-project
 """
 
@@ -44,6 +49,7 @@ from enum import Enum
 from typing import TypeVar
 
 from .interfaces import (
+    AlertingQueryClient,
     LoggingQueryClient,
     MetricsQueryClient,
     TracingQueryClient,
@@ -86,10 +92,21 @@ class MetricsBackend(str, Enum):
     STUB = "stub"  # In-memory stub for testing
 
 
+class AlertingBackend(str, Enum):
+    """Supported alerting backends."""
+
+    GRAFANA = "grafana"  # Grafana Alerting (LGTM stack)
+    CLOUDMONITORING = "cloudmonitoring"  # GCP Cloud Monitoring Alerting
+    CLOUDWATCH = "cloudwatch"  # AWS CloudWatch Alarms
+    AZUREMONITOR = "azuremonitor"  # Azure Monitor Alerts
+    STUB = "stub"  # In-memory stub for testing
+
+
 # Global client instances
 _tracing_client: TracingQueryClient | None = None
 _logging_client: LoggingQueryClient | None = None
 _metrics_client: MetricsQueryClient | None = None
+_alerting_client: AlertingQueryClient | None = None
 
 
 def _get_tracing_backend() -> TracingBackend:
@@ -120,6 +137,16 @@ def _get_metrics_backend() -> MetricsBackend:
     except ValueError:
         logger.warning(f"Unknown metrics backend '{backend}', falling back to prometheus")
         return MetricsBackend.PROMETHEUS
+
+
+def _get_alerting_backend() -> AlertingBackend:
+    """Determine alerting backend from environment."""
+    backend = os.getenv("OBSERVABILITY_ALERTING_BACKEND", "grafana").lower()
+    try:
+        return AlertingBackend(backend)
+    except ValueError:
+        logger.warning(f"Unknown alerting backend '{backend}', falling back to grafana")
+        return AlertingBackend.GRAFANA
 
 
 def _create_tracing_client(backend: TracingBackend) -> TracingQueryClient:
@@ -233,6 +260,40 @@ def _create_metrics_client(backend: MetricsBackend) -> MetricsQueryClient:
         raise ValueError(f"Unsupported metrics backend: {backend}")
 
 
+def _create_alerting_client(backend: AlertingBackend) -> AlertingQueryClient:
+    """Create alerting client for the specified backend."""
+    if backend == AlertingBackend.GRAFANA:
+        from .backends.grafana import GrafanaAlertingClient
+
+        return GrafanaAlertingClient()
+
+    elif backend == AlertingBackend.CLOUDMONITORING:
+        # TODO: Implement GCP Cloud Monitoring Alerting backend
+        raise NotImplementedError(
+            "GCP Cloud Monitoring Alerting backend not yet implemented. Use OBSERVABILITY_ALERTING_BACKEND=grafana or stub instead."
+        )
+
+    elif backend == AlertingBackend.CLOUDWATCH:
+        # TODO: Implement AWS CloudWatch Alarms backend
+        raise NotImplementedError(
+            "AWS CloudWatch Alarms backend not yet implemented. Use OBSERVABILITY_ALERTING_BACKEND=grafana or stub instead."
+        )
+
+    elif backend == AlertingBackend.AZUREMONITOR:
+        # TODO: Implement Azure Monitor Alerts backend
+        raise NotImplementedError(
+            "Azure Monitor Alerts backend not yet implemented. Use OBSERVABILITY_ALERTING_BACKEND=grafana or stub instead."
+        )
+
+    elif backend == AlertingBackend.STUB:
+        from .backends.stub import StubAlertingClient
+
+        return StubAlertingClient()
+
+    else:
+        raise ValueError(f"Unsupported alerting backend: {backend}")
+
+
 def get_tracing_client() -> TracingQueryClient:
     """
     Get or create the global tracing query client.
@@ -275,6 +336,20 @@ def get_metrics_client() -> MetricsQueryClient:
     return _metrics_client
 
 
+def get_alerting_client() -> AlertingQueryClient:
+    """
+    Get or create the global alerting query client.
+
+    Returns client based on OBSERVABILITY_ALERTING_BACKEND environment variable.
+    """
+    global _alerting_client
+    if _alerting_client is None:
+        backend = _get_alerting_backend()
+        logger.info(f"Creating alerting client for backend: {backend.value}")
+        _alerting_client = _create_alerting_client(backend)
+    return _alerting_client
+
+
 async def init_query_clients() -> None:
     """
     Initialize all query clients based on environment configuration.
@@ -284,10 +359,12 @@ async def init_query_clients() -> None:
     tracing = get_tracing_client()
     logging_client = get_logging_client()
     metrics = get_metrics_client()
+    alerting = get_alerting_client()
 
     await tracing.initialize()
     await logging_client.initialize()
     await metrics.initialize()
+    await alerting.initialize()
 
     logger.info("All observability query clients initialized")
 
@@ -298,7 +375,7 @@ async def close_query_clients() -> None:
 
     Call this during application shutdown.
     """
-    global _tracing_client, _logging_client, _metrics_client
+    global _tracing_client, _logging_client, _metrics_client, _alerting_client
 
     if _tracing_client:
         await _tracing_client.close()
@@ -311,6 +388,10 @@ async def close_query_clients() -> None:
     if _metrics_client:
         await _metrics_client.close()
         _metrics_client = None
+
+    if _alerting_client:
+        await _alerting_client.close()
+        _alerting_client = None
 
     logger.info("All observability query clients closed")
 
@@ -344,5 +425,12 @@ async def health_check_all() -> dict[str, bool]:
     except Exception as e:
         logger.exception(f"Metrics health check failed: {e}")
         results["metrics"] = False
+
+    try:
+        alerting = get_alerting_client()
+        results["alerting"] = await alerting.health_check()
+    except Exception as e:
+        logger.exception(f"Alerting health check failed: {e}")
+        results["alerting"] = False
 
     return results

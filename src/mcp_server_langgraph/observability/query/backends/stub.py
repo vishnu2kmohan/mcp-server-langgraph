@@ -13,6 +13,12 @@ import logging
 from datetime import datetime, timedelta
 
 from ..interfaces import (
+    Alert,
+    AlertingQueryClient,
+    AlertRule,
+    AlertSearchResult,
+    AlertSeverity,
+    AlertState,
     LogEntry,
     LogLevel,
     LogSearchResult,
@@ -353,6 +359,117 @@ class StubMetricsClient(MetricsQueryClient):
             if series.labels.get("service") == service_name:
                 results[series.metric_name] = series
         return results
+
+    async def health_check(self) -> bool:
+        """Always return healthy for stub."""
+        return self._initialized
+
+
+class StubAlertingClient(AlertingQueryClient):
+    """
+    In-memory stub implementation of AlertingQueryClient.
+
+    Stores alerts in memory for testing purposes.
+    """
+
+    def __init__(self) -> None:
+        self._alerts: dict[str, Alert] = {}
+        self._rules: list[AlertRule] = []
+        self._initialized = False
+
+    async def initialize(self) -> None:
+        """Initialize the stub client."""
+        self._initialized = True
+        logger.info("Stub alerting client initialized")
+
+    async def close(self) -> None:
+        """Close the stub client."""
+        self._alerts.clear()
+        self._rules.clear()
+        logger.info("Stub alerting client closed")
+
+    def add_alert(self, alert: Alert) -> None:
+        """Add an alert to stub storage (for testing)."""
+        self._alerts[alert.alert_id] = alert
+
+    def add_rule(self, rule: AlertRule) -> None:
+        """Add an alert rule to stub storage (for testing)."""
+        self._rules.append(rule)
+
+    async def list_alerts(
+        self,
+        state: AlertState | None = None,
+        severity: AlertSeverity | None = None,
+        labels: dict[str, str] | None = None,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        limit: int = 100,
+    ) -> AlertSearchResult:
+        """List alerts with filtering."""
+        results = []
+
+        for alert in self._alerts.values():
+            # Filter by state
+            if state and alert.state != state:
+                continue
+
+            # Filter by severity
+            if severity and alert.severity != severity:
+                continue
+
+            # Filter by labels
+            if labels:
+                match = all(alert.labels.get(k) == v for k, v in labels.items())
+                if not match:
+                    continue
+
+            # Filter by time range
+            if start and alert.started_at and alert.started_at < start:
+                continue
+            if end and alert.started_at and alert.started_at > end:
+                continue
+
+            results.append(alert)
+
+        # Sort by start time descending and limit
+        results.sort(key=lambda a: a.started_at or datetime.min, reverse=True)
+        results = results[:limit]
+
+        return AlertSearchResult(alerts=results, total_count=len(results))
+
+    async def get_alert(self, alert_id: str) -> Alert | None:
+        """Get an alert by ID."""
+        return self._alerts.get(alert_id)
+
+    async def get_alerts_for_service(
+        self,
+        service_name: str,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        limit: int = 100,
+    ) -> AlertSearchResult:
+        """Get alerts for a specific service."""
+        # Try matching on service, job, app labels
+        for label_name in ["service", "job", "app", "service_name"]:
+            result = await self.list_alerts(
+                labels={label_name: service_name},
+                start=start,
+                end=end,
+                limit=limit,
+            )
+            if result.alerts:
+                return result
+
+        return AlertSearchResult(alerts=[], total_count=0)
+
+    async def list_alert_rules(
+        self,
+        enabled_only: bool = True,
+        limit: int = 100,
+    ) -> list[AlertRule]:
+        """List configured alerting rules."""
+        rules = [r for r in self._rules if r.enabled] if enabled_only else list(self._rules)
+        return rules[:limit]
 
     async def health_check(self) -> bool:
         """Always return healthy for stub."""

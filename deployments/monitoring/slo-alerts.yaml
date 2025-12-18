@@ -1,0 +1,293 @@
+# SLO Alert Rules for MCP Server LangGraph
+#
+# These alerts define Service Level Objectives (SLOs) for the mcp-server-langgraph service.
+# Deploy to Prometheus/Mimir using: kubectl apply -f slo-alerts.yaml
+#
+# SLO Targets:
+#   - Availability: 99.9% uptime
+#   - Latency (p95): < 500ms
+#   - Latency (p99): < 2000ms
+#   - Error Rate: < 1%
+#   - Throughput: Within 50% of baseline
+#
+# References:
+#   - Google SRE Workbook: https://sre.google/workbook/alerting-on-slos/
+#   - Prometheus Recording Rules: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mcp-server-slo-alerts
+  namespace: monitoring
+  labels:
+    app: mcp-server-langgraph
+    prometheus: mcp-server
+    role: alert-rules
+spec:
+  groups:
+    # =========================================================================
+    # SLO Recording Rules - Pre-computed metrics for faster alerting
+    # =========================================================================
+    - name: slo.recording_rules
+      interval: 30s
+      rules:
+        # Error budget remaining (30-day window)
+        - record: slo:error_budget:remaining_percent
+          expr: |
+            1 - (
+              sum(rate(http_requests_total{job="mcp-server-langgraph",status=~"5.."}[30d]))
+              / sum(rate(http_requests_total{job="mcp-server-langgraph"}[30d]))
+            ) / (1 - 0.999)
+
+        # Burn rate - how fast we're consuming error budget
+        - record: slo:error_budget:burn_rate_1h
+          expr: |
+            sum(rate(http_requests_total{job="mcp-server-langgraph",status=~"5.."}[1h]))
+            / sum(rate(http_requests_total{job="mcp-server-langgraph"}[1h]))
+            / 0.001
+
+        - record: slo:error_budget:burn_rate_6h
+          expr: |
+            sum(rate(http_requests_total{job="mcp-server-langgraph",status=~"5.."}[6h]))
+            / sum(rate(http_requests_total{job="mcp-server-langgraph"}[6h]))
+            / 0.001
+
+        # Availability (1h, 24h, 7d, 30d windows)
+        - record: slo:availability:ratio_1h
+          expr: |
+            sum(rate(http_requests_total{job="mcp-server-langgraph",status!~"5.."}[1h]))
+            / sum(rate(http_requests_total{job="mcp-server-langgraph"}[1h]))
+
+        - record: slo:availability:ratio_24h
+          expr: |
+            sum(rate(http_requests_total{job="mcp-server-langgraph",status!~"5.."}[24h]))
+            / sum(rate(http_requests_total{job="mcp-server-langgraph"}[24h]))
+
+        # Latency SLI (p95, p99)
+        - record: slo:latency:p95_seconds
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(http_request_duration_seconds_bucket{job="mcp-server-langgraph"}[5m])) by (le)
+            )
+
+        - record: slo:latency:p99_seconds
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(http_request_duration_seconds_bucket{job="mcp-server-langgraph"}[5m])) by (le)
+            )
+
+    # =========================================================================
+    # Multi-Window Multi-Burn-Rate Alerts (Google SRE recommended)
+    # =========================================================================
+    - name: slo.multiwindow_multiburn
+      interval: 30s
+      rules:
+        # Page: 2% of 30-day budget consumed in 1 hour (14.4x burn rate)
+        - alert: SLOBudgetBurnCritical
+          expr: |
+            (
+              slo:error_budget:burn_rate_1h > 14.4
+              and
+              slo:error_budget:burn_rate_6h > 14.4
+            )
+          for: 2m
+          labels:
+            severity: critical
+            slo: availability
+            window: fast
+          annotations:
+            summary: "Critical SLO burn rate - immediate action required"
+            description: |
+              Error budget is being consumed at {{ $value | printf "%.1f" }}x the sustainable rate.
+              At this rate, the entire 30-day budget will be exhausted in {{ printf "%.1f" (30 / $value) }} days.
+            runbook: "https://docs.example.com/runbooks/slo-burn-critical"
+            dashboard: "https://grafana.example.com/d/slo/slo-dashboard"
+
+        # Page: 5% of 30-day budget consumed in 6 hours (6x burn rate)
+        - alert: SLOBudgetBurnHigh
+          expr: |
+            (
+              slo:error_budget:burn_rate_1h > 6
+              and
+              slo:error_budget:burn_rate_6h > 6
+            )
+          for: 5m
+          labels:
+            severity: warning
+            slo: availability
+            window: medium
+          annotations:
+            summary: "High SLO burn rate - investigation needed"
+            description: |
+              Error budget is being consumed at {{ $value | printf "%.1f" }}x the sustainable rate.
+              Investigate recent deployments or dependency issues.
+            runbook: "https://docs.example.com/runbooks/slo-burn-high"
+
+        # Ticket: 10% of 30-day budget consumed in 3 days (3x burn rate)
+        - alert: SLOBudgetBurnElevated
+          expr: |
+            (
+              slo:error_budget:burn_rate_6h > 3
+            )
+          for: 30m
+          labels:
+            severity: info
+            slo: availability
+            window: slow
+          annotations:
+            summary: "Elevated SLO burn rate - monitor closely"
+            description: |
+              Error budget consumption is elevated. Review error trends and plan remediation.
+
+    # =========================================================================
+    # Latency SLO Alerts
+    # =========================================================================
+    - name: slo.latency
+      interval: 30s
+      rules:
+        - alert: SLOLatencyP95Breach
+          expr: |
+            slo:latency:p95_seconds > 0.5
+          for: 5m
+          labels:
+            severity: critical
+            slo: latency
+            percentile: p95
+          annotations:
+            summary: "P95 latency exceeds 500ms SLO"
+            description: |
+              P95 latency is {{ $value | humanizeDuration }}, exceeding the 500ms SLO target.
+              Check for slow database queries, LLM provider issues, or resource contention.
+            dashboard: "https://grafana.example.com/d/latency/latency-dashboard"
+
+        - alert: SLOLatencyP99Breach
+          expr: |
+            slo:latency:p99_seconds > 2.0
+          for: 5m
+          labels:
+            severity: warning
+            slo: latency
+            percentile: p99
+          annotations:
+            summary: "P99 latency exceeds 2000ms threshold"
+            description: |
+              P99 latency is {{ $value | humanizeDuration }}, indicating tail latency issues.
+              Review slow LLM calls or complex request patterns.
+
+        - alert: SLOLatencyDegrading
+          expr: |
+            deriv(slo:latency:p95_seconds[30m]) > 0.001
+          for: 15m
+          labels:
+            severity: info
+            slo: latency
+            type: trend
+          annotations:
+            summary: "Latency trending upward"
+            description: "P95 latency is showing an upward trend. Investigate before it breaches SLO."
+
+    # =========================================================================
+    # Error Budget Exhaustion Alerts
+    # =========================================================================
+    - name: slo.error_budget
+      interval: 5m
+      rules:
+        - alert: SLOErrorBudgetExhausted
+          expr: |
+            slo:error_budget:remaining_percent < 0
+          labels:
+            severity: critical
+            slo: error_budget
+          annotations:
+            summary: "Error budget exhausted"
+            description: |
+              The 30-day error budget has been fully consumed.
+              Availability is below the 99.9% SLO target.
+              Consider freezing deployments until stability is restored.
+            runbook: "https://docs.example.com/runbooks/error-budget-exhausted"
+
+        - alert: SLOErrorBudgetLow
+          expr: |
+            slo:error_budget:remaining_percent < 0.25
+            and
+            slo:error_budget:remaining_percent >= 0
+          for: 10m
+          labels:
+            severity: warning
+            slo: error_budget
+          annotations:
+            summary: "Error budget below 25%"
+            description: |
+              Only {{ $value | humanizePercentage }} of the 30-day error budget remains.
+              Consider risk-reduction measures for upcoming changes.
+
+        - alert: SLOErrorBudgetHalfConsumed
+          expr: |
+            slo:error_budget:remaining_percent < 0.5
+            and
+            slo:error_budget:remaining_percent >= 0.25
+          for: 1h
+          labels:
+            severity: info
+            slo: error_budget
+          annotations:
+            summary: "Error budget 50% consumed"
+            description: |
+              {{ $value | humanizePercentage }} of error budget remains for this 30-day window.
+
+    # =========================================================================
+    # Golden Signals - Saturation Alerts
+    # =========================================================================
+    - name: slo.saturation
+      interval: 30s
+      rules:
+        - alert: SLOCPUSaturation
+          expr: |
+            (
+              sum(rate(container_cpu_usage_seconds_total{pod=~"mcp-server-langgraph-.*"}[5m]))
+              / sum(kube_pod_container_resource_limits{pod=~"mcp-server-langgraph-.*",resource="cpu"})
+            ) > 0.85
+          for: 10m
+          labels:
+            severity: warning
+            slo: saturation
+            resource: cpu
+          annotations:
+            summary: "High CPU saturation (>85%)"
+            description: |
+              CPU utilization is at {{ $value | humanizePercentage }}.
+              This may impact latency SLO. Consider scaling horizontally.
+
+        - alert: SLOMemorySaturation
+          expr: |
+            (
+              sum(container_memory_working_set_bytes{pod=~"mcp-server-langgraph-.*"})
+              / sum(kube_pod_container_resource_limits{pod=~"mcp-server-langgraph-.*",resource="memory"})
+            ) > 0.85
+          for: 10m
+          labels:
+            severity: warning
+            slo: saturation
+            resource: memory
+          annotations:
+            summary: "High memory saturation (>85%)"
+            description: |
+              Memory utilization is at {{ $value | humanizePercentage }}.
+              Risk of OOM events affecting availability SLO.
+
+        - alert: SLOConnectionPoolSaturation
+          expr: |
+            (
+              sum(pg_stat_activity_count{datname="langgraph"})
+              / sum(pg_settings_max_connections{})
+            ) > 0.80
+          for: 5m
+          labels:
+            severity: warning
+            slo: saturation
+            resource: database_connections
+          annotations:
+            summary: "Database connection pool near saturation"
+            description: |
+              {{ $value | humanizePercentage }} of PostgreSQL connections in use.
+              May cause request queueing and latency increases.

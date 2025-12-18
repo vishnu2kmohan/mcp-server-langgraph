@@ -32,6 +32,7 @@ _auth_session_created_total: Any = None
 _auth_session_revoked_total: Any = None
 _auth_authorization_checks_total: Any = None
 _auth_authorization_duration_seconds: Any = None
+_session_lifecycle_events_total: Any = None
 
 
 def _init_metrics() -> bool:
@@ -49,6 +50,7 @@ def _init_metrics() -> bool:
     global _auth_session_revoked_total  # noqa: PLW0603
     global _auth_authorization_checks_total  # noqa: PLW0603
     global _auth_authorization_duration_seconds  # noqa: PLW0603
+    global _session_lifecycle_events_total  # noqa: PLW0603
 
     if _metrics_available is not None:
         return _metrics_available
@@ -133,6 +135,13 @@ def _init_metrics() -> bool:
             "Authorization check duration in seconds",
             ["resource_type"],
             buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0),
+        )
+
+        # Session lifecycle metrics (aligned with OTEL span events)
+        _session_lifecycle_events_total = Counter(
+            "session_events_total",
+            "Session lifecycle events (session.start, session.end) with bounded labels",
+            ["event", "reason"],  # event: session.start, session.end; reason: revoked, timeout, error
         )
 
         _metrics_available = True
@@ -341,5 +350,34 @@ def record_authorization_check(result: str, resource_type: str, duration_seconds
 
         if duration_seconds is not None and _auth_authorization_duration_seconds:
             _auth_authorization_duration_seconds.labels(resource_type=resource_type).observe(duration_seconds)
+    except Exception:
+        pass
+
+
+# =============================================================================
+# Session Lifecycle Metrics Recording Functions
+# =============================================================================
+
+
+def record_session_lifecycle_event(event: str, reason: str | None = None) -> None:
+    """
+    Record a session lifecycle event.
+
+    Args:
+        event: Event type ("session.start" or "session.end")
+        reason: End reason (only for session.end events: "revoked", "timeout", "error")
+                For session.start, this should be None or empty string
+
+    This creates metrics compatible with the session lifecycle dashboard
+    and Grafana Alloy label extraction.
+    """
+    if not _metrics_available:
+        return
+
+    try:
+        if _session_lifecycle_events_total:
+            # Use empty string for reason on session.start events
+            reason_label = reason if reason and event == "session.end" else ""
+            _session_lifecycle_events_total.labels(event=event, reason=reason_label).inc()
     except Exception:
         pass

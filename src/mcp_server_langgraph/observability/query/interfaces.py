@@ -528,12 +528,208 @@ class MetricsQueryClient(ABC):
 # ==============================================================================
 
 
+# ==============================================================================
+# Alerting Data Types
+# ==============================================================================
+
+
+class AlertSeverity(str, Enum):
+    """Alert severity levels."""
+
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
+
+
+class AlertState(str, Enum):
+    """Current state of an alert."""
+
+    PENDING = "pending"
+    FIRING = "firing"
+    RESOLVED = "resolved"
+    SILENCED = "silenced"
+
+
+@dataclass
+class Alert:
+    """
+    Information about an alert.
+
+    Represents an active, pending, or resolved alert from the alerting system.
+    """
+
+    alert_id: str
+    name: str
+    severity: AlertSeverity
+    state: AlertState
+    message: str
+    labels: dict[str, str] = field(default_factory=dict)
+    annotations: dict[str, str] = field(default_factory=dict)
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
+    generator_url: str | None = None  # Link to view in monitoring system
+
+    @property
+    def is_active(self) -> bool:
+        """Check if alert is currently active (pending or firing)."""
+        return self.state in (AlertState.PENDING, AlertState.FIRING)
+
+    @property
+    def duration_ms(self) -> float | None:
+        """Get alert duration in milliseconds."""
+        if not self.started_at:
+            return None
+        end = self.ended_at or datetime.now(UTC)
+        return (end - self.started_at).total_seconds() * 1000
+
+
+@dataclass
+class AlertRule:
+    """
+    An alerting rule definition.
+
+    Represents a rule that generates alerts when conditions are met.
+    """
+
+    rule_id: str
+    name: str
+    expression: str  # PromQL, LogQL, or backend-specific query
+    severity: AlertSeverity
+    labels: dict[str, str] = field(default_factory=dict)
+    annotations: dict[str, str] = field(default_factory=dict)
+    evaluation_interval: timedelta = field(default_factory=lambda: timedelta(minutes=1))
+    for_duration: timedelta | None = None  # How long condition must be true
+    enabled: bool = True
+
+
+@dataclass
+class AlertSearchResult:
+    """Result of an alert search query."""
+
+    alerts: list[Alert]
+    total_count: int
+    next_cursor: str | None = None
+
+
+# ==============================================================================
+# Abstract Alerting Query Client
+# ==============================================================================
+
+
+class AlertingQueryClient(ABC):
+    """
+    Abstract interface for querying alerts.
+
+    Implementations:
+    - GrafanaAlertingClient (Grafana Alerting)
+    - CloudAlertsClient (GCP Cloud Alerting / Monitoring Alerting Policies)
+    - CloudWatchAlarmsClient (AWS CloudWatch Alarms)
+    - AzureMonitorAlertsClient (Azure Monitor Alerts)
+    """
+
+    @abstractmethod
+    async def initialize(self) -> None:
+        """Initialize the client."""
+        ...
+
+    @abstractmethod
+    async def close(self) -> None:
+        """Close the client and release resources."""
+        ...
+
+    @abstractmethod
+    async def list_alerts(
+        self,
+        state: AlertState | None = None,
+        severity: AlertSeverity | None = None,
+        labels: dict[str, str] | None = None,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        limit: int = 100,
+    ) -> AlertSearchResult:
+        """
+        List alerts matching the given criteria.
+
+        Args:
+            state: Filter by alert state (pending, firing, resolved, silenced)
+            severity: Filter by severity level
+            labels: Filter by label key-value pairs
+            start: Search start time
+            end: Search end time
+            limit: Maximum alerts to return
+
+        Returns:
+            AlertSearchResult with matching alerts
+        """
+        ...
+
+    @abstractmethod
+    async def get_alert(self, alert_id: str) -> Alert | None:
+        """
+        Get a specific alert by ID.
+
+        Args:
+            alert_id: The alert identifier
+
+        Returns:
+            Alert if found, None otherwise
+        """
+        ...
+
+    @abstractmethod
+    async def get_alerts_for_service(
+        self,
+        service_name: str,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        limit: int = 100,
+    ) -> AlertSearchResult:
+        """
+        Get alerts for a specific service.
+
+        Args:
+            service_name: Service to get alerts for
+            start: Search start time
+            end: Search end time
+            limit: Maximum alerts to return
+
+        Returns:
+            AlertSearchResult with matching alerts
+        """
+        ...
+
+    @abstractmethod
+    async def list_alert_rules(
+        self,
+        enabled_only: bool = True,
+        limit: int = 100,
+    ) -> list[AlertRule]:
+        """
+        List configured alerting rules.
+
+        Args:
+            enabled_only: Only return enabled rules
+            limit: Maximum rules to return
+
+        Returns:
+            List of alert rules
+        """
+        ...
+
+    @abstractmethod
+    async def health_check(self) -> bool:
+        """Check if the alerting backend is healthy."""
+        ...
+
+
 class ObservabilityClient(Protocol):
     """Protocol combining all observability query interfaces."""
 
     tracing: TracingQueryClient
     logging: LoggingQueryClient
     metrics: MetricsQueryClient
+    alerting: AlertingQueryClient
 
     async def initialize_all(self) -> None:
         """Initialize all clients."""

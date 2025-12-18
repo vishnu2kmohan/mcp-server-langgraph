@@ -9,7 +9,122 @@ Prometheus metrics for LLM operations:
 These metrics are scraped by Alloy and displayed in the LLM Performance Grafana dashboard.
 """
 
+import re
 from typing import Any
+
+# =============================================================================
+# BOUNDED LABEL CONSTANTS
+# =============================================================================
+# These constants define the allowed values for metric labels to prevent
+# cardinality explosion. Unknown values are mapped to "other".
+
+BOUNDED_OPERATIONS: frozenset[str] = frozenset(
+    {
+        "chat",
+        "completion",
+        "embedding",
+        "streaming",
+        "tool_call",
+        "function_call",
+        "other",
+    }
+)
+
+BOUNDED_STATUSES: frozenset[str] = frozenset(
+    {
+        "success",
+        "error",
+        "timeout",
+        "rate_limited",
+        "cancelled",
+        "fallback",
+        "other",
+    }
+)
+
+# Model family patterns for bounded labels
+# Maps regex patterns to normalized model family names
+_MODEL_FAMILY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    # OpenAI GPT models
+    (re.compile(r"^gpt-4o", re.IGNORECASE), "gpt-4o"),
+    (re.compile(r"^gpt-4", re.IGNORECASE), "gpt-4"),
+    (re.compile(r"^gpt-3\.5", re.IGNORECASE), "gpt-3.5"),
+    (re.compile(r"^gpt-5", re.IGNORECASE), "gpt-5"),
+    (re.compile(r"^o1", re.IGNORECASE), "o1"),
+    (re.compile(r"^o3", re.IGNORECASE), "o3"),
+    # Anthropic Claude 4 models (new naming convention)
+    (re.compile(r"claude-opus-4", re.IGNORECASE), "claude-4-opus"),
+    (re.compile(r"claude-sonnet-4", re.IGNORECASE), "claude-4-sonnet"),
+    (re.compile(r"claude-haiku-4", re.IGNORECASE), "claude-4-haiku"),
+    # Anthropic Claude 3.5 models
+    (re.compile(r"claude-3-5-sonnet", re.IGNORECASE), "claude-3.5-sonnet"),
+    (re.compile(r"claude-3-5-haiku", re.IGNORECASE), "claude-3.5-haiku"),
+    (re.compile(r"claude-3-5-opus", re.IGNORECASE), "claude-3.5-opus"),
+    # Anthropic Claude 3 models
+    (re.compile(r"claude-3-opus", re.IGNORECASE), "claude-3-opus"),
+    (re.compile(r"claude-3-sonnet", re.IGNORECASE), "claude-3-sonnet"),
+    (re.compile(r"claude-3-haiku", re.IGNORECASE), "claude-3-haiku"),
+    # Google Gemini models
+    (re.compile(r"gemini-2\.0-flash", re.IGNORECASE), "gemini-2.0-flash"),
+    (re.compile(r"gemini-2\.0-pro", re.IGNORECASE), "gemini-2.0-pro"),
+    (re.compile(r"gemini-1\.5-flash", re.IGNORECASE), "gemini-1.5-flash"),
+    (re.compile(r"gemini-1\.5-pro", re.IGNORECASE), "gemini-1.5-pro"),
+    (re.compile(r"gemini-pro", re.IGNORECASE), "gemini-pro"),
+]
+
+
+def get_model_family(model: str | None) -> str:
+    """
+    Extract bounded model family from model name.
+
+    Maps detailed model names to bounded model families to prevent
+    metric label cardinality explosion.
+
+    Args:
+        model: Full model name (e.g., "gpt-4-turbo-preview", "claude-3-opus-20240229")
+
+    Returns:
+        Bounded model family (e.g., "gpt-4", "claude-3-opus") or "other" for unknown models
+    """
+    if not model:
+        return "unknown"
+
+    for pattern, family in _MODEL_FAMILY_PATTERNS:
+        if pattern.search(model):
+            return family
+
+    return "other"
+
+
+def normalize_operation(operation: str) -> str:
+    """
+    Normalize operation to bounded value.
+
+    Args:
+        operation: Raw operation name
+
+    Returns:
+        Bounded operation name or "other" if not in allowed set
+    """
+    if operation in BOUNDED_OPERATIONS:
+        return operation
+    return "other"
+
+
+def normalize_status(status: str) -> str:
+    """
+    Normalize status to bounded value.
+
+    Args:
+        status: Raw status name
+
+    Returns:
+        Bounded status name or "other" if not in allowed set
+    """
+    if status in BOUNDED_STATUSES:
+        return status
+    return "other"
+
 
 # Lazy-load prometheus_client to handle missing dependency
 _metrics_available: bool | None = None
