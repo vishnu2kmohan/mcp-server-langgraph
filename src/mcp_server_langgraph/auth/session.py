@@ -26,7 +26,7 @@ except ImportError:
     redis = None  # type: ignore[assignment]
     REDIS_AVAILABLE = False
 
-from mcp_server_langgraph.auth.metrics import record_session_operation
+from mcp_server_langgraph.auth.metrics import record_session_lifecycle_event, record_session_operation
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 
@@ -321,6 +321,15 @@ class InMemorySessionStore(SessionStore):
                 self.user_sessions[user_id] = []
             self.user_sessions[user_id].append(session_id)
 
+            # Emit session.start lifecycle event (OpenTelemetry Semantic Convention)
+            span.add_event(
+                "session.start",
+                {"session.id": session_id, "user.id": user_id},
+            )
+
+            # Record session lifecycle metrics (for dashboards)
+            record_session_lifecycle_event("session.start", user_id=user_id, session_id=session_id)
+
             # Record session creation metrics
             duration_ms = (time.perf_counter() - start_time) * 1000
             record_session_operation("create", "memory", "success", duration_ms)
@@ -403,29 +412,41 @@ class InMemorySessionStore(SessionStore):
 
         start_time = time.perf_counter()
 
-        if session_id not in self.sessions:
+        with tracer.start_as_current_span("session.delete") as span:
+            span.set_attribute("session.id", session_id)
+
+            if session_id not in self.sessions:
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_session_operation("revoke", "memory", "not_found", duration_ms)
+                return False
+
+            session = self.sessions.pop(session_id)
+            user_id = session.user_id
+
+            # Remove from user sessions tracking
+            if user_id in self.user_sessions:
+                try:
+                    self.user_sessions[user_id].remove(session_id)
+                    if not self.user_sessions[user_id]:
+                        del self.user_sessions[user_id]
+                except ValueError:
+                    pass
+
+            # Emit session.end lifecycle event (OpenTelemetry Semantic Convention)
+            span.add_event(
+                "session.end",
+                {"session.id": session_id, "session.end.reason": "revoked"},
+            )
+
+            # Record session lifecycle metrics (for dashboards)
+            record_session_lifecycle_event("session.end", session_id=session_id, reason="revoked")
+
+            # Record session deletion metrics
             duration_ms = (time.perf_counter() - start_time) * 1000
-            record_session_operation("revoke", "memory", "not_found", duration_ms)
-            return False
+            record_session_operation("revoke", "memory", "success", duration_ms)
 
-        session = self.sessions.pop(session_id)
-        user_id = session.user_id
-
-        # Remove from user sessions tracking
-        if user_id in self.user_sessions:
-            try:
-                self.user_sessions[user_id].remove(session_id)
-                if not self.user_sessions[user_id]:
-                    del self.user_sessions[user_id]
-            except ValueError:
-                pass
-
-        # Record session deletion metrics
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        record_session_operation("revoke", "memory", "success", duration_ms)
-
-        logger.info(f"Session deleted: {session_id}")
-        return True
+            logger.info(f"Session deleted: {session_id}")
+            return True
 
     async def list_user_sessions(self, user_id: str) -> list[SessionData]:
         """List all active sessions for a user"""
@@ -613,6 +634,15 @@ class RedisSessionStore(SessionStore):
             await self.redis.rpush(user_sessions_key, session_id)
             await self.redis.expire(user_sessions_key, ttl + 3600)  # Extra hour
 
+            # Emit session.start lifecycle event (OpenTelemetry Semantic Convention)
+            span.add_event(
+                "session.start",
+                {"session.id": session_id, "user.id": user_id},
+            )
+
+            # Record session lifecycle metrics (for dashboards)
+            record_session_lifecycle_event("session.start", user_id=user_id, session_id=session_id)
+
             # Record session creation metrics
             duration_ms = (time.perf_counter() - start_time) * 1000
             record_session_operation("create", "redis", "success", duration_ms)
@@ -722,26 +752,39 @@ class RedisSessionStore(SessionStore):
 
         start_time = time.perf_counter()
 
-        session_key = f"session:{session_id}"
+        with tracer.start_as_current_span("session.delete") as span:
+            span.set_attribute("session.id", session_id)
 
-        # Get user_id before deleting
-        user_id = await self.redis.hget(session_key, "user_id")
+            session_key = f"session:{session_id}"
 
-        # Delete session
-        deleted = await self.redis.delete(session_key)
+            # Get user_id before deleting
+            user_id = await self.redis.hget(session_key, "user_id")
 
-        if deleted and user_id:
-            # Remove from user sessions list
-            user_sessions_key = f"user_sessions:{user_id}"
-            await self.redis.lrem(user_sessions_key, 0, session_id)
+            # Delete session
+            deleted = await self.redis.delete(session_key)
 
-        # Record session deletion metrics
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        result = "success" if deleted else "not_found"
-        record_session_operation("revoke", "redis", result, duration_ms)
+            if deleted and user_id:
+                # Remove from user sessions list
+                user_sessions_key = f"user_sessions:{user_id}"
+                await self.redis.lrem(user_sessions_key, 0, session_id)
 
-        logger.info(f"Session deleted from Redis: {session_id}")
-        return bool(deleted)
+            if deleted:
+                # Emit session.end lifecycle event (OpenTelemetry Semantic Convention)
+                span.add_event(
+                    "session.end",
+                    {"session.id": session_id, "session.end.reason": "revoked"},
+                )
+
+                # Record session lifecycle metrics (for dashboards)
+                record_session_lifecycle_event("session.end", session_id=session_id, reason="revoked")
+
+            # Record session deletion metrics
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            result = "success" if deleted else "not_found"
+            record_session_operation("revoke", "redis", result, duration_ms)
+
+            logger.info(f"Session deleted from Redis: {session_id}")
+            return bool(deleted)
 
     async def list_user_sessions(self, user_id: str) -> list[SessionData]:
         """List all active sessions for a user"""

@@ -71,6 +71,13 @@ class TestPrometheusAuthMetricsDefinitions:
         assert prometheus_metrics._init_metrics()
         assert prometheus_metrics._auth_authorization_checks_total is not None
 
+    def test_session_lifecycle_events_total_defined(self) -> None:
+        """Test session_events_total counter is defined."""
+        from mcp_server_langgraph.auth import prometheus_metrics
+
+        assert prometheus_metrics._init_metrics()
+        assert prometheus_metrics._session_lifecycle_events_total is not None
+
 
 @pytest.mark.xdist_group(name="test_prometheus_auth_metrics_record")
 class TestPrometheusAuthMetricsRecording:
@@ -154,6 +161,41 @@ class TestPrometheusAuthMetricsRecording:
         # Should not raise
         prometheus_metrics.record_authorization_check(result="denied", resource_type="workflow")
 
+    def test_record_session_lifecycle_start(self) -> None:
+        """Test recording a session.start lifecycle event."""
+        from mcp_server_langgraph.auth import prometheus_metrics
+
+        # Should not raise
+        prometheus_metrics.record_session_lifecycle_event(event="session.start")
+
+    def test_record_session_lifecycle_end_with_reason(self) -> None:
+        """Test recording a session.end lifecycle event with reason."""
+        from mcp_server_langgraph.auth import prometheus_metrics
+
+        # Should not raise
+        prometheus_metrics.record_session_lifecycle_event(event="session.end", reason="revoked")
+
+    def test_record_session_lifecycle_end_timeout(self) -> None:
+        """Test recording a session.end lifecycle event with timeout reason."""
+        from mcp_server_langgraph.auth import prometheus_metrics
+
+        # Should not raise
+        prometheus_metrics.record_session_lifecycle_event(event="session.end", reason="timeout")
+
+    def test_record_session_lifecycle_end_error(self) -> None:
+        """Test recording a session.end lifecycle event with error reason."""
+        from mcp_server_langgraph.auth import prometheus_metrics
+
+        # Should not raise
+        prometheus_metrics.record_session_lifecycle_event(event="session.end", reason="error")
+
+    def test_record_session_lifecycle_start_ignores_reason(self) -> None:
+        """Test that session.start event ignores reason parameter."""
+        from mcp_server_langgraph.auth import prometheus_metrics
+
+        # Should not raise - reason should be ignored for session.start
+        prometheus_metrics.record_session_lifecycle_event(event="session.start", reason="should_be_ignored")
+
 
 @pytest.mark.xdist_group(name="test_prometheus_auth_metrics_noop")
 class TestPrometheusAuthMetricsNoOp:
@@ -179,5 +221,7 @@ class TestPrometheusAuthMetricsNoOp:
             prometheus_metrics.record_session_created("memory")
             prometheus_metrics.record_session_revoked("memory")
             prometheus_metrics.record_authorization_check("allowed", "test")
+            prometheus_metrics.record_session_lifecycle_event("session.start")
+            prometheus_metrics.record_session_lifecycle_event("session.end", reason="revoked")
         finally:
             prometheus_metrics._metrics_available = original
