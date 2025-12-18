@@ -25,7 +25,10 @@ Message Format:
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import Any, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.notifications.preferences import PreferencesRepository
 
 logger = logging.getLogger(__name__)
 
@@ -244,3 +247,82 @@ class NotificationBroadcaster:
             if failed_connections:
                 self._subscribers = [s for s in self._subscribers if s.connection not in failed_connections]
                 logger.info(f"Removed {len(failed_connections)} failed subscribers. Remaining: {self.subscriber_count}")
+
+    async def broadcast_to_user_with_preferences(
+        self,
+        repository: "PreferencesRepository",
+        user_id: str,
+        notification_type: str,
+        title: str,
+        message: str,
+        action: dict[str, str] | None = None,
+    ) -> None:
+        """
+        Broadcast a notification to a user, respecting their preferences.
+
+        Checks the user's notification preferences before sending.
+        If the notification type is disabled, the notification is not sent.
+
+        Args:
+            repository: Preferences repository for looking up user preferences.
+            user_id: The user ID to send notification to.
+            notification_type: Type of notification (info, success, warning, error).
+            title: Notification title.
+            message: Notification message.
+            action: Optional action with label and url.
+
+        Raises:
+            ValueError: If notification_type is invalid.
+        """
+        from mcp_server_langgraph.notifications.preferences import should_send_notification
+
+        # Check user preferences before sending
+        if not await should_send_notification(repository, user_id, notification_type):
+            logger.debug(f"Notification type '{notification_type}' disabled for user {user_id}, skipping")
+            return
+
+        # Send the notification using the existing method
+        await self.broadcast_to_user(
+            user_id=user_id,
+            notification_type=notification_type,
+            title=title,
+            message=message,
+            action=action,
+        )
+
+    async def notify_user(
+        self,
+        user_id: str,
+        notification_type: str,
+        title: str,
+        message: str,
+        action: dict[str, str] | None = None,
+    ) -> None:
+        """
+        Send a notification to a user, respecting their preferences.
+
+        This is the preferred method for sending user notifications.
+        It automatically retrieves the user's preferences from the global
+        preferences repository and filters accordingly.
+
+        Args:
+            user_id: The user ID to send notification to.
+            notification_type: Type of notification (info, success, warning, error).
+            title: Notification title.
+            message: Notification message.
+            action: Optional action with label and url.
+
+        Raises:
+            ValueError: If notification_type is invalid.
+        """
+        from mcp_server_langgraph.api.v1.notification_preferences import get_preferences_repository
+
+        repository = get_preferences_repository()
+        await self.broadcast_to_user_with_preferences(
+            repository=repository,
+            user_id=user_id,
+            notification_type=notification_type,
+            title=title,
+            message=message,
+            action=action,
+        )
