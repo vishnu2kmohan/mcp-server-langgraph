@@ -25,6 +25,35 @@ class HealthCheckResult(BaseModel):
     warnings: list[str]
 
 
+class LivenessResult(BaseModel):
+    """Liveness probe result (K8s livenessProbe)."""
+
+    status: str  # "alive" or "dead"
+
+
+class ReadinessResult(BaseModel):
+    """Readiness probe result (K8s readinessProbe)."""
+
+    status: str  # "ready" or "not_ready"
+    checks: dict[str, bool]
+
+
+class StartupResult(BaseModel):
+    """Startup probe result (K8s startupProbe)."""
+
+    status: str  # "started" or "starting"
+    observability: bool
+
+
+class DependencyStatus(BaseModel):
+    """Detailed dependency status."""
+
+    name: str
+    healthy: bool
+    message: str
+    latency_ms: float | None = None
+
+
 class SystemValidationError(Exception):
     """Raised when critical system validation fails at startup"""
 
@@ -499,3 +528,168 @@ async def health_check() -> HealthCheckResult:
         errors=errors,
         warnings=warnings,
     )
+
+
+# ==============================================================================
+# Granular Health Probes (K8s Probe Pattern)
+# ==============================================================================
+
+
+@router.get(
+    "/live",
+    status_code=status.HTTP_200_OK,
+    summary="Liveness Probe",
+    description="Lightweight check that app is responsive (K8s livenessProbe)",
+)
+async def liveness_probe() -> LivenessResult:
+    """
+    Liveness probe endpoint for Kubernetes livenessProbe.
+
+    This is a lightweight check that returns immediately if the app is responsive.
+    Use this to detect deadlocked or hung processes.
+
+    Returns:
+        LivenessResult with status "alive"
+
+    K8s Usage:
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health/live
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+    """
+    return LivenessResult(status="alive")
+
+
+@router.get(
+    "/startup",
+    status_code=status.HTTP_200_OK,
+    summary="Startup Probe",
+    description="Check if app has completed initialization (K8s startupProbe)",
+)
+async def startup_probe() -> StartupResult:
+    """
+    Startup probe endpoint for Kubernetes startupProbe.
+
+    Checks that the app has completed initialization, including observability.
+    This is used during container startup to determine when the app is ready
+    to receive liveness and readiness probes.
+
+    Returns:
+        StartupResult with initialization status
+
+    K8s Usage:
+        startupProbe:
+          httpGet:
+            path: /api/v1/health/startup
+            port: 8000
+          failureThreshold: 30
+          periodSeconds: 10
+    """
+    observability_ok, _ = validate_observability_initialized()
+
+    return StartupResult(
+        status="started" if observability_ok else "starting",
+        observability=observability_ok,
+    )
+
+
+@router.get(
+    "/ready",
+    status_code=status.HTTP_200_OK,
+    summary="Readiness Probe",
+    description="Check if all dependencies are healthy (K8s readinessProbe)",
+)
+async def readiness_probe() -> ReadinessResult:
+    """
+    Readiness probe endpoint for Kubernetes readinessProbe.
+
+    Checks that all dependencies (database, cache, observability) are healthy.
+    When not ready, K8s will remove the pod from service endpoints.
+
+    Returns:
+        ReadinessResult with dependency status
+
+    K8s Usage:
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health/ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+    """
+    # Check critical dependencies
+    checks = {
+        "observability": validate_observability_initialized()[0],
+        "database": (await validate_database_connectivity_async())[0],
+    }
+
+    # All checks must pass for ready status
+    all_ready = all(checks.values())
+
+    return ReadinessResult(
+        status="ready" if all_ready else "not_ready",
+        checks=checks,
+    )
+
+
+@router.get(
+    "/deps",
+    status_code=status.HTTP_200_OK,
+    summary="Dependency Status",
+    description="Detailed dependency health status with latency metrics",
+)
+async def dependency_status() -> list[DependencyStatus]:
+    """
+    Detailed dependency status endpoint.
+
+    Returns health status and latency for each dependency. This is useful
+    for debugging and monitoring dependency performance.
+
+    Returns:
+        List of DependencyStatus with detailed info per dependency
+    """
+    import time
+
+    dependencies = []
+
+    # Check observability
+    start = time.perf_counter()
+    healthy, message = validate_observability_initialized()
+    latency = (time.perf_counter() - start) * 1000
+    dependencies.append(DependencyStatus(name="observability", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+
+    # Check database
+    start = time.perf_counter()
+    healthy, message = await validate_database_connectivity_async()
+    latency = (time.perf_counter() - start) * 1000
+    dependencies.append(DependencyStatus(name="database", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+
+    # Check Qdrant (if configured)
+    if settings.qdrant_url:
+        start = time.perf_counter()
+        healthy, message = await validate_qdrant_connectivity_async()
+        latency = (time.perf_counter() - start) * 1000
+        dependencies.append(DependencyStatus(name="qdrant", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+
+    # Check LGTM stack (if configured)
+    if settings.loki_url:
+        start = time.perf_counter()
+        healthy, message = await validate_loki_connectivity_async()
+        latency = (time.perf_counter() - start) * 1000
+        dependencies.append(DependencyStatus(name="loki", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+
+    if settings.tempo_url:
+        start = time.perf_counter()
+        healthy, message = await validate_tempo_connectivity_async()
+        latency = (time.perf_counter() - start) * 1000
+        dependencies.append(DependencyStatus(name="tempo", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+
+    if settings.mimir_url:
+        start = time.perf_counter()
+        healthy, message = await validate_mimir_connectivity_async()
+        latency = (time.perf_counter() - start) * 1000
+        dependencies.append(DependencyStatus(name="mimir", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+
+    return dependencies

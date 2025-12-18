@@ -14,6 +14,7 @@ from mcp_server_langgraph.api.v1.admin import admin_router
 from mcp_server_langgraph.api.v1.agents import agents_router
 from mcp_server_langgraph.api.v1.auth import auth_router
 from mcp_server_langgraph.api.v1.notifications import notifications_router
+from mcp_server_langgraph.api.v1.notification_preferences import notification_preferences_router
 from mcp_server_langgraph.api.v1.ai import ai_router
 from mcp_server_langgraph.api.v1.audit import router as unified_audit_router
 from mcp_server_langgraph.api.v1.audit_websocket import router as audit_ws_router
@@ -126,6 +127,9 @@ v1_router.include_router(ai_router, prefix="/ai", tags=["ai"])
 
 # Include push notification endpoints (PWA support)
 v1_router.include_router(notifications_router)
+
+# Include notification preferences endpoints
+v1_router.include_router(notification_preferences_router)
 
 # Include identity provider discovery endpoints (SSO IdP discovery for login page)
 v1_router.include_router(identity_providers_router)
