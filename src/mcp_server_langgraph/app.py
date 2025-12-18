@@ -31,27 +31,9 @@ from mcp_server_langgraph.auth.factory import create_user_provider
 from mcp_server_langgraph.auth.middleware import AuthMiddleware, set_global_auth_middleware
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
-from mcp_server_langgraph.middleware.audit import (
-    AuditMiddleware,
-    get_audit_service,
-    set_audit_service,
-)
-from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
-from mcp_server_langgraph.audit.factory import create_audit_scheduler
-from mcp_server_langgraph.audit.service import UnifiedAuditService
-from mcp_server_langgraph.audit.compliance_service import ComplianceService
-from mcp_server_langgraph.audit.repository import create_audit_repository
-from mcp_server_langgraph.audit.retention_scheduler import create_retention_scheduler
-from mcp_server_langgraph.audit.alerts import AuditAlertDetector
-from mcp_server_langgraph.audit.config import load_alerting_config, create_notifiers_from_config
-from mcp_server_langgraph.audit.notifications import NotificationRouter, create_notification_callback
-from mcp_server_langgraph.api.v1.compliance_reports import set_compliance_service
-from mcp_server_langgraph.api.v1.audit_websocket import set_audit_event_broadcaster
-from mcp_server_langgraph.api.v1.notification_websocket import set_notification_broadcaster
-from mcp_server_langgraph.audit.broadcast import AuditEventBroadcaster
-from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
-from mcp_server_langgraph.core.http_client import HttpClientManager
-from mcp_server_langgraph.observability.telemetry import init_observability, logger
+from mcp_server_langgraph.middleware.audit import AuditMiddleware
+from mcp_server_langgraph.bootstrap import bootstrap_all, init_observability, AppState
+from mcp_server_langgraph.observability.telemetry import logger
 
 
 def create_app(settings_override: Settings | None = None, skip_startup_validation: bool = False) -> FastAPI:
@@ -78,197 +60,45 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-        # Run startup validation to ensure all critical systems initialized correctly
-        # This prevents the app from starting if any of the OpenAI Codex findings recur
-        # Skip validation in unit tests (skip_startup_validation=True) to avoid DB dependency
+        """
+        Application lifespan handler using modular bootstrap.
+
+        Uses bootstrap package for testable, isolated initialization phases:
+        1. Security (OpenFGA, auth middleware)
+        2. Storage (audit, compliance, schedulers)
+        3. HTTP (connection pool)
+
+        Reduced from ~160 lines to ~40 lines via P0.1 refactor.
+        """
+        # Run startup validation (skip in tests to avoid DB dependency)
         if not skip_startup_validation:
             try:
                 await run_startup_validation_async()
             except Exception as e:
-                try:
-                    logger.critical(f"Startup validation failed: {e}")
-                except RuntimeError:
-                    pass  # Graceful degradation if observability not initialized
+                logger.critical(f"Startup validation failed: {e}")
                 raise
         else:
-            try:
-                logger.debug("Skipping startup validation (test mode)")
-            except RuntimeError:
-                pass  # Graceful degradation if observability not initialized
+            logger.debug("Skipping startup validation (test mode)")
 
-        # Initialize OpenFGA client (async initialization pattern)
-        # This replaces the lazy sync singleton with proper async startup init
-        openfga_client: OpenFGAClient | None = None
-        try:
-            # Check if OpenFGA is configured (store_id or store_name required)
-            has_store_config = config.openfga_store_id or config.openfga_store_name
-            if has_store_config:
-                # Construct OIDC issuer URL from settings if not explicitly provided
-                oidc_issuer = config.openfga_oidc_issuer
-                if not oidc_issuer and config.openfga_oidc_client_id and config.openfga_oidc_client_secret:
-                    oidc_issuer = f"{config.keycloak_server_url.rstrip('/')}/realms/{config.keycloak_realm}"
+        # Bootstrap all components using modular initialization
+        state: AppState = await bootstrap_all(config)
 
-                openfga_config = OpenFGAConfig(
-                    api_url=config.openfga_api_url,
-                    store_id=config.openfga_store_id,
-                    store_name=config.openfga_store_name,
-                    model_id=config.openfga_model_id,
-                    oidc_client_id=config.openfga_oidc_client_id,
-                    oidc_client_secret=config.openfga_oidc_client_secret,
-                    oidc_issuer=oidc_issuer,
-                    preshared_key=config.openfga_preshared_key,
-                )
-                openfga_client = OpenFGAClient(config=openfga_config)
-                # Async initialization: resolve store_id, model_id, obtain OIDC token
-                await openfga_client._ensure_initialized()
-                logger.info(
-                    "OpenFGA client initialized at startup",
-                    extra={
-                        "store_id": openfga_client.store_id,
-                        "model_id": openfga_client.model_id,
-                    },
-                )
-            else:
-                logger.warning(
-                    "OpenFGA not configured - authorization will be degraded. "
-                    "Set OPENFGA_STORE_ID or OPENFGA_STORE_NAME to enable."
-                )
-        except Exception as e:
-            logger.warning(f"Failed to initialize OpenFGA client: {e}")
-            openfga_client = None
+        # Store in app.state for request-scoped access via api/deps.py
+        app.state.openfga_client = state.security.openfga_client if state.security else None
+        app.state.http_client_manager = state.http.http_client_manager if state.http else None
+        app.state.audit_service = state.storage.audit_service if state.storage else None
+        app.state.websocket_lifecycle = state.websocket.mcp_lifecycle_manager if state.websocket else None
 
-        # Store in app.state for access via get_openfga_client_from_request dependency
-        app.state.openfga_client = openfga_client
-
-        # Initialize HTTP client pool for connection reuse across auth modules
-        # This provides a shared httpx.AsyncClient with HTTP/2 and connection pooling
-        http_client_manager = HttpClientManager()
-        app.state.http_client_manager = http_client_manager
-        logger.info("HTTP client pool manager initialized")
-
-        # Initialize audit service (required for middleware and scheduler)
-        # Uses PostgresUnifiedAuditRepository if database_url is configured (production)
-        # Falls back to InMemoryUnifiedAuditRepository if not (development/testing)
-        try:
-            audit_repository = create_audit_repository(database_url=config.database_url)
-            # Create broadcaster for real-time WebSocket streaming
-            audit_broadcaster = AuditEventBroadcaster()
-
-            # Create alert notification system (Slack/PagerDuty integration)
-            alert_detector = None
-            try:
-                alerting_config = load_alerting_config()
-                notifiers = create_notifiers_from_config(alerting_config)
-                if notifiers:
-                    notification_router = NotificationRouter(notifiers=notifiers)
-                    notification_callback = create_notification_callback(notification_router)
-
-                    # Create alert detector with configured thresholds
-                    alert_detector = AuditAlertDetector(
-                        failed_login_threshold=alerting_config.detection.failed_login.threshold,
-                        failed_login_window_minutes=alerting_config.detection.failed_login.window_minutes,
-                        business_hours_start=alerting_config.detection.after_hours_admin.end_hour,
-                        business_hours_end=alerting_config.detection.after_hours_admin.start_hour,
-                        bulk_export_threshold_records=alerting_config.detection.bulk_export.threshold_records,
-                        alert_callback=notification_callback,
-                    )
-                    logger.info(f"Alert notification system initialized with {len(notifiers)} notifier(s)")
-                else:
-                    logger.info("No alert notifiers configured (Slack/PagerDuty webhooks not set)")
-            except Exception as alert_config_error:
-                logger.warning(f"Failed to initialize alert notifications: {alert_config_error}")
-
-            audit_service_instance = UnifiedAuditService(
-                repository=audit_repository,
-                integrity_secret=config.audit_integrity_secret,
-                broadcaster=audit_broadcaster,
-                alert_detector=alert_detector,
-            )
-            set_audit_service(audit_service_instance)
-            # Make broadcaster available to WebSocket endpoint
-            set_audit_event_broadcaster(audit_broadcaster)
-            logger.info("Audit service initialized successfully with WebSocket streaming")
-
-            # Initialize notification broadcaster for real-time user notifications
-            notification_broadcaster = NotificationBroadcaster()
-            set_notification_broadcaster(notification_broadcaster)
-            logger.info("Notification WebSocket broadcaster initialized")
-
-            # Initialize compliance service (depends on audit service)
-            compliance_service_instance = ComplianceService(
-                audit_service=audit_service_instance,
-            )
-            set_compliance_service(compliance_service_instance)
-            logger.info("Compliance service initialized successfully")
-        except Exception as e:
-            logger.warning(f"Failed to initialize audit service: {e}")
-
-        # Start audit integrity scheduler if enabled (FedRAMP AU-9 compliance)
-        audit_scheduler = None
-        if config.audit_scheduler_enabled:
-            audit_service = get_audit_service()
-            if audit_service is not None:
-                try:
-                    audit_scheduler = create_audit_scheduler(
-                        audit_service=audit_service,
-                        schedule_hours=config.audit_scheduler_hours,
-                    )
-                    await audit_scheduler.start()
-                    logger.info(f"Audit integrity scheduler started (every {config.audit_scheduler_hours} hours)")
-                except Exception as e:
-                    logger.warning(f"Failed to start audit scheduler: {e}")
-            else:
-                logger.warning("Audit scheduler enabled but no audit service configured - skipping")
-
-        # Start partition retention scheduler if enabled (FedRAMP AU-11 compliance)
-        retention_scheduler = None
-        if config.partition_retention_enabled:
-            try:
-                retention_scheduler = create_retention_scheduler(
-                    retention_months=config.partition_retention_months,
-                    schedule_hours=config.partition_retention_hours,
-                )
-                await retention_scheduler.start()
-                logger.info(
-                    f"Partition retention scheduler started "
-                    f"(retention={config.partition_retention_months} months, "
-                    f"interval={config.partition_retention_hours} hours)"
-                )
-            except Exception as e:
-                logger.warning(f"Failed to start retention scheduler: {e}")
+        # Global setters are now called within bootstrap/storage.py:init_storage()
+        # This consolidates initialization logic in bootstrap modules.
+        # See: set_audit_service, set_audit_event_broadcaster,
+        #      set_notification_broadcaster, set_compliance_service
 
         yield
 
-        # Stop retention scheduler gracefully on shutdown
-        if retention_scheduler is not None:
-            try:
-                await retention_scheduler.stop()
-                logger.info("Partition retention scheduler stopped")
-            except Exception as e:
-                logger.warning(f"Error stopping retention scheduler: {e}")
-
-        # Stop audit scheduler gracefully on shutdown
-        if audit_scheduler is not None:
-            try:
-                audit_scheduler.stop()  # sync method, no await needed
-                logger.info("Audit integrity scheduler stopped")
-            except Exception as e:
-                logger.warning(f"Error stopping audit scheduler: {e}")
-
-        # Close OpenFGA client to release resources (aiohttp ClientSession)
-        if openfga_client is not None:
-            try:
-                await openfga_client.close()
-                logger.info("OpenFGA client closed")
-            except Exception as e:
-                logger.warning(f"Error closing OpenFGA client: {e}")
-
-        # Close HTTP client pool to release connections
-        try:
-            await http_client_manager.close()
-            logger.info("HTTP client pool closed")
-        except Exception as e:
-            logger.warning(f"Error closing HTTP client pool: {e}")
+        # Cleanup all components (reverse initialization order)
+        await state.cleanup()
+        logger.info("Application shutdown complete")
 
     app = FastAPI(
         title="MCP Server LangGraph API",
