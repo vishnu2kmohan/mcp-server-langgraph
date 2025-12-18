@@ -97,6 +97,14 @@ class RedisSessionManager:
         """Generate Redis key for user-scoped session."""
         return f"{self.KEY_PREFIX}:user:{user_id}:{session_id}"
 
+    def _user_sessions_index_key(self, user_id: str) -> str:
+        """Generate Redis key for user's session index (SET).
+
+        This secondary index enables O(1) session listing per user
+        instead of O(N) SCAN across all keys.
+        """
+        return f"{self.KEY_PREFIX}:index:user:{user_id}"
+
     async def create_session(
         self,
         name: str,
@@ -135,6 +143,12 @@ class RedisSessionManager:
         if user_id:
             user_key = self._user_session_key(user_id, session_id)
             await self._redis.setex(user_key, self._ttl, session.model_dump_json())
+
+            # Add session_id to user's session index (SET) for O(1) listing
+            index_key = self._user_sessions_index_key(user_id)
+            await self._redis.sadd(index_key, session_id)
+            # Refresh index TTL (slightly longer than session TTL)
+            await self._redis.expire(index_key, self._ttl + 300)
 
         return session
 
@@ -210,10 +224,14 @@ class RedisSessionManager:
         key = self._session_key(session_id)
         result = await self._redis.delete(key)
 
-        # Also delete user-scoped key if applicable
+        # Also delete user-scoped key and remove from index if applicable
         if session and session.user_id:
             user_key = self._user_session_key(session.user_id, session_id)
             await self._redis.delete(user_key)
+
+            # Remove from user's session index
+            index_key = self._user_sessions_index_key(session.user_id)
+            await self._redis.srem(index_key, session_id)
 
         return bool(result > 0)
 
@@ -266,26 +284,26 @@ class RedisSessionManager:
         """
         List all sessions for a user.
 
+        Uses a Redis SET secondary index for O(1) lookup per session
+        instead of O(N) SCAN across all keys.
+
         Args:
             user_id: User ID to list sessions for
 
         Returns:
             List of sessions
         """
-        pattern = f"{self.KEY_PREFIX}:user:{user_id}:*"
-        cursor = 0
+        # Use SET index for O(1) lookup instead of O(N) SCAN
+        index_key = self._user_sessions_index_key(user_id)
+        session_ids = await self._redis.smembers(index_key)
+
         sessions = []
-
-        # Use SCAN to iterate through keys matching pattern
-        cursor, keys = await self._redis.scan(cursor=cursor, match=pattern, count=100)
-
-        for key in keys:
-            # Handle bytes keys (when decode_responses=False)
-            if isinstance(key, bytes):
-                key = key.decode("utf-8")
-            data = await self._redis.get(key)
-            if data:
-                session = Session.model_validate_json(data)
+        for session_id in session_ids:
+            # Handle bytes (when decode_responses=False)
+            if isinstance(session_id, bytes):
+                session_id = session_id.decode("utf-8")
+            session = await self.get_session(session_id)
+            if session:
                 sessions.append(session)
 
         return sessions
