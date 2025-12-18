@@ -253,6 +253,9 @@ class TestMessageResponseContract:
 class TestSessionServiceContract:
     """Tests for session service response contract."""
 
+    # Test user ID for session ownership
+    TEST_USER_ID = "test-user-123"
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
@@ -264,8 +267,8 @@ class TestSessionServiceContract:
         # GIVEN an in-memory session service
         service = InMemorySessionService()
 
-        # WHEN creating a session
-        session = await service.create_session({"title": "My Session"})
+        # WHEN creating a session (user_id is now required for security)
+        session = await service.create_session({"title": "My Session"}, self.TEST_USER_ID)
 
         # THEN response should have 'name' field (not 'title')
         assert "name" in session
@@ -279,10 +282,10 @@ class TestSessionServiceContract:
         """Retrieved session should have 'name' field in response."""
         # GIVEN an in-memory session service with a session
         service = InMemorySessionService()
-        created = await service.create_session({"title": "Test Session"})
+        created = await service.create_session({"title": "Test Session"}, self.TEST_USER_ID)
 
-        # WHEN getting the session
-        session = await service.get_session(created["id"])
+        # WHEN getting the session (user_id is now required for security)
+        session = await service.get_session(created["id"], self.TEST_USER_ID)
 
         # THEN response should have 'name' field
         assert session is not None
@@ -295,7 +298,7 @@ class TestSessionServiceContract:
         """Added message should include message_id in response."""
         # GIVEN an in-memory session service with a session
         service = InMemorySessionService()
-        session = await service.create_session({"title": "Test"})
+        session = await service.create_session({"title": "Test"}, self.TEST_USER_ID)
 
         # WHEN adding a message
         message = await service.add_message(
@@ -315,7 +318,7 @@ class TestSessionServiceContract:
         """Retrieved messages should include message_id."""
         # GIVEN a session with messages
         service = InMemorySessionService()
-        session = await service.create_session({"title": "Test"})
+        session = await service.create_session({"title": "Test"}, self.TEST_USER_ID)
         await service.add_message(session["id"], {"role": "user", "content": "Hi"})
         await service.add_message(session["id"], {"role": "assistant", "content": "Hello"})
 
@@ -335,7 +338,7 @@ class TestSessionServiceContract:
         """Each message should have a unique message_id."""
         # GIVEN a session with multiple messages
         service = InMemorySessionService()
-        session = await service.create_session({"title": "Test"})
+        session = await service.create_session({"title": "Test"}, self.TEST_USER_ID)
 
         # Add 5 messages
         for i in range(5):

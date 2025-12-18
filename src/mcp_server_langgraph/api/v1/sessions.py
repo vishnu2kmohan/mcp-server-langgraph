@@ -20,10 +20,12 @@ import uuid
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+
+from mcp_server_langgraph.auth.middleware import get_current_user
 
 
 # Enums for type-safe status and role values
@@ -55,6 +57,19 @@ from mcp_server_langgraph.storage.session import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# Type alias for authenticated user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
+
+
+def _get_user_id(current_user: dict[str, Any]) -> str:
+    """
+    Extract user ID from the current user context.
+
+    Tries 'sub' claim first (JWT standard), then 'user_id', then 'preferred_username'.
+    """
+    return current_user.get("sub") or current_user.get("user_id") or current_user.get("preferred_username") or "anonymous"
 
 
 sessions_router = APIRouter(tags=["sessions"])
@@ -113,6 +128,7 @@ class SessionService(ABC):
     @abstractmethod
     async def list_sessions(
         self,
+        user_id: str,
         cursor: str | None = None,
         limit: int = 20,
         workflow_id: str | None = None,
@@ -124,6 +140,7 @@ class SessionService(ABC):
         """List sessions with pagination, filtering, search, and sorting.
 
         Args:
+            user_id: User ID for scoping sessions (REQUIRED for security)
             cursor: Pagination cursor (session ID to start after)
             limit: Maximum number of sessions to return
             workflow_id: Filter by workflow ID
@@ -137,18 +154,18 @@ class SessionService(ABC):
         ...
 
     @abstractmethod
-    async def get_session(self, session_id: str) -> dict[str, Any] | None:
-        """Get a session by ID. Returns None if not found."""
+    async def get_session(self, session_id: str, user_id: str) -> dict[str, Any] | None:
+        """Get a session by ID. Returns None if not found or not owned by user."""
         ...
 
     @abstractmethod
-    async def create_session(self, session_data: dict[str, Any]) -> dict[str, Any]:
-        """Create a new session. Returns the created session."""
+    async def create_session(self, session_data: dict[str, Any], user_id: str) -> dict[str, Any]:
+        """Create a new session associated with user. Returns the created session."""
         ...
 
     @abstractmethod
-    async def delete_session(self, session_id: str) -> bool:
-        """Delete a session. Returns True if deleted, False if not found."""
+    async def delete_session(self, session_id: str, user_id: str) -> bool:
+        """Delete a session. Returns True if deleted, False if not found or not owned."""
         ...
 
     @abstractmethod
@@ -175,6 +192,7 @@ class InMemorySessionService(SessionService):
 
     async def list_sessions(
         self,
+        user_id: str,
         cursor: str | None = None,
         limit: int = 20,
         workflow_id: str | None = None,
@@ -184,8 +202,8 @@ class InMemorySessionService(SessionService):
         sort_order: str | None = "desc",
     ) -> tuple[list[dict[str, Any]], str | None]:
         """List sessions with pagination, filtering, search, and sorting."""
-        # Get all sessions
-        sessions = list(self._sessions.values())
+        # Get sessions owned by user (SECURITY: user scoping)
+        sessions = [s for s in self._sessions.values() if s.get("user_id") == user_id]
 
         # Apply filters
         if workflow_id:
@@ -225,12 +243,16 @@ class InMemorySessionService(SessionService):
 
         return paginated, next_cursor
 
-    async def get_session(self, session_id: str) -> dict[str, Any] | None:
-        """Get a session by ID."""
-        return self._sessions.get(session_id)
+    async def get_session(self, session_id: str, user_id: str) -> dict[str, Any] | None:
+        """Get a session by ID. Returns None if not found or not owned by user."""
+        session = self._sessions.get(session_id)
+        # SECURITY: Verify ownership
+        if session is None or session.get("user_id") != user_id:
+            return None
+        return session
 
-    async def create_session(self, session_data: dict[str, Any]) -> dict[str, Any]:
-        """Create a new session."""
+    async def create_session(self, session_data: dict[str, Any], user_id: str) -> dict[str, Any]:
+        """Create a new session associated with user."""
         session_id = str(uuid.uuid4())
         now = datetime.now(UTC).isoformat()
 
@@ -240,6 +262,7 @@ class InMemorySessionService(SessionService):
         session: dict[str, Any] = {
             "id": session_id,
             "name": name,
+            "user_id": user_id,  # SECURITY: Track ownership
             "workflow_id": session_data.get("workflow_id"),
             "messages": [],
             "created_at": now,
@@ -250,12 +273,14 @@ class InMemorySessionService(SessionService):
         self._sessions[session_id] = session
         return session
 
-    async def delete_session(self, session_id: str) -> bool:
-        """Delete a session."""
-        if session_id in self._sessions:
-            del self._sessions[session_id]
-            return True
-        return False
+    async def delete_session(self, session_id: str, user_id: str) -> bool:
+        """Delete a session. Only owner can delete."""
+        session = self._sessions.get(session_id)
+        # SECURITY: Verify ownership before deletion
+        if session is None or session.get("user_id") != user_id:
+            return False
+        del self._sessions[session_id]
+        return True
 
     async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
         """Get all messages in a session."""
@@ -302,6 +327,7 @@ class RedisSessionService(SessionService):
 
     async def list_sessions(
         self,
+        user_id: str,
         cursor: str | None = None,
         limit: int = 20,
         workflow_id: str | None = None,
@@ -312,48 +338,34 @@ class RedisSessionService(SessionService):
     ) -> tuple[list[dict[str, Any]], str | None]:
         """List sessions with pagination, filtering, search, and sorting.
 
-        Note: RedisSessionManager.list_sessions() requires a user_id.
-        For now, we'll use a global scan. In production, this should
-        be scoped to the authenticated user.
+        SECURITY: Sessions are scoped to the authenticated user.
+        Uses RedisSessionManager.list_sessions() with user_id for proper scoping.
         """
-        # TODO: Get user_id from request context once auth is wired up
-        # For now, use pattern matching to get all sessions
-        import redis.asyncio as redis
+        # SECURITY: Use user-scoped listing via RedisSessionManager
+        # This uses user:{user_id}:sessions index for O(1) lookup per session
+        raw_sessions = await self._manager.list_sessions(user_id)
 
-        pattern = f"{self._manager.KEY_PREFIX}:*"
-        redis_client: redis.Redis = self._manager._redis
         sessions: list[dict[str, Any]] = []
-
-        # Use SCAN to get session keys (excluding user-scoped keys)
-        async for key in redis_client.scan_iter(match=pattern, count=100):
-            # Skip user-scoped keys (they're duplicates)
-            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
-            if ":user:" in key_str:
-                continue
-
-            data = await redis_client.get(key)
-            if data:
-                from mcp_server_langgraph.storage.session import Session
-
-                session = Session.model_validate_json(data)
-                session_dict: dict[str, Any] = {
-                    "id": session.session_id,
-                    "name": session.name,
-                    "workflow_id": None,  # Not supported in current model
-                    "messages": [
-                        {
-                            "message_id": m.message_id,
-                            "role": m.role,
-                            "content": m.content,
-                            "timestamp": m.timestamp.isoformat(),
-                        }
-                        for m in session.messages
-                    ],
-                    "created_at": session.created_at.isoformat(),
-                    "updated_at": session.updated_at.isoformat(),
-                    "status": SessionStatus.active,
-                }
-                sessions.append(session_dict)
+        for session in raw_sessions:
+            session_dict: dict[str, Any] = {
+                "id": session.session_id,
+                "name": session.name,
+                "user_id": session.user_id,
+                "workflow_id": None,  # Not supported in current model
+                "messages": [
+                    {
+                        "message_id": m.message_id,
+                        "role": m.role,
+                        "content": m.content,
+                        "timestamp": m.timestamp.isoformat(),
+                    }
+                    for m in session.messages
+                ],
+                "created_at": session.created_at.isoformat(),
+                "updated_at": session.updated_at.isoformat(),
+                "status": SessionStatus.active,
+            }
+            sessions.append(session_dict)
 
         # Apply filters
         if workflow_id:
@@ -390,15 +402,20 @@ class RedisSessionService(SessionService):
 
         return paginated, next_cursor
 
-    async def get_session(self, session_id: str) -> dict[str, Any] | None:
-        """Get a session by ID."""
+    async def get_session(self, session_id: str, user_id: str) -> dict[str, Any] | None:
+        """Get a session by ID. Returns None if not found or not owned by user."""
         session = await self._manager.get_session(session_id)
         if session is None:
+            return None
+
+        # SECURITY: Verify ownership
+        if session.user_id != user_id:
             return None
 
         return {
             "id": session.session_id,
             "name": session.name,
+            "user_id": session.user_id,
             "workflow_id": None,
             "messages": [
                 {
@@ -414,18 +431,20 @@ class RedisSessionService(SessionService):
             "status": SessionStatus.active,
         }
 
-    async def create_session(self, session_data: dict[str, Any]) -> dict[str, Any]:
-        """Create a new session."""
+    async def create_session(self, session_data: dict[str, Any], user_id: str) -> dict[str, Any]:
+        """Create a new session associated with user."""
         # Support both 'title' (legacy) and 'name' (new) input
         name = session_data.get("name") or session_data.get("title") or "New Session"
+        # SECURITY: Pass authenticated user_id to manager
         session = await self._manager.create_session(
             name=name,
-            user_id=None,  # TODO: Get from auth context
+            user_id=user_id,
         )
 
         return {
             "id": session.session_id,
             "name": session.name,
+            "user_id": session.user_id,
             "workflow_id": session_data.get("workflow_id"),
             "messages": [],
             "created_at": session.created_at.isoformat(),
@@ -433,8 +452,12 @@ class RedisSessionService(SessionService):
             "status": SessionStatus.active,
         }
 
-    async def delete_session(self, session_id: str) -> bool:
-        """Delete a session."""
+    async def delete_session(self, session_id: str, user_id: str) -> bool:
+        """Delete a session. Only owner can delete."""
+        # SECURITY: Verify ownership before deletion
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return False
         return await self._manager.delete_session(session_id)
 
     async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
@@ -484,6 +507,7 @@ class PostgresSessionService(SessionService):
 
     async def list_sessions(
         self,
+        user_id: str,
         cursor: str | None = None,
         limit: int = 20,
         workflow_id: str | None = None,
@@ -494,12 +518,11 @@ class PostgresSessionService(SessionService):
     ) -> tuple[list[dict[str, Any]], str | None]:
         """List sessions with pagination, filtering, search, and sorting.
 
-        Note: PostgresSessionManager.list_sessions() uses offset-based pagination.
-        We'll convert to cursor-based for API consistency.
+        SECURITY: Sessions are scoped to the authenticated user.
         """
-        # Get sessions (without messages for performance)
+        # Get sessions scoped to user
         # PostgresSessionManager.list_sessions returns (sessions, next_cursor)
-        sessions, next_cursor = await self._manager.list_sessions(limit=limit + 1)
+        sessions, next_cursor = await self._manager.list_sessions(user_id=user_id, limit=limit + 1)
 
         session_dicts: list[dict[str, Any]] = []
         for s in sessions[:limit]:
@@ -507,6 +530,7 @@ class PostgresSessionService(SessionService):
                 {
                     "id": s.session_id,
                     "name": s.name,
+                    "user_id": s.user_id,
                     "workflow_id": None,  # Not supported in current model
                     "messages": [],  # Not loaded for list performance
                     "created_at": s.created_at.isoformat(),
@@ -540,15 +564,20 @@ class PostgresSessionService(SessionService):
 
         return session_dicts, next_cursor
 
-    async def get_session(self, session_id: str) -> dict[str, Any] | None:
-        """Get a session by ID."""
+    async def get_session(self, session_id: str, user_id: str) -> dict[str, Any] | None:
+        """Get a session by ID. Returns None if not found or not owned by user."""
         session = await self._manager.get_session(session_id)
         if session is None:
+            return None
+
+        # SECURITY: Verify ownership
+        if session.user_id != user_id:
             return None
 
         return {
             "id": session.session_id,
             "name": session.name,
+            "user_id": session.user_id,
             "workflow_id": None,
             "messages": [
                 {
@@ -564,18 +593,20 @@ class PostgresSessionService(SessionService):
             "status": SessionStatus.active,
         }
 
-    async def create_session(self, session_data: dict[str, Any]) -> dict[str, Any]:
-        """Create a new session."""
+    async def create_session(self, session_data: dict[str, Any], user_id: str) -> dict[str, Any]:
+        """Create a new session associated with user."""
         # Support both 'title' (legacy) and 'name' (new) input
         name = session_data.get("name") or session_data.get("title") or "New Session"
+        # SECURITY: Pass authenticated user_id to manager
         session = await self._manager.create_session(
             name=name,
-            user_id=None,  # TODO: Get from auth context
+            user_id=user_id,
         )
 
         return {
             "id": session.session_id,
             "name": session.name,
+            "user_id": session.user_id,
             "workflow_id": session_data.get("workflow_id"),
             "messages": [],
             "created_at": session.created_at.isoformat(),
@@ -583,8 +614,12 @@ class PostgresSessionService(SessionService):
             "status": SessionStatus.active,
         }
 
-    async def delete_session(self, session_id: str) -> bool:
-        """Delete a session."""
+    async def delete_session(self, session_id: str, user_id: str) -> bool:
+        """Delete a session. Only owner can delete."""
+        # SECURITY: Verify ownership before deletion
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return False
         return await self._manager.delete_session(session_id)
 
     async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
@@ -718,6 +753,7 @@ def set_session_service(service: SessionService) -> None:
 
 @sessions_router.get("/sessions")
 async def list_sessions(
+    current_user: CurrentUser,
     cursor: str | None = Query(default=None, description="Pagination cursor"),
     limit: int = Query(default=20, ge=1, le=100, description="Items per page"),
     workflow_id: str | None = Query(default=None, description="Filter by workflow ID"),
@@ -731,14 +767,18 @@ async def list_sessions(
     """
     List all sessions with cursor-based pagination.
 
+    Requires authentication. Returns only sessions owned by the authenticated user.
+
     Supports:
     - Pagination: cursor, limit
     - Filtering: workflow_id, status
     - Search: search (searches title)
     - Sorting: sort_by, sort_order
     """
+    user_id = _get_user_id(current_user)
     service = get_session_service()
     sessions, next_cursor = await service.list_sessions(
+        user_id=user_id,
         cursor=cursor,
         limit=limit,
         workflow_id=workflow_id,
@@ -762,14 +802,15 @@ async def list_sessions(
 
 
 @sessions_router.get("/sessions/{session_id}")
-async def get_session(session_id: str) -> SessionResponse:
+async def get_session(session_id: str, current_user: CurrentUser) -> SessionResponse:
     """
     Get a specific session by ID.
 
-    Returns the complete session data including messages.
+    Requires authentication. Returns 404 if session not found or not owned by user.
     """
+    user_id = _get_user_id(current_user)
     service = get_session_service()
-    session = await service.get_session(session_id)
+    session = await service.get_session(session_id, user_id)
 
     if session is None:
         raise HTTPException(
@@ -781,28 +822,30 @@ async def get_session(session_id: str) -> SessionResponse:
 
 
 @sessions_router.post("/sessions", status_code=status.HTTP_201_CREATED)
-async def create_session(request: SessionCreateRequest) -> SessionResponse:
+async def create_session(request: SessionCreateRequest, current_user: CurrentUser) -> SessionResponse:
     """
     Create a new session.
 
-    The session can optionally be associated with a workflow.
+    Requires authentication. The session is associated with the authenticated user.
     """
+    user_id = _get_user_id(current_user)
     service = get_session_service()
     session_data = request.model_dump()
-    session = await service.create_session(session_data)
+    session = await service.create_session(session_data, user_id)
 
     return SessionResponse(**session)
 
 
 @sessions_router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_session(session_id: str) -> None:
+async def delete_session(session_id: str, current_user: CurrentUser) -> None:
     """
     Delete a session.
 
-    This permanently removes the session and all its messages.
+    Requires authentication. Only the session owner can delete it.
     """
+    user_id = _get_user_id(current_user)
     service = get_session_service()
-    deleted = await service.delete_session(session_id)
+    deleted = await service.delete_session(session_id, user_id)
 
     if not deleted:
         raise HTTPException(
@@ -812,32 +855,45 @@ async def delete_session(session_id: str) -> None:
 
 
 @sessions_router.get("/sessions/{session_id}/messages")
-async def get_session_messages(session_id: str) -> list[dict[str, Any]]:
+async def get_session_messages(session_id: str, current_user: CurrentUser) -> list[dict[str, Any]]:
     """
     Get all messages in a session.
 
-    Returns messages in chronological order.
+    Requires authentication. Returns 404 if session not found or not owned by user.
     """
+    user_id = _get_user_id(current_user)
     service = get_session_service()
-    messages = await service.get_session_messages(session_id)
 
-    if messages is None:
+    # SECURITY: Verify ownership first
+    session = await service.get_session(session_id, user_id)
+    if session is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Session {session_id} not found",
         )
 
-    return messages
+    messages = await service.get_session_messages(session_id)
+    return messages or []
 
 
 @sessions_router.post("/sessions/{session_id}/messages", status_code=status.HTTP_201_CREATED)
-async def add_message(session_id: str, request: MessageRequest) -> dict[str, Any]:
+async def add_message(session_id: str, request: MessageRequest, current_user: CurrentUser) -> dict[str, Any]:
     """
     Add a message to a session.
 
-    The message is appended to the session's message history.
+    Requires authentication. Only the session owner can add messages.
     """
+    user_id = _get_user_id(current_user)
     service = get_session_service()
+
+    # SECURITY: Verify ownership first
+    session = await service.get_session(session_id, user_id)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
     message_data = request.model_dump()
     message = await service.add_message(session_id, message_data)
 
@@ -851,13 +907,23 @@ async def add_message(session_id: str, request: MessageRequest) -> dict[str, Any
 
 
 @sessions_router.delete("/sessions/{session_id}/messages", status_code=status.HTTP_204_NO_CONTENT)
-async def clear_messages(session_id: str) -> None:
+async def clear_messages(session_id: str, current_user: CurrentUser) -> None:
     """
     Clear all messages in a session.
 
-    This removes all messages but keeps the session intact.
+    Requires authentication. Only the session owner can clear messages.
     """
+    user_id = _get_user_id(current_user)
     service = get_session_service()
+
+    # SECURITY: Verify ownership first
+    session = await service.get_session(session_id, user_id)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
     cleared = await service.clear_messages(session_id)
 
     if not cleared:

@@ -8,6 +8,7 @@ The sessions endpoint provides CRUD operations for chat session management.
 """
 
 import gc
+from typing import Any, Generator
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
@@ -23,13 +24,32 @@ pytestmark = [
 
 
 @pytest.fixture
-def test_app() -> FastAPI:
-    """Create a test app with the sessions router."""
+def mock_user() -> dict[str, Any]:
+    """Mock authenticated user for testing."""
+    return {
+        "sub": "test-user-123",
+        "preferred_username": "testuser",
+        "email": "testuser@example.com",
+        "roles": ["user"],
+    }
+
+
+@pytest.fixture
+def test_app(mock_user: dict[str, Any]) -> Generator[FastAPI, None, None]:
+    """Create a test app with the sessions router and mock authentication."""
     from mcp_server_langgraph.api.v1.sessions import sessions_router
+    from mcp_server_langgraph.auth.middleware import get_current_user
 
     app = FastAPI()
     app.include_router(sessions_router, prefix="/api/v1")
-    return app
+
+    # Override authentication dependency with mock user
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    yield app
+
+    # Cleanup
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -39,11 +59,12 @@ def client(test_app: FastAPI) -> TestClient:
 
 
 @pytest.fixture
-def sample_session() -> dict:
+def sample_session(mock_user: dict[str, Any]) -> dict[str, Any]:
     """Sample session data for testing."""
     return {
         "id": str(uuid4()),
         "name": "Test Chat Session",
+        "user_id": mock_user["sub"],  # Session owned by mock user
         "workflow_id": str(uuid4()),
         "messages": [
             {"role": "user", "content": "Hello"},
