@@ -575,8 +575,8 @@ class CacheService:
                 1,
                 attributes={"layer": layer, "cache_type": cache_type},
             )
-        except Exception:
-            pass  # Don't let metrics failure break caching
+        except Exception as e:
+            logger.debug("Operation failed: %s", e)
 
     def _emit_cache_miss_metric(self, layer: str, key: str) -> None:
         """Emit cache miss metric"""
@@ -596,8 +596,8 @@ class CacheService:
                 1,
                 attributes={"layer": layer, "cache_type": cache_type},
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Operation failed: %s", e)
 
     def _emit_cache_set_metric(self, layer: str, key: str) -> None:
         """Emit cache set metric"""
@@ -617,8 +617,8 @@ class CacheService:
                 1,
                 attributes={"layer": layer, "cache_type": cache_type},
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Operation failed: %s", e)
 
     def get_statistics(self) -> dict[str, Any]:
         """

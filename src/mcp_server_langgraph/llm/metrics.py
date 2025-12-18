@@ -9,6 +9,7 @@ Prometheus metrics for LLM operations:
 These metrics are scraped by Alloy and displayed in the LLM Performance Grafana dashboard.
 """
 
+import logging
 import re
 from typing import Any
 
@@ -18,6 +19,8 @@ from typing import Any
 # These constants define the allowed values for metric labels to prevent
 # cardinality explosion. Unknown values are mapped to "other".
 
+
+logger = logging.getLogger(__name__)
 BOUNDED_OPERATIONS: frozenset[str] = frozenset(
     {
         "chat",
@@ -194,8 +197,8 @@ def record_llm_token_usage(model: str, prompt_tokens: int, completion_tokens: in
             # S106: token_type is a metrics label, not a password
             _llm_token_usage_total.labels(model=model, token_type="prompt").inc(prompt_tokens)  # noqa: S106
             _llm_token_usage_total.labels(model=model, token_type="completion").inc(completion_tokens)  # noqa: S106
-    except Exception:
-        pass  # Don't let metrics failures break the app
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_llm_request_duration(model: str, duration_ms: float, provider: str = "unknown") -> None:
@@ -215,8 +218,8 @@ def record_llm_request_duration(model: str, duration_ms: float, provider: str = 
             # Convert ms to seconds for histogram
             duration_seconds = duration_ms / 1000.0
             _llm_request_duration.labels(model=model, provider=provider).observe(duration_seconds)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_llm_request(model: str, provider: str, status: str) -> None:
@@ -234,5 +237,5 @@ def record_llm_request(model: str, provider: str, status: str) -> None:
     try:
         if _llm_requests_total:
             _llm_requests_total.labels(model=model, provider=provider, status=status).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)

@@ -20,6 +20,7 @@ Usage:
     GET /api/v1/observability/alerts/rules - List alerting rules
 """
 
+import logging
 from typing import TYPE_CHECKING, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query, status
@@ -29,6 +30,8 @@ from mcp_server_langgraph.api.pagination import (
     CursorPaginatedResponse,
     CursorPaginationMetadata,
 )
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.observability.query.interfaces import (
@@ -491,8 +494,8 @@ class ObservabilityServiceImpl(ObservabilityService):
                 val = requests_result.series[0].latest_value
                 if val is not None:
                     requests_total = int(val)
-        except Exception:
-            pass  # Use default if query fails
+        except Exception as e:
+            logger.debug("Operation failed: %s", e)
 
         try:
             # Query errors_total
@@ -501,8 +504,8 @@ class ObservabilityServiceImpl(ObservabilityService):
                 val = errors_result.series[0].latest_value
                 if val is not None:
                     errors_total = int(val)
-        except Exception:
-            pass  # Use default if query fails
+        except Exception as e:
+            logger.debug("Operation failed: %s", e)
 
         return {
             "requests_total": requests_total,

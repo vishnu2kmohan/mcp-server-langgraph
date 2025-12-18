@@ -14,10 +14,13 @@ caught the error during startup with a clear, actionable error message.
 Usage:
 ------
 ```python
+import logging
 from mcp_server_langgraph.core.checkpoint_validator import validate_checkpoint_config
 from mcp_server_langgraph.core.config import settings
 
 # At application startup:
+
+logger = logging.getLogger(__name__)
 validate_checkpoint_config(settings)
 ```
 """
@@ -192,8 +195,8 @@ class CheckpointConfigValidator:
             if "%" in password:
                 # If decoding changed it, it was encoded
                 return decoded != password
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Operation failed: %s", e)
 
         return False
 

@@ -11,12 +11,16 @@ Service principals enable machine-to-machine authentication with two modes:
 See ADR-0033 for architectural decisions.
 """
 
+import logging
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, UTC
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -381,10 +385,8 @@ class ServicePrincipalManager:
                     enabled=client.get("enabled", True),
                     created_at=attrs.get("createdAt"),
                 )
-        except Exception:
-            pass
-
-        # Try to find as service account user
+        except Exception as e:
+            logger.debug("Operation failed: %s", e)
         try:
             user = await self.keycloak.get_user_by_username(f"svc_{service_id}")
             if user:
@@ -401,8 +403,8 @@ class ServicePrincipalManager:
                         enabled=user.get("enabled", True),  # type: ignore[attr-defined]
                         created_at=attrs.get("createdAt"),
                     )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Operation failed: %s", e)
 
         return None
 
@@ -419,8 +421,8 @@ class ServicePrincipalManager:
         except Exception:
             try:
                 await self.keycloak.delete_user(f"svc_{service_id}")
-            except Exception:
-                pass  # May not exist
+            except Exception as e:
+                logger.debug("Operation failed: %s", e)
 
         # Remove from OpenFGA (if available)
         if self.openfga is not None:

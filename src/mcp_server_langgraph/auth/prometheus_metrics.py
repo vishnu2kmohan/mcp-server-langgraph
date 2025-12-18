@@ -16,7 +16,10 @@ Metrics:
 - auth_authorization_checks_total: Authorization checks by result and resource
 """
 
+import logging
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Lazy-load prometheus_client to handle missing dependency
 _metrics_available: bool | None = None
@@ -183,8 +186,8 @@ def record_login_attempt(provider: str, result: str, duration_seconds: float) ->
         # Record failures separately with reason
         if result != "success" and _auth_login_failures_total:
             _auth_login_failures_total.labels(provider=provider, reason=result).inc()
-    except Exception:
-        pass  # Silently ignore metric recording errors
+    except Exception as e:
+        logger.debug("Metric recording failed: %s", e)
 
 
 # =============================================================================
@@ -206,8 +209,8 @@ def record_token_verification(result: str, provider: str = "unknown") -> None:
     try:
         if _auth_token_verifications_total:
             _auth_token_verifications_total.labels(result=result, provider=provider).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Metric recording failed: %s", e)
 
 
 def record_token_created(provider: str = "unknown") -> None:
@@ -223,8 +226,8 @@ def record_token_created(provider: str = "unknown") -> None:
     try:
         if _auth_token_created_total:
             _auth_token_created_total.labels(provider=provider).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Metric recording failed: %s", e)
 
 
 def record_token_refresh(result: str) -> None:
@@ -240,8 +243,8 @@ def record_token_refresh(result: str) -> None:
     try:
         if _auth_token_refresh_total:
             _auth_token_refresh_total.labels(result=result).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Metric recording failed: %s", e)
 
 
 # =============================================================================
@@ -262,8 +265,8 @@ def record_jwks_cache_operation(operation_type: str) -> None:
     try:
         if _auth_jwks_cache_operations_total:
             _auth_jwks_cache_operations_total.labels(type=operation_type).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Metric recording failed: %s", e)
 
 
 # =============================================================================
@@ -286,8 +289,8 @@ def record_session_created(backend: str) -> None:
             _auth_session_created_total.labels(backend=backend).inc()
         if _auth_sessions_active:
             _auth_sessions_active.labels(backend=backend).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Metric recording failed: %s", e)
 
 
 def record_session_revoked(backend: str) -> None:
@@ -305,8 +308,8 @@ def record_session_revoked(backend: str) -> None:
             _auth_session_revoked_total.labels(backend=backend).inc()
         if _auth_sessions_active:
             _auth_sessions_active.labels(backend=backend).dec()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Metric recording failed: %s", e)
 
 
 def set_active_sessions(backend: str, count: int) -> None:
@@ -323,8 +326,8 @@ def set_active_sessions(backend: str, count: int) -> None:
     try:
         if _auth_sessions_active:
             _auth_sessions_active.labels(backend=backend).set(count)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Metric recording failed: %s", e)
 
 
 # =============================================================================
@@ -350,8 +353,8 @@ def record_authorization_check(result: str, resource_type: str, duration_seconds
 
         if duration_seconds is not None and _auth_authorization_duration_seconds:
             _auth_authorization_duration_seconds.labels(resource_type=resource_type).observe(duration_seconds)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Metric recording failed: %s", e)
 
 
 # =============================================================================
@@ -379,5 +382,5 @@ def record_session_lifecycle_event(event: str, reason: str | None = None) -> Non
             # Use empty string for reason on session.start events
             reason_label = reason if reason and event == "session.end" else ""
             _session_lifecycle_events_total.labels(event=event, reason=reason_label).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Metric recording failed: %s", e)

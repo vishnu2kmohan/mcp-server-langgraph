@@ -12,9 +12,12 @@ Metrics for SOC2 compliance dashboard:
 These metrics are scraped by Alloy and displayed in the SOC2 Compliance Grafana dashboard.
 """
 
+import logging
 from typing import Any
 
 # Lazy-load prometheus_client to handle missing dependency
+
+logger = logging.getLogger(__name__)
 _metrics_available: bool | None = None
 _compliance_score_gauge: Any = None
 _evidence_items_total: Any = None
@@ -133,8 +136,8 @@ def record_compliance_score(score: float) -> None:
     try:
         if _compliance_score_gauge:
             _compliance_score_gauge.set(score)
-    except Exception:
-        pass  # Don't let metrics failures break the app
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_evidence_item(status: str, control_category: str) -> None:
@@ -151,8 +154,8 @@ def record_evidence_item(status: str, control_category: str) -> None:
     try:
         if _evidence_items_total:
             _evidence_items_total.labels(status=status, control_category=control_category).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_audit_log(event_type: str) -> None:
@@ -168,8 +171,8 @@ def record_audit_log(event_type: str) -> None:
     try:
         if _audit_logs_total:
             _audit_logs_total.labels(event_type=event_type).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_access_review_item(status: str) -> None:
@@ -185,8 +188,8 @@ def record_access_review_item(status: str) -> None:
     try:
         if _access_review_items_total:
             _access_review_items_total.labels(status=status).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_compliance_job(job_type: str, status: str) -> None:
@@ -203,8 +206,8 @@ def record_compliance_job(job_type: str, status: str) -> None:
     try:
         if _compliance_job_executions_total:
             _compliance_job_executions_total.labels(job_type=job_type, status=status).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_compliance_report(report_type: str) -> None:
@@ -220,8 +223,8 @@ def record_compliance_report(report_type: str) -> None:
     try:
         if _compliance_report_generated_total:
             _compliance_report_generated_total.labels(report_type=report_type).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_gdpr_anonymization(count: int, operation: str = "audit_logs") -> None:
@@ -238,8 +241,8 @@ def record_gdpr_anonymization(count: int, operation: str = "audit_logs") -> None
     try:
         if _gdpr_anonymization_total:
             _gdpr_anonymization_total.labels(operation=operation).inc(count)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_gdpr_data_export(format: str, status: str) -> None:
@@ -256,8 +259,8 @@ def record_gdpr_data_export(format: str, status: str) -> None:
     try:
         if _gdpr_data_export_total:
             _gdpr_data_export_total.labels(format=format, status=status).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_gdpr_data_deletion(operation: str, status: str) -> None:
@@ -274,8 +277,8 @@ def record_gdpr_data_deletion(operation: str, status: str) -> None:
     try:
         if _gdpr_data_deletion_total:
             _gdpr_data_deletion_total.labels(operation=operation, status=status).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_gdpr_retention_cleanup(data_type: str, status: str, count: int = 1) -> None:
@@ -293,5 +296,5 @@ def record_gdpr_retention_cleanup(data_type: str, status: str, count: int = 1) -
     try:
         if _gdpr_retention_cleanup_total:
             _gdpr_retention_cleanup_total.labels(data_type=data_type, status=status).inc(count)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)

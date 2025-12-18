@@ -9,6 +9,7 @@ This middleware integrates with the LGTM observability stack (Grafana/Mimir).
 See ADR-0028 for design rationale.
 """
 
+import logging
 import time
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, cast
@@ -17,6 +18,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+
+logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from starlette.types import ASGIApp
 
@@ -206,9 +209,9 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                     endpoint=endpoint,
                 ).observe(duration)
 
-        except Exception:
+        except Exception as e:
             # Don't let metrics failures break the request
-            pass
+            logger.debug("Metric recording failed: %s", e)
 
 
 # Module-level references for patching in tests

@@ -28,6 +28,7 @@ from mcp_server_langgraph.auth.dpop import DPoPReplayCache, verify_dpop_proof
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 # FastAPI imports for dependency injection (optional, only if using FastAPI endpoints)
+
 try:
     from fastapi import Depends, HTTPException, Request, status  # noqa: F401 (Depends used at line 929, 970)
     from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -309,8 +310,8 @@ class AuthMiddleware:
                         },
                     )
                     return self._get_mock_resources(user_id, relation, resource_type)
-            except Exception:
-                pass  # If settings not available, fall through to empty list
+            except Exception as e:
+                logger.debug("Operation failed: %s", e)
 
             logger.warning("OpenFGA not available for resource listing, no mock data enabled")
             return []

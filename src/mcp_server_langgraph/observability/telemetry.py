@@ -818,9 +818,9 @@ def _safe_metric_operation(metric_name: str, operation: str, *args: Any, **kwarg
     try:
         metric = getattr(_observability_config, metric_name)
         getattr(metric, operation)(*args, **kwargs)
-    except Exception:
-        # Silently ignore metric errors to prevent breaking application logic
-        pass
+    except Exception as e:
+        # Log metric errors at debug level to prevent breaking application logic
+        logger.debug("Metric recording failed: %s", e)
 
 
 circuit_breaker_state_gauge = type(

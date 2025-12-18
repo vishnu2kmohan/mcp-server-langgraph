@@ -8,9 +8,12 @@ Initializes storage-related services:
 - Retention scheduler (FedRAMP AU-11 partition management)
 """
 
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+
+logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from mcp_server_langgraph.audit.service import UnifiedAuditService
     from mcp_server_langgraph.audit.compliance_service import ComplianceService
@@ -43,14 +46,14 @@ class StorageState:
         if self.retention_scheduler is not None:
             try:
                 await self.retention_scheduler.stop()
-            except Exception:
-                pass  # Best effort cleanup
+            except Exception as e:
+                logger.debug("Operation failed: %s", e)
 
         if self.audit_scheduler is not None:
             try:
                 self.audit_scheduler.stop()  # sync method
-            except Exception:
-                pass  # Best effort cleanup
+            except Exception as e:
+                logger.debug("Operation failed: %s", e)
 
 
 async def init_storage(settings: "Settings") -> StorageState:

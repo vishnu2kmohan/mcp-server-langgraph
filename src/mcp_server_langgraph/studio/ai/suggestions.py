@@ -5,11 +5,14 @@ Provides AI-powered workflow suggestions using LangGraph and LiteLLM.
 Includes HEART metrics tracking for suggestion quality and adoption.
 """
 
+import logging
 import time
 from dataclasses import dataclass, field
 from typing import Any
 
 # Lazy-load metrics to handle missing dependency
+
+logger = logging.getLogger(__name__)
 _metrics_available: bool | None = None
 _suggestion_counter: Any = None
 _suggestion_latency: Any = None
@@ -355,6 +358,6 @@ Return a JSON object with a "suggestions" array."""
                 for s in suggestions:
                     _suggestion_confidence.labels(suggestion_type=s.type).observe(s.confidence)
 
-        except Exception:
+        except Exception as e:
             # Don't let metrics failures break the app
-            pass
+            logger.debug("Metric recording failed: %s", e)

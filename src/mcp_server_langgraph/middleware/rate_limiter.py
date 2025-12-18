@@ -23,6 +23,7 @@ from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger
 
 # Rate limit tiers (requests per minute)
+
 RATE_LIMITS = {
     "anonymous": "10/minute",
     "free": "60/minute",
@@ -267,8 +268,8 @@ async def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExc
                 "endpoint": request.url.path,
             },
         )
-    except Exception:
-        pass  # Don't let metrics failure break error handling
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
     # Log rate limit violation
     logger.warning(

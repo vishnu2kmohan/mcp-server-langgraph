@@ -15,6 +15,7 @@ from mcp_server_langgraph.observability.telemetry import logger
 from mcp_server_langgraph.secret_providers.manager import get_secrets_manager
 
 # Prometheus client for metrics exposition
+
 try:
     from prometheus_client import (
         CONTENT_TYPE_LATEST,
@@ -116,8 +117,8 @@ def record_agent_call_success(agent_type: str = "default", model: str = "unknown
 
     try:
         agent_calls_successful_total.labels(agent_type=agent_type, model=model).inc()
-    except Exception:
-        pass  # Silently ignore metric recording errors
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 def record_agent_call_failure(agent_type: str = "default", model: str = "unknown", error_type: str = "unknown") -> None:
@@ -134,8 +135,8 @@ def record_agent_call_failure(agent_type: str = "default", model: str = "unknown
 
     try:
         agent_calls_failed_total.labels(agent_type=agent_type, model=model, error_type=error_type).inc()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
 
 app = FastAPI(title="MCP Server with LangGraph Health")
@@ -304,8 +305,8 @@ async def prometheus_metrics() -> Response:
         memory_info = process.memory_info()
         agent_memory_bytes.labels(type="rss").set(memory_info.rss)
         agent_memory_bytes.labels(type="vms").set(memory_info.vms)
-    except Exception:
-        pass  # Don't fail metrics if psutil unavailable
+    except Exception as e:
+        logger.debug("Operation failed: %s", e)
 
     # Generate and return Prometheus-format metrics
     return Response(

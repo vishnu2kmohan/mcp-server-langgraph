@@ -184,8 +184,8 @@ class DockerSandbox(Sandbox):
                 stats = container.stats(stream=False)
                 if "memory_stats" in stats and "max_usage" in stats["memory_stats"]:
                     memory_used_mb = stats["memory_stats"]["max_usage"] / (1024 * 1024)
-            except Exception:
-                pass  # Memory stats not critical
+            except Exception as e:
+                logger.debug("Operation failed: %s", e)
 
             # Cleanup container
             self._cleanup_container(container)
@@ -346,5 +346,5 @@ class DockerSandbox(Sandbox):
         try:
             if hasattr(self, "client"):
                 self.client.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Operation failed: %s", e)

@@ -213,8 +213,8 @@ class CleanupScheduler:
             job = self.scheduler.get_job("data_retention_cleanup")
             if job and hasattr(job, "next_run_time") and job.next_run_time:
                 return job.next_run_time.isoformat()  # type: ignore[no-any-return]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Operation failed: %s", e)
         return "Not scheduled"
 
     async def run_now(self) -> None:

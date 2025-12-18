@@ -4,10 +4,14 @@ GCP Secret Manager Provider
 Provides secrets from Google Cloud Secret Manager.
 """
 
+import logging
 import os
 from typing import Any
 
 from .base import SecretNotFoundError, SecretsProvider, SecretsProviderError
+
+
+logger = logging.getLogger(__name__)
 
 
 class GCPSecretsProvider(SecretsProvider):
@@ -112,9 +116,9 @@ class GCPSecretsProvider(SecretsProvider):
                         "secret": {"replication": {"automatic": {}}},
                     }
                 )
-            except Exception:
-                # Secret might already exist
-                pass
+            except Exception as e:
+                # Secret might already exist, log at debug level
+                logger.debug("Secret creation skipped (may already exist): %s", e)
 
             # Add the secret version
             secret_path = f"projects/{self._project_id}/secrets/{name}"

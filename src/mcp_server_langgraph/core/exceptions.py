@@ -7,10 +7,14 @@ and integration with observability stack.
 See ADR-0029 for design rationale.
 """
 
+import logging
 from enum import Enum
 from typing import Any
 
 from opentelemetry import trace
+
+
+logger = logging.getLogger(__name__)
 
 
 class ErrorCategory(str, Enum):
@@ -85,8 +89,8 @@ class MCPServerException(Exception):
             span = trace.get_current_span()
             if span and span.get_span_context().is_valid:
                 return format(span.get_span_context().trace_id, "032x")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Operation failed: %s", e)
         return None
 
     def _generate_user_message(self) -> str:

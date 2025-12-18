@@ -4,6 +4,7 @@ FastAPI Dependencies
 Provides dependency injection for commonly used services.
 """
 
+import logging
 from collections.abc import AsyncGenerator
 from typing import Any
 
@@ -29,6 +30,8 @@ from mcp_server_langgraph.storage.base import ProjectRepository
 import httpx
 
 from mcp_server_langgraph.core.http_client import HttpClientManager
+
+logger = logging.getLogger(__name__)
 
 # Singleton instances (will be initialized on first use)
 _keycloak_client: KeycloakClient | None = None
@@ -798,22 +801,22 @@ class MCPClient:
                             try:
                                 tools = await session.list_tools()
                                 tool_count = len(tools.tools) if tools.tools else 0
-                            except Exception:
-                                pass  # Server may not support tools
+                            except Exception as e:
+                                logger.debug("Operation failed: %s", e)
 
                         if init_result.capabilities.resources:
                             try:
                                 resources = await session.list_resources()
                                 resource_count = len(resources.resources) if resources.resources else 0
-                            except Exception:
-                                pass  # Server may not support resources
+                            except Exception as e:
+                                logger.debug("Operation failed: %s", e)
 
                         if init_result.capabilities.prompts:
                             try:
                                 prompts = await session.list_prompts()
                                 prompt_count = len(prompts.prompts) if prompts.prompts else 0
-                            except Exception:
-                                pass  # Server may not support prompts
+                            except Exception as e:
+                                logger.debug("Operation failed: %s", e)
 
                     return MCPConnectionTestResult(
                         success=True,

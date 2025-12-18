@@ -5,9 +5,12 @@ Initializes the shared HTTP client pool for external requests.
 Uses httpx.AsyncClient with HTTP/2 and connection pooling.
 """
 
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+
+logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from mcp_server_langgraph.core.config import Settings
     from mcp_server_langgraph.core.http_client import HttpClientManager
@@ -32,8 +35,8 @@ class HttpState:
         if self.http_client_manager is not None:
             try:
                 await self.http_client_manager.close()
-            except Exception:
-                pass  # Best effort cleanup
+            except Exception as e:
+                logger.debug("Operation failed: %s", e)
 
 
 async def init_http_client(settings: "Settings") -> HttpState:

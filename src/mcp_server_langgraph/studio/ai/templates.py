@@ -5,10 +5,13 @@ Provides AI-powered workflow template recommendations.
 Uses embedding-based similarity (sentence-transformers) with fallback to keywords.
 """
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any
 
 # Lazy-load embeddings to handle missing dependency
+
+logger = logging.getLogger(__name__)
 _embeddings_available: bool | None = None
 _embedding_model: Any = None
 _template_embeddings: dict[str, Any] = {}
@@ -283,9 +286,9 @@ class TemplateRecommender:
         if self._enable_embeddings and _embeddings_available and _embedding_model is not None:
             try:
                 return self._compute_embedding_similarity(description, template)
-            except Exception:
+            except Exception as e:
                 # Fall through to keyword matching on any error
-                pass
+                logger.debug("Embedding similarity failed, falling back to keywords: %s", e)
 
         # Fallback: keyword-based similarity
         return self._compute_keyword_similarity(description, template)

@@ -7,9 +7,12 @@ Initializes authentication and authorization components:
 - User provider based on AUTH_PROVIDER setting
 """
 
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+
+logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from mcp_server_langgraph.auth.middleware import AuthMiddleware
     from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -38,8 +41,8 @@ class SecurityState:
         if self.openfga_client is not None:
             try:
                 await self.openfga_client.close()
-            except Exception:
-                pass  # Best effort cleanup
+            except Exception as e:
+                logger.debug("Operation failed: %s", e)
 
 
 async def init_auth(settings: "Settings") -> SecurityState:

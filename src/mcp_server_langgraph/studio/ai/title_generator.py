@@ -5,7 +5,11 @@ Generates concise, descriptive titles for chat sessions based on the first user 
 Uses LiteLLM for AI-powered title generation with fallback to simple extraction.
 """
 
+import logging
 import re
+
+
+logger = logging.getLogger(__name__)
 
 
 class SessionTitleGenerator:
@@ -56,8 +60,8 @@ class SessionTitleGenerator:
                 title = await self._generate_with_llm(message)
                 if title:
                     return self._sanitize_title(title)
-            except Exception:
-                pass  # Fall through to heuristic
+            except Exception as e:
+                logger.debug("Operation failed: %s", e)
 
         return self._generate_heuristic_title(message)
 
