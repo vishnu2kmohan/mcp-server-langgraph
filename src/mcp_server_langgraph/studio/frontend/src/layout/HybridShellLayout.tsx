@@ -47,6 +47,7 @@ import {
   setSelectedArtifactId,
   type CanvasPanelSizes,
 } from "../store/slices/canvasSlice";
+import { selectSidebarItems } from "../store/slices/personaSlice";
 
 // =============================================================================
 // Utility
@@ -89,6 +90,21 @@ function ActivityBar() {
   const navigate = useNavigate();
   const activeNavItem = useAppSelector(selectActiveNavItem);
 
+  // RBAC: Get allowed sidebar items from persona slice (deny-by-default)
+  const allowedItems = useAppSelector(selectSidebarItems);
+
+  // Filter navigation items based on persona permissions
+  const visibleNavItems = useMemo(
+    () => NAV_ITEMS.filter((item) => allowedItems.includes(item.id)),
+    [allowedItems],
+  );
+
+  // Filter bottom items based on persona permissions
+  const visibleBottomItems = useMemo(
+    () => BOTTOM_ITEMS.filter((item) => allowedItems.includes(item.id)),
+    [allowedItems],
+  );
+
   const handleNavClick = useCallback(
     (item: NavItem) => {
       dispatch(setActiveNavItem(item.id));
@@ -108,9 +124,9 @@ function ActivityBar() {
         "border-r border-gray-200 dark:border-gray-700",
       )}
     >
-      {/* Main navigation icons */}
+      {/* Main navigation icons - RBAC filtered */}
       <div className="flex flex-col gap-1">
-        {NAV_ITEMS.map((item) => (
+        {visibleNavItems.map((item) => (
           <button
             key={item.id}
             type="button"
@@ -134,7 +150,7 @@ function ActivityBar() {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Bottom icons */}
+      {/* Bottom icons - RBAC filtered */}
       <div className="flex flex-col gap-1">
         <button
           type="button"
@@ -148,7 +164,7 @@ function ActivityBar() {
         >
           <Command size={20} />
         </button>
-        {BOTTOM_ITEMS.map((item) => (
+        {visibleBottomItems.map((item) => (
           <button
             key={item.id}
             type="button"

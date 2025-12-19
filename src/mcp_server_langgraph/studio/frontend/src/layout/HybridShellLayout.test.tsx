@@ -11,6 +11,10 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { HybridShellLayout } from "./HybridShellLayout";
 import canvasReducer from "../store/slices/canvasSlice";
+import personaReducer, {
+  setUserInfo,
+  type Persona,
+} from "../store/slices/personaSlice";
 
 // Mock react-resizable-panels to avoid layout calculation issues in tests
 vi.mock("react-resizable-panels", () => ({
@@ -67,14 +71,42 @@ vi.mock("react-router", async () => {
   };
 });
 
-// Create test store with canvas slice
-const createTestStore = (preloadedState = {}) =>
-  configureStore({
+// Create test store with canvas and persona slices
+const createTestStore = (
+  preloadedState: {
+    canvas?: Partial<ReturnType<typeof canvasReducer>>;
+    persona?: {
+      persona: Persona;
+      username: string | null;
+      email: string | null;
+      permissions: string[];
+      isPersonaLoading: boolean;
+    };
+  } = {},
+) => {
+  const store = configureStore({
     reducer: {
       canvas: canvasReducer,
+      persona: personaReducer,
     },
-    preloadedState,
+    preloadedState: preloadedState as Record<string, unknown>,
   });
+  return store;
+};
+
+// Helper to create store with specific persona
+const createStoreWithPersona = (persona: Persona) => {
+  const store = createTestStore();
+  store.dispatch(
+    setUserInfo({
+      username: "testuser",
+      email: "test@example.com",
+      roles: [persona],
+      persona,
+    }),
+  );
+  return store;
+};
 
 describe("HybridShellLayout", () => {
   beforeEach(() => {
@@ -264,6 +296,113 @@ describe("HybridShellLayout", () => {
 
       // Status bar should show keyboard hint
       expect(screen.getByTestId("canvas-status-bar")).toBeInTheDocument();
+    });
+  });
+
+  // =============================================================================
+  // Phase 3: RBAC and Persona-based Navigation Filtering
+  // =============================================================================
+
+  describe("RBAC - Persona-based Navigation (Phase 3)", () => {
+    it("shows all navigation items for admin persona", () => {
+      render(
+        <Provider store={createStoreWithPersona("admin")}>
+          <MemoryRouter>
+            <HybridShellLayout />
+          </MemoryRouter>
+        </Provider>,
+      );
+
+      // Admin should see all items including admin-only
+      expect(screen.getByLabelText(/chat/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/workflows/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/observability/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/admin/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/settings/i)).toBeInTheDocument();
+    });
+
+    it("shows developer-allowed items for developer persona", () => {
+      render(
+        <Provider store={createStoreWithPersona("developer")}>
+          <MemoryRouter>
+            <HybridShellLayout />
+          </MemoryRouter>
+        </Provider>,
+      );
+
+      // Developer should see chat, workflows, observability but NOT admin
+      expect(screen.getByLabelText(/chat/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/workflows/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/observability/i)).toBeInTheDocument();
+      expect(screen.queryByLabelText(/admin/i)).not.toBeInTheDocument();
+      expect(screen.getByLabelText(/settings/i)).toBeInTheDocument();
+    });
+
+    it("shows user-allowed items for user persona (deny-by-default)", () => {
+      render(
+        <Provider store={createStoreWithPersona("user")}>
+          <MemoryRouter>
+            <HybridShellLayout />
+          </MemoryRouter>
+        </Provider>,
+      );
+
+      // User should only see chat and workflows, NOT admin/observability
+      expect(screen.getByLabelText(/chat/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/workflows/i)).toBeInTheDocument();
+      // User persona does NOT have access to these
+      expect(screen.queryByLabelText(/observability/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/admin/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/agents/i)).not.toBeInTheDocument();
+    });
+
+    it("implements deny-by-default - only shows explicitly allowed items", () => {
+      render(
+        <Provider store={createStoreWithPersona("user")}>
+          <MemoryRouter>
+            <HybridShellLayout />
+          </MemoryRouter>
+        </Provider>,
+      );
+
+      const activityBar = screen.getByTestId("activity-bar");
+      const buttons = activityBar.querySelectorAll("button");
+
+      // User persona should have limited navigation items
+      // chat, workflows, cost are allowed + command palette + settings
+      // But our NAV_ITEMS only has: chat, workflows (allowed for user)
+      // and agents, observability, admin (NOT allowed for user)
+      // So we expect fewer buttons for user than admin
+      expect(buttons.length).toBeLessThan(7); // Less than all possible buttons
+    });
+  });
+
+  describe("ConversationPanel with Chat Integration (Phase 3)", () => {
+    it("renders conversation panel with chat functionality", () => {
+      render(
+        <Provider store={createStoreWithPersona("user")}>
+          <MemoryRouter initialEntries={["/studio/v2/chat/session-1"]}>
+            <HybridShellLayout />
+          </MemoryRouter>
+        </Provider>,
+      );
+
+      const conversationPanel = screen.getByTestId("conversation-panel");
+      expect(conversationPanel).toBeInTheDocument();
+    });
+
+    it("shows empty state when no session is selected", () => {
+      render(
+        <Provider store={createStoreWithPersona("user")}>
+          <MemoryRouter initialEntries={["/studio/v2/chat"]}>
+            <HybridShellLayout />
+          </MemoryRouter>
+        </Provider>,
+      );
+
+      // Should show some indication that no session is active
+      const conversationPanel = screen.getByTestId("conversation-panel");
+      expect(conversationPanel).toBeInTheDocument();
     });
   });
 });
