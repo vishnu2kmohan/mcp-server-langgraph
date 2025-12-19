@@ -17,7 +17,7 @@ Handles:
 - pytest.mark.parametrize decorator parameters
 - unittest.mock @patch decorators (mock_* and Mock* parameter patterns)
 - Built-in pytest fixtures (capsys, monkeypatch, tmp_path, etc.)
-- Custom fixtures from conftest.py and tests/fixtures/
+- Custom fixtures from conftest.py, tests/fixtures/, and tests/plugins/
 
 Features:
 - AST-based analysis (doesn't execute code)
@@ -84,12 +84,21 @@ class FixtureCollector(ast.NodeVisitor):
             if decorator_name in ("pytest.mark.parametrize", "parametrize"):
                 # Extract parameter names from first argument
                 if isinstance(decorator, ast.Call) and decorator.args:
-                    # First arg is the parameter string (e.g., "param1,param2" or "param1")
-                    if isinstance(decorator.args[0], ast.Constant):
-                        param_str = decorator.args[0].value
+                    first_arg = decorator.args[0]
+                    # First arg can be:
+                    # - String: "param1,param2" or "param1"
+                    # - Tuple: ("param1", "param2")
+                    # - List: ["param1", "param2"]
+                    if isinstance(first_arg, ast.Constant):
+                        param_str = first_arg.value
                         # Parse comma-separated parameter names
                         params = [p.strip() for p in param_str.split(",")]
                         parametrize_params.update(params)
+                    elif isinstance(first_arg, (ast.Tuple, ast.List)):
+                        # Handle tuple/list of parameter names: ("param1", "param2")
+                        for elt in first_arg.elts:
+                            if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                                parametrize_params.add(elt.value)
 
             if decorator_name in ("pytest.fixture", "pytest_asyncio.fixture"):
                 is_fixture = True
@@ -208,10 +217,16 @@ class FixtureValidator:
         if fixtures_dir.exists():
             fixture_files = list(fixtures_dir.glob("*.py"))
 
+        # Also collect fixtures from plugins/ directory (pytest_plugins registered plugins)
+        plugins_dir = self.test_dir / "plugins"
+        plugin_files = []
+        if plugins_dir.exists():
+            plugin_files = list(plugins_dir.glob("*_plugin.py"))
+
         print(f"🔍 Validating pytest fixtures in {len(test_files)} test files...\n")
 
-        # Parse all files to collect fixtures (fixtures first, then conftests, then tests)
-        for file_path in fixture_files + conftest_files + test_files:
+        # Parse all files to collect fixtures (fixtures first, plugins, then conftests, then tests)
+        for file_path in fixture_files + plugin_files + conftest_files + test_files:
             self._parse_file(file_path)
 
         # Validate fixture dependencies
