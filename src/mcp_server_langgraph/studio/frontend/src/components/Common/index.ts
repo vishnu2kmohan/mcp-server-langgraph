@@ -15,3 +15,6 @@ export type {
   ShortcutsPanelProps,
   ShortcutDefinition,
 } from "./ShortcutsPanel";
+
+export { ThemeToggle } from "./ThemeToggle";
+export type { ThemeToggleProps, Theme } from "./ThemeToggle";
