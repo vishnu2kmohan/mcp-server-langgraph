@@ -91,6 +91,12 @@ export default defineConfig({
         __dirname,
         "./src/mocks/pwa-register.ts",
       ),
+      // Mock Sandpack to avoid Stitches CSS-in-JS incompatibility with jsdom 27
+      // Stitches uses CSS syntax like '--sxs{--sxs:6}' that @acemir/cssom cannot parse
+      "@codesandbox/sandpack-react": path.resolve(
+        __dirname,
+        "./src/mocks/components/sandpack-react.ts",
+      ),
     },
   },
   test: {
