@@ -10,6 +10,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { getAuthToken } from "../utils/storage";
 
 export interface Tool {
   name: string;
@@ -100,7 +101,7 @@ export function useMCPConnection(
 
   const fetchToolsViaRest = useCallback(async () => {
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch("/api/v1/mcp/tools", {
         method: "GET",
         headers: {
@@ -305,7 +306,7 @@ export function useMCPConnection(
       }
 
       // REST fallback
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch("/api/v1/mcp/tools/call", {
         method: "POST",
         headers: {

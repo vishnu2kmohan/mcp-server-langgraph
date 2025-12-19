@@ -16,6 +16,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { storage, STORAGE_KEYS } from "../utils/storage";
 
 // ==============================================================================
 // Types
@@ -45,7 +46,7 @@ export interface AccessibilityState extends AccessibilitySettings {
 // Constants
 // ==============================================================================
 
-const STORAGE_KEY = "accessibility-settings";
+const STORAGE_KEY = STORAGE_KEYS.ACCESSIBILITY;
 
 const DEFAULT_SETTINGS: AccessibilitySettings = {
   screenReaderMode: false,
@@ -66,23 +67,17 @@ const FONT_SIZE_MAP: Record<FontSize, string> = {
 // ==============================================================================
 
 function loadSettings(): AccessibilitySettings {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
-    }
-  } catch {
-    // Corrupted localStorage, use defaults
+  const stored = storage.get<AccessibilitySettings>(STORAGE_KEY, {
+    expectObject: true,
+  });
+  if (stored) {
+    return { ...DEFAULT_SETTINGS, ...stored };
   }
   return DEFAULT_SETTINGS;
 }
 
 function saveSettings(settings: AccessibilitySettings): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-  } catch {
-    // localStorage unavailable
-  }
+  storage.set(STORAGE_KEY, settings);
 }
 
 function getSystemReducedMotion(): boolean {

@@ -11,6 +11,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { storage, STORAGE_KEYS } from "../utils/storage";
 
 /**
  * Happiness tracking payload
@@ -83,7 +84,7 @@ export interface HeartMetricsTrackerResult {
 }
 
 const HEART_API_ENDPOINT = "/api/v1/metrics/heart/event";
-const LAST_VISIT_KEY = "heart_last_visit";
+const LAST_VISIT_KEY = STORAGE_KEYS.LAST_VISIT;
 const MS_PER_DAY = 86400000;
 
 /**
@@ -128,9 +129,9 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
   const [pendingEventsCount, setPendingEventsCount] = useState(0);
 
   // Calculate days since last visit using useState initializer
-  // This captures the localStorage value exactly once at mount time
+  // This captures the storage value exactly once at mount time
   const [daysSinceLastVisit] = useState<number>(() => {
-    const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
+    const lastVisit = storage.get<string>(LAST_VISIT_KEY);
     if (!lastVisit) return 0;
 
     const lastVisitTime = parseInt(lastVisit, 10);
@@ -141,7 +142,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
 
   // Update last visit on mount
   useEffect(() => {
-    localStorage.setItem(LAST_VISIT_KEY, Date.now().toString());
+    storage.set(LAST_VISIT_KEY, Date.now().toString());
   }, []);
 
   /**

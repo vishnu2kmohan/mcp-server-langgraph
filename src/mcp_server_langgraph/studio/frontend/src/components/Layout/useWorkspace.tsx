@@ -13,6 +13,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { storage } from "../../utils/storage";
 
 // =============================================================================
 // Types
@@ -56,7 +57,7 @@ export interface UseWorkspaceReturn {
 // Constants
 // =============================================================================
 
-const WORKSPACE_PREFIX = "workspace:";
+const WORKSPACE_PREFIX = "studio-workspace:";
 
 const DEFAULT_STATE: WorkspaceState = {
   focusMode: false,
@@ -75,53 +76,32 @@ function getStorageKey(name: string): string {
 }
 
 function loadWorkspace(name: string): WorkspaceState {
-  try {
-    const key = getStorageKey(name);
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        ...DEFAULT_STATE,
-        ...parsed,
-      };
-    }
-  } catch {
-    // Invalid JSON or other error - use default
+  const key = getStorageKey(name);
+  const saved = storage.get<WorkspaceState>(key, { expectObject: true });
+  if (saved) {
+    return {
+      ...DEFAULT_STATE,
+      ...saved,
+    };
   }
   return { ...DEFAULT_STATE };
 }
 
 function saveWorkspace(name: string, state: WorkspaceState): void {
-  try {
-    const key = getStorageKey(name);
-    localStorage.setItem(key, JSON.stringify(state));
-  } catch {
-    // Storage full or other error - ignore
-  }
+  const key = getStorageKey(name);
+  storage.set(key, state);
 }
 
 function deleteWorkspaceStorage(name: string): void {
-  try {
-    const key = getStorageKey(name);
-    localStorage.removeItem(key);
-  } catch {
-    // Error - ignore
-  }
+  const key = getStorageKey(name);
+  storage.remove(key);
 }
 
 function listAllWorkspaces(): string[] {
-  const workspaces: string[] = [];
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith(WORKSPACE_PREFIX)) {
-        workspaces.push(key.slice(WORKSPACE_PREFIX.length));
-      }
-    }
-  } catch {
-    // Error - return empty
-  }
-  return workspaces;
+  return storage
+    .keys()
+    .filter((key) => key.startsWith(WORKSPACE_PREFIX))
+    .map((key) => key.slice(WORKSPACE_PREFIX.length));
 }
 
 // =============================================================================

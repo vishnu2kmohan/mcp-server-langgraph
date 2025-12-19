@@ -17,6 +17,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { getAuthToken } from "../utils/storage";
 
 /**
  * Token usage information from streaming response
@@ -289,8 +290,8 @@ export function useStreamingChat(): UseStreamingChatReturn {
       // Start the fetch + stream processing
       const processStream = async () => {
         try {
-          // Get JWT token from localStorage (hybrid auth: JWT primary, cookies fallback)
-          const token = localStorage.getItem("auth_token");
+          // Get JWT token using storage utility (hybrid auth: JWT primary, cookies fallback)
+          const token = getAuthToken();
 
           const response = await fetch("/api/v1/chat/completions/stream", {
             method: "POST",

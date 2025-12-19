@@ -14,6 +14,7 @@ import { useAppDispatch } from "../store/hooks";
 import { addNotification } from "../store/slices/notificationSlice";
 import type { AddNotificationPayload } from "../store/slices/notificationSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
+import { getAuthToken } from "../utils/storage";
 
 /**
  * Options for useNotificationWebSocket hook
@@ -81,7 +82,7 @@ function getDefaultWebSocketUrl(): string {
   // For gateway (localhost, localhost:80) and production, use the same host
 
   // Get access token for authentication
-  const token = localStorage.getItem("access_token");
+  const token = getAuthToken();
   const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
 
   return `${protocol}//${host}/ws/notifications${tokenParam}`;

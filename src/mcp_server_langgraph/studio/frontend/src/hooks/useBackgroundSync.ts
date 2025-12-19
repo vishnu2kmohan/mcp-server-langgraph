@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { getAuthToken } from "../utils/storage";
 
 const DB_NAME = "mcp-studio-sync-queue";
 const STORE_NAME = "requests";
@@ -280,7 +281,7 @@ export function useBackgroundSync(
     async (request: QueuedRequest): Promise<boolean> => {
       try {
         // Merge auth headers with request headers
-        const token = localStorage.getItem("auth_token");
+        const token = getAuthToken();
         const headers: Record<string, string> = {
           ...request.headers,
           ...(token && { Authorization: `Bearer ${token}` }),

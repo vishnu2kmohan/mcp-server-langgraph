@@ -42,13 +42,14 @@ import type {
   UserPreferences as ApiUserPreferences,
   UserPreferencesUpdate as ApiUserPreferencesUpdate,
 } from "../types/api";
+import { storage, STORAGE_KEYS } from "../utils/storage";
 
 // ==============================================================================
 // Constants
 // ==============================================================================
 
-/** localStorage key for preferences */
-const STORAGE_KEY = "mcp_studio_preferences";
+/** localStorage key for preferences - uses centralized STORAGE_KEYS */
+const STORAGE_KEY = STORAGE_KEYS.PREFERENCES;
 
 /** Debounce delay for saving preferences (ms) */
 const SAVE_DEBOUNCE_MS = 500;
@@ -198,11 +199,40 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
   // Load preferences from localStorage on mount
   // ---------------------------------------------------------------------------
   useEffect(() => {
+    // Validator to ensure parsed data has the expected structure
+    const isValidPreferences = (data: unknown): data is UserPreferences => {
+      return (
+        typeof data === "object" &&
+        data !== null &&
+        "general" in data &&
+        typeof (data as UserPreferences).general === "object"
+      );
+    };
+
     const loadFromStorage = () => {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored) as UserPreferences;
+        // Try loading from new key first with validation
+        let parsed = storage.get<UserPreferences>(STORAGE_KEY, {
+          expectObject: true,
+          validator: isValidPreferences,
+        });
+
+        // Migration: check legacy key if new key is empty
+        if (!parsed) {
+          const legacyStored = storage.get<UserPreferences>(
+            "mcp_studio_preferences",
+            { expectObject: true, validator: isValidPreferences },
+          );
+          if (legacyStored) {
+            parsed = legacyStored;
+            // Migrate to new key
+            storage.set(STORAGE_KEY, legacyStored);
+            // Clean up legacy key
+            storage.remove("mcp_studio_preferences");
+          }
+        }
+
+        if (parsed) {
           // Merge with defaults to handle missing fields from older versions
           setPreferences({
             ...DEFAULT_USER_PREFERENCES,
@@ -292,7 +322,7 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
   }, [preferences.general.theme]);
 
   // ---------------------------------------------------------------------------
-  // Save preferences to localStorage (debounced)
+  // Save preferences to localStorage (debounced) using storage utility
   // ---------------------------------------------------------------------------
   const saveToStorage = useCallback(
     (prefs: UserPreferences) => {
@@ -302,12 +332,12 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
       }
 
       const timeoutId = setTimeout(() => {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+        const success = storage.set(STORAGE_KEY, prefs);
+        if (success) {
           setHasUnsavedChanges(false);
-        } catch (err) {
+        } else {
           setError(
-            `Failed to save preferences: ${err instanceof Error ? err.message : String(err)}`,
+            "Failed to save preferences: storage quota exceeded or unavailable",
           );
         }
       }, SAVE_DEBOUNCE_MS);
@@ -534,9 +564,9 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
   const loadPreferences = useCallback(async () => {
     setIsLoading(true);
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = storage.get<UserPreferences>(STORAGE_KEY);
       if (stored) {
-        setPreferences(JSON.parse(stored));
+        setPreferences(stored);
       }
     } catch {
       setError("Failed to load preferences");
@@ -546,12 +576,12 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
   }, []);
 
   const savePreferences = useCallback(async () => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+    const success = storage.set(STORAGE_KEY, preferences);
+    if (success) {
       setHasUnsavedChanges(false);
-    } catch (err) {
+    } else {
       setError(
-        `Failed to save preferences: ${err instanceof Error ? err.message : String(err)}`,
+        "Failed to save preferences: storage quota exceeded or unavailable",
       );
     }
   }, [preferences]);

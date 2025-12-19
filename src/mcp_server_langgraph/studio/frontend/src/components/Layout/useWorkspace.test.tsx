@@ -60,7 +60,8 @@ describe("useWorkspace", () => {
         activeActivityId: "files",
         activeTabs: { left: "sessions" },
       };
-      mockStorage["workspace:saved-workspace"] = JSON.stringify(savedState);
+      mockStorage["studio-workspace:saved-workspace"] =
+        JSON.stringify(savedState);
 
       const { result } = renderHook(() => useWorkspace("saved-workspace"));
 
@@ -68,7 +69,7 @@ describe("useWorkspace", () => {
     });
 
     it("uses default state if localStorage is invalid", () => {
-      mockStorage["workspace:invalid"] = "not valid json";
+      mockStorage["studio-workspace:invalid"] = "not valid json";
 
       const { result } = renderHook(() => useWorkspace("invalid"));
 
@@ -137,13 +138,13 @@ describe("useWorkspace", () => {
       });
 
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        "workspace:persist-test",
+        "studio-workspace:persist-test",
         expect.stringContaining('"focusMode":true'),
       );
     });
 
-    it("uses debounced save to avoid too many writes", async () => {
-      const { result } = renderHook(() => useWorkspace("debounce-test"));
+    it("saves state changes to localStorage", async () => {
+      const { result } = renderHook(() => useWorkspace("save-test"));
 
       act(() => {
         result.current.setFocusMode(true);
@@ -151,9 +152,12 @@ describe("useWorkspace", () => {
         result.current.setRightPanelCollapsed(true);
       });
 
-      // All three updates should result in fewer than 3 localStorage writes
-      // (due to debouncing)
-      expect(localStorageMock.setItem.mock.calls.length).toBeLessThanOrEqual(3);
+      // Verify saves happen (React may batch state updates)
+      expect(localStorageMock.setItem).toHaveBeenCalled();
+      // Final state should include all three changes
+      expect(result.current.state.focusMode).toBe(true);
+      expect(result.current.state.leftPanelCollapsed).toBe(true);
+      expect(result.current.state.rightPanelCollapsed).toBe(true);
     });
   });
 
@@ -179,8 +183,10 @@ describe("useWorkspace", () => {
     });
 
     it("lists available workspaces", () => {
-      mockStorage["workspace:ws1"] = JSON.stringify({ focusMode: false });
-      mockStorage["workspace:ws2"] = JSON.stringify({ focusMode: true });
+      mockStorage["studio-workspace:ws1"] = JSON.stringify({
+        focusMode: false,
+      });
+      mockStorage["studio-workspace:ws2"] = JSON.stringify({ focusMode: true });
       mockStorage["other-key"] = "not a workspace";
 
       const { result } = renderHook(() => useWorkspace("ws1"));
@@ -220,7 +226,7 @@ describe("useWorkspace", () => {
       });
 
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        "workspace:delete-test",
+        "studio-workspace:delete-test",
       );
     });
   });

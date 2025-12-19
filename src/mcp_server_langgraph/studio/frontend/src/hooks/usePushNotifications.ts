@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { getAuthToken } from "../utils/storage";
 
 // VAPID public key for push notifications (should come from env in production)
 // This is a test key - replace with actual key in production
@@ -150,7 +151,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       });
 
       // Send subscription to backend
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch("/api/v1/notifications/subscribe", {
         method: "POST",
         headers: {
@@ -187,7 +188,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       await subscription.unsubscribe();
 
       // Notify backend
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       await fetch("/api/v1/notifications/unsubscribe", {
         method: "POST",
         headers: {

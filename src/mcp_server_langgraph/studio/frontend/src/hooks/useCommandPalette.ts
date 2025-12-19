@@ -13,6 +13,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { storage, STORAGE_KEYS } from "../utils/storage";
 
 // ==============================================================================
 // Types
@@ -72,7 +73,7 @@ export interface CommandPaletteState {
 // Constants
 // ==============================================================================
 
-const RECENT_COMMANDS_KEY = "command-palette-recent";
+const RECENT_COMMANDS_KEY = STORAGE_KEYS.RECENT_COMMANDS;
 const MAX_RECENT_COMMANDS = 5;
 
 // ==============================================================================
@@ -80,20 +81,11 @@ const MAX_RECENT_COMMANDS = 5;
 // ==============================================================================
 
 function loadRecentCommands(): string[] {
-  try {
-    const stored = localStorage.getItem(RECENT_COMMANDS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
+  return storage.get<string[]>(RECENT_COMMANDS_KEY) ?? [];
 }
 
 function saveRecentCommands(commands: string[]): void {
-  try {
-    localStorage.setItem(RECENT_COMMANDS_KEY, JSON.stringify(commands));
-  } catch {
-    // localStorage unavailable
-  }
+  storage.set(RECENT_COMMANDS_KEY, commands);
 }
 
 /**

@@ -96,7 +96,7 @@ describe("useAccessibility", () => {
       });
 
       expect(window.localStorage.setItem).toHaveBeenCalledWith(
-        "accessibility-settings",
+        "studio-accessibility",
         expect.stringContaining('"screenReaderMode":true'),
       );
     });

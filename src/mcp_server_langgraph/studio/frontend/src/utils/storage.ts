@@ -72,14 +72,49 @@ function isStorageAvailable(): boolean {
 /**
  * Unified storage interface
  */
+/**
+ * Options for storage.get()
+ */
+export interface StorageGetOptions<T> {
+  /** Default value if key not found or validation fails */
+  defaultValue?: T;
+  /**
+   * Validator function to check if parsed value is valid.
+   * If provided and returns false, defaultValue is returned.
+   */
+  validator?: (value: unknown) => value is T;
+  /**
+   * If true, only return parsed JSON objects (not raw strings).
+   * Useful for structured data like preferences.
+   */
+  expectObject?: boolean;
+}
+
 export const storage = {
   /**
    * Get a value from storage
    * @param key - Storage key (with or without prefix)
-   * @param defaultValue - Default value if key not found
+   * @param defaultValueOrOptions - Default value or options object
    * @returns Parsed value or default
    */
-  get<T>(key: string, defaultValue?: T): T | undefined {
+  get<T>(
+    key: string,
+    defaultValueOrOptions?: T | StorageGetOptions<T>,
+  ): T | undefined {
+    // Parse options
+    const isOptionsObject =
+      defaultValueOrOptions !== null &&
+      typeof defaultValueOrOptions === "object" &&
+      ("defaultValue" in defaultValueOrOptions ||
+        "validator" in defaultValueOrOptions ||
+        "expectObject" in defaultValueOrOptions);
+
+    const options: StorageGetOptions<T> = isOptionsObject
+      ? (defaultValueOrOptions as StorageGetOptions<T>)
+      : { defaultValue: defaultValueOrOptions as T | undefined };
+
+    const { defaultValue, validator, expectObject } = options;
+
     if (!isStorageAvailable()) return defaultValue;
 
     try {
@@ -94,8 +129,24 @@ export const storage = {
       if (value === null) return defaultValue;
 
       try {
-        return JSON.parse(value) as T;
+        const parsed = JSON.parse(value) as T;
+
+        // If expectObject is true, verify the result is an object
+        if (expectObject && (typeof parsed !== "object" || parsed === null)) {
+          return defaultValue;
+        }
+
+        // If validator is provided, use it to validate
+        if (validator && !validator(parsed)) {
+          return defaultValue;
+        }
+
+        return parsed;
       } catch {
+        // JSON parse failed - only return raw string if not expecting object
+        if (expectObject) {
+          return defaultValue;
+        }
         // Return as-is if not valid JSON (e.g., plain strings)
         return value as unknown as T;
       }

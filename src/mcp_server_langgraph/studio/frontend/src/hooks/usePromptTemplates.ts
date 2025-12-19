@@ -12,6 +12,7 @@
  */
 
 import { useState, useCallback, useMemo } from "react";
+import { storage, STORAGE_KEYS } from "../utils/storage";
 
 // ==============================================================================
 // Types
@@ -87,9 +88,10 @@ export interface PromptTemplatesState {
 // Constants
 // ==============================================================================
 
-const STORAGE_KEY_TEMPLATES = "prompt-templates-custom";
-const STORAGE_KEY_FAVORITES = "prompt-templates-favorites";
-const STORAGE_KEY_RECENT = "prompt-templates-recent";
+// Use centralized storage key for templates, with custom keys for sub-categories
+const STORAGE_KEY_TEMPLATES = STORAGE_KEYS.PROMPT_TEMPLATES;
+const STORAGE_KEY_FAVORITES = "studio-prompt-templates-favorites";
+const STORAGE_KEY_RECENT = "studio-prompt-templates-recent";
 const MAX_RECENT = 10;
 
 // Built-in templates
@@ -174,24 +176,11 @@ function generateTemplateId(): string {
 }
 
 function loadFromStorage<T>(key: string, defaultValue: T): T {
-  if (typeof window === "undefined") return defaultValue;
-
-  try {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : defaultValue;
-  } catch {
-    return defaultValue;
-  }
+  return storage.get<T>(key) ?? defaultValue;
 }
 
 function saveToStorage<T>(key: string, value: T): void {
-  if (typeof window === "undefined") return;
-
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Storage might be full or unavailable
-  }
+  storage.set(key, value);
 }
 
 // ==============================================================================

@@ -11,6 +11,7 @@
  */
 
 import { useState, useCallback, useMemo } from "react";
+import { storage, STORAGE_KEYS } from "../utils/storage";
 
 // ==============================================================================
 // Types
@@ -43,7 +44,7 @@ export interface OnboardingState {
 // Constants
 // ==============================================================================
 
-const STORAGE_KEY = "onboarding-state";
+const STORAGE_KEY = STORAGE_KEYS.ONBOARDING;
 
 const DEFAULT_STEPS: OnboardingStep[] = [
   {
@@ -81,28 +82,15 @@ interface StoredState {
 }
 
 function loadState(): StoredState | null {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
+  return storage.get<StoredState>(STORAGE_KEY, { expectObject: true }) ?? null;
 }
 
 function saveState(state: StoredState): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // localStorage unavailable
-  }
+  storage.set(STORAGE_KEY, state);
 }
 
 function clearState(): void {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // localStorage unavailable
-  }
+  storage.remove(STORAGE_KEY);
 }
 
 // ==============================================================================

@@ -164,7 +164,7 @@ describe("useOnboarding", () => {
         result.current.completeOnboarding();
       });
       expect(window.localStorage.setItem).toHaveBeenCalledWith(
-        "onboarding-state",
+        "studio-onboarding",
         expect.stringContaining('"completed":true'),
       );
     });

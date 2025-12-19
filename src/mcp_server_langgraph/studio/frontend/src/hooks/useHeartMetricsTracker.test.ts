@@ -220,7 +220,7 @@ describe("useHeartMetricsTracker", () => {
       const threeDaysAgo = Date.now() - 3 * 86400000;
       const originalGetItem = localStorage.getItem.bind(localStorage);
       vi.spyOn(localStorage, "getItem").mockImplementation((key: string) => {
-        if (key === "heart_last_visit") {
+        if (key === "studio-last-visit") {
           return threeDaysAgo.toString();
         }
         return originalGetItem(key);

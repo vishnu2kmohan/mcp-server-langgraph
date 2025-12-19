@@ -13,6 +13,7 @@
 
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
+import { getAuthToken } from "../utils/storage";
 
 // ============================================================================
 // MCP Protocol Types
@@ -219,8 +220,8 @@ function getDefaultMCPWebSocketUrl(authenticated: boolean): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.host;
 
-  // Get access token for authentication
-  const token = localStorage.getItem("access_token");
+  // Get access token for authentication using storage utility
+  const token = getAuthToken();
   const endpoint = authenticated ? "/api/v1/mcp/ws/auth" : "/api/v1/mcp/ws";
   const tokenParam =
     authenticated && token ? `?token=${encodeURIComponent(token)}` : "";
