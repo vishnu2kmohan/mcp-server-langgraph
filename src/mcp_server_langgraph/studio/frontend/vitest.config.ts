@@ -103,8 +103,7 @@ export default defineConfig({
     // Pool Configuration - Adaptive Resource Management
     // =========================================================================
     // Use forks pool for better isolation and stability with jsdom.
-    // Note: tinypool (used by vitest 2.x) can leave orphan processes.
-    // Use `npm run test:cleanup` or upgrade to vitest v4 (removes tinypool).
+    // Vitest 4 removed tinypool, eliminating the orphan process issue.
     pool: "forks",
 
     // Limit parallel workers based on available resources
