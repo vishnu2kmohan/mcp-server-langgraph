@@ -162,6 +162,16 @@ Each ADR follows this structure:
    python scripts/generate_adr_index.py
    ```
 
+## Numbering Gaps
+
+The ADR sequence contains intentional gaps where numbers were skipped during the evolution of the documentation:
+
+| Gap | Reason | Details |
+|-----|--------|---------|
+| **ADR-0057, ADR-0058, ADR-0059** | Removed during repository consolidation | **2025-11-16** - Three ADRs were initially created with duplicate numbers in commit `d10b29b5`:<br>• ADR-0053 (AsyncMock Configuration Prevention)<br>• ADR-0053 (Pytest-xdist State Pollution Prevention)<br>• ADR-0054 (Circuit Breaker Decorator Closure Isolation)<br><br>**2025-11-16** - Renumbered in commit `d35b5ea7` to resolve conflicts:<br>• ADR-0056 (AsyncMock Configuration Prevention)<br>• ADR-0057 (Circuit Breaker Decorator Closure Isolation)<br>• ADR-0058 (Pytest-xdist State Pollution Prevention)<br><br>**2025-11-18** - ADR-0056 (Database Architecture) created, then renumbered to ADR-0060 in commit `0c14018a`<br><br>**2025-11-29** - ADRs 0057 and 0058 were deleted in commit `e4c6cf3e` during codebase consolidation<br><br>**Result**: ADR-0057, ADR-0058, and ADR-0059 remain permanently unassigned. The content from the deleted ADRs may have been merged into other ADRs or deemed unnecessary. |
+
+These gaps are **intentional** and serve as a historical record of the ADR numbering evolution. They do not indicate missing documentation.
+
 ## Validation
 
 To validate ADR numbering and sync status:
@@ -176,6 +186,8 @@ python scripts/docs/sync-adrs.py --check
 # Validate this index is up-to-date
 python scripts/generate_adr_index.py --check
 ```
+
+**Note:** The validator will report gaps at ADR-0057, ADR-0058, and ADR-0059 as informational warnings. This is expected and does not indicate a validation failure.
 
 ## Related Documentation
 
