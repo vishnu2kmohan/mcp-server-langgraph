@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, Outlet } from "react-router";
 import { App } from "../App";
 import { AuthGuard } from "./guards/AuthGuard";
 import { PersonaGuard } from "./guards/PersonaGuard";
+import { HybridShellLayout } from "../layout";
 
 /**
  * Studio Router Configuration
@@ -242,6 +243,48 @@ export const router = createBrowserRouter(
                       await import("../pages/AuditLogPage");
                     return { Component: AuditLogPage };
                   },
+                },
+              ],
+            },
+          ],
+        },
+
+        // =================================================================
+        // Hybrid Canvas Studio (Phase 0 - Parallel Route)
+        // =================================================================
+        // This is a completely separate route tree from legacy /studio/*
+        // Feature-flagged via canvas_hybrid_shell
+        // Does NOT render MainDock or AppShell - uses HybridShellLayout
+        {
+          path: "studio/v2",
+          element: (
+            <AuthGuard>
+              <HybridShellLayout />
+            </AuthGuard>
+          ),
+          children: [
+            // Default redirect to chat
+            { index: true, element: <Navigate to="chat" replace /> },
+            // Phase 2: Chat route with loader
+            {
+              path: "chat",
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    // Placeholder - will use ChatPage until CanvasChat is ready
+                    const { ChatPage } = await import("../pages/ChatPage");
+                    return { Component: ChatPage };
+                  },
+                },
+                {
+                  path: ":sessionId",
+                  lazy: async () => {
+                    const { ChatPage } = await import("../pages/ChatPage");
+                    return { Component: ChatPage };
+                  },
+                  // Phase 2: Add loader here for React Router data loading
+                  // loader: chatLoader,
                 },
               ],
             },

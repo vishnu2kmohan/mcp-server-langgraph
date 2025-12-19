@@ -157,6 +157,24 @@ export interface FeatureFlags {
   enable_mcp_websocket?: boolean;
   /** Enable interactive artifact rendering in chat messages (Sandpack for JSX/TSX/MDX) */
   enable_interactive_artifacts?: boolean;
+
+  // ==========================================================================
+  // Canvas Hybrid Shell Feature Flags (Phase 0+)
+  // ==========================================================================
+
+  /** Enable Hybrid Canvas shell at /studio/v2 (Phase 1) */
+  canvas_hybrid_shell?: boolean;
+  /** Enable editable artifacts in Canvas panel (Phase 2) */
+  canvas_editable?: boolean;
+  /** Enable background agent panel (Phase 4) */
+  canvas_agents?: boolean;
+  /** Enable AI fallback in command palette (Phase 4) */
+  canvas_ai_palette?: boolean;
+  /** Enable compliance dashboards (Phase 5) */
+  canvas_compliance?: boolean;
+  /** Enable in-app help pane (Phase 6) */
+  canvas_help?: boolean;
+
   [key: string]: boolean | undefined;
 }
 

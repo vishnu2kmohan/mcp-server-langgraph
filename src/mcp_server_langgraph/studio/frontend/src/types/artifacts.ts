@@ -330,3 +330,129 @@ export interface FileUploadResult {
   size: number;
   error?: string;
 }
+
+// =============================================================================
+// Canvas Artifact Types (Phase 0 - Hybrid Canvas Support)
+// =============================================================================
+
+/**
+ * Canvas artifact - extends base with session association and versioning
+ * Used in HybridShell Canvas Panel for Gemini/ChatGPT-style editing
+ */
+export interface CanvasArtifact extends BaseArtifact {
+  /** Session this artifact belongs to */
+  sessionId: string;
+  /** Current version number (1-indexed) */
+  version: number;
+  /** Content of the artifact */
+  content: string;
+  /** Content type for Canvas rendering */
+  contentType: "code" | "markdown" | "json" | "jsx" | "mermaid" | "html";
+  /** Creation timestamp (ISO 8601) */
+  createdAt: string;
+  /** Last update timestamp (ISO 8601) */
+  updatedAt: string;
+  /** Edit metadata */
+  editMetadata?: {
+    /** Who made the edit */
+    editedBy: "user" | "ai-suggestion" | "ai-generation";
+    /** AI confidence score (0-1) if AI-edited */
+    aiConfidence?: number;
+    /** Language for code artifacts */
+    language?: string;
+  };
+}
+
+/**
+ * Artifact version for version history
+ */
+export interface ArtifactVersion {
+  id: string;
+  artifactId: string;
+  version: number;
+  content: string;
+  contentType: CanvasArtifact["contentType"];
+  createdBy: string;
+  createdAt: string;
+  parentVersion?: number;
+  metadata: {
+    editType: "user" | "ai-suggestion" | "ai-generation";
+    aiConfidence?: number;
+  };
+}
+
+// =============================================================================
+// API Types for /api/v1/artifacts (Phase 2 - MSW-first development)
+// =============================================================================
+
+/**
+ * Request to create a new artifact
+ */
+export interface CreateArtifactRequest {
+  type: CanvasArtifact["contentType"];
+  content: string;
+  sessionId: string;
+  title?: string;
+  language?: string;
+}
+
+/**
+ * Response from creating an artifact
+ */
+export interface CreateArtifactResponse {
+  id: string;
+  version: number;
+  createdAt: string;
+}
+
+/**
+ * Request to list artifacts for a session
+ */
+export interface ListArtifactsParams {
+  session_id: string;
+  cursor?: string;
+  limit?: number;
+}
+
+/**
+ * Response from listing artifacts
+ */
+export interface ListArtifactsResponse {
+  items: CanvasArtifact[];
+  cursor: string | null;
+  hasMore: boolean;
+}
+
+/**
+ * Request to update an artifact
+ */
+export interface UpdateArtifactRequest {
+  content: string;
+  editedBy?: "user" | "ai-suggestion" | "ai-generation";
+  aiConfidence?: number;
+}
+
+/**
+ * Response from updating an artifact
+ */
+export interface UpdateArtifactResponse {
+  id: string;
+  version: number;
+  updatedAt: string;
+}
+
+/**
+ * Request to fork an artifact
+ */
+export interface ForkArtifactRequest {
+  newTitle?: string;
+}
+
+/**
+ * Response from forking an artifact
+ */
+export interface ForkArtifactResponse {
+  id: string;
+  parentId: string;
+  version: number;
+}
