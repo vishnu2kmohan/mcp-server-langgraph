@@ -68,8 +68,27 @@ def _get_user_id(current_user: dict[str, Any]) -> str:
     Extract user ID from the current user context.
 
     Tries 'sub' claim first (JWT standard), then 'user_id', then 'preferred_username'.
+
+    SECURITY: Raises HTTPException if no valid user identifier is found.
+    Never falls back to "anonymous" as this would cause session data leakage
+    where all unauthenticated users would share sessions.
+
+    Raises:
+        HTTPException: 401 Unauthorized if no user identifier is found
     """
-    return current_user.get("sub") or current_user.get("user_id") or current_user.get("preferred_username") or "anonymous"
+    user_id = current_user.get("sub") or current_user.get("user_id") or current_user.get("preferred_username")
+
+    if not user_id:
+        logger.warning(
+            "No user identifier found in auth context",
+            extra={"keys": list(current_user.keys())},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User identifier not found in authentication context",
+        )
+
+    return user_id
 
 
 sessions_router = APIRouter(tags=["sessions"])

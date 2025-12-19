@@ -383,3 +383,57 @@ class TestSessionsAuthorizationBypass:
             "PostgresSessionService.create_session contains 'user_id=None'. "
             "This creates anonymous sessions! User ID must come from auth context."
         )
+
+    def test_get_user_id_rejects_anonymous_fallback(self) -> None:
+        """
+        GIVEN a user context without valid user identifiers
+        WHEN _get_user_id is called
+        THEN it should raise HTTPException(401), not fall back to 'anonymous'
+
+        SECURITY: Anonymous fallback allows data leakage between unauthenticated users.
+        All "anonymous" users would share sessions, exposing sensitive data.
+        """
+        from fastapi import HTTPException
+
+        from mcp_server_langgraph.api.v1.sessions import _get_user_id
+
+        # Test case: Empty user context
+        empty_user: dict[str, Any] = {}
+
+        # SECURITY: Must raise HTTPException(401), not return "anonymous"
+        with pytest.raises(HTTPException) as exc_info:
+            _get_user_id(empty_user)
+
+        assert exc_info.value.status_code == 401, (
+            f"Expected 401 Unauthorized, got {exc_info.value.status_code}. "
+            "_get_user_id must reject empty auth context to prevent data leakage."
+        )
+
+    def test_get_user_id_extracts_sub_claim(self) -> None:
+        """
+        GIVEN a user context with a 'sub' claim
+        WHEN _get_user_id is called
+        THEN it should return the 'sub' value
+        """
+        from mcp_server_langgraph.api.v1.sessions import _get_user_id
+
+        user = {"sub": "user:alice", "preferred_username": "alice"}
+        user_id = _get_user_id(user)
+
+        assert user_id == "user:alice", f"Expected 'user:alice', got '{user_id}'"
+
+    def test_get_user_id_fallback_order(self) -> None:
+        """
+        GIVEN a user context without 'sub' but with 'user_id'
+        WHEN _get_user_id is called
+        THEN it should fall back to 'user_id', then 'preferred_username'
+        """
+        from mcp_server_langgraph.api.v1.sessions import _get_user_id
+
+        # Test fallback to user_id
+        user1 = {"user_id": "id-123", "preferred_username": "bob"}
+        assert _get_user_id(user1) == "id-123"
+
+        # Test fallback to preferred_username
+        user2 = {"preferred_username": "charlie"}
+        assert _get_user_id(user2) == "charlie"
