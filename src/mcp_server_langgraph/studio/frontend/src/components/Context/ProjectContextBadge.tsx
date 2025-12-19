@@ -41,7 +41,10 @@ export interface ProjectContextBadgeProps {
 // Constants
 // ==============================================================================
 
-const SIZE_CLASSES: Record<BadgeSize, { badge: string; icon: number; text: string }> = {
+const SIZE_CLASSES: Record<
+  BadgeSize,
+  { badge: string; icon: number; text: string }
+> = {
   sm: { badge: "px-2 py-0.5", icon: 12, text: "text-xs" },
   md: { badge: "px-2.5 py-1", icon: 14, text: "text-sm" },
 };
@@ -86,13 +89,12 @@ export function ProjectContextBadge({
             className="animate-spin"
           />
         ) : (
-          <FileText
-            data-testid="context-icon"
-            size={sizeClasses.icon}
-          />
+          <FileText data-testid="context-icon" size={sizeClasses.icon} />
         )}
         {contextPath && (
-          <span className={`font-medium ${sizeClasses.text}`}>{contextPath}</span>
+          <span className={`font-medium ${sizeClasses.text}`}>
+            {contextPath}
+          </span>
         )}
       </button>
 

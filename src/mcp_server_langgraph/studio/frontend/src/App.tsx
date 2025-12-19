@@ -41,6 +41,7 @@ import {
   useCreateSessionMutation,
   useCreateProjectMutation,
 } from "./api";
+import { useFeatureFlags } from "./contexts/FeatureFlagContext";
 import { addTab, setActiveTabId } from "./store/slices/workspaceSlice";
 
 /**
@@ -154,25 +155,41 @@ export function App() {
   // Tab navigation for MainDock (bidirectional sync)
   const handleTabNavigate = useTabNavigation();
 
+  // Feature flags for conditional rendering of chat features
+  const { isEnabled } = useFeatureFlags();
+  const enableUrlContentFetch = isEnabled("url_content_fetch");
+  const enableSlashCommands = isEnabled("slash_commands");
+  const enableStylePresets = isEnabled("style_presets");
+
   // Tab content renderer - maps tab types to document components
-  const renderTabContent = useCallback((tab: TabState): ReactNode => {
-    switch (tab.type) {
-      case "chat":
-        return <ChatDocument sessionId={tab.entityId || ""} />;
-      case "workflow":
-        return <WorkflowDocument workflowId={tab.entityId || ""} />;
-      case "project":
-        return <ProjectDocument projectId={tab.entityId || ""} />;
-      case "settings":
-        return <SettingsDocument />;
-      case "cost":
-        return <CostDocument />;
-      case "observability":
-        return <ObservabilityDocument />;
-      default:
-        return <div className="p-4 text-gray-500">Unknown tab type</div>;
-    }
-  }, []);
+  const renderTabContent = useCallback(
+    (tab: TabState): ReactNode => {
+      switch (tab.type) {
+        case "chat":
+          return (
+            <ChatDocument
+              sessionId={tab.entityId || ""}
+              enableUrlFetch={enableUrlContentFetch}
+              enableSlashCommands={enableSlashCommands}
+              showStylePresets={enableStylePresets}
+            />
+          );
+        case "workflow":
+          return <WorkflowDocument workflowId={tab.entityId || ""} />;
+        case "project":
+          return <ProjectDocument projectId={tab.entityId || ""} />;
+        case "settings":
+          return <SettingsDocument />;
+        case "cost":
+          return <CostDocument />;
+        case "observability":
+          return <ObservabilityDocument />;
+        default:
+          return <div className="p-4 text-gray-500">Unknown tab type</div>;
+      }
+    },
+    [enableUrlContentFetch, enableSlashCommands, enableStylePresets],
+  );
 
   // PWA update management
   const { needsUpdate, isUpdating, updateApp, dismissUpdate } = usePWAUpdate();

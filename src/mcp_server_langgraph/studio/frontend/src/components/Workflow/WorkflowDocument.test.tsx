@@ -38,6 +38,12 @@ vi.mock("./NodeInspector", () => ({
   NodeInspector: () => <div data-testid="node-inspector">Inspector</div>,
 }));
 
+vi.mock("./ExecutionTracePanel", () => ({
+  ExecutionTracePanel: () => (
+    <div data-testid="execution-trace-panel">Execution Trace</div>
+  ),
+}));
+
 // Create test store with preloaded state
 const createTestStore = (workflowName?: string) => {
   return configureStore({
@@ -168,6 +174,27 @@ describe("WorkflowDocument", () => {
         "Test Workflow",
       );
       expect(screen.getByTestId("node-palette")).toBeInTheDocument();
+    });
+  });
+
+  describe("Execution Trace Integration", () => {
+    it("should render ExecutionTracePanel when workflow is loaded", () => {
+      renderWithProviders(
+        <WorkflowDocument workflowId="wf-123" />,
+        "Test Workflow",
+      );
+      expect(screen.getByTestId("execution-trace-panel")).toBeInTheDocument();
+    });
+
+    it("should render ExecutionTracePanel in collapsible panel", () => {
+      renderWithProviders(
+        <WorkflowDocument workflowId="wf-123" />,
+        "Test Workflow",
+      );
+      // The panel should be within the document structure
+      const doc = screen.getByTestId("workflow-document");
+      const panel = screen.getByTestId("execution-trace-panel");
+      expect(doc).toContainElement(panel);
     });
   });
 });

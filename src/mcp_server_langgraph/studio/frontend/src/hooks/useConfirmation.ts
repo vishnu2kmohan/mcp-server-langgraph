@@ -68,16 +68,19 @@ export function useConfirmation(): UseConfirmationReturn {
     resolve: (value: boolean) => void;
   } | null>(null);
 
-  const confirm = useCallback((config: ConfirmationConfig): Promise<boolean> => {
-    return new Promise((resolve) => {
-      setState({
-        ...DEFAULT_STATE,
-        ...config,
-        isOpen: true,
+  const confirm = useCallback(
+    (config: ConfirmationConfig): Promise<boolean> => {
+      return new Promise((resolve) => {
+        setState({
+          ...DEFAULT_STATE,
+          ...config,
+          isOpen: true,
+        });
+        setResolveRef({ resolve });
       });
-      setResolveRef({ resolve });
-    });
-  }, []);
+    },
+    [],
+  );
 
   const close = useCallback(() => {
     if (resolveRef) {

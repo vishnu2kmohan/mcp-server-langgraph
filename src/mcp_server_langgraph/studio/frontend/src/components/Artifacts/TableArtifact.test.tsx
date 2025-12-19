@@ -160,14 +160,18 @@ describe("TableArtifact", () => {
       render(<TableArtifact {...sampleData} />);
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
-      expect(screen.getByRole("menuitem", { name: /csv/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("menuitem", { name: /csv/i }),
+      ).toBeInTheDocument();
     });
 
     it("should show Excel option in export menu", () => {
       render(<TableArtifact {...sampleData} />);
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
-      expect(screen.getByRole("menuitem", { name: /excel/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("menuitem", { name: /excel/i }),
+      ).toBeInTheDocument();
     });
 
     it("should trigger export when format selected", () => {

@@ -12,6 +12,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { axe } from "jest-axe";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { BrowserRouter } from "react-router";
@@ -368,6 +369,12 @@ describe("AppShell", () => {
       renderWithProviders(<AppShell />);
       const shell = screen.getByTestId("app-shell");
       expect(shell).toBeInTheDocument();
+    });
+
+    it("should have no accessibility violations", async () => {
+      const { container } = renderWithProviders(<AppShell />);
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
     });
   });
 

@@ -17,7 +17,14 @@
  */
 
 import { useState, useCallback } from "react";
-import { Brain, ChevronDown, ChevronUp, Copy, Check, Sparkles } from "lucide-react";
+import {
+  Brain,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Check,
+  Sparkles,
+} from "lucide-react";
 
 // =============================================================================
 // Types
@@ -62,17 +69,7 @@ export function LLMThinkingTrace({
   const [copied, setCopied] = useState(false);
   const [showFullContent, setShowFullContent] = useState(false);
 
-  // Don't render if no content
-  if (!thinkingContent || !thinkingContent.trim()) {
-    return null;
-  }
-
-  const isLongContent = thinkingContent.length > maxPreviewLength;
-  const displayContent = showFullContent || !isLongContent
-    ? thinkingContent
-    : thinkingContent.slice(0, maxPreviewLength) + "...";
-
-  // Copy thinking content to clipboard
+  // Copy thinking content to clipboard (must be before early return)
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(thinkingContent);
@@ -82,6 +79,17 @@ export function LLMThinkingTrace({
       console.error("Failed to copy thinking content:", err);
     }
   }, [thinkingContent]);
+
+  // Don't render if no content
+  if (!thinkingContent || !thinkingContent.trim()) {
+    return null;
+  }
+
+  const isLongContent = thinkingContent.length > maxPreviewLength;
+  const displayContent =
+    showFullContent || !isLongContent
+      ? thinkingContent
+      : thinkingContent.slice(0, maxPreviewLength) + "...";
 
   // Format token count with commas
   const formatTokenCount = (count: number): string => {

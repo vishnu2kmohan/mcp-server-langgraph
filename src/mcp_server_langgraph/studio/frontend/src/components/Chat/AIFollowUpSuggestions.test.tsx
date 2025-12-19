@@ -37,9 +37,7 @@ describe("AIFollowUpSuggestions", () => {
     it("should render the suggestions container", () => {
       render(<AIFollowUpSuggestions {...defaultProps} />);
 
-      expect(
-        screen.getByTestId("follow-up-suggestions"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("follow-up-suggestions")).toBeInTheDocument();
     });
 
     it("should render all suggestions", () => {
@@ -48,12 +46,16 @@ describe("AIFollowUpSuggestions", () => {
       expect(
         screen.getByText("Can you explain this in more detail?"),
       ).toBeInTheDocument();
-      expect(screen.getByText("What are the alternatives?")).toBeInTheDocument();
+      expect(
+        screen.getByText("What are the alternatives?"),
+      ).toBeInTheDocument();
       expect(screen.getByText("Show me an example")).toBeInTheDocument();
     });
 
     it("should not render when suggestions array is empty", () => {
-      render(<AIFollowUpSuggestions suggestions={[]} onSelect={mockOnSelect} />);
+      render(
+        <AIFollowUpSuggestions suggestions={[]} onSelect={mockOnSelect} />,
+      );
 
       expect(
         screen.queryByTestId("follow-up-suggestions"),
@@ -63,7 +65,9 @@ describe("AIFollowUpSuggestions", () => {
     it("should render header text", () => {
       render(<AIFollowUpSuggestions {...defaultProps} />);
 
-      expect(screen.getByText(/follow-up|related|explore/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/follow-up|related|explore/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -110,9 +114,9 @@ describe("AIFollowUpSuggestions", () => {
         />,
       );
 
-      expect(screen.getAllByTestId("skeleton-suggestion").length).toBeGreaterThan(
-        0,
-      );
+      expect(
+        screen.getAllByTestId("skeleton-suggestion").length,
+      ).toBeGreaterThan(0);
     });
 
     it("should not show loading state when isLoading is false", () => {
@@ -236,6 +240,108 @@ describe("AIFollowUpSuggestions", () => {
 
       expect(screen.getByText(/clarify/i)).toBeInTheDocument();
       expect(screen.getByText(/explain/i)).toBeInTheDocument();
+    });
+  });
+
+  describe("feedback functionality", () => {
+    const mockOnFeedback = vi.fn();
+
+    beforeEach(() => {
+      mockOnFeedback.mockClear();
+    });
+
+    it("should render feedback buttons when onFeedback prop is provided", () => {
+      render(
+        <AIFollowUpSuggestions {...defaultProps} onFeedback={mockOnFeedback} />,
+      );
+
+      // Each suggestion should have thumbs up and thumbs down buttons
+      const thumbsUpButtons = screen.getAllByTestId("feedback-positive");
+      const thumbsDownButtons = screen.getAllByTestId("feedback-negative");
+
+      expect(thumbsUpButtons).toHaveLength(defaultSuggestions.length);
+      expect(thumbsDownButtons).toHaveLength(defaultSuggestions.length);
+    });
+
+    it("should not render feedback buttons when onFeedback prop is not provided", () => {
+      render(<AIFollowUpSuggestions {...defaultProps} />);
+
+      expect(screen.queryByTestId("feedback-positive")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("feedback-negative")).not.toBeInTheDocument();
+    });
+
+    it("should call onFeedback with positive feedback when thumbs up is clicked", () => {
+      render(
+        <AIFollowUpSuggestions {...defaultProps} onFeedback={mockOnFeedback} />,
+      );
+
+      const thumbsUpButtons = screen.getAllByTestId("feedback-positive");
+      fireEvent.click(thumbsUpButtons[0]);
+
+      expect(mockOnFeedback).toHaveBeenCalledWith(
+        defaultSuggestions[0],
+        "positive",
+      );
+    });
+
+    it("should call onFeedback with negative feedback when thumbs down is clicked", () => {
+      render(
+        <AIFollowUpSuggestions {...defaultProps} onFeedback={mockOnFeedback} />,
+      );
+
+      const thumbsDownButtons = screen.getAllByTestId("feedback-negative");
+      fireEvent.click(thumbsDownButtons[1]);
+
+      expect(mockOnFeedback).toHaveBeenCalledWith(
+        defaultSuggestions[1],
+        "negative",
+      );
+    });
+
+    it("should prevent click event propagation when feedback button is clicked", () => {
+      render(
+        <AIFollowUpSuggestions {...defaultProps} onFeedback={mockOnFeedback} />,
+      );
+
+      const thumbsUpButtons = screen.getAllByTestId("feedback-positive");
+      fireEvent.click(thumbsUpButtons[0]);
+
+      // onSelect should not be called when feedback button is clicked
+      expect(mockOnSelect).not.toHaveBeenCalled();
+    });
+
+    it("should disable feedback buttons when suggestion is disabled", () => {
+      render(
+        <AIFollowUpSuggestions
+          {...defaultProps}
+          onFeedback={mockOnFeedback}
+          disabled
+        />,
+      );
+
+      const thumbsUpButtons = screen.getAllByTestId("feedback-positive");
+      const thumbsDownButtons = screen.getAllByTestId("feedback-negative");
+
+      thumbsUpButtons.forEach((button) => {
+        expect(button).toBeDisabled();
+      });
+      thumbsDownButtons.forEach((button) => {
+        expect(button).toBeDisabled();
+      });
+    });
+
+    it("should show feedback buttons on hover in compact mode", () => {
+      render(
+        <AIFollowUpSuggestions
+          {...defaultProps}
+          onFeedback={mockOnFeedback}
+          compact
+        />,
+      );
+
+      // Buttons should exist (visibility controlled by CSS)
+      const thumbsUpButtons = screen.getAllByTestId("feedback-positive");
+      expect(thumbsUpButtons).toHaveLength(defaultSuggestions.length);
     });
   });
 });

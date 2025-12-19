@@ -1,75 +1,205 @@
 /**
  * useOnboarding Hook
  *
- * Manages onboarding state for first-time users.
- * Tracks whether the user has completed onboarding using localStorage.
+ * Hook to manage onboarding flow for first-time users.
+ * Features:
+ * - First-time user detection
+ * - Step-by-step navigation
+ * - Skip functionality
+ * - Completion tracking
+ * - Persistence to localStorage
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
 
-const ONBOARDING_KEY = "langgraph_onboarding_completed";
+// ==============================================================================
+// Types
+// ==============================================================================
 
-export interface UseOnboardingReturn {
-  /** Whether onboarding has been completed */
-  isCompleted: boolean;
-  /** Whether the onboarding modal should be shown */
-  shouldShowModal: boolean;
-  /** Mark onboarding as completed */
-  complete: () => void;
-  /** Skip onboarding without completing */
-  skip: () => void;
-  /** Reset onboarding state (for testing) */
-  reset: () => void;
-  /** Whether the state is still loading from localStorage */
-  isLoading: boolean;
+export interface OnboardingStep {
+  title: string;
+  description: string;
+  icon?: string;
 }
 
-export function useOnboarding(): UseOnboardingReturn {
-  const [isCompleted, setIsCompleted] = useState(true); // Default to true to prevent flash
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Load state from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(ONBOARDING_KEY);
-      setIsCompleted(stored === "true");
-    } catch {
-      // localStorage not available (SSR, private browsing, etc.)
-      setIsCompleted(true);
-    }
-    setIsLoading(false);
-  }, []);
-
-  const complete = useCallback(() => {
-    try {
-      localStorage.setItem(ONBOARDING_KEY, "true");
-    } catch {
-      // Ignore localStorage errors
-    }
-    setIsCompleted(true);
-  }, []);
-
-  const skip = useCallback(() => {
-    // Skip without marking as completed - will show again next time
-    // But for this session, don't show again
-    setIsCompleted(true);
-  }, []);
-
-  const reset = useCallback(() => {
-    try {
-      localStorage.removeItem(ONBOARDING_KEY);
-    } catch {
-      // Ignore localStorage errors
-    }
-    setIsCompleted(false);
-  }, []);
-
-  return {
-    isCompleted,
-    shouldShowModal: !isLoading && !isCompleted,
-    complete,
-    skip,
-    reset,
-    isLoading,
-  };
+export interface OnboardingState {
+  isFirstTime: boolean;
+  showOnboarding: boolean;
+  currentStep: number;
+  steps: OnboardingStep[];
+  totalSteps: number;
+  isLastStep: boolean;
+  startOnboarding: () => void;
+  closeOnboarding: () => void;
+  nextStep: () => void;
+  previousStep: () => void;
+  goToStep: (step: number) => void;
+  completeOnboarding: () => void;
+  skipOnboarding: () => void;
+  resetOnboarding: () => void;
 }
+
+// ==============================================================================
+// Constants
+// ==============================================================================
+
+const STORAGE_KEY = "onboarding-state";
+
+const DEFAULT_STEPS: OnboardingStep[] = [
+  {
+    title: "Welcome to LangGraph Studio",
+    description:
+      "Build and visualize AI workflows with ease. Let us show you around!",
+    icon: "rocket",
+  },
+  {
+    title: "Create Chat Sessions",
+    description:
+      "Start conversations with AI agents. Your chats are automatically saved and organized.",
+    icon: "chat",
+  },
+  {
+    title: "Visualize Workflows",
+    description:
+      "See your agent workflows in real-time with our interactive graph view.",
+    icon: "workflow",
+  },
+  {
+    title: "Customize Your Experience",
+    description:
+      "Adjust settings, themes, and keyboard shortcuts to work your way.",
+    icon: "settings",
+  },
+];
+
+// ==============================================================================
+// Helper Functions
+// ==============================================================================
+
+interface StoredState {
+  completed: boolean;
+}
+
+function loadState(): StoredState | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveState(state: StoredState): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // localStorage unavailable
+  }
+}
+
+function clearState(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // localStorage unavailable
+  }
+}
+
+// ==============================================================================
+// Hook
+// ==============================================================================
+
+export function useOnboarding(customSteps?: OnboardingStep[]): OnboardingState {
+  const steps = customSteps || DEFAULT_STEPS;
+
+  // Load initial state from localStorage
+  const [isFirstTime, setIsFirstTime] = useState(() => {
+    const stored = loadState();
+    return !stored?.completed;
+  });
+
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const totalSteps = steps.length;
+  const isLastStep = currentStep === totalSteps - 1;
+
+  const startOnboarding = useCallback(() => {
+    setShowOnboarding(true);
+    setCurrentStep(0);
+  }, []);
+
+  const closeOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+  }, []);
+
+  const nextStep = useCallback(() => {
+    setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1));
+  }, [totalSteps]);
+
+  const previousStep = useCallback(() => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  }, []);
+
+  const goToStep = useCallback(
+    (step: number) => {
+      setCurrentStep(Math.max(0, Math.min(step, totalSteps - 1)));
+    },
+    [totalSteps],
+  );
+
+  const completeOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+    setIsFirstTime(false);
+    saveState({ completed: true });
+  }, []);
+
+  const skipOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+    setIsFirstTime(false);
+    saveState({ completed: true });
+  }, []);
+
+  const resetOnboarding = useCallback(() => {
+    clearState();
+    setIsFirstTime(true);
+    setCurrentStep(0);
+  }, []);
+
+  return useMemo(
+    () => ({
+      isFirstTime,
+      showOnboarding,
+      currentStep,
+      steps,
+      totalSteps,
+      isLastStep,
+      startOnboarding,
+      closeOnboarding,
+      nextStep,
+      previousStep,
+      goToStep,
+      completeOnboarding,
+      skipOnboarding,
+      resetOnboarding,
+    }),
+    [
+      isFirstTime,
+      showOnboarding,
+      currentStep,
+      steps,
+      totalSteps,
+      isLastStep,
+      startOnboarding,
+      closeOnboarding,
+      nextStep,
+      previousStep,
+      goToStep,
+      completeOnboarding,
+      skipOnboarding,
+      resetOnboarding,
+    ],
+  );
+}
+
+export default useOnboarding;

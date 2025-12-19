@@ -59,14 +59,20 @@ describe("ConfirmationDialog", () => {
     it("should render the message", () => {
       render(<ConfirmationDialog {...defaultProps} />);
 
-      expect(screen.getByText("Are you sure you want to proceed?")).toBeInTheDocument();
+      expect(
+        screen.getByText("Are you sure you want to proceed?"),
+      ).toBeInTheDocument();
     });
 
     it("should render confirm and cancel buttons", () => {
       render(<ConfirmationDialog {...defaultProps} />);
 
-      expect(screen.getByRole("button", { name: /confirm/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /confirm/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /cancel/i }),
+      ).toBeInTheDocument();
     });
 
     it("should render custom button labels", () => {
@@ -78,7 +84,9 @@ describe("ConfirmationDialog", () => {
         />,
       );
 
-      expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /delete/i }),
+      ).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /keep/i })).toBeInTheDocument();
     });
   });
@@ -136,7 +144,9 @@ describe("ConfirmationDialog", () => {
         />,
       );
 
-      expect(screen.getByPlaceholderText(/type DELETE to confirm/i)).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText(/type DELETE to confirm/i),
+      ).toBeInTheDocument();
     });
 
     it("should disable confirm button until correct text is entered", () => {

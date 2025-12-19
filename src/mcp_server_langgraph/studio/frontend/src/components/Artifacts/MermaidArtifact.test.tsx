@@ -170,21 +170,27 @@ describe("MermaidArtifact", () => {
       render(<MermaidArtifact code={sampleDiagram} />);
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
-      expect(screen.getByRole("menuitem", { name: /png/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("menuitem", { name: /png/i }),
+      ).toBeInTheDocument();
     });
 
     it("should show SVG option in export menu", () => {
       render(<MermaidArtifact code={sampleDiagram} />);
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
-      expect(screen.getByRole("menuitem", { name: /svg/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("menuitem", { name: /svg/i }),
+      ).toBeInTheDocument();
     });
 
     it("should show Code option in export menu for mermaid diagrams", () => {
       render(<MermaidArtifact code={sampleDiagram} />);
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
-      expect(screen.getByRole("menuitem", { name: /code/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("menuitem", { name: /code/i }),
+      ).toBeInTheDocument();
     });
 
     it("should trigger export when format selected", () => {

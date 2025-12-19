@@ -11,7 +11,9 @@
  */
 
 import { useMemo, useState, useCallback } from "react";
-import { Copy, Download, Check } from "lucide-react";
+import { Copy, Check } from "lucide-react";
+import { ArtifactExporter } from "./ArtifactExporter";
+import type { ExportFormat } from "./ArtifactExporter";
 import type { SVGConfig } from "../../types/artifacts";
 
 export interface SVGArtifactProps {
@@ -132,19 +134,23 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
     }
   }, [sanitizedSvg]);
 
-  // Download SVG as file
-  const handleDownload = useCallback(() => {
-    if (!sanitizedSvg) return;
-    const blob = new Blob([sanitizedSvg], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${title?.replace(/\s+/g, "_") || "diagram"}.svg`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [sanitizedSvg, title]);
+  // Handle export from ArtifactExporter
+  const handleExport = useCallback(
+    (format: ExportFormat, blob: Blob | string) => {
+      // Download the blob
+      if (blob instanceof Blob) {
+        const extension =
+          format === "pdf" ? "pdf" : format === "png" ? "png" : "svg";
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${title?.replace(/\s+/g, "_") || "diagram"}.${extension}`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    },
+    [title],
+  );
 
   const containerStyle: React.CSSProperties = {
     width: config?.width
@@ -189,13 +195,12 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
               <Copy size={16} />
             )}
           </button>
-          <button
-            onClick={handleDownload}
-            aria-label="Download SVG"
-            className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <Download size={16} />
-          </button>
+          <ArtifactExporter
+            artifactType="svg"
+            data={sanitizedSvg || ""}
+            onExport={handleExport}
+            filename={(title || "diagram").replace(/\s+/g, "_")}
+          />
         </div>
       </div>
 

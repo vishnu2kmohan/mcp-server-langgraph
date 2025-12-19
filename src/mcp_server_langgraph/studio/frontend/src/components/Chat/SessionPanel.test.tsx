@@ -1099,4 +1099,301 @@ describe("SessionPanel", () => {
       expect(menuButton).toBeInTheDocument();
     });
   });
+
+  describe("Session Rename", () => {
+    const mockOnRename = vi.fn();
+
+    beforeEach(() => {
+      mockOnRename.mockClear();
+    });
+
+    it("should render rename option in menu when onRename is provided", async () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onRename={mockOnRename}
+        />,
+      );
+
+      // Click menu button on first session
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+
+      // Rename option should be visible
+      expect(
+        screen.getByRole("button", { name: /rename/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should show inline edit input when rename is clicked", async () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onRename={mockOnRename}
+        />,
+      );
+
+      // Click menu button on session-3
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+
+      // Click rename
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /rename/i }));
+      });
+
+      // Inline input should be visible with current name
+      const renameInput = document.querySelector(
+        '[data-testid="session-rename-input-session-3"]',
+      );
+      expect(renameInput).toBeInTheDocument();
+      expect(renameInput).toHaveValue("Chat 3");
+    });
+
+    it("should call onRename when Enter is pressed", async () => {
+      mockOnRename.mockResolvedValue(undefined);
+
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onRename={mockOnRename}
+        />,
+      );
+
+      // Open rename
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /rename/i }));
+      });
+
+      // Change the name and press Enter
+      const renameInput = document.querySelector(
+        '[data-testid="session-rename-input-session-3"]',
+      ) as HTMLInputElement;
+      await act(async () => {
+        fireEvent.change(renameInput, { target: { value: "New Chat Name" } });
+      });
+      await act(async () => {
+        fireEvent.keyDown(renameInput, { key: "Enter" });
+      });
+
+      // onRename should be called with session id and new name
+      await waitFor(() => {
+        expect(mockOnRename).toHaveBeenCalledWith("session-3", "New Chat Name");
+      });
+    });
+
+    it("should cancel rename when Escape is pressed", async () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onRename={mockOnRename}
+        />,
+      );
+
+      // Open rename
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /rename/i }));
+      });
+
+      // Press Escape
+      const renameInput = document.querySelector(
+        '[data-testid="session-rename-input-session-3"]',
+      ) as HTMLInputElement;
+      await act(async () => {
+        fireEvent.keyDown(renameInput, { key: "Escape" });
+      });
+
+      // Input should be gone
+      expect(
+        document.querySelector(
+          '[data-testid="session-rename-input-session-3"]',
+        ),
+      ).not.toBeInTheDocument();
+
+      // onRename should not be called
+      expect(mockOnRename).not.toHaveBeenCalled();
+    });
+
+    it("should save rename when save button is clicked", async () => {
+      mockOnRename.mockResolvedValue(undefined);
+
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onRename={mockOnRename}
+        />,
+      );
+
+      // Open rename
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /rename/i }));
+      });
+
+      // Change name and click save button
+      const renameInput = document.querySelector(
+        '[data-testid="session-rename-input-session-3"]',
+      ) as HTMLInputElement;
+      await act(async () => {
+        fireEvent.change(renameInput, { target: { value: "Updated Name" } });
+      });
+
+      // Click save button
+      const saveButton = screen.getByRole("button", { name: /save name/i });
+      await act(async () => {
+        fireEvent.click(saveButton);
+      });
+
+      await waitFor(() => {
+        expect(mockOnRename).toHaveBeenCalledWith("session-3", "Updated Name");
+      });
+    });
+
+    it("should cancel rename when cancel button is clicked", async () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onRename={mockOnRename}
+        />,
+      );
+
+      // Open rename
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /rename/i }));
+      });
+
+      // Click cancel button
+      const cancelButton = screen.getByRole("button", {
+        name: /cancel rename/i,
+      });
+      await act(async () => {
+        fireEvent.click(cancelButton);
+      });
+
+      // Input should be gone
+      expect(
+        document.querySelector(
+          '[data-testid="session-rename-input-session-3"]',
+        ),
+      ).not.toBeInTheDocument();
+      // onRename should not be called
+      expect(mockOnRename).not.toHaveBeenCalled();
+    });
+
+    it("should not call onRename with empty name", async () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onRename={mockOnRename}
+        />,
+      );
+
+      // Open rename
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /rename/i }));
+      });
+
+      // Clear the name and press Enter
+      const renameInput = document.querySelector(
+        '[data-testid="session-rename-input-session-3"]',
+      ) as HTMLInputElement;
+      await act(async () => {
+        fireEvent.change(renameInput, { target: { value: "   " } });
+      });
+      await act(async () => {
+        fireEvent.keyDown(renameInput, { key: "Enter" });
+      });
+
+      // onRename should not be called with empty/whitespace name
+      expect(mockOnRename).not.toHaveBeenCalled();
+    });
+
+    it("should have data-testid on rename input for E2E testing", async () => {
+      render(
+        <SessionPanel
+          sessions={mockSessions}
+          currentSessionId="session-1"
+          onSessionSelect={mockOnSessionSelect}
+          onNewSession={mockOnNewSession}
+          onRename={mockOnRename}
+        />,
+      );
+
+      // Open rename
+      const menuButtons = screen.getAllByRole("button", {
+        name: /session menu/i,
+      });
+      await act(async () => {
+        fireEvent.click(menuButtons[0]);
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /rename/i }));
+      });
+
+      // Check for data-testid
+      expect(
+        document.querySelector(
+          '[data-testid="session-rename-input-session-3"]',
+        ),
+      ).toBeInTheDocument();
+    });
+  });
 });

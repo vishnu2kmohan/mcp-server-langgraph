@@ -4,6 +4,13 @@
  * React hook for handling streaming chat responses using fetch + ReadableStream.
  * Uses POST requests with JSON body to support the backend's streaming endpoint.
  *
+ * Features:
+ * - Streaming content accumulation
+ * - Thinking/reasoning content parsing (Claude, Gemini, OpenAI)
+ * - Reasoning effort control (low/medium/high)
+ * - Token usage tracking
+ * - Model and trace ID tracking
+ *
  * Note: We use fetch with ReadableStream instead of EventSource because:
  * - EventSource only supports GET requests
  * - Our backend expects POST /api/v1/chat/completions/stream with a JSON body
@@ -21,6 +28,40 @@ export interface StreamingUsage {
 }
 
 /**
+ * Reasoning effort level for thinking models
+ */
+export type ReasoningEffortLevel = "low" | "medium" | "high";
+
+/**
+ * Options for starting a stream
+ */
+export interface StartStreamOptions {
+  /** Reasoning effort level for thinking models (low/medium/high) */
+  reasoningEffort?: ReasoningEffortLevel;
+}
+
+/**
+ * LangGraph node for execution visualization
+ */
+export interface LangGraphNode {
+  id: string;
+  name: string;
+  type: "start" | "end" | "tool" | "conditional" | "agent" | "default";
+  status: "pending" | "running" | "completed" | "error" | "skipped";
+  duration?: number;
+  output?: string;
+}
+
+/**
+ * LangGraph edge connecting nodes
+ */
+export interface LangGraphEdge {
+  from: string;
+  to: string;
+  condition?: string;
+}
+
+/**
  * State for streaming chat
  */
 interface StreamingChatState {
@@ -30,13 +71,27 @@ interface StreamingChatState {
   usage: StreamingUsage | null;
   model: string | null;
   traceId: string | null;
+  /** LLM thinking/reasoning content (from Claude thinking blocks, Gemini thinking_content, etc.) */
+  thinkingContent: string;
+  /** Number of tokens used for thinking/reasoning */
+  thinkingTokens: number | null;
+  /** LangGraph nodes for graph visualization */
+  langgraphNodes: LangGraphNode[];
+  /** LangGraph edges connecting nodes */
+  langgraphEdges: LangGraphEdge[];
+  /** Currently active node ID */
+  currentNode: string | null;
 }
 
 /**
  * Return type for useStreamingChat hook
  */
 export interface UseStreamingChatReturn extends StreamingChatState {
-  startStream: (sessionId: string, message: string) => void;
+  startStream: (
+    sessionId: string,
+    message: string,
+    options?: StartStreamOptions,
+  ) => void;
   stopStream: () => void;
   clearContent: () => void;
 }
@@ -48,15 +103,15 @@ export interface UseStreamingChatReturn extends StreamingChatState {
  *
  * @example
  * ```tsx
- * const { isStreaming, streamingContent, startStream, stopStream } = useStreamingChat();
+ * const { isStreaming, streamingContent, thinkingContent, startStream, stopStream } = useStreamingChat();
  *
  * const handleSend = (message: string) => {
- *   startStream('session-123', message);
+ *   startStream('session-123', message, { reasoningEffort: 'high' });
  * };
  *
  * return (
  *   <div>
- *     {isStreaming && <p>Loading...</p>}
+ *     {thinkingContent && <ThinkingTrace content={thinkingContent} />}
  *     <p>{streamingContent}</p>
  *   </div>
  * );
@@ -70,6 +125,11 @@ export function useStreamingChat(): UseStreamingChatReturn {
     usage: null,
     model: null,
     traceId: null,
+    thinkingContent: "",
+    thinkingTokens: null,
+    langgraphNodes: [],
+    langgraphEdges: [],
+    currentNode: null,
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -82,10 +142,15 @@ export function useStreamingChat(): UseStreamingChatReturn {
       line: string,
     ): {
       content?: string;
+      thinking?: string;
+      thinkingTokens?: number;
       usage?: StreamingUsage;
       model?: string;
       traceId?: string;
       done?: boolean;
+      langgraphNode?: LangGraphNode;
+      langgraphEdge?: LangGraphEdge;
+      currentNode?: string;
     } | null => {
       // Check for done signal
       if (line === "data: [DONE]") {
@@ -100,9 +165,14 @@ export function useStreamingChat(): UseStreamingChatReturn {
 
           const result: {
             content?: string;
+            thinking?: string;
+            thinkingTokens?: number;
             usage?: StreamingUsage;
             model?: string;
             traceId?: string;
+            langgraphNode?: LangGraphNode;
+            langgraphEdge?: LangGraphEdge;
+            currentNode?: string;
           } = {};
 
           // Handle content - support both direct content and delta.content formats
@@ -110,6 +180,24 @@ export function useStreamingChat(): UseStreamingChatReturn {
             result.content = data.content;
           } else if (data.delta?.content) {
             result.content = data.delta.content;
+          }
+
+          // Handle thinking content - Claude style (thinking field)
+          if (data.thinking) {
+            result.thinking = data.thinking;
+          }
+          // Handle thinking content - Gemini style (thinking_content field)
+          else if (data.thinking_content) {
+            result.thinking = data.thinking_content;
+          }
+          // Handle thinking content - delta format
+          else if (data.delta?.thinking) {
+            result.thinking = data.delta.thinking;
+          }
+
+          // Handle thinking tokens
+          if (data.thinking_tokens !== undefined) {
+            result.thinkingTokens = data.thinking_tokens;
           }
 
           // Handle usage
@@ -131,6 +219,21 @@ export function useStreamingChat(): UseStreamingChatReturn {
             result.traceId = data.trace_id;
           }
 
+          // Handle LangGraph node updates
+          if (data.langgraph_node) {
+            result.langgraphNode = data.langgraph_node as LangGraphNode;
+          }
+
+          // Handle LangGraph edge updates
+          if (data.langgraph_edge) {
+            result.langgraphEdge = data.langgraph_edge as LangGraphEdge;
+          }
+
+          // Handle current node updates
+          if (data.current_node) {
+            result.currentNode = data.current_node;
+          }
+
           return result;
         } catch {
           // Ignore non-JSON data lines
@@ -147,7 +250,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
    * Start streaming chat response
    */
   const startStream = useCallback(
-    (sessionId: string, message: string) => {
+    (sessionId: string, message: string, options?: StartStreamOptions) => {
       // Abort any existing stream
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -165,13 +268,23 @@ export function useStreamingChat(): UseStreamingChatReturn {
         usage: null,
         model: null,
         traceId: null,
+        thinkingContent: "",
+        thinkingTokens: null,
+        langgraphNodes: [],
+        langgraphEdges: [],
+        currentNode: null,
       });
 
       // Build request body matching ChatCompletionRequest
-      const requestBody = {
+      const requestBody: Record<string, unknown> = {
         session_id: sessionId,
         messages: [{ role: "user", content: message }],
       };
+
+      // Add reasoning effort if provided
+      if (options?.reasoningEffort) {
+        requestBody.reasoning_effort = options.reasoningEffort;
+      }
 
       // Start the fetch + stream processing
       const processStream = async () => {
@@ -238,6 +351,15 @@ export function useStreamingChat(): UseStreamingChatReturn {
                     prev.streamingContent + parsed.content;
                 }
 
+                if (parsed.thinking) {
+                  updates.thinkingContent =
+                    prev.thinkingContent + parsed.thinking;
+                }
+
+                if (parsed.thinkingTokens !== undefined) {
+                  updates.thinkingTokens = parsed.thinkingTokens;
+                }
+
                 if (parsed.usage) {
                   updates.usage = parsed.usage;
                 }
@@ -248,6 +370,45 @@ export function useStreamingChat(): UseStreamingChatReturn {
 
                 if (parsed.traceId) {
                   updates.traceId = parsed.traceId;
+                }
+
+                // Handle LangGraph node updates
+                if (parsed.langgraphNode) {
+                  const existingNodeIndex = prev.langgraphNodes.findIndex(
+                    (n) => n.id === parsed.langgraphNode!.id,
+                  );
+                  if (existingNodeIndex >= 0) {
+                    // Update existing node
+                    const updatedNodes = [...prev.langgraphNodes];
+                    updatedNodes[existingNodeIndex] = parsed.langgraphNode;
+                    updates.langgraphNodes = updatedNodes;
+                  } else {
+                    // Add new node
+                    updates.langgraphNodes = [
+                      ...prev.langgraphNodes,
+                      parsed.langgraphNode,
+                    ];
+                  }
+                }
+
+                // Handle LangGraph edge updates
+                if (parsed.langgraphEdge) {
+                  const edgeExists = prev.langgraphEdges.some(
+                    (e) =>
+                      e.from === parsed.langgraphEdge!.from &&
+                      e.to === parsed.langgraphEdge!.to,
+                  );
+                  if (!edgeExists) {
+                    updates.langgraphEdges = [
+                      ...prev.langgraphEdges,
+                      parsed.langgraphEdge,
+                    ];
+                  }
+                }
+
+                // Handle current node updates
+                if (parsed.currentNode !== undefined) {
+                  updates.currentNode = parsed.currentNode;
                 }
 
                 return { ...prev, ...updates };
@@ -296,6 +457,11 @@ export function useStreamingChat(): UseStreamingChatReturn {
       usage: null,
       model: null,
       traceId: null,
+      thinkingContent: "",
+      thinkingTokens: null,
+      langgraphNodes: [],
+      langgraphEdges: [],
+      currentNode: null,
     }));
   }, []);
 

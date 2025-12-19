@@ -167,21 +167,27 @@ describe("ChartArtifact", () => {
       render(<ChartArtifact {...barChartData} />);
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
-      expect(screen.getByRole("menuitem", { name: /png/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("menuitem", { name: /png/i }),
+      ).toBeInTheDocument();
     });
 
     it("should show SVG option in export menu", () => {
       render(<ChartArtifact {...barChartData} />);
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
-      expect(screen.getByRole("menuitem", { name: /svg/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("menuitem", { name: /svg/i }),
+      ).toBeInTheDocument();
     });
 
     it("should show PDF option in export menu", () => {
       render(<ChartArtifact {...barChartData} />);
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
-      expect(screen.getByRole("menuitem", { name: /pdf/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("menuitem", { name: /pdf/i }),
+      ).toBeInTheDocument();
     });
 
     it("should trigger export when format selected", () => {

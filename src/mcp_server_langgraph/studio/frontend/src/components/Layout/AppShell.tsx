@@ -358,11 +358,14 @@ export function AppShell({
           <PanelResizeHandle
             onDoubleClick={handleLeftResizeDoubleClick}
             title="Drag to resize, double-click to collapse"
+            aria-label="Resize left sidebar"
             className={cn(
               // Base styling
               "w-1 bg-gray-200 dark:bg-gray-700",
               "hover:bg-blue-500 active:bg-blue-600",
               "transition-colors cursor-col-resize",
+              // Focus indicator for keyboard navigation
+              "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset",
               // Touch-friendly: Larger hit area on touch devices
               "touch-none relative",
               "before:absolute before:inset-y-0 before:-left-2 before:-right-2",
@@ -408,11 +411,14 @@ export function AppShell({
               <PanelResizeHandle
                 onDoubleClick={handleBottomResizeDoubleClick}
                 title="Drag to resize, double-click to collapse"
+                aria-label="Resize bottom panel"
                 className={cn(
                   // Base styling
                   "h-1 bg-gray-200 dark:bg-gray-700",
                   "hover:bg-blue-500 active:bg-blue-600",
                   "transition-colors cursor-row-resize",
+                  // Focus indicator for keyboard navigation
+                  "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset",
                   // Touch-friendly: Larger hit area on touch devices
                   "touch-none relative",
                   "before:absolute before:inset-x-0 before:-top-2 before:-bottom-2",
@@ -461,11 +467,14 @@ export function AppShell({
           <PanelResizeHandle
             onDoubleClick={handleRightResizeDoubleClick}
             title="Drag to resize, double-click to collapse"
+            aria-label="Resize right sidebar"
             className={cn(
               // Base styling
               "w-1 bg-gray-200 dark:bg-gray-700",
               "hover:bg-blue-500 active:bg-blue-600",
               "transition-colors cursor-col-resize",
+              // Focus indicator for keyboard navigation
+              "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset",
               // Touch-friendly: Larger hit area on touch devices
               "touch-none relative",
               "before:absolute before:inset-y-0 before:-left-2 before:-right-2",

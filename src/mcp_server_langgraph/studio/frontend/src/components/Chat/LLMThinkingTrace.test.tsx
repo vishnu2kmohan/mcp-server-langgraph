@@ -15,7 +15,10 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { LLMThinkingTrace, type LLMThinkingTraceProps } from "./LLMThinkingTrace";
+import {
+  LLMThinkingTrace,
+  type LLMThinkingTraceProps,
+} from "./LLMThinkingTrace";
 
 // Mock clipboard API
 const mockClipboard = {
@@ -29,7 +32,8 @@ describe("LLMThinkingTrace", () => {
   });
 
   const defaultProps: LLMThinkingTraceProps = {
-    thinkingContent: "Let me analyze this step by step.\n\n1. First, I need to understand the problem.\n2. Then, I'll break it down into components.\n3. Finally, I'll synthesize a solution.",
+    thinkingContent:
+      "Let me analyze this step by step.\n\n1. First, I need to understand the problem.\n2. Then, I'll break it down into components.\n3. Finally, I'll synthesize a solution.",
     isExpanded: false,
     onToggle: vi.fn(),
   };
@@ -47,7 +51,9 @@ describe("LLMThinkingTrace", () => {
 
     it("should show expand/collapse toggle button", () => {
       render(<LLMThinkingTrace {...defaultProps} />);
-      expect(screen.getByRole("button", { name: /toggle thinking/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /toggle thinking/i }),
+      ).toBeInTheDocument();
     });
 
     it("should hide content when collapsed", () => {
@@ -98,7 +104,9 @@ describe("LLMThinkingTrace", () => {
   describe("copy functionality", () => {
     it("should show copy button when expanded", () => {
       render(<LLMThinkingTrace {...defaultProps} isExpanded={true} />);
-      expect(screen.getByRole("button", { name: /copy thinking/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /copy thinking/i }),
+      ).toBeInTheDocument();
     });
 
     it("should copy thinking content to clipboard when copy button clicked", async () => {
@@ -107,7 +115,9 @@ describe("LLMThinkingTrace", () => {
       fireEvent.click(screen.getByRole("button", { name: /copy thinking/i }));
 
       await waitFor(() => {
-        expect(mockClipboard.writeText).toHaveBeenCalledWith(defaultProps.thinkingContent);
+        expect(mockClipboard.writeText).toHaveBeenCalledWith(
+          defaultProps.thinkingContent,
+        );
       });
     });
 
@@ -124,12 +134,7 @@ describe("LLMThinkingTrace", () => {
 
   describe("token count display", () => {
     it("should display thinking token count when provided", () => {
-      render(
-        <LLMThinkingTrace
-          {...defaultProps}
-          thinkingTokens={1234}
-        />
-      );
+      render(<LLMThinkingTrace {...defaultProps} thinkingTokens={1234} />);
       expect(screen.getByText(/1,?234/)).toBeInTheDocument();
       expect(screen.getByText(/tokens/i)).toBeInTheDocument();
     });
@@ -146,7 +151,7 @@ describe("LLMThinkingTrace", () => {
         <LLMThinkingTrace
           {...defaultProps}
           modelName="claude-opus-4-5-20251101"
-        />
+        />,
       );
       expect(screen.getByText(/claude-opus/i)).toBeInTheDocument();
     });
@@ -157,7 +162,7 @@ describe("LLMThinkingTrace", () => {
           {...defaultProps}
           modelName="claude-opus-4-5-20251101"
           isThinkingModel={true}
-        />
+        />,
       );
       expect(screen.getByTestId("thinking-model-badge")).toBeInTheDocument();
     });
@@ -170,7 +175,7 @@ describe("LLMThinkingTrace", () => {
           {...defaultProps}
           isExpanded={true}
           isStreaming={true}
-        />
+        />,
       );
       expect(screen.getByTestId("streaming-indicator")).toBeInTheDocument();
     });
@@ -181,7 +186,7 @@ describe("LLMThinkingTrace", () => {
           {...defaultProps}
           isExpanded={true}
           isStreaming={true}
-        />
+        />,
       );
       const indicator = screen.getByTestId("streaming-indicator");
       expect(indicator).toHaveClass("animate-pulse");
@@ -191,27 +196,39 @@ describe("LLMThinkingTrace", () => {
   describe("empty state", () => {
     it("should not render when thinkingContent is empty", () => {
       render(<LLMThinkingTrace {...defaultProps} thinkingContent="" />);
-      expect(screen.queryByTestId("llm-thinking-trace")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("llm-thinking-trace"),
+      ).not.toBeInTheDocument();
     });
 
     it("should not render when thinkingContent is only whitespace", () => {
       render(<LLMThinkingTrace {...defaultProps} thinkingContent="   " />);
-      expect(screen.queryByTestId("llm-thinking-trace")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("llm-thinking-trace"),
+      ).not.toBeInTheDocument();
     });
   });
 
   describe("accessibility", () => {
     it("should have proper aria-expanded attribute", () => {
-      const { rerender } = render(<LLMThinkingTrace {...defaultProps} isExpanded={false} />);
-      expect(screen.getByRole("button", { name: /toggle thinking/i })).toHaveAttribute("aria-expanded", "false");
+      const { rerender } = render(
+        <LLMThinkingTrace {...defaultProps} isExpanded={false} />,
+      );
+      expect(
+        screen.getByRole("button", { name: /toggle thinking/i }),
+      ).toHaveAttribute("aria-expanded", "false");
 
       rerender(<LLMThinkingTrace {...defaultProps} isExpanded={true} />);
-      expect(screen.getByRole("button", { name: /toggle thinking/i })).toHaveAttribute("aria-expanded", "true");
+      expect(
+        screen.getByRole("button", { name: /toggle thinking/i }),
+      ).toHaveAttribute("aria-expanded", "true");
     });
 
     it("should have proper aria-label for copy button", () => {
       render(<LLMThinkingTrace {...defaultProps} isExpanded={true} />);
-      expect(screen.getByRole("button", { name: /copy thinking/i })).toHaveAttribute("aria-label");
+      expect(
+        screen.getByRole("button", { name: /copy thinking/i }),
+      ).toHaveAttribute("aria-label");
     });
   });
 
@@ -224,7 +241,7 @@ describe("LLMThinkingTrace", () => {
           thinkingContent={longContent}
           isExpanded={true}
           maxPreviewLength={200}
-        />
+        />,
       );
       // Should show truncated preview with expand option
       expect(screen.getByText(/show more/i)).toBeInTheDocument();
@@ -238,7 +255,7 @@ describe("LLMThinkingTrace", () => {
           thinkingContent={longContent}
           isExpanded={true}
           maxPreviewLength={200}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByText(/show more/i));
@@ -252,7 +269,9 @@ describe("LLMThinkingTrace", () => {
   describe("custom className", () => {
     it("should apply custom className", () => {
       render(<LLMThinkingTrace {...defaultProps} className="custom-class" />);
-      expect(screen.getByTestId("llm-thinking-trace")).toHaveClass("custom-class");
+      expect(screen.getByTestId("llm-thinking-trace")).toHaveClass(
+        "custom-class",
+      );
     });
   });
 });

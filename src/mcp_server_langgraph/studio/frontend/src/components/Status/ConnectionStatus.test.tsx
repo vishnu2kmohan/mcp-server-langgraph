@@ -44,7 +44,9 @@ describe("ConnectionStatus", () => {
     it("should render with custom className", () => {
       render(<ConnectionStatus status="connected" className="custom-class" />);
 
-      expect(screen.getByTestId("connection-status")).toHaveClass("custom-class");
+      expect(screen.getByTestId("connection-status")).toHaveClass(
+        "custom-class",
+      );
     });
   });
 
@@ -57,14 +59,18 @@ describe("ConnectionStatus", () => {
       render(<ConnectionStatus status="connected" />);
 
       expect(screen.getByText(/connected/i)).toBeInTheDocument();
-      expect(screen.getByTestId("status-indicator")).toHaveClass("bg-green-500");
+      expect(screen.getByTestId("status-indicator")).toHaveClass(
+        "bg-green-500",
+      );
     });
 
     it("should show connecting state with yellow indicator", () => {
       render(<ConnectionStatus status="connecting" />);
 
       expect(screen.getByText(/connecting/i)).toBeInTheDocument();
-      expect(screen.getByTestId("status-indicator")).toHaveClass("bg-yellow-500");
+      expect(screen.getByTestId("status-indicator")).toHaveClass(
+        "bg-yellow-500",
+      );
     });
 
     it("should show disconnected state with red indicator", () => {
@@ -78,7 +84,9 @@ describe("ConnectionStatus", () => {
       render(<ConnectionStatus status="reconnecting" />);
 
       expect(screen.getByText(/reconnecting/i)).toBeInTheDocument();
-      expect(screen.getByTestId("status-indicator")).toHaveClass("animate-pulse");
+      expect(screen.getByTestId("status-indicator")).toHaveClass(
+        "animate-pulse",
+      );
     });
   });
 
@@ -153,19 +161,25 @@ describe("ConnectionStatus", () => {
     it("should show reconnect button when disconnected", () => {
       render(<ConnectionStatus status="disconnected" onReconnect={() => {}} />);
 
-      expect(screen.getByRole("button", { name: /reconnect/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /reconnect/i }),
+      ).toBeInTheDocument();
     });
 
     it("should not show reconnect button when connected", () => {
       render(<ConnectionStatus status="connected" onReconnect={() => {}} />);
 
-      expect(screen.queryByRole("button", { name: /reconnect/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /reconnect/i }),
+      ).not.toBeInTheDocument();
     });
 
     it("should call onReconnect when reconnect button is clicked", async () => {
       const onReconnect = vi.fn();
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-      render(<ConnectionStatus status="disconnected" onReconnect={onReconnect} />);
+      render(
+        <ConnectionStatus status="disconnected" onReconnect={onReconnect} />,
+      );
 
       await user.click(screen.getByRole("button", { name: /reconnect/i }));
 
@@ -257,7 +271,9 @@ describe("ConnectionStatus", () => {
     it("should have proper role for reconnect button", () => {
       render(<ConnectionStatus status="disconnected" onReconnect={() => {}} />);
 
-      expect(screen.getByRole("button", { name: /reconnect/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /reconnect/i }),
+      ).toBeInTheDocument();
     });
   });
 });

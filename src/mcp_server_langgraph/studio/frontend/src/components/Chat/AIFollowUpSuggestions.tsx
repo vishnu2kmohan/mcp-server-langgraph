@@ -13,19 +13,39 @@
  */
 
 import { useMemo } from "react";
-import { Sparkles, HelpCircle, Lightbulb, BookOpen, Code, MessageCircle } from "lucide-react";
+import {
+  Sparkles,
+  HelpCircle,
+  Lightbulb,
+  BookOpen,
+  Code,
+  MessageCircle,
+  ArrowRight,
+  GitCompare,
+  ThumbsUp,
+  ThumbsDown,
+} from "lucide-react";
+
+/** Feedback type for suggestions */
+export type SuggestionFeedbackType = "positive" | "negative";
 
 // =============================================================================
 // Types
 // =============================================================================
 
+/**
+ * Suggestion categories aligned with backend API.
+ * Supports both legacy frontend categories and new backend categories.
+ */
 export type SuggestionCategory =
-  | "clarify"
-  | "explain"
-  | "example"
-  | "code"
-  | "explore"
-  | "general";
+  | "clarify" // Get simpler explanation
+  | "explain" // Legacy: similar to clarify
+  | "example" // Request practical examples
+  | "code" // Code-specific suggestions
+  | "explore" // Dig deeper into topic
+  | "general" // Catch-all
+  | "alternative" // Compare options/trade-offs (from backend)
+  | "continue"; // Next steps/what to do next (from backend)
 
 export interface FollowUpSuggestion {
   /** Unique identifier */
@@ -41,6 +61,11 @@ export interface AIFollowUpSuggestionsProps {
   suggestions: FollowUpSuggestion[];
   /** Callback when a suggestion is selected */
   onSelect: (suggestion: FollowUpSuggestion) => void;
+  /** Callback when feedback is provided (thumbs up/down) */
+  onFeedback?: (
+    suggestion: FollowUpSuggestion,
+    feedback: SuggestionFeedbackType,
+  ) => void;
   /** Whether suggestions are loading */
   isLoading?: boolean;
   /** Whether suggestions are disabled */
@@ -66,6 +91,8 @@ const CATEGORY_ICONS: Record<SuggestionCategory, typeof HelpCircle> = {
   code: Code,
   explore: Sparkles,
   general: MessageCircle,
+  alternative: GitCompare,
+  continue: ArrowRight,
 };
 
 const CATEGORY_LABELS: Record<SuggestionCategory, string> = {
@@ -75,6 +102,8 @@ const CATEGORY_LABELS: Record<SuggestionCategory, string> = {
   code: "Code",
   explore: "Explore",
   general: "General",
+  alternative: "Compare",
+  continue: "Next Step",
 };
 
 // =============================================================================
@@ -84,6 +113,7 @@ const CATEGORY_LABELS: Record<SuggestionCategory, string> = {
 export function AIFollowUpSuggestions({
   suggestions,
   onSelect,
+  onFeedback,
   isLoading = false,
   disabled = false,
   maxSuggestions = 4,
@@ -94,7 +124,7 @@ export function AIFollowUpSuggestions({
   // Limit suggestions to max count
   const visibleSuggestions = useMemo(
     () => suggestions.slice(0, maxSuggestions),
-    [suggestions, maxSuggestions]
+    [suggestions, maxSuggestions],
   );
 
   // Show loading state
@@ -147,39 +177,92 @@ export function AIFollowUpSuggestions({
           const Icon = CATEGORY_ICONS[category];
 
           return (
-            <button
+            <div
               key={suggestion.id}
-              type="button"
-              onClick={() => onSelect(suggestion)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onSelect(suggestion);
-                }
-              }}
-              disabled={disabled}
-              className={`
-                inline-flex items-center gap-1.5
-                px-3 py-1.5 rounded-full
-                bg-blue-50 dark:bg-blue-900/20
-                text-blue-700 dark:text-blue-300
-                hover:bg-blue-100 dark:hover:bg-blue-900/40
-                border border-blue-200 dark:border-blue-800
-                transition-colors cursor-pointer
-                disabled:opacity-50 disabled:cursor-not-allowed
-                ${compact ? "px-2 py-1" : "px-3 py-1.5"}
-              `}
+              className="group relative inline-flex items-center"
             >
-              <span data-testid="suggestion-icon">
-                <Icon size={compact ? 10 : 12} />
-              </span>
-              {showCategories && (
-                <span className="text-[10px] uppercase font-semibold text-blue-500 dark:text-blue-400">
-                  {CATEGORY_LABELS[category]}
+              <button
+                type="button"
+                onClick={() => onSelect(suggestion)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelect(suggestion);
+                  }
+                }}
+                disabled={disabled}
+                className={`
+                  inline-flex items-center gap-1.5
+                  px-3 py-1.5 rounded-full
+                  bg-blue-50 dark:bg-blue-900/20
+                  text-blue-700 dark:text-blue-300
+                  hover:bg-blue-100 dark:hover:bg-blue-900/40
+                  border border-blue-200 dark:border-blue-800
+                  transition-colors cursor-pointer
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  ${compact ? "px-2 py-1" : "px-3 py-1.5"}
+                  ${onFeedback ? "pr-14" : ""}
+                `}
+              >
+                <span data-testid="suggestion-icon">
+                  <Icon size={compact ? 10 : 12} />
                 </span>
+                {showCategories && (
+                  <span className="text-[10px] uppercase font-semibold text-blue-500 dark:text-blue-400">
+                    {CATEGORY_LABELS[category]}
+                  </span>
+                )}
+                <span className="truncate max-w-[200px]">
+                  {suggestion.text}
+                </span>
+              </button>
+
+              {/* Feedback buttons (thumbs up/down) */}
+              {onFeedback && (
+                <div className="absolute right-1 flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    data-testid="feedback-positive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onFeedback(suggestion, "positive");
+                    }}
+                    disabled={disabled}
+                    className={`
+                      p-1 rounded-full
+                      text-gray-400 dark:text-gray-500
+                      hover:text-green-600 dark:hover:text-green-400
+                      hover:bg-green-50 dark:hover:bg-green-900/20
+                      transition-colors
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                    `}
+                    aria-label="Helpful suggestion"
+                  >
+                    <ThumbsUp size={compact ? 10 : 12} />
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="feedback-negative"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onFeedback(suggestion, "negative");
+                    }}
+                    disabled={disabled}
+                    className={`
+                      p-1 rounded-full
+                      text-gray-400 dark:text-gray-500
+                      hover:text-red-600 dark:hover:text-red-400
+                      hover:bg-red-50 dark:hover:bg-red-900/20
+                      transition-colors
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                    `}
+                    aria-label="Not helpful suggestion"
+                  >
+                    <ThumbsDown size={compact ? 10 : 12} />
+                  </button>
+                </div>
               )}
-              <span className="truncate max-w-[200px]">{suggestion.text}</span>
-            </button>
+            </div>
           );
         })}
       </div>

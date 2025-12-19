@@ -219,7 +219,9 @@ export function ConnectionStatus({
           <div className="flex items-center gap-2">
             <span>{config.label}</span>
             {latencyInfo && (
-              <span className={latencyInfo.colorClass}>{latencyInfo.value}</span>
+              <span className={latencyInfo.colorClass}>
+                {latencyInfo.value}
+              </span>
             )}
           </div>
           {syncTimeDisplay && (

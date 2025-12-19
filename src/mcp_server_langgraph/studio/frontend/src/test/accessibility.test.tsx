@@ -310,3 +310,216 @@ describe("PWA Components Accessibility", () => {
     });
   });
 });
+
+describe("Chat Components Accessibility", () => {
+  describe("SlashCommandMenu", () => {
+    beforeEach(async () => {
+      vi.resetModules();
+    });
+
+    it("should have role=listbox for screen readers", async () => {
+      const { SlashCommandMenu } =
+        await import("../components/Chat/SlashCommandMenu");
+
+      const commands = [
+        { name: "help", description: "Show help" },
+        { name: "clear", description: "Clear chat" },
+      ];
+
+      render(
+        <SlashCommandMenu
+          commands={commands}
+          isOpen={true}
+          onSelect={() => {}}
+          onClose={() => {}}
+        />,
+      );
+
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+    });
+
+    it("should have aria-label on the listbox", async () => {
+      const { SlashCommandMenu } =
+        await import("../components/Chat/SlashCommandMenu");
+
+      const commands = [{ name: "help", description: "Show help" }];
+
+      render(
+        <SlashCommandMenu
+          commands={commands}
+          isOpen={true}
+          onSelect={() => {}}
+          onClose={() => {}}
+        />,
+      );
+
+      const listbox = screen.getByRole("listbox");
+      expect(listbox).toHaveAttribute("aria-label", "Slash commands");
+    });
+
+    it("should have role=option for each command", async () => {
+      const { SlashCommandMenu } =
+        await import("../components/Chat/SlashCommandMenu");
+
+      const commands = [
+        { name: "help", description: "Show help" },
+        { name: "clear", description: "Clear chat" },
+      ];
+
+      render(
+        <SlashCommandMenu
+          commands={commands}
+          isOpen={true}
+          onSelect={() => {}}
+          onClose={() => {}}
+        />,
+      );
+
+      const options = screen.getAllByRole("option");
+      expect(options).toHaveLength(2);
+    });
+
+    it("should have aria-selected on the highlighted option", async () => {
+      const { SlashCommandMenu } =
+        await import("../components/Chat/SlashCommandMenu");
+
+      const commands = [
+        { name: "help", description: "Show help" },
+        { name: "clear", description: "Clear chat" },
+      ];
+
+      render(
+        <SlashCommandMenu
+          commands={commands}
+          isOpen={true}
+          onSelect={() => {}}
+          onClose={() => {}}
+          selectedIndex={0}
+        />,
+      );
+
+      const options = screen.getAllByRole("option");
+      expect(options[0]).toHaveAttribute("aria-selected", "true");
+      expect(options[1]).toHaveAttribute("aria-selected", "false");
+    });
+  });
+
+  describe("LLMThinkingTrace Accessibility", () => {
+    it("should have accessible toggle button with aria-expanded", async () => {
+      const { LLMThinkingTrace } =
+        await import("../components/Chat/LLMThinkingTrace");
+
+      render(
+        <LLMThinkingTrace
+          thinkingContent="Thinking about the problem..."
+          thinkingTokens={100}
+          isExpanded={false}
+          onToggle={() => {}}
+        />,
+      );
+
+      // Toggle button should have aria-label and aria-expanded
+      const button = screen.getByRole("button", {
+        name: /toggle thinking trace/i,
+      });
+      expect(button).toBeInTheDocument();
+      expect(button).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("should reflect expanded state in aria-expanded", async () => {
+      const { LLMThinkingTrace } =
+        await import("../components/Chat/LLMThinkingTrace");
+
+      render(
+        <LLMThinkingTrace
+          thinkingContent="Thinking about the problem..."
+          thinkingTokens={100}
+          isExpanded={true}
+          onToggle={() => {}}
+        />,
+      );
+
+      const button = screen.getByRole("button", {
+        name: /toggle thinking trace/i,
+      });
+      expect(button).toHaveAttribute("aria-expanded", "true");
+    });
+  });
+
+  describe("AIFollowUpSuggestions Accessibility", () => {
+    it("should have accessible suggestion buttons", async () => {
+      const { AIFollowUpSuggestions } =
+        await import("../components/Chat/AIFollowUpSuggestions");
+
+      const suggestions = [
+        { id: "1", text: "Tell me more", category: "explore" as const },
+        { id: "2", text: "Give an example", category: "example" as const },
+      ];
+
+      render(
+        <AIFollowUpSuggestions
+          suggestions={suggestions}
+          onSuggestionClick={() => {}}
+        />,
+      );
+
+      // Each suggestion should be a clickable element
+      const buttons = screen.getAllByRole("button");
+      expect(buttons.length).toBeGreaterThan(0);
+    });
+
+    it("should have descriptive text on suggestion buttons", async () => {
+      const { AIFollowUpSuggestions } =
+        await import("../components/Chat/AIFollowUpSuggestions");
+
+      const suggestions = [
+        { id: "1", text: "Tell me more", category: "explore" as const },
+      ];
+
+      render(
+        <AIFollowUpSuggestions
+          suggestions={suggestions}
+          onSuggestionClick={() => {}}
+        />,
+      );
+
+      // Button should have visible text
+      expect(screen.getByText("Tell me more")).toBeInTheDocument();
+    });
+  });
+
+  describe("ReasoningEffortSelector Accessibility", () => {
+    it("should have accessible button group for effort levels", async () => {
+      const { ReasoningEffortSelector } =
+        await import("../components/Chat/ReasoningEffortSelector");
+
+      render(<ReasoningEffortSelector value="medium" onChange={() => {}} />);
+
+      // Should have buttons for each effort level
+      const buttons = screen.getAllByRole("button");
+      expect(buttons.length).toBeGreaterThanOrEqual(3); // Low, Medium, High
+    });
+
+    it("should have aria-pressed on the selected effort button", async () => {
+      const { ReasoningEffortSelector } =
+        await import("../components/Chat/ReasoningEffortSelector");
+
+      render(<ReasoningEffortSelector value="medium" onChange={() => {}} />);
+
+      // Medium should be pressed
+      const mediumButton = screen.getByText("Medium").closest("button");
+      expect(mediumButton).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("should have descriptive title on effort buttons", async () => {
+      const { ReasoningEffortSelector } =
+        await import("../components/Chat/ReasoningEffortSelector");
+
+      render(<ReasoningEffortSelector value="medium" onChange={() => {}} />);
+
+      // Buttons should have title attributes for screen readers
+      const mediumButton = screen.getByText("Medium").closest("button");
+      expect(mediumButton).toHaveAttribute("title");
+    });
+  });
+});

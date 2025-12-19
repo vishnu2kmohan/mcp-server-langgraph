@@ -13,7 +13,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useExport, Message, ExportFormat, ExportOptions } from "./useExport";
+import { useExport, Message } from "./useExport";
 
 describe("useExport", () => {
   const mockMessages: Message[] = [

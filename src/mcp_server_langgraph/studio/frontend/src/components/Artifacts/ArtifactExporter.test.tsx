@@ -9,11 +9,7 @@
 
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  ArtifactExporter,
-  type ArtifactExporterProps,
-  type ExportFormat,
-} from "./ArtifactExporter";
+import { ArtifactExporter } from "./ArtifactExporter";
 
 // Mock the download functionality
 const mockCreateObjectURL = vi.fn(() => "blob:mock-url");
@@ -29,11 +25,7 @@ describe("ArtifactExporter", () => {
   describe("rendering", () => {
     it("should render export button", () => {
       render(
-        <ArtifactExporter
-          artifactType="table"
-          data={[]}
-          onExport={vi.fn()}
-        />,
+        <ArtifactExporter artifactType="table" data={[]} onExport={vi.fn()} />,
       );
 
       expect(screen.getByRole("button")).toBeInTheDocument();
@@ -231,11 +223,7 @@ describe("ArtifactExporter", () => {
   describe("disabled state", () => {
     it("should be disabled when no data", () => {
       render(
-        <ArtifactExporter
-          artifactType="table"
-          data={[]}
-          onExport={vi.fn()}
-        />,
+        <ArtifactExporter artifactType="table" data={[]} onExport={vi.fn()} />,
       );
 
       expect(screen.getByRole("button")).toBeDisabled();

@@ -34,7 +34,9 @@ describe("ReasoningEffortSelector", () => {
   describe("rendering", () => {
     it("should render the selector container", () => {
       render(<ReasoningEffortSelector {...defaultProps} />);
-      expect(screen.getByTestId("reasoning-effort-selector")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("reasoning-effort-selector"),
+      ).toBeInTheDocument();
     });
 
     it("should display label 'Thinking'", () => {
@@ -45,7 +47,9 @@ describe("ReasoningEffortSelector", () => {
     it("should render three effort level options", () => {
       render(<ReasoningEffortSelector {...defaultProps} />);
       expect(screen.getByRole("button", { name: /low/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /medium/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /medium/i }),
+      ).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /high/i })).toBeInTheDocument();
     });
 
@@ -72,7 +76,13 @@ describe("ReasoningEffortSelector", () => {
 
     it("should call onChange with 'medium' when medium button clicked", () => {
       const onChange = vi.fn();
-      render(<ReasoningEffortSelector {...defaultProps} onChange={onChange} value="low" />);
+      render(
+        <ReasoningEffortSelector
+          {...defaultProps}
+          onChange={onChange}
+          value="low"
+        />,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /medium/i }));
       expect(onChange).toHaveBeenCalledWith("medium");
@@ -88,7 +98,13 @@ describe("ReasoningEffortSelector", () => {
 
     it("should not call onChange when clicking already selected option", () => {
       const onChange = vi.fn();
-      render(<ReasoningEffortSelector {...defaultProps} onChange={onChange} value="medium" />);
+      render(
+        <ReasoningEffortSelector
+          {...defaultProps}
+          onChange={onChange}
+          value="medium"
+        />,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /medium/i }));
       expect(onChange).not.toHaveBeenCalled();
@@ -112,7 +128,9 @@ describe("ReasoningEffortSelector", () => {
     it("should show tooltip for high option", () => {
       render(<ReasoningEffortSelector {...defaultProps} />);
       const highButton = screen.getByRole("button", { name: /high/i });
-      expect(highButton.getAttribute("title")).toMatch(/deep|comprehensive|thorough/i);
+      expect(highButton.getAttribute("title")).toMatch(
+        /deep|comprehensive|thorough/i,
+      );
     });
   });
 
@@ -127,7 +145,13 @@ describe("ReasoningEffortSelector", () => {
 
     it("should not call onChange when disabled", () => {
       const onChange = vi.fn();
-      render(<ReasoningEffortSelector {...defaultProps} onChange={onChange} disabled={true} />);
+      render(
+        <ReasoningEffortSelector
+          {...defaultProps}
+          onChange={onChange}
+          disabled={true}
+        />,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /high/i }));
       expect(onChange).not.toHaveBeenCalled();
@@ -146,7 +170,7 @@ describe("ReasoningEffortSelector", () => {
         <ReasoningEffortSelector
           {...defaultProps}
           modelSupportsThinking={false}
-        />
+        />,
       );
       expect(screen.getByText(/not supported/i)).toBeInTheDocument();
     });
@@ -156,7 +180,7 @@ describe("ReasoningEffortSelector", () => {
         <ReasoningEffortSelector
           {...defaultProps}
           modelSupportsThinking={false}
-        />
+        />,
       );
       expect(screen.getByRole("button", { name: /low/i })).toBeDisabled();
     });
@@ -166,7 +190,7 @@ describe("ReasoningEffortSelector", () => {
         <ReasoningEffortSelector
           {...defaultProps}
           modelName="claude-opus-4-5-20251101"
-        />
+        />,
       );
       expect(screen.getByText(/claude-opus/i)).toBeInTheDocument();
     });
@@ -196,7 +220,10 @@ describe("ReasoningEffortSelector", () => {
 
     it("should have aria-label for the group", () => {
       render(<ReasoningEffortSelector {...defaultProps} />);
-      expect(screen.getByRole("radiogroup")).toHaveAttribute("aria-label", "Reasoning effort level");
+      expect(screen.getByRole("radiogroup")).toHaveAttribute(
+        "aria-label",
+        "Reasoning effort level",
+      );
     });
 
     it("should mark selected option with aria-checked", () => {
@@ -220,8 +247,12 @@ describe("ReasoningEffortSelector", () => {
 
   describe("custom className", () => {
     it("should apply custom className", () => {
-      render(<ReasoningEffortSelector {...defaultProps} className="custom-class" />);
-      expect(screen.getByTestId("reasoning-effort-selector")).toHaveClass("custom-class");
+      render(
+        <ReasoningEffortSelector {...defaultProps} className="custom-class" />,
+      );
+      expect(screen.getByTestId("reasoning-effort-selector")).toHaveClass(
+        "custom-class",
+      );
     });
   });
 
@@ -232,10 +263,12 @@ describe("ReasoningEffortSelector", () => {
           {...defaultProps}
           showDescription={true}
           value="high"
-        />
+        />,
       );
       expect(screen.getByTestId("effort-description")).toBeInTheDocument();
-      expect(screen.getByText(/comprehensive|thorough|deep/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/comprehensive|thorough|deep/i),
+      ).toBeInTheDocument();
     });
   });
 });

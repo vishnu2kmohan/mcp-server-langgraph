@@ -421,12 +421,13 @@ describe("ChatPage", () => {
       updatedAt: Date.now(),
     };
 
-    it("should show thinking indicator when sending (legacy)", async () => {
+    it("should show processing indicator when sending (legacy)", async () => {
       await renderWithProviders(<ChatPage />, {
         sessionState: { currentSession: mockSession, isSending: true },
       });
 
-      expect(screen.getByText("Thinking...")).toBeInTheDocument();
+      // ChatMessages shows "Processing..." for legacy sending indicator
+      expect(screen.getByText("Processing...")).toBeInTheDocument();
     });
 
     it("should show streaming content when streaming", async () => {

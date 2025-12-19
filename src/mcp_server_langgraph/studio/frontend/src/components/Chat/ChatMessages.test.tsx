@@ -7,6 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { axe } from "jest-axe";
 import { ChatMessages } from "./ChatMessages";
 
 describe("ChatMessages", () => {
@@ -84,7 +85,7 @@ describe("ChatMessages", () => {
       expect(screen.getByText("This is streaming...")).toBeInTheDocument();
     });
 
-    it("should show thinking indicator when streaming with no content", () => {
+    it("should show processing indicator when streaming with no content", () => {
       render(
         <ChatMessages
           messages={mockMessages}
@@ -92,7 +93,7 @@ describe("ChatMessages", () => {
           streamingContent=""
         />,
       );
-      expect(screen.getByText(/thinking/i)).toBeInTheDocument();
+      expect(screen.getByText(/processing/i)).toBeInTheDocument();
     });
 
     it("should show cursor animation when streaming", () => {
@@ -118,7 +119,7 @@ describe("ChatMessages", () => {
           isStreaming={false}
         />,
       );
-      expect(screen.getByText(/thinking/i)).toBeInTheDocument();
+      expect(screen.getByText(/processing/i)).toBeInTheDocument();
     });
 
     it("should not show sending indicator when streaming", () => {
@@ -130,9 +131,9 @@ describe("ChatMessages", () => {
           streamingContent="Response"
         />,
       );
-      // Should only see one thinking indicator (from streaming), not two
-      const thinkingElements = screen.queryAllByText(/thinking/i);
-      expect(thinkingElements.length).toBeLessThanOrEqual(1);
+      // Should only see one processing indicator (from streaming), not two
+      const processingElements = screen.queryAllByText(/processing/i);
+      expect(processingElements.length).toBeLessThanOrEqual(1);
     });
   });
 
@@ -177,6 +178,12 @@ describe("ChatMessages", () => {
       const messageTexts = screen.getAllByText(/how are you|doing well/i);
       expect(messageTexts[0]).toHaveTextContent("Hello, how are you?");
       expect(messageTexts[1]).toHaveTextContent("I am doing well, thank you!");
+    });
+
+    it("should have no accessibility violations", async () => {
+      const { container } = render(<ChatMessages messages={mockMessages} />);
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
     });
   });
 
@@ -607,6 +614,571 @@ describe("ChatMessages", () => {
 
       const regenerateButton = screen.getByTestId("action-regenerate");
       expect(regenerateButton).toBeDisabled();
+    });
+  });
+
+  describe("LLM Thinking Trace Integration", () => {
+    const mockOnToggleThinking = vi.fn();
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it("should render LLMThinkingTrace when thinking content is present during streaming", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent=""
+          llmThinkingContent="Analyzing the user's request..."
+          isThinkingExpanded={true}
+          onToggleThinking={mockOnToggleThinking}
+        />,
+      );
+      expect(screen.getByTestId("llm-thinking-trace")).toBeInTheDocument();
+    });
+
+    it("should display thinking content text", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent=""
+          llmThinkingContent="I need to consider several factors here..."
+          isThinkingExpanded={true}
+          onToggleThinking={mockOnToggleThinking}
+        />,
+      );
+      expect(screen.getByTestId("thinking-content")).toHaveTextContent(
+        "I need to consider several factors here...",
+      );
+    });
+
+    it("should show thinking token count when provided", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent=""
+          llmThinkingContent="Deep analysis in progress..."
+          llmThinkingTokens={1500}
+          isThinkingExpanded={true}
+          onToggleThinking={mockOnToggleThinking}
+        />,
+      );
+      expect(screen.getByText(/1,500 tokens/)).toBeInTheDocument();
+    });
+
+    it("should call onToggleThinking when toggle button is clicked", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent="Some content" // Having content hides the agent trace button
+          llmThinkingContent="Thinking..."
+          isThinkingExpanded={false}
+          onToggleThinking={mockOnToggleThinking}
+        />,
+      );
+
+      // Get the toggle button from within the LLMThinkingTrace component
+      const thinkingTrace = screen.getByTestId("llm-thinking-trace");
+      const toggleButton = thinkingTrace.querySelector(
+        '[aria-label="Toggle thinking trace"]',
+      );
+      expect(toggleButton).toBeTruthy();
+      fireEvent.click(toggleButton!);
+
+      expect(mockOnToggleThinking).toHaveBeenCalled();
+    });
+
+    it("should show streaming indicator during active streaming", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent=""
+          llmThinkingContent="Processing..."
+          isThinkingExpanded={true}
+          onToggleThinking={mockOnToggleThinking}
+        />,
+      );
+      expect(screen.getByTestId("streaming-indicator")).toBeInTheDocument();
+    });
+
+    it("should not show streaming indicator when not streaming", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          isStreaming={false}
+          llmThinkingContent="Previous thinking content"
+          isThinkingExpanded={true}
+          onToggleThinking={mockOnToggleThinking}
+        />,
+      );
+      expect(
+        screen.queryByTestId("streaming-indicator"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should not render LLMThinkingTrace when no thinking content", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent="Response content"
+          llmThinkingContent=""
+          isThinkingExpanded={true}
+          onToggleThinking={mockOnToggleThinking}
+        />,
+      );
+      expect(
+        screen.queryByTestId("llm-thinking-trace"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should display model name when provided", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent=""
+          llmThinkingContent="Thinking deeply..."
+          llmModelName="claude-opus-4-5"
+          isThinkingExpanded={true}
+          onToggleThinking={mockOnToggleThinking}
+        />,
+      );
+      expect(screen.getByText(/claude-opus-4-5/)).toBeInTheDocument();
+    });
+
+    it("should show Extended badge for thinking models", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent=""
+          llmThinkingContent="Extended thinking..."
+          isThinkingModel={true}
+          isThinkingExpanded={true}
+          onToggleThinking={mockOnToggleThinking}
+        />,
+      );
+      expect(screen.getByTestId("thinking-model-badge")).toBeInTheDocument();
+    });
+
+    it("should render thinking trace above streaming content", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent="Here is my response..."
+          llmThinkingContent="First, I analyzed..."
+          isThinkingExpanded={true}
+          onToggleThinking={mockOnToggleThinking}
+        />,
+      );
+
+      // Both should be present
+      expect(screen.getByTestId("llm-thinking-trace")).toBeInTheDocument();
+      expect(screen.getByText("Here is my response...")).toBeInTheDocument();
+    });
+  });
+
+  describe("AIFollowUpSuggestions Integration", () => {
+    const mockSuggestions = [
+      {
+        id: "sug-1",
+        text: "Tell me more about this",
+        category: "explore" as const,
+      },
+      {
+        id: "sug-2",
+        text: "Can you provide an example?",
+        category: "example" as const,
+      },
+    ];
+
+    it("should render follow-up suggestions when provided", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          suggestions={mockSuggestions}
+          onSuggestionSelect={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByTestId("follow-up-suggestions")).toBeInTheDocument();
+      expect(screen.getByText("Tell me more about this")).toBeInTheDocument();
+      expect(
+        screen.getByText("Can you provide an example?"),
+      ).toBeInTheDocument();
+    });
+
+    it("should not render suggestions when array is empty", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          suggestions={[]}
+          onSuggestionSelect={vi.fn()}
+        />,
+      );
+
+      expect(
+        screen.queryByTestId("follow-up-suggestions"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should not render suggestions when not provided", () => {
+      render(<ChatMessages messages={mockMessages} />);
+
+      expect(
+        screen.queryByTestId("follow-up-suggestions"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should call onSuggestionSelect when a suggestion is clicked", () => {
+      const mockOnSelect = vi.fn();
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          suggestions={mockSuggestions}
+          onSuggestionSelect={mockOnSelect}
+        />,
+      );
+
+      fireEvent.click(screen.getByText("Tell me more about this"));
+      expect(mockOnSelect).toHaveBeenCalledWith(mockSuggestions[0]);
+    });
+
+    it("should show loading state when suggestionsLoading is true", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          suggestions={[]}
+          onSuggestionSelect={vi.fn()}
+          suggestionsLoading={true}
+        />,
+      );
+
+      expect(screen.getByTestId("suggestions-loading")).toBeInTheDocument();
+    });
+
+    it("should not show suggestions while streaming", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent="Generating..."
+          suggestions={mockSuggestions}
+          onSuggestionSelect={vi.fn()}
+        />,
+      );
+
+      // Should not show suggestions during streaming
+      expect(
+        screen.queryByTestId("follow-up-suggestions"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should render suggestions after the last assistant message", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          suggestions={mockSuggestions}
+          onSuggestionSelect={vi.fn()}
+        />,
+      );
+
+      // Suggestions should appear after messages
+      const messagesEnd = screen.getByTestId("messages-end");
+      const suggestions = screen.getByTestId("follow-up-suggestions");
+
+      // Suggestions should be in the DOM before the messages end marker
+      expect(suggestions.compareDocumentPosition(messagesEnd)).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+    });
+  });
+
+  describe("AgentExecutionTrace with LangGraph Nodes", () => {
+    const mockMessagesForTrace = [
+      {
+        id: "msg-1",
+        role: "user" as const,
+        content: "Run the analysis workflow",
+        timestamp: Date.now(),
+      },
+    ];
+
+    it("should render agent execution trace panel when provided", () => {
+      render(
+        <ChatMessages
+          messages={mockMessagesForTrace}
+          isStreaming={true}
+          streamingContent=""
+          agentExecutionTrace={{
+            steps: [{ name: "agent", status: "running" }],
+            tokens: { input: 100, output: 50 },
+          }}
+        />,
+      );
+
+      // Toggle the trace panel
+      const toggleButton = screen.getByLabelText(
+        "Toggle agent execution trace",
+      );
+      fireEvent.click(toggleButton);
+
+      expect(screen.getByText(/Execution Steps/i)).toBeInTheDocument();
+    });
+
+    it("should display LangGraph nodes when provided in trace", () => {
+      render(
+        <ChatMessages
+          messages={mockMessagesForTrace}
+          isStreaming={true}
+          streamingContent=""
+          agentExecutionTrace={{
+            nodes: [
+              {
+                id: "start",
+                name: "Start",
+                type: "start",
+                status: "completed",
+              },
+              {
+                id: "analyze",
+                name: "Analyze Input",
+                type: "tool",
+                status: "running",
+              },
+              {
+                id: "decide",
+                name: "Route Decision",
+                type: "conditional",
+                status: "pending",
+              },
+              { id: "end", name: "End", type: "end", status: "pending" },
+            ],
+            edges: [
+              { from: "start", to: "analyze" },
+              { from: "analyze", to: "decide" },
+              { from: "decide", to: "end", condition: "complete" },
+            ],
+            currentNode: "analyze",
+          }}
+        />,
+      );
+
+      // Toggle the trace panel
+      const toggleButton = screen.getByLabelText(
+        "Toggle agent execution trace",
+      );
+      fireEvent.click(toggleButton);
+
+      // Should show node visualization
+      expect(
+        screen.getByTestId("langgraph-node-visualization"),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Start")).toBeInTheDocument();
+      expect(screen.getByText("Analyze Input")).toBeInTheDocument();
+      expect(screen.getByText("Route Decision")).toBeInTheDocument();
+    });
+
+    it("should highlight the current active node", () => {
+      render(
+        <ChatMessages
+          messages={mockMessagesForTrace}
+          isStreaming={true}
+          streamingContent=""
+          agentExecutionTrace={{
+            nodes: [
+              {
+                id: "start",
+                name: "Start",
+                type: "start",
+                status: "completed",
+              },
+              {
+                id: "process",
+                name: "Process",
+                type: "tool",
+                status: "running",
+              },
+            ],
+            currentNode: "process",
+          }}
+        />,
+      );
+
+      const toggleButton = screen.getByLabelText(
+        "Toggle agent execution trace",
+      );
+      fireEvent.click(toggleButton);
+
+      const activeNode = screen.getByTestId("node-process");
+      expect(activeNode).toHaveClass("ring-2");
+    });
+
+    it("should display different node type icons", () => {
+      render(
+        <ChatMessages
+          messages={mockMessagesForTrace}
+          isStreaming={true}
+          streamingContent=""
+          agentExecutionTrace={{
+            nodes: [
+              {
+                id: "start",
+                name: "Start",
+                type: "start",
+                status: "completed",
+              },
+              { id: "tool", name: "Search", type: "tool", status: "running" },
+              {
+                id: "conditional",
+                name: "Check",
+                type: "conditional",
+                status: "pending",
+              },
+            ],
+            currentNode: "tool",
+          }}
+        />,
+      );
+
+      const toggleButton = screen.getByLabelText(
+        "Toggle agent execution trace",
+      );
+      fireEvent.click(toggleButton);
+
+      expect(screen.getByTestId("node-type-start")).toBeInTheDocument();
+      expect(screen.getByTestId("node-type-tool")).toBeInTheDocument();
+      expect(screen.getByTestId("node-type-conditional")).toBeInTheDocument();
+    });
+
+    it("should show node status indicators", () => {
+      render(
+        <ChatMessages
+          messages={mockMessagesForTrace}
+          isStreaming={true}
+          streamingContent=""
+          agentExecutionTrace={{
+            nodes: [
+              { id: "n1", name: "Step 1", type: "tool", status: "completed" },
+              { id: "n2", name: "Step 2", type: "tool", status: "running" },
+              { id: "n3", name: "Step 3", type: "tool", status: "error" },
+              { id: "n4", name: "Step 4", type: "tool", status: "pending" },
+            ],
+          }}
+        />,
+      );
+
+      const toggleButton = screen.getByLabelText(
+        "Toggle agent execution trace",
+      );
+      fireEvent.click(toggleButton);
+
+      expect(screen.getByTestId("node-status-completed")).toBeInTheDocument();
+      expect(screen.getByTestId("node-status-running")).toBeInTheDocument();
+      expect(screen.getByTestId("node-status-error")).toBeInTheDocument();
+      expect(screen.getByTestId("node-status-pending")).toBeInTheDocument();
+    });
+
+    it("should display edge connections between nodes", () => {
+      render(
+        <ChatMessages
+          messages={mockMessagesForTrace}
+          isStreaming={true}
+          streamingContent=""
+          agentExecutionTrace={{
+            nodes: [
+              { id: "a", name: "A", type: "start", status: "completed" },
+              { id: "b", name: "B", type: "tool", status: "completed" },
+            ],
+            edges: [{ from: "a", to: "b" }],
+          }}
+        />,
+      );
+
+      const toggleButton = screen.getByLabelText(
+        "Toggle agent execution trace",
+      );
+      fireEvent.click(toggleButton);
+
+      expect(screen.getByTestId("edge-a-to-b")).toBeInTheDocument();
+    });
+
+    it("should show conditional edge labels", () => {
+      render(
+        <ChatMessages
+          messages={mockMessagesForTrace}
+          isStreaming={true}
+          streamingContent=""
+          agentExecutionTrace={{
+            nodes: [
+              {
+                id: "check",
+                name: "Check",
+                type: "conditional",
+                status: "completed",
+              },
+              {
+                id: "success",
+                name: "Success",
+                type: "tool",
+                status: "running",
+              },
+              {
+                id: "failure",
+                name: "Failure",
+                type: "tool",
+                status: "pending",
+              },
+            ],
+            edges: [
+              { from: "check", to: "success", condition: "passed" },
+              { from: "check", to: "failure", condition: "failed" },
+            ],
+          }}
+        />,
+      );
+
+      const toggleButton = screen.getByLabelText(
+        "Toggle agent execution trace",
+      );
+      fireEvent.click(toggleButton);
+
+      expect(screen.getByText("passed")).toBeInTheDocument();
+      expect(screen.getByText("failed")).toBeInTheDocument();
+    });
+
+    it("should fallback to simple steps view when no nodes provided", () => {
+      render(
+        <ChatMessages
+          messages={mockMessagesForTrace}
+          isStreaming={true}
+          streamingContent=""
+          agentExecutionTrace={{
+            steps: [
+              { name: "Processing", status: "running" },
+              { name: "Completed", status: "success" },
+            ],
+            tokens: { input: 100, output: 200 },
+          }}
+        />,
+      );
+
+      const toggleButton = screen.getByLabelText(
+        "Toggle agent execution trace",
+      );
+      fireEvent.click(toggleButton);
+
+      expect(screen.getByText("Processing")).toBeInTheDocument();
+      expect(
+        screen.queryByTestId("langgraph-node-visualization"),
+      ).not.toBeInTheDocument();
     });
   });
 });

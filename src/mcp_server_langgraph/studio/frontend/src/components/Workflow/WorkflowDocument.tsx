@@ -36,6 +36,7 @@ import {
 import { WorkflowCanvas } from "./WorkflowCanvas";
 import { NodePalette, type NodeType } from "./NodePalette";
 import { NodeInspector } from "./NodeInspector";
+import { ExecutionTracePanel } from "./ExecutionTracePanel";
 import { addNode } from "../../store/slices/workflowSlice";
 import type { WorkflowNodeType } from "../../types/workflow";
 import {
@@ -82,6 +83,14 @@ export function WorkflowDocument({
 }: WorkflowDocumentProps) {
   const dispatch = useAppDispatch();
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
+    null,
+  );
+
+  // Callback for ExecutionTracePanel to highlight nodes on hover
+  const handleNodeHighlight = useCallback((nodeId: string | null) => {
+    setHighlightedNodeId(nodeId);
+  }, []);
 
   // Redux selectors
   const metadata = useAppSelector(selectWorkflowMetadata);
@@ -293,8 +302,13 @@ export function WorkflowDocument({
 
           {/* Canvas */}
           <div className="flex-1 relative">
-            <WorkflowCanvas />
+            <WorkflowCanvas highlightedNodeId={highlightedNodeId} />
             <NodeInspector />
+          </div>
+
+          {/* Execution Trace Panel - collapsible right panel */}
+          <div className="w-80 border-l border-gray-200 dark:border-gray-700 overflow-hidden">
+            <ExecutionTracePanel onNodeHighlight={handleNodeHighlight} />
           </div>
         </div>
       </div>

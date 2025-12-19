@@ -100,6 +100,12 @@ export interface ExecutionLog {
   nodeId?: string;
   level: "info" | "warning" | "error";
   message: string;
+  /** Optional structured data for log details (e.g., node output, token counts) */
+  data?: {
+    output?: string;
+    tokens?: number;
+    [key: string]: unknown;
+  };
 }
 
 /** Workflow store state */

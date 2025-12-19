@@ -102,7 +102,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
   // Local state for filter panel visibility
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
-    new Set(currentFilter?.categories || [])
+    new Set(currentFilter?.categories || []),
   );
 
   // Check if a filter is active
@@ -133,7 +133,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
       };
       setFilter(newFilter);
     },
-    [selectedCategories, setFilter]
+    [selectedCategories, setFilter],
   );
 
   // Handle clear filter
@@ -229,7 +229,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
               "p-1.5 rounded relative",
               isFilterOpen
                 ? "text-blue-600 bg-blue-50 dark:bg-blue-900/30"
-                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700",
             )}
             title="Filter events"
           >
@@ -262,11 +262,15 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
               "p-1.5 rounded",
               isPaused
                 ? "text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30"
-                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700",
             )}
             title={isPaused ? "Resume" : "Pause"}
           >
-            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+            {isPaused ? (
+              <Play className="w-4 h-4" />
+            ) : (
+              <Pause className="w-4 h-4" />
+            )}
           </button>
 
           {/* Clear button */}
@@ -384,7 +388,7 @@ function AuditEventItem({ event }: AuditEventItemProps) {
             <span
               className={cn(
                 "px-2 py-0.5 text-xs font-medium rounded-full",
-                categoryColor
+                categoryColor,
               )}
             >
               {event.category}

@@ -14,7 +14,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
@@ -58,11 +58,19 @@ describe("SettingsPanel", () => {
       renderWithProvider(<SettingsPanel />);
 
       await waitFor(() => {
-        expect(screen.getByRole("tab", { name: /general/i })).toBeInTheDocument();
-        expect(screen.getByRole("tab", { name: /accessibility/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("tab", { name: /general/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("tab", { name: /accessibility/i }),
+        ).toBeInTheDocument();
         expect(screen.getByRole("tab", { name: /model/i })).toBeInTheDocument();
-        expect(screen.getByRole("tab", { name: /shortcuts/i })).toBeInTheDocument();
-        expect(screen.getByRole("tab", { name: /privacy/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("tab", { name: /shortcuts/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("tab", { name: /privacy/i }),
+        ).toBeInTheDocument();
       });
     });
 
@@ -97,15 +105,16 @@ describe("SettingsPanel", () => {
       renderWithProvider(<SettingsPanel />);
 
       await waitFor(() => {
-        expect(screen.getByRole("tab", { name: /accessibility/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("tab", { name: /accessibility/i }),
+        ).toBeInTheDocument();
       });
 
       await user.click(screen.getByRole("tab", { name: /accessibility/i }));
 
-      expect(screen.getByRole("tab", { name: /accessibility/i })).toHaveAttribute(
-        "aria-selected",
-        "true",
-      );
+      expect(
+        screen.getByRole("tab", { name: /accessibility/i }),
+      ).toHaveAttribute("aria-selected", "true");
     });
 
     it("should switch to Model Defaults tab when clicked", async () => {
@@ -129,7 +138,9 @@ describe("SettingsPanel", () => {
       renderWithProvider(<SettingsPanel />);
 
       await waitFor(() => {
-        expect(screen.getByRole("tab", { name: /general/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("tab", { name: /general/i }),
+        ).toBeInTheDocument();
       });
 
       // Focus the first tab
@@ -215,7 +226,9 @@ describe("SettingsPanel", () => {
       renderWithProvider(<SettingsPanel />);
 
       await waitFor(() => {
-        expect(screen.getByRole("tab", { name: /accessibility/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("tab", { name: /accessibility/i }),
+        ).toBeInTheDocument();
       });
 
       await user.click(screen.getByRole("tab", { name: /accessibility/i }));
@@ -363,7 +376,9 @@ describe("SettingsPanel", () => {
       renderWithProvider(<SettingsPanel />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /reset/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /reset/i }),
+        ).toBeInTheDocument();
       });
     });
 
@@ -372,7 +387,9 @@ describe("SettingsPanel", () => {
       renderWithProvider(<SettingsPanel />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /reset/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /reset/i }),
+        ).toBeInTheDocument();
       });
 
       await user.click(screen.getByRole("button", { name: /reset/i }));
@@ -451,7 +468,9 @@ describe("SettingsPanel", () => {
       renderWithProvider(<SettingsPanel />);
 
       await waitFor(() => {
-        expect(screen.getByRole("tab", { name: /general/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("tab", { name: /general/i }),
+        ).toBeInTheDocument();
       });
 
       // Tab navigation should work
@@ -471,7 +490,9 @@ describe("SettingsPanel", () => {
       renderWithProvider(<SettingsPanel onClose={onClose} />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /close/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /close/i }),
+        ).toBeInTheDocument();
       });
 
       await user.click(screen.getByRole("button", { name: /close/i }));

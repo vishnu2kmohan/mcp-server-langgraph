@@ -61,7 +61,7 @@ import { ChatHeader, ConnectionMode } from "../components/Chat/ChatHeader";
 import {
   ChatMessages,
   Message,
-  ThinkingTrace,
+  AgentExecutionTrace,
 } from "../components/Chat/ChatMessages";
 import { ChatInputForm } from "../components/Chat/ChatInputForm";
 import {
@@ -206,8 +206,8 @@ export function ChatPage() {
     [currentSession?.messages],
   );
 
-  // Construct thinking trace from streaming usage data
-  const thinkingTrace: ThinkingTrace | undefined = useMemo(() => {
+  // Construct agent execution trace from streaming usage data
+  const agentExecutionTrace: AgentExecutionTrace | undefined = useMemo(() => {
     // Only show trace when streaming or if we have usage data
     if (!isStreaming && !usage) {
       return undefined;
@@ -747,7 +747,7 @@ export function ChatPage() {
               isStreaming={isStreaming}
               streamingContent={streamingContent}
               isSending={isSending}
-              thinkingTrace={thinkingTrace}
+              agentExecutionTrace={agentExecutionTrace}
               enableInteractiveArtifacts={enableInteractiveArtifacts}
             />
 

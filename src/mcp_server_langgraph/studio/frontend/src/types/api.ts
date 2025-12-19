@@ -425,6 +425,12 @@ export interface TraceSpan {
   events?: unknown[];
   error_message?: string;
   depth?: number;
+  /** LLM thinking/reasoning content (from Claude extended thinking, etc.) */
+  thinking_content?: string;
+  /** Number of tokens used for thinking/reasoning */
+  thinking_tokens?: number;
+  /** Model name that generated this span's content */
+  model_name?: string;
 }
 
 /**
@@ -452,6 +458,10 @@ export interface TraceListItem {
   span_count: number | null;
   status?: string;
   end_time?: string | null;
+  /** Whether this trace includes LLM thinking/reasoning */
+  has_thinking?: boolean;
+  /** Total thinking tokens used in this trace */
+  thinking_tokens_total?: number;
 }
 
 export interface ObservabilityData {
@@ -812,6 +822,104 @@ export interface AISuggestion {
 export interface SuggestionsResponse {
   suggestions: AISuggestion[];
   workflow_id?: string;
+}
+
+// =============================================================================
+// Unified AI Suggestions Types (new /api/v1/ai/suggestions endpoint)
+// =============================================================================
+
+/**
+ * Suggestion type discriminator
+ */
+export type UnifiedSuggestionType = "chat_followup" | "workflow";
+
+/**
+ * Category for chat follow-up suggestions
+ */
+export type ChatFollowUpCategory =
+  | "explore"
+  | "clarify"
+  | "example"
+  | "alternative"
+  | "continue";
+
+/**
+ * A chat follow-up suggestion
+ */
+export interface ChatFollowUpSuggestion {
+  id: string;
+  text: string;
+  category: ChatFollowUpCategory;
+}
+
+/**
+ * A workflow optimization suggestion
+ */
+export interface WorkflowSuggestion {
+  type: string;
+  description: string;
+  confidence: number;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Request for unified AI suggestions
+ */
+export interface UnifiedSuggestionsRequest {
+  type: UnifiedSuggestionType;
+  /** Content to analyze (required for chat_followup) */
+  content?: string;
+  /** Session ID for context */
+  session_id?: string;
+  /** Workflow to analyze (required for workflow) */
+  workflow?: Record<string, unknown>;
+  /** Maximum suggestions to return. Default: 4 */
+  max_suggestions?: number;
+}
+
+/**
+ * Response from unified AI suggestions endpoint
+ */
+export interface UnifiedSuggestionsResponse {
+  suggestions: (ChatFollowUpSuggestion | WorkflowSuggestion)[];
+}
+
+/**
+ * Request to track a suggestion click
+ */
+export interface SuggestionClickRequest {
+  suggestion_id: string;
+  suggestion_type: UnifiedSuggestionType;
+  category?: string;
+  session_id?: string;
+}
+
+/**
+ * Response confirming click tracking
+ */
+export interface SuggestionClickResponse {
+  tracked: boolean;
+}
+
+/**
+ * Request to submit feedback on a suggestion (thumbs up/down)
+ */
+export interface SuggestionFeedbackRequest {
+  suggestion_id: string;
+  suggestion_type: UnifiedSuggestionType;
+  feedback: "positive" | "negative";
+  category?: string;
+  session_id?: string;
+  /** Optional text feedback for negative ratings */
+  comment?: string;
+}
+
+/**
+ * Response confirming feedback submission
+ */
+export interface SuggestionFeedbackResponse {
+  recorded: boolean;
+  feedback_id?: string;
 }
 
 // =============================================================================

@@ -14,7 +14,7 @@
  * Based on UX patterns from Gemini CLI, OpenAI Codex, and Claude Code.
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   X,
   Settings,
@@ -497,7 +497,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           value={preferences.modelDefaults.defaultReasoningEffort}
           onChange={(e) =>
             updateModelDefaults({
-              defaultReasoningEffort: e.target.value as "low" | "medium" | "high",
+              defaultReasoningEffort: e.target.value as
+                | "low"
+                | "medium"
+                | "high",
             })
           }
           className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -760,10 +763,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             aria-describedby="reset-dialog-description"
             className="bg-white dark:bg-gray-900 rounded-lg shadow-xl p-6 max-w-sm mx-4"
           >
-            <h3
-              id="reset-dialog-title"
-              className="text-lg font-semibold mb-2"
-            >
+            <h3 id="reset-dialog-title" className="text-lg font-semibold mb-2">
               Reset Settings
             </h3>
             <p

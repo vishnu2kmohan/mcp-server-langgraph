@@ -101,29 +101,26 @@ export function ConfirmationDialog({
   }, [isOpen, isLoading, onCancel]);
 
   // Focus trap
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === "Tab" && dialogRef.current) {
-        const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-        );
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Tab" && dialogRef.current) {
+      const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
 
-        if (focusableElements.length === 0) return;
+      if (focusableElements.length === 0) return;
 
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
 
-        if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        } else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
       }
-    },
-    [],
-  );
+    }
+  }, []);
 
   // Check if confirm is allowed
   const requiresConfirmText = severity === "danger" && confirmText;
@@ -224,9 +221,8 @@ export function ConfirmationDialog({
           {requiresConfirmText && (
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Type{" "}
-                <span className="font-mono font-bold">{confirmText}</span> to
-                confirm
+                Type <span className="font-mono font-bold">{confirmText}</span>{" "}
+                to confirm
               </label>
               <input
                 type="text"

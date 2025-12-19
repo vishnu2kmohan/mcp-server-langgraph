@@ -15,3 +15,5 @@ export type { CodePanelProps } from "./CodePanel";
 
 export { WorkflowDocument } from "./WorkflowDocument";
 export type { WorkflowDocumentProps } from "./WorkflowDocument";
+
+export { ExecutionTracePanel } from "./ExecutionTracePanel";

@@ -70,7 +70,12 @@ export interface ErrorRecoveryProps {
 
 const SEVERITY_CONFIG: Record<
   ErrorSeverity,
-  { icon: typeof AlertCircle; bgColor: string; borderColor: string; textColor: string }
+  {
+    icon: typeof AlertCircle;
+    bgColor: string;
+    borderColor: string;
+    textColor: string;
+  }
 > = {
   error: {
     icon: AlertCircle,

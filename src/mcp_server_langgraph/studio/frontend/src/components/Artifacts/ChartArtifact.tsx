@@ -305,7 +305,10 @@ export function ChartArtifact({
     // Build CSV content
     const headers = ["Label", "Value"];
     const rows = data.map((point) => [point.label, point.value.toString()]);
-    const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.join(",")),
+    ].join("\n");
 
     // Generate filename from title
     const filename = title
@@ -324,7 +327,7 @@ export function ChartArtifact({
     URL.revokeObjectURL(url);
   }, [data, title]);
 
-  const handleDownload = useCallback(() => {
+  const _handleDownload = useCallback(() => {
     if (onDownload) {
       onDownload();
     } else {
@@ -343,7 +346,8 @@ export function ChartArtifact({
 
       // Download the blob
       if (blob instanceof Blob) {
-        const extension = format === "pdf" ? "pdf" : format === "svg" ? "svg" : "png";
+        const extension =
+          format === "pdf" ? "pdf" : format === "svg" ? "svg" : "png";
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;

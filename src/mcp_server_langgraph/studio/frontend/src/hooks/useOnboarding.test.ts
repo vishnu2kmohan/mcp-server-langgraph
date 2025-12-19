@@ -1,165 +1,239 @@
 /**
- * useOnboarding Hook Tests
+ * useOnboarding Tests
  *
- * Tests for the onboarding state management hook.
+ * TDD tests for the Onboarding hook.
+ * Tests cover:
+ * - First-time user detection
+ * - Onboarding completion tracking
+ * - Step navigation
+ * - Skip functionality
+ * - Persistence
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
 import { useOnboarding } from "./useOnboarding";
 
 describe("useOnboarding", () => {
-  // Mock localStorage
-  const localStorageMock = {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-  };
+  let originalLocalStorage: Storage;
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Mock localStorage
+    originalLocalStorage = window.localStorage;
+    const storage: Record<string, string> = {};
+    const mockStorage = {
+      getItem: vi.fn((key: string) => storage[key] || null),
+      setItem: vi.fn((key: string, value: string) => {
+        storage[key] = value;
+      }),
+      removeItem: vi.fn((key: string) => {
+        delete storage[key];
+      }),
+      clear: vi.fn(() => {
+        Object.keys(storage).forEach((key) => delete storage[key]);
+      }),
+      length: 0,
+      key: vi.fn(),
+    };
+    Object.defineProperty(window, "localStorage", { value: mockStorage });
+  });
+
+  afterEach(() => {
     Object.defineProperty(window, "localStorage", {
-      value: localStorageMock,
-      writable: true,
+      value: originalLocalStorage,
     });
   });
 
-  describe("Initial State", () => {
-    it("should read from localStorage on mount", async () => {
-      localStorageMock.getItem.mockReturnValue(null);
-      renderHook(() => useOnboarding());
-
-      // Should have called localStorage
-      await waitFor(() => {
-        expect(localStorageMock.getItem).toHaveBeenCalledWith(
-          "langgraph_onboarding_completed",
-        );
-      });
+  describe("first-time user detection", () => {
+    it("should detect first-time user", () => {
+      const { result } = renderHook(() => useOnboarding());
+      expect(result.current.isFirstTime).toBe(true);
     });
 
-    it("should show modal when onboarding not completed", async () => {
-      localStorageMock.getItem.mockReturnValue(null);
+    it("should not be first-time if onboarding completed", () => {
+      (
+        window.localStorage.getItem as ReturnType<typeof vi.fn>
+      ).mockReturnValueOnce(JSON.stringify({ completed: true }));
       const { result } = renderHook(() => useOnboarding());
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      expect(result.current.isCompleted).toBe(false);
-      expect(result.current.shouldShowModal).toBe(true);
-    });
-
-    it("should not show modal when onboarding completed", async () => {
-      localStorageMock.getItem.mockReturnValue("true");
-      const { result } = renderHook(() => useOnboarding());
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      expect(result.current.isCompleted).toBe(true);
-      expect(result.current.shouldShowModal).toBe(false);
+      expect(result.current.isFirstTime).toBe(false);
     });
   });
 
-  describe("complete()", () => {
-    it("should mark onboarding as completed", async () => {
-      localStorageMock.getItem.mockReturnValue(null);
+  describe("onboarding state", () => {
+    it("should start with showOnboarding false", () => {
       const { result } = renderHook(() => useOnboarding());
+      expect(result.current.showOnboarding).toBe(false);
+    });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
+    it("should start onboarding", () => {
+      const { result } = renderHook(() => useOnboarding());
       act(() => {
-        result.current.complete();
+        result.current.startOnboarding();
       });
+      expect(result.current.showOnboarding).toBe(true);
+    });
 
-      expect(result.current.isCompleted).toBe(true);
-      expect(result.current.shouldShowModal).toBe(false);
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        "langgraph_onboarding_completed",
-        "true",
+    it("should close onboarding", () => {
+      const { result } = renderHook(() => useOnboarding());
+      act(() => {
+        result.current.startOnboarding();
+      });
+      act(() => {
+        result.current.closeOnboarding();
+      });
+      expect(result.current.showOnboarding).toBe(false);
+    });
+  });
+
+  describe("step navigation", () => {
+    it("should start at step 0", () => {
+      const { result } = renderHook(() => useOnboarding());
+      act(() => {
+        result.current.startOnboarding();
+      });
+      expect(result.current.currentStep).toBe(0);
+    });
+
+    it("should advance to next step", () => {
+      const { result } = renderHook(() => useOnboarding());
+      act(() => {
+        result.current.startOnboarding();
+      });
+      act(() => {
+        result.current.nextStep();
+      });
+      expect(result.current.currentStep).toBe(1);
+    });
+
+    it("should go back to previous step", () => {
+      const { result } = renderHook(() => useOnboarding());
+      act(() => {
+        result.current.startOnboarding();
+      });
+      act(() => {
+        result.current.nextStep();
+        result.current.nextStep();
+      });
+      act(() => {
+        result.current.previousStep();
+      });
+      expect(result.current.currentStep).toBe(1);
+    });
+
+    it("should not go below step 0", () => {
+      const { result } = renderHook(() => useOnboarding());
+      act(() => {
+        result.current.startOnboarding();
+      });
+      act(() => {
+        result.current.previousStep();
+      });
+      expect(result.current.currentStep).toBe(0);
+    });
+
+    it("should go to specific step", () => {
+      const { result } = renderHook(() => useOnboarding());
+      act(() => {
+        result.current.startOnboarding();
+      });
+      act(() => {
+        result.current.goToStep(2);
+      });
+      expect(result.current.currentStep).toBe(2);
+    });
+  });
+
+  describe("completion", () => {
+    it("should complete onboarding", () => {
+      const { result } = renderHook(() => useOnboarding());
+      act(() => {
+        result.current.startOnboarding();
+      });
+      act(() => {
+        result.current.completeOnboarding();
+      });
+      expect(result.current.showOnboarding).toBe(false);
+      expect(result.current.isFirstTime).toBe(false);
+    });
+
+    it("should persist completion to localStorage", () => {
+      const { result } = renderHook(() => useOnboarding());
+      act(() => {
+        result.current.completeOnboarding();
+      });
+      expect(window.localStorage.setItem).toHaveBeenCalledWith(
+        "onboarding-state",
+        expect.stringContaining('"completed":true'),
       );
     });
   });
 
-  describe("skip()", () => {
-    it("should hide modal without persisting to localStorage", async () => {
-      localStorageMock.getItem.mockReturnValue(null);
+  describe("skip", () => {
+    it("should skip onboarding", () => {
       const { result } = renderHook(() => useOnboarding());
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
       act(() => {
-        result.current.skip();
+        result.current.startOnboarding();
       });
+      act(() => {
+        result.current.skipOnboarding();
+      });
+      expect(result.current.showOnboarding).toBe(false);
+    });
 
-      expect(result.current.isCompleted).toBe(true);
-      expect(result.current.shouldShowModal).toBe(false);
-      // Skip should not persist
-      expect(localStorageMock.setItem).not.toHaveBeenCalled();
+    it("should mark as completed when skipping", () => {
+      const { result } = renderHook(() => useOnboarding());
+      act(() => {
+        result.current.skipOnboarding();
+      });
+      expect(result.current.isFirstTime).toBe(false);
     });
   });
 
-  describe("reset()", () => {
-    it("should reset onboarding state", async () => {
-      localStorageMock.getItem.mockReturnValue("true");
+  describe("steps data", () => {
+    it("should provide onboarding steps", () => {
       const { result } = renderHook(() => useOnboarding());
+      expect(result.current.steps).toBeDefined();
+      expect(result.current.steps.length).toBeGreaterThan(0);
+    });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
+    it("should have step with title and description", () => {
+      const { result } = renderHook(() => useOnboarding());
+      const firstStep = result.current.steps[0];
+      expect(firstStep.title).toBeDefined();
+      expect(firstStep.description).toBeDefined();
+    });
 
+    it("should provide total steps count", () => {
+      const { result } = renderHook(() => useOnboarding());
+      expect(result.current.totalSteps).toBe(result.current.steps.length);
+    });
+
+    it("should track if on last step", () => {
+      const { result } = renderHook(() => useOnboarding());
       act(() => {
-        result.current.reset();
+        result.current.startOnboarding();
       });
-
-      expect(result.current.isCompleted).toBe(false);
-      expect(result.current.shouldShowModal).toBe(true);
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        "langgraph_onboarding_completed",
-      );
+      for (let i = 0; i < result.current.totalSteps - 1; i++) {
+        act(() => {
+          result.current.nextStep();
+        });
+      }
+      expect(result.current.isLastStep).toBe(true);
     });
   });
 
-  describe("localStorage Errors", () => {
-    it("should handle localStorage getItem errors gracefully", async () => {
-      localStorageMock.getItem.mockImplementation(() => {
-        throw new Error("localStorage not available");
-      });
-
+  describe("reset", () => {
+    it("should reset onboarding state", () => {
       const { result } = renderHook(() => useOnboarding());
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // Should default to completed (don't show modal on error)
-      expect(result.current.isCompleted).toBe(true);
-    });
-
-    it("should handle localStorage setItem errors gracefully", async () => {
-      localStorageMock.getItem.mockReturnValue(null);
-      localStorageMock.setItem.mockImplementation(() => {
-        throw new Error("localStorage full");
-      });
-
-      const { result } = renderHook(() => useOnboarding());
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // Should not throw
       act(() => {
-        result.current.complete();
+        result.current.completeOnboarding();
       });
-
-      // State should still update even if localStorage fails
-      expect(result.current.isCompleted).toBe(true);
+      act(() => {
+        result.current.resetOnboarding();
+      });
+      expect(result.current.isFirstTime).toBe(true);
     });
   });
 });

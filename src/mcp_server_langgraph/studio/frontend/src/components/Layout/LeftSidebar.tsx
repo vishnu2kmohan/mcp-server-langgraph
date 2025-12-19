@@ -604,10 +604,12 @@ export function LeftSidebar({
                     <NavLink
                       key={item.id}
                       to={item.path}
+                      aria-label={item.label}
                       className={({ isActive }) =>
                         cn(
                           "flex items-center gap-2 px-4 py-1.5 mx-2 rounded-md",
                           "text-sm transition-colors",
+                          "focus:outline-none focus:ring-2 focus:ring-primary-500",
                           isActive && "bg-primary-100 dark:bg-primary-900/30",
                           isActive && "text-primary-700 dark:text-primary-300",
                           !isActive && "text-gray-700 dark:text-gray-300",
@@ -616,8 +618,17 @@ export function LeftSidebar({
                         )
                       }
                     >
-                      {item.icon}
-                      <span>{item.label}</span>
+                      {({ isActive }) => (
+                        <>
+                          {isActive && (
+                            <span className="sr-only">Current page: </span>
+                          )}
+                          {item.icon}
+                          <span aria-current={isActive ? "page" : undefined}>
+                            {item.label}
+                          </span>
+                        </>
+                      )}
                     </NavLink>
                   ))}
                 </div>

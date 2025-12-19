@@ -50,7 +50,9 @@ describe("ThemeToggle", () => {
     it("should render the toggle button", () => {
       render(<ThemeToggle />);
 
-      expect(screen.getByRole("button", { name: /theme/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /theme/i }),
+      ).toBeInTheDocument();
     });
 
     it("should render with custom className", () => {
@@ -131,7 +133,13 @@ describe("ThemeToggle", () => {
   describe("dropdown mode", () => {
     it("should show dropdown when variant is dropdown", async () => {
       const user = userEvent.setup();
-      render(<ThemeToggle variant="dropdown" theme="light" onThemeChange={() => {}} />);
+      render(
+        <ThemeToggle
+          variant="dropdown"
+          theme="light"
+          onThemeChange={() => {}}
+        />,
+      );
 
       await user.click(screen.getByRole("button", { name: /theme/i }));
 
@@ -142,14 +150,26 @@ describe("ThemeToggle", () => {
 
     it("should show all theme options in dropdown", async () => {
       const user = userEvent.setup();
-      render(<ThemeToggle variant="dropdown" theme="light" onThemeChange={() => {}} />);
+      render(
+        <ThemeToggle
+          variant="dropdown"
+          theme="light"
+          onThemeChange={() => {}}
+        />,
+      );
 
       await user.click(screen.getByRole("button", { name: /theme/i }));
 
       await waitFor(() => {
-        expect(screen.getByRole("menuitem", { name: /light/i })).toBeInTheDocument();
-        expect(screen.getByRole("menuitem", { name: /dark/i })).toBeInTheDocument();
-        expect(screen.getByRole("menuitem", { name: /system/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("menuitem", { name: /light/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("menuitem", { name: /dark/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("menuitem", { name: /system/i }),
+        ).toBeInTheDocument();
       });
     });
 
@@ -157,7 +177,11 @@ describe("ThemeToggle", () => {
       const onThemeChange = vi.fn();
       const user = userEvent.setup();
       render(
-        <ThemeToggle variant="dropdown" theme="light" onThemeChange={onThemeChange} />,
+        <ThemeToggle
+          variant="dropdown"
+          theme="light"
+          onThemeChange={onThemeChange}
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /theme/i }));

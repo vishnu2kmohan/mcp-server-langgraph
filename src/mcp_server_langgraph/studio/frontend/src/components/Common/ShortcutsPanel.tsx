@@ -12,7 +12,14 @@
  * Based on UX patterns from Gemini CLI, OpenAI Codex, and Claude Code.
  */
 
-import { useState, useEffect, useRef, useMemo, useId, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useId,
+  useCallback,
+} from "react";
 import { Search, X, Keyboard } from "lucide-react";
 
 // ==============================================================================

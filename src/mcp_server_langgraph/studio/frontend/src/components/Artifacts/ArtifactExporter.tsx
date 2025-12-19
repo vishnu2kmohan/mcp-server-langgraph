@@ -12,19 +12,20 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Download, FileSpreadsheet, Image, FileCode, FileText, Loader2 } from "lucide-react";
+import {
+  Download,
+  FileSpreadsheet,
+  Image,
+  FileCode,
+  FileText,
+  Loader2,
+} from "lucide-react";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type ExportFormat =
-  | "csv"
-  | "excel"
-  | "png"
-  | "svg"
-  | "pdf"
-  | "code";
+export type ExportFormat = "csv" | "excel" | "png" | "svg" | "pdf" | "code";
 
 export type ArtifactType = "table" | "chart" | "mermaid" | "svg" | "json";
 
@@ -87,15 +88,17 @@ function arrayToCSV(data: Record<string, unknown>[]): string {
   const headerRow = headers.join(",");
 
   const rows = data.map((row) =>
-    headers.map((h) => {
-      const value = row[h];
-      // Escape quotes and wrap in quotes if contains comma
-      const str = String(value ?? "");
-      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    }).join(",")
+    headers
+      .map((h) => {
+        const value = row[h];
+        // Escape quotes and wrap in quotes if contains comma
+        const str = String(value ?? "");
+        if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      })
+      .join(","),
   );
 
   return [headerRow, ...rows].join("\n");
@@ -114,29 +117,29 @@ function arrayToExcel(data: Record<string, unknown>[]): string {
   xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ';
   xml += 'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
   xml += '  <Worksheet ss:Name="Sheet1">\n';
-  xml += '    <Table>\n';
+  xml += "    <Table>\n";
 
   // Header row
-  xml += '      <Row>\n';
+  xml += "      <Row>\n";
   headers.forEach((h) => {
     xml += `        <Cell><Data ss:Type="String">${escapeXml(h)}</Data></Cell>\n`;
   });
-  xml += '      </Row>\n';
+  xml += "      </Row>\n";
 
   // Data rows
   data.forEach((row) => {
-    xml += '      <Row>\n';
+    xml += "      <Row>\n";
     headers.forEach((h) => {
       const value = row[h];
       const type = typeof value === "number" ? "Number" : "String";
       xml += `        <Cell><Data ss:Type="${type}">${escapeXml(String(value ?? ""))}</Data></Cell>\n`;
     });
-    xml += '      </Row>\n';
+    xml += "      </Row>\n";
   });
 
-  xml += '    </Table>\n';
-  xml += '  </Worksheet>\n';
-  xml += '</Workbook>';
+  xml += "    </Table>\n";
+  xml += "  </Worksheet>\n";
+  xml += "</Workbook>";
 
   return xml;
 }
@@ -156,10 +159,11 @@ function escapeXml(str: string): string {
 /**
  * Convert SVG element to data URL
  */
-function svgToDataUrl(svgElement: SVGElement | string): string {
-  const svgString = typeof svgElement === "string"
-    ? svgElement
-    : new XMLSerializer().serializeToString(svgElement);
+function _svgToDataUrl(svgElement: SVGElement | string): string {
+  const svgString =
+    typeof svgElement === "string"
+      ? svgElement
+      : new XMLSerializer().serializeToString(svgElement);
 
   const encoded = encodeURIComponent(svgString);
   return `data:image/svg+xml,${encoded}`;
@@ -174,7 +178,7 @@ export function ArtifactExporter({
   data,
   elementRef,
   onExport,
-  filename = "export",
+  filename: _filename = "export",
   disabled = false,
   compact = false,
   className = "",
@@ -276,7 +280,7 @@ export function ArtifactExporter({
               svgContent = data as string;
             } else if (elementRef?.current) {
               svgContent = new XMLSerializer().serializeToString(
-                elementRef.current as SVGElement
+                elementRef.current as SVGElement,
               );
             } else {
               svgContent = data as string;
@@ -292,7 +296,7 @@ export function ArtifactExporter({
               svgContent = data;
             } else if (elementRef?.current) {
               svgContent = new XMLSerializer().serializeToString(
-                elementRef.current as SVGElement
+                elementRef.current as SVGElement,
               );
             } else {
               svgContent = "";
@@ -310,7 +314,7 @@ export function ArtifactExporter({
               content = data;
             } else if (elementRef?.current) {
               content = new XMLSerializer().serializeToString(
-                elementRef.current as SVGElement
+                elementRef.current as SVGElement,
               );
             } else {
               content = "";
@@ -334,7 +338,7 @@ export function ArtifactExporter({
         setIsLoading(false);
       }
     },
-    [artifactType, data, elementRef, onExport]
+    [artifactType, data, elementRef, onExport],
   );
 
   const buttonSize = compact ? "p-1" : "p-2";

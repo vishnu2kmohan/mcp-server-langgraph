@@ -77,7 +77,8 @@ export function ThemeToggle({
 
     if (isDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isDropdownOpen]);
 
@@ -170,7 +171,10 @@ export function ThemeToggle({
                   <OptionIcon size={16} className="flex-shrink-0" />
                   <span className="flex-1 text-left">{optionConfig.label}</span>
                   {isSelected && (
-                    <Check size={16} className="text-blue-600 dark:text-blue-400" />
+                    <Check
+                      size={16}
+                      className="text-blue-600 dark:text-blue-400"
+                    />
                   )}
                 </button>
               );

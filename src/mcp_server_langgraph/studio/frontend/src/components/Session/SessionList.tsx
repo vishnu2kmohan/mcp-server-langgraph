@@ -133,7 +133,8 @@ export function SessionList({
 
     if (activeMenuId) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [activeMenuId]);
 
@@ -206,14 +207,11 @@ export function SessionList({
     [onDelete],
   );
 
-  const handleStartRename = useCallback(
-    (session: SessionSummary) => {
-      setEditingId(session.id);
-      setEditName(session.name);
-      setActiveMenuId(null);
-    },
-    [],
-  );
+  const handleStartRename = useCallback((session: SessionSummary) => {
+    setEditingId(session.id);
+    setEditName(session.name);
+    setActiveMenuId(null);
+  }, []);
 
   const handleRenameSubmit = useCallback(
     (sessionId: string) => {

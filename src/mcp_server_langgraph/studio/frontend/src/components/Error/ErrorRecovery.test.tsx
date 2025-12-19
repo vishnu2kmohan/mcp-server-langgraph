@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
@@ -69,7 +69,9 @@ describe("ErrorRecovery", () => {
     it("should show retry button when onRetry is provided", () => {
       render(<ErrorRecovery error={mockError} onRetry={() => {}} />);
 
-      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /retry/i }),
+      ).toBeInTheDocument();
     });
 
     it("should call onRetry when retry button is clicked", async () => {
@@ -85,7 +87,9 @@ describe("ErrorRecovery", () => {
     it("should show dismiss button when onDismiss is provided", () => {
       render(<ErrorRecovery error={mockError} onDismiss={() => {}} />);
 
-      expect(screen.getByRole("button", { name: /dismiss/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /dismiss/i }),
+      ).toBeInTheDocument();
     });
 
     it("should call onDismiss when dismiss button is clicked", async () => {
@@ -101,7 +105,9 @@ describe("ErrorRecovery", () => {
     it("should show report button when onReport is provided", () => {
       render(<ErrorRecovery error={mockError} onReport={() => {}} />);
 
-      expect(screen.getByRole("button", { name: /report/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /report/i }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -113,7 +119,9 @@ describe("ErrorRecovery", () => {
     it("should show expand details button", () => {
       render(<ErrorRecovery error={mockError} />);
 
-      expect(screen.getByRole("button", { name: /details/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /details/i }),
+      ).toBeInTheDocument();
     });
 
     it("should expand details when button is clicked", async () => {
@@ -214,8 +222,12 @@ describe("ErrorRecovery", () => {
       ];
       render(<ErrorRecovery error={mockError} suggestions={suggestions} />);
 
-      expect(screen.getByText("Check your internet connection")).toBeInTheDocument();
-      expect(screen.getByText("Try again in a few minutes")).toBeInTheDocument();
+      expect(
+        screen.getByText("Check your internet connection"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Try again in a few minutes"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -240,7 +252,10 @@ describe("ErrorRecovery", () => {
     it("should have proper aria-live", () => {
       render(<ErrorRecovery error={mockError} />);
 
-      expect(screen.getByRole("alert")).toHaveAttribute("aria-live", "assertive");
+      expect(screen.getByRole("alert")).toHaveAttribute(
+        "aria-live",
+        "assertive",
+      );
     });
 
     it("should have proper heading", () => {

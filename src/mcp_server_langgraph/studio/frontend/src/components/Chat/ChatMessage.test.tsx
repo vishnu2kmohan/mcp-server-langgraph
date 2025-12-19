@@ -500,8 +500,16 @@ Conclusion text.`;
 
   describe("AI Follow-Up Suggestions", () => {
     const mockSuggestions = [
-      { id: "s1", text: "Tell me more about this", category: "explore" as const },
-      { id: "s2", text: "Can you give an example?", category: "example" as const },
+      {
+        id: "s1",
+        text: "Tell me more about this",
+        category: "explore" as const,
+      },
+      {
+        id: "s2",
+        text: "Can you give an example?",
+        category: "example" as const,
+      },
     ];
 
     it("should display follow-up suggestions for assistant messages", () => {
@@ -560,7 +568,9 @@ Conclusion text.`;
         />,
       );
 
-      expect(screen.queryByTestId("follow-up-suggestions")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("follow-up-suggestions"),
+      ).not.toBeInTheDocument();
     });
 
     it("should not display suggestions when loading", () => {
@@ -575,7 +585,9 @@ Conclusion text.`;
         />,
       );
 
-      expect(screen.queryByTestId("follow-up-suggestions")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("follow-up-suggestions"),
+      ).not.toBeInTheDocument();
     });
 
     it("should show loading state for suggestions", () => {
@@ -603,7 +615,9 @@ Conclusion text.`;
         />,
       );
 
-      expect(screen.queryByTestId("follow-up-suggestions")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("follow-up-suggestions"),
+      ).not.toBeInTheDocument();
     });
 
     it("should position suggestions after sources if both present", () => {
@@ -620,8 +634,12 @@ Conclusion text.`;
         />,
       );
 
-      const sourcesSection = container.querySelector('[data-testid="sources-section"]');
-      const suggestionsSection = container.querySelector('[data-testid="follow-up-suggestions"]');
+      const sourcesSection = container.querySelector(
+        '[data-testid="sources-section"]',
+      );
+      const suggestionsSection = container.querySelector(
+        '[data-testid="follow-up-suggestions"]',
+      );
 
       expect(sourcesSection).toBeInTheDocument();
       expect(suggestionsSection).toBeInTheDocument();

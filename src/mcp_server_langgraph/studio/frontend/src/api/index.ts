@@ -70,10 +70,19 @@ import type {
   AddProjectMemberRequest,
   RemoveProjectMemberRequest,
   AddProjectConnectionRequest,
-  // AI Suggestions
+  // AI Suggestions (legacy - deprecated)
   SuggestionRequest,
   AISuggestion,
   SuggestionsResponse,
+  // Unified AI Suggestions (new endpoint)
+  UnifiedSuggestionsRequest,
+  UnifiedSuggestionsResponse,
+  ChatFollowUpSuggestion,
+  // Suggestion Analytics
+  SuggestionClickRequest,
+  SuggestionClickResponse,
+  SuggestionFeedbackRequest,
+  SuggestionFeedbackResponse,
   // Node Config Assistant
   NodeConfigHelpRequest,
   NodeConfigHelpResponse,
@@ -1159,13 +1168,66 @@ export const api = createApi({
       query: () => "/studio/templates",
     }),
 
-    // AI Suggestions
+    // AI Suggestions (legacy - deprecated, use getAISuggestions instead)
     getWorkflowSuggestions: builder.mutation<
       SuggestionsResponse,
       SuggestionRequest
     >({
       query: (body) => ({
         url: "/studio/suggestions",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // Unified AI Suggestions (new endpoint)
+    getAISuggestions: builder.mutation<
+      UnifiedSuggestionsResponse,
+      UnifiedSuggestionsRequest
+    >({
+      query: (body) => ({
+        url: "/ai/suggestions",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // Chat Follow-Up Suggestions (convenience wrapper)
+    getChatFollowUpSuggestions: builder.mutation<
+      { suggestions: ChatFollowUpSuggestion[] },
+      { content: string; session_id?: string; max_suggestions?: number }
+    >({
+      query: ({ content, session_id, max_suggestions = 4 }) => ({
+        url: "/ai/suggestions",
+        method: "POST",
+        body: {
+          type: "chat_followup",
+          content,
+          session_id,
+          max_suggestions,
+        },
+      }),
+    }),
+
+    // Track Suggestion Clicks (analytics)
+    trackSuggestionClick: builder.mutation<
+      SuggestionClickResponse,
+      SuggestionClickRequest
+    >({
+      query: (body) => ({
+        url: "/ai/suggestions/click",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // Submit Suggestion Feedback (thumbs up/down)
+    submitSuggestionFeedback: builder.mutation<
+      SuggestionFeedbackResponse,
+      SuggestionFeedbackRequest
+    >({
+      query: (body) => ({
+        url: "/ai/suggestions/feedback",
         method: "POST",
         body,
       }),
@@ -1178,6 +1240,25 @@ export const api = createApi({
     >({
       query: (body) => ({
         url: "/ai/node-config/help",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // URL Content Fetch (OpenWebUI-style "#URL" integration)
+    fetchUrlContent: builder.mutation<
+      {
+        url: string;
+        title: string | null;
+        content: string;
+        content_type: string;
+        content_length: number;
+        truncated: boolean;
+      },
+      { url: string }
+    >({
+      query: (body) => ({
+        url: "/ai/fetch-url",
         method: "POST",
         body,
       }),
@@ -1923,10 +2004,18 @@ export const {
   useGetHeartMetricsQuery,
   // Workflow Templates
   useGetWorkflowTemplatesQuery,
-  // AI Suggestions
+  // AI Suggestions (legacy - deprecated)
   useGetWorkflowSuggestionsMutation,
+  // Unified AI Suggestions (new)
+  useGetAISuggestionsMutation,
+  useGetChatFollowUpSuggestionsMutation,
+  // Suggestion Analytics
+  useTrackSuggestionClickMutation,
+  useSubmitSuggestionFeedbackMutation,
   // Node Config Assistant
   useGetNodeConfigHelpMutation,
+  // URL Content Fetch
+  useFetchUrlContentMutation,
   // User Info
   useGetCurrentUserQuery,
   // Auth (Native Login/Logout)

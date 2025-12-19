@@ -5,4 +5,7 @@
  */
 
 export { ProjectContextBadge } from "./ProjectContextBadge";
-export type { ProjectContextBadgeProps, BadgeSize } from "./ProjectContextBadge";
+export type {
+  ProjectContextBadgeProps,
+  BadgeSize,
+} from "./ProjectContextBadge";

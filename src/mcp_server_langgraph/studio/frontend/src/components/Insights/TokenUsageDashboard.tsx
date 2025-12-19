@@ -217,7 +217,7 @@ export function TokenUsageDashboard({
     totalTokens,
     estimatedCost,
     contextWindowSize,
-    contextWindowUsage,
+    contextWindowUsage: _contextWindowUsage,
     isContextWindowNearLimit,
     history,
     refresh,

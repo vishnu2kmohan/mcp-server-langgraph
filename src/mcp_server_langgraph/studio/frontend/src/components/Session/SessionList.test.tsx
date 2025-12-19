@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
@@ -109,7 +109,9 @@ describe("SessionList", () => {
     });
 
     it("should render create new session button when onCreate is provided", () => {
-      renderWithProvider(<SessionList sessions={mockSessions} onCreate={() => {}} />);
+      renderWithProvider(
+        <SessionList sessions={mockSessions} onCreate={() => {}} />,
+      );
 
       expect(
         screen.getByRole("button", { name: /new session/i }),
@@ -279,7 +281,9 @@ describe("SessionList", () => {
 
       // Enter new name - search input is visible, so get the one inside the session item
       const inputs = screen.getAllByRole("textbox");
-      const renameInput = inputs.find(input => !input.hasAttribute("placeholder"));
+      const renameInput = inputs.find(
+        (input) => !input.hasAttribute("placeholder"),
+      );
       await user.clear(renameInput!);
       await user.type(renameInput!, "New Name");
       await user.keyboard("{Enter}");
@@ -305,7 +309,9 @@ describe("SessionList", () => {
       });
       await user.click(actionsButton);
 
-      expect(screen.getByRole("menuitem", { name: /pin/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("menuitem", { name: /pin/i }),
+      ).toBeInTheDocument();
     });
 
     it("should show pinned sessions at top", () => {

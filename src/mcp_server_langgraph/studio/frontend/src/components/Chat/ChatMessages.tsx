@@ -22,6 +22,19 @@ import {
   Copy,
   Check,
   AlertCircle,
+  GitBranch,
+  // ChevronDown (unused),
+  // ChevronUp (unused),
+  Play,
+  Square,
+  Wrench,
+  GitFork,
+  Bot,
+  Circle,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  ArrowRight,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -38,6 +51,12 @@ import {
   HallucinationIndicator,
   type HallucinationReport,
 } from "./HallucinationIndicator";
+// LLM native thinking trace display (for Claude Opus 4.5, Gemini 2.5, etc.)
+import { LLMThinkingTrace } from "./LLMThinkingTrace";
+import {
+  AIFollowUpSuggestions,
+  type FollowUpSuggestion,
+} from "./AIFollowUpSuggestions";
 // Interactive renderers for diagrams and charts
 import { InteractiveMermaidDiagram } from "./InteractiveMermaidDiagram";
 import { InteractiveChart, type ChartData } from "./InteractiveChart";
@@ -62,20 +81,96 @@ export interface Message {
   confidence?: number;
   /** Whether this message has been flagged for hallucination */
   isReported?: boolean;
+  /** LLM thinking/reasoning content (from Claude extended thinking, Gemini thinking_content, etc.) */
+  thinkingContent?: string;
+  /** Number of tokens used for thinking/reasoning */
+  thinkingTokens?: number;
+  /** Model name that generated this message */
+  modelName?: string;
 }
 
-export interface ThinkingTrace {
+/**
+ * LangGraph node types for visualization
+ */
+export type LangGraphNodeType =
+  | "start"
+  | "end"
+  | "tool"
+  | "conditional"
+  | "agent"
+  | "default";
+
+/**
+ * LangGraph node status
+ */
+export type LangGraphNodeStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "error"
+  | "skipped";
+
+/**
+ * LangGraph node for execution visualization
+ */
+export interface LangGraphNode {
+  id: string;
+  name: string;
+  type: LangGraphNodeType;
+  status: LangGraphNodeStatus;
+  /** Duration in milliseconds */
+  duration?: number;
+  /** Tool/function output if applicable */
+  output?: string;
+}
+
+/**
+ * LangGraph edge connecting nodes
+ */
+export interface LangGraphEdge {
+  from: string;
+  to: string;
+  /** Condition label for conditional edges */
+  condition?: string;
+}
+
+/**
+ * Agent execution trace (distinct from LLM thinking content)
+ * Tracks agent steps, token usage, and raw output for observability.
+ * Supports LangGraph node/edge visualization.
+ */
+export interface AgentExecutionTrace {
   rawOutput?: string;
   steps?: Array<{ name: string; status: string; duration?: number }>;
   tokens?: { input: number; output: number };
+  /** LangGraph nodes for graph visualization */
+  nodes?: LangGraphNode[];
+  /** LangGraph edges connecting nodes */
+  edges?: LangGraphEdge[];
+  /** Currently active node ID */
+  currentNode?: string;
 }
+
+/**
+ * @deprecated Use AgentExecutionTrace instead. Renamed for clarity.
+ */
+export type AgentTrace = AgentExecutionTrace;
+
+/**
+ * @deprecated Use AgentExecutionTrace instead. Renamed to clarify distinction from LLM thinking.
+ */
+export type ThinkingTrace = AgentExecutionTrace;
+
+// Re-export FollowUpSuggestion type for consumers
+export type { FollowUpSuggestion };
 
 export interface ChatMessagesProps {
   messages: Message[];
   isStreaming?: boolean;
   streamingContent?: string;
   isSending?: boolean;
-  thinkingTrace?: ThinkingTrace;
+  /** Agent execution trace (steps, tokens, raw output). Distinct from LLM thinking. */
+  agentExecutionTrace?: AgentExecutionTrace;
   /** Callback when user reports a hallucination */
   onReportHallucination?: (report: HallucinationReport) => void;
   /** Enable interactive artifact rendering (mermaid, charts, SVG, etc.). Default: true */
@@ -88,6 +183,31 @@ export interface ChatMessagesProps {
   onDeleteMessage?: (messageId: string) => void;
   /** Whether a message is being regenerated */
   isRegenerating?: boolean;
+  // LLM native thinking trace props (for extended thinking models like Claude Opus 4.5, Gemini 2.5)
+  /** LLM native thinking/reasoning content */
+  llmThinkingContent?: string;
+  /** Number of thinking tokens used */
+  llmThinkingTokens?: number;
+  /** Whether thinking trace is expanded */
+  isThinkingExpanded?: boolean;
+  /** Callback to toggle thinking trace expansion */
+  onToggleThinking?: () => void;
+  /** LLM model name for display */
+  llmModelName?: string;
+  /** Whether the current model supports extended thinking */
+  isThinkingModel?: boolean;
+  // AI Follow-Up Suggestions props
+  /** Follow-up suggestions to display after the last assistant message */
+  suggestions?: FollowUpSuggestion[];
+  /** Callback when a suggestion is selected */
+  onSuggestionSelect?: (suggestion: FollowUpSuggestion) => void;
+  /** Callback when feedback is provided on a suggestion (thumbs up/down) */
+  onSuggestionFeedback?: (
+    suggestion: FollowUpSuggestion,
+    feedback: "positive" | "negative",
+  ) => void;
+  /** Whether suggestions are loading */
+  suggestionsLoading?: boolean;
 }
 
 /**
@@ -203,15 +323,21 @@ function CodeBlock({
   return (
     <div className="relative group my-2">
       {/* Toolbar */}
-      <div className="absolute right-2 top-2 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div
+        className="absolute right-2 top-2 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+        role="toolbar"
+        aria-label="Code block actions"
+      >
         <button
           onClick={handleToggleWordWrap}
-          className={`p-1.5 rounded transition-colors ${
+          className={`p-1.5 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             wordWrap
               ? "bg-blue-600 text-white"
               : "bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white"
           }`}
           title="Toggle word wrap"
+          aria-label={wordWrap ? "Disable word wrap" : "Enable word wrap"}
+          aria-pressed={wordWrap}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -223,6 +349,7 @@ function CodeBlock({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <line x1="3" y1="6" x2="21" y2="6" />
             <path d="M3 12h15a3 3 0 1 1 0 6h-4" />
@@ -232,8 +359,9 @@ function CodeBlock({
         </button>
         <button
           onClick={handleDownload}
-          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors"
+          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
           title="Download file"
+          aria-label="Download code as file"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -245,6 +373,7 @@ function CodeBlock({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="7 10 12 15 17 10" />
@@ -253,10 +382,17 @@ function CodeBlock({
         </button>
         <button
           onClick={handleCopy}
-          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors"
+          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
           title="Copy code"
+          aria-label={
+            copied ? "Code copied to clipboard" : "Copy code to clipboard"
+          }
         >
-          {copied ? <Check size={14} /> : <Copy size={14} />}
+          {copied ? (
+            <Check size={14} aria-hidden="true" />
+          ) : (
+            <Copy size={14} aria-hidden="true" />
+          )}
         </button>
       </div>
       {language && (
@@ -283,6 +419,197 @@ function CodeBlock({
     </div>
   );
 }
+
+// =============================================================================
+// LangGraph Node Visualization
+// =============================================================================
+
+interface LangGraphNodeVisualizationProps {
+  nodes: LangGraphNode[];
+  edges?: LangGraphEdge[];
+  currentNode?: string;
+}
+
+/**
+ * Get icon for node type
+ */
+function getNodeTypeIcon(type: LangGraphNodeType, size: number = 14) {
+  const iconProps = { size, className: "flex-shrink-0" };
+  switch (type) {
+    case "start":
+      return <Play {...iconProps} data-testid="node-type-start" />;
+    case "end":
+      return <Square {...iconProps} data-testid="node-type-end" />;
+    case "tool":
+      return <Wrench {...iconProps} data-testid="node-type-tool" />;
+    case "conditional":
+      return <GitFork {...iconProps} data-testid="node-type-conditional" />;
+    case "agent":
+      return <Bot {...iconProps} data-testid="node-type-agent" />;
+    default:
+      return <Circle {...iconProps} data-testid="node-type-default" />;
+  }
+}
+
+/**
+ * Get status indicator for node
+ */
+function getNodeStatusIndicator(status: LangGraphNodeStatus) {
+  switch (status) {
+    case "completed":
+      return (
+        <CheckCircle
+          size={12}
+          className="text-green-500"
+          data-testid="node-status-completed"
+        />
+      );
+    case "running":
+      return (
+        <Loader2
+          size={12}
+          className="text-blue-500 animate-spin"
+          data-testid="node-status-running"
+        />
+      );
+    case "error":
+      return (
+        <XCircle
+          size={12}
+          className="text-red-500"
+          data-testid="node-status-error"
+        />
+      );
+    case "pending":
+      return (
+        <Circle
+          size={12}
+          className="text-gray-400"
+          data-testid="node-status-pending"
+        />
+      );
+    case "skipped":
+      return (
+        <Circle
+          size={12}
+          className="text-gray-300 opacity-50"
+          data-testid="node-status-skipped"
+        />
+      );
+  }
+}
+
+/**
+ * Get node background color based on type and status
+ */
+function getNodeColor(
+  type: LangGraphNodeType,
+  status: LangGraphNodeStatus,
+): string {
+  if (status === "error")
+    return "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700";
+  if (status === "running")
+    return "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700";
+  if (status === "completed")
+    return "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700";
+
+  switch (type) {
+    case "start":
+      return "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700";
+    case "end":
+      return "bg-slate-50 dark:bg-slate-900/20 border-slate-300 dark:border-slate-700";
+    case "conditional":
+      return "bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700";
+    case "tool":
+      return "bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700";
+    case "agent":
+      return "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700";
+    default:
+      return "bg-gray-50 dark:bg-gray-900/20 border-gray-300 dark:border-gray-700";
+  }
+}
+
+/**
+ * LangGraph node visualization component
+ * Displays a visual representation of the workflow execution
+ */
+function LangGraphNodeVisualization({
+  nodes,
+  edges = [],
+  currentNode,
+}: LangGraphNodeVisualizationProps) {
+  return (
+    <div
+      data-testid="langgraph-node-visualization"
+      className="flex flex-col gap-2"
+    >
+      {/* Node list with edges */}
+      {nodes.map((node, index) => {
+        const isActive = node.id === currentNode;
+        const outgoingEdges = edges.filter((e) => e.from === node.id);
+
+        return (
+          <div key={node.id} className="flex flex-col">
+            {/* Node */}
+            <div
+              data-testid={`node-${node.id}`}
+              className={`
+                flex items-center gap-2 px-3 py-2 rounded-lg border
+                ${getNodeColor(node.type, node.status)}
+                ${isActive ? "ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-900" : ""}
+                transition-all duration-200
+              `}
+            >
+              {/* Type icon */}
+              <span className="text-gray-600 dark:text-gray-400">
+                {getNodeTypeIcon(node.type)}
+              </span>
+
+              {/* Name */}
+              <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">
+                {node.name}
+              </span>
+
+              {/* Duration */}
+              {node.duration !== undefined && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {node.duration}ms
+                </span>
+              )}
+
+              {/* Status indicator */}
+              {getNodeStatusIndicator(node.status)}
+            </div>
+
+            {/* Edges from this node */}
+            {outgoingEdges.length > 0 && index < nodes.length - 1 && (
+              <div className="flex flex-col gap-1 ml-4 my-1">
+                {outgoingEdges.map((edge) => (
+                  <div
+                    key={`${edge.from}-${edge.to}`}
+                    data-testid={`edge-${edge.from}-to-${edge.to}`}
+                    className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500"
+                  >
+                    <ArrowRight size={10} />
+                    {edge.condition && (
+                      <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">
+                        {edge.condition}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// =============================================================================
+// Markdown Content
+// =============================================================================
 
 interface MarkdownContentProps {
   content: string;
@@ -530,16 +857,32 @@ export function ChatMessages({
   isStreaming = false,
   streamingContent = "",
   isSending = false,
-  thinkingTrace,
+  agentExecutionTrace,
   onReportHallucination,
   enableInteractiveArtifacts = true,
   onEditMessage,
   onRegenerateMessage,
   onDeleteMessage,
   isRegenerating = false,
+  // LLM native thinking trace props
+  llmThinkingContent = "",
+  llmThinkingTokens,
+  isThinkingExpanded = false,
+  onToggleThinking,
+  llmModelName,
+  isThinkingModel = false,
+  // AI Follow-Up Suggestions props
+  suggestions = [],
+  onSuggestionSelect,
+  onSuggestionFeedback,
+  suggestionsLoading = false,
 }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [showThinkingTrace, setShowThinkingTrace] = useState(false);
+  const [showAgentExecutionTrace, setShowAgentExecutionTrace] = useState(false);
+
+  // Determine if we should show the LLM thinking trace
+  const showLLMThinkingTrace =
+    llmThinkingContent && llmThinkingContent.trim().length > 0;
 
   // Auto-scroll to bottom when messages or streaming content change
   useEffect(() => {
@@ -675,6 +1018,23 @@ export function ChatMessages({
         </div>
       ))}
 
+      {/* LLM Native Thinking Trace - displayed during streaming when thinking content is present */}
+      {showLLMThinkingTrace && onToggleThinking && (
+        <div className="flex justify-start">
+          <div className="max-w-[70%]">
+            <LLMThinkingTrace
+              thinkingContent={llmThinkingContent}
+              isExpanded={isThinkingExpanded}
+              onToggle={onToggleThinking}
+              thinkingTokens={llmThinkingTokens}
+              modelName={llmModelName}
+              isThinkingModel={isThinkingModel}
+              isStreaming={isStreaming}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Streaming response with markdown rendering */}
       {isStreaming && (
         <div className="flex justify-start">
@@ -689,81 +1049,115 @@ export function ChatMessages({
               </div>
             ) : (
               <div className="space-y-2">
-                {/* Clickable thinking indicator */}
-                <button
-                  onClick={() => setShowThinkingTrace(!showThinkingTrace)}
-                  className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                  aria-expanded={showThinkingTrace}
-                  aria-label="Toggle thinking trace"
-                >
-                  <RefreshCw size={16} className="animate-spin" />
-                  <span>Thinking...</span>
-                  <span className="text-xs text-blue-500 hover:text-blue-600">
-                    {showThinkingTrace ? "Hide trace" : "Show trace"}
-                  </span>
-                </button>
+                {/* Processing indicator with agent trace toggle */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                    <RefreshCw size={16} className="animate-spin" />
+                    <span>Processing...</span>
+                  </div>
+                  {/* Agent trace toggle button (graph icon) */}
+                  <button
+                    onClick={() =>
+                      setShowAgentExecutionTrace(!showAgentExecutionTrace)
+                    }
+                    className={`p-1.5 rounded transition-colors ${
+                      showAgentExecutionTrace
+                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                        : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                    aria-expanded={showAgentExecutionTrace}
+                    aria-label="Toggle agent execution trace"
+                    title={
+                      showAgentExecutionTrace
+                        ? "Hide execution trace"
+                        : "Show execution trace"
+                    }
+                  >
+                    <GitBranch size={14} />
+                  </button>
+                </div>
 
                 {/* Thinking trace panel */}
-                {showThinkingTrace && thinkingTrace && (
+                {showAgentExecutionTrace && agentExecutionTrace && (
                   <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-xs font-mono">
-                    {/* Steps visualization */}
-                    {thinkingTrace.steps && thinkingTrace.steps.length > 0 && (
-                      <div className="mb-2">
-                        <p className="text-gray-500 dark:text-gray-400 mb-1 font-sans text-xs font-semibold">
-                          Execution Steps:
-                        </p>
-                        <ul className="space-y-1">
-                          {thinkingTrace.steps.map((step, i) => (
-                            <li key={i} className="flex items-center gap-2">
-                              <span
-                                className={`w-2 h-2 rounded-full ${
-                                  step.status === "completed"
-                                    ? "bg-green-500"
-                                    : step.status === "running"
-                                      ? "bg-blue-500 animate-pulse"
-                                      : "bg-gray-400"
-                                }`}
-                              />
-                              <span className="text-gray-700 dark:text-gray-300">
-                                {step.name}
-                              </span>
-                              {step.duration && (
-                                <span className="text-gray-400">
-                                  ({step.duration}ms)
+                    {/* LangGraph Node Visualization - when nodes are provided */}
+                    {agentExecutionTrace.nodes &&
+                      agentExecutionTrace.nodes.length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-gray-500 dark:text-gray-400 mb-2 font-sans text-xs font-semibold">
+                            Workflow Execution:
+                          </p>
+                          <LangGraphNodeVisualization
+                            nodes={agentExecutionTrace.nodes}
+                            edges={agentExecutionTrace.edges}
+                            currentNode={agentExecutionTrace.currentNode}
+                          />
+                        </div>
+                      )}
+
+                    {/* Simple Steps visualization - fallback when no nodes */}
+                    {(!agentExecutionTrace.nodes ||
+                      agentExecutionTrace.nodes.length === 0) &&
+                      agentExecutionTrace.steps &&
+                      agentExecutionTrace.steps.length > 0 && (
+                        <div className="mb-2">
+                          <p className="text-gray-500 dark:text-gray-400 mb-1 font-sans text-xs font-semibold">
+                            Execution Steps:
+                          </p>
+                          <ul className="space-y-1">
+                            {agentExecutionTrace.steps.map((step, i) => (
+                              <li key={i} className="flex items-center gap-2">
+                                <span
+                                  className={`w-2 h-2 rounded-full ${
+                                    step.status === "completed"
+                                      ? "bg-green-500"
+                                      : step.status === "running"
+                                        ? "bg-blue-500 animate-pulse"
+                                        : "bg-gray-400"
+                                  }`}
+                                />
+                                <span className="text-gray-700 dark:text-gray-300">
+                                  {step.name}
                                 </span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                                {step.duration && (
+                                  <span className="text-gray-400">
+                                    ({step.duration}ms)
+                                  </span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
 
                     {/* Token usage */}
-                    {thinkingTrace.tokens && (
+                    {agentExecutionTrace.tokens && (
                       <div className="mb-2 flex gap-4 text-gray-500 dark:text-gray-400">
-                        <span>Input: {thinkingTrace.tokens.input} tokens</span>
                         <span>
-                          Output: {thinkingTrace.tokens.output} tokens
+                          Input: {agentExecutionTrace.tokens.input} tokens
+                        </span>
+                        <span>
+                          Output: {agentExecutionTrace.tokens.output} tokens
                         </span>
                       </div>
                     )}
 
                     {/* Raw output */}
-                    {thinkingTrace.rawOutput && (
+                    {agentExecutionTrace.rawOutput && (
                       <details className="mt-2">
                         <summary className="cursor-pointer text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 font-sans">
                           Raw Output
                         </summary>
                         <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-                          {thinkingTrace.rawOutput}
+                          {agentExecutionTrace.rawOutput}
                         </pre>
                       </details>
                     )}
 
                     {/* Fallback when no trace data */}
-                    {!thinkingTrace.steps &&
-                      !thinkingTrace.tokens &&
-                      !thinkingTrace.rawOutput && (
+                    {!agentExecutionTrace.steps &&
+                      !agentExecutionTrace.tokens &&
+                      !agentExecutionTrace.rawOutput && (
                         <p className="text-gray-400 italic font-sans">
                           Processing... trace data will appear here.
                         </p>
@@ -772,7 +1166,7 @@ export function ChatMessages({
                 )}
 
                 {/* Placeholder when trace toggle is on but no data */}
-                {showThinkingTrace && !thinkingTrace && (
+                {showAgentExecutionTrace && !agentExecutionTrace && (
                   <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-xs">
                     <p className="text-gray-400 italic">
                       Trace data not available. Enable verbose mode in settings
@@ -790,22 +1184,52 @@ export function ChatMessages({
       {isSending && !isStreaming && (
         <div className="flex justify-start">
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 rounded-lg">
-            <button
-              onClick={() => setShowThinkingTrace(!showThinkingTrace)}
-              className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-              aria-expanded={showThinkingTrace}
-            >
-              <RefreshCw size={16} className="animate-spin" />
-              <span>Thinking...</span>
-              <span className="text-xs text-blue-500 hover:text-blue-600">
-                {showThinkingTrace ? "Hide trace" : "Show trace"}
-              </span>
-            </button>
-            {showThinkingTrace && (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                <RefreshCw size={16} className="animate-spin" />
+                <span>Processing...</span>
+              </div>
+              {/* Agent trace toggle button (graph icon) */}
+              <button
+                onClick={() =>
+                  setShowAgentExecutionTrace(!showAgentExecutionTrace)
+                }
+                className={`p-1.5 rounded transition-colors ${
+                  showAgentExecutionTrace
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                    : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                }`}
+                aria-expanded={showAgentExecutionTrace}
+                aria-label="Toggle agent execution trace"
+                title={
+                  showAgentExecutionTrace
+                    ? "Hide execution trace"
+                    : "Show execution trace"
+                }
+              >
+                <GitBranch size={14} />
+              </button>
+            </div>
+            {showAgentExecutionTrace && (
               <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-xs text-gray-400 italic">
                 Waiting for trace data...
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* AI Follow-Up Suggestions - show after all messages when not streaming */}
+      {!isStreaming && !isSending && onSuggestionSelect && (
+        <div className="flex justify-start">
+          <div className="max-w-[70%]">
+            <AIFollowUpSuggestions
+              suggestions={suggestions}
+              onSelect={onSuggestionSelect}
+              onFeedback={onSuggestionFeedback}
+              isLoading={suggestionsLoading}
+              compact={true}
+            />
           </div>
         </div>
       )}

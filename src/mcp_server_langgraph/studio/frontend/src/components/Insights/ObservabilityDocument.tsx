@@ -21,6 +21,9 @@ import {
   RefreshCw,
   Clock,
   Server,
+  X,
+  MessageSquare,
+  GitBranch,
 } from "lucide-react";
 import {
   useListTracesQuery,
@@ -46,6 +49,12 @@ export interface ObservabilityDocumentProps {
   compact?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /** Session ID to filter traces/logs by */
+  sessionId?: string;
+  /** Workflow ID to filter traces/logs by */
+  workflowId?: string;
+  /** Callback when context filter is cleared */
+  onClearContext?: () => void;
 }
 
 type ObservabilityTab = "traces" | "logs" | "metrics";
@@ -57,6 +66,9 @@ type ObservabilityTab = "traces" | "logs" | "metrics";
 export function ObservabilityDocument({
   compact = false,
   className,
+  sessionId,
+  workflowId,
+  onClearContext,
 }: ObservabilityDocumentProps) {
   const [activeTab, setActiveTab] = useState<ObservabilityTab>("traces");
 
@@ -92,6 +104,8 @@ export function ObservabilityDocument({
     limit: 50,
     status: statusFilter || undefined,
     start_time: getTimeRange(),
+    session_id: sessionId,
+    workflow_id: workflowId,
   });
 
   const {
@@ -192,6 +206,40 @@ export function ObservabilityDocument({
             Refresh
           </button>
         </div>
+
+        {/* Context Indicator */}
+        {(sessionId || workflowId) && (
+          <div
+            data-testid="context-indicator"
+            className="mt-3 flex items-center gap-2 flex-wrap"
+          >
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Filtered by:
+            </span>
+            {sessionId && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full text-sm">
+                <MessageSquare size={14} />
+                {sessionId}
+              </span>
+            )}
+            {workflowId && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full text-sm">
+                <GitBranch size={14} />
+                {workflowId}
+              </span>
+            )}
+            {onClearContext && (
+              <button
+                data-testid="clear-context-filter"
+                onClick={onClearContext}
+                className="inline-flex items-center gap-1 px-2 py-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              >
+                <X size={14} />
+                Clear
+              </button>
+            )}
+          </div>
+        )}
       </header>
 
       {/* Tabs */}

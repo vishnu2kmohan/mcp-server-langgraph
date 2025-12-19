@@ -67,23 +67,44 @@ const nodeTypes: NodeTypes = {
   end: EndNode,
 };
 
-export function WorkflowCanvas() {
+// =============================================================================
+// Types
+// =============================================================================
+
+export interface WorkflowCanvasProps {
+  /** Node ID to highlight (from ExecutionTracePanel hover) */
+  highlightedNodeId?: string | null;
+}
+
+// =============================================================================
+// Component
+// =============================================================================
+
+export function WorkflowCanvas({
+  highlightedNodeId,
+}: WorkflowCanvasProps = {}) {
   const dispatch = useAppDispatch();
   const storeNodes = useAppSelector(selectWorkflowNodes);
   const storeEdges = useAppSelector(selectWorkflowEdges);
   const nodeStatuses = useAppSelector(selectNodeStatuses);
 
-  // Sync nodes with status from store
+  // Sync nodes with status and highlighting from store
   const nodesWithStatus = useMemo(() => {
     return (storeNodes || []).map((node) => ({
       ...node,
       type: node.data.nodeType, // Use nodeType as React Flow type
+      // Apply highlight styling when node matches highlightedNodeId
+      className:
+        highlightedNodeId === node.id
+          ? "ring-2 ring-blue-500 ring-offset-2"
+          : undefined,
       data: {
         ...node.data,
         status: nodeStatuses?.[node.id] || node.data.status || "idle",
+        isHighlighted: highlightedNodeId === node.id,
       },
     }));
-  }, [storeNodes, nodeStatuses]);
+  }, [storeNodes, nodeStatuses, highlightedNodeId]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(nodesWithStatus);
   const [edges, setEdges, onEdgesChange] = useEdgesState(storeEdges || []);

@@ -521,4 +521,323 @@ describe("useStreamingChat", () => {
       expect(result.current.model).toBeNull();
     });
   });
+
+  describe("Thinking Content (LLM Reasoning Trace)", () => {
+    it("should start with empty thinking content", () => {
+      const { result } = renderHook(() => useStreamingChat());
+
+      expect(result.current.thinkingContent).toBe("");
+    });
+
+    it("should parse thinking content from Claude-style response", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"thinking":"Let me analyze this step by step..."}\n\n',
+          'data: {"content":"Here is my answer."}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.thinkingContent).toBe(
+        "Let me analyze this step by step...",
+      );
+      expect(result.current.streamingContent).toBe("Here is my answer.");
+    });
+
+    it("should accumulate thinking content across multiple chunks", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"thinking":"First, "}\n\n',
+          'data: {"thinking":"I need to consider "}\n\n',
+          'data: {"thinking":"all options."}\n\n',
+          'data: {"content":"My conclusion is..."}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.thinkingContent).toBe(
+        "First, I need to consider all options.",
+      );
+    });
+
+    it("should parse thinking_content from Gemini-style response", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"thinking_content":"Analyzing the problem..."}\n\n',
+          'data: {"content":"The answer is 42."}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.thinkingContent).toBe("Analyzing the problem...");
+    });
+
+    it("should track thinking tokens when provided", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"thinking":"Deep analysis...","thinking_tokens":1500}\n\n',
+          'data: {"content":"Answer","usage":{"prompt_tokens":10,"completion_tokens":5,"total_tokens":15}}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.thinkingTokens).toBe(1500);
+    });
+
+    it("should reset thinking content when starting new stream", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockSSEResponse([
+          'data: {"thinking":"First thinking..."}\n\n',
+          'data: {"content":"First answer"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "First");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.thinkingContent).toBe("First thinking...");
+
+      // Start new stream
+      mockFetch.mockResolvedValueOnce(
+        createMockSSEResponse([
+          'data: {"content":"Second answer"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      await act(async () => {
+        result.current.startStream("session-123", "Second");
+      });
+
+      // Should be reset
+      expect(result.current.thinkingContent).toBe("");
+    });
+
+    it("should clear thinking content when clearContent is called", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"thinking":"Some thinking..."}\n\n',
+          'data: {"content":"Answer"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      act(() => {
+        result.current.clearContent();
+      });
+
+      expect(result.current.thinkingContent).toBe("");
+      expect(result.current.thinkingTokens).toBeNull();
+    });
+  });
+
+  describe("Reasoning Effort Parameter", () => {
+    it("should include reasoning_effort in request when provided", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Response"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello", {
+          reasoningEffort: "high",
+        });
+        await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
+      });
+
+      const callArgs = mockFetch.mock.calls[0];
+      const body = JSON.parse(callArgs[1].body);
+      expect(body.reasoning_effort).toBe("high");
+    });
+
+    it("should not include reasoning_effort when not provided", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Response"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
+      });
+
+      const callArgs = mockFetch.mock.calls[0];
+      const body = JSON.parse(callArgs[1].body);
+      expect(body.reasoning_effort).toBeUndefined();
+    });
+
+    it("should accept all valid reasoning effort levels", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Response"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      for (const level of ["low", "medium", "high"]) {
+        await act(async () => {
+          result.current.startStream("session-123", "Hello", {
+            reasoningEffort: level as "low" | "medium" | "high",
+          });
+          await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
+        });
+
+        const callArgs = mockFetch.mock.calls[mockFetch.mock.calls.length - 1];
+        const body = JSON.parse(callArgs[1].body);
+        expect(body.reasoning_effort).toBe(level);
+      }
+    });
+  });
+
+  describe("LangGraph Node/Edge Streaming", () => {
+    it("should start with empty langgraph state", () => {
+      const { result } = renderHook(() => useStreamingChat());
+
+      expect(result.current.langgraphNodes).toEqual([]);
+      expect(result.current.langgraphEdges).toEqual([]);
+      expect(result.current.currentNode).toBeNull();
+    });
+
+    it("should parse langgraph node updates from streaming", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"langgraph_node":{"id":"node-1","name":"Agent","type":"agent","status":"running"}}\n\n',
+          'data: {"content":"Processing..."}\n\n',
+          'data: {"langgraph_node":{"id":"node-1","name":"Agent","type":"agent","status":"completed"}}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.langgraphNodes.length).toBeGreaterThan(0);
+    });
+
+    it("should parse langgraph edges from streaming", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"langgraph_edge":{"from":"start","to":"agent"}}\n\n',
+          'data: {"content":"Response"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.langgraphEdges.length).toBeGreaterThan(0);
+    });
+
+    it("should track current node from streaming", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"current_node":"agent-1"}\n\n',
+          'data: {"content":"Thinking..."}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.currentNode).toBe("agent-1");
+    });
+
+    it("should reset langgraph state when starting new stream", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockSSEResponse([
+          'data: {"langgraph_node":{"id":"node-1","name":"Agent","type":"agent","status":"completed"}}\n\n',
+          'data: {"content":"First"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "First");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      // Start new stream - should reset
+      mockFetch.mockResolvedValueOnce(
+        createMockSSEResponse([
+          'data: {"content":"Second"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      await act(async () => {
+        result.current.startStream("session-123", "Second");
+      });
+
+      // Should be reset when starting new stream
+      expect(result.current.langgraphNodes).toEqual([]);
+      expect(result.current.langgraphEdges).toEqual([]);
+      expect(result.current.currentNode).toBeNull();
+    });
+  });
 });

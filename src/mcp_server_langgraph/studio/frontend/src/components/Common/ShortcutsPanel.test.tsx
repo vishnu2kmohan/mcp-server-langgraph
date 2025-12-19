@@ -63,25 +63,37 @@ describe("ShortcutsPanel", () => {
 
   describe("rendering", () => {
     it("should render the shortcuts panel when open", () => {
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should not render when closed", () => {
-      render(<ShortcutsPanel isOpen={false} shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel
+          isOpen={false}
+          shortcuts={mockShortcuts}
+          onClose={() => {}}
+        />,
+      );
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
     it("should render panel title", () => {
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       expect(screen.getByText(/keyboard shortcuts/i)).toBeInTheDocument();
     });
 
     it("should render all shortcuts", () => {
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       expect(screen.getByText("New Session")).toBeInTheDocument();
       expect(screen.getByText("Quick Search")).toBeInTheDocument();
@@ -89,7 +101,9 @@ describe("ShortcutsPanel", () => {
     });
 
     it("should render shortcut keys", () => {
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       expect(screen.getByText("Cmd+N")).toBeInTheDocument();
       expect(screen.getByText("Cmd+K")).toBeInTheDocument();
@@ -102,7 +116,9 @@ describe("ShortcutsPanel", () => {
 
   describe("category grouping", () => {
     it("should group shortcuts by category", () => {
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       expect(screen.getByText("Navigation")).toBeInTheDocument();
       expect(screen.getByText("Chat")).toBeInTheDocument();
@@ -110,7 +126,9 @@ describe("ShortcutsPanel", () => {
     });
 
     it("should show category headings", () => {
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       const headings = screen.getAllByRole("heading", { level: 3 });
       expect(headings.length).toBeGreaterThan(0);
@@ -123,14 +141,20 @@ describe("ShortcutsPanel", () => {
 
   describe("search functionality", () => {
     it("should render search input", () => {
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
-      expect(screen.getByPlaceholderText(/search shortcuts/i)).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText(/search shortcuts/i),
+      ).toBeInTheDocument();
     });
 
     it("should filter shortcuts by search query", async () => {
       const user = userEvent.setup();
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       const searchInput = screen.getByPlaceholderText(/search shortcuts/i);
       await user.type(searchInput, "session");
@@ -141,7 +165,9 @@ describe("ShortcutsPanel", () => {
 
     it("should show no results message when search has no matches", async () => {
       const user = userEvent.setup();
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       const searchInput = screen.getByPlaceholderText(/search shortcuts/i);
       await user.type(searchInput, "nonexistent");
@@ -151,7 +177,9 @@ describe("ShortcutsPanel", () => {
 
     it("should clear search when clear button is clicked", async () => {
       const user = userEvent.setup();
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       const searchInput = screen.getByPlaceholderText(/search shortcuts/i);
       await user.type(searchInput, "session");
@@ -172,7 +200,9 @@ describe("ShortcutsPanel", () => {
     it("should call onClose when close button is clicked", async () => {
       const onClose = vi.fn();
       const user = userEvent.setup();
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={onClose} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={onClose} />,
+      );
 
       await user.click(screen.getByRole("button", { name: /close/i }));
 
@@ -182,7 +212,9 @@ describe("ShortcutsPanel", () => {
     it("should close on Escape key", async () => {
       const onClose = vi.fn();
       const user = userEvent.setup();
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={onClose} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={onClose} />,
+      );
 
       await user.keyboard("{Escape}");
 
@@ -192,7 +224,9 @@ describe("ShortcutsPanel", () => {
     it("should close on backdrop click", async () => {
       const onClose = vi.fn();
       const user = userEvent.setup();
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={onClose} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={onClose} />,
+      );
 
       await user.click(screen.getByTestId("panel-backdrop"));
 
@@ -215,20 +249,26 @@ describe("ShortcutsPanel", () => {
     });
 
     it("should have proper dialog role", () => {
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should have proper aria-labelledby", () => {
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-labelledby");
     });
 
     it("should focus search input on open", async () => {
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       await waitFor(() => {
         expect(screen.getByPlaceholderText(/search shortcuts/i)).toHaveFocus();
@@ -236,7 +276,9 @@ describe("ShortcutsPanel", () => {
     });
 
     it("should use kbd element for shortcut keys", () => {
-      render(<ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />);
+      render(
+        <ShortcutsPanel isOpen shortcuts={mockShortcuts} onClose={() => {}} />,
+      );
 
       const kbdElements = document.querySelectorAll("kbd");
       expect(kbdElements.length).toBeGreaterThan(0);

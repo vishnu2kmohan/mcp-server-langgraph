@@ -4,8 +4,8 @@
  * TDD tests for SVG artifact rendering component.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
 import { SVGArtifact } from "./SVGArtifact";
 
 describe("SVGArtifact", () => {
@@ -102,16 +102,66 @@ describe("SVGArtifact", () => {
   describe("export functionality", () => {
     it("should render copy button", () => {
       render(<SVGArtifact data={simpleSvg} />);
+      expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
+    });
+  });
+
+  describe("ArtifactExporter Integration", () => {
+    it("should show export menu when export button clicked", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByTestId("export-menu")).toBeInTheDocument();
+    });
+
+    it("should show PNG option in export menu", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
       expect(
-        screen.getByRole("button", { name: /copy/i }),
+        screen.getByRole("menuitem", { name: /png/i }),
       ).toBeInTheDocument();
     });
 
-    it("should render download button", () => {
+    it("should show SVG option in export menu", () => {
       render(<SVGArtifact data={simpleSvg} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
       expect(
-        screen.getByRole("button", { name: /download/i }),
+        screen.getByRole("menuitem", { name: /svg/i }),
       ).toBeInTheDocument();
+    });
+
+    it("should show PDF option in export menu", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(
+        screen.getByRole("menuitem", { name: /pdf/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should trigger export when format selected", () => {
+      // Mock URL methods in JSDOM environment
+      const mockUrl = "blob:test";
+      const originalCreateObjectURL = URL.createObjectURL;
+      const originalRevokeObjectURL = URL.revokeObjectURL;
+
+      URL.createObjectURL = vi.fn().mockReturnValue(mockUrl);
+      URL.revokeObjectURL = vi.fn();
+
+      render(<SVGArtifact data={simpleSvg} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+
+      const svgOption = screen.getByRole("menuitem", { name: /svg/i });
+      fireEvent.click(svgOption);
+
+      expect(URL.createObjectURL).toHaveBeenCalled();
+
+      // Restore original methods
+      URL.createObjectURL = originalCreateObjectURL;
+      URL.revokeObjectURL = originalRevokeObjectURL;
     });
   });
 });

@@ -925,4 +925,128 @@ describe("API Contract Tests", () => {
       expect(isConnectionTestResult(validResponse)).toBe(true);
     });
   });
+
+  // ==========================================================================
+  // AI URL FETCH ENDPOINT CONTRACT TESTS
+  // ==========================================================================
+
+  describe("AI Fetch URL Endpoint", () => {
+    // Type definition for URL fetch response
+    interface FetchUrlResponse {
+      url: string;
+      title?: string | null;
+      content?: string | null;
+      content_type?: string | null;
+      error?: string | null;
+      status_code?: number | null;
+    }
+
+    // Type definition for error response
+    interface FetchUrlErrorResponse {
+      detail: string;
+    }
+
+    function isFetchUrlResponse(obj: unknown): obj is FetchUrlResponse {
+      if (typeof obj !== "object" || obj === null) return false;
+      const o = obj as Record<string, unknown>;
+      return (
+        typeof o.url === "string" &&
+        (o.title === undefined ||
+          o.title === null ||
+          typeof o.title === "string") &&
+        (o.content === undefined ||
+          o.content === null ||
+          typeof o.content === "string") &&
+        (o.content_type === undefined ||
+          o.content_type === null ||
+          typeof o.content_type === "string") &&
+        (o.error === undefined ||
+          o.error === null ||
+          typeof o.error === "string") &&
+        (o.status_code === undefined ||
+          o.status_code === null ||
+          typeof o.status_code === "number")
+      );
+    }
+
+    function isFetchUrlErrorResponse(
+      obj: unknown,
+    ): obj is FetchUrlErrorResponse {
+      if (typeof obj !== "object" || obj === null) return false;
+      const o = obj as Record<string, unknown>;
+      return typeof o.detail === "string";
+    }
+
+    it("should validate successful FetchUrlResponse schema", () => {
+      const validResponse = {
+        url: "https://example.com",
+        title: "Example Domain",
+        content: "This domain is for use in illustrative examples...",
+        content_type: "text/html",
+      };
+      expect(isFetchUrlResponse(validResponse)).toBe(true);
+    });
+
+    it("should validate FetchUrlResponse with null optional fields", () => {
+      const validResponse = {
+        url: "https://example.com/api",
+        title: null,
+        content: '{"key": "value"}',
+        content_type: "application/json",
+      };
+      expect(isFetchUrlResponse(validResponse)).toBe(true);
+    });
+
+    it("should validate FetchUrlResponse with error field", () => {
+      const validResponse = {
+        url: "https://example.com/notfound",
+        error: "Page not found",
+        status_code: 404,
+      };
+      expect(isFetchUrlResponse(validResponse)).toBe(true);
+    });
+
+    it("should validate minimal FetchUrlResponse (URL only)", () => {
+      const minimalResponse = {
+        url: "https://example.com",
+      };
+      expect(isFetchUrlResponse(minimalResponse)).toBe(true);
+    });
+
+    it("should validate SSRF error response schema", () => {
+      const errorResponse = {
+        detail: "URL blocked: Private IP addresses are not allowed",
+      };
+      expect(isFetchUrlErrorResponse(errorResponse)).toBe(true);
+    });
+
+    it("should reject FetchUrlResponse with missing url field", () => {
+      const invalidResponse = {
+        title: "Example",
+        content: "Some content",
+      };
+      expect(isFetchUrlResponse(invalidResponse)).toBe(false);
+    });
+
+    it("should validate FetchUrlResponse with all optional fields", () => {
+      const fullResponse = {
+        url: "https://docs.example.com/guide",
+        title: "Documentation Guide",
+        content: "# Getting Started\n\nWelcome to our documentation...",
+        content_type: "text/html; charset=utf-8",
+        error: null,
+        status_code: 200,
+      };
+      expect(isFetchUrlResponse(fullResponse)).toBe(true);
+    });
+
+    it("should validate FetchUrlResponse with timeout error", () => {
+      const timeoutResponse = {
+        url: "https://slow-server.example.com",
+        error: "Request timed out after 30 seconds",
+        status_code: null,
+      };
+      expect(isFetchUrlResponse(timeoutResponse)).toBe(true);
+    });
+  });
 });

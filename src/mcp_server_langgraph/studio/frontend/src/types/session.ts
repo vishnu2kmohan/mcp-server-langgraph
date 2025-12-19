@@ -75,6 +75,12 @@ export interface ChatMessage {
   toolCalls?: ToolCall[];
   usage?: ClientTokenUsage;
   agentMetadata?: AgentMetadata;
+  /** LLM thinking/reasoning content (from Claude extended thinking, Gemini thinking_content, etc.) */
+  thinkingContent?: string;
+  /** Number of tokens used for thinking/reasoning */
+  thinkingTokens?: number;
+  /** Model name that generated this message */
+  modelName?: string;
 }
 
 // ==============================================================================

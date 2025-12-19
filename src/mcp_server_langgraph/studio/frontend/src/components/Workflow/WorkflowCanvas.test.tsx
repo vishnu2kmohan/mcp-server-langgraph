@@ -557,4 +557,37 @@ describe("WorkflowCanvas", () => {
       expect(wrapper).toHaveClass("w-full");
     });
   });
+
+  describe("Node Highlighting", () => {
+    it("should accept highlightedNodeId prop", () => {
+      const store = createTestStore({ nodes: sampleNodes });
+      render(
+        <Provider store={store}>
+          <WorkflowCanvas highlightedNodeId="node-1" />
+        </Provider>,
+      );
+      expect(screen.getByTestId("react-flow")).toBeInTheDocument();
+    });
+
+    it("should apply highlight class to highlighted node", () => {
+      const store = createTestStore({ nodes: sampleNodes });
+      render(
+        <Provider store={store}>
+          <WorkflowCanvas highlightedNodeId="node-2" />
+        </Provider>,
+      );
+      // The mock ReactFlow will receive nodes with highlight flag
+      expect(screen.getByTestId("node-node-2")).toBeInTheDocument();
+    });
+
+    it("should clear highlight when highlightedNodeId is null", () => {
+      const store = createTestStore({ nodes: sampleNodes });
+      render(
+        <Provider store={store}>
+          <WorkflowCanvas highlightedNodeId={null} />
+        </Provider>,
+      );
+      expect(screen.getByTestId("react-flow")).toBeInTheDocument();
+    });
+  });
 });

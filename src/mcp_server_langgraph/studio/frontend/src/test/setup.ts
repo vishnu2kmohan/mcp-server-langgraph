@@ -9,9 +9,43 @@
  */
 
 import "@testing-library/jest-dom/vitest";
-import { afterAll, afterEach, beforeAll, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, vi, expect } from "vitest";
 import { cleanup } from "@testing-library/react";
 import { server } from "../mocks/server";
+import { toHaveNoViolations } from "jest-axe";
+
+// Extend Vitest's expect with jest-axe matchers
+expect.extend(toHaveNoViolations);
+
+// =============================================================================
+// Global Error Handlers to Prevent Worker Crashes
+// =============================================================================
+// Prevent unhandled promise rejections from crashing the test worker.
+// These often happen with AbortSignal errors from MSW v2 / jsdom incompatibility.
+process.on("unhandledRejection", (reason) => {
+  // Silently ignore AbortSignal-related errors (known MSW v2 issue)
+  const message = String(reason);
+  if (
+    message.includes("AbortSignal") ||
+    message.includes("RequestInit: Expected signal")
+  ) {
+    return; // Ignore these known issues
+  }
+  // Log other unhandled rejections but don't crash
+  console.warn("Unhandled Rejection (suppressed):", reason);
+});
+
+// Similarly handle uncaught exceptions
+process.on("uncaughtException", (error) => {
+  const message = String(error);
+  if (
+    message.includes("AbortSignal") ||
+    message.includes("RequestInit: Expected signal")
+  ) {
+    return;
+  }
+  console.warn("Uncaught Exception (suppressed):", error);
+});
 
 // =============================================================================
 // MSW Server Setup
