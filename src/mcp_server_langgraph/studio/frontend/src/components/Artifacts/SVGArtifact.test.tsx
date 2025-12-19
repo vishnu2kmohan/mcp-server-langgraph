@@ -4,8 +4,8 @@
  * TDD tests for SVG artifact rendering component.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { SVGArtifact } from "./SVGArtifact";
 
 describe("SVGArtifact", () => {
