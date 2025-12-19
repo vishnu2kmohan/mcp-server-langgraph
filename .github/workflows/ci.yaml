@@ -497,6 +497,19 @@ jobs:
     - name: Run tests
       run: npm test -- --run
 
+    - name: Verify no orphan vitest processes
+      run: |
+        # Wait briefly for any cleanup
+        sleep 2
+        # Check for orphan vitest processes
+        ORPHANS=$(pgrep -f 'node.*vitest' 2>/dev/null || true)
+        if [ -n "$ORPHANS" ]; then
+          echo "::error::Orphan vitest processes detected after test completion:"
+          ps aux | grep '[v]itest'
+          exit 1
+        fi
+        echo "✓ No orphan vitest processes detected"
+
     - name: Install Playwright browsers
       run: npx playwright install --with-deps chromium
 
@@ -798,7 +811,7 @@ jobs:
       if: matrix.needs_node
       uses: actions/setup-node@v6
       with:
-        node-version: '20'
+        node-version: '22'
 
     - name: Cache pre-commit environments
       uses: actions/cache@v4
