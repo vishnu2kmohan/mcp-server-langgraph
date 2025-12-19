@@ -74,21 +74,26 @@ class TestDockerfileUvSyncConsistency:
 
     def test_main_dockerfile_uses_uv_sync(self, main_dockerfile):
         """
-        Verify main Dockerfile uses 'uv sync' instead of 'uv export' + 'uv pip install'.
+        Verify main Dockerfile uses 'uv sync' for dependency installation.
 
         This ensures consistency with local development and CI/CD which use:
             uv sync --frozen --extra dev
-        """
-        # Should NOT use uv export (old approach)
-        assert "uv export" not in main_dockerfile, (
-            "Dockerfile should NOT use 'uv export'. Use 'uv sync --frozen' directly for consistency with local/CI."
-        )
 
-        # Should use uv sync
+        Note: 'uv export' is allowed for SBOM (Software Bill of Materials) generation
+        which outputs to /sbom/requirements.txt for supply chain security.
+        """
+        # Should use uv sync for dependency installation
         assert "uv sync" in main_dockerfile, (
             "Dockerfile should use 'uv sync --frozen' for dependency installation. "
             "This ensures consistency with local development and CI/CD."
         )
+
+        # If uv export is used, it should only be for SBOM generation, not dependency installation
+        if "uv export" in main_dockerfile:
+            assert "/sbom" in main_dockerfile, (
+                "If 'uv export' is used, it should be for SBOM generation (output to /sbom/). "
+                "Dependency installation should use 'uv sync --frozen'."
+            )
 
     def test_main_dockerfile_uses_frozen_flag(self, main_dockerfile):
         """
@@ -140,14 +145,24 @@ class TestDockerfileUvSyncConsistency:
 
     def test_test_dockerfile_uses_uv_sync(self, test_dockerfile_content):
         """
-        Verify test Dockerfile (build-test stage) uses 'uv sync' instead of 'uv export' + 'uv pip install'.
+        Verify test Dockerfile (build-test stage) uses 'uv sync' for dependency installation.
 
         The test variant is defined as the build-test stage in docker/Dockerfile.
+
+        Note: 'uv export' is allowed for SBOM (Software Bill of Materials) generation
+        which outputs to /sbom/requirements.txt for supply chain security.
         """
-        # Should NOT use uv export
-        assert "uv export" not in test_dockerfile_content, (
-            "Dockerfile should NOT use 'uv export'. Use 'uv sync --frozen --extra dev' for consistency."
+        # Should use uv sync for dependency installation
+        assert "uv sync" in test_dockerfile_content, (
+            "Dockerfile should use 'uv sync --frozen --extra dev' for test dependencies."
         )
+
+        # If uv export is used, it should only be for SBOM generation
+        if "uv export" in test_dockerfile_content:
+            assert "/sbom" in test_dockerfile_content, (
+                "If 'uv export' is used, it should be for SBOM generation (output to /sbom/). "
+                "Dependency installation should use 'uv sync --frozen'."
+            )
 
         # Should use uv sync
         assert "uv sync" in test_dockerfile_content, "Dockerfile should use 'uv sync --frozen' for dependency installation."

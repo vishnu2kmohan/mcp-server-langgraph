@@ -132,22 +132,20 @@ def test_get_integration_test_file_returns_valid_path():
     - Relative path is correctly appended
 
     **Regression Prevention:**
-    - Validates helper works for known files (test_api_keys_endpoints.py)
+    - Validates helper works for known files (test_agent.py)
     - Ensures path construction is correct
     - Guards against path manipulation bugs
     """
     from tests.helpers import get_integration_test_file
 
     # Act: Get path to a known integration test file
-    result = get_integration_test_file("api/test_api_keys_endpoints.py")
+    result = get_integration_test_file("test_agent.py")
 
     # Assert: Path is correct
     assert isinstance(result, Path), "Should return a Path object"
     assert result.is_absolute(), "Should return absolute path, not relative"
-    assert "tests/integration/api/test_api_keys_endpoints.py" in str(result), (
-        f"Path should contain integration/api structure, got: {result}"
-    )
-    assert result.name == "test_api_keys_endpoints.py", f"Filename should be test_api_keys_endpoints.py, got: {result.name}"
+    assert "tests/integration/test_agent.py" in str(result), f"Path should contain integration structure, got: {result}"
+    assert result.name == "test_agent.py", f"Filename should be test_agent.py, got: {result.name}"
 
 
 def test_get_integration_test_file_validates_existence():
@@ -180,24 +178,24 @@ def test_get_integration_test_file_handles_nested_paths():
     get_integration_test_file() works with nested directory structures.
 
     **Test Coverage:**
-    - Handles multi-level paths (e.g., "api/auth/test_bearer.py")
+    - Handles multi-level paths (e.g., "security/test_*.py")
     - Path separator handling (forward slashes)
     - Relative path construction from tests/integration/ base
 
     **Use Cases:**
-    - API tests: api/test_*.py
-    - Auth tests: api/auth/test_*.py
+    - Security tests: security/test_*.py
+    - Auth tests: auth/test_*.py
     - Storage tests: storage/test_*.py
     """
     from tests.helpers import get_integration_test_file
 
-    # Act: Get path with nested structure (api/ subdirectory under integration/)
-    result = get_integration_test_file("api/test_service_principals_endpoints.py")
+    # Act: Get path with nested structure (security/ subdirectory under integration/)
+    result = get_integration_test_file("security/test_api_key_indexed_lookup.py")
 
     # Assert: Nested path is constructed correctly
     assert isinstance(result, Path)
-    assert "tests/integration/api/test_service_principals_endpoints.py" in str(result)
-    assert result.name == "test_service_principals_endpoints.py"
+    assert "tests/integration/security/test_api_key_indexed_lookup.py" in str(result)
+    assert result.name == "test_api_key_indexed_lookup.py"
 
 
 def test_get_integration_test_file_works_with_actual_files():
@@ -209,16 +207,16 @@ def test_get_integration_test_file_works_with_actual_files():
     - Validates file.exists() returns True for real files
     - Ensures end-to-end functionality
 
-    **Known Files (as of 2025-11-16):**
-    - tests/integration/api/test_api_keys_endpoints.py
-    - tests/integration/api/test_service_principals_endpoints.py
+    **Known Files (as of 2025-12-18):**
+    - tests/integration/test_agent.py
+    - tests/integration/security/test_api_key_indexed_lookup.py
     """
     from tests.helpers import get_integration_test_file
 
-    # Known files that should exist in tests/integration/api/
+    # Known files that should exist in tests/integration/
     known_files = [
-        "api/test_api_keys_endpoints.py",
-        "api/test_service_principals_endpoints.py",
+        "test_agent.py",
+        "security/test_api_key_indexed_lookup.py",
     ]
 
     for relative_path in known_files:
