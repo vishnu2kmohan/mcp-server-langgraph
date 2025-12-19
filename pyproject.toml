@@ -778,6 +778,7 @@ markers = [
     "timeout: Custom timeout override for pytest-timeout plugin (used for meta-tests running subprocesses)",
     "auth: Authentication/authorization tests",
     "auth_flow: End-to-end authentication flow tests (Keycloak, OAuth2, OpenFGA)",
+    "keycloak: Keycloak-specific integration tests (realm, client, user management)",
     "sso: SSO browser-based authentication flow tests (OAuth2 Authorization Code + PKCE)",
     "oauth2: OAuth2 protocol tests (Authorization Code + PKCE, token introspection, PAR)",
     "oidc: OpenID Connect protocol tests (token validation, claims, discovery)",
