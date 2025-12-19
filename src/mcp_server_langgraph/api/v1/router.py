@@ -35,6 +35,7 @@ from mcp_server_langgraph.api.v1.observability import observability_router
 from mcp_server_langgraph.api.v1.projects import projects_router
 from mcp_server_langgraph.api.v1.sessions import sessions_router
 from mcp_server_langgraph.api.v1.user import user_router
+from mcp_server_langgraph.api.v1.user_preferences import user_preferences_router
 from mcp_server_langgraph.api.v1.vectors import router as vectors_router
 from mcp_server_langgraph.api.v1.workflow_bootstrap import workflow_bootstrap_router
 from mcp_server_langgraph.api.v1.workflows import workflows_router
@@ -130,6 +131,9 @@ v1_router.include_router(notifications_router)
 
 # Include notification preferences endpoints
 v1_router.include_router(notification_preferences_router)
+
+# Include user preferences endpoints (theme, accessibility, model defaults)
+v1_router.include_router(user_preferences_router)
 
 # Include identity provider discovery endpoints (SSO IdP discovery for login page)
 v1_router.include_router(identity_providers_router)
