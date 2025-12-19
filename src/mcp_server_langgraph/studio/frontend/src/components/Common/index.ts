@@ -10,11 +10,24 @@ export type {
   DialogSeverity,
 } from "./ConfirmationDialog";
 
-export { ShortcutsPanel } from "./ShortcutsPanel";
+export { ProgressIndicator } from "./ProgressIndicator";
 export type {
-  ShortcutsPanelProps,
-  ShortcutDefinition,
-} from "./ShortcutsPanel";
+  ProgressIndicatorProps,
+  ProgressSize,
+  ProgressColor,
+} from "./ProgressIndicator";
+
+export { ShortcutsPanel } from "./ShortcutsPanel";
+export type { ShortcutsPanelProps, ShortcutDefinition } from "./ShortcutsPanel";
+
+export { StepProgress } from "./StepProgress";
+export type {
+  StepProgressProps,
+  Step,
+  StepStatus,
+  StepSize,
+  StepOrientation,
+} from "./StepProgress";
 
 export { ThemeToggle } from "./ThemeToggle";
 export type { ThemeToggleProps, Theme } from "./ThemeToggle";
