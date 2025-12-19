@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { RouterProvider } from "react-router";
 import { store } from "./store";
 import { router } from "./router";
+import { PreferencesProvider } from "./contexts/PreferencesContext";
 import { registerServiceWorker } from "./utils/serviceWorker";
 import "./index.css";
 
@@ -14,8 +15,10 @@ if (import.meta.env.PROD) {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <Provider store={store}>
-      <RouterProvider router={router} />
-    </Provider>
+    <PreferencesProvider>
+      <Provider store={store}>
+        <RouterProvider router={router} />
+      </Provider>
+    </PreferencesProvider>
   </React.StrictMode>,
 );
