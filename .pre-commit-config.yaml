@@ -608,6 +608,42 @@ repos:
       Regression prevention for REC-001 from documentation audit (2025-11-12).
 
       '
+  - id: check-adr-sync
+    name: Validate ADR synchronization
+    entry: uv run --frozen python scripts/validators/check_adr_sync.py
+    language: system
+    files: ^(README\.md|docs/architecture/adr-.*|adr/.*|mint\.json)$
+    pass_filenames: false
+    stages:
+    - pre-commit
+    description: 'Validates ADR synchronization across repository.
+
+
+      Checks:
+
+      - README.md badge count matches actual ADR file count
+
+      - All ADR .md files have corresponding .mdx files in docs/architecture/
+
+      - No duplicate ADR numbers
+
+      - Reports gaps in ADR numbering (informational)
+
+
+      Auto-fix badge count:
+
+      $ python scripts/validators/check_adr_sync.py --fix
+
+
+      Prevents:
+
+      - Stale ADR badge counts in README
+
+      - Missing ADR documentation in docs/
+
+      - Duplicate ADR numbers
+
+      '
   - id: check-internal-links
     name: Check Internal Documentation Links (GitHub, ADR, docs-internal)
     entry: uv run --frozen python -u scripts/ci/check-links.py --root-dir . --exclude archive/ reports/ docs/
