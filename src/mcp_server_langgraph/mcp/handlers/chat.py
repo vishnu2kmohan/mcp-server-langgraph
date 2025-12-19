@@ -5,7 +5,7 @@ Handles agent_chat tool invocations for the MCP server.
 Implements Anthropic best practices for token-efficient responses.
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from langchain_core.messages import HumanMessage
 from mcp.types import TextContent
@@ -164,7 +164,7 @@ class ChatToolHandler(AbstractToolHandler):
         message: str,
         thread_id: str,
         user_id: str,
-        response_format_type: str,
+        response_format_type: Literal["concise", "detailed"],
         span: Any,
     ) -> list[TextContent]:
         """Process agent result and return formatted response."""

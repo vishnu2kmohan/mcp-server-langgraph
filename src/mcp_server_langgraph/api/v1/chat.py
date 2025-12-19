@@ -140,10 +140,8 @@ class ChatServiceImpl(ChatService):
             32-character hex string trace ID, or None if no active trace.
         """
         span = trace.get_current_span()
-        if span is None:
-            return None
         span_context = span.get_span_context()
-        if span_context is None or not span_context.trace_id:
+        if not span_context.is_valid or not span_context.trace_id:
             return None
         # Format as 32-character hex string (padded with zeros)
         return format(span_context.trace_id, "032x")

@@ -290,7 +290,7 @@ async def prometheus_metrics() -> Response:
     Exposes application metrics for scraping by Alloy/Prometheus.
     Returns metrics in Prometheus text exposition format.
     """
-    import psutil  # type: ignore[import-untyped]
+    import psutil
 
     if not PROMETHEUS_CLIENT_AVAILABLE or generate_latest is None:
         # Fallback if prometheus_client not installed

@@ -436,8 +436,8 @@ class LLMFactory:
                         response.usage.completion_tokens or 0,  # type: ignore[attr-defined]
                     )
                     # OTEL GenAI token usage attributes
-                    span.set_attribute("gen_ai.usage.input_tokens", response.usage.prompt_tokens or 0)
-                    span.set_attribute("gen_ai.usage.output_tokens", response.usage.completion_tokens or 0)
+                    span.set_attribute("gen_ai.usage.input_tokens", response.usage.prompt_tokens or 0)  # type: ignore[attr-defined]
+                    span.set_attribute("gen_ai.usage.output_tokens", response.usage.completion_tokens or 0)  # type: ignore[attr-defined]
 
                 self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
 

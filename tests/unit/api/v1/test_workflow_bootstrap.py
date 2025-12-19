@@ -25,10 +25,17 @@ pytestmark = [
 
 @pytest.fixture
 def test_app() -> FastAPI:
-    """Create a test app with the workflow bootstrap router."""
+    """Create a test app with the workflow bootstrap router and mocked auth."""
     from mcp_server_langgraph.api.v1.workflow_bootstrap import workflow_bootstrap_router
+    from mcp_server_langgraph.auth.middleware import get_current_user
 
     app = FastAPI()
+
+    # Mock current user for all tests
+    async def mock_get_current_user() -> dict:
+        return {"user_id": "user:test_user", "username": "test_user", "roles": ["user"]}
+
+    app.dependency_overrides[get_current_user] = mock_get_current_user
     app.include_router(workflow_bootstrap_router, prefix="/api/v1")
     return app
 

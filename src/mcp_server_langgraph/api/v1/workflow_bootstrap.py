@@ -11,13 +11,17 @@ Usage:
     POST /api/v1/sessions/{id}/bootstrap-workflow - Bootstrap workflow from session
 """
 
-from typing import Any
+from typing import Annotated, Any
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.api.v1.sessions import SessionService, get_session_service
+from mcp_server_langgraph.auth.middleware import get_current_user
+
+# Type alias for current user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 
 workflow_bootstrap_router = APIRouter(tags=["workflow-bootstrap"])
@@ -63,13 +67,14 @@ class WorkflowBootstrapper:
         self.session_service: SessionService | None = None
 
     async def extract_steps_from_session(
-        self, session_id: str, selected_messages: list[int] | None = None
+        self, session_id: str, user_id: str, selected_messages: list[int] | None = None
     ) -> list[dict[str, Any]]:
         """
         Extract action steps from a session's chat history.
 
         Args:
             session_id: The session ID to analyze
+            user_id: The user ID for session authorization
             selected_messages: Optional list of message indices to analyze
 
         Returns:
@@ -83,7 +88,7 @@ class WorkflowBootstrapper:
             self.session_service = get_session_service()
 
         # Fetch session
-        session = await self.session_service.get_session(session_id)
+        session = await self.session_service.get_session(session_id, user_id)
         if session is None:
             raise ValueError(f"Session {session_id} not found")
 
@@ -199,6 +204,7 @@ class WorkflowBootstrapper:
     async def bootstrap_workflow(
         self,
         session_id: str,
+        user_id: str,
         name: str,
         description: str | None = None,
         selected_messages: list[int] | None = None,
@@ -213,6 +219,7 @@ class WorkflowBootstrapper:
 
         Args:
             session_id: The session ID to analyze
+            user_id: The user ID for session authorization
             name: Name for the new workflow
             description: Description for the new workflow
             selected_messages: Optional list of message indices to use
@@ -224,7 +231,7 @@ class WorkflowBootstrapper:
             ValueError: If session not found or has no messages
         """
         # Extract steps from session
-        steps = await self.extract_steps_from_session(session_id, selected_messages)
+        steps = await self.extract_steps_from_session(session_id, user_id, selected_messages)
 
         # Create workflow from steps
         workflow = self.create_workflow_from_steps(steps, name, description)
@@ -254,7 +261,7 @@ def set_workflow_bootstrapper(bootstrapper: WorkflowBootstrapper) -> None:
 
 
 @workflow_bootstrap_router.post("/sessions/{session_id}/bootstrap-workflow")
-async def bootstrap_workflow(session_id: str, request: BootstrapRequest) -> BootstrapResponse:
+async def bootstrap_workflow(session_id: str, request: BootstrapRequest, current_user: CurrentUser) -> BootstrapResponse:
     """
     Bootstrap a workflow from a chat session's conversation trace.
 
@@ -264,6 +271,7 @@ async def bootstrap_workflow(session_id: str, request: BootstrapRequest) -> Boot
     Args:
         session_id: The session ID to analyze
         request: Bootstrap request with workflow name and description
+        current_user: Authenticated user from JWT token
 
     Returns:
         Complete workflow definition with nodes and edges
@@ -272,10 +280,12 @@ async def bootstrap_workflow(session_id: str, request: BootstrapRequest) -> Boot
         HTTPException: 404 if session not found, 400 if session has no messages
     """
     bootstrapper = get_workflow_bootstrapper()
+    user_id: str = current_user.get("user_id") or current_user.get("sub") or "anonymous"
 
     try:
         workflow = await bootstrapper.bootstrap_workflow(
             session_id=session_id,
+            user_id=user_id,
             name=request.name,
             description=request.description,
             selected_messages=request.selected_messages,

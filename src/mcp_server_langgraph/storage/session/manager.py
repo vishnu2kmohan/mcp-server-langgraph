@@ -146,7 +146,7 @@ class RedisSessionManager:
 
             # Add session_id to user's session index (SET) for O(1) listing
             index_key = self._user_sessions_index_key(user_id)
-            await self._redis.sadd(index_key, session_id)
+            await self._redis.sadd(index_key, session_id)  # type: ignore[misc]
             # Refresh index TTL (slightly longer than session TTL)
             await self._redis.expire(index_key, self._ttl + 300)
 
@@ -231,7 +231,7 @@ class RedisSessionManager:
 
             # Remove from user's session index
             index_key = self._user_sessions_index_key(session.user_id)
-            await self._redis.srem(index_key, session_id)
+            await self._redis.srem(index_key, session_id)  # type: ignore[misc]
 
         return bool(result > 0)
 
@@ -295,7 +295,7 @@ class RedisSessionManager:
         """
         # Use SET index for O(1) lookup instead of O(N) SCAN
         index_key = self._user_sessions_index_key(user_id)
-        session_ids = await self._redis.smembers(index_key)
+        session_ids = await self._redis.smembers(index_key)  # type: ignore[misc]
 
         sessions = []
         for session_id in session_ids:

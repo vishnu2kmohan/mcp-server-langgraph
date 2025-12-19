@@ -10,8 +10,54 @@ Supports both:
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any
+
+import jwt
+
+logger = logging.getLogger(__name__)
+
+
+def decode_jwt_token(token: str, options: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    """
+    Decode a JWT token without verification for WebSocket auth.
+
+    This function decodes the token to extract claims without verifying the signature.
+    It's intended for initial claim extraction in WebSocket connections where
+    full verification happens through the AuthMiddleware.
+
+    SECURITY NOTE: This does NOT verify the token signature!
+    For production use, always use AuthMiddleware.verify_token() for full validation.
+    This is only safe for extracting non-sensitive claims before full verification.
+
+    Args:
+        token: JWT token string
+        options: Optional decode options (passed to PyJWT)
+
+    Returns:
+        Token payload dict if decode succeeds, None otherwise.
+    """
+    if not token:
+        return None
+
+    default_options = {
+        "verify_signature": False,  # We're just extracting claims
+        "verify_exp": True,  # Still check expiration
+        "verify_aud": False,  # Audience varies
+    }
+    if options:
+        default_options.update(options)
+
+    try:
+        payload = jwt.decode(token, options=default_options)
+        return dict(payload)
+    except jwt.ExpiredSignatureError:
+        logger.debug("Token expired")
+        return None
+    except jwt.InvalidTokenError as e:
+        logger.debug("Invalid token: %s", e)
+        return None
 
 
 def extract_user_from_jwt_payload(payload: dict[str, Any]) -> dict[str, Any]:
