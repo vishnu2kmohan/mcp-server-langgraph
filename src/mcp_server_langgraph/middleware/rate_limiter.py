@@ -41,6 +41,7 @@ ENDPOINT_RATE_LIMITS = {
     "read": "200/minute",  # Read-only endpoints
     "oauth2_start": "10/minute",  # Prevent OAuth2 flow abuse
     "oauth2_callback": "20/minute",  # Allow reasonable callback rate
+    "suggestions": "60/minute",  # AI suggestion endpoints (configurable via FF_SUGGESTION_RATE_LIMIT_PER_MINUTE)
 }
 
 # Path-based rate limits (applied via slowapi's path_limits in setup_rate_limiting)
@@ -198,31 +199,83 @@ def get_dynamic_limit(request: Request) -> str:
 
 
 # Configure Redis storage for distributed rate limiting
-def get_redis_storage_uri() -> str:
+def get_redis_storage_uri() -> str | None:
     """
-    Get Redis storage URI for rate limiting.
+    Get Redis storage URI for rate limiting if distributed mode is enabled.
 
     Returns:
-        Redis URI string
+        Redis URI string if distributed rate limiting is enabled, None otherwise
 
-    Fallback: If Redis is unavailable, slowapi will use in-memory storage
+    When distributed rate limiting is disabled (single-instance):
+    - Uses in-memory storage (faster, no Redis dependency)
+    - Rate limits are per-instance (not shared across replicas)
+
+    When distributed rate limiting is enabled (multi-instance):
+    - Uses Redis for shared rate limit counters
+    - Rate limits are shared across all instances
+    - Requires Redis to be available
     """
+    # Import feature flags lazily to avoid circular imports
+    from mcp_server_langgraph.core.feature_flags import feature_flags
+
+    # Check if distributed rate limiting is enabled via feature flag
+    if not feature_flags.enable_distributed_rate_limiting:
+        logger.debug("Distributed rate limiting disabled, using in-memory storage")
+        return None  # Uses in-memory storage (default for slowapi)
+
     redis_host = getattr(settings, "redis_host", "localhost")
     redis_port = getattr(settings, "redis_port", 6379)
     redis_db = getattr(settings, "redis_rate_limit_db", 3)  # DB 3 for rate limiting
 
-    return f"redis://{redis_host}:{redis_port}/{redis_db}"
+    redis_uri = f"redis://{redis_host}:{redis_port}/{redis_db}"
+    logger.debug("Distributed rate limiting enabled", extra={"storage": redis_uri})
+    return redis_uri
 
 
-# Create limiter instance
-limiter = Limiter(
-    key_func=get_rate_limit_key,
-    default_limits=[get_dynamic_limit],  # Dynamic limits based on tier
-    storage_uri=get_redis_storage_uri(),
-    strategy="fixed-window",  # fixed-window, moving-window
-    headers_enabled=True,  # Add X-RateLimit-* headers
-    swallow_errors=True,  # Fail-open: allow requests if rate limiting fails
-)
+def _create_limiter() -> Limiter:
+    """
+    Create and return the rate limiter instance.
+
+    This function allows lazy creation of the limiter to ensure feature flags
+    are properly initialized before the storage URI is determined.
+    """
+    storage_uri = get_redis_storage_uri()
+
+    return Limiter(
+        key_func=get_rate_limit_key,
+        default_limits=[get_dynamic_limit],  # Dynamic limits based on tier
+        storage_uri=storage_uri,
+        strategy="fixed-window",  # fixed-window, moving-window
+        headers_enabled=True,  # Add X-RateLimit-* headers
+        swallow_errors=True,  # Fail-open: allow requests if rate limiting fails
+    )
+
+
+# Create limiter instance lazily on first access
+_limiter: Limiter | None = None
+
+
+def get_limiter() -> Limiter:
+    """Get the rate limiter instance, creating it lazily if needed."""
+    global _limiter  # noqa: PLW0603
+    if _limiter is None:
+        _limiter = _create_limiter()
+    return _limiter
+
+
+# For backward compatibility, expose limiter property
+# Note: This is accessed at module import time, so we need a lazy proxy
+class _LimiterProxy:
+    """Lazy proxy for the limiter to defer creation until feature flags are ready."""
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(get_limiter(), name)
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        return get_limiter()(*args, **kwargs)
+
+
+limiter = _LimiterProxy()  # type: ignore[assignment]
 
 
 async def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):  # type: ignore[no-untyped-def]
@@ -308,6 +361,10 @@ def setup_rate_limiting(app: Any) -> None:
     for auth endpoints, so they don't need explicit @limiter.limit decorators.
     This makes endpoint modules easier to unit test without Redis.
 
+    Storage mode is determined by the FF_ENABLE_DISTRIBUTED_RATE_LIMITING feature flag:
+    - False (default): In-memory storage (single-instance mode)
+    - True: Redis storage (multi-instance/distributed mode)
+
     Args:
         app: FastAPI application instance
 
@@ -318,8 +375,8 @@ def setup_rate_limiting(app: Any) -> None:
         app = FastAPI()
         setup_rate_limiting(app)
     """
-    # Add limiter to app state
-    app.state.limiter = limiter
+    # Add limiter to app state (ensures lazy initialization)
+    app.state.limiter = get_limiter()
 
     # Register custom exception handler
     app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
@@ -330,10 +387,14 @@ def setup_rate_limiting(app: Any) -> None:
     # the intended limits for auth endpoints.
 
     try:
+        storage_uri = get_redis_storage_uri()
+        storage_mode = "redis (distributed)" if storage_uri else "in-memory (single-instance)"
+
         logger.info(
             "Rate limiting configured",
             extra={
-                "storage": get_redis_storage_uri(),
+                "storage_mode": storage_mode,
+                "storage_uri": storage_uri or "memory://",
                 "strategy": "fixed-window",
                 "tiers": list(RATE_LIMITS.keys()),
                 "path_limits": list(PATH_RATE_LIMITS.keys()),
@@ -373,3 +434,8 @@ def rate_limit_for_oauth2_start(func: Callable[..., Any]) -> Callable[..., Any]:
 def rate_limit_for_oauth2_callback(func: Callable[..., Any]) -> Callable[..., Any]:
     """Rate limit decorator for OAuth2 callback endpoints"""
     return limiter.limit(ENDPOINT_RATE_LIMITS["oauth2_callback"])(func)  # type: ignore[no-any-return]
+
+
+def rate_limit_for_suggestions(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Rate limit decorator for AI suggestion endpoints"""
+    return limiter.limit(ENDPOINT_RATE_LIMITS["suggestions"])(func)  # type: ignore[no-any-return]

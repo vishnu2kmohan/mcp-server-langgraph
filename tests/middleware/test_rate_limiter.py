@@ -364,21 +364,37 @@ class TestDynamicLimitDetermination:
 
 @pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestRedisStorageURI:
-    """Test Redis storage URI generation"""
+    """Test Redis storage URI generation based on feature flags"""
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    def test_get_redis_storage_uri_returns_none_when_distributed_disabled(self):
+        """Test Redis storage URI returns None when distributed rate limiting is disabled"""
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags:
+            mock_flags.enable_distributed_rate_limiting = False
+
+            uri = get_redis_storage_uri()
+            assert uri is None  # In-memory storage
+
     def test_get_redis_storage_uri_default(self):
-        """Test Redis storage URI with default settings"""
-        uri = get_redis_storage_uri()
-        assert uri.startswith("redis://")
-        assert "/3" in uri  # Default DB 3 for rate limiting
+        """Test Redis storage URI with default settings when distributed mode is enabled"""
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags:
+            mock_flags.enable_distributed_rate_limiting = True
+
+            uri = get_redis_storage_uri()
+            assert uri is not None
+            assert uri.startswith("redis://")
+            assert "/3" in uri  # Default DB 3 for rate limiting
 
     def test_get_redis_storage_uri_format(self):
-        """Test Redis URI format"""
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
+        """Test Redis URI format with custom settings"""
+        with (
+            patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings,
+            patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags,
+        ):
+            mock_flags.enable_distributed_rate_limiting = True
             mock_settings.redis_host = "redis.example.com"
             mock_settings.redis_port = 6380
             mock_settings.redis_rate_limit_db = 5
@@ -445,12 +461,18 @@ class TestSetupRateLimiting:
 
     def test_setup_adds_limiter_to_app_state(self):
         """Test setup_rate_limiting adds limiter to app state"""
+        from slowapi import Limiter
+
+        from mcp_server_langgraph.middleware.rate_limiter import get_limiter
+
         app = FastAPI()
 
         setup_rate_limiting(app)
 
         assert hasattr(app.state, "limiter")
-        assert app.state.limiter == limiter
+        # Verify it's a Limiter instance (get_limiter returns actual Limiter)
+        assert isinstance(app.state.limiter, Limiter)
+        assert app.state.limiter is get_limiter()
 
     def test_setup_registers_exception_handler(self):
         """Test setup_rate_limiting registers exception handler"""
@@ -742,3 +764,33 @@ class TestKeycloakIntegration:
         key = get_rate_limit_key(request)
         # Should use user ID from state
         assert "user:alice" in key or "alice" in key
+
+
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
+class TestSuggestionRateLimiting:
+    """Test suggestion-specific rate limiting"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_suggestions_rate_limit_defined(self):
+        """Test that suggestions rate limit is defined"""
+        assert "suggestions" in ENDPOINT_RATE_LIMITS
+
+    def test_suggestions_rate_limit_value(self):
+        """Test suggestions rate limit has appropriate value"""
+        suggestions_limit = int(ENDPOINT_RATE_LIMITS["suggestions"].split("/")[0])
+        # Suggestions should have reasonable limit (around 60/minute)
+        assert 30 <= suggestions_limit <= 120
+
+    def test_rate_limit_for_suggestions_decorator_exists(self):
+        """Test that rate_limit_for_suggestions decorator is available"""
+        from mcp_server_langgraph.middleware.rate_limiter import rate_limit_for_suggestions
+
+        @rate_limit_for_suggestions
+        async def suggestions_endpoint(request: Request):
+            return {"suggestions": []}
+
+        # Decorator should be applied
+        assert hasattr(suggestions_endpoint, "__wrapped__")
