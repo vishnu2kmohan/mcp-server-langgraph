@@ -14,17 +14,13 @@
  * Extracted from ChatPage for improved modularity.
  */
 
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useMemo, lazy, Suspense } from "react";
 import {
   MessageSquare,
   RefreshCw,
   ExternalLink,
-  Copy,
-  Check,
   AlertCircle,
   GitBranch,
-  // ChevronDown (unused),
-  // ChevronUp (unused),
   Play,
   Square,
   Wrench,
@@ -37,8 +33,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+// Note: SyntaxHighlighter moved to CodeBlock.tsx for lazy loading
 import { ConfidenceIndicator } from "./ConfidenceIndicator";
 import { MessageActions } from "./MessageActions";
 // Rich media artifact components for artifact rendering support
@@ -46,7 +41,7 @@ import { InteractiveSVGArtifact } from "../Artifacts/InteractiveSVGArtifact";
 import { AudioArtifact } from "../Artifacts/AudioArtifact";
 import { VideoArtifact } from "../Artifacts/VideoArtifact";
 import { ExecutableArtifact } from "../Artifacts/ExecutableArtifact";
-import { SandpackExecutor } from "../Artifacts/SandpackExecutor";
+// SandpackExecutor lazy loaded below for bundle optimization (612 KB sandpack)
 import {
   HallucinationIndicator,
   type HallucinationReport,
@@ -57,13 +52,77 @@ import {
   AIFollowUpSuggestions,
   type FollowUpSuggestion,
 } from "./AIFollowUpSuggestions";
-// Interactive renderers for diagrams and charts
-import { InteractiveMermaidDiagram } from "./InteractiveMermaidDiagram";
+// Interactive renderers for diagrams and charts (lazy loaded for bundle optimization)
+const InteractiveMermaidDiagram = lazy(
+  () => import("./InteractiveMermaidDiagram"),
+);
+// Code block with syntax highlighting (lazy loaded - 618 KB react-syntax-highlighter)
+const CodeBlock = lazy(() => import("./CodeBlock"));
+// Interactive code execution (lazy loaded - 612 KB sandpack)
+const SandpackExecutor = lazy(() => import("../Artifacts/SandpackExecutor"));
 import { InteractiveChart, type ChartData } from "./InteractiveChart";
+
+/**
+ * Loading fallback for lazy-loaded diagram components
+ */
+function DiagramLoadingFallback() {
+  return (
+    <div className="my-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 animate-pulse">
+      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+        <Loader2 size={16} className="animate-spin" />
+        <span className="text-sm">Loading diagram...</span>
+      </div>
+      <div className="mt-3 h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+    </div>
+  );
+}
+
+/**
+ * Loading fallback for lazy-loaded code blocks
+ */
+function CodeLoadingFallback() {
+  return (
+    <div className="my-2 bg-gray-900 rounded-lg overflow-hidden animate-pulse">
+      <div className="p-4">
+        <div className="h-4 bg-gray-700 rounded w-1/4 mb-3" />
+        <div className="space-y-2">
+          <div className="h-3 bg-gray-800 rounded w-3/4" />
+          <div className="h-3 bg-gray-800 rounded w-1/2" />
+          <div className="h-3 bg-gray-800 rounded w-2/3" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Loading fallback for lazy-loaded Sandpack executor
+ */
+function SandpackLoadingFallback() {
+  return (
+    <div className="my-2 bg-gray-900 rounded-lg overflow-hidden animate-pulse border border-gray-700">
+      <div className="flex items-center gap-2 p-3 bg-gray-800 border-b border-gray-700">
+        <div className="h-4 bg-gray-700 rounded w-32" />
+        <div className="ml-auto h-6 w-16 bg-gray-700 rounded" />
+      </div>
+      <div className="p-4 space-y-2">
+        <div className="h-3 bg-gray-800 rounded w-2/3" />
+        <div className="h-3 bg-gray-800 rounded w-1/2" />
+        <div className="h-3 bg-gray-800 rounded w-3/4" />
+      </div>
+      <div className="p-4 bg-gray-800 border-t border-gray-700">
+        <div className="flex items-center gap-2 text-gray-500">
+          <Loader2 size={14} className="animate-spin" />
+          <span className="text-xs">Loading interactive editor...</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import "katex/dist/katex.min.css";
 
 export interface Source {
@@ -250,175 +309,7 @@ function ChartCodeBlock({ code }: { code: string }) {
   return <InteractiveChart chartData={chartData} />;
 }
 
-/**
- * Get file extension for a language
- */
-function getFileExtension(language?: string): string {
-  const extensions: Record<string, string> = {
-    javascript: "js",
-    typescript: "ts",
-    python: "py",
-    ruby: "rb",
-    rust: "rs",
-    java: "java",
-    cpp: "cpp",
-    c: "c",
-    go: "go",
-    swift: "swift",
-    kotlin: "kt",
-    scala: "scala",
-    php: "php",
-    html: "html",
-    css: "css",
-    scss: "scss",
-    json: "json",
-    yaml: "yaml",
-    xml: "xml",
-    sql: "sql",
-    bash: "sh",
-    shell: "sh",
-    markdown: "md",
-    text: "txt",
-  };
-  return extensions[language || ""] || language || "txt";
-}
-
-/**
- * Enhanced code block component with syntax highlighting and interactive controls:
- * - Copy to clipboard
- * - Word wrap toggle
- * - Download as file
- */
-function CodeBlock({
-  language,
-  children,
-}: {
-  language?: string;
-  children: string;
-}) {
-  const [copied, setCopied] = useState(false);
-  const [wordWrap, setWordWrap] = useState(false);
-
-  const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(children);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [children]);
-
-  const handleToggleWordWrap = useCallback(() => {
-    setWordWrap((prev) => !prev);
-  }, []);
-
-  const handleDownload = useCallback(() => {
-    const ext = getFileExtension(language);
-    const blob = new Blob([children], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.download = `code.${ext}`;
-    link.href = url;
-    link.click();
-    URL.revokeObjectURL(url);
-  }, [children, language]);
-
-  return (
-    <div className="relative group my-2">
-      {/* Toolbar */}
-      <div
-        className="absolute right-2 top-2 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-        role="toolbar"
-        aria-label="Code block actions"
-      >
-        <button
-          onClick={handleToggleWordWrap}
-          className={`p-1.5 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            wordWrap
-              ? "bg-blue-600 text-white"
-              : "bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white"
-          }`}
-          title="Toggle word wrap"
-          aria-label={wordWrap ? "Disable word wrap" : "Enable word wrap"}
-          aria-pressed={wordWrap}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <path d="M3 12h15a3 3 0 1 1 0 6h-4" />
-            <polyline points="16 16 14 18 16 20" />
-            <line x1="3" y1="18" x2="10" y2="18" />
-          </svg>
-        </button>
-        <button
-          onClick={handleDownload}
-          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-          title="Download file"
-          aria-label="Download code as file"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-        </button>
-        <button
-          onClick={handleCopy}
-          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-          title="Copy code"
-          aria-label={
-            copied ? "Code copied to clipboard" : "Copy code to clipboard"
-          }
-        >
-          {copied ? (
-            <Check size={14} aria-hidden="true" />
-          ) : (
-            <Copy size={14} aria-hidden="true" />
-          )}
-        </button>
-      </div>
-      {language && (
-        <div className="absolute left-3 top-2 z-10 text-xs text-gray-400 font-mono">
-          {language}
-        </div>
-      )}
-      <SyntaxHighlighter
-        style={oneDark}
-        language={language || "text"}
-        showLineNumbers
-        wrapLongLines={wordWrap}
-        customStyle={{
-          margin: 0,
-          borderRadius: "0.5rem",
-          paddingTop: "2rem",
-        }}
-        codeTagProps={{
-          className: "text-sm font-mono",
-        }}
-      >
-        {children}
-      </SyntaxHighlighter>
-    </div>
-  );
-}
+// Note: CodeBlock component moved to CodeBlock.tsx for lazy loading
 
 // =============================================================================
 // LangGraph Node Visualization
@@ -643,9 +534,13 @@ function MarkdownContent({
 
         // Interactive artifacts - only render when enabled
         if (enableInteractiveArtifacts) {
-          // Handle mermaid diagrams
+          // Handle mermaid diagrams (lazy loaded for bundle optimization)
           if (language === "mermaid" && !inline) {
-            return <InteractiveMermaidDiagram code={codeContent} />;
+            return (
+              <Suspense fallback={<DiagramLoadingFallback />}>
+                <InteractiveMermaidDiagram code={codeContent} />
+              </Suspense>
+            );
           }
 
           // Handle chart blocks
@@ -679,37 +574,45 @@ function MarkdownContent({
             );
           }
 
-          // Handle JSX/TSX code blocks with Sandpack for live execution
+          // Handle JSX/TSX code blocks with Sandpack for live execution (lazy loaded)
           if ((language === "jsx" || language === "tsx") && !inline) {
             return (
-              <SandpackExecutor
-                code={codeContent}
-                language={language}
-                title="Interactive Component"
-                showRunButton={true}
-                autoRun={false}
-                theme="dark"
-              />
+              <Suspense fallback={<SandpackLoadingFallback />}>
+                <SandpackExecutor
+                  code={codeContent}
+                  language={language}
+                  title="Interactive Component"
+                  showRunButton={true}
+                  autoRun={false}
+                  theme="dark"
+                />
+              </Suspense>
             );
           }
 
-          // Handle MDX code blocks with Sandpack
+          // Handle MDX code blocks with Sandpack (lazy loaded)
           if (language === "mdx" && !inline) {
             return (
-              <SandpackExecutor
-                code={codeContent}
-                language="mdx"
-                title="Interactive Report"
-                showRunButton={true}
-                autoRun={false}
-                theme="dark"
-              />
+              <Suspense fallback={<SandpackLoadingFallback />}>
+                <SandpackExecutor
+                  code={codeContent}
+                  language="mdx"
+                  title="Interactive Report"
+                  showRunButton={true}
+                  autoRun={false}
+                  theme="dark"
+                />
+              </Suspense>
             );
           }
         }
 
         if (!inline && codeContent.includes("\n")) {
-          return <CodeBlock language={language}>{codeContent}</CodeBlock>;
+          return (
+            <Suspense fallback={<CodeLoadingFallback />}>
+              <CodeBlock language={language}>{codeContent}</CodeBlock>
+            </Suspense>
+          );
         }
 
         return (

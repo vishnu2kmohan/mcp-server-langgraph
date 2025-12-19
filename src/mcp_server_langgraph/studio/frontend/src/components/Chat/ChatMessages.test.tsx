@@ -289,7 +289,7 @@ describe("ChatMessages", () => {
       expect(diagramContainer).toBeInTheDocument();
     });
 
-    it("should not render regular code blocks as mermaid diagrams", () => {
+    it("should not render regular code blocks as mermaid diagrams", async () => {
       const jsCodeMessage = [
         {
           id: "msg-1",
@@ -299,8 +299,8 @@ describe("ChatMessages", () => {
         },
       ];
       render(<ChatMessages messages={jsCodeMessage} />);
-      // Should show the code block with language label (multi-line code triggers CodeBlock)
-      expect(screen.getByText("javascript")).toBeInTheDocument();
+      // Should show the code block with language label (multi-line code triggers CodeBlock) - async due to lazy loading
+      expect(await screen.findByText("javascript")).toBeInTheDocument();
       // Syntax highlighting splits code into tokens, so check the container text
       const codeContainer = document.querySelector("pre");
       expect(codeContainer?.textContent).toContain("const");
@@ -362,7 +362,7 @@ describe("ChatMessages", () => {
       expect(screen.getByText("Test Chart")).toBeInTheDocument();
     });
 
-    it("should render mermaid as plain code when enableInteractiveArtifacts is false", () => {
+    it("should render mermaid as plain code when enableInteractiveArtifacts is false", async () => {
       const mermaidMessage = [
         {
           id: "msg-1",
@@ -378,11 +378,11 @@ describe("ChatMessages", () => {
           enableInteractiveArtifacts={false}
         />,
       );
-      // When disabled, should show mermaid language label (plain code block)
-      expect(screen.getByText("mermaid")).toBeInTheDocument();
+      // When disabled, should show mermaid language label (plain code block) - async due to lazy loading
+      expect(await screen.findByText("mermaid")).toBeInTheDocument();
     });
 
-    it("should render chart as plain code when enableInteractiveArtifacts is false", () => {
+    it("should render chart as plain code when enableInteractiveArtifacts is false", async () => {
       // Using multi-line content so it renders as CodeBlock with language label
       const chartMessage = [
         {
@@ -399,8 +399,8 @@ describe("ChatMessages", () => {
           enableInteractiveArtifacts={false}
         />,
       );
-      // When disabled, should show chart language label (plain code block)
-      expect(screen.getByText("chart")).toBeInTheDocument();
+      // When disabled, should show chart language label (plain code block) - async due to lazy loading
+      expect(await screen.findByText("chart")).toBeInTheDocument();
     });
 
     it("should default to enabled for interactive artifacts", () => {
@@ -430,29 +430,32 @@ describe("ChatMessages", () => {
       },
     ];
 
-    it("should render code block with language label", () => {
+    // Note: CodeBlock is lazy loaded, so we use async queries (findBy) to wait for Suspense resolution
+
+    it("should render code block with language label", async () => {
       render(<ChatMessages messages={codeMessage} />);
-      expect(screen.getByText("python")).toBeInTheDocument();
+      expect(await screen.findByText("python")).toBeInTheDocument();
     });
 
-    it("should have copy button", () => {
+    it("should have copy button", async () => {
       render(<ChatMessages messages={codeMessage} />);
-      expect(screen.getByTitle("Copy code")).toBeInTheDocument();
+      expect(await screen.findByTitle("Copy code")).toBeInTheDocument();
     });
 
-    it("should have word wrap toggle button", () => {
+    it("should have word wrap toggle button", async () => {
       render(<ChatMessages messages={codeMessage} />);
-      expect(screen.getByTitle("Toggle word wrap")).toBeInTheDocument();
+      expect(await screen.findByTitle("Toggle word wrap")).toBeInTheDocument();
     });
 
-    it("should have download button", () => {
+    it("should have download button", async () => {
       render(<ChatMessages messages={codeMessage} />);
-      expect(screen.getByTitle("Download file")).toBeInTheDocument();
+      expect(await screen.findByTitle("Download file")).toBeInTheDocument();
     });
 
-    it("should show line numbers", () => {
+    it("should show line numbers", async () => {
       render(<ChatMessages messages={codeMessage} />);
-      // Line numbers are shown via react-syntax-highlighter
+      // Line numbers are shown via react-syntax-highlighter - wait for lazy load
+      await screen.findByText("python"); // Wait for CodeBlock to load
       const codeBlock = document.querySelector("pre");
       expect(codeBlock).toBeInTheDocument();
     });

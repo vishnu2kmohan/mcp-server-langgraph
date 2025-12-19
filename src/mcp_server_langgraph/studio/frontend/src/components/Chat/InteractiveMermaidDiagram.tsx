@@ -23,14 +23,25 @@ import {
   Download,
 } from "lucide-react";
 
-// Initialize mermaid with dark theme support
-// suppressErrorRendering prevents Mermaid from rendering its own error SVG at the bottom of the page
-mermaid.initialize({
-  startOnLoad: false,
-  theme: "dark",
-  securityLevel: "loose",
-  suppressErrorRendering: true,
-});
+// Track whether mermaid has been initialized (for lazy loading support)
+let mermaidInitialized = false;
+
+/**
+ * Initialize mermaid on first use (supports lazy loading)
+ */
+function ensureMermaidInitialized() {
+  if (!mermaidInitialized) {
+    // Initialize mermaid with dark theme support
+    // suppressErrorRendering prevents Mermaid from rendering its own error SVG at the bottom of the page
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "dark",
+      securityLevel: "loose",
+      suppressErrorRendering: true,
+    });
+    mermaidInitialized = true;
+  }
+}
 
 export interface InteractiveMermaidDiagramProps {
   /** The mermaid diagram code */
@@ -58,6 +69,9 @@ export function InteractiveMermaidDiagram({
   useEffect(() => {
     const renderDiagram = async () => {
       if (!containerRef.current) return;
+
+      // Ensure mermaid is initialized (supports lazy loading)
+      ensureMermaidInitialized();
 
       try {
         const id = `mermaid-${uniqueId.replace(/:/g, "-")}`;
