@@ -9,3 +9,9 @@ export type {
   ConfirmationDialogProps,
   DialogSeverity,
 } from "./ConfirmationDialog";
+
+export { ShortcutsPanel } from "./ShortcutsPanel";
+export type {
+  ShortcutsPanelProps,
+  ShortcutDefinition,
+} from "./ShortcutsPanel";
