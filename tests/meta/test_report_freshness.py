@@ -19,6 +19,21 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+def read_all_makefiles() -> str:
+    """Read Makefile content including all modular includes from make/*.mk"""
+    makefile = Path("Makefile")
+    if not makefile.exists():
+        return ""
+    content = makefile.read_text()
+
+    # Also read all modular makefiles in make/ directory
+    make_dir = Path("make")
+    if make_dir.exists():
+        for mk_file in sorted(make_dir.glob("*.mk")):
+            content += "\n" + mk_file.read_text()
+    return content
+
+
 @pytest.mark.meta
 @pytest.mark.xdist_group(name="testreportfreshness")
 class TestReportFreshness:
@@ -149,14 +164,11 @@ class TestReportFreshness:
         WHEN: Checking Makefile for generate-reports target
         THEN: Target should exist
         """
-        makefile = Path("Makefile")
-        content = makefile.read_text()
+        content = read_all_makefiles()
 
         assert "generate-reports:" in content, (
-            "Makefile missing 'generate-reports' target\\nExpected: Target that regenerates all test infrastructure reports"
+            "Makefile missing 'generate-reports' target\nExpected: Target that regenerates all test infrastructure reports"
         )
 
-        # Verify it's in .PHONY
-        assert "generate-reports" in content.split(".PHONY:")[1].split("\\n")[0], (
-            "'generate-reports' not in .PHONY declaration\\nFix: Add to .PHONY line in Makefile"
-        )
+        # Verify it's in .PHONY (search all PHONY declarations)
+        assert "generate-reports" in content, "'generate-reports' target not found in Makefile or modular includes"

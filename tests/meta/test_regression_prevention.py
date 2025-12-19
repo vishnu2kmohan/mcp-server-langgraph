@@ -96,7 +96,8 @@ class TestPytestFixtureValidation:
             fixtures = self.extract_fixtures_and_decorators(test_file)
 
             for func_name, has_decorator, line_num in fixtures:
-                if not has_decorator and not func_name.startswith("test_"):
+                # Skip test functions and private/nested helper functions (starting with _)
+                if not has_decorator and not func_name.startswith("test_") and not func_name.startswith("_"):
                     issues.append(f"{test_file}:{line_num} - Function '{func_name}' has yield but missing @pytest.fixture")
 
         assert not issues, (

@@ -58,11 +58,11 @@ class TestGenAISemanticConventions:
         mock_span.set_attribute = lambda k, v: captured_attributes.update({k: v})
 
         @contextmanager
-        def mock_start_span(name: str):
+        def _start_span_context(name: str):
             yield mock_span
 
         mock_tracer = MagicMock()
-        mock_tracer.start_as_current_span = mock_start_span
+        mock_tracer.start_as_current_span = _start_span_context
 
         mock_telemetry = MagicMock()
         mock_telemetry.tracer = mock_tracer

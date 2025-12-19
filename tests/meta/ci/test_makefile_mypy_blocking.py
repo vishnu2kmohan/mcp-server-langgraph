@@ -20,6 +20,20 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+def read_all_makefiles() -> str:
+    """Read Makefile content including all modular includes from make/*.mk"""
+    makefile = Path("Makefile")
+    assert makefile.exists(), "Makefile not found"
+    content = makefile.read_text()
+
+    # Also read all modular makefiles in make/ directory
+    make_dir = Path("make")
+    if make_dir.exists():
+        for mk_file in sorted(make_dir.glob("*.mk")):
+            content += "\n" + mk_file.read_text()
+    return content
+
+
 @pytest.mark.xdist_group(name="makefile_mypy_blocking")
 class TestMakefileMyPyBlocking:
     """Test that Makefile treats MyPy errors as blocking"""
@@ -40,11 +54,8 @@ class TestMakefileMyPyBlocking:
 
         The test should PASS.
         """
-        makefile_path = Path("Makefile")
-        assert makefile_path.exists(), "Makefile not found"
-
-        # Read Makefile content
-        makefile_content = makefile_path.read_text()
+        # Read Makefile content including modular includes
+        makefile_content = read_all_makefiles()
 
         # Check the validate-pre-push target
         # The MyPy step should exit 1 on failure, not just warn
@@ -82,24 +93,33 @@ class TestMakefileMyPyBlocking:
         Test that validate-pre-push target includes MyPy type checking.
 
         Ensures MyPy is part of the comprehensive pre-push validation.
+        MyPy can be included directly or via referenced sub-targets like
+        validate-pre-push-full, validate-pre-push-quick, or _validate-pre-push-phases-1-2.
         """
-        makefile_path = Path("Makefile")
-        makefile_content = makefile_path.read_text()
+        makefile_content = read_all_makefiles()
 
-        # Find the validate-pre-push target
-        validate_pre_push_section = re.search(r"validate-pre-push:.*?^[a-zA-Z]", makefile_content, re.MULTILINE | re.DOTALL)
+        # Check that validate-pre-push target exists
+        assert "validate-pre-push:" in makefile_content, "validate-pre-push target not found in Makefile"
 
-        if not validate_pre_push_section:
-            pytest.fail("validate-pre-push target not found in Makefile")
+        # Check that MyPy is run somewhere in the validation chain
+        # The modular Makefile uses _validate-pre-push-phases-1-2 which contains mypy
+        phases_pattern = r"_validate-pre-push-phases-1-2:.*?mypy"
+        full_pattern = r"validate-pre-push-full:.*?mypy"
+        quick_pattern = r"validate-pre-push-quick:.*?mypy"
+        direct_pattern = r"validate-pre-push:.*?mypy"
 
-        section_content = validate_pre_push_section.group(0)
+        has_mypy = (
+            re.search(phases_pattern, makefile_content, re.DOTALL | re.IGNORECASE)
+            or re.search(full_pattern, makefile_content, re.DOTALL | re.IGNORECASE)
+            or re.search(quick_pattern, makefile_content, re.DOTALL | re.IGNORECASE)
+            or re.search(direct_pattern, makefile_content, re.DOTALL | re.IGNORECASE)
+        )
 
-        # Check that MyPy is mentioned in the target
-        if "mypy" not in section_content.lower():
+        if not has_mypy:
             pytest.fail(
-                "validate-pre-push target does not include MyPy type checking!\n"
+                "validate-pre-push chain does not include MyPy type checking!\n"
                 "MyPy should be part of comprehensive pre-push validation\n"
-                "Add: MyPy type checking step to validate-pre-push"
+                "Add: MyPy type checking step to validate-pre-push or its sub-targets"
             )
 
     def test_makefile_phase_2_includes_mypy(self):
@@ -114,8 +134,7 @@ class TestMakefileMyPyBlocking:
 
         This test validates PHASE 2 structure.
         """
-        makefile_path = Path("Makefile")
-        makefile_content = makefile_path.read_text()
+        makefile_content = read_all_makefiles()
 
         # Find PHASE 2 section
         phase_2_pattern = r"PHASE 2.*?Type Checking.*?mypy"
@@ -133,8 +152,7 @@ class TestMakefileMyPyBlocking:
         Good pattern: "✓ MyPy passed" or "✗ MyPy found type errors" with exit 1
         Bad pattern: "⚠️ MyPy found type errors (non-blocking)" without exit 1
         """
-        makefile_path = Path("Makefile")
-        makefile_content = makefile_path.read_text()
+        makefile_content = read_all_makefiles()
 
         # Search for MyPy execution in validate-pre-push sub-targets and shared internal targets
         # MyPy is in the shared _validate-pre-push-phases-1-2 target

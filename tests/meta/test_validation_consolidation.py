@@ -32,6 +32,20 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+def read_all_makefiles(root: Path) -> str:
+    """Read Makefile content including all modular includes from make/*.mk"""
+    makefile = root / "Makefile"
+    assert makefile.exists(), "Makefile not found"
+    content = makefile.read_text()
+
+    # Also read all modular makefiles in make/ directory
+    make_dir = root / "make"
+    if make_dir.exists():
+        for mk_file in sorted(make_dir.glob("*.mk")):
+            content += "\n" + mk_file.read_text()
+    return content
+
+
 @pytest.mark.meta
 @pytest.mark.xdist_group(name="validation_consolidation_tests")
 class TestValidationConsolidation:
@@ -118,11 +132,8 @@ class TestValidationConsolidation:
         alongside automatic pre-commit hooks.
         """
         root = Path(__file__).parent.parent.parent
-        makefile = root / "Makefile"
 
-        assert makefile.exists(), "Makefile must exist"
-
-        content = makefile.read_text()
+        content = read_all_makefiles(root)
 
         # Find validate-pre-push target
         assert "validate-pre-push:" in content, "validate-pre-push target must exist"
@@ -169,9 +180,8 @@ class TestValidationConsolidation:
         validate-push should be lightweight for quick manual validation.
         """
         root = Path(__file__).parent.parent.parent
-        makefile = root / "Makefile"
 
-        content = makefile.read_text()
+        content = read_all_makefiles(root)
 
         assert "validate-push:" in content, "validate-push target must exist"
 
@@ -206,9 +216,8 @@ class TestValidationConsolidation:
         validate-full should run everything for manual comprehensive validation.
         """
         root = Path(__file__).parent.parent.parent
-        makefile = root / "Makefile"
 
-        content = makefile.read_text()
+        content = read_all_makefiles(root)
 
         assert "validate-full:" in content, "validate-full target must exist"
 
@@ -291,9 +300,8 @@ class TestValidationDocumentation:
         Makefile should have clear comments explaining each tier.
         """
         root = Path(__file__).parent.parent.parent
-        makefile = root / "Makefile"
 
-        content = makefile.read_text()
+        content = read_all_makefiles(root)
 
         # Should have tier documentation
         tier_keywords = ["Tier 1", "Tier 2", "Tier 3", "tier", "validation"]

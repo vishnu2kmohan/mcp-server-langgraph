@@ -25,6 +25,21 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+def read_all_makefiles(root: Path) -> str:
+    """Read Makefile content including all modular includes from make/*.mk"""
+    makefile = root / "Makefile"
+    if not makefile.exists():
+        return ""
+    content = makefile.read_text()
+
+    # Also read all modular makefiles in make/ directory
+    make_dir = root / "make"
+    if make_dir.exists():
+        for mk_file in sorted(make_dir.glob("*.mk")):
+            content += "\n" + mk_file.read_text()
+    return content
+
+
 @pytest.mark.xdist_group(name="slash_commands")
 class TestSlashCommands:
     """Validate slash commands are properly structured."""
@@ -120,17 +135,17 @@ class TestSlashCommands:
 
         assert len(duplicates) == 0, f"Duplicate command names found: {duplicates}"
 
-    def test_make_targets_referenced_exist(self, command_files: list[Path], makefile: Path):
+    def test_make_targets_referenced_exist(self, command_files: list[Path], project_root: Path):
         """Test that make targets referenced in commands actually exist."""
         if not command_files:
             pytest.skip("No command files found")
 
+        makefile = project_root / "Makefile"
         if not makefile.exists():
             pytest.skip("Makefile does not exist")
 
-        # Extract all make targets from Makefile
-        with open(makefile) as f:
-            makefile_content = f.read()
+        # Extract all make targets from Makefile and modular includes
+        makefile_content = read_all_makefiles(project_root)
 
         # Find all make targets (lines starting with target_name:)
         make_target_pattern = re.compile(r"^([a-z][a-z0-9-]*):.*$", re.MULTILINE)

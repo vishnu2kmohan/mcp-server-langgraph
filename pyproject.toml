@@ -108,6 +108,7 @@ dev = [
     # NOTE: Infrastructure lifecycle managed by shell scripts (make test-integration), not Python libraries
     # pytest-docker-compose-v2 and python-on-whales removed - plugin fixtures not used, custom fixtures in conftest.py instead
     "docker>=7.1.0",  # Docker Python SDK for test imports (tests/unit/execution/test_docker_sandbox_unit.py)
+    "aiosqlite>=0.20.0",  # Async SQLite for integration tests (tests/integration/storage/workflow/)
     "kubernetes>=34.1.0",  # Updated 2025-11-28: Minor update
     # Time mocking for deterministic tests
     "freezegun>=1.5.1",  # Freeze time for deterministic timestamp testing

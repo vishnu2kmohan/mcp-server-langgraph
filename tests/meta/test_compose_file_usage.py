@@ -31,6 +31,20 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+def read_all_makefiles(root: Path) -> str:
+    """Read Makefile content including all modular includes from make/*.mk"""
+    makefile = root / "Makefile"
+    assert makefile.exists(), "Makefile not found"
+    content = makefile.read_text()
+
+    # Also read all modular makefiles in make/ directory
+    make_dir = root / "make"
+    if make_dir.exists():
+        for mk_file in sorted(make_dir.glob("*.mk")):
+            content += "\n" + mk_file.read_text()
+    return content
+
+
 @pytest.mark.meta
 @pytest.mark.xdist_group(name="compose_file_validation_tests")
 class TestComposeFileConsolidation:
@@ -125,11 +139,8 @@ class TestComposeFileConsolidation:
         All Makefile integration test targets must reference root compose file.
         """
         root = Path(__file__).parent.parent.parent
-        makefile = root / "Makefile"
 
-        assert makefile.exists(), "Makefile must exist"
-
-        content = makefile.read_text()
+        content = read_all_makefiles(root)
 
         # Find test-integration targets
         integration_targets = [
