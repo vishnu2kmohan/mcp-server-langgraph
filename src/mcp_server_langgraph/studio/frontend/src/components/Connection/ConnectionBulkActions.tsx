@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { Trash2, Zap, X, AlertCircle, Loader2 } from "lucide-react";
 import { Dialog } from "../UI/Dialog";
+import { getAuthToken } from "../../utils/storage";
 
 interface Connection {
   id: string;
@@ -60,7 +61,7 @@ export function ConnectionBulkActions({
     setError(null);
 
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch("/api/v1/connections/bulk/delete", {
         method: "POST",
         headers: {
@@ -94,7 +95,7 @@ export function ConnectionBulkActions({
     setError(null);
 
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch("/api/v1/connections/bulk/test", {
         method: "POST",
         headers: {

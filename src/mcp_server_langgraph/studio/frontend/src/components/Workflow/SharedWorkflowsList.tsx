@@ -20,6 +20,7 @@ import {
   Lock,
   Edit3,
 } from "lucide-react";
+import { getAuthToken } from "../../utils/storage";
 
 interface SharedWorkflow {
   id: string;
@@ -54,7 +55,7 @@ export function SharedWorkflowsList({
     setIsLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch("/api/v1/workflows/shared", {
         method: "GET",
         headers: {

@@ -17,6 +17,7 @@ import {
   RefreshCw,
   ArrowLeft,
 } from "lucide-react";
+import { getAuthToken } from "../utils/storage";
 
 type CallbackState = "processing" | "success" | "error";
 
@@ -86,7 +87,7 @@ export function OAuth2CallbackPage() {
 
     // Call backend API
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch("/api/v1/connections/oauth/callback", {
         method: "POST",
         headers: {

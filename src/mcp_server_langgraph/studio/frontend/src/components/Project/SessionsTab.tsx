@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Plus, MessageSquare, Trash2, X } from "lucide-react";
 import { BulkActionBar } from "../UI/BulkActionBar";
+import { getAuthToken } from "../../utils/storage";
 
 // ============================================================================
 // Types
@@ -141,7 +142,7 @@ export function SessionsTab({
   );
 
   const handleCreateSession = async (name: string) => {
-    const token = localStorage.getItem("auth_token");
+    const token = getAuthToken();
 
     // Step 1: Create the session in global storage first
     const createResponse = await fetch("/api/v1/sessions", {
@@ -185,7 +186,7 @@ export function SessionsTab({
     e: React.MouseEvent,
   ) => {
     e.stopPropagation(); // Prevent navigation
-    const token = localStorage.getItem("auth_token");
+    const token = getAuthToken();
     const response = await fetch(
       `/api/v1/projects/${projectId}/sessions/${sessionId}`,
       {
@@ -230,7 +231,7 @@ export function SessionsTab({
 
   const handleBulkDelete = async () => {
     // Delete each selected session
-    const token = localStorage.getItem("auth_token");
+    const token = getAuthToken();
     const deletePromises = Array.from(selectedSessions).map(
       async (sessionId) => {
         const response = await fetch(

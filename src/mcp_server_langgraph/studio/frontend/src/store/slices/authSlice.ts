@@ -13,13 +13,14 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
 import type { User, AuthTokens, Organization, Persona } from "../../types/auth";
+import { storage, STORAGE_KEYS, clearAuthTokens } from "../../utils/storage";
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-/** Storage key for auth tokens */
-const AUTH_STORAGE_KEY = "studio-auth";
+/** Storage key for auth tokens - uses centralized STORAGE_KEYS */
+const AUTH_STORAGE_KEY = STORAGE_KEYS.AUTH_STATE;
 
 /** Buffer time before token expiration to trigger refresh (5 minutes) */
 const TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
@@ -75,36 +76,37 @@ function decodeJwtExp(token: string): number {
  * 1. AUTH_STORAGE_KEY (studio-auth) - structured token storage
  * 2. OAuth2 PKCE keys (access_token, refresh_token) - raw token storage
  */
+interface StoredAuthState {
+  state?: {
+    tokens?: AuthTokens;
+  };
+}
+
 function loadTokensFromStorage(): AuthTokens | null {
-  try {
-    // First, check structured storage (studio-auth)
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (stored) {
-      const data = JSON.parse(stored);
-      if (data.state?.tokens) {
-        return data.state.tokens;
-      }
-    }
+  // First, check structured storage (studio-auth)
+  const stored = storage.get<StoredAuthState>(AUTH_STORAGE_KEY, {
+    expectObject: true,
+  });
+  if (stored?.state?.tokens) {
+    return stored.state.tokens;
+  }
 
-    // Fallback: check OAuth2 PKCE storage keys
-    const accessToken = localStorage.getItem("access_token");
-    if (accessToken) {
-      const refreshToken = localStorage.getItem("refresh_token");
-      const expiresAt = decodeJwtExp(accessToken);
-      // Refresh token typically expires later (e.g., 30 days)
-      const refreshExpiresAt = refreshToken
-        ? decodeJwtExp(refreshToken)
-        : expiresAt + 30 * 24 * 60 * 60 * 1000;
+  // Fallback: check OAuth2 PKCE storage keys
+  const accessToken = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN);
+  if (accessToken) {
+    const refreshToken = storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN);
+    const expiresAt = decodeJwtExp(accessToken);
+    // Refresh token typically expires later (e.g., 30 days)
+    const refreshExpiresAt = refreshToken
+      ? decodeJwtExp(refreshToken)
+      : expiresAt + 30 * 24 * 60 * 60 * 1000;
 
-      return {
-        accessToken,
-        refreshToken: refreshToken || "",
-        expiresAt,
-        refreshExpiresAt,
-      };
-    }
-  } catch {
-    // Ignore localStorage errors
+    return {
+      accessToken,
+      refreshToken: refreshToken || "",
+      expiresAt,
+      refreshExpiresAt,
+    };
   }
   return null;
 }
@@ -113,17 +115,10 @@ function loadTokensFromStorage(): AuthTokens | null {
  * Save tokens to localStorage
  */
 function saveTokensToStorage(tokens: AuthTokens | null): void {
-  try {
-    if (tokens) {
-      localStorage.setItem(
-        AUTH_STORAGE_KEY,
-        JSON.stringify({ state: { tokens } }),
-      );
-    } else {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-    }
-  } catch {
-    // Ignore localStorage errors
+  if (tokens) {
+    storage.set(AUTH_STORAGE_KEY, { state: { tokens } });
+  } else {
+    storage.remove(AUTH_STORAGE_KEY);
   }
 }
 
@@ -131,21 +126,18 @@ function saveTokensToStorage(tokens: AuthTokens | null): void {
  * Clear all auth-related localStorage keys.
  * Called during logout to ensure complete session cleanup.
  *
- * Clears:
- * - studio-auth: Main auth state (authSlice)
+ * Uses centralized clearAuthTokens utility which clears:
  * - access_token: OAuth2 PKCE tokens (LoginPage, AuthCallbackPage)
  * - refresh_token: OAuth2 refresh tokens
  * - auth_token: Legacy token key (deprecated)
+ *
+ * Also clears:
+ * - studio-auth: Main auth state (authSlice)
  */
 function clearAllAuthStorage(): void {
-  try {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("auth_token"); // Legacy key
-  } catch {
-    // Ignore localStorage errors
-  }
+  storage.remove(AUTH_STORAGE_KEY);
+  // Use centralized utility for token cleanup
+  clearAuthTokens();
 }
 
 // ============================================================================

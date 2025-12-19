@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { getAuthToken } from "../../utils/storage";
 
 // ============================================================================
 // Types
@@ -103,7 +104,7 @@ export function ConnectionTemplateSelector({
 
       const templateUrl = `/api/v1/connection-templates${params.toString() ? `?${params.toString()}` : ""}`;
 
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const fetchOptions: RequestInit = {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),

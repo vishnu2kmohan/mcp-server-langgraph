@@ -30,9 +30,10 @@ import {
   DEFAULT_ACCESSIBILITY_PREFERENCES,
   type UserPreferences,
 } from "../types/preferences";
+import { STORAGE_KEYS } from "../utils/storage";
 
-// Storage key used by the context
-const STORAGE_KEY = "mcp_studio_preferences";
+// Storage key used by the context - use centralized key
+const STORAGE_KEY = STORAGE_KEYS.PREFERENCES;
 
 // Helper to create wrapper
 const createWrapper = () => {
@@ -101,8 +102,12 @@ describe("PreferencesContext", () => {
         expect(result.current.isInitialized).toBe(true);
       });
 
-      // Should fall back to defaults
-      expect(result.current.preferences).toEqual(DEFAULT_USER_PREFERENCES);
+      // Should fall back to defaults (compare without updatedAt which is dynamic)
+      const { updatedAt: _testUpdatedAt, ...expectedDefaults } =
+        DEFAULT_USER_PREFERENCES;
+      const { updatedAt: _actualUpdatedAt, ...actualPrefs } =
+        result.current.preferences;
+      expect(actualPrefs).toEqual(expectedDefaults);
     });
 
     it("should set isLoading to false after initialization", async () => {

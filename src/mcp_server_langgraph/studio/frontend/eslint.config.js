@@ -31,6 +31,33 @@ export default tseslint.config(
           destructuredArrayIgnorePattern: '^_',
         },
       ],
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'localStorage',
+          message:
+            'Use the storage utility from utils/storage.ts instead. Import { storage } for get/set/remove or { getAuthToken, setAuthTokens, clearAuthTokens } for auth tokens.',
+        },
+        {
+          name: 'sessionStorage',
+          message:
+            'Use the storage utility from utils/storage.ts instead for consistent storage abstraction.',
+        },
+      ],
     },
-  }
+  },
+  // Override for storage utility - it legitimately needs direct localStorage access
+  {
+    files: ['**/utils/storage.ts'],
+    rules: {
+      'no-restricted-globals': 'off',
+    },
+  },
+  // Override for test files - they need to set up localStorage for testing
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+    rules: {
+      'no-restricted-globals': 'off',
+    },
+  },
 );

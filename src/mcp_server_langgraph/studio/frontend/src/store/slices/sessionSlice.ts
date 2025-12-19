@@ -17,6 +17,7 @@ import type {
   ChatMessage,
 } from "../../types/session";
 import { DEFAULT_SESSION_CONFIG } from "../../types/session";
+import { getAuthToken } from "../../utils/storage";
 
 /**
  * Generate unique message ID
@@ -27,18 +28,15 @@ function generateMessageId(): string {
 
 /**
  * Get auth headers for API requests.
- * Matches the logic in baseQueryWithReauth.ts for consistency.
+ * Uses centralized storage utility for token retrieval.
  */
 function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
-  // Check multiple storage keys for backward compatibility:
-  // - "access_token": Used by OAuth2 PKCE callback
-  // - "auth_token": Legacy key (deprecated)
-  const token =
-    localStorage.getItem("access_token") || localStorage.getItem("auth_token");
+  // Use centralized storage utility for consistent token access
+  const token = getAuthToken();
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;

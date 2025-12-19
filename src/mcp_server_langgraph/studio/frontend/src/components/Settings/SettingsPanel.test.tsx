@@ -20,11 +20,12 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { SettingsPanel } from "./SettingsPanel";
 import { PreferencesProvider } from "../../contexts/PreferencesContext";
+import { STORAGE_KEYS } from "../../utils/storage";
 
 expect.extend(toHaveNoViolations);
 
-// Storage key used by the context
-const STORAGE_KEY = "mcp_studio_preferences";
+// Storage key used by the context - use centralized key
+const STORAGE_KEY = STORAGE_KEYS.PREFERENCES;
 
 // Helper to create wrapper with preferences provider
 const renderWithProvider = (ui: React.ReactElement) => {

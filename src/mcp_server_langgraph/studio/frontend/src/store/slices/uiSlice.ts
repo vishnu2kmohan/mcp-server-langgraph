@@ -2,9 +2,11 @@
  * UI State Slice
  *
  * Manages global UI state like sidebar visibility, theme, loading states.
+ * Uses centralized storage utility for localStorage operations.
  */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { storage, STORAGE_KEYS } from "../../utils/storage";
 
 interface UIState {
   sidebarOpen: boolean;
@@ -20,28 +22,17 @@ interface UIState {
   }>;
 }
 
-// Load collapsed state from localStorage
+// Load collapsed state from localStorage using storage utility
 const getInitialCollapsedState = (): boolean => {
-  if (typeof window === "undefined") return false;
-  try {
-    const stored = localStorage.getItem("sidebar-collapsed");
-    return stored === "true";
-  } catch {
-    // localStorage may not be available in some environments
-    return false;
-  }
+  const stored = storage.get<boolean>(STORAGE_KEYS.SIDEBAR_COLLAPSED);
+  return stored === true;
 };
 
 // Load theme from localStorage, defaulting to "dark" for better UX
 const getInitialTheme = (): "light" | "dark" | "system" => {
-  if (typeof window === "undefined") return "dark";
-  try {
-    const stored = localStorage.getItem("theme");
-    if (stored === "light" || stored === "dark" || stored === "system") {
-      return stored;
-    }
-  } catch {
-    // localStorage may not be available in some environments
+  const stored = storage.get<string>(STORAGE_KEYS.THEME);
+  if (stored === "light" || stored === "dark" || stored === "system") {
+    return stored;
   }
   return "dark"; // Default to dark mode
 };
@@ -67,30 +58,18 @@ export const uiSlice = createSlice({
     },
     toggleSidebarCollapsed: (state) => {
       state.sidebarCollapsed = !state.sidebarCollapsed;
-      // Persist to localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem(
-          "sidebar-collapsed",
-          String(state.sidebarCollapsed),
-        );
-      }
+      // Persist to localStorage using storage utility
+      storage.set(STORAGE_KEYS.SIDEBAR_COLLAPSED, state.sidebarCollapsed);
     },
     setSidebarCollapsed: (state, action: PayloadAction<boolean>) => {
       state.sidebarCollapsed = action.payload;
-      // Persist to localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem(
-          "sidebar-collapsed",
-          String(state.sidebarCollapsed),
-        );
-      }
+      // Persist to localStorage using storage utility
+      storage.set(STORAGE_KEYS.SIDEBAR_COLLAPSED, state.sidebarCollapsed);
     },
     setTheme: (state, action: PayloadAction<"light" | "dark" | "system">) => {
       state.theme = action.payload;
-      // Persist to localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("theme", action.payload);
-      }
+      // Persist to localStorage using storage utility
+      storage.set(STORAGE_KEYS.THEME, action.payload);
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;

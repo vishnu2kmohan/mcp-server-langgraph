@@ -14,6 +14,7 @@ import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { useAppDispatch } from "../store/hooks";
 import { setUser } from "../store/slices/authSlice";
 import { setPersona } from "../store/slices/personaSlice";
+import { setAuthTokens } from "../utils/storage";
 
 // Parse URL fragment into key-value pairs
 function parseFragment(fragment: string): Record<string, string> {
@@ -76,15 +77,9 @@ export function AuthCallbackPage() {
           throw new Error("No access token received");
         }
 
-        // Store tokens in localStorage
-        // Set both 'access_token' and 'auth_token' for compatibility:
-        // - 'access_token' is used by AuthCallbackPage and some components
-        // - 'auth_token' is read by api/index.ts prepareHeaders for API calls
-        localStorage.setItem("access_token", accessToken);
-        localStorage.setItem("auth_token", accessToken);
-        if (refreshToken) {
-          localStorage.setItem("refresh_token", refreshToken);
-        }
+        // Store tokens using centralized storage utility
+        // Sets access_token, auth_token (legacy), and refresh_token
+        setAuthTokens(accessToken, refreshToken || undefined);
 
         // Decode JWT to get user info
         const payload = decodeJwtPayload(accessToken);

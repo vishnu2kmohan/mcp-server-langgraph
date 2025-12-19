@@ -56,6 +56,7 @@ import {
   setFocusMode,
   toggleExpandedGroup,
 } from "../../store/slices/workspaceSlice";
+import { clearAuthTokens } from "../../utils/storage";
 
 // =============================================================================
 // Utility
@@ -248,10 +249,8 @@ export function LeftSidebar({
 
   // Handle logout - redirect to Keycloak end-session endpoint
   const handleLogout = useCallback(() => {
-    // Clear local storage tokens first
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("refresh_token");
+    // Clear local storage tokens using centralized utility
+    clearAuthTokens();
     setIsUserMenuOpen(false);
 
     // Redirect to backend logout endpoint which handles Keycloak session termination

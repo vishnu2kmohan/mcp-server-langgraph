@@ -15,6 +15,7 @@ import {
   FileText,
   Filter,
 } from "lucide-react";
+import { getAuthToken } from "../../utils/storage";
 
 interface AuditLogEntry {
   id: string;
@@ -68,7 +69,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
         url = `/api/v1/connections/audit/logs?resource_id=${connectionId}&event_type=${eventTypeFilter}`;
       }
 
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch(url, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),

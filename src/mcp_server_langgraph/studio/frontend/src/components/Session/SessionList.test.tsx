@@ -18,6 +18,7 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { SessionList } from "./SessionList";
 import { PreferencesProvider } from "../../contexts/PreferencesContext";
+import { STORAGE_KEYS } from "../../utils/storage";
 import type { SessionSummary } from "../../types/session";
 
 expect.extend(toHaveNoViolations);
@@ -52,11 +53,18 @@ const renderWithProvider = (
   ui: React.ReactElement,
   { pinnedSessions = [] }: { pinnedSessions?: string[] } = {},
 ) => {
-  // Set up localStorage with pinned sessions
+  // Set up localStorage with pinned sessions using centralized storage key
   if (pinnedSessions.length > 0) {
     localStorage.setItem(
-      "mcp_studio_preferences",
+      STORAGE_KEYS.PREFERENCES,
       JSON.stringify({
+        general: {
+          theme: "system",
+          language: "en",
+          autoScroll: true,
+          notificationsEnabled: true,
+          showShortcutHints: true,
+        },
         session: { pinnedSessions, recentSessions: [], maxRecentSessions: 10 },
       }),
     );

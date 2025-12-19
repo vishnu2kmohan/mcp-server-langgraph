@@ -64,6 +64,7 @@ import {
   Lightbulb,
   History,
 } from "lucide-react";
+import { getAuthToken } from "../utils/storage";
 
 export function WorkflowsPage() {
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
@@ -185,7 +186,7 @@ export function WorkflowsPage() {
         return;
       }
 
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch("/api/v1/workflows/generate", {
         method: "POST",
         headers: {

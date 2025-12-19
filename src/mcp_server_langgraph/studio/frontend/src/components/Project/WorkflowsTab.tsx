@@ -9,6 +9,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { Plus, GitBranch, Trash2, X, Search } from "lucide-react";
 import { BulkActionBar } from "../UI/BulkActionBar";
+import { getAuthToken } from "../../utils/storage";
 
 // ============================================================================
 // Sort Types
@@ -202,7 +203,7 @@ export function WorkflowsTab({
 
   const handleCreateWorkflow = async (name: string) => {
     const workflowId = crypto.randomUUID();
-    const token = localStorage.getItem("auth_token");
+    const token = getAuthToken();
     const response = await fetch(
       `/api/v1/projects/${projectId}/workflows?workflow_id=${workflowId}&workflow_name=${encodeURIComponent(name)}`,
       {
@@ -224,7 +225,7 @@ export function WorkflowsTab({
     e: React.MouseEvent,
   ) => {
     e.stopPropagation(); // Prevent navigation
-    const token = localStorage.getItem("auth_token");
+    const token = getAuthToken();
     const response = await fetch(
       `/api/v1/projects/${projectId}/workflows/${workflowId}`,
       {
@@ -269,7 +270,7 @@ export function WorkflowsTab({
 
   const handleBulkDelete = async () => {
     // Delete each selected workflow
-    const token = localStorage.getItem("auth_token");
+    const token = getAuthToken();
     const deletePromises = Array.from(selectedWorkflows).map(
       async (workflowId) => {
         const response = await fetch(

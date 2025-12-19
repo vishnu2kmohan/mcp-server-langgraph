@@ -25,7 +25,12 @@ import {
 } from "@reduxjs/toolkit/query/react";
 
 import { logout, setTokens } from "../store/slices/authSlice";
-import { getAuthToken, setAuthTokens, STORAGE_KEYS } from "../utils/storage";
+import {
+  getAuthToken,
+  setAuthTokens,
+  storage,
+  STORAGE_KEYS,
+} from "../utils/storage";
 
 // Simple lock mechanism to prevent concurrent refresh attempts
 let isRefreshing = false;
@@ -66,7 +71,7 @@ export const baseQueryWithReauth: BaseQueryFn<
     // Check if we have a refresh token (stored under legacy key without prefix)
     const refreshToken =
       typeof window !== "undefined"
-        ? localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+        ? storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN)
         : null;
 
     if (!refreshToken) {

@@ -33,6 +33,7 @@ import {
   ScrollText,
 } from "lucide-react";
 import { AuditEventPanel } from "../components/Settings/AuditEventPanel";
+import { getAuthToken } from "../utils/storage";
 
 type SettingsTab =
   | "profile"
@@ -99,7 +100,7 @@ export function SettingsPage() {
     setIsLoadingUsers(true);
     setAdminError(null);
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch("/api/v1/admin/users", {
         method: "GET",
         headers: {
@@ -130,7 +131,7 @@ export function SettingsPage() {
   const handleRevokeKey = async (userId: string) => {
     setAdminError(null);
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch(`/api/v1/admin/users/${userId}/api-key`, {
         method: "DELETE",
         headers: {
@@ -152,7 +153,7 @@ export function SettingsPage() {
   const handleGenerateKey = async (userId: string) => {
     setAdminError(null);
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = getAuthToken();
       const response = await fetch(`/api/v1/admin/users/${userId}/api-key`, {
         method: "POST",
         headers: {

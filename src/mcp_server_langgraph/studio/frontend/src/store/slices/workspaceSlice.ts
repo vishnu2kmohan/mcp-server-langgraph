@@ -16,6 +16,7 @@
  */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { storage } from "../../utils/storage";
 
 // =============================================================================
 // Types
@@ -110,7 +111,7 @@ export interface WorkspaceState {
 // Constants
 // =============================================================================
 
-export const WORKSPACE_STORAGE_KEY = "agent-studio-workspace";
+export const WORKSPACE_STORAGE_KEY = "studio-agent-workspace";
 
 // Panel constraints
 const LEFT_SIDEBAR_MIN_WIDTH = 200;
@@ -288,45 +289,25 @@ function addTabToGroupAtPath(
  * Load workspace state from localStorage
  */
 function loadFromStorage(): Partial<WorkspaceState> | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const saved = localStorage.getItem(WORKSPACE_STORAGE_KEY);
-    if (saved) {
-      return JSON.parse(saved);
-    }
-  } catch {
-    // Invalid JSON or other error
-    console.warn("Failed to load workspace state from localStorage");
-  }
-  return null;
+  return (
+    storage.get<Partial<WorkspaceState>>(WORKSPACE_STORAGE_KEY, {
+      expectObject: true,
+    }) ?? null
+  );
 }
 
 /**
  * Save workspace state to localStorage
  */
 function saveToStorage(state: WorkspaceState): void {
-  if (typeof window === "undefined") return;
-
-  try {
-    localStorage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // Storage full or other error
-    console.warn("Failed to save workspace state to localStorage");
-  }
+  storage.set(WORKSPACE_STORAGE_KEY, state);
 }
 
 /**
  * Clear workspace state from localStorage
  */
 function clearStorage(): void {
-  if (typeof window === "undefined") return;
-
-  try {
-    localStorage.removeItem(WORKSPACE_STORAGE_KEY);
-  } catch {
-    // Error - ignore
-  }
+  storage.remove(WORKSPACE_STORAGE_KEY);
 }
 
 // =============================================================================
