@@ -102,7 +102,9 @@ export default defineConfig({
     // =========================================================================
     // Pool Configuration - Adaptive Resource Management
     // =========================================================================
-    // Use forks pool for better isolation and stability with jsdom
+    // Use forks pool for better isolation and stability with jsdom.
+    // Note: tinypool (used by vitest 2.x) can leave orphan processes.
+    // Use `npm run test:cleanup` or upgrade to vitest v4 (removes tinypool).
     pool: "forks",
 
     // Limit parallel workers based on available resources
@@ -112,6 +114,9 @@ export default defineConfig({
 
     // Limit concurrent tests within a single file
     maxConcurrency: 10,
+
+    // Teardown timeout - give workers time to clean up gracefully
+    teardownTimeout: 5000,
 
     // Retry flaky tests once
     retry: 1,
