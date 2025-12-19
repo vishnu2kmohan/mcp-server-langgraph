@@ -223,6 +223,62 @@ class FeatureFlags(BaseSettings):
         description="Enable AI-powered suggestions in UI",
     )
 
+    enable_llm_suggestions: bool = Field(
+        default=True,
+        description="Use LLM for generating suggestions (when False, uses heuristics only). Reduces cost but may lower suggestion quality.",
+    )
+
+    enable_streaming_suggestions: bool = Field(
+        default=True,
+        description="Enable streaming suggestions via SSE for real-time response",
+    )
+
+    enable_personalized_suggestions: bool = Field(
+        default=True,
+        description="Enable personalized suggestions based on conversation history",
+    )
+
+    suggestion_rate_limit_per_minute: int = Field(
+        default=60,
+        ge=1,
+        le=1000,
+        description="Maximum suggestion requests per minute per user (1-1000)",
+    )
+
+    enable_distributed_rate_limiting: bool = Field(
+        default=False,
+        description="Use Redis for distributed rate limiting (required for multi-instance deployments)",
+    )
+
+    suggestion_cache_ttl_seconds: int = Field(
+        default=300,
+        ge=60,
+        le=3600,
+        description="Time-to-live for suggestion cache entries (60s-1h)",
+    )
+
+    enable_suggestion_quality_tracking: bool = Field(
+        default=True,
+        description="Track suggestion click rates and quality metrics for improvement",
+    )
+
+    enable_suggestion_prewarm: bool = Field(
+        default=False,
+        description="Pre-compute suggestions for common topics (experimental, increases startup time)",
+    )
+
+    max_conversation_history_messages: int = Field(
+        default=5,
+        ge=1,
+        le=20,
+        description="Maximum conversation history messages to include for personalization (1-20)",
+    )
+
+    enable_conversation_history_validation: bool = Field(
+        default=True,
+        description="Validate and sanitize conversation history to prevent prompt injection",
+    )
+
     enable_notification_preferences: bool = Field(
         default=True,
         description="Enable notification preferences UI for users to customize notification types",
@@ -236,6 +292,72 @@ class FeatureFlags(BaseSettings):
     enable_interactive_artifacts: bool = Field(
         default=True,
         description="Enable interactive artifact rendering in chat (Sandpack for JSX/TSX/MDX, Mermaid diagrams, charts)",
+    )
+
+    enable_url_content_fetch: bool = Field(
+        default=True,
+        description="Enable #URL content fetch feature for including web content in chat context (OpenWebUI-style)",
+    )
+
+    enable_slash_commands: bool = Field(
+        default=True,
+        description="Enable slash commands (/) for quick actions and workflow templates in chat input",
+    )
+
+    enable_style_presets: bool = Field(
+        default=True,
+        description="Enable response style presets selector in chat (concise, detailed, etc.)",
+    )
+
+    # UX Enhancement Features (Priority 1-3 from competitive analysis)
+    enable_user_preferences_sync: bool = Field(
+        default=True,
+        description="Enable syncing user preferences (theme, accessibility, model defaults) to backend",
+    )
+
+    enable_session_export: bool = Field(
+        default=True,
+        description="Enable exporting chat sessions to Markdown, JSON, or HTML formats",
+    )
+
+    enable_project_context: bool = Field(
+        default=True,
+        description="Enable .studio/context.md project context files (AGENTS.md equivalent)",
+    )
+
+    enable_onboarding_wizard: bool = Field(
+        default=True,
+        description="Enable onboarding wizard for first-time users",
+    )
+
+    enable_guided_tour: bool = Field(
+        default=True,
+        description="Enable guided tour after onboarding for feature discovery",
+    )
+
+    enable_sus_survey: bool = Field(
+        default=True,
+        description="Enable System Usability Scale (SUS) survey after 3 sessions or 7 days",
+    )
+
+    enable_command_palette: bool = Field(
+        default=True,
+        description="Enable command palette (Cmd+K) for quick actions",
+    )
+
+    enable_keyboard_shortcuts: bool = Field(
+        default=True,
+        description="Enable customizable keyboard shortcuts",
+    )
+
+    enable_theme_customization: bool = Field(
+        default=True,
+        description="Enable theme customization (light/dark/system)",
+    )
+
+    enable_confirmation_dialogs: bool = Field(
+        default=True,
+        description="Enable confirmation dialogs for destructive actions",
     )
 
     # Experimental Features
@@ -337,9 +459,24 @@ class FeatureFlags(BaseSettings):
             "observability": self.enable_observability_ui,
             "code_export": self.enable_code_export,
             "ai_suggestions": self.enable_ai_suggestions,
+            "llm_suggestions": self.enable_llm_suggestions,
             "notification_preferences": self.enable_notification_preferences,
             "mcp_websocket": self.enable_mcp_websocket,
             "interactive_artifacts": self.enable_interactive_artifacts,
+            "url_content_fetch": self.enable_url_content_fetch,
+            "slash_commands": self.enable_slash_commands,
+            "style_presets": self.enable_style_presets,
+            # UX Enhancement Features
+            "user_preferences_sync": self.enable_user_preferences_sync,
+            "session_export": self.enable_session_export,
+            "project_context": self.enable_project_context,
+            "onboarding_wizard": self.enable_onboarding_wizard,
+            "guided_tour": self.enable_guided_tour,
+            "sus_survey": self.enable_sus_survey,
+            "command_palette": self.enable_command_palette,
+            "keyboard_shortcuts": self.enable_keyboard_shortcuts,
+            "theme_customization": self.enable_theme_customization,
+            "confirmation_dialogs": self.enable_confirmation_dialogs,
         }
 
 
