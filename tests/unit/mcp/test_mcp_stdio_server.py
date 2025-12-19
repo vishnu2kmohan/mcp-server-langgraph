@@ -378,7 +378,7 @@ class TestHandleChat:
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_agent_graph")
     @patch("mcp_server_langgraph.mcp.server_stdio.tracer")
-    @patch("mcp_server_langgraph.mcp.server_stdio.format_response")
+    @patch("mcp_server_langgraph.mcp.handlers.chat.format_response")
     async def test_handle_chat_new_conversation(
         self,
         mock_format_response,
@@ -460,7 +460,7 @@ class TestHandleChat:
             "thread_id": "existing_conv",
             "response_format": "detailed",
         }
-        with patch("mcp_server_langgraph.mcp.server_stdio.format_response", return_value="Response"):
+        with patch("mcp_server_langgraph.mcp.handlers.chat.format_response", return_value="Response"):
             result = await server._handle_chat(arguments, span, get_user_id("alice"))
             assert isinstance(result, list)
             mock_auth_middleware.authorize.assert_called_with(
@@ -546,7 +546,7 @@ class TestResponseFormatting:
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_agent_graph")
     @patch("mcp_server_langgraph.mcp.server_stdio.tracer")
-    @patch("mcp_server_langgraph.mcp.server_stdio.format_response")
+    @patch("mcp_server_langgraph.mcp.handlers.chat.format_response")
     async def test_concise_format_applied(
         self,
         mock_format_response,

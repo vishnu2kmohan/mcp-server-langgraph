@@ -7,103 +7,28 @@ Implements Anthropic's best practices for writing tools for agents:
 - Response format control (concise vs detailed)
 - Namespaced tools for clarity
 - High-signal information in responses
+
+Phase 2.1 SRP decomposition: Handler logic extracted to mcp/handlers/ modules.
 """
 
 import asyncio
 import sys
-import time
-from typing import Any, Literal
+from typing import Any
 
-from langchain_core.messages import HumanMessage
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Resource, TextContent, Tool
-from pydantic import AnyUrl, BaseModel, Field
+from pydantic import AnyUrl
 
 from mcp_server_langgraph.auth.factory import create_auth_middleware
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
-from mcp_server_langgraph.core.agent import AgentState, cleanup_checkpointer, create_agent_graph
+from mcp_server_langgraph.core.agent import cleanup_checkpointer, create_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.core.dependencies import get_openfga_client
-from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
+from mcp_server_langgraph.mcp.handlers import ChatToolHandler, ConversationToolHandler, ExecutionToolHandler
+from mcp_server_langgraph.mcp.models import ChatInput, SearchConversationsInput
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
-from mcp_server_langgraph.utils.response_optimizer import format_response
-
-
-class ChatInput(BaseModel):
-    """
-    Input schema for agent_chat tool.
-
-    Follows Anthropic best practices:
-    - Unambiguous parameter names (user_id not username, message not query)
-    - Response format control for token efficiency
-    - Clear field descriptions
-    """
-
-    message: str = Field(description="The user message to send to the agent", min_length=1, max_length=10000)
-    token: str = Field(
-        description=(
-            "JWT authentication token. Obtain via /auth/login endpoint (HTTP) "
-            "or external authentication service. Required for all tool calls."
-        )
-    )
-    user_id: str = Field(
-        description=(
-            "User identifier for authentication and authorization. "
-            "Accepts both plain usernames ('alice') and OpenFGA-prefixed IDs ('user:alice'). "
-            "The system will normalize both formats automatically."
-        )
-    )
-    thread_id: str | None = Field(
-        default=None, description="Optional thread ID for conversation continuity (e.g., 'conv_123')"
-    )
-    response_format: Literal["concise", "detailed"] = Field(
-        default="concise",
-        description=(
-            "Response verbosity level. "
-            "'concise' returns ~500 tokens (faster, less context). "
-            "'detailed' returns ~2000 tokens (comprehensive, more context)."
-        ),
-    )
-
-    # Backward compatibility - DEPRECATED
-    username: str | None = Field(
-        default=None, deprecated=True, description="DEPRECATED: Use 'user_id' instead. Maintained for backward compatibility."
-    )
-
-    @property
-    def effective_user_id(self) -> str:
-        """Get effective user ID, prioritizing user_id over deprecated username."""
-        return self.user_id if hasattr(self, "user_id") and self.user_id else (self.username or "")
-
-
-class SearchConversationsInput(BaseModel):
-    """Input schema for conversation_search tool."""
-
-    query: str = Field(
-        description="Search query to filter conversations. Empty string returns recent conversations.",
-        min_length=0,
-        max_length=500,
-    )
-    token: str = Field(
-        description=(
-            "JWT authentication token. Obtain via /auth/login endpoint (HTTP) "
-            "or external authentication service. Required for all tool calls."
-        )
-    )
-    user_id: str = Field(description="User identifier for authentication and authorization")
-    limit: int = Field(default=10, ge=1, le=50, description="Maximum number of conversations to return (1-50)")
-
-    # Backward compatibility - DEPRECATED
-    username: str | None = Field(
-        default=None, deprecated=True, description="DEPRECATED: Use 'user_id' instead. Maintained for backward compatibility."
-    )
-
-    @property
-    def effective_user_id(self) -> str:
-        """Get effective user ID, prioritizing user_id over deprecated username."""
-        return self.user_id if hasattr(self, "user_id") and self.user_id else (self.username or "")
 
 
 class MCPAgentServer:
@@ -219,6 +144,11 @@ class MCPAgentServer:
                 raise ValueError(msg)
 
             self.auth = create_auth_middleware(self.settings, openfga_client=self.openfga)
+
+        # Initialize tool handlers (Phase 2.1 SRP decomposition)
+        self._chat_handler = ChatToolHandler(auth=self.auth, agent_graph=self.agent_graph)
+        self._conversation_handler = ConversationToolHandler(auth=self.auth, agent_graph=self.agent_graph)
+        self._execution_handler = ExecutionToolHandler(auth=self.auth, agent_graph=self.agent_graph)
 
         self._setup_handlers()
 
@@ -450,16 +380,17 @@ class MCPAgentServer:
             logger.info("Authorization granted", extra={"user_id": user_id, "resource": resource})
 
             # Route to appropriate handler (with backward compatibility)
+            # Phase 2.1: Delegating to decomposed handlers instead of inline methods
             if name == "agent_chat" or name == "chat":  # Support old name for compatibility
-                return await self._handle_chat(arguments, span, user_id)
+                return await self._chat_handler.handle(arguments, span, user_id)
             elif name == "conversation_get" or name == "get_conversation":
-                return await self._handle_get_conversation(arguments, span, user_id)
+                return await self._conversation_handler.handle_get_conversation(arguments, span, user_id)
             elif name == "conversation_search" or name == "list_conversations":
-                return await self._handle_search_conversations(arguments, span, user_id)
+                return await self._conversation_handler.handle_search_conversations(arguments, span, user_id)
             elif name == "search_tools":
-                return await self._handle_search_tools(arguments, span)
+                return await self._execution_handler.handle_search_tools(arguments, span)
             elif name == "execute_python":
-                return await self._handle_execute_python(arguments, span, user_id)
+                return await self._execution_handler.handle_execute_python(arguments, span, user_id)
             else:
                 msg = f"Unknown tool: {name}"
                 raise ValueError(msg)
@@ -506,435 +437,31 @@ class MCPAgentServer:
             cleanup_checkpointer(self.agent_graph.checkpointer)
             logger.debug("Agent graph checkpointer cleaned up")
 
+    # NOTE: _handle_* methods delegated to mcp/handlers/ modules in Phase 2.1 SRP decomposition.
+    # These wrapper methods are retained for test backward compatibility.
+    # - ChatToolHandler: handles agent_chat
+    # - ConversationToolHandler: handles conversation_get, conversation_search
+    # - ExecutionToolHandler: handles execute_python, search_tools
+
     async def _handle_chat(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
-        """
-        Handle agent_chat tool invocation.
-
-        Implements Anthropic best practices:
-        - Response format control (concise vs detailed)
-        - Token-efficient responses with truncation
-        - Clear error messages
-        - Performance tracking
-        """
-        with tracer.start_as_current_span("agent.chat"):
-            # BUGFIX: Validate input with Pydantic schema to enforce length limits and required fields
-            try:
-                chat_input = ChatInput.model_validate(arguments)
-            except Exception as e:
-                logger.error(f"Invalid chat input: {e}", extra={"arguments": arguments})
-                msg = f"Invalid chat input: {e}"
-                raise ValueError(msg)
-
-            message = chat_input.message
-            thread_id = chat_input.thread_id or "default"
-            response_format_type = chat_input.response_format
-
-            span.set_attribute("message.length", len(message))
-            span.set_attribute("thread.id", thread_id)
-            span.set_attribute("user.id", user_id)
-            span.set_attribute("response.format", response_format_type)
-
-            # Check if user can access this conversation
-            # BUGFIX: Allow first-time conversation creation without pre-existing OpenFGA tuples
-            # For new conversations, we short-circuit authorization and will seed ownership after creation
-            conversation_resource = f"conversation:{thread_id}"
-
-            # Check if conversation exists by trying to get state from checkpointer
-            graph = self.agent_graph
-            conversation_exists = False
-            if hasattr(graph, "checkpointer") and graph.checkpointer is not None:
-                try:
-                    config = {"configurable": {"thread_id": thread_id}}
-                    state_snapshot = await graph.aget_state(config)
-                    conversation_exists = state_snapshot is not None and state_snapshot.values is not None
-                except Exception:
-                    # If we can't check, assume it doesn't exist (fail-open for creation)
-                    conversation_exists = False
-
-            # Only check authorization for existing conversations
-            if conversation_exists:
-                can_edit = await self.auth.authorize(user_id=user_id, relation="editor", resource=conversation_resource)
-                if not can_edit:
-                    logger.warning("User cannot edit conversation", extra={"user_id": user_id, "thread_id": thread_id})
-                    msg = (
-                        f"Not authorized to edit conversation '{thread_id}'. "
-                        f"Request access from conversation owner or use a different thread_id."
-                    )
-                    raise PermissionError(msg)
-            else:
-                # New conversation - user becomes implicit owner (OpenFGA tuples should be seeded after creation)
-                logger.info(
-                    "Creating new conversation, user granted implicit ownership",
-                    extra={"user_id": user_id, "thread_id": thread_id},
-                )
-
-            logger.info(
-                "Processing chat message",
-                extra={
-                    "thread_id": thread_id,
-                    "user_id": user_id,
-                    "message_preview": message[:100],
-                    "response_format": response_format_type,
-                },
-            )
-
-            # Create initial state with proper LangChain message objects
-            initial_state: AgentState = {
-                "messages": [HumanMessage(content=message)],  # Use HumanMessage, not dict
-                "next_action": "",
-                "user_id": user_id,
-                "request_id": str(span.get_span_context().trace_id) if span.get_span_context() else None,
-                "routing_confidence": None,
-                "reasoning": None,
-                "compaction_applied": None,
-                "original_message_count": None,
-                "verification_passed": None,
-                "verification_score": None,
-                "verification_feedback": None,
-                "refinement_attempts": None,
-                "user_request": message,
-            }
-
-            # Run the agent graph
-            config = {"configurable": {"thread_id": thread_id}}
-
-            try:
-                result = await self.agent_graph.ainvoke(initial_state, config)
-
-                # Extract response
-                response_message = result["messages"][-1]
-                response_text = response_message.content
-
-                # Apply response formatting based on format type
-                # Follows Anthropic guidance: offer response_format enum parameter
-                formatted_response = format_response(response_text, format_type=response_format_type)
-
-                span.set_attribute("response.length.original", len(response_text))
-                span.set_attribute("response.length.formatted", len(formatted_response))
-                metrics.successful_calls.add(1, {"tool": "agent_chat", "format": response_format_type})
-
-                logger.info(
-                    "Chat response generated",
-                    extra={
-                        "thread_id": thread_id,
-                        "original_length": len(response_text),
-                        "formatted_length": len(formatted_response),
-                        "format": response_format_type,
-                    },
-                )
-
-                # Record conversation metadata in store for search functionality
-                try:
-                    from mcp_server_langgraph.core.storage.conversation_store import get_conversation_store
-
-                    store = get_conversation_store()
-                    # Count messages in result
-                    message_count = len(result.get("messages", []))
-                    # Extract title from first few words of user message
-                    title = message[:50] + "..." if len(message) > 50 else message
-
-                    await store.record_conversation(
-                        thread_id=thread_id, user_id=user_id, message_count=message_count, title=title
-                    )
-
-                    logger.debug(f"Recorded conversation metadata for {thread_id}")
-                except Exception as e:
-                    # Non-critical - don't fail the request
-                    logger.debug(f"Failed to record conversation metadata: {e}")
-
-                return [TextContent(type="text", text=formatted_response)]
-
-            except Exception as e:
-                logger.error(f"Error processing chat: {e}", extra={"error": str(e), "thread_id": thread_id}, exc_info=True)
-                metrics.failed_calls.add(1, {"tool": "agent_chat", "error": type(e).__name__})
-                span.record_exception(e)
-                raise
+        """Delegate to ChatToolHandler (wrapper for test backward compatibility)."""
+        return await self._chat_handler.handle(arguments, span, user_id)
 
     async def _handle_get_conversation(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
-        """Retrieve conversation history from checkpointer"""
-        with tracer.start_as_current_span("agent.get_conversation"):
-            thread_id = arguments["thread_id"]
-
-            # Check if user can view this conversation
-            conversation_resource = f"conversation:{thread_id}"
-
-            can_view = await self.auth.authorize(user_id=user_id, relation="viewer", resource=conversation_resource)
-
-            if not can_view:
-                logger.warning("User cannot view conversation", extra={"user_id": user_id, "thread_id": thread_id})
-                msg = f"Not authorized to view conversation {thread_id}"
-                raise PermissionError(msg)
-
-            # Retrieve conversation state from checkpointer
-            try:
-                # Get the checkpointer from agent_graph
-                graph = self.agent_graph
-                if not hasattr(graph, "checkpointer") or graph.checkpointer is None:
-                    logger.warning("Checkpointing not enabled, cannot retrieve conversation history")
-                    return [
-                        TextContent(
-                            type="text",
-                            text=f"Conversation history not available for thread {thread_id}. "
-                            "Checkpointing is disabled. Enable it by setting ENABLE_CHECKPOINTING=true.",
-                        )
-                    ]
-
-                # Get state from checkpointer
-                config = {"configurable": {"thread_id": thread_id}}
-                state_snapshot = await graph.aget_state(config)
-
-                if not state_snapshot or not state_snapshot.values:
-                    logger.info("No conversation history found", extra={"thread_id": thread_id})
-                    return [
-                        TextContent(
-                            type="text",
-                            text=f"No conversation history found for thread {thread_id}. "
-                            "This thread may not exist or has no messages yet.",
-                        )
-                    ]
-
-                # Extract messages from state
-                messages = state_snapshot.values.get("messages", [])
-
-                if not messages:
-                    return [
-                        TextContent(
-                            type="text",
-                            text=f"Thread {thread_id} exists but has no messages yet.",
-                        )
-                    ]
-
-                # Format messages for display
-                formatted_messages = []
-                for i, msg in enumerate(messages, 1):
-                    role = "unknown"
-                    content = str(msg)
-
-                    if hasattr(msg, "type"):
-                        role = msg.type
-                    elif hasattr(msg, "__class__"):
-                        role = msg.__class__.__name__.replace("Message", "").lower()
-
-                    if hasattr(msg, "content"):
-                        content = msg.content
-
-                    formatted_messages.append(
-                        f"{i}. [{role}] {content[:MESSAGE_PREVIEW_LENGTH]}"
-                        f"{'...' if len(content) > MESSAGE_PREVIEW_LENGTH else ''}"
-                    )
-
-                # Build response
-                response_text = (
-                    f"Conversation history for thread {thread_id}\n"
-                    f"Total messages: {len(messages)}\n"
-                    f"User: {user_id}\n\n"
-                    f"Messages:\n" + "\n".join(formatted_messages)
-                )
-
-                logger.info(
-                    "Retrieved conversation history",
-                    extra={"thread_id": thread_id, "message_count": len(messages), "user_id": user_id},
-                )
-
-                return [TextContent(type="text", text=response_text)]
-
-            except Exception as e:
-                logger.error(f"Failed to retrieve conversation: {e}", extra={"thread_id": thread_id}, exc_info=True)
-                return [
-                    TextContent(
-                        type="text",
-                        text=f"Error retrieving conversation {thread_id}: {e!s}. "
-                        "This may indicate a checkpointer issue or the conversation may not exist.",
-                    )
-                ]
+        """Delegate to ConversationToolHandler (wrapper for test backward compatibility)."""
+        return await self._conversation_handler.handle_get_conversation(arguments, span, user_id)
 
     async def _handle_search_conversations(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
-        """
-        Search conversations (replacing list-all approach).
-
-        Implements Anthropic best practice:
-        "Implement search-focused tools (like search_contacts) rather than
-        list-all tools (list_contacts)"
-
-        Benefits:
-        - Prevents context overflow with large conversation lists
-        - Forces agents to be specific in their requests
-        - More token-efficient
-        - Better for users with many conversations
-        """
-        with tracer.start_as_current_span("agent.search_conversations"):
-            # BUGFIX: Validate input with Pydantic schema to enforce query length and limit constraints
-            try:
-                search_input = SearchConversationsInput.model_validate(arguments)
-            except Exception as e:
-                logger.error(f"Invalid search input: {e}", extra={"arguments": arguments})
-                msg = f"Invalid search input: {e}"
-                raise ValueError(msg)
-
-            query = search_input.query
-            limit = search_input.limit
-
-            span.set_attribute("search.query", query)
-            span.set_attribute("search.limit", limit)
-
-            # Initialize all_conversations for logging
-            all_conversations = []
-
-            # Try to get conversations from OpenFGA first, fall back to conversation store
-            try:
-                # Get all conversations user can view from OpenFGA
-                all_conversations = await self.auth.list_accessible_resources(
-                    user_id=user_id, relation="viewer", resource_type="conversation"
-                )
-
-                # Filter conversations based on query
-                # Normalize query and conversation names to handle spaces/underscores/hyphens
-                if query:
-                    normalized_query = query.lower().replace(" ", "_").replace("-", "_")
-                    filtered_conversations = [
-                        conv
-                        for conv in all_conversations
-                        if (
-                            query.lower() in conv.lower()
-                            or normalized_query in conv.lower().replace(" ", "_").replace("-", "_")
-                        )
-                    ]
-                else:
-                    filtered_conversations = all_conversations
-
-            except Exception:
-                # Fall back to conversation store
-                logger.info("Using conversation store for search (OpenFGA unavailable or returning mock data)")
-
-                try:
-                    from mcp_server_langgraph.core.storage.conversation_store import get_conversation_store
-
-                    store = get_conversation_store()
-                    metadata_list = await store.search_conversations(user_id=user_id, query=query, limit=limit)
-
-                    # Convert metadata to conversation IDs
-                    filtered_conversations = [f"conversation:{m.thread_id}" for m in metadata_list]
-
-                except Exception as e:
-                    logger.warning(f"Conversation store also unavailable: {e}")
-                    # Ultimate fallback: empty list
-                    filtered_conversations = []
-
-            # Apply limit to prevent context overflow
-            # Follows Anthropic guidance: "Restrict responses to ~25,000 tokens"
-            limited_conversations = filtered_conversations[:limit]
-
-            # Build response with high-signal information
-            # Avoid technical IDs where possible
-            if not limited_conversations:
-                response_text = (
-                    f"No conversations found matching '{query}'. "
-                    f"Try a different search query or request access to more conversations."
-                )
-            else:
-                response_lines = [
-                    (
-                        f"Found {len(limited_conversations)} conversation(s) matching '{query}':"
-                        if query
-                        else f"Showing {len(limited_conversations)} recent conversation(s):"
-                    )
-                ]
-
-                for i, conv_id in enumerate(limited_conversations, 1):
-                    # Extract human-readable info from conversation ID
-                    # In production, fetch metadata like title, date, participants
-                    response_lines.append(f"{i}. {conv_id}")
-
-                # Add guidance if results were truncated
-                if len(filtered_conversations) > limit:
-                    response_lines.append(
-                        f"\n[Showing {limit} of {len(filtered_conversations)} results. "
-                        f"Use a more specific query to narrow results.]"
-                    )
-
-                response_text = "\n".join(response_lines)
-
-            logger.info(
-                "Searched conversations",
-                extra={
-                    "user_id": user_id,
-                    "query": query,
-                    "total_accessible": len(all_conversations),
-                    "filtered_count": len(filtered_conversations),
-                    "returned_count": len(limited_conversations),
-                },
-            )
-
-            return [TextContent(type="text", text=response_text)]
+        """Delegate to ConversationToolHandler (wrapper for test backward compatibility)."""
+        return await self._conversation_handler.handle_search_conversations(arguments, span, user_id)
 
     async def _handle_search_tools(self, arguments: dict[str, Any], span: Any) -> list[TextContent]:
-        """
-        Handle search_tools invocation for progressive tool discovery.
-
-        Implements Anthropic best practice for token-efficient tool discovery.
-        """
-        with tracer.start_as_current_span("tools.search"):
-            from mcp_server_langgraph.tools.tool_discovery import search_tools
-
-            # Extract arguments
-            query = arguments.get("query")
-            category = arguments.get("category")
-            detail_level = arguments.get("detail_level", "minimal")
-
-            logger.info(
-                "Searching tools",
-                extra={"query": query, "category": category, "detail_level": detail_level},
-            )
-
-            # Execute search_tools
-            result = search_tools.invoke(
-                {
-                    "query": query,
-                    "category": category,
-                    "detail_level": detail_level,
-                }
-            )
-
-            span.set_attribute("tools.query", query or "")
-            span.set_attribute("tools.category", category or "")
-            span.set_attribute("tools.detail_level", detail_level)
-
-            return [TextContent(type="text", text=result)]
+        """Delegate to ExecutionToolHandler (wrapper for test backward compatibility)."""
+        return await self._execution_handler.handle_search_tools(arguments, span)
 
     async def _handle_execute_python(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
-        """
-        Handle execute_python invocation for secure code execution.
-
-        Implements sandboxed Python execution with validation and resource limits.
-        """
-        with tracer.start_as_current_span("code.execute"):
-            from mcp_server_langgraph.tools.code_execution_tools import execute_python
-
-            # Extract arguments
-            code = arguments.get("code", "")
-            timeout = arguments.get("timeout")
-
-            logger.info(
-                "Executing Python code",
-                extra={
-                    "user_id": user_id,
-                    "code_length": len(code),
-                    "timeout": timeout,
-                },
-            )
-
-            # Execute code
-            start_time = time.time()
-            result = execute_python.invoke({"code": code, "timeout": timeout})
-            execution_time = time.time() - start_time
-
-            span.set_attribute("code.length", len(code))
-            span.set_attribute("code.execution_time", execution_time)
-            span.set_attribute("code.success", "success" in result.lower())
-
-            metrics.code_executions.add(1, {"user_id": user_id, "success": "success" in result.lower()})
-
-            return [TextContent(type="text", text=result)]
+        """Delegate to ExecutionToolHandler (wrapper for test backward compatibility)."""
+        return await self._execution_handler.handle_execute_python(arguments, span, user_id)
 
     async def run(self) -> None:
         """Run the MCP server"""
