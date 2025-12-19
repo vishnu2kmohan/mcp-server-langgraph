@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback, type ReactNode } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  lazy,
+  Suspense,
+  type ReactNode,
+} from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { Toaster } from "sonner";
 import { LeftSidebar } from "./components/Layout/LeftSidebar";
@@ -10,21 +17,52 @@ import { MainDock } from "./components/Layout/MainDock";
 import { ChatDocument } from "./components/Chat/ChatDocument";
 import { WorkflowDocument } from "./components/Workflow";
 import { ProjectDocument } from "./components/Project";
-import { SettingsDocument } from "./components/Settings";
-import { CostDocument, ObservabilityDocument } from "./components/Insights";
 import type { TabState } from "./store/slices/workspaceSlice";
 import { OfflineBanner } from "./components/UI";
 import { UpdatePrompt } from "./components/PWA";
-import {
-  OnboardingWizard,
-  GuidedTour,
-  type WorkflowTemplate,
-  type OnboardingResult,
-  type TourStep,
-  type TourCompleteResult,
-  type TourSkipResult,
+import type {
+  WorkflowTemplate,
+  OnboardingResult,
+  TourStep,
+  TourCompleteResult,
+  TourSkipResult,
 } from "./components/Onboarding";
-import { SUSSurvey, type SUSSurveyResult } from "./components/Feedback";
+import type { SUSSurveyResult } from "./components/Feedback";
+
+// Lazy-loaded components for better bundle splitting
+// These are only loaded when needed (modal/conditional rendering)
+const SettingsDocument = lazy(() =>
+  import("./components/Settings").then((m) => ({
+    default: m.SettingsDocument,
+  })),
+);
+const CostDocument = lazy(() =>
+  import("./components/Insights").then((m) => ({ default: m.CostDocument })),
+);
+const ObservabilityDocument = lazy(() =>
+  import("./components/Insights").then((m) => ({
+    default: m.ObservabilityDocument,
+  })),
+);
+const OnboardingWizard = lazy(() =>
+  import("./components/Onboarding").then((m) => ({
+    default: m.OnboardingWizard,
+  })),
+);
+const GuidedTour = lazy(() =>
+  import("./components/Onboarding").then((m) => ({ default: m.GuidedTour })),
+);
+const SUSSurvey = lazy(() =>
+  import("./components/Feedback").then((m) => ({ default: m.SUSSurvey })),
+);
+
+// Loading fallback for lazy-loaded components (defined outside component to avoid recreating on each render)
+const LazyFallback = (
+  <div className="flex h-full items-center justify-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
+  </div>
+);
+
 import { useAppDispatch } from "./store/hooks";
 import { setUserInfo, setPersonaLoading } from "./store/slices/personaSlice";
 import { initializeAuth } from "./store/slices/authSlice";
@@ -179,11 +217,23 @@ export function App() {
         case "project":
           return <ProjectDocument projectId={tab.entityId || ""} />;
         case "settings":
-          return <SettingsDocument />;
+          return (
+            <Suspense fallback={LazyFallback}>
+              <SettingsDocument />
+            </Suspense>
+          );
         case "cost":
-          return <CostDocument />;
+          return (
+            <Suspense fallback={LazyFallback}>
+              <CostDocument />
+            </Suspense>
+          );
         case "observability":
-          return <ObservabilityDocument />;
+          return (
+            <Suspense fallback={LazyFallback}>
+              <ObservabilityDocument />
+            </Suspense>
+          );
         default:
           return <div className="p-4 text-gray-500">Unknown tab type</div>;
       }
@@ -477,28 +527,37 @@ export function App() {
         onUpdate={updateApp}
         onDismiss={dismissUpdate}
       />
-      {/* Global onboarding wizard for first-time users */}
-      {isStudioRoute && (
-        <OnboardingWizard
-          isOpen={shouldShowOnboarding}
-          onComplete={handleOnboardingComplete}
-          onSkip={handleOnboardingSkip}
-          templates={templates ?? DEFAULT_TEMPLATES}
-        />
+      {/* Global onboarding wizard for first-time users (lazy-loaded) */}
+      {isStudioRoute && shouldShowOnboarding && (
+        <Suspense fallback={null}>
+          <OnboardingWizard
+            isOpen={shouldShowOnboarding}
+            onComplete={handleOnboardingComplete}
+            onSkip={handleOnboardingSkip}
+            templates={templates ?? DEFAULT_TEMPLATES}
+          />
+        </Suspense>
       )}
-      {/* Guided tour after onboarding (Priority 2.2) */}
-      {isStudioRoute && (
-        <GuidedTour
-          isActive={showGuidedTour}
-          steps={TOUR_STEPS}
-          onComplete={handleTourComplete}
-          onSkip={handleTourSkip}
-        />
+      {/* Guided tour after onboarding (Priority 2.2, lazy-loaded) */}
+      {isStudioRoute && showGuidedTour && (
+        <Suspense fallback={null}>
+          <GuidedTour
+            isActive={showGuidedTour}
+            steps={TOUR_STEPS}
+            onComplete={handleTourComplete}
+            onSkip={handleTourSkip}
+          />
+        </Suspense>
       )}
-      {/* SUS Survey modal (Priority 1.4) */}
+      {/* SUS Survey modal (Priority 1.4, lazy-loaded) */}
       {showSUSSurvey && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
-          <SUSSurvey onSubmit={handleSUSSubmit} onDismiss={handleSUSDismiss} />
+          <Suspense fallback={null}>
+            <SUSSurvey
+              onSubmit={handleSUSSubmit}
+              onDismiss={handleSUSDismiss}
+            />
+          </Suspense>
         </div>
       )}
     </div>
