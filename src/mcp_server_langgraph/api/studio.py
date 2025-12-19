@@ -18,7 +18,6 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.api.v1.workflows import WorkflowService
 from mcp_server_langgraph.auth.middleware import get_current_user
-from mcp_server_langgraph.studio.ai.suggestions import WorkflowSuggestionAgent
 from mcp_server_langgraph.studio.ai.templates import BUILT_IN_TEMPLATES, TemplateRecommender
 
 # Type aliases for FastAPI dependencies
@@ -79,30 +78,6 @@ class WorkflowResponse(BaseModel):
     owner_id: str
     created_at: str
     updated_at: str
-
-
-class SuggestionRequest(BaseModel):
-    """Request for AI suggestions on a workflow."""
-
-    workflow: dict[str, Any] = Field(..., description="Workflow to analyze")
-    max_suggestions: int = Field(default=5, ge=1, le=20, description="Max suggestions to return")
-    confidence_threshold: float = Field(default=0.0, ge=0.0, le=1.0)
-
-
-class SuggestionResponse(BaseModel):
-    """A single suggestion item."""
-
-    type: str
-    description: str
-    confidence: float
-    metadata: dict[str, Any] = Field(default_factory=dict)
-
-
-class SuggestionsResponse(BaseModel):
-    """Response containing AI suggestions."""
-
-    suggestions: list[SuggestionResponse]
-    workflow_id: str | None = None
 
 
 class RecommendTemplatesRequest(BaseModel):
@@ -366,42 +341,6 @@ async def list_workflows(
         )
         for w in workflows
     ]
-
-
-# =============================================================================
-# AI Suggestion Endpoints
-# =============================================================================
-
-
-@router.post("/suggestions")
-async def get_suggestions(
-    request: SuggestionRequest,
-    current_user: CurrentUser,
-) -> SuggestionsResponse:
-    """
-    Get AI suggestions for a workflow.
-
-    Analyzes the workflow and returns optimization suggestions.
-    """
-    agent = WorkflowSuggestionAgent()
-    suggestions = await agent.suggest(
-        workflow=request.workflow,
-        max_suggestions=request.max_suggestions,
-        confidence_threshold=request.confidence_threshold,
-    )
-
-    return SuggestionsResponse(
-        suggestions=[
-            SuggestionResponse(
-                type=s.type,
-                description=s.description,
-                confidence=s.confidence,
-                metadata=s.metadata,
-            )
-            for s in suggestions
-        ],
-        workflow_id=request.workflow.get("id"),
-    )
 
 
 # =============================================================================

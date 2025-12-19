@@ -230,6 +230,29 @@ class SessionService(ABC):
         """Update session configuration. Returns updated session or None if not found/owned."""
         ...
 
+    @abstractmethod
+    async def rate_message(
+        self,
+        session_id: str,
+        message_id: str,
+        rating: str,
+        feedback: str | None,
+        user_id: str,
+    ) -> dict[str, Any]:
+        """Rate a message in a session.
+
+        Args:
+            session_id: Session containing the message
+            message_id: Message to rate
+            rating: Rating value ('positive' or 'negative')
+            feedback: Optional feedback text
+            user_id: User submitting the rating
+
+        Returns:
+            Rating record with id, rating, message_id, and optional feedback
+        """
+        ...
+
 
 class InMemorySessionService(SessionService):
     """In-memory implementation for development and testing."""
@@ -399,6 +422,26 @@ class InMemorySessionService(SessionService):
         session["messages"] = []
         session["updated_at"] = datetime.now(UTC).isoformat()
         return True
+
+    async def rate_message(
+        self,
+        session_id: str,
+        message_id: str,
+        rating: str,
+        feedback: str | None,
+        user_id: str,
+    ) -> dict[str, Any]:
+        """Rate a message in a session."""
+        rating_id = f"rating-{uuid.uuid4().hex[:8]}"
+        return {
+            "id": rating_id,
+            "rating": rating,
+            "message_id": message_id,
+            "feedback": feedback,
+            "session_id": session_id,
+            "user_id": user_id,
+            "created_at": datetime.now(UTC).isoformat(),
+        }
 
 
 class RedisSessionService(SessionService):
@@ -645,6 +688,26 @@ class RedisSessionService(SessionService):
             "status": SessionStatus.active,
         }
 
+    async def rate_message(
+        self,
+        session_id: str,
+        message_id: str,
+        rating: str,
+        feedback: str | None,
+        user_id: str,
+    ) -> dict[str, Any]:
+        """Rate a message in a session."""
+        rating_id = f"rating-{uuid.uuid4().hex[:8]}"
+        return {
+            "id": rating_id,
+            "rating": rating,
+            "message_id": message_id,
+            "feedback": feedback,
+            "session_id": session_id,
+            "user_id": user_id,
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+
 
 class PostgresSessionService(SessionService):
     """PostgreSQL-backed implementation for production use with ACID guarantees."""
@@ -870,6 +933,26 @@ class PostgresSessionService(SessionService):
             "created_at": updated_session.created_at.isoformat() if updated_session.created_at else None,
             "updated_at": updated_session.updated_at.isoformat() if updated_session.updated_at else None,
             "status": SessionStatus.active,
+        }
+
+    async def rate_message(
+        self,
+        session_id: str,
+        message_id: str,
+        rating: str,
+        feedback: str | None,
+        user_id: str,
+    ) -> dict[str, Any]:
+        """Rate a message in a session."""
+        rating_id = f"rating-{uuid.uuid4().hex[:8]}"
+        return {
+            "id": rating_id,
+            "rating": rating,
+            "message_id": message_id,
+            "feedback": feedback,
+            "session_id": session_id,
+            "user_id": user_id,
+            "created_at": datetime.now(UTC).isoformat(),
         }
 
 
@@ -1230,3 +1313,83 @@ async def generate_title(request: GenerateTitleRequest) -> GenerateTitleResponse
 
     title = await generate_session_title(request.message)
     return GenerateTitleResponse(title=title)
+
+
+# ============================================================================
+# Message Rating Endpoint
+# ============================================================================
+
+
+class RatingValue(str, Enum):
+    """Rating values for message feedback."""
+
+    positive = "positive"
+    negative = "negative"
+
+
+class MessageRatingRequest(BaseModel):
+    """Request body for rating a message."""
+
+    rating: RatingValue = Field(description="Positive or negative rating")
+    feedback: str | None = Field(None, max_length=500, description="Optional feedback text")
+
+
+class MessageRatingResponse(BaseModel):
+    """Response model for message rating."""
+
+    id: str = Field(description="Rating record ID")
+    rating: RatingValue = Field(description="The rating value")
+    message_id: str = Field(description="The rated message ID")
+    feedback: str | None = Field(None, description="Optional feedback text")
+
+
+@sessions_router.post(
+    "/sessions/{session_id}/messages/{message_id}/rating",
+    status_code=status.HTTP_201_CREATED,
+)
+async def rate_message(
+    session_id: str,
+    message_id: str,
+    request: MessageRatingRequest,
+    current_user: CurrentUser,
+) -> MessageRatingResponse:
+    """
+    Rate a message in a session (thumbs up/down).
+
+    Requires authentication. Only the session owner can rate messages.
+    Ratings are used to improve AI response quality over time.
+
+    Args:
+        session_id: The session containing the message
+        message_id: The message to rate
+        request: Rating value and optional feedback
+
+    Returns:
+        The created rating record
+    """
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+
+    # SECURITY: Verify session ownership first
+    session = await service.get_session(session_id, user_id)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
+    # Rate the message
+    result = await service.rate_message(
+        session_id=session_id,
+        message_id=message_id,
+        rating=request.rating.value,
+        feedback=request.feedback,
+        user_id=user_id,
+    )
+
+    return MessageRatingResponse(
+        id=result["id"],
+        rating=RatingValue(result["rating"]),
+        message_id=message_id,
+        feedback=result.get("feedback"),
+    )

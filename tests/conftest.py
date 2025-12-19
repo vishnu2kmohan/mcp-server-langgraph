@@ -470,6 +470,119 @@ def in_memory_span_exporter():
     exporter.clear()
 
 
+# ==============================================================================
+# Mock Factory Fixtures
+# ==============================================================================
+
+
+@pytest.fixture
+def configured_async_mock():  # type: ignore[no-untyped-def]
+    """
+    Factory fixture for creating properly configured AsyncMock instances.
+
+    Returns a factory function that creates AsyncMock objects with
+    configurable return values, side effects, and specs.
+
+    Usage:
+        def test_something(configured_async_mock):
+            # Mock with return value
+            mock_service = configured_async_mock(return_value={"status": "ok"})
+            result = await mock_service()
+            assert result == {"status": "ok"}
+
+            # Mock with side effect
+            mock_error = configured_async_mock(side_effect=ValueError("test error"))
+            with pytest.raises(ValueError):
+                await mock_error()
+
+            # Mock with spec
+            from mymodule import MyService
+            mock_typed = configured_async_mock(spec=MyService, return_value=True)
+            result = await mock_typed.some_method()
+            assert result is True
+
+    Best Practices:
+        - Always specify `spec` parameter to ensure type safety
+        - Use `return_value` for simple return values
+        - Use `side_effect` for exceptions or sequential returns
+        - See tests/ASYNC_MOCK_GUIDELINES.md for complete guidelines
+        - Remember to add `teardown_method() + gc.collect()` for xdist safety
+
+    Args:
+        return_value: Value to return when the mock is called (optional)
+        side_effect: Exception to raise or sequence of return values (optional)
+        spec: Class/object to spec the mock against (optional but recommended)
+
+    Returns:
+        Configured AsyncMock instance
+    """
+    from unittest.mock import AsyncMock
+
+    def _factory(return_value=None, side_effect=None, spec=None):  # type: ignore[no-untyped-def]
+        mock = AsyncMock(spec=spec)
+        if return_value is not None:
+            mock.return_value = return_value
+        if side_effect is not None:
+            mock.side_effect = side_effect
+        return mock
+
+    return _factory
+
+
+@pytest.fixture
+def configured_mock():  # type: ignore[no-untyped-def]
+    """
+    Factory fixture for creating properly configured MagicMock instances.
+
+    Returns a factory function that creates MagicMock objects with
+    configurable return values, side effects, and specs.
+
+    Usage:
+        def test_something(configured_mock):
+            # Mock with return value
+            mock_service = configured_mock(return_value={"status": "ok"})
+            result = mock_service()
+            assert result == {"status": "ok"}
+
+            # Mock with side effect
+            mock_error = configured_mock(side_effect=ValueError("test error"))
+            with pytest.raises(ValueError):
+                mock_error()
+
+            # Mock with spec
+            from mymodule import MyService
+            mock_typed = configured_mock(spec=MyService, return_value=True)
+            result = mock_typed.some_method()
+            assert result is True
+
+    Best Practices:
+        - Always specify `spec` parameter to ensure type safety
+        - Use `return_value` for simple return values
+        - Use `side_effect` for exceptions or sequential returns
+        - See tests/ASYNC_MOCK_GUIDELINES.md for complete guidelines
+        - Remember to add `teardown_method() + gc.collect()` for xdist safety
+
+    Args:
+        return_value: Value to return when the mock is called (optional)
+        side_effect: Exception to raise or sequence of return values (optional)
+        spec: Class/object to spec the mock against (optional but recommended)
+
+    Returns:
+        Configured MagicMock instance
+    """
+    from unittest.mock import MagicMock
+
+    def _factory(return_value=None, side_effect=None, spec=None):  # type: ignore[no-untyped-def]
+        mock = MagicMock(spec=spec)
+        if return_value is not None:
+            mock.return_value = return_value
+        if side_effect is not None:
+            mock.side_effect = side_effect
+        return mock
+
+    return _factory
+
+
 @pytest.fixture
 def test_infrastructure_ports():
     """

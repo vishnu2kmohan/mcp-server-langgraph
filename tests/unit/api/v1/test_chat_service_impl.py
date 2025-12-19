@@ -614,3 +614,240 @@ class TestChatServiceImpl:
         # Verify streaming still works
         assert len(chunks) == 1
         assert chunks[0]["delta"]["content"] == "Response"
+
+    # =========================================================================
+    # LangGraph event streaming tests
+    # =========================================================================
+
+    @pytest.mark.asyncio
+    async def test_create_stream_with_langgraph_emits_node_events(
+        self,
+        sample_messages: list[dict],
+    ) -> None:
+        """GIVEN a LangGraph-based agent
+        WHEN create_stream() is called with use_langgraph=True
+        THEN it emits langgraph_node events for each node execution
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        # Mock LangGraph agent with astream_events
+        mock_agent = AsyncMock()  # async-mock-configured
+
+        async def mock_astream_events(*args, **kwargs):
+            """Simulate LangGraph astream_events output."""
+            # Node start event
+            yield {
+                "event": "on_chain_start",
+                "name": "agent",
+                "data": {"input": {"messages": []}},
+                "metadata": {"langgraph_node": "agent"},
+            }
+            # Node output
+            yield {
+                "event": "on_chat_model_stream",
+                "data": {"chunk": MagicMock(content="Hello")},
+            }
+            # Node end event
+            yield {
+                "event": "on_chain_end",
+                "name": "agent",
+                "data": {"output": {"messages": []}},
+                "metadata": {"langgraph_node": "agent"},
+            }
+
+        mock_agent.astream_events = mock_astream_events
+
+        with patch("mcp_server_langgraph.api.v1.chat.acompletion"):
+            service = ChatServiceImpl(langgraph_agent=mock_agent)
+            chunks = []
+            async for chunk in service.create_stream(
+                session_id="test-session",
+                messages=sample_messages,
+                use_langgraph=True,
+            ):
+                chunks.append(chunk)
+
+        # Should include node events
+        node_events = [c for c in chunks if "langgraph_node" in c]
+        assert len(node_events) >= 1
+        assert node_events[0]["langgraph_node"]["name"] == "agent"
+
+    @pytest.mark.asyncio
+    async def test_create_stream_langgraph_emits_current_node(
+        self,
+        sample_messages: list[dict],
+    ) -> None:
+        """GIVEN a LangGraph-based agent executing
+        WHEN nodes transition
+        THEN current_node is emitted to track active node
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_agent = AsyncMock()  # async-mock-configured
+
+        async def mock_astream_events(*args, **kwargs):
+            # Simulate node transitions
+            yield {
+                "event": "on_chain_start",
+                "name": "router",
+                "metadata": {"langgraph_node": "router"},
+            }
+            yield {
+                "event": "on_chain_end",
+                "name": "router",
+                "metadata": {"langgraph_node": "router"},
+            }
+            yield {
+                "event": "on_chain_start",
+                "name": "agent",
+                "metadata": {"langgraph_node": "agent"},
+            }
+
+        mock_agent.astream_events = mock_astream_events
+
+        with patch("mcp_server_langgraph.api.v1.chat.acompletion"):
+            service = ChatServiceImpl(langgraph_agent=mock_agent)
+            chunks = []
+            async for chunk in service.create_stream(
+                session_id="test-session",
+                messages=sample_messages,
+                use_langgraph=True,
+            ):
+                chunks.append(chunk)
+
+        # Should include current_node updates
+        current_node_events = [c for c in chunks if "current_node" in c]
+        assert len(current_node_events) >= 2
+        # First node: router, then agent
+        node_names = [e["current_node"] for e in current_node_events]
+        assert "router" in node_names
+        assert "agent" in node_names
+
+    @pytest.mark.asyncio
+    async def test_create_stream_langgraph_emits_edge_events(
+        self,
+        sample_messages: list[dict],
+    ) -> None:
+        """GIVEN a LangGraph with conditional edges
+        WHEN edges are traversed
+        THEN langgraph_edge events are emitted
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_agent = AsyncMock()  # async-mock-configured
+
+        async def mock_astream_events(*args, **kwargs):
+            # Simulate edge traversal from router to agent
+            yield {
+                "event": "on_chain_start",
+                "name": "router",
+                "metadata": {"langgraph_node": "router"},
+            }
+            yield {
+                "event": "on_chain_end",
+                "name": "router",
+                "metadata": {
+                    "langgraph_node": "router",
+                    "langgraph_triggers": ["agent"],
+                },
+            }
+            yield {
+                "event": "on_chain_start",
+                "name": "agent",
+                "metadata": {"langgraph_node": "agent"},
+            }
+
+        mock_agent.astream_events = mock_astream_events
+
+        with patch("mcp_server_langgraph.api.v1.chat.acompletion"):
+            service = ChatServiceImpl(langgraph_agent=mock_agent)
+            chunks = []
+            async for chunk in service.create_stream(
+                session_id="test-session",
+                messages=sample_messages,
+                use_langgraph=True,
+            ):
+                chunks.append(chunk)
+
+        # Should include edge events
+        edge_events = [c for c in chunks if "langgraph_edge" in c]
+        assert len(edge_events) >= 1
+        assert edge_events[0]["langgraph_edge"]["from"] == "router"
+        assert edge_events[0]["langgraph_edge"]["to"] == "agent"
+
+    @pytest.mark.asyncio
+    async def test_create_stream_langgraph_includes_node_status(
+        self,
+        sample_messages: list[dict],
+    ) -> None:
+        """GIVEN a LangGraph node execution
+        WHEN node starts and completes
+        THEN node status transitions from running to completed
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_agent = AsyncMock()  # async-mock-configured
+
+        async def mock_astream_events(*args, **kwargs):
+            yield {
+                "event": "on_chain_start",
+                "name": "agent",
+                "metadata": {"langgraph_node": "agent"},
+            }
+            yield {
+                "event": "on_chain_end",
+                "name": "agent",
+                "metadata": {"langgraph_node": "agent"},
+            }
+
+        mock_agent.astream_events = mock_astream_events
+
+        with patch("mcp_server_langgraph.api.v1.chat.acompletion"):
+            service = ChatServiceImpl(langgraph_agent=mock_agent)
+            chunks = []
+            async for chunk in service.create_stream(
+                session_id="test-session",
+                messages=sample_messages,
+                use_langgraph=True,
+            ):
+                chunks.append(chunk)
+
+        # Find node events for 'agent'
+        node_events = [c for c in chunks if "langgraph_node" in c and c["langgraph_node"]["name"] == "agent"]
+        assert len(node_events) >= 2
+
+        # First event: running, last event: completed
+        statuses = [e["langgraph_node"]["status"] for e in node_events]
+        assert "running" in statuses
+        assert "completed" in statuses
+
+    @pytest.mark.asyncio
+    async def test_create_stream_fallback_to_litellm_when_no_langgraph(
+        self,
+        sample_messages: list[dict],
+    ) -> None:
+        """GIVEN no LangGraph agent configured
+        WHEN create_stream() is called with use_langgraph=True
+        THEN it falls back to LiteLLM streaming
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        async def mock_stream():
+            yield MagicMock(choices=[MagicMock(delta=MagicMock(content="Fallback"))])
+
+        with patch("mcp_server_langgraph.api.v1.chat.acompletion") as mock_acompletion:
+            mock_acompletion.return_value = mock_stream()
+
+            # No langgraph_agent provided
+            service = ChatServiceImpl()
+            chunks = []
+            async for chunk in service.create_stream(
+                session_id="test-session",
+                messages=sample_messages,
+                use_langgraph=True,  # Request LangGraph but none configured
+            ):
+                chunks.append(chunk)
+
+        # Should fallback to LiteLLM
+        assert len(chunks) == 1
+        assert chunks[0]["delta"]["content"] == "Fallback"

@@ -595,3 +595,112 @@ class TestSessionsListCombined:
             )
 
             assert response.status_code == 200
+
+
+# ============================================================================
+# Message Rating Tests
+# ============================================================================
+
+
+@pytest.mark.xdist_group(name="test_sessions_router_rating")
+class TestMessageRatingEndpoint:
+    """Tests for POST /api/v1/sessions/{session_id}/messages/{message_id}/rating endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_rate_message_returns_201(self, test_app: FastAPI, sample_session: dict) -> None:
+        """
+        GIVEN a valid session and message
+        WHEN POST request with rating is made
+        THEN response should be 201 Created
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.get_session.return_value = sample_session
+            mock_service.rate_message.return_value = {
+                "id": "rating-001",
+                "rating": "positive",
+                "message_id": "msg-123",
+            }
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.post(
+                f"/api/v1/sessions/{sample_session['id']}/messages/msg-123/rating",
+                json={"rating": "positive"},
+            )
+
+            assert response.status_code == 201
+
+    def test_rate_message_returns_rating_data(self, test_app: FastAPI, sample_session: dict) -> None:
+        """
+        GIVEN a valid session and message
+        WHEN POST request with rating is made
+        THEN response should contain rating data
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.get_session.return_value = sample_session
+            mock_service.rate_message.return_value = {
+                "id": "rating-001",
+                "rating": "positive",
+                "message_id": "msg-123",
+            }
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.post(
+                f"/api/v1/sessions/{sample_session['id']}/messages/msg-123/rating",
+                json={"rating": "positive"},
+            )
+            data = response.json()
+
+            assert "id" in data
+            assert data["rating"] == "positive"
+
+    def test_rate_message_with_feedback(self, test_app: FastAPI, sample_session: dict) -> None:
+        """
+        GIVEN a valid session and message
+        WHEN POST request with rating and feedback is made
+        THEN response should be 201 Created
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.get_session.return_value = sample_session
+            mock_service.rate_message.return_value = {
+                "id": "rating-001",
+                "rating": "negative",
+                "message_id": "msg-123",
+                "feedback": "Response was not helpful",
+            }
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.post(
+                f"/api/v1/sessions/{sample_session['id']}/messages/msg-123/rating",
+                json={"rating": "negative", "feedback": "Response was not helpful"},
+            )
+
+            assert response.status_code == 201
+
+    def test_rate_message_session_not_found(self, test_app: FastAPI) -> None:
+        """
+        GIVEN a session does not exist
+        WHEN POST request with rating is made
+        THEN response should be 404 Not Found
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.get_session.return_value = None
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            session_id = str(uuid4())
+            response = client.post(
+                f"/api/v1/sessions/{session_id}/messages/msg-123/rating",
+                json={"rating": "positive"},
+            )
+
+            assert response.status_code == 404

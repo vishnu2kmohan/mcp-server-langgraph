@@ -52,6 +52,16 @@ class ChatCompletionRequest(BaseModel):
         default=None,
         description="Optional list of MCP resource URIs to inject as context (MCP 2025-11-25)",
     )
+    # Extended thinking / reasoning effort parameters
+    reasoning_effort: Literal["low", "medium", "high"] | None = Field(
+        default=None,
+        description="Reasoning effort level for models supporting extended thinking (Claude Opus 4.5, Sonnet 4, Gemini 2.5). "
+        "Maps to LiteLLM's reasoning_effort parameter which translates to Anthropic's thinking budget.",
+    )
+    enable_thinking: bool = Field(
+        default=True,
+        description="Whether to enable extended thinking for supported models. Set to False to disable thinking even on models that support it.",
+    )
 
 
 class ChatUsage(BaseModel):
@@ -62,6 +72,13 @@ class ChatUsage(BaseModel):
     total_tokens: int | None = Field(default=None, description="Total tokens used")
 
 
+class ThinkingContent(BaseModel):
+    """Thinking/reasoning content from extended thinking models."""
+
+    content: str = Field(description="The model's internal reasoning/thinking content")
+    tokens: int | None = Field(default=None, description="Number of tokens used for thinking")
+
+
 class ChatCompletionResponse(BaseModel):
     """Response model for chat completion."""
 
@@ -70,6 +87,96 @@ class ChatCompletionResponse(BaseModel):
     usage: ChatUsage | None = Field(default=None, description="Token usage")
     model: str | None = Field(default=None, description="Model used")
     trace_id: str | None = Field(default=None, description="OpenTelemetry trace ID for observability correlation")
+    thinking: ThinkingContent | None = Field(
+        default=None,
+        description="Thinking/reasoning content from extended thinking models (Claude Opus 4.5, Sonnet 4, Gemini 2.5)",
+    )
+
+
+# ==============================================================================
+# Extended Thinking Support
+# ==============================================================================
+
+# Models that support extended thinking / reasoning effort
+# Based on LiteLLM docs: https://docs.litellm.ai/docs/reasoning_content
+THINKING_MODELS = frozenset(
+    {
+        # Anthropic models with extended thinking
+        "claude-opus-4-5",
+        "claude-opus-4-5-20250514",
+        "claude-sonnet-4-5",
+        "claude-sonnet-4-5-20250514",
+        "claude-sonnet-4",
+        "claude-3-7-sonnet",
+        "claude-3-7-sonnet-20250219",
+        "claude-3.7-sonnet",
+        "claude-3.5-sonnet",  # May support thinking in newer versions
+        # Anthropic prefixed models
+        "anthropic/claude-opus-4-5",
+        "anthropic/claude-opus-4-5-20250514",
+        "anthropic/claude-sonnet-4-5",
+        "anthropic/claude-sonnet-4-5-20250514",
+        "anthropic/claude-sonnet-4",
+        "anthropic/claude-3-7-sonnet",
+        "anthropic/claude-3-7-sonnet-20250219",
+        "anthropic/claude-3.7-sonnet",
+        # Google Gemini models with thinking
+        "gemini-2.5-pro",
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-thinking",
+        "gemini/gemini-2.5-pro",
+        "gemini/gemini-2.5-flash",
+        "gemini/gemini-2.5-flash-thinking",
+        # OpenAI o-series reasoning models
+        "o1",
+        "o1-preview",
+        "o1-mini",
+        "o3",
+        "o3-mini",
+        "openai/o1",
+        "openai/o1-preview",
+        "openai/o1-mini",
+        "openai/o3",
+        "openai/o3-mini",
+        # DeepSeek reasoning models
+        "deepseek-reasoner",
+        "deepseek/deepseek-reasoner",
+    }
+)
+
+
+def model_supports_thinking(model_name: str) -> bool:
+    """
+    Check if a model supports extended thinking / reasoning effort.
+
+    Args:
+        model_name: The model name to check (e.g., "claude-opus-4-5", "gemini-2.5-flash")
+
+    Returns:
+        True if the model supports extended thinking, False otherwise.
+    """
+    if not model_name:
+        return False
+
+    model_lower = model_name.lower()
+
+    # Check exact match first
+    if model_lower in THINKING_MODELS:
+        return True
+
+    # Check pattern-based matching for common naming variants
+    thinking_patterns = [
+        "claude-opus-4",
+        "claude-sonnet-4",
+        "claude-3.7",
+        "claude-3-7",
+        "gemini-2.5",
+        "o1-",
+        "o3-",
+        "deepseek-reasoner",
+    ]
+
+    return any(pattern in model_lower for pattern in thinking_patterns)
 
 
 # Service Interface
@@ -111,6 +218,7 @@ class ChatServiceImpl(ChatService):
         self,
         session_storage: Any | None = None,
         mcp_bridge: Any | None = None,
+        langgraph_agent: Any | None = None,
     ) -> None:
         """
         Initialize with optional dependencies.
@@ -120,9 +228,12 @@ class ChatServiceImpl(ChatService):
                              If None, history will return empty list.
             mcp_bridge: Optional MCPBridge instance for agent communication.
                         If None, uses LiteLLM as fallback.
+            langgraph_agent: Optional compiled LangGraph agent for astream_events.
+                             If provided, enables real-time node/edge streaming.
         """
         self._session_storage = session_storage
         self._mcp_bridge = mcp_bridge
+        self._langgraph_agent = langgraph_agent
 
     @property
     def mcp_bridge(self) -> Any | None:
@@ -271,18 +382,29 @@ class ChatServiceImpl(ChatService):
         model = kwargs.get("model") or settings.model_name
         temperature = kwargs.get("temperature", 0.7)
         max_tokens = kwargs.get("max_tokens")
+        reasoning_effort = kwargs.get("reasoning_effort")
+        enable_thinking = kwargs.get("enable_thinking", True)
 
         # Inject resource context if provided
         resource_uris = kwargs.get("resource_uris")
         messages = await self._inject_resource_context(messages, resource_uris)
 
-        response = await acompletion(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=False,
-        )
+        # Build completion parameters
+        completion_params: dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "stream": False,
+        }
+
+        # Add reasoning_effort for models that support extended thinking
+        # Only add if thinking is enabled and the model supports it
+        supports_thinking = model_supports_thinking(model)
+        if supports_thinking and enable_thinking and reasoning_effort:
+            completion_params["reasoning_effort"] = reasoning_effort
+
+        response = await acompletion(**completion_params)
 
         choice = response.choices[0]
         message_data = {
@@ -298,6 +420,27 @@ class ChatServiceImpl(ChatService):
                 "total_tokens": getattr(response.usage, "total_tokens", None),
             }
 
+        # Extract thinking content from response if available
+        # LiteLLM returns thinking content in different ways:
+        # 1. response.reasoning_content (unified field)
+        # 2. response.thinking_blocks (Anthropic-specific)
+        thinking_data = None
+        reasoning_content = getattr(response, "reasoning_content", None)
+        if reasoning_content:
+            thinking_data = {
+                "content": reasoning_content,
+                "tokens": getattr(response.usage, "reasoning_tokens", None) if response.usage else None,
+            }
+        elif hasattr(choice.message, "thinking_blocks") and choice.message.thinking_blocks:
+            # Anthropic-specific thinking blocks
+            thinking_blocks = choice.message.thinking_blocks
+            combined_thinking = "\n\n".join(block.get("text", "") for block in thinking_blocks if block.get("text"))
+            if combined_thinking:
+                thinking_data = {
+                    "content": combined_thinking,
+                    "tokens": None,  # Anthropic doesn't provide separate token count for thinking
+                }
+
         # Get current trace_id for observability correlation
         trace_id = self._get_current_trace_id()
 
@@ -307,6 +450,7 @@ class ChatServiceImpl(ChatService):
             "usage": usage_data,
             "model": response.model or model,
             "trace_id": trace_id,
+            "thinking": thinking_data,
         }
 
     async def create_completion(self, session_id: str, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:
@@ -379,27 +523,178 @@ class ChatServiceImpl(ChatService):
         model = kwargs.get("model") or settings.model_name
         temperature = kwargs.get("temperature", 0.7)
         max_tokens = kwargs.get("max_tokens")
+        reasoning_effort = kwargs.get("reasoning_effort")
+        enable_thinking = kwargs.get("enable_thinking", True)
 
         # Inject resource context if provided
         resource_uris = kwargs.get("resource_uris")
         messages = await self._inject_resource_context(messages, resource_uris)
 
-        response = await acompletion(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=True,
-        )
+        # Build completion parameters
+        completion_params: dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "stream": True,
+        }
+
+        # Add reasoning_effort for models that support extended thinking
+        # Only add if thinking is enabled and the model supports it
+        supports_thinking = model_supports_thinking(model)
+        if supports_thinking and enable_thinking and reasoning_effort:
+            completion_params["reasoning_effort"] = reasoning_effort
+
+        response = await acompletion(**completion_params)
 
         async for chunk in response:
             if chunk.choices:
                 delta = chunk.choices[0].delta
-                yield {
+                chunk_data: dict[str, Any] = {
                     "delta": {
                         "content": delta.content if hasattr(delta, "content") else "",
                     },
                 }
+
+                # Include thinking content in stream if available
+                # LiteLLM may stream thinking blocks or reasoning_content
+                if hasattr(delta, "reasoning_content") and delta.reasoning_content:
+                    chunk_data["delta"]["thinking"] = delta.reasoning_content
+                elif hasattr(delta, "thinking") and delta.thinking:
+                    chunk_data["delta"]["thinking"] = delta.thinking
+
+                yield chunk_data
+
+    async def _stream_via_langgraph(
+        self,
+        session_id: str,
+        messages: list[dict[str, Any]],
+        **kwargs: Any,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """
+        Stream completion using LangGraph agent with astream_events.
+
+        Emits:
+        - langgraph_node: Node execution updates (name, type, status)
+        - langgraph_edge: Edge traversals (from, to, condition)
+        - current_node: Currently executing node ID
+        - delta.content: Streaming content from LLM
+        """
+        from langchain_core.messages import HumanMessage
+
+        from mcp_server_langgraph.observability.telemetry import logger
+
+        agent = self._langgraph_agent
+        if not agent or not hasattr(agent, "astream_events"):
+            raise ValueError("LangGraph agent not configured or doesn't support astream_events")
+
+        # Build initial state from messages
+        last_user_message = ""
+        for msg in reversed(messages):
+            if msg.get("role") == "user":
+                last_user_message = msg.get("content", "")
+                break
+
+        initial_state = {
+            "messages": [HumanMessage(content=last_user_message)],
+            "next_action": "",
+            "user_id": kwargs.get("user_id"),
+            "request_id": session_id,
+        }
+
+        config = {"configurable": {"thread_id": session_id}}
+        node_statuses: dict[str, str] = {}  # Track node statuses
+        last_node: str | None = None
+
+        try:
+            async for event in agent.astream_events(initial_state, config=config, version="v2"):
+                event_type = event.get("event", "")
+                metadata = event.get("metadata", {})
+                langgraph_node = metadata.get("langgraph_node")
+
+                # Handle node start events
+                if event_type == "on_chain_start" and langgraph_node:
+                    node_name = langgraph_node
+                    node_statuses[node_name] = "running"
+
+                    # Emit current_node update
+                    yield {"current_node": node_name}
+
+                    # Emit langgraph_node event
+                    yield {
+                        "langgraph_node": {
+                            "id": node_name,
+                            "name": node_name,
+                            "type": self._infer_node_type(node_name),
+                            "status": "running",
+                        }
+                    }
+
+                    # Emit edge from previous node if exists
+                    if last_node and last_node != node_name:
+                        yield {
+                            "langgraph_edge": {
+                                "from": last_node,
+                                "to": node_name,
+                            }
+                        }
+
+                    last_node = node_name
+
+                # Handle node end events
+                elif event_type == "on_chain_end" and langgraph_node:
+                    node_name = langgraph_node
+                    node_statuses[node_name] = "completed"
+
+                    # Emit langgraph_node event with completed status
+                    yield {
+                        "langgraph_node": {
+                            "id": node_name,
+                            "name": node_name,
+                            "type": self._infer_node_type(node_name),
+                            "status": "completed",
+                        }
+                    }
+
+                    # Check for triggered edges in metadata
+                    triggers = metadata.get("langgraph_triggers", [])
+                    for trigger in triggers:
+                        yield {
+                            "langgraph_edge": {
+                                "from": node_name,
+                                "to": trigger,
+                            }
+                        }
+
+                # Handle streaming content from chat model
+                elif event_type == "on_chat_model_stream":
+                    data = event.get("data", {})
+                    chunk = data.get("chunk")
+                    if chunk and hasattr(chunk, "content") and chunk.content:
+                        yield {
+                            "delta": {
+                                "content": chunk.content,
+                            }
+                        }
+
+        except Exception as e:
+            logger.error(f"LangGraph streaming error: {e}", exc_info=True)
+            raise
+
+    def _infer_node_type(self, node_name: str) -> str:
+        """Infer node type from name for visualization."""
+        name_lower = node_name.lower()
+        if name_lower in ("__start__", "start"):
+            return "start"
+        elif name_lower in ("__end__", "end"):
+            return "end"
+        elif "tool" in name_lower:
+            return "tool"
+        elif "router" in name_lower or "route" in name_lower:
+            return "conditional"
+        elif "agent" in name_lower:
+            return "agent"
+        return "default"
 
     async def create_stream(
         self, session_id: str, messages: list[dict[str, Any]], **kwargs: Any
@@ -407,20 +702,31 @@ class ChatServiceImpl(ChatService):
         """
         Create a streaming chat completion.
 
-        Tries MCP agent first (for full tool support), falls back to LiteLLM.
+        Tries LangGraph (if use_langgraph=True), then MCP agent, then LiteLLM.
 
         Args:
             session_id: Session ID for tracking
             messages: List of message dicts with 'role' and 'content'
-            **kwargs: Additional parameters (model, temperature, max_tokens, user_id)
+            **kwargs: Additional parameters (model, temperature, max_tokens, user_id, use_langgraph)
 
         Yields:
-            Streaming chunks with delta content
+            Streaming chunks with delta content and optional langgraph_node/edge events
         """
         from mcp_server_langgraph.api.v1.mcp_bridge import ChatError
         from mcp_server_langgraph.observability.telemetry import logger
 
-        # Try MCP agent first if configured
+        use_langgraph = kwargs.pop("use_langgraph", False)
+
+        # Try LangGraph agent if requested and configured
+        if use_langgraph and self._langgraph_agent is not None:
+            try:
+                async for chunk in self._stream_via_langgraph(session_id, messages, **kwargs):
+                    yield chunk
+                return
+            except Exception as e:
+                logger.warning(f"LangGraph streaming failed, falling back: {e}")
+
+        # Try MCP agent if configured
         if self.mcp_bridge and self.mcp_bridge.is_configured:
             try:
                 async for chunk in self._stream_via_mcp(session_id, messages, **kwargs):
@@ -509,6 +815,8 @@ async def create_completion(request: ChatCompletionRequest) -> ChatCompletionRes
             temperature=request.temperature,
             max_tokens=request.max_tokens,
             resource_uris=request.resource_uris,
+            reasoning_effort=request.reasoning_effort,
+            enable_thinking=request.enable_thinking,
         )
         return ChatCompletionResponse(**response)
     except MCPElicitationRequiredError as e:
@@ -546,6 +854,8 @@ async def create_stream(request: ChatCompletionRequest) -> StreamingResponse:
             temperature=request.temperature,
             max_tokens=request.max_tokens,
             resource_uris=request.resource_uris,
+            reasoning_effort=request.reasoning_effort,
+            enable_thinking=request.enable_thinking,
         ):
             # Format as SSE
             import json
