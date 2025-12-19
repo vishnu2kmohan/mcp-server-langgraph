@@ -65,3 +65,13 @@ export type {
   FollowUpSuggestion,
   SuggestionCategory,
 } from "./AIFollowUpSuggestions";
+
+// =============================================================================
+// Session Management Components
+// =============================================================================
+
+export { ExportButton } from "./ExportButton";
+export type { ExportButtonProps } from "./ExportButton";
+
+export { ChatHeader } from "./ChatHeader";
+export type { ChatHeaderProps, ConnectionMode } from "./ChatHeader";

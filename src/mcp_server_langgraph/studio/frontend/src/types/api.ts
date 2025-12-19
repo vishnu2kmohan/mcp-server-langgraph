@@ -1108,3 +1108,73 @@ export interface UpdateNotificationPreferencesRequest {
   warning_enabled?: boolean;
   error_enabled?: boolean;
 }
+
+// =============================================================================
+// User Preferences (UX Enhancement)
+// =============================================================================
+
+/**
+ * User preferences for personalization
+ */
+export interface UserPreferences {
+  // General
+  theme: "light" | "dark" | "system";
+  language: string;
+  auto_scroll: boolean;
+
+  // Accessibility
+  reduced_motion: boolean;
+  high_contrast: boolean;
+  screen_reader_mode: boolean;
+  font_size: "small" | "medium" | "large";
+
+  // Model Defaults
+  default_model: string | null;
+  default_temperature: number;
+  default_max_tokens: number;
+
+  // Session
+  pinned_sessions: string[];
+
+  // Privacy
+  notifications_enabled: boolean;
+
+  // Keyboard Shortcuts
+  keyboard_shortcuts: Record<string, string>;
+}
+
+/**
+ * Request to update user preferences (partial update)
+ */
+export interface UserPreferencesUpdate {
+  theme?: "light" | "dark" | "system";
+  language?: string;
+  auto_scroll?: boolean;
+  reduced_motion?: boolean;
+  high_contrast?: boolean;
+  screen_reader_mode?: boolean;
+  font_size?: "small" | "medium" | "large";
+  default_model?: string | null;
+  default_temperature?: number;
+  default_max_tokens?: number;
+  pinned_sessions?: string[];
+  notifications_enabled?: boolean;
+  keyboard_shortcuts?: Record<string, string>;
+}
+
+// =============================================================================
+// Session Export (UX Enhancement)
+// =============================================================================
+
+/**
+ * Session export format
+ */
+export type ExportFormat = "markdown" | "json" | "html";
+
+/**
+ * Request to export a session
+ */
+export interface SessionExportRequest {
+  format: ExportFormat;
+  include_metadata?: boolean;
+}

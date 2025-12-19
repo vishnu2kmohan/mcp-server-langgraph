@@ -25,6 +25,7 @@ import {
 } from "@reduxjs/toolkit/query/react";
 
 import { logout, setTokens } from "../store/slices/authSlice";
+import { getAuthToken, setAuthTokens, STORAGE_KEYS } from "../utils/storage";
 
 // Simple lock mechanism to prevent concurrent refresh attempts
 let isRefreshing = false;
@@ -37,12 +38,8 @@ const baseQuery = fetchBaseQuery({
   credentials: "include",
   prepareHeaders: (headers) => {
     // Add auth token if available (for direct JWT auth)
-    // Check multiple storage keys for backward compatibility:
-    // - "access_token": Used by OAuth2 PKCE callback (LoginPage, AuthCallbackPage)
-    // - "auth_token": Legacy key (deprecated)
-    const token =
-      localStorage.getItem("access_token") ||
-      localStorage.getItem("auth_token");
+    // Uses unified storage utility which handles legacy key fallback
+    const token = getAuthToken();
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
@@ -66,8 +63,11 @@ export const baseQueryWithReauth: BaseQueryFn<
 
   // Check for 401 Unauthorized
   if (result.error && result.error.status === 401) {
-    // Check if we have a refresh token
-    const refreshToken = localStorage.getItem("refresh_token");
+    // Check if we have a refresh token (stored under legacy key without prefix)
+    const refreshToken =
+      typeof window !== "undefined"
+        ? localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+        : null;
 
     if (!refreshToken) {
       // No refresh token, logout immediately
@@ -110,11 +110,8 @@ export const baseQueryWithReauth: BaseQueryFn<
             refresh_expires_in?: number;
           };
 
-          // Save to localStorage
-          localStorage.setItem("access_token", newTokens.access_token);
-          if (newTokens.refresh_token) {
-            localStorage.setItem("refresh_token", newTokens.refresh_token);
-          }
+          // Save to localStorage using unified storage utility
+          setAuthTokens(newTokens.access_token, newTokens.refresh_token);
 
           // Update Redux store
           const expiresIn = newTokens.expires_in ?? 300;

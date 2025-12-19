@@ -81,6 +81,7 @@ import {
 } from "./api";
 import { useFeatureFlags } from "./contexts/FeatureFlagContext";
 import { addTab, setActiveTabId } from "./store/slices/workspaceSlice";
+import { storage, STORAGE_KEYS, getAuthToken } from "./utils/storage";
 
 /**
  * Default tour steps for first-time users (Priority 2.2)
@@ -199,6 +200,11 @@ export function App() {
   const enableSlashCommands = isEnabled("slash_commands");
   const enableStylePresets = isEnabled("style_presets");
 
+  // UX Enhancement Feature Flags
+  const enableOnboardingWizard = isEnabled("onboarding_wizard");
+  const enableGuidedTour = isEnabled("guided_tour");
+  const enableSusSurvey = isEnabled("sus_survey");
+
   // Tab content renderer - maps tab types to document components
   const renderTabContent = useCallback(
     (tab: TabState): ReactNode => {
@@ -246,9 +252,9 @@ export function App() {
 
   // Onboarding for first-time users (only in studio routes)
   const {
-    shouldShowModal: shouldShowOnboarding,
-    complete: completeOnboarding,
-    skip: skipOnboarding,
+    showOnboarding: shouldShowOnboarding,
+    completeOnboarding,
+    skipOnboarding,
   } = useOnboarding();
 
   // Guided tour state (Priority 2.2 - triggers after onboarding)
@@ -256,18 +262,18 @@ export function App() {
 
   // Check if user has completed the tour before
   const hasTourCompleted = useCallback(() => {
-    return localStorage.getItem("agent-studio-tour-completed") === "true";
+    return storage.get<boolean>(STORAGE_KEYS.TOUR_COMPLETED, false) === true;
   }, []);
 
   // Handle tour completion
   const handleTourComplete = useCallback((_result: TourCompleteResult) => {
-    localStorage.setItem("agent-studio-tour-completed", "true");
+    storage.set(STORAGE_KEYS.TOUR_COMPLETED, true);
     setShowGuidedTour(false);
   }, []);
 
   // Handle tour skip
   const handleTourSkip = useCallback((_result: TourSkipResult) => {
-    localStorage.setItem("agent-studio-tour-completed", "true");
+    storage.set(STORAGE_KEYS.TOUR_COMPLETED, true);
     setShowGuidedTour(false);
   }, []);
 
@@ -280,38 +286,32 @@ export function App() {
 
     // Skip if already completed or dismissed
     const surveyCompleted =
-      localStorage.getItem("agent-studio-sus-completed") === "true";
-    const surveyDismissed = localStorage.getItem("agent-studio-sus-dismissed");
+      storage.get<boolean>(STORAGE_KEYS.SUS_COMPLETED, false) === true;
+    const surveyDismissed = storage.get<number>(STORAGE_KEYS.SUS_DISMISSED);
     if (surveyCompleted) return;
 
     // Skip if dismissed within the last 7 days
     if (surveyDismissed) {
-      const dismissedAt = parseInt(surveyDismissed, 10);
       const daysSinceDismiss =
-        (Date.now() - dismissedAt) / (1000 * 60 * 60 * 24);
+        (Date.now() - surveyDismissed) / (1000 * 60 * 60 * 24);
       if (daysSinceDismiss < 7) return;
     }
 
     // Track session count
-    const sessionCount = parseInt(
-      localStorage.getItem("agent-studio-session-count") || "0",
-      10,
-    );
-    localStorage.setItem(
-      "agent-studio-session-count",
-      String(sessionCount + 1),
-    );
+    const sessionCount =
+      storage.get<number>(STORAGE_KEYS.SESSION_COUNT, 0) ?? 0;
+    storage.set(STORAGE_KEYS.SESSION_COUNT, sessionCount + 1);
 
     // Track first visit
-    let firstVisit = localStorage.getItem("agent-studio-first-visit");
+    let firstVisit = storage.get<number>(STORAGE_KEYS.FIRST_VISIT);
     if (!firstVisit) {
-      firstVisit = Date.now().toString();
-      localStorage.setItem("agent-studio-first-visit", firstVisit);
+      firstVisit = Date.now();
+      storage.set(STORAGE_KEYS.FIRST_VISIT, firstVisit);
     }
 
     // Calculate days since first visit
     const daysSinceFirstVisit =
-      (Date.now() - parseInt(firstVisit, 10)) / (1000 * 60 * 60 * 24);
+      (Date.now() - firstVisit) / (1000 * 60 * 60 * 24);
 
     // Show survey after 3rd session OR 7 days (whichever comes first)
     if (sessionCount >= 3 || daysSinceFirstVisit >= 7) {
@@ -325,7 +325,7 @@ export function App() {
 
   // Handle SUS survey submission
   const handleSUSSubmit = useCallback((result: SUSSurveyResult) => {
-    localStorage.setItem("agent-studio-sus-completed", "true");
+    storage.set(STORAGE_KEYS.SUS_COMPLETED, true);
     setShowSUSSurvey(false);
     // TODO: Send result to backend analytics endpoint
     console.log("SUS Survey submitted:", result);
@@ -333,7 +333,7 @@ export function App() {
 
   // Handle SUS survey dismissal
   const handleSUSDismiss = useCallback(() => {
-    localStorage.setItem("agent-studio-sus-dismissed", Date.now().toString());
+    storage.set(STORAGE_KEYS.SUS_DISMISSED, Date.now());
     setShowSUSSurvey(false);
   }, []);
 
@@ -440,7 +440,7 @@ export function App() {
       );
 
       // Attempt to decode the JWT token to get roles/persona
-      const token = localStorage.getItem("access_token");
+      const token = getAuthToken();
       if (token) {
         try {
           const parts = token.split(".");
@@ -527,8 +527,8 @@ export function App() {
         onUpdate={updateApp}
         onDismiss={dismissUpdate}
       />
-      {/* Global onboarding wizard for first-time users (lazy-loaded) */}
-      {isStudioRoute && shouldShowOnboarding && (
+      {/* Global onboarding wizard for first-time users (lazy-loaded, feature-flagged) */}
+      {enableOnboardingWizard && isStudioRoute && shouldShowOnboarding && (
         <Suspense fallback={null}>
           <OnboardingWizard
             isOpen={shouldShowOnboarding}
@@ -538,8 +538,8 @@ export function App() {
           />
         </Suspense>
       )}
-      {/* Guided tour after onboarding (Priority 2.2, lazy-loaded) */}
-      {isStudioRoute && showGuidedTour && (
+      {/* Guided tour after onboarding (Priority 2.2, lazy-loaded, feature-flagged) */}
+      {enableGuidedTour && isStudioRoute && showGuidedTour && (
         <Suspense fallback={null}>
           <GuidedTour
             isActive={showGuidedTour}
@@ -549,8 +549,8 @@ export function App() {
           />
         </Suspense>
       )}
-      {/* SUS Survey modal (Priority 1.4, lazy-loaded) */}
-      {showSUSSurvey && (
+      {/* SUS Survey modal (Priority 1.4, lazy-loaded, feature-flagged) */}
+      {enableSusSurvey && showSUSSurvey && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
           <Suspense fallback={null}>
             <SUSSurvey

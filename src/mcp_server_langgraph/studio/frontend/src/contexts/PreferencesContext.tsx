@@ -36,6 +36,12 @@ import {
   DEFAULT_USER_PREFERENCES,
   DEFAULT_KEYBOARD_SHORTCUTS,
 } from "../types/preferences";
+import { store } from "../store";
+import { api } from "../api";
+import type {
+  UserPreferences as ApiUserPreferences,
+  UserPreferencesUpdate as ApiUserPreferencesUpdate,
+} from "../types/api";
 
 // ==============================================================================
 // Constants
@@ -46,6 +52,69 @@ const STORAGE_KEY = "mcp_studio_preferences";
 
 /** Debounce delay for saving preferences (ms) */
 const SAVE_DEBOUNCE_MS = 500;
+
+// ==============================================================================
+// API Conversion Functions
+// ==============================================================================
+
+/**
+ * Convert frontend nested preferences to flat API format
+ */
+function toApiFormat(prefs: UserPreferences): ApiUserPreferencesUpdate {
+  return {
+    theme: prefs.general.theme,
+    language: prefs.general.language,
+    auto_scroll: prefs.general.autoScroll,
+    reduced_motion: prefs.accessibility.reducedMotion,
+    high_contrast: prefs.accessibility.highContrast,
+    screen_reader_mode: prefs.accessibility.screenReaderMode,
+    font_size: prefs.accessibility.fontSize,
+    default_model: prefs.modelDefaults.defaultModel,
+    default_temperature: prefs.modelDefaults.defaultTemperature,
+    default_max_tokens: prefs.modelDefaults.defaultMaxTokens,
+    pinned_sessions: prefs.session.pinnedSessions,
+    notifications_enabled: prefs.general.notificationsEnabled,
+    keyboard_shortcuts: prefs.keyboardShortcuts,
+  };
+}
+
+/**
+ * Merge API format preferences into frontend nested format
+ */
+function fromApiFormat(
+  apiPrefs: ApiUserPreferences,
+  existing: UserPreferences,
+): UserPreferences {
+  return {
+    ...existing,
+    general: {
+      ...existing.general,
+      theme: apiPrefs.theme,
+      language: apiPrefs.language,
+      autoScroll: apiPrefs.auto_scroll,
+      notificationsEnabled: apiPrefs.notifications_enabled,
+    },
+    accessibility: {
+      ...existing.accessibility,
+      reducedMotion: apiPrefs.reduced_motion,
+      highContrast: apiPrefs.high_contrast,
+      screenReaderMode: apiPrefs.screen_reader_mode,
+      fontSize: apiPrefs.font_size,
+    },
+    modelDefaults: {
+      ...existing.modelDefaults,
+      defaultModel: apiPrefs.default_model,
+      defaultTemperature: apiPrefs.default_temperature,
+      defaultMaxTokens: apiPrefs.default_max_tokens,
+    },
+    session: {
+      ...existing.session,
+      pinnedSessions: apiPrefs.pinned_sessions,
+    },
+    keyboardShortcuts: apiPrefs.keyboard_shortcuts,
+    updatedAt: Date.now(),
+  };
+}
 
 // ==============================================================================
 // Context Types
@@ -489,19 +558,33 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
 
   const syncWithBackend = useCallback(async () => {
     setIsSyncing(true);
+    setError(null);
     try {
-      // TODO: Implement backend sync when /api/v1/preferences is available
-      // const token = localStorage.getItem('auth_token');
-      // const response = await fetch('/api/v1/preferences', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     ...(token && { 'Authorization': `Bearer ${token}` }),
-      //   },
-      //   body: JSON.stringify(toApiFormat(preferences)),
-      //   credentials: 'include',
-      // });
-      // if (!response.ok) throw new Error('Sync failed');
+      // Convert nested frontend format to flat API format
+      const apiPrefs = toApiFormat(preferences);
+
+      // Use RTK Query to update preferences on backend
+      const result = await store.dispatch(
+        api.endpoints.updateUserPreferences.initiate(apiPrefs),
+      );
+
+      if ("error" in result) {
+        throw new Error(
+          typeof result.error === "object" && "message" in result.error
+            ? String(result.error.message)
+            : "Sync failed",
+        );
+      }
+
+      // Optionally merge server response back into local state
+      // This ensures server-side defaults/validation are respected
+      if (result.data) {
+        const merged = fromApiFormat(result.data, preferences);
+        setPreferences(merged);
+        saveToStorage(merged);
+      }
+
+      setHasUnsavedChanges(false);
     } catch (err) {
       setError(
         `Failed to sync preferences: ${err instanceof Error ? err.message : String(err)}`,
@@ -509,7 +592,7 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
     } finally {
       setIsSyncing(false);
     }
-  }, []);
+  }, [preferences, saveToStorage]);
 
   const clearError = useCallback(() => {
     setError(null);

@@ -105,6 +105,12 @@ import type {
   // Notification Preferences
   NotificationPreferences,
   UpdateNotificationPreferencesRequest,
+  // User Preferences
+  UserPreferences,
+  UserPreferencesUpdate,
+  // Session Export
+  SessionExportRequest,
+  ExportFormat,
 } from "../types/api";
 import type {
   MCPConnection,
@@ -177,6 +183,12 @@ export type {
   WorkflowExecution,
   WorkflowExecutionListParams,
   WorkflowExecutionListResponse,
+  // User Preferences
+  UserPreferences,
+  UserPreferencesUpdate,
+  // Session Export
+  SessionExportRequest,
+  ExportFormat,
 };
 
 /**
@@ -251,6 +263,7 @@ export const api = createApi({
     "ComplianceReport",
     "ConnectionTemplate",
     "ConnectionAudit",
+    "UserPreferences",
   ],
   endpoints: (builder) => ({
     // Feature Flags
@@ -1908,6 +1921,71 @@ export const api = createApi({
       }),
       invalidatesTags: ["Connection"],
     }),
+
+    // =========================================================================
+    // User Preferences (UX Enhancement)
+    // =========================================================================
+
+    /**
+     * Get current user's preferences
+     */
+    getUserPreferences: builder.query<UserPreferences, void>({
+      query: () => "/preferences",
+      providesTags: ["UserPreferences"],
+    }),
+
+    /**
+     * Update user preferences (partial update)
+     */
+    updateUserPreferences: builder.mutation<
+      UserPreferences,
+      UserPreferencesUpdate
+    >({
+      query: (body) => ({
+        url: "/preferences",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["UserPreferences"],
+    }),
+
+    /**
+     * Reset user preferences to defaults
+     */
+    resetUserPreferences: builder.mutation<UserPreferences, void>({
+      query: () => ({
+        url: "/preferences",
+        method: "DELETE",
+      }),
+      invalidatesTags: ["UserPreferences"],
+    }),
+
+    // =========================================================================
+    // Session Export (UX Enhancement)
+    // =========================================================================
+
+    /**
+     * Export a session in the specified format
+     *
+     * Returns a Blob that can be downloaded as a file.
+     */
+    exportSession: builder.mutation<
+      Blob,
+      { sessionId: string; request: SessionExportRequest }
+    >({
+      query: ({ sessionId, request }) => ({
+        url: `/sessions/${sessionId}/export`,
+        method: "POST",
+        body: request,
+        responseHandler: async (response) => {
+          // Handle blob response for file download
+          if (response.ok) {
+            return response.blob();
+          }
+          throw new Error("Export failed");
+        },
+      }),
+    }),
   }),
 });
 
@@ -2062,4 +2140,10 @@ export const {
   useBulkDeleteConnectionsMutation,
   useBulkTestConnectionsMutation,
   useBulkUpdateConnectionStatusMutation,
+  // User Preferences
+  useGetUserPreferencesQuery,
+  useUpdateUserPreferencesMutation,
+  useResetUserPreferencesMutation,
+  // Session Export
+  useExportSessionMutation,
 } = api;

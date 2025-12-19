@@ -9,8 +9,48 @@
 
 import { Wifi, WifiOff, Radio, RefreshCw, Trash2 } from "lucide-react";
 import { SaveAsWorkflowButton } from "./SaveAsWorkflowButton";
+import { ExportButton } from "./ExportButton";
+import { useFeatureFlag } from "../../contexts/FeatureFlagContext";
 
 export type ConnectionMode = "websocket" | "rest" | "disconnected";
+
+// =============================================================================
+// ChatHeaderActions - Internal Component
+// =============================================================================
+
+interface ChatHeaderActionsProps {
+  sessionId: string;
+  sessionName?: string;
+  onClear: () => void;
+}
+
+function ChatHeaderActions({
+  sessionId,
+  sessionName,
+  onClear,
+}: ChatHeaderActionsProps) {
+  const enableSessionExport = useFeatureFlag("session_export");
+
+  return (
+    <div className="flex items-center gap-2">
+      <SaveAsWorkflowButton sessionId={sessionId} />
+      {enableSessionExport && (
+        <ExportButton sessionId={sessionId} sessionTitle={sessionName} />
+      )}
+      <button
+        onClick={onClear}
+        className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+      >
+        <Trash2 size={16} />
+        Clear
+      </button>
+    </div>
+  );
+}
+
+// =============================================================================
+// ChatHeader
+// =============================================================================
 
 export interface ChatHeaderProps {
   connectionMode: ConnectionMode;
@@ -94,16 +134,11 @@ export function ChatHeader({
 
           {/* Actions */}
           {sessionId && (
-            <div className="flex items-center gap-2">
-              <SaveAsWorkflowButton sessionId={sessionId} />
-              <button
-                onClick={onClear}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-              >
-                <Trash2 size={16} />
-                Clear
-              </button>
-            </div>
+            <ChatHeaderActions
+              sessionId={sessionId}
+              sessionName={sessionName}
+              onClear={onClear}
+            />
           )}
         </div>
       </header>
