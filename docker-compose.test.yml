@@ -151,6 +151,9 @@ services:
       - "traefik.http.middlewares.forward-auth.forwardauth.address=http://traefik-forward-auth:4181"
       - "traefik.http.middlewares.forward-auth.forwardauth.trustForwardHeader=true"
       - "traefik.http.middlewares.forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User,X-Auth-User,X-Auth-Email"
+      # CSP Headers for Sandpack code execution (codesandbox.io iframes)
+      # Required for SandpackExecutor component to work with CodeSandbox bundler
+      - "traefik.http.middlewares.sandpack-csp.headers.customresponseheaders.Content-Security-Policy=default-src 'self'; frame-src 'self' https://*.codesandbox.io https://codesandbox.io; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.codesandbox.io wss://*.codesandbox.io; img-src 'self' data: https:; font-src 'self' data:;"
       # Route: /gateway/* -> Traefik Dashboard [PROTECTED]
       # Traefik dashboard requires both /api and /dashboard paths internally.
       # We use replacepathregex to rewrite /gateway/api -> /api and /gateway/dashboard -> /dashboard
@@ -1086,6 +1089,13 @@ services:
       - GRAFANA_URL=http://grafana-test:3000
       # GCP credentials for Vertex AI (mounted from host for local development)
       - GOOGLE_APPLICATION_CREDENTIALS=/app/.config/gcloud/application_default_credentials.json
+      # Feature Flags for AI Suggestions (ADR-xxxx)
+      # Enable Redis-backed distributed rate limiting for multi-instance deployments
+      - FF_ENABLE_DISTRIBUTED_RATE_LIMITING=true
+      # Enable suggestion pre-warming (pre-computes common suggestions during startup)
+      - FF_ENABLE_SUGGESTION_PREWARM=true
+      # Enable suggestion quality tracking for click-through metrics
+      - FF_ENABLE_SUGGESTION_QUALITY_TRACKING=true
     volumes:
       # Mount GCP ADC credentials for Vertex AI (local development only)
       - ~/.config/gcloud/application_default_credentials.json:/app/.config/gcloud/application_default_credentials.json:ro
@@ -1127,6 +1137,8 @@ services:
       - "traefik.http.routers.studio.entrypoints=web"
       - "traefik.http.routers.studio.priority=10"
       - "traefik.http.routers.studio.service=mcp-api"
+      # Apply CSP headers for Sandpack (CodeSandbox iframe execution)
+      - "traefik.http.routers.studio.middlewares=sandpack-csp@docker"
       # NO forward-auth - SPA implements OAuth2 Authorization Code + PKCE flow
       # NO strip - FastAPI serves /studio/* directly
       # Route: /login -> mcp-server:8000/login (Native Login Page - NO AUTH)
