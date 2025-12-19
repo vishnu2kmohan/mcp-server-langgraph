@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
 **Last Updated**: 2025-12-19
-**Total ADRs**: 72
+**Total ADRs**: 73
 
 ## Overview
 
@@ -136,6 +136,7 @@ Each ADR follows this structure:
 | [ADR-0048](adr-0048-postgres-storage-integration-tests.md) | 48. PostgreSQL Storage Integration Tests | Accepted | 2025-11-06 |
 | [ADR-0049](adr-0049-pytest-fixture-consolidation.md) | Pytest Fixture Consolidation and Organization | Accepted | 2025-11-07 |
 | [ADR-0052](adr-0052-pytest-xdist-isolation-strategy.md) | Pytest-xdist Isolation Strategy | Accepted | 2025-01-11 |
+| [ADR-0076](adr-0076-sandpack-jsdom-27-mock.md) | Sandpack Mock for jsdom 27 Compatibility | Accepted | 2025-12-19 |
 
 ## Creating a New ADR
 
