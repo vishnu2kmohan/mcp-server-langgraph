@@ -14,22 +14,33 @@ import { renderHook, act } from "@testing-library/react";
 import { useVoiceInput } from "./useVoiceInput";
 
 // Mock SpeechRecognition
-const mockSpeechRecognition = {
-  start: vi.fn(),
-  stop: vi.fn(),
-  abort: vi.fn(),
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-  continuous: false,
-  interimResults: false,
-  lang: "en-US",
-  onresult: null as ((event: unknown) => void) | null,
-  onerror: null as ((event: unknown) => void) | null,
-  onend: null as (() => void) | null,
-  onstart: null as (() => void) | null,
-};
+// Vitest 4 requires class/function syntax for constructor mocks (arrow functions don't work with `new`)
+// Use a class that creates fresh instances with the shared reference for assertions
+let mockSpeechRecognitionInstance: MockSpeechRecognitionClass | null = null;
 
-const MockSpeechRecognition = vi.fn(() => mockSpeechRecognition);
+class MockSpeechRecognitionClass {
+  start = vi.fn();
+  stop = vi.fn();
+  abort = vi.fn();
+  addEventListener = vi.fn();
+  removeEventListener = vi.fn();
+  continuous = false;
+  interimResults = false;
+  lang = "en-US";
+  onresult: ((event: unknown) => void) | null = null;
+  onerror: ((event: unknown) => void) | null = null;
+  onend: (() => void) | null = null;
+  onstart: (() => void) | null = null;
+
+  constructor() {
+    // Store reference for test assertions
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    mockSpeechRecognitionInstance = this;
+  }
+}
+
+// Getter for current mock instance (for test assertions)
+const getMockSpeechRecognition = () => mockSpeechRecognitionInstance!;
 
 // Store original values
 const originalSpeechRecognition = (
@@ -42,11 +53,12 @@ const originalWebkitSpeechRecognition = (
 describe("useVoiceInput", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSpeechRecognitionInstance = null;
     // Set up SpeechRecognition mock
     (window as { SpeechRecognition?: unknown }).SpeechRecognition =
-      MockSpeechRecognition;
+      MockSpeechRecognitionClass;
     (window as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition =
-      MockSpeechRecognition;
+      MockSpeechRecognitionClass;
   });
 
   afterEach(() => {
@@ -100,7 +112,7 @@ describe("useVoiceInput", () => {
 
       // Simulate start event
       act(() => {
-        mockSpeechRecognition.onstart?.();
+        getMockSpeechRecognition().onstart?.();
       });
 
       expect(result.current.isListening).toBe(true);
@@ -113,7 +125,7 @@ describe("useVoiceInput", () => {
         result.current.startListening();
       });
 
-      expect(mockSpeechRecognition.start).toHaveBeenCalled();
+      expect(getMockSpeechRecognition().start).toHaveBeenCalled();
     });
 
     it("should set isListening to false when stopListening is called", () => {
@@ -124,7 +136,7 @@ describe("useVoiceInput", () => {
       });
 
       act(() => {
-        mockSpeechRecognition.onstart?.();
+        getMockSpeechRecognition().onstart?.();
       });
 
       act(() => {
@@ -132,7 +144,7 @@ describe("useVoiceInput", () => {
       });
 
       act(() => {
-        mockSpeechRecognition.onend?.();
+        getMockSpeechRecognition().onend?.();
       });
 
       expect(result.current.isListening).toBe(false);
@@ -149,7 +161,7 @@ describe("useVoiceInput", () => {
         result.current.stopListening();
       });
 
-      expect(mockSpeechRecognition.stop).toHaveBeenCalled();
+      expect(getMockSpeechRecognition().stop).toHaveBeenCalled();
     });
   });
 
@@ -167,7 +179,7 @@ describe("useVoiceInput", () => {
           results: [[{ transcript: "Hello world", confidence: 0.9 }]],
           resultIndex: 0,
         };
-        mockSpeechRecognition.onresult?.(event);
+        getMockSpeechRecognition().onresult?.(event);
       });
 
       expect(result.current.transcript).toBe("Hello world");
@@ -186,7 +198,7 @@ describe("useVoiceInput", () => {
           results: [[{ transcript: "Hello", confidence: 0.9 }]],
           resultIndex: 0,
         };
-        mockSpeechRecognition.onresult?.(event);
+        getMockSpeechRecognition().onresult?.(event);
       });
 
       // Second result
@@ -198,7 +210,7 @@ describe("useVoiceInput", () => {
           ],
           resultIndex: 1,
         };
-        mockSpeechRecognition.onresult?.(event);
+        getMockSpeechRecognition().onresult?.(event);
       });
 
       expect(result.current.transcript).toContain("world");
@@ -217,7 +229,7 @@ describe("useVoiceInput", () => {
           results: [[{ transcript: "Test speech", confidence: 0.95 }]],
           resultIndex: 0,
         };
-        mockSpeechRecognition.onresult?.(event);
+        getMockSpeechRecognition().onresult?.(event);
       });
 
       expect(onTranscript).toHaveBeenCalledWith("Test speech");
@@ -234,7 +246,7 @@ describe("useVoiceInput", () => {
 
       act(() => {
         const event = { error: "no-speech" };
-        mockSpeechRecognition.onerror?.(event);
+        getMockSpeechRecognition().onerror?.(event);
       });
 
       expect(result.current.error).toBe("no-speech");
@@ -250,7 +262,7 @@ describe("useVoiceInput", () => {
 
       act(() => {
         const event = { error: "network" };
-        mockSpeechRecognition.onerror?.(event);
+        getMockSpeechRecognition().onerror?.(event);
       });
 
       expect(onError).toHaveBeenCalledWith("network");
@@ -287,7 +299,7 @@ describe("useVoiceInput", () => {
           results: [[{ transcript: "Some text", confidence: 0.9 }]],
           resultIndex: 0,
         };
-        mockSpeechRecognition.onresult?.(event);
+        getMockSpeechRecognition().onresult?.(event);
       });
 
       act(() => {
@@ -302,19 +314,19 @@ describe("useVoiceInput", () => {
     it("should use specified language", () => {
       renderHook(() => useVoiceInput({ language: "es-ES" }));
 
-      expect(mockSpeechRecognition.lang).toBe("es-ES");
+      expect(getMockSpeechRecognition().lang).toBe("es-ES");
     });
 
     it("should set continuous mode", () => {
       renderHook(() => useVoiceInput({ continuous: true }));
 
-      expect(mockSpeechRecognition.continuous).toBe(true);
+      expect(getMockSpeechRecognition().continuous).toBe(true);
     });
 
     it("should enable interim results", () => {
       renderHook(() => useVoiceInput({ interimResults: true }));
 
-      expect(mockSpeechRecognition.interimResults).toBe(true);
+      expect(getMockSpeechRecognition().interimResults).toBe(true);
     });
   });
 
@@ -324,7 +336,7 @@ describe("useVoiceInput", () => {
 
       unmount();
 
-      expect(mockSpeechRecognition.abort).toHaveBeenCalled();
+      expect(getMockSpeechRecognition().abort).toHaveBeenCalled();
     });
   });
 });

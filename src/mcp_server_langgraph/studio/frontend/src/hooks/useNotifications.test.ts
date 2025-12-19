@@ -15,22 +15,59 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useNotifications } from "./useNotifications";
 
+// Track the last created notification instance for test assertions
+let lastNotificationInstance: MockNotificationInstance | null = null;
+// Custom instance for specific test overrides
+let customNotificationInstance: { close: ReturnType<typeof vi.fn> } | null =
+  null;
+
+interface MockNotificationInstance {
+  close: ReturnType<typeof vi.fn>;
+  addEventListener: ReturnType<typeof vi.fn>;
+  removeEventListener: ReturnType<typeof vi.fn>;
+}
+
 describe("useNotifications", () => {
   let originalNotification: typeof Notification;
   let mockNotification: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    lastNotificationInstance = null;
+    customNotificationInstance = null;
 
     // Store original Notification
     originalNotification = window.Notification;
 
-    // Mock Notification constructor
-    mockNotification = vi.fn().mockImplementation(() => ({
-      close: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }));
+    // Vitest 4 compatibility: Use vi.fn() with mockImplementation for constructor
+    // The implementation function works as a constructor when called with `new`
+    mockNotification = vi.fn().mockImplementation(function (
+      this: MockNotificationInstance,
+      title: string,
+      options?: NotificationOptions,
+    ) {
+      // If a custom instance is set, use it (for mockReturnValueOnce behavior)
+      if (customNotificationInstance) {
+        const instance = customNotificationInstance;
+        customNotificationInstance = null;
+        Object.assign(this, instance);
+      } else {
+        this.close = vi.fn();
+        this.addEventListener = vi.fn();
+        this.removeEventListener = vi.fn();
+      }
+      // Store reference for test assertions
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      lastNotificationInstance = this;
+      // Store title and options on instance for access
+      (
+        this as unknown as { title: string; options?: NotificationOptions }
+      ).title = title;
+      (
+        this as unknown as { title: string; options?: NotificationOptions }
+      ).options = options;
+      return this;
+    });
 
     // Mock Notification static properties and methods
     Object.defineProperty(mockNotification, "permission", {
@@ -41,15 +78,12 @@ describe("useNotifications", () => {
 
     mockNotification.requestPermission = vi.fn().mockResolvedValue("granted");
 
-    // Replace Notification
-    Object.defineProperty(window, "Notification", {
-      value: mockNotification,
-      writable: true,
-      configurable: true,
-    });
+    // Replace Notification using vi.stubGlobal for proper jsdom integration
+    vi.stubGlobal("Notification", mockNotification);
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     Object.defineProperty(window, "Notification", {
       value: originalNotification,
       writable: true,
@@ -215,9 +249,6 @@ describe("useNotifications", () => {
     });
 
     it("should return the notification instance", async () => {
-      const mockInstance = { close: vi.fn() };
-      mockNotification.mockReturnValueOnce(mockInstance);
-
       const { result } = renderHook(() => useNotifications());
 
       let notification: unknown;
@@ -225,7 +256,10 @@ describe("useNotifications", () => {
         notification = result.current.notify("Test Title");
       });
 
-      expect(notification).toBe(mockInstance);
+      // Notification instance should have the close method
+      expect(notification).toBeDefined();
+      expect(notification).toBe(lastNotificationInstance);
+      expect((notification as MockNotificationInstance).close).toBeDefined();
     });
   });
 
@@ -306,18 +340,20 @@ describe("useNotifications", () => {
     });
 
     it("should close notification", async () => {
-      const closeMock = vi.fn();
-      mockNotification.mockReturnValueOnce({ close: closeMock });
-
       const { result } = renderHook(() => useNotifications());
 
-      let notification: { close: () => void } | undefined;
+      let notification: MockNotificationInstance | undefined;
       await act(async () => {
-        notification = result.current.notify("Test Title");
+        notification = result.current.notify(
+          "Test Title",
+        ) as MockNotificationInstance;
       });
 
+      // Verify notification was created and close() can be called
+      expect(notification).toBeDefined();
       notification?.close();
-      expect(closeMock).toHaveBeenCalled();
+      // The close method should have been called
+      expect(notification?.close).toHaveBeenCalled();
     });
   });
 

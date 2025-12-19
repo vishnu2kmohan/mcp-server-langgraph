@@ -20,22 +20,41 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 // Mock XMLHttpRequest for progress tracking
-const mockXHR = {
-  open: vi.fn(),
-  send: vi.fn(),
-  setRequestHeader: vi.fn(),
-  upload: {
-    addEventListener: vi.fn(),
-  },
-  addEventListener: vi.fn(),
-  abort: vi.fn(),
-  readyState: 4,
-  status: 200,
-  response: JSON.stringify({ id: "file-123", url: "/files/file-123" }),
-};
+// Vitest 4 requires class/function syntax for constructor mocks (arrow functions don't work with `new`)
+// Using a class to create fresh mocks for each instance
+interface MockXHRInstance {
+  open: ReturnType<typeof vi.fn>;
+  send: ReturnType<typeof vi.fn>;
+  setRequestHeader: ReturnType<typeof vi.fn>;
+  upload: { addEventListener: ReturnType<typeof vi.fn> };
+  addEventListener: ReturnType<typeof vi.fn>;
+  abort: ReturnType<typeof vi.fn>;
+  readyState: number;
+  status: number;
+  response: string;
+}
 
-const MockXMLHttpRequest = vi.fn(() => mockXHR);
-global.XMLHttpRequest = MockXMLHttpRequest as unknown as typeof XMLHttpRequest;
+let lastMockXHR: MockXHRInstance | null = null;
+
+class MockXMLHttpRequest {
+  open = vi.fn();
+  send = vi.fn();
+  setRequestHeader = vi.fn();
+  upload = { addEventListener: vi.fn() };
+  addEventListener = vi.fn();
+  abort = vi.fn();
+  readyState = 4;
+  status = 200;
+  response = JSON.stringify({ id: "file-123", url: "/files/file-123" });
+
+  constructor() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    lastMockXHR = this;
+  }
+}
+
+// Getter for accessing the last created instance in tests
+const getMockXHR = () => lastMockXHR!;
 
 // Helper to create mock File
 function createMockFile(name: string, type: string, size: number): File {
@@ -46,16 +65,15 @@ function createMockFile(name: string, type: string, size: number): File {
 describe("useFileUpload", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockXHR.readyState = 4;
-    mockXHR.status = 200;
-    mockXHR.response = JSON.stringify({
-      id: "file-123",
-      url: "/files/file-123",
-    });
+    lastMockXHR = null;
+    // Use vi.stubGlobal to properly mock XMLHttpRequest in jsdom environment
+    // This ensures our mock takes precedence over jsdom's XMLHttpRequest
+    vi.stubGlobal("XMLHttpRequest", MockXMLHttpRequest);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe("Initial State", () => {
@@ -278,8 +296,8 @@ describe("useFileUpload", () => {
       });
 
       // XHR should have registered load and error handlers
-      expect(mockXHR.addEventListener).toHaveBeenCalled();
-      const loadCall = mockXHR.addEventListener.mock.calls.find(
+      expect(getMockXHR().addEventListener).toHaveBeenCalled();
+      const loadCall = getMockXHR().addEventListener.mock.calls.find(
         (call) => call[0] === "load",
       );
       expect(loadCall).toBeDefined();
@@ -298,13 +316,26 @@ describe("useFileUpload", () => {
         result.current.selectFiles([file]);
       });
 
-      await act(async () => {
+      // Verify files were added
+      expect(result.current.files.length).toBe(1);
+      expect(result.current.files[0].status).toBe("pending");
+
+      // Use synchronous act since XHR calls are synchronous
+      act(() => {
         result.current.uploadFiles();
       });
 
+      // Wait for XHR to be created
+      await vi.waitFor(() => {
+        expect(getMockXHR()).not.toBeNull();
+      });
+
       // XHR.send should have been called with FormData
-      expect(mockXHR.send).toHaveBeenCalled();
-      const sendCall = mockXHR.send.mock.calls[0];
+      const xhr = getMockXHR();
+      expect(xhr).not.toBeNull();
+      expect(xhr.open).toHaveBeenCalled();
+      expect(xhr.send).toHaveBeenCalled();
+      const sendCall = xhr.send.mock.calls[0];
       expect(sendCall[0]).toBeInstanceOf(FormData);
     });
   });
@@ -329,7 +360,7 @@ describe("useFileUpload", () => {
         result.current.cancelUpload();
       });
 
-      expect(mockXHR.abort).toHaveBeenCalled();
+      expect(getMockXHR().abort).toHaveBeenCalled();
       expect(result.current.isUploading).toBe(false);
     });
   });
@@ -412,7 +443,11 @@ describe("useFileUpload", () => {
         result.current.uploadFiles();
       });
 
-      expect(mockXHR.open).toHaveBeenCalledWith("POST", "/custom/upload", true);
+      expect(getMockXHR().open).toHaveBeenCalledWith(
+        "POST",
+        "/custom/upload",
+        true,
+      );
     });
   });
 });

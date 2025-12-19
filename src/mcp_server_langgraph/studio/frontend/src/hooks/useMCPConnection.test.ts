@@ -66,7 +66,8 @@ describe("useMCPConnection", () => {
 
     // Mock WebSocket constructor with static constants using vi.stubGlobal
     // This works correctly in jsdom environment where WebSocket is read-only
-    const MockWebSocketConstructor = vi.fn((url: string) => {
+    // Vitest 4 requires function syntax for constructor mocks (arrow functions don't work with `new`)
+    const MockWebSocketConstructor = vi.fn(function (url: string) {
       mockWebSocket = new MockWebSocket(url);
       return mockWebSocket;
     });

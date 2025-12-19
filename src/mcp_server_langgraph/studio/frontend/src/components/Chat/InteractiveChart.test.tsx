@@ -10,11 +10,13 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { InteractiveChart } from "./InteractiveChart";
 
 // Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// Vitest 4 requires class/function syntax for constructor mocks (arrow functions don't work with `new`)
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 describe("InteractiveChart", () => {
   const sampleChartData = {

@@ -27,7 +27,9 @@ process.on("unhandledRejection", (reason) => {
   const message = String(reason);
   if (
     message.includes("AbortSignal") ||
-    message.includes("RequestInit: Expected signal")
+    message.includes("RequestInit: Expected signal") ||
+    // jsdom 27 / CSS-in-JS compatibility (Stitches, Sandpack)
+    message.includes("Failed to parse the rule")
   ) {
     return; // Ignore these known issues
   }
@@ -40,7 +42,9 @@ process.on("uncaughtException", (error) => {
   const message = String(error);
   if (
     message.includes("AbortSignal") ||
-    message.includes("RequestInit: Expected signal")
+    message.includes("RequestInit: Expected signal") ||
+    // jsdom 27 / CSS-in-JS compatibility (Stitches, Sandpack)
+    message.includes("Failed to parse the rule")
   ) {
     return;
   }
@@ -82,13 +86,76 @@ afterEach(() => {
   cleanup();
 });
 
-// Mock ResizeObserver
+// =============================================================================
+// jsdom 27 CSS Compatibility Workaround
+// =============================================================================
+// jsdom 27 uses @acemir/cssom which has stricter CSS parsing and fails on
+// certain CSS-in-JS library syntax (e.g., Stitches uses '--sxs{--sxs:6}').
+// We need to patch the CSSOM module's insertRule method.
+
+// This runs immediately (not in beforeAll) to patch before any imports happen
+(() => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const cssom = require("@acemir/cssom");
+    if (cssom?.CSSStyleSheet?.prototype?.insertRule) {
+      const originalInsertRule = cssom.CSSStyleSheet.prototype.insertRule;
+      cssom.CSSStyleSheet.prototype.insertRule = function (
+        rule: string,
+        index?: number,
+      ): number {
+        try {
+          return originalInsertRule.call(this, rule, index);
+        } catch (error) {
+          // Silently ignore CSS-in-JS library internal rules that jsdom can't parse
+          if (
+            error instanceof Error &&
+            error.message.includes("Failed to parse the rule")
+          ) {
+            return index ?? 0;
+          }
+          throw error;
+        }
+      };
+    }
+  } catch {
+    // cssom module not found - not an issue, jsdom might use native implementation
+  }
+})();
+
+// Also patch the native CSSStyleSheet for completeness
 beforeAll(() => {
-  global.ResizeObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  }));
+  const originalInsertRule = CSSStyleSheet.prototype.insertRule;
+  CSSStyleSheet.prototype.insertRule = function (
+    rule: string,
+    index?: number,
+  ): number {
+    try {
+      return originalInsertRule.call(this, rule, index);
+    } catch (error) {
+      // Silently ignore CSS-in-JS library internal rules that jsdom can't parse
+      // These are typically harmless tracking rules like '--sxs{--sxs:X}'
+      if (
+        error instanceof Error &&
+        error.message.includes("Failed to parse the rule")
+      ) {
+        return index ?? 0;
+      }
+      throw error;
+    }
+  };
+});
+
+// Mock ResizeObserver
+// Vitest 4 requires class/function syntax for constructor mocks (arrow functions don't work with `new`)
+beforeAll(() => {
+  class MockResizeObserver {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+  }
+  global.ResizeObserver =
+    MockResizeObserver as unknown as typeof ResizeObserver;
 });
 
 // Mock window.matchMedia
@@ -162,14 +229,17 @@ beforeAll(() => {
 });
 
 // Mock IntersectionObserver
+// Vitest 4 requires class/function syntax for constructor mocks (arrow functions don't work with `new`)
 beforeAll(() => {
-  global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-    root: null,
-    rootMargin: "",
-    thresholds: [],
-    takeRecords: vi.fn(() => []),
-  }));
+  class MockIntersectionObserver {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+    root = null;
+    rootMargin = "";
+    thresholds: number[] = [];
+    takeRecords = vi.fn(() => []);
+  }
+  global.IntersectionObserver =
+    MockIntersectionObserver as unknown as typeof IntersectionObserver;
 });
