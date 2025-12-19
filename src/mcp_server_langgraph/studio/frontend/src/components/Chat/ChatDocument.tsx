@@ -359,7 +359,7 @@ Type \`/\` to see available commands.`,
           // Copy last assistant message to clipboard with error handling
           const sessionMessages = currentSession?.messages || [];
           const lastAssistant = sessionMessages.findLast(
-            (m) => m.role === "assistant",
+            (m: { role: string; content: string }) => m.role === "assistant",
           );
           if (lastAssistant) {
             navigator.clipboard

@@ -124,8 +124,9 @@ export function ConfirmationDialog({
 
   // Check if confirm is allowed
   const requiresConfirmText = severity === "danger" && confirmText;
-  const isConfirmDisabled =
-    isLoading || (requiresConfirmText && typedText !== confirmText);
+  const isConfirmDisabled = Boolean(
+    isLoading || (requiresConfirmText && typedText !== confirmText),
+  );
 
   // Handle backdrop click
   const handleBackdropClick = useCallback(() => {

@@ -17,6 +17,22 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Use forks pool for better isolation and stability
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        // Isolate each test file in its own process
+        isolate: true,
+        // Set a timeout for worker cleanup
+        singleFork: false,
+      },
+    },
+    // Limit concurrent tests to prevent memory issues
+    maxConcurrency: 5,
+    // Retry flaky tests once
+    retry: 1,
+    // Silence verbose errors during cleanup
+    silent: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

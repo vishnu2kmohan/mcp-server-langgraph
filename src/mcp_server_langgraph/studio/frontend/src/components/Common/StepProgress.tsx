@@ -209,11 +209,6 @@ export function StepProgress({
                       size={size === "sm" ? 12 : size === "lg" ? 20 : 16}
                       aria-hidden="true"
                     />
-                  ) : status === "error" ? (
-                    <AlertCircle
-                      size={size === "sm" ? 12 : size === "lg" ? 20 : 16}
-                      aria-hidden="true"
-                    />
                   ) : showNumbers ? (
                     <span>{index + 1}</span>
                   ) : (
