@@ -4,7 +4,7 @@
  * Tests for JSON tree view component with collapsible nodes.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { JSONArtifact } from "./JSONArtifact";
@@ -250,6 +250,33 @@ describe("JSONArtifact", () => {
       const { container } = render(<JSONArtifact artifact={darkArtifact} />);
       const jsonContainer = container.querySelector('[data-theme="dark"]');
       expect(jsonContainer).toBeInTheDocument();
+    });
+  });
+
+  describe("Download Functionality", () => {
+    it("should have download button", () => {
+      render(<JSONArtifact artifact={mockSimpleArtifact} />);
+      expect(
+        screen.getByRole("button", { name: /download/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should trigger download when button clicked", async () => {
+      const user = userEvent.setup();
+
+      // Mock URL methods
+      const createObjectURLMock = vi.fn(() => "blob:test-url");
+      const revokeObjectURLMock = vi.fn();
+      URL.createObjectURL = createObjectURLMock;
+      URL.revokeObjectURL = revokeObjectURLMock;
+
+      render(<JSONArtifact artifact={mockSimpleArtifact} />);
+      const downloadButton = screen.getByRole("button", { name: /download/i });
+      await user.click(downloadButton);
+
+      // Verify blob URL was created and cleaned up
+      expect(createObjectURLMock).toHaveBeenCalled();
+      expect(revokeObjectURLMock).toHaveBeenCalled();
     });
   });
 });

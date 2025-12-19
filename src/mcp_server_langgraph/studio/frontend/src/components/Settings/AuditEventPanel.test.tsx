@@ -254,4 +254,150 @@ describe("AuditEventPanel", () => {
       expect(screen.getByTestId("reconnect-button")).toBeInTheDocument();
     });
   });
+
+  describe("loading states", () => {
+    it("should show connecting spinner when status is connecting", () => {
+      mockUseAuditWebSocket.mockReturnValue({
+        status: "connecting",
+        isConnected: false,
+        events: [],
+        currentFilter: null,
+        isPaused: false,
+        setFilter: vi.fn(),
+        clearFilter: vi.fn(),
+        clearEvents: vi.fn(),
+        pause: vi.fn(),
+        resume: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      render(<AuditEventPanel />);
+      expect(screen.getByTestId("connecting-spinner")).toBeInTheDocument();
+    });
+
+    it("should show reconnecting indicator when status is reconnecting", () => {
+      mockUseAuditWebSocket.mockReturnValue({
+        status: "reconnecting",
+        isConnected: false,
+        events: [],
+        currentFilter: null,
+        isPaused: false,
+        setFilter: vi.fn(),
+        clearFilter: vi.fn(),
+        clearEvents: vi.fn(),
+        pause: vi.fn(),
+        resume: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      render(<AuditEventPanel />);
+      expect(screen.getByText(/reconnecting/i)).toBeInTheDocument();
+      expect(screen.getByTestId("reconnecting-spinner")).toBeInTheDocument();
+    });
+  });
+
+  describe("filtering", () => {
+    it("should render filter controls", () => {
+      render(<AuditEventPanel />);
+      expect(screen.getByTestId("filter-toggle")).toBeInTheDocument();
+    });
+
+    it("should expand filter panel when filter button clicked", async () => {
+      render(<AuditEventPanel />);
+      const filterToggle = screen.getByTestId("filter-toggle");
+      fireEvent.click(filterToggle);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("filter-panel")).toBeInTheDocument();
+      });
+    });
+
+    it("should show category filter options", async () => {
+      render(<AuditEventPanel />);
+      const filterToggle = screen.getByTestId("filter-toggle");
+      fireEvent.click(filterToggle);
+
+      await waitFor(() => {
+        expect(screen.getByText(/authentication/i)).toBeInTheDocument();
+        expect(screen.getByText(/authorization/i)).toBeInTheDocument();
+        expect(screen.getByText(/data access/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should call setFilter when category is selected", async () => {
+      const mockSetFilter = vi.fn();
+      mockUseAuditWebSocket.mockReturnValue({
+        status: "connected",
+        isConnected: true,
+        events: [],
+        currentFilter: null,
+        isPaused: false,
+        setFilter: mockSetFilter,
+        clearFilter: vi.fn(),
+        clearEvents: vi.fn(),
+        pause: vi.fn(),
+        resume: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      render(<AuditEventPanel />);
+
+      // Open filter panel
+      const filterToggle = screen.getByTestId("filter-toggle");
+      fireEvent.click(filterToggle);
+
+      // Select a category
+      await waitFor(() => {
+        const authCheckbox = screen.getByTestId("filter-authentication");
+        fireEvent.click(authCheckbox);
+      });
+
+      expect(mockSetFilter).toHaveBeenCalled();
+    });
+
+    it("should show active filter indicator when filter is applied", () => {
+      mockUseAuditWebSocket.mockReturnValue({
+        status: "connected",
+        isConnected: true,
+        events: [],
+        currentFilter: { categories: ["authentication"] },
+        isPaused: false,
+        setFilter: vi.fn(),
+        clearFilter: vi.fn(),
+        clearEvents: vi.fn(),
+        pause: vi.fn(),
+        resume: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      render(<AuditEventPanel />);
+      expect(screen.getByTestId("filter-active-badge")).toBeInTheDocument();
+    });
+
+    it("should call clearFilter when clear button clicked", async () => {
+      const mockClearFilter = vi.fn();
+      mockUseAuditWebSocket.mockReturnValue({
+        status: "connected",
+        isConnected: true,
+        events: [],
+        currentFilter: { categories: ["authentication"] },
+        isPaused: false,
+        setFilter: vi.fn(),
+        clearFilter: mockClearFilter,
+        clearEvents: vi.fn(),
+        pause: vi.fn(),
+        resume: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      render(<AuditEventPanel />);
+
+      const clearFilterButton = screen.getByTestId("clear-filter-button");
+      fireEvent.click(clearFilterButton);
+
+      await waitFor(() => {
+        expect(mockClearFilter).toHaveBeenCalled();
+      });
+    });
+  });
 });

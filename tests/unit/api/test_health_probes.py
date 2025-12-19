@@ -8,6 +8,8 @@ Tests for:
 - /health/deps - Dependency status
 """
 
+import gc
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -18,6 +20,10 @@ pytestmark = pytest.mark.unit
 @pytest.mark.xdist_group(name="test_health_liveness_probe")
 class TestLivenessProbe:
     """Tests for /health/live endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_liveness_returns_alive(self, test_client: TestClient):
         """Liveness probe should return status='alive'."""
@@ -44,6 +50,10 @@ class TestLivenessProbe:
 class TestStartupProbe:
     """Tests for /health/startup endpoint."""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
     def test_startup_returns_started(self, test_client: TestClient):
         """Startup probe should return status='started' when observability is ready."""
         response = test_client.get("/api/v1/health/startup")
@@ -65,6 +75,10 @@ class TestStartupProbe:
 @pytest.mark.xdist_group(name="test_health_readiness_probe")
 class TestReadinessProbe:
     """Tests for /health/ready endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_readiness_returns_status(self, test_client: TestClient):
         """Readiness probe should return status field."""
@@ -88,6 +102,10 @@ class TestReadinessProbe:
 @pytest.mark.xdist_group(name="test_health_dependency_status")
 class TestDependencyStatus:
     """Tests for /health/deps endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_deps_returns_list(self, test_client: TestClient):
         """Dependency status should return a list."""

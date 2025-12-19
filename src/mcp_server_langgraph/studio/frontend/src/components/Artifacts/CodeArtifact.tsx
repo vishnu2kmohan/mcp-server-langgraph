@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Download } from "lucide-react";
 import type { CodeArtifact as CodeArtifactType } from "../../types/artifacts";
 
 export interface CodeArtifactProps {
@@ -36,6 +36,62 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
       console.error("Failed to copy code:", error);
     }
   }, [data]);
+
+  /**
+   * Get file extension from language
+   */
+  const getFileExtension = useCallback((lang: string): string => {
+    const extensionMap: Record<string, string> = {
+      javascript: "js",
+      typescript: "ts",
+      python: "py",
+      java: "java",
+      cpp: "cpp",
+      c: "c",
+      csharp: "cs",
+      go: "go",
+      rust: "rs",
+      ruby: "rb",
+      php: "php",
+      swift: "swift",
+      kotlin: "kt",
+      scala: "scala",
+      html: "html",
+      css: "css",
+      scss: "scss",
+      less: "less",
+      json: "json",
+      yaml: "yaml",
+      xml: "xml",
+      markdown: "md",
+      sql: "sql",
+      shell: "sh",
+      bash: "sh",
+      powershell: "ps1",
+    };
+    return extensionMap[lang.toLowerCase()] || "txt";
+  }, []);
+
+  /**
+   * Download code as file
+   */
+  const handleDownload = useCallback(() => {
+    const extension = getFileExtension(language);
+    const filename = title || `code.${extension}`;
+    const finalFilename = filename.includes(".")
+      ? filename
+      : `${filename}.${extension}`;
+
+    const blob = new Blob([data], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = finalFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [data, title, language, getFileExtension]);
 
   /**
    * Split code into lines for line number display
@@ -78,27 +134,40 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
             {language}
           </span>
         </div>
-        <button
-          onClick={handleCopy}
-          className={`flex items-center gap-2 px-3 py-1 text-sm rounded transition-colors ${
-            theme === "dark"
-              ? "hover:bg-gray-700 text-gray-300"
-              : "hover:bg-gray-200 text-gray-700"
-          }`}
-          aria-label="Copy code"
-        >
-          {copied ? (
-            <>
-              <Check className="w-4 h-4 text-green-500" />
-              <span className="text-green-500">Copied!</span>
-            </>
-          ) : (
-            <>
-              <Copy className="w-4 h-4" />
-              <span>Copy</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleCopy}
+            className={`flex items-center gap-2 px-3 py-1 text-sm rounded transition-colors ${
+              theme === "dark"
+                ? "hover:bg-gray-700 text-gray-300"
+                : "hover:bg-gray-200 text-gray-700"
+            }`}
+            aria-label="Copy code"
+          >
+            {copied ? (
+              <>
+                <Check className="w-4 h-4 text-green-500" />
+                <span className="text-green-500">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                <span>Copy</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleDownload}
+            className={`p-1.5 rounded transition-colors ${
+              theme === "dark"
+                ? "hover:bg-gray-700 text-gray-300"
+                : "hover:bg-gray-200 text-gray-700"
+            }`}
+            aria-label="Download code"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Code Content */}

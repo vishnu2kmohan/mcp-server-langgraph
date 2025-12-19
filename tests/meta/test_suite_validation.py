@@ -507,6 +507,14 @@ class TestImportGuards:
                     import_pattern = f"import {package}"
                     from_pattern = f"from {package} import"
 
+                    # Check for module-level guard (protects entire file)
+                    # Pattern: pytest.importorskip("package_name", ...)
+                    has_module_guard = f'pytest.importorskip("{package}"' in content
+
+                    if has_module_guard:
+                        # Module-level guard protects all imports in this file
+                        continue
+
                     for line_num, line in enumerate(lines, 1):
                         stripped = line.strip()
 
@@ -580,9 +588,9 @@ class TestInfrastructureFixtures:
             error_msg += "\n\nUse pytest.skip() for infrastructure unavailability, not pytest.fail()."
             pytest.fail(error_msg)
 
-        # Verify pytest.skip is used
-        if "pytest.skip(" not in content:
-            pytest.fail("conftest.py should use pytest.skip() for infrastructure unavailability")
+        # Verify pytest.skip or pytest.mark.skip is used
+        if "pytest.skip(" not in content and "pytest.mark.skip(" not in content:
+            pytest.fail("conftest.py should use pytest.skip() or pytest.mark.skip() for infrastructure unavailability")
 
 
 @pytest.mark.xdist_group(name="testclitoolguards")

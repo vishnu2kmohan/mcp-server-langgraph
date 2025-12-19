@@ -10,6 +10,8 @@ SECURITY REQUIREMENTS:
 - transport must be included (required field)
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.api.v1.connections import ConnectionResponse
@@ -22,6 +24,10 @@ pytestmark = pytest.mark.unit
 @pytest.mark.xdist_group(name="test_connection_response_security")
 class TestConnectionResponseSecurity:
     """Tests for secure ConnectionResponse model."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_connection_response_excludes_env(self) -> None:

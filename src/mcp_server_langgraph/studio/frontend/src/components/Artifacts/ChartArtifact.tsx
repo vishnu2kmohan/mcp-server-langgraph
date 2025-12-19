@@ -13,15 +13,16 @@
  * consider using Recharts or Chart.js for more advanced features.
  */
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   BarChart3,
   LineChart,
   PieChart,
-  Download,
   Maximize2,
   Minimize2,
 } from "lucide-react";
+import { ArtifactExporter } from "./ArtifactExporter";
+import type { ExportFormat } from "./ArtifactExporter";
 
 export interface ChartDataPoint {
   label: string;
@@ -283,6 +284,7 @@ export function ChartArtifact({
 }: ChartArtifactProps) {
   const [chartType, setChartType] = useState<ChartType>(initialType);
   const [isExpanded, setIsExpanded] = useState(false);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   const maxValue = Math.max(...data.map((d) => d.value), 0);
 
@@ -296,12 +298,62 @@ export function ChartArtifact({
     { type: "pie", icon: <PieChart size={14} />, label: "Pie" },
   ];
 
-  const handleDownload = () => {
+  /**
+   * Export chart data as CSV file
+   */
+  const exportAsCsv = useCallback(() => {
+    // Build CSV content
+    const headers = ["Label", "Value"];
+    const rows = data.map((point) => [point.label, point.value.toString()]);
+    const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+
+    // Generate filename from title
+    const filename = title
+      ? `${title.replace(/\s+/g, "_").toLowerCase()}.csv`
+      : "chart_data.csv";
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [data, title]);
+
+  const handleDownload = useCallback(() => {
     if (onDownload) {
       onDownload();
+    } else {
+      // Default: export as CSV
+      exportAsCsv();
     }
-    // Default: no-op (would require canvas conversion for real implementation)
-  };
+  }, [onDownload, exportAsCsv]);
+
+  // Handle export from ArtifactExporter
+  const handleExport = useCallback(
+    (format: ExportFormat, blob: Blob | string) => {
+      if (onDownload) {
+        onDownload();
+        return;
+      }
+
+      // Download the blob
+      if (blob instanceof Blob) {
+        const extension = format === "pdf" ? "pdf" : format === "svg" ? "svg" : "png";
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${title.replace(/\s+/g, "_")}.${extension}`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    },
+    [onDownload, title],
+  );
 
   const ChartIcon =
     chartType === "bar"
@@ -342,13 +394,13 @@ export function ChartArtifact({
               ))}
             </div>
           )}
-          <button
-            onClick={handleDownload}
-            className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-            aria-label="Download chart"
-          >
-            <Download size={16} />
-          </button>
+          <ArtifactExporter
+            artifactType="chart"
+            data={data}
+            elementRef={chartContainerRef}
+            onExport={handleExport}
+            filename={title.replace(/\s+/g, "_")}
+          />
           {expandable && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
@@ -362,7 +414,7 @@ export function ChartArtifact({
       </div>
 
       {/* Chart */}
-      <div data-testid="chart-container">
+      <div ref={chartContainerRef} data-testid="chart-container">
         {data.length === 0 ? (
           <div className="h-48 flex items-center justify-center text-gray-500 dark:text-gray-400">
             No data available

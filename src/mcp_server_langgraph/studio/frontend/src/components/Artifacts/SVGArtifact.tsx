@@ -3,9 +3,15 @@
  *
  * Renders SVG content inline with sanitization for security.
  * Supports raw SVG markup, base64 data URLs, and URL-encoded data URLs.
+ *
+ * Features:
+ * - Security sanitization (removes scripts, event handlers)
+ * - Copy to clipboard
+ * - Download as SVG file
  */
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
+import { Copy, Download, Check } from "lucide-react";
 import type { SVGConfig } from "../../types/artifacts";
 
 export interface SVGArtifactProps {
@@ -95,6 +101,8 @@ function extractSvgContent(data: string): string {
 }
 
 export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
+  const [copied, setCopied] = useState(false);
+
   const { sanitizedSvg, error } = useMemo(() => {
     if (!data || data.trim() === "") {
       return { sanitizedSvg: null, error: "No SVG data provided" };
@@ -111,6 +119,32 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
       };
     }
   }, [data]);
+
+  // Copy SVG to clipboard
+  const handleCopy = useCallback(async () => {
+    if (!sanitizedSvg) return;
+    try {
+      await navigator.clipboard.writeText(sanitizedSvg);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy SVG:", err);
+    }
+  }, [sanitizedSvg]);
+
+  // Download SVG as file
+  const handleDownload = useCallback(() => {
+    if (!sanitizedSvg) return;
+    const blob = new Blob([sanitizedSvg], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title?.replace(/\s+/g, "_") || "diagram"}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [sanitizedSvg, title]);
 
   const containerStyle: React.CSSProperties = {
     width: config?.width
@@ -137,14 +171,35 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden">
-      {title && (
-        <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {title}
-          </h4>
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+      {/* Header with title and actions */}
+      <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {title || "SVG"}
+        </h4>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleCopy}
+            aria-label="Copy SVG"
+            className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            {copied ? (
+              <Check size={16} className="text-green-500" />
+            ) : (
+              <Copy size={16} />
+            )}
+          </button>
+          <button
+            onClick={handleDownload}
+            aria-label="Download SVG"
+            className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <Download size={16} />
+          </button>
         </div>
-      )}
+      </div>
+
+      {/* SVG Content */}
       <div
         data-testid="svg-container"
         className="p-4 flex items-center justify-center"

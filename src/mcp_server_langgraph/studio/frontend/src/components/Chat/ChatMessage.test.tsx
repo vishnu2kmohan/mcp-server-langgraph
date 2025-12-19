@@ -4,8 +4,8 @@
  * Tests for individual chat message display component.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ChatMessage } from "./ChatMessage";
 
 describe("ChatMessage", () => {
@@ -495,6 +495,136 @@ Conclusion text.`;
 
       expect(screen.getByText("Introduction text.")).toBeInTheDocument();
       expect(screen.getByText("Conclusion text.")).toBeInTheDocument();
+    });
+  });
+
+  describe("AI Follow-Up Suggestions", () => {
+    const mockSuggestions = [
+      { id: "s1", text: "Tell me more about this", category: "explore" as const },
+      { id: "s2", text: "Can you give an example?", category: "example" as const },
+    ];
+
+    it("should display follow-up suggestions for assistant messages", () => {
+      render(
+        <ChatMessage
+          role="assistant"
+          content="Here is some information"
+          timestamp={new Date()}
+          suggestions={mockSuggestions}
+          onSuggestionSelect={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByTestId("follow-up-suggestions")).toBeInTheDocument();
+    });
+
+    it("should render suggestion chips", () => {
+      render(
+        <ChatMessage
+          role="assistant"
+          content="Here is some information"
+          timestamp={new Date()}
+          suggestions={mockSuggestions}
+          onSuggestionSelect={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText("Tell me more about this")).toBeInTheDocument();
+      expect(screen.getByText("Can you give an example?")).toBeInTheDocument();
+    });
+
+    it("should call onSuggestionSelect when suggestion is clicked", () => {
+      const handleSelect = vi.fn();
+      render(
+        <ChatMessage
+          role="assistant"
+          content="Here is some information"
+          timestamp={new Date()}
+          suggestions={mockSuggestions}
+          onSuggestionSelect={handleSelect}
+        />,
+      );
+
+      fireEvent.click(screen.getByText("Tell me more about this"));
+      expect(handleSelect).toHaveBeenCalledWith(mockSuggestions[0]);
+    });
+
+    it("should not display suggestions for user messages", () => {
+      render(
+        <ChatMessage
+          role="user"
+          content="My message"
+          timestamp={new Date()}
+          suggestions={mockSuggestions}
+          onSuggestionSelect={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByTestId("follow-up-suggestions")).not.toBeInTheDocument();
+    });
+
+    it("should not display suggestions when loading", () => {
+      render(
+        <ChatMessage
+          role="assistant"
+          content=""
+          timestamp={new Date()}
+          isLoading={true}
+          suggestions={mockSuggestions}
+          onSuggestionSelect={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByTestId("follow-up-suggestions")).not.toBeInTheDocument();
+    });
+
+    it("should show loading state for suggestions", () => {
+      render(
+        <ChatMessage
+          role="assistant"
+          content="Here is info"
+          timestamp={new Date()}
+          suggestionsLoading={true}
+          onSuggestionSelect={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByTestId("suggestions-loading")).toBeInTheDocument();
+    });
+
+    it("should not display suggestions when empty array", () => {
+      render(
+        <ChatMessage
+          role="assistant"
+          content="Here is info"
+          timestamp={new Date()}
+          suggestions={[]}
+          onSuggestionSelect={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByTestId("follow-up-suggestions")).not.toBeInTheDocument();
+    });
+
+    it("should position suggestions after sources if both present", () => {
+      const sources = [{ title: "Doc", url: "https://example.com" }];
+
+      const { container } = render(
+        <ChatMessage
+          role="assistant"
+          content="Here is info"
+          timestamp={new Date()}
+          sources={sources}
+          suggestions={mockSuggestions}
+          onSuggestionSelect={vi.fn()}
+        />,
+      );
+
+      const sourcesSection = container.querySelector('[data-testid="sources-section"]');
+      const suggestionsSection = container.querySelector('[data-testid="follow-up-suggestions"]');
+
+      expect(sourcesSection).toBeInTheDocument();
+      expect(suggestionsSection).toBeInTheDocument();
     });
   });
 });

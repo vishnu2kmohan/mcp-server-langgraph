@@ -6,6 +6,8 @@ with compile-time graph composition. This follows the Open/Closed Principle
 by enabling graph topology changes without modifying node functions.
 """
 
+import gc
+
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -15,6 +17,10 @@ pytestmark = pytest.mark.unit
 @pytest.mark.xdist_group(name="test_agent_config_creation")
 class TestAgentConfigCreation:
     """Test AgentConfig instantiation and defaults."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_import_agent_config(self):
         """AgentConfig should be importable from core.agent_config."""
@@ -73,6 +79,10 @@ class TestAgentConfigCreation:
 class TestAgentConfigImmutability:
     """Test that AgentConfig is immutable (frozen dataclass)."""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
     def test_config_is_frozen(self):
         """AgentConfig should be immutable."""
         from mcp_server_langgraph.core.agent_config import AgentConfig
@@ -87,6 +97,10 @@ class TestAgentConfigImmutability:
 @pytest.mark.xdist_group(name="test_graph_versioning")
 class TestGraphVersioning:
     """Test graph_version property for checkpoint compatibility."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_graph_version_is_string(self):
         """graph_version should return a string hash."""
@@ -142,6 +156,10 @@ class TestGraphVersioning:
 @pytest.mark.xdist_group(name="test_agent_config_from_settings")
 class TestAgentConfigFromSettings:
     """Test creating AgentConfig from Settings object."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_from_settings_basic(self, monkeypatch):
         """AgentConfig.from_settings should extract relevant settings."""
@@ -201,6 +219,10 @@ class TestAgentConfigFromSettings:
 @pytest.mark.xdist_group(name="test_topology_fields")
 class TestTopologyFields:
     """Test that topology-affecting fields are correctly identified."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_topology_fields_property(self):
         """Should expose which fields affect graph topology."""

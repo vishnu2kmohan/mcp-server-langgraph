@@ -18,8 +18,8 @@ Workflow:
 3. Falls back to running tests if `.coverage` doesn't exist (CI/dev compatibility)
 
 Coverage targets:
-- Current: 65.78% (after Phase 1 improvements)
-- Minimum: 64% (CI threshold) ⚠️ MUST NOT DROP BELOW
+- Current: 75%+ (after Phase 2 improvements)
+- Minimum: 70% (CI threshold) ⚠️ MUST NOT DROP BELOW
 - Target: 80% (Codex recommendation) 🎯
 - Excellent: 90%+ ⭐
 
@@ -42,8 +42,8 @@ How to improve coverage:
 4. Use TDD for new code (write tests first!)
 
 Related:
-- pyproject.toml: Coverage configuration (fail_under = 64)
-- .github/workflows/ci.yaml: CI coverage enforcement
+- pyproject.toml: Coverage configuration (fail_under = 75, stricter local check)
+- .github/workflows/integration-tests.yaml: CI coverage enforcement (--cov-fail-under=70)
 - Makefile: PHASE 3 runs tests with coverage (creates `.coverage` file)
 """
 
@@ -101,11 +101,11 @@ def test_minimum_coverage_threshold():
             "Skipping to avoid 5+ minute test execution during pre-push hooks."
         )
 
-    # Minimum threshold (aligned with pyproject.toml fail_under)
-    MIN_COVERAGE = 64
+    # Minimum threshold (aligned with CI workflow --cov-fail-under)
+    MIN_COVERAGE = 70
 
-    # Current baseline (after Phase 1 improvements)
-    BASELINE_COVERAGE = 65  # 65.78% rounded down for safety margin
+    # Current baseline (after Phase 2 improvements)
+    BASELINE_COVERAGE = 75  # ~75% achieved, rounded down for safety margin
 
     assert coverage_pct >= MIN_COVERAGE, (
         f"Coverage too low: {coverage_pct}% (minimum: {MIN_COVERAGE}%) [source: {source}]\n"

@@ -65,3 +65,10 @@ export {
   Step,
 } from "./MDXArtifact";
 export type { MDXArtifactProps } from "./MDXArtifact";
+
+export { ArtifactExporter } from "./ArtifactExporter";
+export type {
+  ArtifactExporterProps,
+  ExportFormat,
+  ArtifactType as ExporterArtifactType,
+} from "./ArtifactExporter";

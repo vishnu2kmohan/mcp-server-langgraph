@@ -3,9 +3,10 @@
  *
  * Real-time audit event streaming panel for admin users.
  * Displays security and compliance events from the backend.
+ * Features loading states and category filtering.
  */
 
-import { useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   Wifi,
   WifiOff,
@@ -14,9 +15,12 @@ import {
   Trash2,
   RefreshCw,
   Shield,
+  Filter,
+  X,
+  Loader2,
 } from "lucide-react";
 import { useAuditWebSocket } from "../../hooks/useAuditWebSocket";
-import type { AuditEvent } from "../../hooks/useAuditWebSocket";
+import type { AuditEvent, AuditFilter } from "../../hooks/useAuditWebSocket";
 
 // =============================================================================
 // Types
@@ -26,6 +30,20 @@ export interface AuditEventPanelProps {
   /** Maximum height for the event list */
   maxHeight?: string;
 }
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+// Available categories for filtering
+const FILTER_CATEGORIES = [
+  { id: "authentication", label: "Authentication" },
+  { id: "authorization", label: "Authorization" },
+  { id: "data_access", label: "Data Access" },
+  { id: "data_modification", label: "Data Modification" },
+  { id: "system", label: "System" },
+  { id: "security", label: "Security" },
+];
 
 // =============================================================================
 // Utility
@@ -71,12 +89,58 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
     status,
     isConnected,
     events,
+    currentFilter,
     isPaused,
+    setFilter,
+    clearFilter,
     pause,
     resume,
     clearEvents,
     reconnect,
   } = useAuditWebSocket();
+
+  // Local state for filter panel visibility
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
+    new Set(currentFilter?.categories || [])
+  );
+
+  // Check if a filter is active
+  const hasActiveFilter = useMemo(() => {
+    return (
+      currentFilter !== null &&
+      ((currentFilter.categories && currentFilter.categories.length > 0) ||
+        (currentFilter.regulations && currentFilter.regulations.length > 0) ||
+        (currentFilter.actors && currentFilter.actors.length > 0) ||
+        (currentFilter.event_types && currentFilter.event_types.length > 0))
+    );
+  }, [currentFilter]);
+
+  // Handle category toggle
+  const handleCategoryToggle = useCallback(
+    (categoryId: string) => {
+      const newSelected = new Set(selectedCategories);
+      if (newSelected.has(categoryId)) {
+        newSelected.delete(categoryId);
+      } else {
+        newSelected.add(categoryId);
+      }
+      setSelectedCategories(newSelected);
+
+      // Apply filter
+      const newFilter: AuditFilter = {
+        categories: Array.from(newSelected),
+      };
+      setFilter(newFilter);
+    },
+    [selectedCategories, setFilter]
+  );
+
+  // Handle clear filter
+  const handleClearFilter = useCallback(() => {
+    setSelectedCategories(new Set());
+    clearFilter();
+  }, [clearFilter]);
 
   // Status text
   const statusText = useMemo(() => {
@@ -96,7 +160,13 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
     }
   }, [status]);
 
-  const statusColor = isConnected ? "text-green-500" : "text-red-500";
+  const isConnecting = status === "connecting";
+  const isReconnecting = status === "reconnecting";
+  const statusColor = isConnected
+    ? "text-green-500"
+    : isConnecting || isReconnecting
+      ? "text-yellow-500"
+      : "text-red-500";
 
   return (
     <div
@@ -113,21 +183,34 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Connection Status */}
+          {/* Connection Status with loading states */}
           <div
             data-testid="audit-status"
             className={cn("flex items-center gap-1.5 text-sm", statusColor)}
           >
-            {isConnected ? (
+            {isConnecting && (
+              <Loader2
+                data-testid="connecting-spinner"
+                className="w-4 h-4 animate-spin"
+              />
+            )}
+            {isReconnecting && (
+              <Loader2
+                data-testid="reconnecting-spinner"
+                className="w-4 h-4 animate-spin"
+              />
+            )}
+            {!isConnecting && !isReconnecting && isConnected && (
               <Wifi className="w-4 h-4" />
-            ) : (
+            )}
+            {!isConnecting && !isReconnecting && !isConnected && (
               <WifiOff className="w-4 h-4" />
             )}
             <span>{statusText}</span>
           </div>
 
           {/* Reconnect button (when disconnected) */}
-          {!isConnected && (
+          {!isConnected && !isConnecting && !isReconnecting && (
             <button
               data-testid="reconnect-button"
               onClick={reconnect}
@@ -135,6 +218,39 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
               title="Reconnect"
             >
               <RefreshCw className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Filter button with active indicator */}
+          <button
+            data-testid="filter-toggle"
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className={cn(
+              "p-1.5 rounded relative",
+              isFilterOpen
+                ? "text-blue-600 bg-blue-50 dark:bg-blue-900/30"
+                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+            )}
+            title="Filter events"
+          >
+            <Filter className="w-4 h-4" />
+            {hasActiveFilter && (
+              <span
+                data-testid="filter-active-badge"
+                className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"
+              />
+            )}
+          </button>
+
+          {/* Clear filter button (when filter is active) */}
+          {hasActiveFilter && (
+            <button
+              data-testid="clear-filter-button"
+              onClick={handleClearFilter}
+              className="p-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded"
+              title="Clear filter"
+            >
+              <X className="w-4 h-4" />
             </button>
           )}
 
@@ -146,17 +262,11 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
               "p-1.5 rounded",
               isPaused
                 ? "text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30"
-                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700",
+                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
             )}
             title={isPaused ? "Resume" : "Pause"}
           >
-            {isPaused ? (
-              <>
-                <Play className="w-4 h-4" />
-              </>
-            ) : (
-              <Pause className="w-4 h-4" />
-            )}
+            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </button>
 
           {/* Clear button */}
@@ -172,6 +282,37 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
           )}
         </div>
       </div>
+
+      {/* Filter Panel */}
+      {isFilterOpen && (
+        <div
+          data-testid="filter-panel"
+          className="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700"
+        >
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+            Filter by Category
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {FILTER_CATEGORIES.map((category) => (
+              <label
+                key={category.id}
+                className="inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  data-testid={`filter-${category.id}`}
+                  checked={selectedCategories.has(category.id)}
+                  onChange={() => handleCategoryToggle(category.id)}
+                  className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-xs text-gray-700 dark:text-gray-300">
+                  {category.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Paused indicator */}
       {isPaused && (
@@ -207,10 +348,17 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
         )}
       </div>
 
-      {/* Footer with event count */}
-      {events.length > 0 && (
-        <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-          {events.length} event{events.length !== 1 ? "s" : ""}
+      {/* Footer with event count and active filter info */}
+      {(events.length > 0 || hasActiveFilter) && (
+        <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
+          <span>
+            {events.length} event{events.length !== 1 ? "s" : ""}
+          </span>
+          {hasActiveFilter && (
+            <span className="text-blue-600 dark:text-blue-400">
+              Filter active: {currentFilter?.categories?.join(", ")}
+            </span>
+          )}
         </div>
       )}
     </div>
@@ -236,7 +384,7 @@ function AuditEventItem({ event }: AuditEventItemProps) {
             <span
               className={cn(
                 "px-2 py-0.5 text-xs font-medium rounded-full",
-                categoryColor,
+                categoryColor
               )}
             >
               {event.category}

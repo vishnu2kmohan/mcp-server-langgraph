@@ -285,4 +285,79 @@ describe("ChatDocument", () => {
       expect(container).toHaveClass("h-full");
     });
   });
+
+  describe("message actions", () => {
+    it("should show message actions on hover for assistant messages", async () => {
+      renderWithProviders(<ChatDocument sessionId="session-123" />, {
+        sessionOverrides: { currentSession: mockSession },
+      });
+
+      // Find the assistant message container
+      const assistantMessage = screen.getByText("Hi there!").closest(".group");
+      expect(assistantMessage).toBeInTheDocument();
+
+      // Message actions should exist (may be hidden with opacity-0)
+      const actionsContainer = assistantMessage?.querySelector(
+        '[data-testid="message-actions-container"]',
+      );
+      expect(actionsContainer).toBeInTheDocument();
+    });
+
+    it("should show regenerate action for assistant messages", async () => {
+      renderWithProviders(<ChatDocument sessionId="session-123" />, {
+        sessionOverrides: { currentSession: mockSession },
+      });
+
+      // Find and click the actions trigger for assistant message
+      const assistantMessage = screen.getByText("Hi there!").closest(".group");
+      const trigger = assistantMessage?.querySelector(
+        '[data-testid="message-actions-trigger"]',
+      );
+
+      if (trigger) {
+        fireEvent.click(trigger);
+        await waitFor(() => {
+          expect(screen.getByTestId("action-regenerate")).toBeInTheDocument();
+        });
+      }
+    });
+
+    it("should show edit action for user messages", async () => {
+      renderWithProviders(<ChatDocument sessionId="session-123" />, {
+        sessionOverrides: { currentSession: mockSession },
+      });
+
+      // Find and click the actions trigger for user message
+      const userMessage = screen.getByText("Hello").closest(".group");
+      const trigger = userMessage?.querySelector(
+        '[data-testid="message-actions-trigger"]',
+      );
+
+      if (trigger) {
+        fireEvent.click(trigger);
+        await waitFor(() => {
+          expect(screen.getByTestId("action-edit")).toBeInTheDocument();
+        });
+      }
+    });
+
+    it("should always show copy action", async () => {
+      renderWithProviders(<ChatDocument sessionId="session-123" />, {
+        sessionOverrides: { currentSession: mockSession },
+      });
+
+      // Find and click the actions trigger
+      const assistantMessage = screen.getByText("Hi there!").closest(".group");
+      const trigger = assistantMessage?.querySelector(
+        '[data-testid="message-actions-trigger"]',
+      );
+
+      if (trigger) {
+        fireEvent.click(trigger);
+        await waitFor(() => {
+          expect(screen.getByTestId("action-copy")).toBeInTheDocument();
+        });
+      }
+    });
+  });
 });

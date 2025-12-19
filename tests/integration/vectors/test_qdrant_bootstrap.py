@@ -39,6 +39,9 @@ import pytest
 
 from tests.constants import TEST_QDRANT_PORT
 
+# Guard for optional qdrant_client dependency
+pytest.importorskip("qdrant_client", reason="qdrant_client is an optional dependency for vector tests")
+
 # Module-level marker
 pytestmark = [
     pytest.mark.integration,

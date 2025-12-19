@@ -5,6 +5,8 @@ TDD: These tests are written FIRST before implementation.
 They define the expected behavior of the decomposed config modules.
 """
 
+import gc
+
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -14,6 +16,10 @@ pytestmark = pytest.mark.unit
 @pytest.mark.xdist_group(name="test_config_module_imports")
 class TestConfigModuleImports:
     """Test that all config modules can be imported."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_import_settings_from_package(self):
         """Settings should be importable from the config package."""
@@ -39,6 +45,10 @@ class TestConfigModuleImports:
 @pytest.mark.xdist_group(name="test_settings_defaults")
 class TestSettingsDefaults:
     """Test that Settings has correct default values."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_default_environment_is_development_when_not_set(self, monkeypatch):
         """Default environment should be development when not set."""
@@ -77,6 +87,10 @@ class TestSettingsDefaults:
 class TestSettingsValidation:
     """Test Settings validation logic."""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
     def test_production_validation_inmemory_auth_blocked(self):
         """Production with inmemory auth should raise ValueError."""
         from mcp_server_langgraph.core.config import Settings
@@ -110,6 +124,10 @@ class TestSettingsValidation:
 @pytest.mark.xdist_group(name="test_settings_methods")
 class TestSettingsMethods:
     """Test Settings helper methods."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_mock_authorization_enabled_explicit(self):
         """Explicit setting should be respected."""
@@ -151,6 +169,10 @@ class TestSettingsMethods:
 class TestSettingsFieldValidators:
     """Test field validators parse correctly."""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
     def test_parse_comma_separated_list_cors(self):
         """CORS origins should parse from comma-separated string."""
         from mcp_server_langgraph.core.config import Settings
@@ -170,6 +192,10 @@ class TestSettingsFieldValidators:
 @pytest.mark.xdist_group(name="test_settings_backwards_compat")
 class TestSettingsBackwardsCompatibility:
     """Test backwards compatibility with existing code."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_expected_fields_exist(self):
         """All expected fields should exist on Settings."""

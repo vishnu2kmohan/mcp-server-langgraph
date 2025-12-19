@@ -201,4 +201,31 @@ describe("CodeArtifact", () => {
       expect(elements.length).toBeGreaterThan(0);
     });
   });
+
+  describe("Download Functionality", () => {
+    it("should have download button", () => {
+      render(<CodeArtifact artifact={mockArtifact} />);
+      expect(
+        screen.getByRole("button", { name: /download/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should trigger download when button clicked", async () => {
+      const user = userEvent.setup();
+
+      // Mock URL methods
+      const createObjectURLMock = vi.fn(() => "blob:test-url");
+      const revokeObjectURLMock = vi.fn();
+      URL.createObjectURL = createObjectURLMock;
+      URL.revokeObjectURL = revokeObjectURLMock;
+
+      render(<CodeArtifact artifact={mockArtifact} />);
+      const downloadButton = screen.getByRole("button", { name: /download/i });
+      await user.click(downloadButton);
+
+      // Verify blob URL was created and cleaned up
+      expect(createObjectURLMock).toHaveBeenCalled();
+      expect(revokeObjectURLMock).toHaveBeenCalled();
+    });
+  });
 });

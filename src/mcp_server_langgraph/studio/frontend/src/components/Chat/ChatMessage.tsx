@@ -8,6 +8,8 @@
 import { Loader2, ExternalLink } from "lucide-react";
 import { parseArtifacts } from "../../utils/artifactParser";
 import { ArtifactRenderer } from "../Artifacts/ArtifactRenderer";
+import { AIFollowUpSuggestions } from "./AIFollowUpSuggestions";
+import type { FollowUpSuggestion } from "./AIFollowUpSuggestions";
 
 /**
  * Source citation for AI responses
@@ -28,6 +30,12 @@ export interface ChatMessageProps {
   renderArtifacts?: boolean;
   /** Source citations for AI responses (only displayed for assistant messages) */
   sources?: SourceCitation[];
+  /** AI-generated follow-up suggestions (only displayed for assistant messages) */
+  suggestions?: FollowUpSuggestion[];
+  /** Callback when a suggestion is selected */
+  onSuggestionSelect?: (suggestion: FollowUpSuggestion) => void;
+  /** Whether suggestions are loading */
+  suggestionsLoading?: boolean;
 }
 
 export function ChatMessage({
@@ -39,6 +47,9 @@ export function ChatMessage({
   renderMarkdown = false,
   renderArtifacts = false,
   sources,
+  suggestions,
+  onSuggestionSelect,
+  suggestionsLoading = false,
 }: ChatMessageProps) {
   const isUser = role === "user";
   const isAssistant = role === "assistant";
@@ -185,6 +196,17 @@ export function ChatMessage({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* AI Follow-Up Suggestions - only for assistant messages when not loading */}
+      {isAssistant && !isLoading && onSuggestionSelect && (
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+          <AIFollowUpSuggestions
+            suggestions={suggestions || []}
+            onSelect={onSuggestionSelect}
+            isLoading={suggestionsLoading}
+          />
         </div>
       )}
     </div>

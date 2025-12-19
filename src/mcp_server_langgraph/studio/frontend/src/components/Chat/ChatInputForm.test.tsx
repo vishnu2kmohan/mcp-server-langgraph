@@ -270,4 +270,60 @@ describe("ChatInputForm", () => {
       ).toBeInTheDocument();
     });
   });
+
+  describe("Layout and Spacing", () => {
+    it("should have proper bottom padding for comfortable spacing", () => {
+      render(<ChatInputForm {...defaultProps} />);
+      const container = screen.getByTestId("chat-input-container");
+      expect(container).toBeInTheDocument();
+      // Container should have bottom padding class
+      expect(container.className).toMatch(/pb-\d+|py-\d+/);
+    });
+
+    it("should have centered max-width container for wide screens", () => {
+      render(<ChatInputForm {...defaultProps} />);
+      const container = screen.getByTestId("chat-input-container");
+      expect(container.className).toMatch(/max-w-/);
+    });
+
+    it("should use textarea for multi-line input support", () => {
+      render(<ChatInputForm {...defaultProps} />);
+      const textarea = screen.getByRole("textbox");
+      expect(textarea.tagName.toLowerCase()).toBe("textarea");
+    });
+
+    it("should have proper input wrapper with grouped controls", () => {
+      render(<ChatInputForm {...defaultProps} />);
+      const wrapper = screen.getByTestId("input-wrapper");
+      expect(wrapper).toBeInTheDocument();
+    });
+  });
+
+  describe("Stop Streaming Button", () => {
+    it("should show stop button when streaming", () => {
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello"
+          isStreaming={true}
+          onStopStreaming={vi.fn()}
+        />,
+      );
+      expect(screen.getByTestId("stop-streaming-button")).toBeInTheDocument();
+    });
+
+    it("should call onStopStreaming when stop button clicked", () => {
+      const mockOnStopStreaming = vi.fn();
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello"
+          isStreaming={true}
+          onStopStreaming={mockOnStopStreaming}
+        />,
+      );
+      fireEvent.click(screen.getByTestId("stop-streaming-button"));
+      expect(mockOnStopStreaming).toHaveBeenCalledOnce();
+    });
+  });
 });

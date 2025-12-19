@@ -8,7 +8,7 @@ parallel execution.
 Background:
 -----------
 The `set_global_auth_middleware()` function modifies a module-level global
-variable `_global_auth_middleware` in the auth.middleware module. If this
+variable `_global_auth_middleware` in the auth.dependencies module. If this
 global is not reset between tests, it can pollute subsequent tests running
 in the same pytest-xdist worker, causing unexpected authentication behavior.
 
@@ -22,17 +22,35 @@ Failure Scenario:
 
 See Also:
 ---------
-- src/mcp_server_langgraph/auth/middleware.py
+- src/mcp_server_langgraph/auth/dependencies.py
 - tests/conftest.py:268-291 (reset_dependency_singletons fixture)
 - tests/test_auth.py (tests that use set_global_auth_middleware)
 """
 
 import gc
+from unittest.mock import MagicMock
 
 import pytest
 
-import mcp_server_langgraph.auth.middleware as middleware
-from mcp_server_langgraph.auth.middleware import set_global_auth_middleware
+import mcp_server_langgraph.auth.dependencies as dependencies
+from mcp_server_langgraph.auth.dependencies import set_global_auth_middleware
+
+
+class MockUserProvider:
+    """Mock user provider for testing."""
+
+    pass
+
+
+class MockAuthMiddleware:
+    """Mock auth middleware with required user_provider attribute."""
+
+    def __init__(self, name: str = "mock"):
+        self.name = name
+        self.user_provider = MockUserProvider()
+
+    def __call__(self):
+        return self.name
 
 pytestmark = pytest.mark.regression
 
@@ -44,13 +62,13 @@ class TestAuthMiddlewareIsolation:
     def setup_method(self):
         """Reset auth middleware before each test to prevent pollution."""
         # Explicitly reset global auth middleware BEFORE test starts
-        middleware._global_auth_middleware = None
+        dependencies._global_auth_middleware = None
         gc.collect()
 
     def teardown_method(self):
         """Clean up auth middleware after each test."""
         # Explicitly reset global auth middleware AFTER test completes
-        middleware._global_auth_middleware = None
+        dependencies._global_auth_middleware = None
         gc.collect()
 
     @pytest.mark.unit
@@ -62,8 +80,8 @@ class TestAuthMiddlewareIsolation:
         is properly reset between tests.
         """
         # Global auth middleware should be None by default
-        assert middleware._global_auth_middleware is None, (
-            f"Expected _global_auth_middleware to be None, got {middleware._global_auth_middleware}. "
+        assert dependencies._global_auth_middleware is None, (
+            f"Expected _global_auth_middleware to be None, got {dependencies._global_auth_middleware}. "
             "This indicates pollution from a previous test in the same worker."
         )
 
@@ -74,21 +92,18 @@ class TestAuthMiddlewareIsolation:
 
         This test validates that the function works as expected.
         """
-
-        # Create a mock auth middleware function
-        def custom_auth():
-            """Custom auth middleware."""
-            return "custom"
+        # Create a mock auth middleware with required user_provider attribute
+        custom_auth = MockAuthMiddleware(name="custom")
 
         # Verify global starts as None
-        assert middleware._global_auth_middleware is None
+        assert dependencies._global_auth_middleware is None
 
         # Set global auth middleware
         set_global_auth_middleware(custom_auth)
 
         # Verify global was modified
-        assert middleware._global_auth_middleware is not None
-        assert middleware._global_auth_middleware is custom_auth
+        assert dependencies._global_auth_middleware is not None
+        assert dependencies._global_auth_middleware is custom_auth
 
     @pytest.mark.unit
     def test_global_auth_middleware_pollution_detection(self):
@@ -101,22 +116,19 @@ class TestAuthMiddlewareIsolation:
         This test should FAIL if the reset_dependency_singletons fixture
         is not properly resetting _global_auth_middleware.
         """
-
         # First test sets global auth middleware
-        def test1_auth():
-            """Test 1 auth middleware."""
-            return "test1"
+        test1_auth = MockAuthMiddleware(name="test1")
 
         set_global_auth_middleware(test1_auth)
-        assert middleware._global_auth_middleware is test1_auth
+        assert dependencies._global_auth_middleware is test1_auth
 
         # Simulate test cleanup (what conftest.py should do)
         # If this line is commented out, the next assertion will fail
-        middleware._global_auth_middleware = None
+        dependencies._global_auth_middleware = None
 
         # Second test expects global to be None
         # If cleanup didn't happen, this will fail
-        assert middleware._global_auth_middleware is None, (
+        assert dependencies._global_auth_middleware is None, (
             "Global auth middleware was not reset between tests. "
             "This indicates the reset_dependency_singletons fixture is not "
             "properly resetting _global_auth_middleware."
@@ -129,27 +141,24 @@ class TestAuthMiddlewareIsolation:
 
         This test runs multiple scenarios in sequence to ensure proper isolation.
         """
-
         # Scenario 1: Set custom auth
-        def auth1():
-            return "auth1"
+        auth1 = MockAuthMiddleware(name="auth1")
 
         set_global_auth_middleware(auth1)
-        assert middleware._global_auth_middleware is auth1
+        assert dependencies._global_auth_middleware is auth1
 
         # Reset (simulating what conftest should do between tests)
-        middleware._global_auth_middleware = None
+        dependencies._global_auth_middleware = None
 
         # Scenario 2: Set different auth
-        def auth2():
-            return "auth2"
+        auth2 = MockAuthMiddleware(name="auth2")
 
         set_global_auth_middleware(auth2)
-        assert middleware._global_auth_middleware is auth2
-        assert middleware._global_auth_middleware is not auth1
+        assert dependencies._global_auth_middleware is auth2
+        assert dependencies._global_auth_middleware is not auth1
 
         # Reset (simulating what conftest should do between tests)
-        middleware._global_auth_middleware = None
+        dependencies._global_auth_middleware = None
 
         # Scenario 3: Global should be None again
-        assert middleware._global_auth_middleware is None
+        assert dependencies._global_auth_middleware is None

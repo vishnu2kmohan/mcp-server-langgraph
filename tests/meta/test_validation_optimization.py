@@ -176,8 +176,16 @@ class TestMakefilePrePushParity:
     @pytest.fixture
     def makefile_skip_list(self, repo_root: Path) -> set[str]:
         """Extract SKIP list from Makefile validate-pre-push targets"""
+        # Read main Makefile and all modular includes from make/*.mk
+        content = ""
         makefile = repo_root / "Makefile"
-        content = makefile.read_text()
+        if makefile.exists():
+            content = makefile.read_text()
+
+        make_dir = repo_root / "make"
+        if make_dir.exists():
+            for mk_file in sorted(make_dir.glob("*.mk")):
+                content += "\n" + mk_file.read_text()
 
         # Find all SKIP= declarations in validate-pre-push targets
         skip_pattern = r"SKIP=([^\s]+)"

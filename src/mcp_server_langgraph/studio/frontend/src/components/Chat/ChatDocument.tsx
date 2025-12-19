@@ -13,11 +13,12 @@
  * - Compact mode for docked tabs
  */
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   loadSession,
   addMessage,
+  deleteMessage,
   selectCurrentSession,
   selectIsLoadingSession,
   selectIsSending,
@@ -62,6 +63,8 @@ export function ChatDocument({
   className,
 }: ChatDocumentProps) {
   const [input, setInput] = useState("");
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const dispatch = useAppDispatch();
 
   // Feature flag for interactive artifacts
@@ -215,6 +218,63 @@ export function ChatDocument({
     startStream(currentSession.id, content);
   };
 
+  // Handle message edit - sets the input to the message content for re-submission
+  const handleEditMessage = useCallback(
+    (messageId: string) => {
+      const message = messages.find((m) => m.id === messageId);
+      if (message && message.role === "user") {
+        setEditingMessageId(messageId);
+        setInput(message.content);
+      }
+    },
+    [messages],
+  );
+
+  // Handle message regeneration - re-sends the last user message to get new response
+  const handleRegenerateMessage = useCallback(
+    async (messageId: string) => {
+      if (!currentSession || isProcessing) return;
+
+      // Find the message to regenerate and the preceding user message
+      const messageIndex = messages.findIndex((m) => m.id === messageId);
+      if (messageIndex === -1) return;
+
+      // For assistant messages, find the preceding user message
+      const message = messages[messageIndex];
+      if (message.role !== "assistant") return;
+
+      // Find the user message that prompted this response
+      let userMessageIndex = messageIndex - 1;
+      while (userMessageIndex >= 0 && messages[userMessageIndex].role !== "user") {
+        userMessageIndex--;
+      }
+
+      if (userMessageIndex < 0) return;
+
+      const userMessage = messages[userMessageIndex];
+
+      setIsRegenerating(true);
+      try {
+        // Delete the old assistant response
+        dispatch(deleteMessage(messageId));
+
+        // Re-send the user message to get a new response
+        startStream(currentSession.id, userMessage.content);
+      } finally {
+        setIsRegenerating(false);
+      }
+    },
+    [currentSession, messages, isProcessing, dispatch, startStream],
+  );
+
+  // Handle message deletion
+  const handleDeleteMessage = useCallback(
+    (messageId: string) => {
+      dispatch(deleteMessage(messageId));
+    },
+    [dispatch],
+  );
+
   // Loading state
   if (isLoadingSession && !currentSession) {
     return (
@@ -268,6 +328,10 @@ export function ChatDocument({
         isSending={isSending}
         thinkingTrace={thinkingTrace}
         enableInteractiveArtifacts={enableInteractiveArtifacts}
+        onEditMessage={handleEditMessage}
+        onRegenerateMessage={handleRegenerateMessage}
+        onDeleteMessage={handleDeleteMessage}
+        isRegenerating={isRegenerating}
       />
 
       {/* Input Form */}

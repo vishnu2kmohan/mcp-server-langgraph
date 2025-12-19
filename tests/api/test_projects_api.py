@@ -343,8 +343,13 @@ def app(mock_repo, mock_current_user):
 
     # Override the repository dependency
     app.dependency_overrides[get_project_repository] = lambda: mock_repo
-    # Override the auth dependency
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+
+    # CRITICAL: Use async function for async dependency override (pytest-xdist compatible)
+    # Sync lambda causes 401 errors in xdist workers
+    async def override_get_current_user():
+        return mock_current_user
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
     return app
 
 

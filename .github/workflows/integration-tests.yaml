@@ -121,7 +121,7 @@ jobs:
           -v --tb=short \
           --cov=src/mcp_server_langgraph \
           --cov-report=xml:coverage-integration-${{ matrix.label }}.xml \
-          --cov-fail-under=0
+          --cov-fail-under=70
 
         # Rename .coverage to include category for combining
         if [ -f .coverage ]; then

@@ -4,8 +4,8 @@
  * TDD tests for SVG artifact rendering component.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { SVGArtifact } from "./SVGArtifact";
 
 describe("SVGArtifact", () => {
@@ -96,6 +96,22 @@ describe("SVGArtifact", () => {
       render(<SVGArtifact data={svgWithHandlers} />);
       const circle = document.querySelector("circle");
       expect(circle).not.toHaveAttribute("onclick");
+    });
+  });
+
+  describe("export functionality", () => {
+    it("should render copy button", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      expect(
+        screen.getByRole("button", { name: /copy/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should render download button", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      expect(
+        screen.getByRole("button", { name: /download/i }),
+      ).toBeInTheDocument();
     });
   });
 });

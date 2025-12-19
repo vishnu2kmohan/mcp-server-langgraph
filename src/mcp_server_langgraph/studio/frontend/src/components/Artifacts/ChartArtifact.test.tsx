@@ -94,17 +94,20 @@ describe("ChartArtifact", () => {
   });
 
   describe("Actions", () => {
-    it("should render download button", () => {
+    it("should render export button", () => {
       render(<ChartArtifact {...barChartData} />);
       expect(
-        screen.getByRole("button", { name: /download/i }),
+        screen.getByRole("button", { name: /export/i }),
       ).toBeInTheDocument();
     });
 
-    it("should call onDownload when download clicked", () => {
+    it("should call onDownload when export format selected", () => {
       const onDownload = vi.fn();
       render(<ChartArtifact {...barChartData} onDownload={onDownload} />);
-      fireEvent.click(screen.getByRole("button", { name: /download/i }));
+      // Click the export button to open menu
+      fireEvent.click(screen.getByRole("button", { name: /export/i }));
+      // Click PNG option in the menu
+      fireEvent.click(screen.getByRole("menuitem", { name: /png/i }));
       expect(onDownload).toHaveBeenCalled();
     });
 
@@ -149,6 +152,59 @@ describe("ChartArtifact", () => {
     it("should apply custom className", () => {
       render(<ChartArtifact {...barChartData} className="custom-class" />);
       expect(screen.getByTestId("chart-artifact")).toHaveClass("custom-class");
+    });
+  });
+
+  describe("ArtifactExporter Integration", () => {
+    it("should show export menu when export button clicked", () => {
+      render(<ChartArtifact {...barChartData} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByTestId("export-menu")).toBeInTheDocument();
+    });
+
+    it("should show PNG option in export menu", () => {
+      render(<ChartArtifact {...barChartData} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByRole("menuitem", { name: /png/i })).toBeInTheDocument();
+    });
+
+    it("should show SVG option in export menu", () => {
+      render(<ChartArtifact {...barChartData} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByRole("menuitem", { name: /svg/i })).toBeInTheDocument();
+    });
+
+    it("should show PDF option in export menu", () => {
+      render(<ChartArtifact {...barChartData} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByRole("menuitem", { name: /pdf/i })).toBeInTheDocument();
+    });
+
+    it("should trigger export when format selected", () => {
+      // Mock URL methods in JSDOM environment
+      const mockUrl = "blob:test";
+      const originalCreateObjectURL = URL.createObjectURL;
+      const originalRevokeObjectURL = URL.revokeObjectURL;
+
+      URL.createObjectURL = vi.fn().mockReturnValue(mockUrl);
+      URL.revokeObjectURL = vi.fn();
+
+      render(<ChartArtifact {...barChartData} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+
+      const pngOption = screen.getByRole("menuitem", { name: /png/i });
+      fireEvent.click(pngOption);
+
+      expect(URL.createObjectURL).toHaveBeenCalled();
+
+      // Restore original methods
+      URL.createObjectURL = originalCreateObjectURL;
+      URL.revokeObjectURL = originalRevokeObjectURL;
     });
   });
 });

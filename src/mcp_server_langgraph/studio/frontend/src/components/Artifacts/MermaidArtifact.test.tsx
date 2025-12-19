@@ -157,4 +157,57 @@ describe("MermaidArtifact", () => {
       expect(container).toHaveClass("dark");
     });
   });
+
+  describe("ArtifactExporter Integration", () => {
+    it("should show export menu when export button clicked", () => {
+      render(<MermaidArtifact code={sampleDiagram} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByTestId("export-menu")).toBeInTheDocument();
+    });
+
+    it("should show PNG option in export menu", () => {
+      render(<MermaidArtifact code={sampleDiagram} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByRole("menuitem", { name: /png/i })).toBeInTheDocument();
+    });
+
+    it("should show SVG option in export menu", () => {
+      render(<MermaidArtifact code={sampleDiagram} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByRole("menuitem", { name: /svg/i })).toBeInTheDocument();
+    });
+
+    it("should show Code option in export menu for mermaid diagrams", () => {
+      render(<MermaidArtifact code={sampleDiagram} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByRole("menuitem", { name: /code/i })).toBeInTheDocument();
+    });
+
+    it("should trigger export when format selected", () => {
+      // Mock URL methods in JSDOM environment
+      const mockUrl = "blob:test";
+      const originalCreateObjectURL = URL.createObjectURL;
+      const originalRevokeObjectURL = URL.revokeObjectURL;
+
+      URL.createObjectURL = vi.fn().mockReturnValue(mockUrl);
+      URL.revokeObjectURL = vi.fn();
+
+      render(<MermaidArtifact code={sampleDiagram} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+
+      const codeOption = screen.getByRole("menuitem", { name: /code/i });
+      fireEvent.click(codeOption);
+
+      expect(URL.createObjectURL).toHaveBeenCalled();
+
+      // Restore original methods
+      URL.createObjectURL = originalCreateObjectURL;
+      URL.revokeObjectURL = originalRevokeObjectURL;
+    });
+  });
 });

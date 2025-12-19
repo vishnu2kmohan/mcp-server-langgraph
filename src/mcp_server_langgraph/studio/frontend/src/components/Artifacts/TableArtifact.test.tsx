@@ -98,10 +98,13 @@ describe("TableArtifact", () => {
       ).toBeInTheDocument();
     });
 
-    it("should call onExport when export clicked", () => {
+    it("should call onExport when export format selected", () => {
       const onExport = vi.fn();
       render(<TableArtifact {...sampleData} onExport={onExport} />);
+      // Click the export button to open menu
       fireEvent.click(screen.getByRole("button", { name: /export/i }));
+      // Click CSV option in the menu
+      fireEvent.click(screen.getByRole("menuitem", { name: /csv/i }));
       expect(onExport).toHaveBeenCalled();
     });
 
@@ -142,6 +145,52 @@ describe("TableArtifact", () => {
     it("should apply custom className", () => {
       render(<TableArtifact {...sampleData} className="custom-class" />);
       expect(screen.getByTestId("table-artifact")).toHaveClass("custom-class");
+    });
+  });
+
+  describe("ArtifactExporter Integration", () => {
+    it("should show export menu when export button clicked", () => {
+      render(<TableArtifact {...sampleData} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByTestId("export-menu")).toBeInTheDocument();
+    });
+
+    it("should show CSV option in export menu", () => {
+      render(<TableArtifact {...sampleData} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByRole("menuitem", { name: /csv/i })).toBeInTheDocument();
+    });
+
+    it("should show Excel option in export menu", () => {
+      render(<TableArtifact {...sampleData} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+      expect(screen.getByRole("menuitem", { name: /excel/i })).toBeInTheDocument();
+    });
+
+    it("should trigger export when format selected", () => {
+      // Mock URL methods in JSDOM environment
+      const mockUrl = "blob:test";
+      const originalCreateObjectURL = URL.createObjectURL;
+      const originalRevokeObjectURL = URL.revokeObjectURL;
+
+      URL.createObjectURL = vi.fn().mockReturnValue(mockUrl);
+      URL.revokeObjectURL = vi.fn();
+
+      render(<TableArtifact {...sampleData} />);
+      const exportButton = screen.getByRole("button", { name: /export/i });
+      fireEvent.click(exportButton);
+
+      const csvOption = screen.getByRole("menuitem", { name: /csv/i });
+      fireEvent.click(csvOption);
+
+      expect(URL.createObjectURL).toHaveBeenCalled();
+
+      // Restore original methods
+      URL.createObjectURL = originalCreateObjectURL;
+      URL.revokeObjectURL = originalRevokeObjectURL;
     });
   });
 });

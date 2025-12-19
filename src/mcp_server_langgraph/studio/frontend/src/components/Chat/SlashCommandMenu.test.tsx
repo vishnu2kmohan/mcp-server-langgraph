@@ -139,14 +139,20 @@ describe("SlashCommandMenu", () => {
     });
 
     it("should navigate up with ArrowUp", () => {
-      render(<SlashCommandMenu {...defaultProps} selectedIndex={1} />);
+      const mockOnSelectedIndexChange = vi.fn();
+      render(
+        <SlashCommandMenu
+          {...defaultProps}
+          selectedIndex={1}
+          onSelectedIndexChange={mockOnSelectedIndexChange}
+        />,
+      );
 
       fireEvent.keyDown(screen.getByTestId("slash-command-menu"), {
         key: "ArrowUp",
       });
 
-      const firstItem = screen.getByTestId("command-item-help");
-      expect(firstItem).toHaveAttribute("data-highlighted", "true");
+      expect(mockOnSelectedIndexChange).toHaveBeenCalledWith(0);
     });
 
     it("should select with Enter key", () => {

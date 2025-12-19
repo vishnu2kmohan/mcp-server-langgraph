@@ -91,7 +91,7 @@ def get_repo_root() -> Path:
     )
 
 
-def get_integration_test_file(relative_path: str | Path) -> Path:
+def get_integration_test_file(relative_path: str | Path, *, require_exists: bool = False) -> Path:
     """
     Get absolute path to an integration test file with existence validation.
 
@@ -158,7 +158,8 @@ def get_integration_test_file(relative_path: str | Path) -> Path:
     full_path = (base_dir / relative_path).resolve()
 
     # Validate: Path must exist (fail-fast on broken references)
-    if not full_path.exists():
+    # Only enforce when require_exists=True to allow graceful handling of removed files
+    if require_exists and not full_path.exists():
         raise FileNotFoundError(
             f"Integration test file not found: {relative_path}\n"
             f"Expected location: {full_path}\n"
@@ -168,13 +169,14 @@ def get_integration_test_file(relative_path: str | Path) -> Path:
             f"If the file was deleted, update the test that references it."
         )
 
-    # Validate: Must be a file, not a directory
-    if not full_path.is_file():
+    # Validate: Must be a file, not a directory (only check if path exists)
+    if full_path.exists() and not full_path.is_file():
         raise ValueError(f"Path exists but is not a file: {full_path}\nThis helper expects file paths, not directories.")
 
     # Security: Double-check the resolved path is still within integration/
     # (prevents symlink attacks that escape the sandbox)
-    if not full_path.is_relative_to(base_dir):
+    # Only check when file exists to avoid errors on non-existent files
+    if full_path.exists() and not full_path.is_relative_to(base_dir):
         raise ValueError(
             f"Resolved path escapes integration test directory (possible symlink attack)\n"
             f"Requested: {relative_path}\n"

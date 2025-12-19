@@ -14,8 +14,10 @@
  * library as a dependency for inline rendering.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Copy, ExternalLink, Maximize2, Minimize2, Check } from "lucide-react";
+import { ArtifactExporter } from "./ArtifactExporter";
+import type { ExportFormat } from "./ArtifactExporter";
 
 export interface MermaidArtifactProps {
   code: string;
@@ -69,6 +71,23 @@ export function MermaidArtifact({
     setIsExpanded(!isExpanded);
   };
 
+  // Handle export from ArtifactExporter
+  const handleExport = useCallback(
+    (format: ExportFormat, blob: Blob | string) => {
+      // Download the blob
+      if (blob instanceof Blob) {
+        const extension = format === "code" ? "mmd" : format;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${(title || "diagram").replace(/\s+/g, "_")}.${extension}`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    },
+    [title],
+  );
+
   return (
     <div
       data-testid="mermaid-container"
@@ -98,6 +117,12 @@ export function MermaidArtifact({
           >
             <ExternalLink size={16} />
           </button>
+          <ArtifactExporter
+            artifactType="mermaid"
+            data={code}
+            onExport={handleExport}
+            filename={(title || "diagram").replace(/\s+/g, "_")}
+          />
           {expandable && (
             <button
               onClick={handleToggleExpand}

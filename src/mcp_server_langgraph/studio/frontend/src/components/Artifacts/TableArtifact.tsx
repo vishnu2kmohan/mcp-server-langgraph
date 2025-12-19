@@ -10,15 +10,16 @@
  * - Responsive design
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   ChevronUp,
   ChevronDown,
-  Download,
   Maximize2,
   Minimize2,
   Table,
 } from "lucide-react";
+import { ArtifactExporter } from "./ArtifactExporter";
+import type { ExportFormat } from "./ArtifactExporter";
 
 export interface TableColumn {
   key: string;
@@ -113,25 +114,27 @@ export function TableArtifact({
     });
   };
 
-  const handleExport = () => {
-    if (onExport) {
-      onExport();
-    } else {
-      // Default CSV export
-      const headers = columns.map((c) => c.label).join(",");
-      const rows = sortedData.map((row) =>
-        columns.map((c) => String(row[c.key] ?? "")).join(","),
-      );
-      const csv = [headers, ...rows].join("\n");
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${title.replace(/\s+/g, "_")}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-  };
+  // Handle export from ArtifactExporter
+  const handleExport = useCallback(
+    (format: ExportFormat, blob: Blob | string) => {
+      if (onExport) {
+        onExport();
+        return;
+      }
+
+      // Download the blob
+      if (blob instanceof Blob) {
+        const extension = format === "excel" ? "xls" : format;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${title.replace(/\s+/g, "_")}.${extension}`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    },
+    [onExport, title],
+  );
 
   const renderSortIndicator = (key: string) => {
     if (sortConfig.key !== key) {
@@ -161,14 +164,12 @@ export function TableArtifact({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleExport}
-            className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-            aria-label="Export CSV"
-          >
-            <Download size={14} />
-            Export
-          </button>
+          <ArtifactExporter
+            artifactType="table"
+            data={sortedData}
+            onExport={handleExport}
+            filename={title.replace(/\s+/g, "_")}
+          />
           {expandable && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}

@@ -54,3 +54,14 @@ export type {
 
 export { ChatDocument } from "./ChatDocument";
 export type { ChatDocumentProps } from "./ChatDocument";
+
+// =============================================================================
+// AI Assistance Components
+// =============================================================================
+
+export { AIFollowUpSuggestions } from "./AIFollowUpSuggestions";
+export type {
+  AIFollowUpSuggestionsProps,
+  FollowUpSuggestion,
+  SuggestionCategory,
+} from "./AIFollowUpSuggestions";

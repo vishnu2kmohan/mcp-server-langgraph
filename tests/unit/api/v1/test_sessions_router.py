@@ -43,8 +43,12 @@ def test_app(mock_user: dict[str, Any]) -> Generator[FastAPI, None, None]:
     app = FastAPI()
     app.include_router(sessions_router, prefix="/api/v1")
 
-    # Override authentication dependency with mock user
-    app.dependency_overrides[get_current_user] = lambda: mock_user
+    # CRITICAL: Use async function for async dependency override (pytest-xdist compatible)
+    # Sync lambda causes 401 errors in xdist workers
+    async def override_get_current_user():
+        return mock_user
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
 
     yield app
 

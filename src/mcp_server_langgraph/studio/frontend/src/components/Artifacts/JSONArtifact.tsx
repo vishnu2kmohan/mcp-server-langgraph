@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { Copy, Check, ChevronDown, ChevronRight } from "lucide-react";
+import { Copy, Check, ChevronDown, ChevronRight, Download } from "lucide-react";
 import type { JSONArtifact as JSONArtifactType } from "../../types/artifacts";
 
 export interface JSONArtifactProps {
@@ -194,6 +194,28 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
     }
   }, [data]);
 
+  /**
+   * Download JSON as file
+   */
+  const handleDownload = useCallback(() => {
+    const jsonString = JSON.stringify(data, null, 2);
+    const filename = title
+      ? title.endsWith(".json")
+        ? title
+        : `${title.replace(/\s+/g, "_")}.json`
+      : "data.json";
+
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [data, title]);
+
   const initialCollapsed = typeof collapsed === "boolean" ? collapsed : false;
 
   const themeClasses =
@@ -228,27 +250,40 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
             JSON
           </span>
         </div>
-        <button
-          onClick={handleCopy}
-          className={`flex items-center gap-2 px-3 py-1 text-sm rounded transition-colors ${
-            theme === "dark"
-              ? "hover:bg-gray-700 text-gray-300"
-              : "hover:bg-gray-200 text-gray-700"
-          }`}
-          aria-label="Copy JSON"
-        >
-          {copied ? (
-            <>
-              <Check className="w-4 h-4 text-green-500" />
-              <span className="text-green-500">Copied!</span>
-            </>
-          ) : (
-            <>
-              <Copy className="w-4 h-4" />
-              <span>Copy</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleCopy}
+            className={`flex items-center gap-2 px-3 py-1 text-sm rounded transition-colors ${
+              theme === "dark"
+                ? "hover:bg-gray-700 text-gray-300"
+                : "hover:bg-gray-200 text-gray-700"
+            }`}
+            aria-label="Copy JSON"
+          >
+            {copied ? (
+              <>
+                <Check className="w-4 h-4 text-green-500" />
+                <span className="text-green-500">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                <span>Copy</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleDownload}
+            className={`p-1.5 rounded transition-colors ${
+              theme === "dark"
+                ? "hover:bg-gray-700 text-gray-300"
+                : "hover:bg-gray-200 text-gray-700"
+            }`}
+            aria-label="Download JSON"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* JSON Content */}
