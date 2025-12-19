@@ -146,7 +146,13 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
     # Use factory to create the correct user provider based on AUTH_PROVIDER setting
     user_provider = create_user_provider(config)
     auth_middleware = AuthMiddleware(secret_key=config.jwt_secret_key, settings=config, user_provider=user_provider)
-    set_global_auth_middleware(auth_middleware)  # Set global instance for dependency injection
+
+    # Store in app.state for DI-based access (recommended pattern)
+    app.state.auth_middleware = auth_middleware
+
+    # Also set global for backward compatibility with code using get_auth_middleware()
+    set_global_auth_middleware(auth_middleware)
+
     app.add_middleware(AuthRequestMiddleware, auth_middleware=auth_middleware)
     try:
         logger.info("Auth request middleware enabled")

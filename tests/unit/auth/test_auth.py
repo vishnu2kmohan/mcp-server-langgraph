@@ -555,6 +555,8 @@ class TestGetCurrentUser:
         request.state = MagicMock()
         request.state.user = None
         request.headers = {"Authorization": f"Bearer {token}"}
+        # Set auth_middleware in app.state for DI pattern (or None to fallback to global)
+        request.app.state.auth_middleware = auth
         user = await get_current_user(request)
         assert user is not None
         assert user["username"] == "alice"
@@ -573,6 +575,8 @@ class TestGetCurrentUser:
         request.state = MagicMock()
         request.state.user = None
         request.headers = {"Authorization": "Bearer invalid.jwt.token"}
+        # Set auth_middleware in app.state for DI pattern
+        request.app.state.auth_middleware = auth
         with pytest.raises(HTTPException) as exc_info:
             await get_current_user(request)
         assert exc_info.value.status_code == 401
@@ -602,6 +606,8 @@ class TestGetCurrentUser:
         request.state = MagicMock()
         request.state.user = None
         request.headers = {"Authorization": f"Bearer {expired_token}"}
+        # Set auth_middleware in app.state for DI pattern
+        request.app.state.auth_middleware = auth
         with pytest.raises(HTTPException) as exc_info:
             await get_current_user(request)
         assert exc_info.value.status_code == 401
@@ -618,6 +624,8 @@ class TestGetCurrentUser:
         request.state = MagicMock()
         request.state.user = None
         request.headers = {}
+        # Set auth_middleware in app.state for DI pattern
+        request.app.state.auth_middleware = auth
         with pytest.raises(HTTPException) as exc_info:
             await get_current_user(request)
         assert exc_info.value.status_code == 401
@@ -659,6 +667,8 @@ class TestGetCurrentUser:
         request.state = MagicMock()
         request.state.user = None
         request.headers = {"Authorization": f"Bearer {keycloak_token}"}
+        # Set auth_middleware in app.state for DI pattern
+        request.app.state.auth_middleware = auth
         user = await get_current_user(request)
         assert user["username"] == "alice"
         # Keycloak JWTs normalize to clean user:username format (no worker-safe IDs)
@@ -688,6 +698,8 @@ class TestGetCurrentUser:
         request.state = MagicMock()
         request.state.user = None
         request.headers = {"Authorization": f"Bearer {legacy_token}"}
+        # Set auth_middleware in app.state for DI pattern
+        request.app.state.auth_middleware = auth
         user = await get_current_user(request)
         assert user["username"] == "charlie"
         assert user["user_id"] == get_user_id("charlie")
@@ -718,6 +730,8 @@ class TestGetCurrentUser:
         request.state = MagicMock()
         request.state.user = None
         request.headers = {"Authorization": f"Bearer {token}"}
+        # Set auth_middleware in app.state for DI pattern
+        request.app.state.auth_middleware = auth
         user = await get_current_user(request)
         assert user["username"] == "dave"
         # Manually created JWTs normalize to clean user:username format (no worker-safe IDs)

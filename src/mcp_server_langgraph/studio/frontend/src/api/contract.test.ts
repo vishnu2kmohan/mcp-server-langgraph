@@ -152,6 +152,296 @@ function isProject(obj: unknown): obj is Project {
   return typeof o.id === "string" && typeof o.name === "string";
 }
 
+// =============================================================================
+// Type guards for new endpoints
+// =============================================================================
+
+// SUS Surveys
+interface SUSSurveyResponse {
+  id: string;
+  sus_score: number;
+  recorded_at: string;
+}
+
+interface ScoreDistribution {
+  excellent: number;
+  good: number;
+  ok: number;
+  poor: number;
+}
+
+interface SUSSummaryResponse {
+  timeframe: string;
+  avg_score: number | null;
+  response_count: number;
+  score_distribution: ScoreDistribution;
+}
+
+function isSUSSurveyResponse(obj: unknown): obj is SUSSurveyResponse {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    typeof o.sus_score === "number" &&
+    typeof o.recorded_at === "string"
+  );
+}
+
+function isScoreDistribution(obj: unknown): obj is ScoreDistribution {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.excellent === "number" &&
+    typeof o.good === "number" &&
+    typeof o.ok === "number" &&
+    typeof o.poor === "number"
+  );
+}
+
+function isSUSSummaryResponse(obj: unknown): obj is SUSSummaryResponse {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.timeframe === "string" &&
+    (o.avg_score === null || typeof o.avg_score === "number") &&
+    typeof o.response_count === "number" &&
+    isScoreDistribution(o.score_distribution)
+  );
+}
+
+// HEART Analytics
+interface MetricTrackingResponse {
+  success: boolean;
+  metric_id: string;
+  recorded_at: string;
+}
+
+interface HEARTAnalyticsSummary {
+  period: string;
+  happiness?: unknown;
+  engagement?: unknown;
+  adoption?: unknown;
+  retention?: unknown;
+  task_success?: unknown;
+}
+
+function isMetricTrackingResponse(obj: unknown): obj is MetricTrackingResponse {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.success === "boolean" &&
+    typeof o.metric_id === "string" &&
+    typeof o.recorded_at === "string"
+  );
+}
+
+function isHEARTAnalyticsSummary(obj: unknown): obj is HEARTAnalyticsSummary {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return typeof o.period === "string";
+}
+
+// Compliance Reports
+interface ComplianceReport {
+  regulation: string;
+  generated_at: string;
+  time_range: { start: string; end: string };
+}
+
+interface ComplianceSummaryResponse {
+  generated_at: string;
+  regulations: string[];
+  overall_status: string;
+  findings: unknown[];
+}
+
+function isComplianceReport(obj: unknown): obj is ComplianceReport {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.regulation === "string" &&
+    typeof o.generated_at === "string" &&
+    typeof o.time_range === "object" &&
+    o.time_range !== null
+  );
+}
+
+function isComplianceSummary(obj: unknown): obj is ComplianceSummaryResponse {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.generated_at === "string" &&
+    Array.isArray(o.regulations) &&
+    typeof o.overall_status === "string" &&
+    Array.isArray(o.findings)
+  );
+}
+
+// Connection Templates
+interface TemplateCategory {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface CategoryListResponse {
+  categories: TemplateCategory[];
+}
+
+interface ConnectionTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  icon: string;
+  default_url: string;
+  auth_type: "none" | "api_key" | "oauth2";
+}
+
+interface TemplateListResponse {
+  templates: ConnectionTemplate[];
+}
+
+function isTemplateCategory(obj: unknown): obj is TemplateCategory {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    typeof o.name === "string" &&
+    typeof o.description === "string"
+  );
+}
+
+function isCategoryListResponse(obj: unknown): obj is CategoryListResponse {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return Array.isArray(o.categories) && o.categories.every(isTemplateCategory);
+}
+
+function isConnectionTemplate(obj: unknown): obj is ConnectionTemplate {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    typeof o.name === "string" &&
+    typeof o.description === "string" &&
+    typeof o.category === "string" &&
+    typeof o.icon === "string" &&
+    typeof o.default_url === "string" &&
+    ["none", "api_key", "oauth2"].includes(o.auth_type as string)
+  );
+}
+
+function isTemplateListResponse(obj: unknown): obj is TemplateListResponse {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return Array.isArray(o.templates) && o.templates.every(isConnectionTemplate);
+}
+
+// Connection Audit
+interface ConnectionAuditLogEntry {
+  id: string;
+  timestamp: string;
+  connection_id: string;
+  event_type: string;
+  user_id: string;
+  details?: unknown;
+}
+
+interface ConnectionAuditLogListResponse {
+  logs: ConnectionAuditLogEntry[];
+  total: number;
+}
+
+function isConnectionAuditLogEntry(
+  obj: unknown,
+): obj is ConnectionAuditLogEntry {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    typeof o.timestamp === "string" &&
+    typeof o.connection_id === "string" &&
+    typeof o.event_type === "string" &&
+    typeof o.user_id === "string"
+  );
+}
+
+function isAuditLogListResponse(
+  obj: unknown,
+): obj is ConnectionAuditLogListResponse {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    Array.isArray(o.logs) &&
+    o.logs.every(isConnectionAuditLogEntry) &&
+    typeof o.total === "number"
+  );
+}
+
+// Connections Bulk
+interface BulkDeleteResponse {
+  deleted_count: number;
+  failed_ids?: string[];
+}
+
+interface ConnectionTestResult {
+  connection_id: string;
+  success: boolean;
+  server_name?: string | null;
+  server_version?: string | null;
+  tool_count: number;
+  error?: string | null;
+}
+
+interface BulkTestResponse {
+  results: ConnectionTestResult[];
+  not_found?: string[];
+}
+
+interface BulkStatusResponse {
+  updated_count: number;
+  failed_ids?: string[];
+}
+
+function isBulkDeleteResponse(obj: unknown): obj is BulkDeleteResponse {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.deleted_count === "number" &&
+    (o.failed_ids === undefined || Array.isArray(o.failed_ids))
+  );
+}
+
+function isConnectionTestResult(obj: unknown): obj is ConnectionTestResult {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.connection_id === "string" &&
+    typeof o.success === "boolean" &&
+    typeof o.tool_count === "number"
+  );
+}
+
+function isBulkTestResponse(obj: unknown): obj is BulkTestResponse {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    Array.isArray(o.results) &&
+    o.results.every(isConnectionTestResult) &&
+    (o.not_found === undefined || Array.isArray(o.not_found))
+  );
+}
+
+function isBulkStatusResponse(obj: unknown): obj is BulkStatusResponse {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.updated_count === "number" &&
+    (o.failed_ids === undefined || Array.isArray(o.failed_ids))
+  );
+}
+
 function isPaginatedResponse<T>(
   obj: unknown,
   itemValidator: (item: unknown) => item is T,
@@ -386,6 +676,253 @@ describe("API Contract Tests", () => {
         created_at: "2025-01-01T12:00:00Z",
       };
       expect(isSession(validResponse)).toBe(true);
+    });
+  });
+
+  // ==========================================================================
+  // NEW ENDPOINT CONTRACT TESTS
+  // ==========================================================================
+
+  describe("SUS Surveys Endpoints", () => {
+    it("should validate SUSSurveyResponse schema", () => {
+      const validResponse = {
+        id: "survey-000001",
+        sus_score: 72.5,
+        recorded_at: "2025-01-15T10:30:00Z",
+      };
+      expect(isSUSSurveyResponse(validResponse)).toBe(true);
+    });
+
+    it("should validate SUSSummaryResponse schema", () => {
+      const validResponse = {
+        timeframe: "30d",
+        avg_score: 68.5,
+        response_count: 150,
+        score_distribution: {
+          excellent: 20,
+          good: 50,
+          ok: 60,
+          poor: 20,
+        },
+      };
+      expect(isSUSSummaryResponse(validResponse)).toBe(true);
+    });
+
+    it("should allow null avg_score in SUSSummaryResponse", () => {
+      const responseWithNull = {
+        timeframe: "7d",
+        avg_score: null,
+        response_count: 0,
+        score_distribution: {
+          excellent: 0,
+          good: 0,
+          ok: 0,
+          poor: 0,
+        },
+      };
+      expect(isSUSSummaryResponse(responseWithNull)).toBe(true);
+    });
+  });
+
+  describe("HEART Analytics Endpoints", () => {
+    it("should validate metric tracking response", () => {
+      const validResponse = {
+        success: true,
+        metric_id: "metric-001",
+        recorded_at: "2025-01-15T10:30:00Z",
+      };
+      expect(isMetricTrackingResponse(validResponse)).toBe(true);
+    });
+
+    it("should validate HEART analytics summary", () => {
+      const validResponse = {
+        period: "7d",
+        happiness: { avg_score: 4.2, response_count: 100 },
+        engagement: { avg_session_duration_ms: 300000, active_users: 50 },
+        adoption: { new_users: 25, activation_rate: 0.75 },
+        retention: { returning_users: 80, churn_rate: 0.05 },
+        task_success: { completion_rate: 0.85, avg_time_ms: 5000 },
+      };
+      expect(isHEARTAnalyticsSummary(validResponse)).toBe(true);
+    });
+  });
+
+  describe("Compliance Reports Endpoints", () => {
+    it("should validate GDPR report schema", () => {
+      const validResponse = {
+        regulation: "GDPR",
+        generated_at: "2025-01-15T10:30:00Z",
+        time_range: {
+          start: "2025-01-01T00:00:00Z",
+          end: "2025-01-15T00:00:00Z",
+        },
+        processing_activities: [],
+        data_subject_requests: { total: 0, completed: 0, pending: 0 },
+      };
+      expect(isComplianceReport(validResponse)).toBe(true);
+    });
+
+    it("should validate compliance summary schema", () => {
+      const validResponse = {
+        generated_at: "2025-01-15T10:30:00Z",
+        regulations: ["GDPR", "HIPAA", "SOC2", "FedRAMP", "EU_AI_Act"],
+        overall_status: "compliant",
+        findings: [],
+      };
+      expect(isComplianceSummary(validResponse)).toBe(true);
+    });
+  });
+
+  describe("Connection Templates Endpoints", () => {
+    it("should validate TemplateCategory schema", () => {
+      const validResponse = {
+        id: "databases",
+        name: "Databases",
+        description: "Database connection templates",
+      };
+      expect(isTemplateCategory(validResponse)).toBe(true);
+    });
+
+    it("should validate CategoryListResponse schema", () => {
+      const validResponse = {
+        categories: [
+          {
+            id: "databases",
+            name: "Databases",
+            description: "Database connections",
+          },
+          { id: "apis", name: "APIs", description: "API connections" },
+        ],
+      };
+      expect(isCategoryListResponse(validResponse)).toBe(true);
+    });
+
+    it("should validate ConnectionTemplate schema", () => {
+      const validResponse = {
+        id: "postgres-template",
+        name: "PostgreSQL",
+        description: "PostgreSQL database connection",
+        category: "databases",
+        icon: "postgres",
+        default_url: "postgresql://localhost:5432",
+        auth_type: "api_key",
+      };
+      expect(isConnectionTemplate(validResponse)).toBe(true);
+    });
+
+    it("should validate TemplateListResponse schema", () => {
+      const validResponse = {
+        templates: [
+          {
+            id: "postgres-template",
+            name: "PostgreSQL",
+            description: "PostgreSQL database",
+            category: "databases",
+            icon: "postgres",
+            default_url: "postgresql://localhost:5432",
+            auth_type: "none",
+          },
+        ],
+      };
+      expect(isTemplateListResponse(validResponse)).toBe(true);
+    });
+  });
+
+  describe("Connection Audit Endpoints", () => {
+    it("should validate ConnectionAuditLogEntry schema", () => {
+      const validResponse = {
+        id: "audit-001",
+        timestamp: "2025-01-15T10:30:00Z",
+        connection_id: "conn-123",
+        event_type: "connection_created",
+        user_id: "user-001",
+        details: { name: "New Connection" },
+      };
+      expect(isConnectionAuditLogEntry(validResponse)).toBe(true);
+    });
+
+    it("should validate AuditLogListResponse schema", () => {
+      const validResponse = {
+        logs: [
+          {
+            id: "audit-001",
+            timestamp: "2025-01-15T10:30:00Z",
+            connection_id: "conn-123",
+            event_type: "connection_created",
+            user_id: "user-001",
+          },
+        ],
+        total: 1,
+      };
+      expect(isAuditLogListResponse(validResponse)).toBe(true);
+    });
+  });
+
+  describe("Connections Bulk Endpoints", () => {
+    it("should validate BulkDeleteResponse schema", () => {
+      const validResponse = {
+        deleted_count: 5,
+        failed_ids: ["conn-003"],
+      };
+      expect(isBulkDeleteResponse(validResponse)).toBe(true);
+    });
+
+    it("should allow empty failed_ids in BulkDeleteResponse", () => {
+      const validResponse = {
+        deleted_count: 10,
+      };
+      expect(isBulkDeleteResponse(validResponse)).toBe(true);
+    });
+
+    it("should validate BulkTestResponse schema", () => {
+      const validResponse = {
+        results: [
+          {
+            connection_id: "conn-001",
+            success: true,
+            server_name: "Test Server",
+            server_version: "1.0.0",
+            tool_count: 5,
+          },
+          {
+            connection_id: "conn-002",
+            success: false,
+            error: "Connection refused",
+            tool_count: 0,
+          },
+        ],
+        not_found: ["conn-003"],
+      };
+      expect(isBulkTestResponse(validResponse)).toBe(true);
+    });
+
+    it("should validate BulkStatusResponse schema", () => {
+      const validResponse = {
+        updated_count: 3,
+        failed_ids: [],
+      };
+      expect(isBulkStatusResponse(validResponse)).toBe(true);
+    });
+
+    it("should validate ConnectionTestResult schema", () => {
+      const validResponse = {
+        connection_id: "conn-001",
+        success: true,
+        server_name: "MCP Server",
+        server_version: "2.0.0",
+        tool_count: 10,
+      };
+      expect(isConnectionTestResult(validResponse)).toBe(true);
+    });
+
+    it("should validate failed ConnectionTestResult", () => {
+      const validResponse = {
+        connection_id: "conn-002",
+        success: false,
+        error: "Authentication failed",
+        tool_count: 0,
+      };
+      expect(isConnectionTestResult(validResponse)).toBe(true);
     });
   });
 });

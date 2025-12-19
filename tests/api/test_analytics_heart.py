@@ -19,7 +19,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-pytestmark = pytest.mark.api
+pytestmark = [pytest.mark.unit, pytest.mark.api]
 
 
 def _make_authenticated_user() -> dict[str, Any]:

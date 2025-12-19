@@ -90,8 +90,11 @@ async def validate_websocket_auth(websocket: WebSocket) -> dict[str, Any] | None
         return None
 
     try:
-        # Use AuthMiddleware for token validation
-        auth_middleware = get_auth_middleware()
+        # Use AuthMiddleware for token validation (DI pattern preferred)
+        auth_middleware = getattr(websocket.app.state, "auth_middleware", None)
+        if auth_middleware is None:
+            # Fallback to global for backward compatibility
+            auth_middleware = get_auth_middleware()
         result = await auth_middleware.verify_token(token)
 
         if not result.valid or not result.payload:

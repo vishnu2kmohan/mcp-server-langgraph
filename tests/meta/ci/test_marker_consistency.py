@@ -22,6 +22,21 @@ import yaml
 pytestmark = pytest.mark.unit
 
 
+def read_all_makefiles() -> str:
+    """Read Makefile content including all modular includes from make/*.mk"""
+    makefile = Path("Makefile")
+    if not makefile.exists():
+        return ""
+    content = makefile.read_text()
+
+    # Also read all modular makefiles in make/ directory
+    make_dir = Path("make")
+    if make_dir.exists():
+        for mk_file in sorted(make_dir.glob("*.mk")):
+            content += "\n" + mk_file.read_text()
+    return content
+
+
 @pytest.mark.xdist_group(name="marker_consistency")
 class TestMarkerConsistency:
     """Test that pytest markers are consistent across all sources"""
@@ -152,10 +167,8 @@ class TestMarkerConsistency:
         - validate-pre-push-full (with integration tests)
         - validate-pre-push-quick (without integration tests)
         """
-        makefile = Path("Makefile")
-        assert makefile.exists(), "Makefile not found"
-
-        content = makefile.read_text()
+        content = read_all_makefiles()
+        assert content, "Makefile content not found"
 
         # Find validate-pre-push sub-targets
         full_match = re.search(r"^validate-pre-push-full:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)

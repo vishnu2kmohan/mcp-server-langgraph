@@ -56,6 +56,33 @@ class StorageState:
                 logger.debug("Operation failed: %s", e)
 
 
+def create_preferences_repository(
+    redis_client: Any = None,
+) -> "PreferencesRepository":
+    """
+    Create a preferences repository based on available Redis client.
+
+    Args:
+        redis_client: Optional async Redis client. If provided, uses
+            RedisPreferencesRepository for production. If None, uses
+            InMemoryPreferencesRepository for development/testing.
+
+    Returns:
+        PreferencesRepository instance (Redis-backed or in-memory)
+    """
+    from mcp_server_langgraph.notifications.preferences import (
+        InMemoryPreferencesRepository,
+        RedisPreferencesRepository,
+    )
+
+    if redis_client is not None:
+        logger.info("Using Redis-backed notification preferences repository")
+        return RedisPreferencesRepository(redis_client=redis_client)
+    else:
+        logger.info("Using in-memory notification preferences repository")
+        return InMemoryPreferencesRepository()
+
+
 async def init_storage(settings: "Settings") -> StorageState:
     """
     Initialize storage-related services.
@@ -87,7 +114,6 @@ async def init_storage(settings: "Settings") -> StorageState:
     from mcp_server_langgraph.audit.notifications import NotificationRouter, create_notification_callback
     from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
     from mcp_server_langgraph.notifications.preferences import (
-        InMemoryPreferencesRepository,
         PreferencesRepository,
     )
     from mcp_server_langgraph.api.v1.notification_preferences import set_preferences_repository
@@ -154,10 +180,23 @@ async def init_storage(settings: "Settings") -> StorageState:
         logger.info("Notification WebSocket broadcaster initialized")
 
         # Create notification preferences repository
-        # TODO: Use RedisPreferencesRepository when Redis URL is configured in settings
-        preferences_repository = InMemoryPreferencesRepository()
+        # Use Redis when configured, otherwise in-memory for development
+        redis_client = None
+        if settings.redis_url and "localhost" not in settings.redis_url:
+            try:
+                import redis.asyncio as aioredis
+
+                redis_client = aioredis.from_url(  # type: ignore[no-untyped-call]
+                    settings.redis_url,
+                    encoding="utf-8",
+                    decode_responses=True,
+                )
+                logger.debug(f"Redis client created for preferences: {settings.redis_url}")
+            except Exception as redis_err:
+                logger.warning(f"Failed to create Redis client for preferences: {redis_err}")
+
+        preferences_repository = create_preferences_repository(redis_client=redis_client)
         set_preferences_repository(preferences_repository)
-        logger.info("Notification preferences repository initialized (in-memory)")
 
         # Create compliance service
         compliance_service = ComplianceService(audit_service=audit_service)

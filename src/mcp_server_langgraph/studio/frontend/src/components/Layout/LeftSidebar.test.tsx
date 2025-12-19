@@ -36,6 +36,7 @@ const defaultWorkspaceState: WorkspaceState = {
   leftSidebarCollapsed: false,
   rightSidebarWidth: 280,
   rightSidebarCollapsed: false,
+  rightSidebarPinned: false,
   bottomPanelHeight: 200,
   bottomPanelCollapsed: true,
   activeActivityId: "conversations",
@@ -287,6 +288,95 @@ describe("LeftSidebar", () => {
       fireEvent.click(newProjectButton);
 
       expect(onNewProject).toHaveBeenCalled();
+    });
+  });
+
+  describe("activity bar controls", () => {
+    it("should render theme toggle with tooltip", () => {
+      renderWithProviders(<LeftSidebar />);
+      const themeButton = screen.getByLabelText(/switch to (light|dark) mode/i);
+      expect(themeButton).toBeInTheDocument();
+      expect(themeButton).toHaveAttribute("title");
+    });
+
+    it("should render command palette button with keyboard shortcut in tooltip", () => {
+      renderWithProviders(<LeftSidebar />);
+      const cmdButton = screen.getByLabelText(/command palette/i);
+      expect(cmdButton).toBeInTheDocument();
+      expect(cmdButton.getAttribute("title")).toMatch(/⌘K|Cmd\+K/i);
+    });
+
+    it("should render focus mode button with tooltip", () => {
+      renderWithProviders(<LeftSidebar />);
+      const focusButton = screen.getByLabelText(/focus mode/i);
+      expect(focusButton).toBeInTheDocument();
+      expect(focusButton).toHaveAttribute("title");
+    });
+
+    it("should render collapse toggle with descriptive tooltip", () => {
+      renderWithProviders(<LeftSidebar />);
+      const collapseButton = screen.getByLabelText(
+        /collapse.*navigation|expand.*navigation/i,
+      );
+      expect(collapseButton).toBeInTheDocument();
+      expect(collapseButton.getAttribute("title")).toMatch(/navigation panel/i);
+    });
+  });
+
+  describe("focus mode toggle", () => {
+    it("should toggle focus mode when focus button is clicked", () => {
+      const store = createTestStore({ focusMode: false });
+      renderWithProviders(<LeftSidebar />, { store });
+
+      const focusButton = screen.getByLabelText(/enter focus mode/i);
+      fireEvent.click(focusButton);
+
+      expect(store.getState().workspace.focusMode).toBe(true);
+    });
+
+    it("should show exit focus mode button when in focus mode", () => {
+      renderWithProviders(<LeftSidebar />, {
+        workspaceOverrides: { focusMode: true },
+      });
+
+      expect(screen.getByLabelText(/exit focus mode/i)).toBeInTheDocument();
+    });
+
+    it("should exit focus mode when exit button is clicked", () => {
+      const store = createTestStore({ focusMode: true });
+      renderWithProviders(<LeftSidebar />, { store });
+
+      const exitButton = screen.getByLabelText(/exit focus mode/i);
+      fireEvent.click(exitButton);
+
+      expect(store.getState().workspace.focusMode).toBe(false);
+    });
+
+    it("should have keyboard shortcut hint in tooltip", () => {
+      renderWithProviders(<LeftSidebar />);
+      const focusButton = screen.getByLabelText(/enter focus mode/i);
+      expect(focusButton.getAttribute("title")).toMatch(/⌘⇧F/);
+    });
+
+    it("should show escape hint when in focus mode", () => {
+      renderWithProviders(<LeftSidebar />, {
+        workspaceOverrides: { focusMode: true },
+      });
+      const exitButton = screen.getByLabelText(/exit focus mode/i);
+      expect(exitButton.getAttribute("title")).toMatch(/Esc/);
+    });
+  });
+
+  describe("logout flow", () => {
+    it("should render logout button in user menu", () => {
+      renderWithProviders(<LeftSidebar />);
+
+      // Open user menu
+      const userButton = screen.getByLabelText(/user menu/i);
+      fireEvent.click(userButton);
+
+      // Should see sign out button
+      expect(screen.getByText(/sign out/i)).toBeInTheDocument();
     });
   });
 });

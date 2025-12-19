@@ -210,6 +210,8 @@ async def setup_client(
                 return client_secret
 
             # Create client
+            # IMPORTANT: fullScopeAllowed=True ensures realm roles are included in JWT
+            # This is required for PersonaGuard to detect "admin" role from realm_access.roles
             client_config = {
                 "clientId": client_id,
                 "name": "LangGraph Agent Client",
@@ -221,9 +223,18 @@ async def setup_client(
                 "serviceAccountsEnabled": False,
                 "standardFlowEnabled": True,  # Enable authorization code flow
                 "implicitFlowEnabled": False,
+                "fullScopeAllowed": True,  # Include all realm roles in JWT token
                 "redirectUris": ["http://localhost:8000/*", "http://localhost:3000/*"],
                 "webOrigins": ["http://localhost:8000", "http://localhost:3000"],
                 "attributes": {"access.token.lifespan": "900"},
+                # Ensure roles scope is included in tokens
+                "defaultClientScopes": [
+                    "web-origins",
+                    "acr",
+                    "roles",  # Critical: includes realm_access.roles in JWT
+                    "profile",
+                    "email",
+                ],
             }
 
             create_response = await client.post(clients_url, headers=headers, json=client_config)

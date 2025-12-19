@@ -68,6 +68,7 @@ const defaultWorkspaceState: WorkspaceState = {
   leftSidebarCollapsed: false,
   rightSidebarWidth: 280,
   rightSidebarCollapsed: false,
+  rightSidebarPinned: false,
   bottomPanelHeight: 200,
   bottomPanelCollapsed: true,
   activeActivityId: "conversations",
@@ -270,6 +271,33 @@ describe("AppShell", () => {
       const leftPanel = screen.getByTestId("left-sidebar-panel");
       expect(leftPanel).toBeVisible();
     });
+
+    it("should keep right sidebar visible in focus mode when pinned", () => {
+      renderWithProviders(<AppShell />, {
+        workspaceOverrides: {
+          focusMode: true,
+          rightSidebarPinned: true,
+          rightSidebarCollapsed: false,
+        },
+      });
+      // Pinned right sidebar should remain visible even in focus mode
+      const rightPanel = screen.getByTestId("right-sidebar-panel");
+      expect(rightPanel).toBeVisible();
+    });
+
+    it("should center content with max-width in focus mode", () => {
+      renderWithProviders(
+        <AppShell>
+          <div data-testid="test-content">Content</div>
+        </AppShell>,
+        {
+          workspaceOverrides: { focusMode: true },
+        },
+      );
+      // Main content area should have centering classes in focus mode
+      const mainArea = screen.getByTestId("main-content-area");
+      expect(mainArea).toHaveClass("flex", "justify-center");
+    });
   });
 
   describe("keyboard shortcuts", () => {
@@ -305,6 +333,28 @@ describe("AppShell", () => {
       // Check that focus mode was turned off
       expect(store.getState().workspace.focusMode).toBe(false);
     });
+
+    it("should toggle focus mode on Cmd+Shift+F", () => {
+      const store = createTestStore({ focusMode: false });
+      renderWithProviders(<AppShell />, { store });
+
+      // Simulate Cmd+Shift+F
+      fireEvent.keyDown(document, { key: "f", metaKey: true, shiftKey: true });
+
+      // Check that focus mode was turned on
+      expect(store.getState().workspace.focusMode).toBe(true);
+    });
+
+    it("should toggle focus mode off on Cmd+Shift+F when already in focus mode", () => {
+      const store = createTestStore({ focusMode: true });
+      renderWithProviders(<AppShell />, { store });
+
+      // Simulate Cmd+Shift+F
+      fireEvent.keyDown(document, { key: "f", metaKey: true, shiftKey: true });
+
+      // Check that focus mode was turned off
+      expect(store.getState().workspace.focusMode).toBe(false);
+    });
   });
 
   describe("accessibility", () => {
@@ -328,29 +378,8 @@ describe("AppShell", () => {
       expect(screen.getByTestId("connection-status")).toBeInTheDocument();
     });
 
-    it("should render focus mode toggle button", () => {
-      renderWithProviders(<AppShell />);
-      expect(
-        screen.getByRole("button", { name: /focus mode/i }),
-      ).toBeInTheDocument();
-    });
-
-    it("should enter focus mode when focus toggle is clicked", () => {
-      const store = createTestStore({ focusMode: false });
-      renderWithProviders(<AppShell />, { store });
-
-      fireEvent.click(screen.getByRole("button", { name: /focus mode/i }));
-
-      expect(store.getState().workspace.focusMode).toBe(true);
-    });
-
-    it("should show expand icon when not in focus mode", () => {
-      renderWithProviders(<AppShell />, {
-        workspaceOverrides: { focusMode: false },
-      });
-      const focusButton = screen.getByRole("button", { name: /focus mode/i });
-      expect(focusButton).toBeInTheDocument();
-    });
+    // NOTE: Focus mode toggle button is in LeftSidebar, not AppShell
+    // See LeftSidebar.test.tsx for focus mode button tests
   });
 
   describe("mobile responsiveness", () => {
@@ -459,6 +488,91 @@ describe("AppShell", () => {
       // Resize handles should have proper touch target sizing via CSS
       const shell = screen.getByTestId("app-shell");
       expect(shell).toBeInTheDocument();
+    });
+  });
+
+  describe("resize handle double-click collapse", () => {
+    it("should toggle left sidebar collapsed on double-click", () => {
+      const store = createTestStore({ leftSidebarCollapsed: false });
+      renderWithProviders(<AppShell />, { store });
+
+      // Get all resize handles (left, right, bottom)
+      const handles = screen.getAllByRole("separator");
+      // First handle is the left sidebar resize handle
+      fireEvent.doubleClick(handles[0]);
+
+      expect(store.getState().workspace.leftSidebarCollapsed).toBe(true);
+    });
+
+    it("should toggle left sidebar expanded on double-click when collapsed", () => {
+      const store = createTestStore({ leftSidebarCollapsed: true });
+      renderWithProviders(<AppShell />, { store });
+
+      const handles = screen.getAllByRole("separator");
+      fireEvent.doubleClick(handles[0]);
+
+      expect(store.getState().workspace.leftSidebarCollapsed).toBe(false);
+    });
+
+    it("should toggle right sidebar collapsed on double-click", () => {
+      const store = createTestStore({
+        rightSidebarCollapsed: false,
+        bottomPanelCollapsed: true,
+      });
+      renderWithProviders(<AppShell />, { store });
+
+      // Get resize handles - when bottom panel is collapsed, we have left and right handles
+      const handles = screen.getAllByRole("separator");
+      // Last handle is the right sidebar resize handle
+      fireEvent.doubleClick(handles[handles.length - 1]);
+
+      expect(store.getState().workspace.rightSidebarCollapsed).toBe(true);
+    });
+
+    it("should toggle right sidebar expanded on double-click when collapsed", () => {
+      const store = createTestStore({
+        rightSidebarCollapsed: true,
+        bottomPanelCollapsed: true,
+      });
+      renderWithProviders(<AppShell />, { store });
+
+      // When right sidebar is collapsed, the handle is not shown
+      // So we test by starting with expanded and clicking
+      const handles = screen.getAllByRole("separator");
+      // Only left sidebar handle is visible when right is collapsed
+      expect(handles.length).toBe(1);
+    });
+
+    it("should toggle bottom panel collapsed on double-click", () => {
+      const store = createTestStore({
+        bottomPanelCollapsed: false,
+        rightSidebarCollapsed: true,
+      });
+      renderWithProviders(<AppShell />, { store });
+
+      // Get resize handles - should have left and bottom handles
+      const handles = screen.getAllByRole("separator");
+      // Bottom panel handle is the second one (after left sidebar)
+      fireEvent.doubleClick(handles[1]);
+
+      expect(store.getState().workspace.bottomPanelCollapsed).toBe(true);
+    });
+
+    it("should have tooltip hint on resize handles", () => {
+      renderWithProviders(<AppShell />, {
+        workspaceOverrides: {
+          leftSidebarCollapsed: false,
+          bottomPanelCollapsed: false,
+          rightSidebarCollapsed: false,
+        },
+      });
+
+      const handles = screen.getAllByRole("separator");
+      // All resize handles should have a title attribute with tooltip hint
+      handles.forEach((handle) => {
+        expect(handle).toHaveAttribute("title");
+        expect(handle.getAttribute("title")).toMatch(/double-click/i);
+      });
     });
   });
 });

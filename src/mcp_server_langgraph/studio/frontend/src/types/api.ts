@@ -245,6 +245,25 @@ export interface GenerateWorkflowCodeResponse {
 // Sessions
 // =============================================================================
 
+/**
+ * Session configuration for LLM settings (API response format)
+ */
+export interface ApiSessionConfig {
+  model: string;
+  temperature: number;
+  max_tokens: number;
+}
+
+/**
+ * Request to update session configuration (all fields optional for partial updates)
+ */
+export interface SessionConfigUpdateRequest {
+  session_id: string;
+  model?: string;
+  temperature?: number;
+  max_tokens?: number;
+}
+
 export interface Session {
   id: string; // Changed from session_id to match REST convention
   name: string;
@@ -253,6 +272,7 @@ export interface Session {
   status: "active" | "archived" | "deleted"; // Constrained to valid values
   created_at: string;
   updated_at: string;
+  config?: ApiSessionConfig;
 }
 
 export interface SessionRef {
@@ -836,6 +856,39 @@ export interface FeedbackRequest {
 export interface FeedbackResponse {
   success: boolean;
   feedback_id?: string;
+}
+
+// =============================================================================
+// Message Rating (Thumbs Up/Down)
+// =============================================================================
+
+/**
+ * Message rating value
+ */
+export type MessageRatingValue = "up" | "down" | null;
+
+/**
+ * Request to submit a message rating
+ */
+export interface MessageRatingRequest {
+  /** The session ID containing the message */
+  session_id: string;
+  /** The message ID being rated */
+  message_id: string;
+  /** The rating value (up, down, or null to remove) */
+  rating: MessageRatingValue;
+  /** Optional feedback text (for negative ratings) */
+  feedback?: string;
+}
+
+/**
+ * Response after message rating submission
+ */
+export interface MessageRatingResponse {
+  success: boolean;
+  rating_id?: string;
+  message_id: string;
+  rating: MessageRatingValue;
 }
 
 // =============================================================================

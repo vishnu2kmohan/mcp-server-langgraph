@@ -30,7 +30,7 @@ class {class_name}State(TypedDict):
 
 def process_query(state: {class_name}State) -> {class_name}State:
     \"\"\"Process the user query.\"\"\"
-    # TODO: Implement your agent logic here
+    # PLACEHOLDER: Implement your agent logic here
     state["response"] = f"Processed: {{state['query']}}"
     return state
 
@@ -63,7 +63,7 @@ class ResearchState(TypedDict):
 
 def search(state: ResearchState) -> ResearchState:
     \"\"\"Search for information.\"\"\"
-    # TODO: Implement search using Tavily, Google, or other search tools
+    # PLACEHOLDER: Implement search using Tavily, Google, or other search tools
     state["search_results"] = ["Result 1", "Result 2", "Result 3"]
     state["sources"] = ["https://example.com/1", "https://example.com/2"]
     return state
@@ -71,7 +71,7 @@ def search(state: ResearchState) -> ResearchState:
 
 def summarize(state: ResearchState) -> ResearchState:
     \"\"\"Summarize search results.\"\"\"
-    # TODO: Use LLM to summarize results
+    # PLACEHOLDER: Use LLM to summarize results
     results = " ".join(state["search_results"])
     state["summary"] = f"Summary of: {{results}}"
     return state
@@ -107,7 +107,7 @@ class SupportState(TypedDict):
 
 def classify_intent(state: SupportState) -> SupportState:
     \"\"\"Classify the customer query.\"\"\"
-    # TODO: Use LLM to classify intent
+    # PLACEHOLDER: Use LLM to classify intent
     query_lower = state["query"].lower()
     if "price" in query_lower or "cost" in query_lower:
         state["intent"] = "billing"
@@ -120,14 +120,14 @@ def classify_intent(state: SupportState) -> SupportState:
 
 def handle_faq(state: SupportState) -> SupportState:
     \"\"\"Handle FAQ queries.\"\"\"
-    # TODO: Lookup in knowledge base
+    # PLACEHOLDER: Lookup in knowledge base
     state["response"] = "Here's the answer from our FAQ..."
     return state
 
 
 def handle_technical(state: SupportState) -> SupportState:
     \"\"\"Handle technical support queries.\"\"\"
-    # TODO: Check technical documentation or escalate
+    # PLACEHOLDER: Check technical documentation or escalate
     state["response"] = "Let me help you troubleshoot..."
     return state
 
@@ -220,14 +220,14 @@ from src.agents.{name}_agent import {name}_agent
 
 def test_{name}_agent_basic():
     """Test basic agent functionality."""
-    # TODO: Implement tests
+    # PLACEHOLDER: Implement tests
     assert {name}_agent is not None
 
 
 @pytest.mark.asyncio
 async def test_{name}_agent_async():
     """Test async agent invocation."""
-    # TODO: Implement async tests
+    # PLACEHOLDER: Implement async tests
     pass
 '''
 

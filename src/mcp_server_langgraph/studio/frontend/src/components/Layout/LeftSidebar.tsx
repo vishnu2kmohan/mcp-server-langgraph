@@ -33,13 +33,15 @@ import {
   ChevronRight,
   ChevronDown,
   Plus,
-  PanelLeftClose,
-  PanelLeftOpen,
+  ChevronsLeft,
+  ChevronsRight,
   Sun,
   Moon,
   Command,
   User,
   LogOut,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { useTheme } from "../../hooks/useTheme";
 import { selectUser } from "../../store/slices/authSlice";
@@ -48,8 +50,10 @@ import {
   selectActiveActivityId,
   selectExpandedGroups,
   selectLeftSidebarCollapsed,
+  selectFocusMode,
   setActiveActivityId,
   setLeftSidebarCollapsed,
+  setFocusMode,
   toggleExpandedGroup,
 } from "../../store/slices/workspaceSlice";
 
@@ -209,6 +213,7 @@ export function LeftSidebar({
   const activeActivityId = useAppSelector(selectActiveActivityId);
   const expandedGroups = useAppSelector(selectExpandedGroups);
   const collapsedFromStore = useAppSelector(selectLeftSidebarCollapsed);
+  const focusMode = useAppSelector(selectFocusMode);
   const user = useAppSelector(selectUser);
   const { isDark, toggleTheme } = useTheme();
 
@@ -241,14 +246,24 @@ export function LeftSidebar({
     setIsUserMenuOpen((prev) => !prev);
   }, []);
 
-  // Handle logout
+  // Handle logout - redirect to Keycloak end-session endpoint
   const handleLogout = useCallback(() => {
+    // Clear local storage tokens first
     localStorage.removeItem("access_token");
     localStorage.removeItem("auth_token");
     localStorage.removeItem("refresh_token");
     setIsUserMenuOpen(false);
-    navigate("/login");
-  }, [navigate]);
+
+    // Redirect to backend logout endpoint which handles Keycloak session termination
+    // This ensures both frontend tokens AND Keycloak session are cleared
+    const logoutUrl = `/api/v1/auth/logout?post_logout_redirect_uri=${encodeURIComponent(window.location.origin + "/login")}`;
+    window.location.href = logoutUrl;
+  }, []);
+
+  // Handle Focus Mode toggle
+  const handleToggleFocusMode = useCallback(() => {
+    dispatch(setFocusMode(!focusMode));
+  }, [dispatch, focusMode]);
 
   // Handle settings navigation
   const handleGoToSettings = useCallback(() => {
@@ -367,7 +382,7 @@ export function LeftSidebar({
           type="button"
           onClick={toggleTheme}
           aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          title={isDark ? "Light Mode" : "Dark Mode"}
           className={cn(
             "p-2 rounded-lg transition-all",
             "focus:outline-none focus:ring-2 focus:ring-primary-500",
@@ -392,6 +407,27 @@ export function LeftSidebar({
           )}
         >
           <Command size={20} />
+        </button>
+
+        {/* Focus Mode Toggle */}
+        <button
+          type="button"
+          onClick={handleToggleFocusMode}
+          aria-label={focusMode ? "Exit focus mode" : "Enter focus mode"}
+          title={
+            focusMode
+              ? "Exit Focus Mode (Esc)"
+              : "Focus Mode - Hide sidebars (⌘⇧F)"
+          }
+          className={cn(
+            "p-2 rounded-lg transition-all",
+            "focus:outline-none focus:ring-2 focus:ring-primary-500",
+            focusMode
+              ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+              : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+          )}
+        >
+          {focusMode ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
         </button>
 
         {/* User Menu */}
@@ -466,12 +502,18 @@ export function LeftSidebar({
           )}
         </div>
 
-        {/* Collapse/Expand Toggle */}
+        {/* Collapse/Expand Navigation Panel Toggle */}
         <button
           type="button"
           onClick={handleToggleCollapse}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={
+            collapsed ? "Expand navigation panel" : "Collapse navigation panel"
+          }
+          title={
+            collapsed
+              ? "Expand Navigation Panel (⌘\\)"
+              : "Collapse Navigation Panel (⌘\\)"
+          }
           className={cn(
             "p-2 rounded-lg transition-all",
             "focus:outline-none focus:ring-2 focus:ring-primary-500",
@@ -479,11 +521,7 @@ export function LeftSidebar({
             "hover:bg-gray-200 dark:hover:bg-gray-700",
           )}
         >
-          {collapsed ? (
-            <PanelLeftOpen size={20} />
-          ) : (
-            <PanelLeftClose size={20} />
-          )}
+          {collapsed ? <ChevronsRight size={20} /> : <ChevronsLeft size={20} />}
         </button>
       </div>
 

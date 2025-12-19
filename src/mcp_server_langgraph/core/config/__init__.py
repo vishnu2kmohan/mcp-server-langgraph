@@ -31,9 +31,11 @@ Migration Path:
     from mcp_server_langgraph.core.config.llm import LLMSettings
 """
 
-# Import from the original monolithic config for backwards compatibility
+# Import the main Settings class (moved from config_legacy.py)
 # This ensures all existing imports work unchanged
-from mcp_server_langgraph.core.config_legacy import Settings, settings
+# Note: _settings.py is named with underscore to avoid module/variable name collision
+# which confused mypy when the module and instance shared the name "settings"
+from mcp_server_langgraph.core.config._settings import Settings, settings
 
 # Import domain-specific settings for granular use
 from mcp_server_langgraph.core.config.base import DomainSettings

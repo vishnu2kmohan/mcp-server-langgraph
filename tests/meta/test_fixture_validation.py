@@ -392,11 +392,18 @@ class TestFixtureDecorators:
                         and decorator.func.attr == "parametrize"
                     ):
                         # Get first argument (parameter names)
-                        if decorator.args and isinstance(decorator.args[0], ast.Constant):
-                            param_str = decorator.args[0].value
-                            # Handle "param" or "param1,param2" formats
-                            param_names = [p.strip() for p in param_str.split(",")]
-                            params.update(param_names)
+                        if decorator.args:
+                            first_arg = decorator.args[0]
+                            # Handle "param" or "param1,param2" string formats
+                            if isinstance(first_arg, ast.Constant) and isinstance(first_arg.value, str):
+                                param_str = first_arg.value
+                                param_names = [p.strip() for p in param_str.split(",")]
+                                params.update(param_names)
+                            # Handle ("param1", "param2") tuple formats
+                            elif isinstance(first_arg, ast.Tuple):
+                                for elt in first_arg.elts:
+                                    if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                                        params.add(elt.value.strip())
 
         return params
 
@@ -778,23 +785,24 @@ class TestFixtureDecorators:
                 except (SyntaxError, UnicodeDecodeError):
                     continue
 
-        # Also search fixtures directory (loaded via pytest_plugins in conftest.py)
-        fixtures_dir = tests_dir / "fixtures"
-        if fixtures_dir.exists():
-            for fixture_file in fixtures_dir.glob("*.py"):
-                if fixture_file.name == "__init__.py":
-                    continue
-                try:
-                    with open(fixture_file, encoding="utf-8") as f:
-                        content = f.read()
-                        tree = ast.parse(content, filename=str(fixture_file))
+        # Also search fixtures and plugins directories (loaded via pytest_plugins in conftest.py)
+        for subdir_name in ["fixtures", "plugins"]:
+            subdir = tests_dir / subdir_name
+            if subdir.exists():
+                for fixture_file in subdir.glob("*.py"):
+                    if fixture_file.name == "__init__.py":
+                        continue
+                    try:
+                        with open(fixture_file, encoding="utf-8") as f:
+                            content = f.read()
+                            tree = ast.parse(content, filename=str(fixture_file))
 
-                    for node in ast.walk(tree):
-                        if isinstance(node, ast.FunctionDef):
-                            if self._has_fixture_decorator(node):
-                                fixtures.add(node.name)
+                        for node in ast.walk(tree):
+                            if isinstance(node, ast.FunctionDef):
+                                if self._has_fixture_decorator(node):
+                                    fixtures.add(node.name)
 
-                except (SyntaxError, UnicodeDecodeError):
-                    continue
+                    except (SyntaxError, UnicodeDecodeError):
+                        continue
 
         return fixtures

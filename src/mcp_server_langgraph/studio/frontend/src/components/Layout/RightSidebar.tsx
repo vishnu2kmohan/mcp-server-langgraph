@@ -11,14 +11,16 @@
  */
 
 import { useCallback } from "react";
-import { FileText, X, PanelRightClose } from "lucide-react";
+import { FileText, X, PanelRightClose, Pin, PinOff } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   selectTabs,
   selectActiveTabId,
   selectExpandedPropertySections,
+  selectRightSidebarPinned,
   toggleExpandedPropertySection,
   setRightSidebarCollapsed,
+  setRightSidebarPinned,
 } from "../../store/slices/workspaceSlice";
 import { selectCurrentSession } from "../../store/slices/sessionSlice";
 import { selectAllTools } from "../../store/slices/mcpSlice";
@@ -68,6 +70,7 @@ export function RightSidebar({
   const tabs = useAppSelector(selectTabs);
   const activeTabId = useAppSelector(selectActiveTabId);
   const expandedSections = useAppSelector(selectExpandedPropertySections);
+  const isPinned = useAppSelector(selectRightSidebarPinned);
   const currentSession = useAppSelector(selectCurrentSession);
   const mcpTools = useAppSelector(selectAllTools);
 
@@ -92,6 +95,11 @@ export function RightSidebar({
   const handleCollapse = useCallback(() => {
     dispatch(setRightSidebarCollapsed(true));
   }, [dispatch]);
+
+  // Handle pin toggle
+  const handleTogglePin = useCallback(() => {
+    dispatch(setRightSidebarPinned(!isPinned));
+  }, [dispatch, isPinned]);
 
   // Determine if in mobile overlay mode
   const isMobileMode = isOpen !== undefined;
@@ -133,6 +141,30 @@ export function RightSidebar({
         >
           <span>PROPERTIES</span>
           <div className="flex items-center gap-1">
+            {/* Pin toggle - keep visible in Focus Mode */}
+            {!isMobileMode && (
+              <button
+                type="button"
+                onClick={handleTogglePin}
+                title={
+                  isPinned
+                    ? "Unpin sidebar (visible in Focus Mode)"
+                    : "Pin sidebar (keep visible in Focus Mode)"
+                }
+                className={cn(
+                  "p-1 rounded",
+                  isPinned
+                    ? "text-primary-600 dark:text-primary-400"
+                    : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300",
+                  "hover:bg-gray-200 dark:hover:bg-gray-700",
+                  "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                  "transition-colors",
+                )}
+                aria-label={isPinned ? "Unpin sidebar" : "Pin sidebar"}
+              >
+                {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+              </button>
+            )}
             {isMobileMode && onClose ? (
               <button
                 type="button"
@@ -146,6 +178,7 @@ export function RightSidebar({
               <button
                 type="button"
                 onClick={handleCollapse}
+                title="Collapse Properties Panel (⌘B)"
                 className={cn(
                   "p-1 rounded",
                   "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300",

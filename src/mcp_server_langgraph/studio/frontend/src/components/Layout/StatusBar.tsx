@@ -3,18 +3,18 @@
  *
  * JupyterLab-inspired status bar for Agent Studio.
  * Displays at the bottom of the AppShell and shows:
- * - Connection status (MCP server)
+ * - Session info (name, messages, model, tokens, cost)
+ * - Connection status (API health)
  * - Persona/role indicator
- * - Notification count badge
- * - Ready state
  */
 
 import { useMemo } from "react";
 import { useAppSelector } from "../../store/hooks";
 import { selectPersona } from "../../store/slices/personaSlice";
-import { selectUnreadCount } from "../../store/slices/notificationSlice";
 import { selectCurrentSession } from "../../store/slices/sessionSlice";
 import { useGetHealthQuery } from "../../api";
+import { useConnectionHealthWebSocket } from "../../hooks/useConnectionHealthWebSocket";
+import { useMCPTaskWebSocket } from "../../hooks/useMCPTaskWebSocket";
 
 // Cost per 1K tokens by provider (simplified estimates)
 const COST_PER_1K_TOKENS: Record<string, { input: number; output: number }> = {
@@ -56,9 +56,19 @@ export function StatusBar({ className }: StatusBarProps) {
     refetchOnMountOrArgChange: true,
   });
 
+  // MCP Connection Health
+  const { summary: mcpSummary } = useConnectionHealthWebSocket();
+
+  // MCP Task Status
+  const { tasks } = useMCPTaskWebSocket();
+  const activeTasks = useMemo(() => {
+    return tasks.filter(
+      (task) => task.status === "running" || task.status === "pending",
+    );
+  }, [tasks]);
+
   // Selectors
   const persona = useAppSelector(selectPersona);
-  const unreadCount = useAppSelector(selectUnreadCount);
   const currentSession = useAppSelector(selectCurrentSession);
 
   // Session info
@@ -98,27 +108,45 @@ export function StatusBar({ className }: StatusBarProps) {
   // Determine API health status text and color
   const isConnected = healthData?.status === "healthy";
   const isDegraded = healthData?.status === "degraded";
+  const isUnhealthy = healthData?.status === "unhealthy";
   const isConnecting = isHealthLoading;
 
   const connectionStatus = isConnecting
     ? "Connecting..."
     : isHealthError
       ? "Disconnected"
-      : isDegraded
-        ? "Degraded"
-        : isConnected
-          ? "Connected"
-          : "Disconnected";
+      : isUnhealthy
+        ? "Unhealthy"
+        : isDegraded
+          ? "Degraded"
+          : isConnected
+            ? "Connected"
+            : "Disconnected";
+
+  // Tooltip with more details about the connection status
+  const connectionTooltip = isConnecting
+    ? "Checking API health..."
+    : isHealthError
+      ? "Cannot reach the API server"
+      : isUnhealthy
+        ? "API responding but system has errors (check backend logs)"
+        : isDegraded
+          ? "API responding but some services are degraded"
+          : isConnected
+            ? "All systems operational"
+            : "Unknown connection state";
 
   const connectionColor = isConnecting
     ? "text-yellow-500"
     : isHealthError
       ? "text-red-500"
-      : isDegraded
-        ? "text-yellow-500"
-        : isConnected
-          ? "text-green-500"
-          : "text-gray-400";
+      : isUnhealthy
+        ? "text-red-500"
+        : isDegraded
+          ? "text-yellow-500"
+          : isConnected
+            ? "text-green-500"
+            : "text-gray-400";
 
   return (
     <div
@@ -131,121 +159,172 @@ export function StatusBar({ className }: StatusBarProps) {
         className,
       )}
     >
-      {/* Left section */}
+      {/* Left section - Session info */}
       <div className="flex items-center gap-4">
+        {/* Session Group - session-related items */}
+        {currentSession && (
+          <div data-testid="session-group" className="flex items-center gap-3">
+            {/* Session Info */}
+            <div
+              data-testid="session-info"
+              title={`Session: ${sessionName} (${messageCount} ${messageCount === 1 ? "message" : "messages"})`}
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-300 cursor-help"
+            >
+              <span className="truncate max-w-48">{sessionName}</span>
+              <span className="text-gray-400 dark:text-gray-500">·</span>
+              <span className="text-gray-500 dark:text-gray-400">
+                {messageCount} {messageCount === 1 ? "msg" : "msgs"}
+              </span>
+            </div>
+
+            {/* Model Info */}
+            {currentSession.config && modelName && (
+              <div
+                data-testid="model-info"
+                title={`Model: ${modelName} (Provider: ${currentSession.config.modelProvider})`}
+                className="flex items-center gap-1 text-gray-600 dark:text-gray-300 cursor-help"
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+                <span>{modelName}</span>
+              </div>
+            )}
+
+            {/* Token Count */}
+            {tokenStats.total > 0 && (
+              <div
+                data-testid="token-count"
+                title={`Tokens: ${tokenStats.prompt.toLocaleString()} in + ${tokenStats.completion.toLocaleString()} out = ${tokenStats.total.toLocaleString()} total`}
+                className="flex items-center gap-1 text-gray-500 dark:text-gray-400 cursor-help"
+              >
+                <span>{tokenStats.total.toLocaleString()} tok</span>
+              </div>
+            )}
+
+            {/* Cost Estimate */}
+            {estimatedCost > 0 && (
+              <div
+                data-testid="cost-estimate"
+                title={`Estimated cost based on ${currentSession.config?.modelProvider || "default"} pricing`}
+                className="flex items-center gap-1 text-green-600 dark:text-green-400 cursor-help"
+              >
+                <span>${estimatedCost.toFixed(2)}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Right section - Connection status and persona */}
+      <div className="flex items-center gap-4">
+        {/* MCP Connection Status */}
+        {mcpSummary.total > 0 && (
+          <div
+            data-testid="mcp-status"
+            title={`MCP Connections: ${mcpSummary.connected}/${mcpSummary.total} connected${mcpSummary.error > 0 ? `, ${mcpSummary.error} error(s)` : ""}${mcpSummary.auth_required > 0 ? `, ${mcpSummary.auth_required} auth required` : ""}`}
+            className={cn(
+              "flex items-center gap-1.5 cursor-help",
+              mcpSummary.connected === mcpSummary.total && "text-green-500",
+              mcpSummary.connected > 0 &&
+                mcpSummary.connected < mcpSummary.total &&
+                "text-yellow-500",
+              mcpSummary.connected === 0 && "text-red-500",
+            )}
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
+              />
+            </svg>
+            <span>
+              {mcpSummary.connected}/{mcpSummary.total}
+            </span>
+          </div>
+        )}
+
+        {/* MCP Task Status */}
+        {activeTasks.length > 0 && (
+          <div
+            data-testid="task-status"
+            title={`${activeTasks.length} active task${activeTasks.length !== 1 ? "s" : ""}: ${activeTasks.filter((t) => t.status === "running").length} running, ${activeTasks.filter((t) => t.status === "pending").length} pending`}
+            className="flex items-center gap-1.5 cursor-help text-blue-500"
+          >
+            <svg
+              className="w-3.5 h-3.5 animate-spin"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            <span>{activeTasks.length}</span>
+          </div>
+        )}
+
         {/* Connection Status */}
         <div
           data-testid="connection-status"
-          className={cn("flex items-center gap-1.5", connectionColor)}
+          title={connectionTooltip}
+          className={cn(
+            "flex items-center gap-1.5 cursor-help",
+            connectionColor,
+          )}
         >
           <span
             className={cn(
               "w-2 h-2 rounded-full",
               isConnecting && "bg-yellow-500 animate-pulse",
               isHealthError && "bg-red-500",
+              isUnhealthy && "bg-red-500",
               isDegraded && "bg-yellow-500",
               isConnected && "bg-green-500",
               !isConnecting &&
                 !isConnected &&
                 !isDegraded &&
                 !isHealthError &&
+                !isUnhealthy &&
                 "bg-gray-400",
             )}
           />
           <span>{connectionStatus}</span>
         </div>
 
-        {/* Ready State */}
-        <span className="text-gray-500 dark:text-gray-400">Ready</span>
-
-        {/* Session Info */}
-        {currentSession && (
-          <div
-            data-testid="session-info"
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-300"
-          >
-            <span className="truncate max-w-48">{sessionName}</span>
-            <span className="text-gray-400 dark:text-gray-500">|</span>
-            <span className="text-gray-500 dark:text-gray-400">
-              {messageCount} {messageCount === 1 ? "message" : "messages"}
-            </span>
-          </div>
-        )}
-
-        {/* Model Info */}
-        {currentSession?.config && modelName && (
-          <div
-            data-testid="model-info"
-            className="flex items-center gap-1 text-gray-600 dark:text-gray-300"
-          >
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-            <span>{modelName}</span>
-          </div>
-        )}
-
-        {/* Token Count */}
-        {currentSession && tokenStats.total > 0 && (
-          <div
-            data-testid="token-count"
-            className="flex items-center gap-1 text-gray-500 dark:text-gray-400"
-          >
-            <span>{tokenStats.total.toLocaleString()} tokens</span>
-          </div>
-        )}
-
-        {/* Cost Estimate */}
-        {currentSession && estimatedCost > 0 && (
-          <div
-            data-testid="cost-estimate"
-            className="flex items-center gap-1 text-green-600 dark:text-green-400"
-          >
-            <span>${estimatedCost.toFixed(2)}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Right section */}
-      <div className="flex items-center gap-4">
-        {/* Notification Count Badge */}
-        {unreadCount > 0 && (
-          <div
-            data-testid="notification-count"
-            className="flex items-center gap-1 text-blue-600 dark:text-blue-400"
-          >
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              />
-            </svg>
-            <span>{unreadCount}</span>
-          </div>
-        )}
-
         {/* Persona Indicator */}
         <div
           data-testid="persona-indicator"
+          title={`Logged in as ${persona} - determines access to features`}
           className={cn(
-            "flex items-center gap-1 capitalize",
+            "flex items-center gap-1 capitalize cursor-help",
             persona === "admin" && "text-purple-600 dark:text-purple-400",
             persona === "developer" && "text-blue-600 dark:text-blue-400",
             persona === "user" && "text-gray-600 dark:text-gray-400",

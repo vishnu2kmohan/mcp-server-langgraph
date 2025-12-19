@@ -21,7 +21,7 @@ import jwt
 import pytest
 from fastapi import FastAPI
 
-pytestmark = pytest.mark.api
+pytestmark = [pytest.mark.unit, pytest.mark.api]
 
 # Test JWT secret for unit tests
 TEST_JWT_SECRET = "test-jwt-secret-for-websocket-unit-tests"

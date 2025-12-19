@@ -20,7 +20,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-pytestmark = pytest.mark.api
+pytestmark = [pytest.mark.unit, pytest.mark.api]
 
 
 def _make_admin_user() -> dict[str, Any]:

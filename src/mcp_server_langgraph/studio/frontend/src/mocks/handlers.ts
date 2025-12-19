@@ -316,7 +316,7 @@ export const handlers = [
     });
   }),
 
-  http.post("/api/v1/connections/:id/oauth2/start", async () => {
+  http.post("/api/v1/connections/:id/oauth/start", async () => {
     await delay(100);
     return HttpResponse.json({
       auth_url:

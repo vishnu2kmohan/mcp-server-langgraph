@@ -84,6 +84,7 @@ export function ChatDocument({
     isStreaming,
     streamingContent,
     startStream,
+    stopStream,
     clearContent,
     usage,
     model: _model,
@@ -275,6 +276,8 @@ export function ChatDocument({
         onInputChange={setInput}
         onSubmit={handleSubmit}
         isProcessing={isProcessing}
+        isStreaming={isStreaming}
+        onStopStreaming={stopStream}
         isListening={isListening}
         isVoiceSupported={isVoiceSupported}
         voiceError={voiceError}

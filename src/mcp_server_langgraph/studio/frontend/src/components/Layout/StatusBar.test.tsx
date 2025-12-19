@@ -36,6 +36,19 @@ vi.mock("../../api", async (importOriginal) => {
   };
 });
 
+// Mock the useConnectionHealthWebSocket hook
+const mockUseConnectionHealthWebSocket = vi.fn();
+vi.mock("../../hooks/useConnectionHealthWebSocket", () => ({
+  useConnectionHealthWebSocket: (...args: unknown[]) =>
+    mockUseConnectionHealthWebSocket(...args),
+}));
+
+// Mock the useMCPTaskWebSocket hook
+const mockUseMCPTaskWebSocket = vi.fn();
+vi.mock("../../hooks/useMCPTaskWebSocket", () => ({
+  useMCPTaskWebSocket: (...args: unknown[]) => mockUseMCPTaskWebSocket(...args),
+}));
+
 // Import after mocks
 import { StatusBar } from "./StatusBar";
 import mcpReducer, { type MCPSliceState } from "../../store/slices/mcpSlice";
@@ -134,6 +147,46 @@ describe("StatusBar", () => {
       isLoading: false,
       isError: false,
     });
+    // Default: MCP connection health WebSocket
+    mockUseConnectionHealthWebSocket.mockReturnValue({
+      status: "connected",
+      connections: [
+        { id: "conn-1", name: "MCP Server 1", status: "connected" },
+        { id: "conn-2", name: "MCP Server 2", status: "connected" },
+      ],
+      subscribedConnections: new Set(),
+      error: null,
+      lastPong: null,
+      summary: {
+        total: 2,
+        connected: 2,
+        disconnected: 0,
+        connecting: 0,
+        error: 0,
+        auth_required: 0,
+      },
+      sendPing: vi.fn(),
+      refresh: vi.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+      checkHealth: vi.fn(),
+      getConnection: vi.fn(),
+      disconnect: vi.fn(),
+      reconnect: vi.fn(),
+    });
+    // Default: MCP task WebSocket - no tasks running
+    mockUseMCPTaskWebSocket.mockReturnValue({
+      status: "connected",
+      tasks: [],
+      subscribedTasks: new Set(),
+      error: null,
+      sendPing: vi.fn(),
+      refresh: vi.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+      disconnect: vi.fn(),
+      reconnect: vi.fn(),
+    });
   });
 
   describe("basic rendering", () => {
@@ -150,7 +203,7 @@ describe("StatusBar", () => {
   });
 
   describe("connection status", () => {
-    it("should show disconnected status when health check fails", () => {
+    it("should show disconnected status when health check fails (API unreachable)", () => {
       // Mock health query as error state (API unreachable)
       mockUseGetHealthQuery.mockReturnValue({
         data: undefined,
@@ -189,6 +242,23 @@ describe("StatusBar", () => {
       renderWithProviders(<StatusBar />);
       expect(screen.getByText(/degraded/i)).toBeInTheDocument();
     });
+
+    it("should show unhealthy status when API responds but system is unhealthy", () => {
+      // Mock health query as unhealthy state (API responds but backend has issues)
+      mockUseGetHealthQuery.mockReturnValue({
+        data: { status: "unhealthy" },
+        isLoading: false,
+        isError: false,
+      });
+      renderWithProviders(<StatusBar />);
+      expect(screen.getByText(/unhealthy/i)).toBeInTheDocument();
+    });
+
+    it("should have tooltip on connection status element", () => {
+      renderWithProviders(<StatusBar />);
+      const connectionStatus = screen.getByTestId("connection-status");
+      expect(connectionStatus).toHaveAttribute("title");
+    });
   });
 
   describe("persona indicator", () => {
@@ -215,35 +285,124 @@ describe("StatusBar", () => {
     });
   });
 
-  describe("notification count", () => {
-    it("should not show badge when no unread notifications", () => {
+  // NOTE: Notification count badge was removed from StatusBar per UX requirements
+  // The status bar now shows only essential session information
+
+  describe("tooltips", () => {
+    it("should have tooltip on persona indicator", () => {
       renderWithProviders(<StatusBar />);
-      expect(
-        screen.queryByTestId("notification-count"),
-      ).not.toBeInTheDocument();
+      const personaIndicator = screen.getByTestId("persona-indicator");
+      expect(personaIndicator).toHaveAttribute("title");
     });
 
-    it("should show badge with unread count", () => {
+    it("should have tooltip on session info when present", () => {
       const store = createTestStore({
-        notifications: {
-          notifications: [
-            { id: "1", read: false },
-            { id: "2", read: false },
-            { id: "3", read: true },
-          ],
+        session: {
+          currentSession: {
+            id: "session-1",
+            name: "My Chat Session",
+            messages: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
         },
       });
       renderWithProviders(<StatusBar />, { store });
-      const badge = screen.getByTestId("notification-count");
-      expect(badge).toBeInTheDocument();
-      expect(badge).toHaveTextContent("2");
+      const sessionInfo = screen.getByTestId("session-info");
+      expect(sessionInfo).toHaveAttribute("title");
     });
-  });
 
-  describe("ready state", () => {
-    it("should show Ready text by default", () => {
-      renderWithProviders(<StatusBar />);
-      expect(screen.getByText("Ready")).toBeInTheDocument();
+    it("should have tooltip on model info when present", () => {
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-1",
+            name: "Test Session",
+            config: {
+              modelProvider: "openai",
+              modelName: "gpt-4",
+              temperature: 0.7,
+              maxTokens: 4096,
+            },
+            messages: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+      });
+      renderWithProviders(<StatusBar />, { store });
+      const modelInfo = screen.getByTestId("model-info");
+      expect(modelInfo).toHaveAttribute("title");
+    });
+
+    it("should have tooltip on token count when present", () => {
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-1",
+            name: "Test Session",
+            config: {
+              modelProvider: "openai",
+              modelName: "gpt-4",
+              temperature: 0.7,
+              maxTokens: 4096,
+            },
+            messages: [
+              {
+                id: "m1",
+                role: "user",
+                content: "Hello",
+                timestamp: Date.now(),
+                usage: {
+                  promptTokens: 100,
+                  completionTokens: 50,
+                  totalTokens: 150,
+                },
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+      });
+      renderWithProviders(<StatusBar />, { store });
+      const tokenCount = screen.getByTestId("token-count");
+      expect(tokenCount).toHaveAttribute("title");
+    });
+
+    it("should have tooltip on cost estimate when present", () => {
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-1",
+            name: "Test Session",
+            config: {
+              modelProvider: "openai",
+              modelName: "gpt-4",
+              temperature: 0.7,
+              maxTokens: 4096,
+            },
+            messages: [
+              {
+                id: "m1",
+                role: "user",
+                content: "Hello",
+                timestamp: Date.now(),
+                usage: {
+                  promptTokens: 1000,
+                  completionTokens: 500,
+                  totalTokens: 1500,
+                },
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+      });
+      renderWithProviders(<StatusBar />, { store });
+      const costEstimate = screen.getByTestId("cost-estimate");
+      expect(costEstimate).toHaveAttribute("title");
     });
   });
 
@@ -310,7 +469,7 @@ describe("StatusBar", () => {
         },
       });
       renderWithProviders(<StatusBar />, { store });
-      expect(screen.getByText(/3 messages/i)).toBeInTheDocument();
+      expect(screen.getByText(/3 msgs/i)).toBeInTheDocument();
     });
 
     it("should show singular message for single message", () => {
@@ -333,7 +492,7 @@ describe("StatusBar", () => {
         },
       });
       renderWithProviders(<StatusBar />, { store });
-      expect(screen.getByText(/1 message\b/i)).toBeInTheDocument();
+      expect(screen.getByText(/1 msg\b/i)).toBeInTheDocument();
     });
   });
 
@@ -458,6 +617,244 @@ describe("StatusBar", () => {
     it("should not show model info when no session", () => {
       renderWithProviders(<StatusBar />);
       expect(screen.queryByTestId("model-info")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("MCP connection status", () => {
+    it("should display MCP connection count when connections exist", () => {
+      renderWithProviders(<StatusBar />);
+      expect(screen.getByTestId("mcp-status")).toBeInTheDocument();
+      // Should show 2/2 connected
+      expect(screen.getByText(/2\/2/)).toBeInTheDocument();
+    });
+
+    it("should show warning style when some connections are not healthy", () => {
+      mockUseConnectionHealthWebSocket.mockReturnValue({
+        status: "connected",
+        connections: [
+          { id: "conn-1", name: "MCP Server 1", status: "connected" },
+          { id: "conn-2", name: "MCP Server 2", status: "error" },
+        ],
+        subscribedConnections: new Set(),
+        error: null,
+        lastPong: null,
+        summary: {
+          total: 2,
+          connected: 1,
+          disconnected: 0,
+          connecting: 0,
+          error: 1,
+          auth_required: 0,
+        },
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        checkHealth: vi.fn(),
+        getConnection: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      renderWithProviders(<StatusBar />);
+      const mcpStatus = screen.getByTestId("mcp-status");
+      expect(mcpStatus).toBeInTheDocument();
+      expect(screen.getByText(/1\/2/)).toBeInTheDocument();
+    });
+
+    it("should show error style when all connections are down", () => {
+      mockUseConnectionHealthWebSocket.mockReturnValue({
+        status: "connected",
+        connections: [
+          { id: "conn-1", name: "MCP Server 1", status: "error" },
+          { id: "conn-2", name: "MCP Server 2", status: "disconnected" },
+        ],
+        subscribedConnections: new Set(),
+        error: null,
+        lastPong: null,
+        summary: {
+          total: 2,
+          connected: 0,
+          disconnected: 1,
+          connecting: 0,
+          error: 1,
+          auth_required: 0,
+        },
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        checkHealth: vi.fn(),
+        getConnection: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      renderWithProviders(<StatusBar />);
+      const mcpStatus = screen.getByTestId("mcp-status");
+      expect(mcpStatus).toBeInTheDocument();
+      expect(screen.getByText(/0\/2/)).toBeInTheDocument();
+    });
+
+    it("should not show MCP status when no connections configured", () => {
+      mockUseConnectionHealthWebSocket.mockReturnValue({
+        status: "connected",
+        connections: [],
+        subscribedConnections: new Set(),
+        error: null,
+        lastPong: null,
+        summary: {
+          total: 0,
+          connected: 0,
+          disconnected: 0,
+          connecting: 0,
+          error: 0,
+          auth_required: 0,
+        },
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        checkHealth: vi.fn(),
+        getConnection: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      renderWithProviders(<StatusBar />);
+      expect(screen.queryByTestId("mcp-status")).not.toBeInTheDocument();
+    });
+
+    it("should have tooltip with connection details", () => {
+      renderWithProviders(<StatusBar />);
+      const mcpStatus = screen.getByTestId("mcp-status");
+      expect(mcpStatus).toHaveAttribute("title");
+      expect(mcpStatus.getAttribute("title")).toContain("MCP");
+    });
+  });
+
+  describe("MCP task status", () => {
+    it("should display task count when tasks are running", () => {
+      mockUseMCPTaskWebSocket.mockReturnValue({
+        status: "connected",
+        tasks: [
+          {
+            task_id: "task-1",
+            status: "running",
+            created_at: "2025-01-01",
+            last_updated_at: "2025-01-01",
+            ttl: 3600,
+            poll_interval: 5,
+          },
+          {
+            task_id: "task-2",
+            status: "pending",
+            created_at: "2025-01-01",
+            last_updated_at: "2025-01-01",
+            ttl: 3600,
+            poll_interval: 5,
+          },
+          {
+            task_id: "task-3",
+            status: "running",
+            created_at: "2025-01-01",
+            last_updated_at: "2025-01-01",
+            ttl: 3600,
+            poll_interval: 5,
+          },
+        ],
+        subscribedTasks: new Set(),
+        error: null,
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      renderWithProviders(<StatusBar />);
+      const taskStatus = screen.getByTestId("task-status");
+      expect(taskStatus).toBeInTheDocument();
+      // Should show 3 active tasks - using within to be specific
+      expect(taskStatus.textContent).toContain("3");
+    });
+
+    it("should not show task status when no active tasks", () => {
+      mockUseMCPTaskWebSocket.mockReturnValue({
+        status: "connected",
+        tasks: [
+          {
+            task_id: "task-1",
+            status: "completed",
+            created_at: "2025-01-01",
+            last_updated_at: "2025-01-01",
+            ttl: 3600,
+            poll_interval: 5,
+          },
+        ],
+        subscribedTasks: new Set(),
+        error: null,
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      renderWithProviders(<StatusBar />);
+      expect(screen.queryByTestId("task-status")).not.toBeInTheDocument();
+    });
+
+    it("should show running indicator when tasks are running", () => {
+      mockUseMCPTaskWebSocket.mockReturnValue({
+        status: "connected",
+        tasks: [
+          {
+            task_id: "task-1",
+            status: "running",
+            created_at: "2025-01-01",
+            last_updated_at: "2025-01-01",
+            ttl: 3600,
+            poll_interval: 5,
+          },
+        ],
+        subscribedTasks: new Set(),
+        error: null,
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      renderWithProviders(<StatusBar />);
+      const taskStatus = screen.getByTestId("task-status");
+      expect(taskStatus).toBeInTheDocument();
+    });
+
+    it("should have tooltip with task details", () => {
+      mockUseMCPTaskWebSocket.mockReturnValue({
+        status: "connected",
+        tasks: [
+          {
+            task_id: "task-1",
+            status: "running",
+            created_at: "2025-01-01",
+            last_updated_at: "2025-01-01",
+            ttl: 3600,
+            poll_interval: 5,
+          },
+        ],
+        subscribedTasks: new Set(),
+        error: null,
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      renderWithProviders(<StatusBar />);
+      const taskStatus = screen.getByTestId("task-status");
+      expect(taskStatus).toHaveAttribute("title");
+      expect(taskStatus.getAttribute("title")).toContain("task");
     });
   });
 });

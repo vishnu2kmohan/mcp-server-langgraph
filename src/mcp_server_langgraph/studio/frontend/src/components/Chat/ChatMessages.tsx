@@ -27,11 +27,13 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { ConfidenceIndicator } from "./ConfidenceIndicator";
+import { MessageActions } from "./MessageActions";
 // Rich media artifact components for artifact rendering support
 import { InteractiveSVGArtifact } from "../Artifacts/InteractiveSVGArtifact";
 import { AudioArtifact } from "../Artifacts/AudioArtifact";
 import { VideoArtifact } from "../Artifacts/VideoArtifact";
 import { ExecutableArtifact } from "../Artifacts/ExecutableArtifact";
+import { SandpackExecutor } from "../Artifacts/SandpackExecutor";
 import {
   HallucinationIndicator,
   type HallucinationReport,
@@ -78,6 +80,14 @@ export interface ChatMessagesProps {
   onReportHallucination?: (report: HallucinationReport) => void;
   /** Enable interactive artifact rendering (mermaid, charts, SVG, etc.). Default: true */
   enableInteractiveArtifacts?: boolean;
+  /** Callback when user wants to edit a message (user messages only) */
+  onEditMessage?: (messageId: string) => void;
+  /** Callback when user wants to regenerate a response (assistant messages only) */
+  onRegenerateMessage?: (messageId: string) => void;
+  /** Callback when user wants to delete a message */
+  onDeleteMessage?: (messageId: string) => void;
+  /** Whether a message is being regenerated */
+  isRegenerating?: boolean;
 }
 
 /**
@@ -341,6 +351,34 @@ function MarkdownContent({
               />
             );
           }
+
+          // Handle JSX/TSX code blocks with Sandpack for live execution
+          if ((language === "jsx" || language === "tsx") && !inline) {
+            return (
+              <SandpackExecutor
+                code={codeContent}
+                language={language}
+                title="Interactive Component"
+                showRunButton={true}
+                autoRun={false}
+                theme="dark"
+              />
+            );
+          }
+
+          // Handle MDX code blocks with Sandpack
+          if (language === "mdx" && !inline) {
+            return (
+              <SandpackExecutor
+                code={codeContent}
+                language="mdx"
+                title="Interactive Report"
+                showRunButton={true}
+                autoRun={false}
+                theme="dark"
+              />
+            );
+          }
         }
 
         if (!inline && codeContent.includes("\n")) {
@@ -495,6 +533,10 @@ export function ChatMessages({
   thinkingTrace,
   onReportHallucination,
   enableInteractiveArtifacts = true,
+  onEditMessage,
+  onRegenerateMessage,
+  onDeleteMessage,
+  isRegenerating = false,
 }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showThinkingTrace, setShowThinkingTrace] = useState(false);
@@ -527,76 +569,108 @@ export function ChatMessages({
       {messages.map((message) => (
         <div
           key={message.id}
-          className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+          className={`group flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
         >
-          <div
-            className={`max-w-[70%] px-4 py-3 rounded-lg ${
-              message.role === "user"
-                ? "bg-blue-600 text-white"
-                : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
-            }`}
-          >
-            {/* Rich markdown rendering for all messages */}
-            <div
-              className={`prose prose-sm dark:prose-invert max-w-none ${
-                message.role === "user" ? "prose-invert" : ""
-              }`}
-            >
-              <MarkdownContent
-                content={message.content}
-                enableInteractiveArtifacts={enableInteractiveArtifacts}
-              />
-            </div>
-            {/* Source Citations - only for assistant messages with sources */}
-            {message.role === "assistant" &&
-              message.sources &&
-              message.sources.length > 0 && (
-                <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Sources:
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {message.sources.map((source, index) => (
-                      <a
-                        key={index}
-                        href={source.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        <ExternalLink size={10} />
-                        {source.title}
-                      </a>
-                    ))}
-                  </div>
+          <div className="relative flex items-start gap-2">
+            {/* Message Actions - appears on hover (before message for assistant, after for user) */}
+            {message.role !== "user" &&
+              (onEditMessage || onRegenerateMessage || onDeleteMessage) && (
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity pt-3">
+                  <MessageActions
+                    messageId={message.id}
+                    content={message.content}
+                    role={message.role}
+                    onEdit={onEditMessage}
+                    onRegenerate={onRegenerateMessage}
+                    onDelete={onDeleteMessage}
+                    isRegenerating={isRegenerating}
+                  />
                 </div>
               )}
-            {/* AI-specific indicators for assistant messages */}
-            {message.role === "assistant" && (
-              <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3 flex-wrap">
-                {/* Confidence indicator */}
-                {message.confidence !== undefined && (
-                  <ConfidenceIndicator score={message.confidence} />
-                )}
-
-                {/* Hallucination report button */}
-                {onReportHallucination && (
-                  <HallucinationIndicator
-                    messageId={message.id}
-                    onReport={onReportHallucination}
-                    isReported={message.isReported}
-                  />
-                )}
-              </div>
-            )}
-
-            <p
-              className={`text-xs mt-1 ${
-                message.role === "user" ? "text-blue-200" : "text-gray-400"
+            <div
+              className={`max-w-[70%] px-4 py-3 rounded-lg ${
+                message.role === "user"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
               }`}
             >
-              {new Date(message.timestamp).toLocaleTimeString()}
-            </p>
+              {/* Rich markdown rendering for all messages */}
+              <div
+                className={`prose prose-sm dark:prose-invert max-w-none ${
+                  message.role === "user" ? "prose-invert" : ""
+                }`}
+              >
+                <MarkdownContent
+                  content={message.content}
+                  enableInteractiveArtifacts={enableInteractiveArtifacts}
+                />
+              </div>
+              {/* Source Citations - only for assistant messages with sources */}
+              {message.role === "assistant" &&
+                message.sources &&
+                message.sources.length > 0 && (
+                  <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Sources:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {message.sources.map((source, index) => (
+                        <a
+                          key={index}
+                          href={source.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          <ExternalLink size={10} />
+                          {source.title}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              {/* AI-specific indicators for assistant messages */}
+              {message.role === "assistant" && (
+                <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3 flex-wrap">
+                  {/* Confidence indicator */}
+                  {message.confidence !== undefined && (
+                    <ConfidenceIndicator score={message.confidence} />
+                  )}
+
+                  {/* Hallucination report button */}
+                  {onReportHallucination && (
+                    <HallucinationIndicator
+                      messageId={message.id}
+                      onReport={onReportHallucination}
+                      isReported={message.isReported}
+                    />
+                  )}
+                </div>
+              )}
+
+              <p
+                className={`text-xs mt-1 ${
+                  message.role === "user" ? "text-blue-200" : "text-gray-400"
+                }`}
+              >
+                {new Date(message.timestamp).toLocaleTimeString()}
+              </p>
+            </div>
+            {/* Message Actions for user messages - appears on hover (after message) */}
+            {message.role === "user" &&
+              (onEditMessage || onRegenerateMessage || onDeleteMessage) && (
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity pt-3">
+                  <MessageActions
+                    messageId={message.id}
+                    content={message.content}
+                    role={message.role}
+                    onEdit={onEditMessage}
+                    onRegenerate={onRegenerateMessage}
+                    onDelete={onDeleteMessage}
+                    isRegenerating={isRegenerating}
+                  />
+                </div>
+              )}
           </div>
         </div>
       ))}

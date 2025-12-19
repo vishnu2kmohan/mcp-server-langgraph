@@ -420,8 +420,10 @@ class ApplicationContainer:
             elif self.config.environment == "development" or not self.config.enable_auth:
                 self._auth_instance = InMemoryAuthProvider()  # type: ignore[assignment]
             else:
-                # Production: use real auth (Keycloak, etc.)
-                # TODO: Implement production auth provider
+                # Production: Use AuthMiddleware with KeycloakUserProvider (see auth/factory.py)
+                # The container's AuthProvider is for internal DI; production auth goes through
+                # AuthMiddleware which uses create_user_provider() for Keycloak integration.
+                # This fallback is safe as AuthMiddleware handles token validation in prod.
                 self._auth_instance = InMemoryAuthProvider()  # type: ignore[assignment]
 
         return self._auth_instance

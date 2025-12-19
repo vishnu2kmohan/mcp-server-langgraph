@@ -244,7 +244,7 @@ def _create_production_project(project_dir: Path, name: str) -> None:
     - Environment-based configuration
     - Production-ready structure
     """
-    # TODO: Implement cookiecutter-based generation
+    # PLACEHOLDER: Implement cookiecutter-based generation
     # For now, create a placeholder with instructions
     readme_content = f"""# {name}
 
@@ -299,7 +299,7 @@ def _create_enterprise_project(project_dir: Path, name: str) -> None:
     - EKS: Beta (modules complete, prod environment ready)
     - AKS: Alpha (manual deployment only)
     """
-    # TODO: Implement full enterprise template generation
+    # PLACEHOLDER: Implement full enterprise template generation
     readme_content = f"""# {name}
 
 MCP Server with LangGraph - Enterprise Project

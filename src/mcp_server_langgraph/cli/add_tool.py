@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 class {class_name}Input(BaseModel):
     \"\"\"Input schema for {name} tool.\"\"\"
-    # TODO: Define input fields
+    # PLACEHOLDER: Define input fields
     input_text: str = Field(description="Input for the tool")
 
 
@@ -42,7 +42,7 @@ def {function_name}(input_data: {class_name}Input) -> {class_name}Output:
         >>> result = {function_name}({class_name}Input(input_text="test"))
         >>> print(result.result)
     \"\"\"
-    # TODO: Implement your tool logic here
+    # PLACEHOLDER: Implement your tool logic here
 
     try:
         # Your implementation here
@@ -135,7 +135,7 @@ def test_{function_name}_with_empty_input():
     result = {function_name}(input_data)
 
     assert isinstance(result, {class_name}Output)
-    # TODO: Add assertions for expected behavior
+    # PLACEHOLDER: Add assertions for expected behavior
 
 
 @pytest.mark.parametrize("test_input,expected_success", [

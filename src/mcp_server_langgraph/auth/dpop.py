@@ -39,6 +39,7 @@ import base64
 import hashlib
 import json
 import secrets
+from dataclasses import dataclass
 from datetime import datetime, UTC
 from typing import Any, cast
 
@@ -339,3 +340,187 @@ def create_dpop_bound_token(
     claims["cnf"] = {"jkt": jkt}
 
     return claims
+
+
+# ============================================================================
+# DPoP Enforcement (RFC 9449) - Extracted from AuthMiddleware
+# ============================================================================
+
+
+@dataclass
+class DPoPVerificationResult:
+    """
+    Result of DPoP verification.
+
+    Returned from DPoPEnforcer.verify() operations.
+    """
+
+    valid: bool
+    """Whether the DPoP verification passed."""
+
+    error: str | None
+    """Error message if verification failed, None otherwise."""
+
+    dpop_bound: bool = False
+    """Whether the token was DPoP-bound (had cnf.jkt claim)."""
+
+
+class DPoPEnforcer:
+    """
+    DPoP (RFC 9449) sender-constraint verification enforcer.
+
+    Extracted from AuthMiddleware to follow Single Responsibility Principle.
+    Handles DPoP proof verification and token binding validation.
+
+    Behavior (depends on self.required):
+    - If required=True: ALL tokens require DPoP proof (strict mode)
+    - If required=False (default):
+      - Tokens with cnf.jkt claim (DPoP-bound): DPoP proof is REQUIRED
+      - Tokens without cnf claim: DPoP proof is optional (verified if provided)
+
+    Usage:
+        enforcer = DPoPEnforcer(replay_cache=cache, required=False)
+        result = enforcer.verify(
+            token_payload={"sub": "user:alice", "cnf": {"jkt": "..."}},
+            dpop_proof=proof,
+            http_method="POST",
+            http_uri="https://api.example.com/resource",
+            access_token=token,
+        )
+        if not result.valid:
+            raise AuthenticationError(result.error)
+    """
+
+    def __init__(
+        self,
+        replay_cache: "DPoPReplayCache | None" = None,
+        required: bool = False,
+    ) -> None:
+        """
+        Initialize DPoPEnforcer.
+
+        Args:
+            replay_cache: DPoP jti replay cache for replay protection (RFC 9449)
+            required: If True, ALL tokens require DPoP proof (strict mode).
+                     If False (default), only tokens with cnf.jkt claim require DPoP.
+        """
+        self.replay_cache = replay_cache
+        self.required = required
+
+    def verify(
+        self,
+        token_payload: dict[str, Any],
+        dpop_proof: str | None,
+        http_method: str,
+        http_uri: str,
+        access_token: str,
+    ) -> DPoPVerificationResult:
+        """
+        Verify DPoP proof for a token.
+
+        Args:
+            token_payload: Decoded JWT payload (must include cnf claim if DPoP-bound)
+            dpop_proof: DPoP proof JWT from request header (may be None)
+            http_method: HTTP method of the request (GET, POST, etc.)
+            http_uri: Full HTTP URI of the request
+            access_token: The access token being verified (for ath claim)
+
+        Returns:
+            DPoPVerificationResult with validation result
+        """
+        # Check if token is DPoP-bound (has cnf.jkt claim)
+        cnf = token_payload.get("cnf")
+        is_dpop_bound = cnf is not None and "jkt" in cnf
+
+        # Check if DPoP is required (either by enforcement mode or token binding)
+        dpop_required_for_this_request = self.required or is_dpop_bound
+
+        if dpop_required_for_this_request and not dpop_proof:
+            # DPoP is required (by enforcement or token binding) but no proof provided
+            reason = "enforcement mode" if self.required else "sender-constrained token"
+            logger.warning(
+                f"DPoP proof required ({reason}) but not provided",
+                extra={
+                    "sub": token_payload.get("sub"),
+                    "dpop_required": self.required,
+                    "is_dpop_bound": is_dpop_bound,
+                },
+            )
+            return DPoPVerificationResult(
+                valid=False,
+                error=f"DPoP proof required ({reason})",
+                dpop_bound=is_dpop_bound,
+            )
+
+        if dpop_proof:
+            # Verify the DPoP proof
+            dpop_result = verify_dpop_proof(
+                proof=dpop_proof,
+                http_method=http_method,
+                http_uri=http_uri,
+                access_token=access_token if is_dpop_bound else None,
+                jti_cache=self.replay_cache,
+            )
+
+            if not dpop_result["valid"]:
+                logger.warning(
+                    "DPoP proof verification failed",
+                    extra={
+                        "error": dpop_result.get("error"),
+                        "sub": token_payload.get("sub"),
+                    },
+                )
+                return DPoPVerificationResult(
+                    valid=False,
+                    error=f"DPoP verification failed: {dpop_result.get('error', 'Unknown error')}",
+                    dpop_bound=is_dpop_bound,
+                )
+
+            # If token is DPoP-bound, verify the key thumbprint matches
+            if is_dpop_bound and cnf:
+                expected_jkt = cnf["jkt"]
+                proof_jwk = dpop_result.get("jwk")
+
+                if proof_jwk:
+                    # Calculate thumbprint of the proof's JWK
+                    canonical = json.dumps(
+                        {
+                            "crv": proof_jwk["crv"],
+                            "kty": proof_jwk["kty"],
+                            "x": proof_jwk["x"],
+                            "y": proof_jwk["y"],
+                        },
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                    thumbprint_bytes = hashlib.sha256(canonical.encode()).digest()
+                    actual_jkt = base64.urlsafe_b64encode(thumbprint_bytes).rstrip(b"=").decode()
+
+                    if actual_jkt != expected_jkt:
+                        logger.warning(
+                            "DPoP key thumbprint mismatch",
+                            extra={
+                                "expected": expected_jkt[:8] + "...",
+                                "actual": actual_jkt[:8] + "...",
+                                "sub": token_payload.get("sub"),
+                            },
+                        )
+                        return DPoPVerificationResult(
+                            valid=False,
+                            error="DPoP key thumbprint does not match token binding",
+                            dpop_bound=is_dpop_bound,
+                        )
+
+            logger.info(
+                "DPoP verification successful",
+                extra={
+                    "sub": token_payload.get("sub"),
+                    "dpop_bound": is_dpop_bound,
+                },
+            )
+
+        return DPoPVerificationResult(
+            valid=True,
+            error=None,
+            dpop_bound=is_dpop_bound,
+        )

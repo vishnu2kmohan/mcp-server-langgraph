@@ -5,12 +5,14 @@
  * model configuration, token usage, and available tools.
  */
 
-import { useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { Pencil, Check, X } from "lucide-react";
 import type { TabState } from "../../../store/slices/workspaceSlice";
 import type { ClientSession } from "../../../types/session";
 import type { MCPTool } from "../../../types/mcp";
 import { PropertySection } from "./PropertySection";
 import { PropertyRow } from "./PropertyRow";
+import { useUpdateSessionConfigMutation } from "../../../api";
 
 // =============================================================================
 // Types
@@ -47,6 +49,85 @@ export function ChatProperties({
   isSectionExpanded,
   onToggleSection,
 }: ChatPropertiesProps) {
+  // Model editing state
+  const [isEditingModel, setIsEditingModel] = useState(false);
+  const [editModelValue, setEditModelValue] = useState("");
+
+  // Temperature editing state
+  const [isEditingTemperature, setIsEditingTemperature] = useState(false);
+  const [editTemperatureValue, setEditTemperatureValue] = useState("");
+
+  // Max tokens editing state
+  const [isEditingMaxTokens, setIsEditingMaxTokens] = useState(false);
+  const [editMaxTokensValue, setEditMaxTokensValue] = useState("");
+
+  const [updateSessionConfig] = useUpdateSessionConfigMutation();
+
+  // Handle model edit
+  const handleEditModel = useCallback(() => {
+    setEditModelValue(session?.config?.modelName ?? "");
+    setIsEditingModel(true);
+  }, [session?.config?.modelName]);
+
+  const handleSaveModel = useCallback(async () => {
+    if (session?.id && editModelValue.trim()) {
+      await updateSessionConfig({
+        session_id: session.id,
+        model: editModelValue.trim(),
+      });
+    }
+    setIsEditingModel(false);
+  }, [session?.id, editModelValue, updateSessionConfig]);
+
+  const handleCancelModel = useCallback(() => {
+    setIsEditingModel(false);
+    setEditModelValue("");
+  }, []);
+
+  // Handle temperature edit
+  const handleEditTemperature = useCallback(() => {
+    setEditTemperatureValue(String(session?.config?.temperature ?? 0.7));
+    setIsEditingTemperature(true);
+  }, [session?.config?.temperature]);
+
+  const handleSaveTemperature = useCallback(async () => {
+    const value = parseFloat(editTemperatureValue);
+    if (session?.id && !isNaN(value) && value >= 0 && value <= 2) {
+      await updateSessionConfig({
+        session_id: session.id,
+        temperature: value,
+      });
+    }
+    setIsEditingTemperature(false);
+  }, [session?.id, editTemperatureValue, updateSessionConfig]);
+
+  const handleCancelTemperature = useCallback(() => {
+    setIsEditingTemperature(false);
+    setEditTemperatureValue("");
+  }, []);
+
+  // Handle max tokens edit
+  const handleEditMaxTokens = useCallback(() => {
+    setEditMaxTokensValue(String(session?.config?.maxTokens ?? 1000));
+    setIsEditingMaxTokens(true);
+  }, [session?.config?.maxTokens]);
+
+  const handleSaveMaxTokens = useCallback(async () => {
+    const value = parseInt(editMaxTokensValue, 10);
+    if (session?.id && !isNaN(value) && value >= 1) {
+      await updateSessionConfig({
+        session_id: session.id,
+        max_tokens: value,
+      });
+    }
+    setIsEditingMaxTokens(false);
+  }, [session?.id, editMaxTokensValue, updateSessionConfig]);
+
+  const handleCancelMaxTokens = useCallback(() => {
+    setIsEditingMaxTokens(false);
+    setEditMaxTokensValue("");
+  }, []);
+
   // Calculate total tokens from messages
   const tokenStats = useMemo(() => {
     if (!session?.messages) {
@@ -100,17 +181,168 @@ export function ChatProperties({
         onToggle={() => onToggleSection("model-info")}
       >
         <PropertyRow label="Provider" value={modelProvider} />
-        <PropertyRow label="Model" value={modelName} />
+        {isEditingModel ? (
+          <div className="flex items-center gap-1 text-xs">
+            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+              Model
+            </span>
+            <div className="flex items-center gap-1 ml-auto">
+              <input
+                data-testid="model-input"
+                type="text"
+                value={editModelValue}
+                onChange={(e) => setEditModelValue(e.target.value)}
+                className="w-24 px-1 py-0.5 text-xs border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                autoFocus
+              />
+              <button
+                data-testid="save-model-button"
+                type="button"
+                onClick={handleSaveModel}
+                className="p-0.5 text-green-600 hover:text-green-700 dark:text-green-400"
+                title="Save"
+              >
+                <Check size={12} />
+              </button>
+              <button
+                data-testid="cancel-model-button"
+                type="button"
+                onClick={handleCancelModel}
+                className="p-0.5 text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                title="Cancel"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <PropertyRow
+            label="Model"
+            value={modelName}
+            action={
+              session && (
+                <button
+                  data-testid="edit-model-button"
+                  type="button"
+                  onClick={handleEditModel}
+                  className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  title="Edit model"
+                >
+                  <Pencil size={10} />
+                </button>
+              )
+            }
+          />
+        )}
         {session?.config && (
           <>
-            <PropertyRow
-              label="Temperature"
-              value={session.config.temperature.toFixed(1)}
-            />
-            <PropertyRow
-              label="Max Tokens"
-              value={session.config.maxTokens.toLocaleString()}
-            />
+            {isEditingTemperature ? (
+              <div className="flex items-center gap-1 text-xs">
+                <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+                  Temperature
+                </span>
+                <div className="flex items-center gap-1 ml-auto">
+                  <input
+                    data-testid="temperature-input"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="2"
+                    value={editTemperatureValue}
+                    onChange={(e) => setEditTemperatureValue(e.target.value)}
+                    className="w-16 px-1 py-0.5 text-xs border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    autoFocus
+                  />
+                  <button
+                    data-testid="save-temperature-button"
+                    type="button"
+                    onClick={handleSaveTemperature}
+                    className="p-0.5 text-green-600 hover:text-green-700 dark:text-green-400"
+                    title="Save"
+                  >
+                    <Check size={12} />
+                  </button>
+                  <button
+                    data-testid="cancel-temperature-button"
+                    type="button"
+                    onClick={handleCancelTemperature}
+                    className="p-0.5 text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                    title="Cancel"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <PropertyRow
+                label="Temperature"
+                value={session.config.temperature.toFixed(1)}
+                action={
+                  <button
+                    data-testid="edit-temperature-button"
+                    type="button"
+                    onClick={handleEditTemperature}
+                    className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    title="Edit temperature"
+                  >
+                    <Pencil size={10} />
+                  </button>
+                }
+              />
+            )}
+            {isEditingMaxTokens ? (
+              <div className="flex items-center gap-1 text-xs">
+                <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+                  Max Tokens
+                </span>
+                <div className="flex items-center gap-1 ml-auto">
+                  <input
+                    data-testid="max-tokens-input"
+                    type="number"
+                    min="1"
+                    max="128000"
+                    value={editMaxTokensValue}
+                    onChange={(e) => setEditMaxTokensValue(e.target.value)}
+                    className="w-20 px-1 py-0.5 text-xs border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    autoFocus
+                  />
+                  <button
+                    data-testid="save-max-tokens-button"
+                    type="button"
+                    onClick={handleSaveMaxTokens}
+                    className="p-0.5 text-green-600 hover:text-green-700 dark:text-green-400"
+                    title="Save"
+                  >
+                    <Check size={12} />
+                  </button>
+                  <button
+                    data-testid="cancel-max-tokens-button"
+                    type="button"
+                    onClick={handleCancelMaxTokens}
+                    className="p-0.5 text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                    title="Cancel"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <PropertyRow
+                label="Max Tokens"
+                value={session.config.maxTokens.toLocaleString()}
+                action={
+                  <button
+                    data-testid="edit-max-tokens-button"
+                    type="button"
+                    onClick={handleEditMaxTokens}
+                    className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    title="Edit max tokens"
+                  >
+                    <Pencil size={10} />
+                  </button>
+                }
+              />
+            )}
           </>
         )}
       </PropertySection>

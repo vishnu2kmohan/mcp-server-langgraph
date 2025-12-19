@@ -50,6 +50,7 @@ class Task(BaseModel):
     status: TaskStatus
     progress: float = 0.0  # 0.0 to 1.0
     checkpoint_id: str | None = None  # Link to LangGraph checkpoint
+    user_id: str | None = None  # User who owns this task (multi-tenant isolation)
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=None))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=None))
     result: Any | None = None
@@ -68,6 +69,9 @@ class Task(BaseModel):
 
         if self.checkpoint_id is not None:
             response["checkpoint_id"] = self.checkpoint_id
+
+        if self.user_id is not None:
+            response["user_id"] = self.user_id
 
         if self.result is not None:
             response["result"] = self.result
@@ -93,12 +97,14 @@ class TaskHandler:
         self,
         operation: str,
         checkpoint_id: str | None = None,
+        user_id: str | None = None,
     ) -> Task:
         """Create a new task.
 
         Args:
             operation: Name of the operation being performed
             checkpoint_id: Optional LangGraph checkpoint ID
+            user_id: Optional user ID for multi-tenant isolation
 
         Returns:
             New Task in WORKING status
@@ -108,6 +114,7 @@ class TaskHandler:
             operation=operation,
             status=TaskStatus.WORKING,
             checkpoint_id=checkpoint_id,
+            user_id=user_id,
         )
         self._tasks[task.id] = task
         return task
@@ -219,13 +226,17 @@ class TaskHandler:
         """List all tasks, optionally filtered by user.
 
         Args:
-            user_id: Optional user ID to filter by (not implemented yet)
+            user_id: Optional user ID to filter by for multi-tenant isolation
 
         Returns:
-            List of tasks
+            List of tasks (filtered by user_id if provided)
         """
-        # TODO: Add user filtering when auth is integrated
-        return list(self._tasks.values())
+        if user_id is None:
+            # No filter - return all tasks (may be admin-only in future)
+            return list(self._tasks.values())
+
+        # Filter tasks by user_id for multi-tenant isolation
+        return [task for task in self._tasks.values() if task.user_id == user_id]
 
     def cleanup_completed(self, max_age_seconds: int = 3600) -> int:
         """Remove old completed/failed/cancelled tasks.

@@ -1046,6 +1046,8 @@ services:
       - TESTING=true
       - POSTGRES_HOST=postgres-test
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres-test:5432/mcp_test
+      - GDPR_POSTGRES_URL=postgresql://postgres:postgres@postgres-test:5432/gdpr_test
+      - GDPR_STORAGE_BACKEND=postgres
       - WORKFLOW_STORAGE_BACKEND=postgres
       # Keycloak URL for backend-to-Keycloak communication (Docker network)
       # Backend uses this for token exchange, introspection, admin API calls

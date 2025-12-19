@@ -14,6 +14,7 @@ import type {
   Workflow,
   WorkflowSummary,
   Session,
+  SessionConfigUpdateRequest,
   Message,
   FeatureFlags,
   CostSummary,
@@ -79,6 +80,9 @@ import type {
   // Feedback
   FeedbackRequest,
   FeedbackResponse,
+  // Message Rating
+  MessageRatingRequest,
+  MessageRatingResponse,
   // Admin User Management
   AdminUser,
   AdminUserListParams,
@@ -233,6 +237,11 @@ export const api = createApi({
     "AdminUser",
     "Execution",
     "NotificationPreferences",
+    "Survey",
+    "Analytics",
+    "ComplianceReport",
+    "ConnectionTemplate",
+    "ConnectionAudit",
   ],
   endpoints: (builder) => ({
     // Feature Flags
@@ -460,6 +469,18 @@ export const api = createApi({
         method: "POST",
         body,
       }),
+    }),
+
+    // Update session configuration (model, temperature, max_tokens)
+    updateSessionConfig: builder.mutation<Session, SessionConfigUpdateRequest>({
+      query: ({ session_id, ...body }) => ({
+        url: `/sessions/${session_id}/config`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { session_id }) => [
+        { type: "Session", id: session_id },
+      ],
     }),
 
     // Messages
@@ -909,7 +930,7 @@ export const api = createApi({
 
     startOAuth2Flow: builder.mutation<OAuth2StartResponse, string>({
       query: (id) => ({
-        url: `/connections/${id}/oauth2/start`,
+        url: `/connections/${id}/oauth/start`,
         method: "POST",
       }),
     }),
@@ -1247,6 +1268,24 @@ export const api = createApi({
       }),
     }),
 
+    // Message Rating (Thumbs Up/Down) - persisted to PostgreSQL
+    submitMessageRating: builder.mutation<
+      MessageRatingResponse,
+      MessageRatingRequest
+    >({
+      query: (body) => ({
+        url: `/sessions/${body.session_id}/messages/${body.message_id}/rating`,
+        method: "POST",
+        body: {
+          rating: body.rating,
+          feedback: body.feedback,
+        },
+      }),
+      invalidatesTags: (_result, _error, { session_id }) => [
+        { type: "Session", id: session_id },
+      ],
+    }),
+
     // Notification Preferences
     getNotificationPreferences: builder.query<NotificationPreferences, void>({
       query: () => "/notifications/preferences",
@@ -1275,6 +1314,519 @@ export const api = createApi({
       }),
       invalidatesTags: ["NotificationPreferences"],
     }),
+
+    // =========================================================================
+    // SUS Surveys
+    // =========================================================================
+
+    submitSusSurvey: builder.mutation<
+      { id: string; sus_score: number; recorded_at: string },
+      { responses: number[] }
+    >({
+      query: (body) => ({
+        url: "/surveys/sus",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Survey"],
+    }),
+
+    getSusSummary: builder.query<
+      {
+        timeframe: string;
+        avg_score: number | null;
+        response_count: number;
+        score_distribution: {
+          excellent: number;
+          good: number;
+          ok: number;
+          poor: number;
+        };
+      },
+      { timeframe?: string }
+    >({
+      query: (params) => ({
+        url: "/surveys/sus/summary",
+        params: filterParams(params || { timeframe: "30d" }),
+      }),
+      providesTags: ["Survey"],
+    }),
+
+    // =========================================================================
+    // HEART Analytics
+    // =========================================================================
+
+    trackHappinessMetric: builder.mutation<
+      { id: string; recorded_at: string },
+      {
+        nps_score?: number;
+        csat_score?: number;
+        feedback?: string;
+        context?: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/analytics/heart/happiness",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Analytics"],
+    }),
+
+    trackEngagementMetric: builder.mutation<
+      { id: string; recorded_at: string },
+      {
+        session_id: string;
+        duration_seconds: number;
+        features_used?: string[];
+      }
+    >({
+      query: (body) => ({
+        url: "/analytics/heart/engagement",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Analytics"],
+    }),
+
+    trackAdoptionMetric: builder.mutation<
+      { id: string; recorded_at: string },
+      { step: string; step_index: number; completed: boolean }
+    >({
+      query: (body) => ({
+        url: "/analytics/heart/adoption",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Analytics"],
+    }),
+
+    trackRetentionMetric: builder.mutation<
+      { id: string; recorded_at: string },
+      { days_since_last_visit: number; return_visit: boolean }
+    >({
+      query: (body) => ({
+        url: "/analytics/heart/retention",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Analytics"],
+    }),
+
+    trackTaskSuccessMetric: builder.mutation<
+      { id: string; recorded_at: string },
+      {
+        task_id: string;
+        success: boolean;
+        duration_seconds: number;
+        error_count?: number;
+        error_message?: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/analytics/heart/task-success",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Analytics"],
+    }),
+
+    getHeartAnalytics: builder.query<
+      {
+        timeframe: string;
+        persona: string | null;
+        happiness: {
+          nps_score_avg: number | null;
+          csat_score_avg: number | null;
+          response_count: number;
+        };
+        engagement: {
+          avg_session_duration_seconds: number;
+          sessions_per_user: number;
+          active_users: number;
+        };
+        adoption: {
+          onboarding_completion_rate: number;
+          feature_adoption: Record<string, number>;
+        };
+        retention: { d7_retention: number; d30_retention: number };
+        task_success: {
+          overall_success_rate: number;
+          avg_task_duration_seconds: number;
+        };
+      },
+      { timeframe?: string; persona?: string }
+    >({
+      query: (params) => ({
+        url: "/analytics/heart",
+        params: filterParams(params || {}),
+      }),
+      providesTags: ["Analytics"],
+    }),
+
+    // =========================================================================
+    // Compliance Reports
+    // =========================================================================
+
+    getGdprReport: builder.query<
+      Record<string, unknown>,
+      { start_time: string; end_time: string }
+    >({
+      query: (params) => ({
+        url: "/compliance/reports/gdpr",
+        params,
+      }),
+      providesTags: ["ComplianceReport"],
+    }),
+
+    getHipaaReport: builder.query<
+      Record<string, unknown>,
+      { start_time: string; end_time: string }
+    >({
+      query: (params) => ({
+        url: "/compliance/reports/hipaa",
+        params,
+      }),
+      providesTags: ["ComplianceReport"],
+    }),
+
+    getSoc2Report: builder.query<
+      Record<string, unknown>,
+      { start_time: string; end_time: string }
+    >({
+      query: (params) => ({
+        url: "/compliance/reports/soc2",
+        params,
+      }),
+      providesTags: ["ComplianceReport"],
+    }),
+
+    getFedrampReport: builder.query<
+      Record<string, unknown>,
+      { start_time: string; end_time: string }
+    >({
+      query: (params) => ({
+        url: "/compliance/reports/fedramp",
+        params,
+      }),
+      providesTags: ["ComplianceReport"],
+    }),
+
+    getEuAiActReport: builder.query<
+      Record<string, unknown>,
+      { start_time: string; end_time: string }
+    >({
+      query: (params) => ({
+        url: "/compliance/reports/eu-ai-act",
+        params,
+      }),
+      providesTags: ["ComplianceReport"],
+    }),
+
+    getComplianceSummary: builder.query<
+      Record<string, unknown>,
+      { start_time: string; end_time: string }
+    >({
+      query: (params) => ({
+        url: "/compliance/reports/summary",
+        params,
+      }),
+      providesTags: ["ComplianceReport"],
+    }),
+
+    // =========================================================================
+    // Connection Templates
+    // =========================================================================
+
+    listTemplateCategories: builder.query<
+      {
+        categories: Array<{
+          id: string;
+          name: string;
+          description: string;
+        }>;
+      },
+      void
+    >({
+      query: () => "/connection-templates/categories",
+      providesTags: ["ConnectionTemplate"],
+    }),
+
+    listConnectionTemplates: builder.query<
+      {
+        templates: Array<{
+          id: string;
+          name: string;
+          description: string;
+          icon: string;
+          auth_type: "none" | "api_key" | "oauth2";
+          default_url: string;
+          category: string;
+          oauth2_scopes: string[];
+          config_fields: Array<{
+            name: string;
+            label: string;
+            type: "text" | "password" | "url" | "textarea";
+            required: boolean;
+            placeholder?: string;
+            description?: string;
+            default?: string;
+          }>;
+        }>;
+      },
+      { category?: string; auth_type?: string; search?: string }
+    >({
+      query: (params) => ({
+        url: "/connection-templates",
+        params: filterParams(params || {}),
+      }),
+      providesTags: ["ConnectionTemplate"],
+    }),
+
+    getConnectionTemplate: builder.query<
+      {
+        id: string;
+        name: string;
+        description: string;
+        icon: string;
+        auth_type: "none" | "api_key" | "oauth2";
+        default_url: string;
+        category: string;
+        oauth2_scopes: string[];
+        config_fields: Array<{
+          name: string;
+          label: string;
+          type: "text" | "password" | "url" | "textarea";
+          required: boolean;
+          placeholder?: string;
+          description?: string;
+          default?: string;
+        }>;
+      },
+      string
+    >({
+      query: (templateId) => `/connection-templates/${templateId}`,
+      providesTags: (_result, _error, templateId) => [
+        { type: "ConnectionTemplate", id: templateId },
+      ],
+    }),
+
+    applyConnectionTemplate: builder.mutation<
+      {
+        connection: {
+          name: string;
+          description: string | null;
+          url: string;
+          auth_type: "none" | "api_key" | "oauth2";
+          oauth2_client_id: string | null;
+          oauth2_scopes: string[] | null;
+        };
+      },
+      {
+        templateId: string;
+        name: string;
+        description?: string;
+        oauth2_client_id?: string;
+        oauth2_scopes?: string[];
+        api_key?: string;
+        url?: string;
+        project_id?: string;
+      }
+    >({
+      query: ({ templateId, ...body }) => ({
+        url: `/connection-templates/${templateId}/apply`,
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // =========================================================================
+    // Connection Audit
+    // =========================================================================
+
+    logConnectionAuditEvent: builder.mutation<
+      {
+        id: string;
+        event_type: string;
+        resource_type: string;
+        resource_id: string;
+        actor_id: string;
+        action: string;
+        details: Record<string, unknown>;
+        ip_address: string | null;
+        user_agent: string | null;
+        timestamp: string;
+      },
+      {
+        event_type: string;
+        resource_type: string;
+        resource_id: string;
+        actor_id: string;
+        action: string;
+        details?: Record<string, unknown>;
+      }
+    >({
+      query: (body) => ({
+        url: "/connections/audit/log",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["ConnectionAudit"],
+    }),
+
+    queryConnectionAuditLogs: builder.query<
+      {
+        logs: Array<{
+          id: string;
+          event_type: string;
+          resource_type: string;
+          resource_id: string;
+          actor_id: string;
+          action: string;
+          details: Record<string, unknown>;
+          ip_address: string | null;
+          user_agent: string | null;
+          timestamp: string;
+        }>;
+        total: number;
+        limit: number;
+        offset: number;
+      },
+      {
+        resource_type?: string;
+        resource_id?: string;
+        actor_id?: string;
+        event_type?: string;
+        start_time?: string;
+        end_time?: string;
+        limit?: number;
+        offset?: number;
+      }
+    >({
+      query: (params) => ({
+        url: "/connections/audit/logs",
+        params: filterParams(params || {}),
+      }),
+      providesTags: ["ConnectionAudit"],
+    }),
+
+    getConnectionAuditLog: builder.query<
+      {
+        logs: Array<{
+          id: string;
+          event_type: string;
+          resource_type: string;
+          resource_id: string;
+          actor_id: string;
+          action: string;
+          details: Record<string, unknown>;
+          ip_address: string | null;
+          user_agent: string | null;
+          timestamp: string;
+        }>;
+        total: number;
+        limit: number;
+        offset: number;
+      },
+      { connectionId: string; limit?: number }
+    >({
+      query: ({ connectionId, limit }) => ({
+        url: `/connections/${connectionId}/audit`,
+        params: limit ? { limit } : undefined,
+      }),
+      providesTags: (_result, _error, { connectionId }) => [
+        { type: "ConnectionAudit", id: connectionId },
+      ],
+    }),
+
+    deleteOldAuditLogs: builder.mutation<
+      { deleted_count: number; retention_days: number },
+      { days?: number }
+    >({
+      query: (params) => ({
+        url: "/connections/audit/retention",
+        method: "DELETE",
+        params: params.days ? { days: params.days } : undefined,
+      }),
+      invalidatesTags: ["ConnectionAudit"],
+    }),
+
+    exportConnectionAuditLogs: builder.query<
+      Blob,
+      {
+        format?: "json" | "csv";
+        resource_type?: string;
+        resource_id?: string;
+        actor_id?: string;
+        event_type?: string;
+        start_time?: string;
+        end_time?: string;
+      }
+    >({
+      query: (params) => ({
+        url: "/connections/audit/export",
+        params: filterParams(params || {}),
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+
+    // =========================================================================
+    // Connections Bulk Operations
+    // =========================================================================
+
+    bulkDeleteConnections: builder.mutation<
+      { deleted_count: number; failed_ids: string[] },
+      { connection_ids: string[] }
+    >({
+      query: (body) => ({
+        url: "/connections/bulk/delete",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Connection"],
+    }),
+
+    bulkTestConnections: builder.mutation<
+      {
+        results: Array<{
+          connection_id: string;
+          success: boolean;
+          server_name: string | null;
+          server_version: string | null;
+          tool_count: number;
+          error: string | null;
+        }>;
+        not_found: string[];
+      },
+      { connection_ids: string[] }
+    >({
+      query: (body) => ({
+        url: "/connections/bulk/test",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Connection"],
+    }),
+
+    bulkUpdateConnectionStatus: builder.mutation<
+      { updated_count: number; failed_ids: string[] },
+      {
+        connection_ids: string[];
+        status:
+          | "disconnected"
+          | "connecting"
+          | "connected"
+          | "error"
+          | "auth_required";
+      }
+    >({
+      query: (body) => ({
+        url: "/connections/bulk/status",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Connection"],
+    }),
   }),
 });
 
@@ -1301,6 +1853,7 @@ export const {
   useCreateSessionMutation,
   useDeleteSessionMutation,
   useGenerateSessionTitleMutation,
+  useUpdateSessionConfigMutation,
   // Messages
   useGetSessionMessagesQuery,
   // Chat
@@ -1382,8 +1935,42 @@ export const {
   useGetIdentityProvidersQuery,
   // Feedback
   useSubmitFeedbackMutation,
+  // Message Rating
+  useSubmitMessageRatingMutation,
   // Notification Preferences
   useGetNotificationPreferencesQuery,
   useUpdateNotificationPreferencesMutation,
   useResetNotificationPreferencesMutation,
+  // SUS Surveys
+  useSubmitSusSurveyMutation,
+  useGetSusSummaryQuery,
+  // HEART Analytics
+  useTrackHappinessMetricMutation,
+  useTrackEngagementMetricMutation,
+  useTrackAdoptionMetricMutation,
+  useTrackRetentionMetricMutation,
+  useTrackTaskSuccessMetricMutation,
+  useGetHeartAnalyticsQuery,
+  // Compliance Reports
+  useGetGdprReportQuery,
+  useGetHipaaReportQuery,
+  useGetSoc2ReportQuery,
+  useGetFedrampReportQuery,
+  useGetEuAiActReportQuery,
+  useGetComplianceSummaryQuery,
+  // Connection Templates
+  useListTemplateCategoriesQuery,
+  useListConnectionTemplatesQuery,
+  useGetConnectionTemplateQuery,
+  useApplyConnectionTemplateMutation,
+  // Connection Audit
+  useLogConnectionAuditEventMutation,
+  useQueryConnectionAuditLogsQuery,
+  useGetConnectionAuditLogQuery,
+  useDeleteOldAuditLogsMutation,
+  useExportConnectionAuditLogsQuery,
+  // Connections Bulk Operations
+  useBulkDeleteConnectionsMutation,
+  useBulkTestConnectionsMutation,
+  useBulkUpdateConnectionStatusMutation,
 } = api;

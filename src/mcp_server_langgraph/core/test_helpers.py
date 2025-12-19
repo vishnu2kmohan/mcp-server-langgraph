@@ -141,7 +141,8 @@ def create_test_server(container: ApplicationContainer | None = None) -> Any:
         container = create_test_container()
 
     # For now, return a mock server
-    # TODO: When we refactor server to use container, this will create a real test server
+    # FUTURE: When server is refactored to use container, this will create a real test server
+    #         See: GitHub issue for server-container integration roadmap
     mock_server = MagicMock()
     mock_server.server = MagicMock()
     mock_server.auth = container.get_auth()

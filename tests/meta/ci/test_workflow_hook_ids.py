@@ -153,10 +153,11 @@ class TestWorkflowHookIds:
         covered = all_ci_hooks & pre_push_hooks
         coverage = len(covered) / len(pre_push_hooks) * 100 if pre_push_hooks else 0
 
-        # We expect at least 76% coverage (current baseline)
+        # We expect at least 75% coverage (current baseline)
         # Note: Some pre-push hooks are intentionally local-only (e.g., mypy, frontend-typecheck,
-        # actionlint-workflow-validation, docker-build-smoke-test, validate-grafana-dashboards)
-        min_coverage = 76
+        # actionlint-workflow-validation, docker-build-smoke-test, validate-grafana-dashboards,
+        # frontend-build, frontend-test, python-version-smoke-test, validate-helm-chart-deps)
+        min_coverage = 75
         if coverage < min_coverage:
             missing = pre_push_hooks - all_ci_hooks
             pytest.fail(

@@ -73,6 +73,7 @@ export interface WorkspaceState {
   leftSidebarCollapsed: boolean;
   rightSidebarWidth: number;
   rightSidebarCollapsed: boolean;
+  rightSidebarPinned: boolean;
   bottomPanelHeight: number;
   bottomPanelCollapsed: boolean;
 
@@ -128,6 +129,7 @@ export const DEFAULT_WORKSPACE_STATE: WorkspaceState = {
   leftSidebarCollapsed: false,
   rightSidebarWidth: 280,
   rightSidebarCollapsed: false,
+  rightSidebarPinned: false,
   bottomPanelHeight: 200,
   bottomPanelCollapsed: true,
   activeActivityId: "conversations",
@@ -365,6 +367,10 @@ export const workspaceSlice = createSlice({
     },
     setRightSidebarCollapsed: (state, action: PayloadAction<boolean>) => {
       state.rightSidebarCollapsed = action.payload;
+      state.lastUpdated = Date.now();
+    },
+    setRightSidebarPinned: (state, action: PayloadAction<boolean>) => {
+      state.rightSidebarPinned = action.payload;
       state.lastUpdated = Date.now();
     },
 
@@ -826,6 +832,7 @@ export const {
   setLeftSidebarCollapsed,
   setRightSidebarWidth,
   setRightSidebarCollapsed,
+  setRightSidebarPinned,
   setBottomPanelHeight,
   setBottomPanelCollapsed,
   setBottomPanelActiveTab,
@@ -868,6 +875,9 @@ export const selectRightSidebarWidth = (state: RootState) =>
 
 export const selectRightSidebarCollapsed = (state: RootState) =>
   state.workspace.rightSidebarCollapsed;
+
+export const selectRightSidebarPinned = (state: RootState) =>
+  state.workspace.rightSidebarPinned;
 
 export const selectBottomPanelHeight = (state: RootState) =>
   state.workspace.bottomPanelHeight;

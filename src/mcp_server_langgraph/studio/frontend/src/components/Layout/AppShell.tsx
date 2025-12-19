@@ -23,18 +23,12 @@ import {
   PanelResizeHandle,
   type ImperativePanelHandle,
 } from "react-resizable-panels";
-import {
-  Maximize2,
-  Minimize2,
-  Menu,
-  X,
-  PanelRight,
-  PanelBottom,
-} from "lucide-react";
+import { Menu, X, PanelRight, PanelBottom } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   selectLeftSidebarCollapsed,
   selectRightSidebarCollapsed,
+  selectRightSidebarPinned,
   selectBottomPanelCollapsed,
   selectFocusMode,
   setLeftSidebarCollapsed,
@@ -89,17 +83,19 @@ export function AppShell({
   // Selectors
   const leftCollapsed = useAppSelector(selectLeftSidebarCollapsed);
   const rightCollapsed = useAppSelector(selectRightSidebarCollapsed);
+  const rightPinned = useAppSelector(selectRightSidebarPinned);
   const bottomCollapsed = useAppSelector(selectBottomPanelCollapsed);
   const focusMode = useAppSelector(selectFocusMode);
 
   // Sync right panel collapse state with redux
+  // Pinned panels stay visible even in focus mode
   useEffect(() => {
-    if (rightCollapsed || focusMode) {
+    if (rightCollapsed || (focusMode && !rightPinned)) {
       rightPanelRef.current?.collapse();
     } else {
       rightPanelRef.current?.expand();
     }
-  }, [rightCollapsed, focusMode]);
+  }, [rightCollapsed, focusMode, rightPinned]);
 
   // Sync bottom panel collapse state with redux
   useEffect(() => {
@@ -113,6 +109,17 @@ export function AppShell({
   // Keyboard shortcuts
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      // Cmd/Ctrl+Shift+F: Toggle focus mode
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        event.shiftKey &&
+        event.key.toLowerCase() === "f"
+      ) {
+        event.preventDefault();
+        dispatch(setFocusMode(!focusMode));
+        return;
+      }
+
       // Cmd/Ctrl+B: Toggle right sidebar (left sidebar is always visible)
       if ((event.metaKey || event.ctrlKey) && event.key === "b") {
         event.preventDefault();
@@ -142,11 +149,6 @@ export function AppShell({
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
-
-  // Focus mode toggle handler
-  const handleToggleFocusMode = useCallback(() => {
-    dispatch(setFocusMode(!focusMode));
-  }, [dispatch, focusMode]);
 
   // Mobile menu toggle handler
   const handleToggleMobileMenu = useCallback(() => {
@@ -190,10 +192,24 @@ export function AppShell({
     [dispatch],
   );
 
+  // Double-click handlers for resize handles to collapse/expand panels
+  const handleLeftResizeDoubleClick = useCallback(() => {
+    dispatch(setLeftSidebarCollapsed(!leftCollapsed));
+  }, [dispatch, leftCollapsed]);
+
+  const handleRightResizeDoubleClick = useCallback(() => {
+    dispatch(setRightSidebarCollapsed(!rightCollapsed));
+  }, [dispatch, rightCollapsed]);
+
+  const handleBottomResizeDoubleClick = useCallback(() => {
+    dispatch(setBottomPanelCollapsed(!bottomCollapsed));
+  }, [dispatch, bottomCollapsed]);
+
   // Calculate visibility
   // Left sidebar is always visible on desktop (only collapsed state affects mobile)
   const showLeftSidebar = true; // Always visible on desktop
-  const showRightSidebar = !focusMode && !rightCollapsed;
+  // Right sidebar: visible if not collapsed AND (not in focus mode OR pinned)
+  const showRightSidebar = !rightCollapsed && (!focusMode || rightPinned);
   const showBottomPanel = !focusMode && !bottomCollapsed;
 
   return (
@@ -337,9 +353,11 @@ export function AppShell({
           </div>
         </Panel>
 
-        {/* Left Resize Handle - Touch-friendly */}
+        {/* Left Resize Handle - Touch-friendly with double-click collapse */}
         {showLeftSidebar && (
           <PanelResizeHandle
+            onDoubleClick={handleLeftResizeDoubleClick}
+            title="Drag to resize, double-click to collapse"
             className={cn(
               // Base styling
               "w-1 bg-gray-200 dark:bg-gray-700",
@@ -367,15 +385,29 @@ export function AppShell({
               <main
                 role="main"
                 data-testid="main-content-area"
-                className="h-full overflow-auto bg-white dark:bg-gray-900"
+                className={cn(
+                  "h-full overflow-auto bg-white dark:bg-gray-900",
+                  // Focus Mode: Center content with max-width for readability
+                  focusMode && "flex justify-center",
+                )}
               >
-                {children}
+                <div
+                  className={cn(
+                    "w-full h-full",
+                    // In focus mode, constrain width and add padding for centered, readable content
+                    focusMode && "max-w-4xl px-4 lg:px-8",
+                  )}
+                >
+                  {children}
+                </div>
               </main>
             </Panel>
 
-            {/* Bottom Resize Handle - Touch-friendly */}
+            {/* Bottom Resize Handle - Touch-friendly with double-click collapse */}
             {showBottomPanel && (
               <PanelResizeHandle
+                onDoubleClick={handleBottomResizeDoubleClick}
+                title="Drag to resize, double-click to collapse"
                 className={cn(
                   // Base styling
                   "h-1 bg-gray-200 dark:bg-gray-700",
@@ -424,9 +456,11 @@ export function AppShell({
           </PanelGroup>
         </Panel>
 
-        {/* Right Resize Handle - Touch-friendly */}
+        {/* Right Resize Handle - Touch-friendly with double-click collapse */}
         {showRightSidebar && (
           <PanelResizeHandle
+            onDoubleClick={handleRightResizeDoubleClick}
+            title="Drag to resize, double-click to collapse"
             className={cn(
               // Base styling
               "w-1 bg-gray-200 dark:bg-gray-700",
@@ -475,26 +509,8 @@ export function AppShell({
         </Panel>
       </PanelGroup>
 
-      {/* Status Bar with Focus Mode Toggle */}
-      <div className="relative flex-shrink-0">
-        <StatusBar />
-        {/* Focus Mode Toggle Button */}
-        <button
-          type="button"
-          aria-label="Focus mode"
-          onClick={handleToggleFocusMode}
-          className={cn(
-            "absolute right-2 top-1/2 -translate-y-1/2",
-            "p-1 rounded",
-            "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300",
-            "hover:bg-gray-200 dark:hover:bg-gray-700",
-            "focus:outline-none focus:ring-2 focus:ring-primary-500",
-            "transition-colors",
-          )}
-        >
-          {focusMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-        </button>
-      </div>
+      {/* Status Bar */}
+      <StatusBar className="flex-shrink-0" />
     </div>
   );
 }

@@ -1042,3 +1042,140 @@ def test_get_cost_collector_returns_singleton():
     collector2 = get_cost_collector()
 
     assert collector1 is collector2
+
+
+# ==============================================================================
+# Test Time Period Filtering
+# ==============================================================================
+
+
+@pytest.mark.xdist_group(name="cost_tracker_time")
+class TestTimePeriodFiltering:
+    """Tests for time period filtering in cost records."""
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_filter_by_day_returns_last_24_hours(self) -> None:
+        """
+        GIVEN records from different time periods
+        WHEN get_records is called with period="day"
+        THEN only records from the last 24 hours are returned
+        """
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
+        collector = CostMetricsCollector()
+
+        # Create records from different times
+        now = datetime.now(UTC)
+        yesterday = now - timedelta(days=1, hours=1)  # Just over 24 hours ago
+        last_hour = now - timedelta(hours=1)
+
+        await collector.record_usage(
+            timestamp=yesterday,
+            user_id="user1",
+            session_id="sess1",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=100,
+            completion_tokens=50,
+        )
+
+        await collector.record_usage(
+            timestamp=last_hour,
+            user_id="user1",
+            session_id="sess2",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=200,
+            completion_tokens=100,
+        )
+
+        # Filter by day
+        records = await collector.get_records(period="day")
+
+        # Only the record from last_hour should be returned
+        assert len(records) == 1
+        assert records[0].session_id == "sess2"
+
+    @pytest.mark.asyncio
+    async def test_filter_by_week_returns_last_7_days(self) -> None:
+        """
+        GIVEN records from different time periods
+        WHEN get_records is called with period="week"
+        THEN only records from the last 7 days are returned
+        """
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
+        collector = CostMetricsCollector()
+
+        now = datetime.now(UTC)
+        eight_days_ago = now - timedelta(days=8)
+        three_days_ago = now - timedelta(days=3)
+
+        await collector.record_usage(
+            timestamp=eight_days_ago,
+            user_id="user1",
+            session_id="old_session",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=100,
+            completion_tokens=50,
+        )
+
+        await collector.record_usage(
+            timestamp=three_days_ago,
+            user_id="user1",
+            session_id="recent_session",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=200,
+            completion_tokens=100,
+        )
+
+        records = await collector.get_records(period="week")
+
+        assert len(records) == 1
+        assert records[0].session_id == "recent_session"
+
+    @pytest.mark.asyncio
+    async def test_filter_by_month_returns_last_30_days(self) -> None:
+        """
+        GIVEN records from different time periods
+        WHEN get_records is called with period="month"
+        THEN only records from the last 30 days are returned
+        """
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
+        collector = CostMetricsCollector()
+
+        now = datetime.now(UTC)
+        forty_days_ago = now - timedelta(days=40)
+        ten_days_ago = now - timedelta(days=10)
+
+        await collector.record_usage(
+            timestamp=forty_days_ago,
+            user_id="user1",
+            session_id="very_old",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=100,
+            completion_tokens=50,
+        )
+
+        await collector.record_usage(
+            timestamp=ten_days_ago,
+            user_id="user1",
+            session_id="within_month",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=200,
+            completion_tokens=100,
+        )
+
+        records = await collector.get_records(period="month")
+
+        assert len(records) == 1
+        assert records[0].session_id == "within_month"

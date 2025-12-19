@@ -54,6 +54,7 @@ from mcp_server_langgraph.api.pagination import (
 from mcp_server_langgraph.storage.session import (
     PostgresSessionManager,
     RedisSessionManager,
+    SessionConfig,
 )
 
 logger = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ def _get_user_id(current_user: dict[str, Any]) -> str:
     Raises:
         HTTPException: 401 Unauthorized if no user identifier is found
     """
-    user_id = current_user.get("sub") or current_user.get("user_id") or current_user.get("preferred_username")
+    user_id: str | None = current_user.get("sub") or current_user.get("user_id") or current_user.get("preferred_username")
 
     if not user_id:
         logger.warning(
@@ -88,6 +89,7 @@ def _get_user_id(current_user: dict[str, Any]) -> str:
             detail="User identifier not found in authentication context",
         )
 
+    # Type narrowing: we've confirmed user_id is not None/empty above
     return user_id
 
 
@@ -126,12 +128,33 @@ class SessionCreateRequest(BaseModel):
         return self.name or self.title
 
 
+class SessionConfigResponse(BaseModel):
+    """Response model for session configuration."""
+
+    model: str = Field(default="gpt-4o-mini", description="LLM model to use")
+    temperature: float = Field(default=0.7, description="Sampling temperature")
+    max_tokens: int = Field(default=1000, description="Max tokens per response")
+
+
+class SessionConfigUpdateRequest(BaseModel):
+    """Request body for updating session configuration.
+
+    All fields are optional to support partial updates.
+    Only provided fields will be updated.
+    """
+
+    model: str | None = Field(default=None, description="LLM model to use")
+    temperature: float | None = Field(default=None, ge=0.0, le=2.0, description="Sampling temperature")
+    max_tokens: int | None = Field(default=None, ge=1, le=128000, description="Max tokens per response")
+
+
 class SessionResponse(BaseModel):
     """Response model for a session."""
 
     id: str = Field(description="Session ID")
     name: str | None = Field(default=None, description="Session name")
     workflow_id: str | None = Field(default=None, description="Associated workflow ID")
+    config: SessionConfigResponse | None = Field(default=None, description="Session LLM configuration")
     messages: list[dict[str, Any]] = Field(default_factory=list, description="Session messages")
     created_at: str | None = Field(default=None, description="Creation timestamp")
     updated_at: str | None = Field(default=None, description="Last update timestamp")
@@ -200,6 +223,11 @@ class SessionService(ABC):
     @abstractmethod
     async def clear_messages(self, session_id: str) -> bool:
         """Clear all messages in a session. Returns True if cleared, False if session not found."""
+        ...
+
+    @abstractmethod
+    async def update_config(self, session_id: str, user_id: str, config_update: dict[str, Any]) -> dict[str, Any] | None:
+        """Update session configuration. Returns updated session or None if not found/owned."""
         ...
 
 
@@ -278,11 +306,20 @@ class InMemorySessionService(SessionService):
         # Support both 'title' (legacy) and 'name' (new) input
         name = session_data.get("name") or session_data.get("title")
 
+        # Extract config from request or use defaults
+        config_data = session_data.get("config", {})
+        config = {
+            "model": config_data.get("model", "gpt-4o-mini"),
+            "temperature": config_data.get("temperature", 0.7),
+            "max_tokens": config_data.get("max_tokens", 1000),
+        }
+
         session: dict[str, Any] = {
             "id": session_id,
             "name": name,
             "user_id": user_id,  # SECURITY: Track ownership
             "workflow_id": session_data.get("workflow_id"),
+            "config": config,
             "messages": [],
             "created_at": now,
             "updated_at": now,
@@ -300,6 +337,32 @@ class InMemorySessionService(SessionService):
             return False
         del self._sessions[session_id]
         return True
+
+    async def update_config(self, session_id: str, user_id: str, config_update: dict[str, Any]) -> dict[str, Any] | None:
+        """Update session configuration. Only owner can update.
+
+        Args:
+            session_id: Session ID to update
+            user_id: User ID making the request (for ownership check)
+            config_update: Partial config update (only non-None fields are applied)
+
+        Returns:
+            Updated session dict, or None if session not found or not owned
+        """
+        session = self._sessions.get(session_id)
+        # SECURITY: Verify ownership before update
+        if session is None or session.get("user_id") != user_id:
+            return None
+
+        # Apply partial update to config
+        current_config = session.get("config", {})
+        for key, value in config_update.items():
+            if value is not None:
+                current_config[key] = value
+
+        session["config"] = current_config
+        session["updated_at"] = datetime.now(UTC).isoformat()
+        return session
 
     async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
         """Get all messages in a session."""
@@ -436,6 +499,13 @@ class RedisSessionService(SessionService):
             "name": session.name,
             "user_id": session.user_id,
             "workflow_id": None,
+            "config": {
+                "model": session.config.model,
+                "temperature": session.config.temperature,
+                "max_tokens": session.config.max_tokens,
+            }
+            if session.config
+            else None,
             "messages": [
                 {
                     "message_id": m.message_id,
@@ -465,6 +535,13 @@ class RedisSessionService(SessionService):
             "name": session.name,
             "user_id": session.user_id,
             "workflow_id": session_data.get("workflow_id"),
+            "config": {
+                "model": session.config.model,
+                "temperature": session.config.temperature,
+                "max_tokens": session.config.max_tokens,
+            }
+            if session.config
+            else None,
             "messages": [],
             "created_at": session.created_at.isoformat(),
             "updated_at": session.updated_at.isoformat(),
@@ -516,6 +593,57 @@ class RedisSessionService(SessionService):
     async def clear_messages(self, session_id: str) -> bool:
         """Clear all messages in a session."""
         return await self._manager.clear_messages(session_id)
+
+    async def update_config(self, session_id: str, user_id: str, config_update: dict[str, Any]) -> dict[str, Any] | None:
+        """Update session configuration with persistence.
+
+        Updates config fields and persists to Redis via manager.update_session.
+        """
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return None
+
+        # Build updated config by merging with existing
+        current_config = session.config or SessionConfig()
+        new_config = SessionConfig(
+            model=config_update.get("model", current_config.model),
+            temperature=config_update.get("temperature", current_config.temperature),
+            max_tokens=config_update.get("max_tokens", current_config.max_tokens),
+        )
+
+        # Persist via manager
+        updated_session = await self._manager.update_session(
+            session_id=session_id,
+            config=new_config,
+        )
+
+        if updated_session is None:
+            return None
+
+        # Return updated session as dict
+        return {
+            "id": updated_session.session_id,
+            "name": updated_session.name,
+            "user_id": updated_session.user_id,
+            "workflow_id": None,
+            "config": {
+                "model": updated_session.config.model if updated_session.config else "gpt-4o-mini",
+                "temperature": updated_session.config.temperature if updated_session.config else 0.7,
+                "max_tokens": updated_session.config.max_tokens if updated_session.config else 1000,
+            },
+            "messages": [
+                {
+                    "message_id": m.message_id,
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.timestamp.isoformat(),
+                }
+                for m in updated_session.messages
+            ],
+            "created_at": updated_session.created_at.isoformat() if updated_session.created_at else None,
+            "updated_at": updated_session.updated_at.isoformat() if updated_session.updated_at else None,
+            "status": SessionStatus.active,
+        }
 
 
 class PostgresSessionService(SessionService):
@@ -598,6 +726,13 @@ class PostgresSessionService(SessionService):
             "name": session.name,
             "user_id": session.user_id,
             "workflow_id": None,
+            "config": {
+                "model": session.config.model,
+                "temperature": session.config.temperature,
+                "max_tokens": session.config.max_tokens,
+            }
+            if session.config
+            else None,
             "messages": [
                 {
                     "message_id": m.message_id,
@@ -627,6 +762,13 @@ class PostgresSessionService(SessionService):
             "name": session.name,
             "user_id": session.user_id,
             "workflow_id": session_data.get("workflow_id"),
+            "config": {
+                "model": session.config.model,
+                "temperature": session.config.temperature,
+                "max_tokens": session.config.max_tokens,
+            }
+            if session.config
+            else None,
             "messages": [],
             "created_at": session.created_at.isoformat(),
             "updated_at": session.updated_at.isoformat(),
@@ -678,6 +820,57 @@ class PostgresSessionService(SessionService):
     async def clear_messages(self, session_id: str) -> bool:
         """Clear all messages in a session."""
         return await self._manager.clear_messages(session_id)
+
+    async def update_config(self, session_id: str, user_id: str, config_update: dict[str, Any]) -> dict[str, Any] | None:
+        """Update session configuration with persistence.
+
+        Updates config fields and persists to PostgreSQL via manager.update_session.
+        """
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return None
+
+        # Build updated config by merging with existing
+        current_config = session.config or SessionConfig()
+        new_config = SessionConfig(
+            model=config_update.get("model", current_config.model),
+            temperature=config_update.get("temperature", current_config.temperature),
+            max_tokens=config_update.get("max_tokens", current_config.max_tokens),
+        )
+
+        # Persist via manager
+        updated_session = await self._manager.update_session(
+            session_id=session_id,
+            config=new_config,
+        )
+
+        if updated_session is None:
+            return None
+
+        # Return updated session as dict
+        return {
+            "id": updated_session.session_id,
+            "name": updated_session.name,
+            "user_id": updated_session.user_id,
+            "workflow_id": None,
+            "config": {
+                "model": updated_session.config.model if updated_session.config else "gpt-4o-mini",
+                "temperature": updated_session.config.temperature if updated_session.config else 0.7,
+                "max_tokens": updated_session.config.max_tokens if updated_session.config else 1000,
+            },
+            "messages": [
+                {
+                    "message_id": m.message_id,
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.timestamp.isoformat(),
+                }
+                for m in updated_session.messages
+            ],
+            "created_at": updated_session.created_at.isoformat() if updated_session.created_at else None,
+            "updated_at": updated_session.updated_at.isoformat() if updated_session.updated_at else None,
+            "status": SessionStatus.active,
+        }
 
 
 # Service singleton (will be replaced by dependency injection in Phase 4)
@@ -871,6 +1064,65 @@ async def delete_session(session_id: str, current_user: CurrentUser) -> None:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Session {session_id} not found",
         )
+
+
+@sessions_router.patch(
+    "/sessions/{session_id}/config",
+    summary="Update session configuration",
+    description="Update LLM configuration for a session (model, temperature, max_tokens)",
+)
+async def update_session_config(
+    session_id: str,
+    config_update: SessionConfigUpdateRequest,
+    current_user: CurrentUser,
+) -> SessionResponse:
+    """
+    Update session LLM configuration.
+
+    Allows users to change the model, temperature, or max_tokens for a session.
+    Only the session owner can update configuration.
+
+    All fields are optional - only provided fields will be updated.
+    """
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+
+    # Convert request to dict, excluding None values
+    config_dict = config_update.model_dump(exclude_none=True)
+
+    if not config_dict:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one config field must be provided",
+        )
+
+    updated = await service.update_config(session_id, user_id, config_dict)
+
+    if updated is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
+    # Convert to SessionResponse
+    config_response = None
+    if updated.get("config"):
+        config_response = SessionConfigResponse(
+            model=updated["config"].get("model", "gpt-4o-mini"),
+            temperature=updated["config"].get("temperature", 0.7),
+            max_tokens=updated["config"].get("max_tokens", 1000),
+        )
+
+    return SessionResponse(
+        id=updated["id"],
+        name=updated.get("name"),
+        workflow_id=updated.get("workflow_id"),
+        config=config_response,
+        messages=updated.get("messages", []),
+        created_at=updated.get("created_at"),
+        updated_at=updated.get("updated_at"),
+        status=updated.get("status", SessionStatus.active),
+    )
 
 
 @sessions_router.get("/sessions/{session_id}/messages")

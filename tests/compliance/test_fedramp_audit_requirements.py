@@ -28,7 +28,7 @@ from mcp_server_langgraph.audit.models import (
 )
 from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-pytestmark = pytest.mark.compliance
+pytestmark = [pytest.mark.unit, pytest.mark.compliance]
 
 
 @pytest.mark.compliance

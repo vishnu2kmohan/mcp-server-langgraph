@@ -446,9 +446,43 @@ class CostMetricsCollector:
         # Storage now returns tuple (records, next_cursor)
         records, _ = await self._storage.get_records(filters=filters if filters else None)
 
-        # TODO: Apply time period filter
+        # Apply time period filter
+        records = self._filter_by_period(records, period)
 
         return records
+
+    def _filter_by_period(
+        self,
+        records: list[TokenUsage],
+        period: str,
+    ) -> list[TokenUsage]:
+        """
+        Filter records by time period.
+
+        Args:
+            records: List of TokenUsage records
+            period: Time period ("day", "week", "month")
+
+        Returns:
+            Filtered records within the specified time period
+        """
+        from datetime import datetime, timedelta
+
+        now = datetime.now(UTC)
+
+        # Calculate cutoff time based on period
+        if period == "day":
+            cutoff = now - timedelta(days=1)
+        elif period == "week":
+            cutoff = now - timedelta(days=7)
+        elif period == "month":
+            cutoff = now - timedelta(days=30)
+        else:
+            # Unknown period, return all records
+            return records
+
+        # Filter records by timestamp
+        return [r for r in records if r.timestamp >= cutoff]
 
     async def get_total_cost(
         self,

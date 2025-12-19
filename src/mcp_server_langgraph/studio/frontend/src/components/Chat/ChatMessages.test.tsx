@@ -5,8 +5,8 @@
  * response display and empty state.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ChatMessages } from "./ChatMessages";
 
 describe("ChatMessages", () => {
@@ -37,18 +37,18 @@ describe("ChatMessages", () => {
     it("should render user message with correct styling", () => {
       render(<ChatMessages messages={mockMessages} />);
       const userMessage = screen.getByText("Hello, how are you?");
-      // Traverse up to find the flex container with justify-end
-      // Structure: flex container > message bubble > prose > p > text
-      const flexContainer = userMessage.closest(".flex");
+      // Traverse up to find the outer flex container with justify-end
+      // Structure: group flex container > wrapper > message bubble > prose > p > text
+      const flexContainer = userMessage.closest(".group");
       expect(flexContainer?.className).toContain("justify-end");
     });
 
     it("should render assistant message with correct styling", () => {
       render(<ChatMessages messages={mockMessages} />);
       const assistantMessage = screen.getByText("I am doing well, thank you!");
-      // Traverse up to find the flex container with justify-start
-      // Structure: flex container > message bubble > prose > p > text
-      const flexContainer = assistantMessage.closest(".flex");
+      // Traverse up to find the outer flex container with justify-start
+      // Structure: group flex container > wrapper > message bubble > prose > p > text
+      const flexContainer = assistantMessage.closest(".group");
       expect(flexContainer?.className).toContain("justify-start");
     });
 
@@ -448,6 +448,165 @@ describe("ChatMessages", () => {
       // Line numbers are shown via react-syntax-highlighter
       const codeBlock = document.querySelector("pre");
       expect(codeBlock).toBeInTheDocument();
+    });
+  });
+
+  describe("Message Actions Integration", () => {
+    const mockOnEdit = vi.fn();
+    const mockOnRegenerate = vi.fn();
+    const mockOnDelete = vi.fn();
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it("should not show message actions when no callbacks provided", () => {
+      render(<ChatMessages messages={mockMessages} />);
+      expect(
+        screen.queryByTestId("message-actions-trigger"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show message actions for messages when callbacks are provided", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          onEditMessage={mockOnEdit}
+          onRegenerateMessage={mockOnRegenerate}
+          onDeleteMessage={mockOnDelete}
+        />,
+      );
+      // MessageActions trigger should be present for each message
+      const actionTriggers = screen.getAllByTestId("message-actions-trigger");
+      expect(actionTriggers.length).toBe(2); // One for each message
+    });
+
+    it("should call onEditMessage when edit action is clicked on user message", async () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          onEditMessage={mockOnEdit}
+          onDeleteMessage={mockOnDelete}
+        />,
+      );
+
+      // Find the message actions for user message and open menu
+      const actionTriggers = screen.getAllByTestId("message-actions-trigger");
+      // User message is first in our mock data
+      fireEvent.click(actionTriggers[0]);
+
+      // Click edit
+      const editButton = screen.getByTestId("action-edit");
+      fireEvent.click(editButton);
+
+      expect(mockOnEdit).toHaveBeenCalledWith("msg-1");
+    });
+
+    it("should call onRegenerateMessage when regenerate action is clicked on assistant message", async () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          onRegenerateMessage={mockOnRegenerate}
+          onDeleteMessage={mockOnDelete}
+        />,
+      );
+
+      // Find the message actions for assistant message and open menu
+      const actionTriggers = screen.getAllByTestId("message-actions-trigger");
+      // Assistant message is second in our mock data
+      fireEvent.click(actionTriggers[1]);
+
+      // Click regenerate
+      const regenerateButton = screen.getByTestId("action-regenerate");
+      fireEvent.click(regenerateButton);
+
+      expect(mockOnRegenerate).toHaveBeenCalledWith("msg-2");
+    });
+
+    it("should call onDeleteMessage when delete action is confirmed", async () => {
+      render(
+        <ChatMessages messages={mockMessages} onDeleteMessage={mockOnDelete} />,
+      );
+
+      // Find the message actions for first message and open menu
+      const actionTriggers = screen.getAllByTestId("message-actions-trigger");
+      fireEvent.click(actionTriggers[0]);
+
+      // Click delete
+      const deleteButton = screen.getByTestId("action-delete");
+      fireEvent.click(deleteButton);
+
+      // Confirm deletion
+      const confirmButton = screen.getByTestId("confirm-delete");
+      fireEvent.click(confirmButton);
+
+      expect(mockOnDelete).toHaveBeenCalledWith("msg-1");
+    });
+
+    it("should show edit action only for user messages", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          onEditMessage={mockOnEdit}
+          onDeleteMessage={mockOnDelete}
+        />,
+      );
+
+      const actionTriggers = screen.getAllByTestId("message-actions-trigger");
+
+      // Open menu for user message (first)
+      fireEvent.click(actionTriggers[0]);
+      expect(screen.queryByTestId("action-edit")).toBeInTheDocument();
+      expect(screen.queryByTestId("action-regenerate")).not.toBeInTheDocument();
+
+      // Close menu
+      fireEvent.click(actionTriggers[0]);
+
+      // Open menu for assistant message (second)
+      fireEvent.click(actionTriggers[1]);
+      expect(screen.queryByTestId("action-edit")).not.toBeInTheDocument();
+    });
+
+    it("should show regenerate action only for assistant messages", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          onRegenerateMessage={mockOnRegenerate}
+          onDeleteMessage={mockOnDelete}
+        />,
+      );
+
+      const actionTriggers = screen.getAllByTestId("message-actions-trigger");
+
+      // Open menu for user message (first)
+      fireEvent.click(actionTriggers[0]);
+      expect(screen.queryByTestId("action-regenerate")).not.toBeInTheDocument();
+
+      // Close menu
+      fireEvent.click(actionTriggers[0]);
+
+      // Open menu for assistant message (second)
+      fireEvent.click(actionTriggers[1]);
+      expect(screen.queryByTestId("action-regenerate")).toBeInTheDocument();
+    });
+
+    it("should disable regenerate button when isRegenerating is true", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          onRegenerateMessage={mockOnRegenerate}
+          onDeleteMessage={mockOnDelete}
+          isRegenerating={true}
+        />,
+      );
+
+      const actionTriggers = screen.getAllByTestId("message-actions-trigger");
+
+      // Open menu for assistant message
+      fireEvent.click(actionTriggers[1]);
+
+      const regenerateButton = screen.getByTestId("action-regenerate");
+      expect(regenerateButton).toBeDisabled();
     });
   });
 });

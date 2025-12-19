@@ -29,6 +29,21 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+def read_all_makefiles(repo_root: Path) -> str:
+    """Read Makefile content including all modular includes from make/*.mk"""
+    makefile = repo_root / "Makefile"
+    if not makefile.exists():
+        return ""
+    content = makefile.read_text()
+
+    # Also read all modular makefiles in make/ directory
+    make_dir = repo_root / "make"
+    if make_dir.exists():
+        for mk_file in sorted(make_dir.glob("*.mk")):
+            content += "\n" + mk_file.read_text()
+    return content
+
+
 @pytest.mark.skipif(os.getenv("CI") == "true", reason="Pre-push hooks not installed in CI environment")
 @pytest.mark.xdist_group(name="testprepushhooksync")
 class TestPrePushHookSync:
@@ -127,9 +142,8 @@ class TestPrePushHookSync:
 
         Expected: Makefile validate-pre-push must have blocking MyPy
         """
-        # Read Makefile to check MyPy configuration
-        makefile_path = repo_root / "Makefile"
-        makefile_content = makefile_path.read_text()
+        # Read Makefile and modular includes to check MyPy configuration
+        makefile_content = read_all_makefiles(repo_root)
 
         # Extract validate-pre-push sub-targets and shared internal targets
         # MyPy is in the shared _validate-pre-push-phases-1-2 target

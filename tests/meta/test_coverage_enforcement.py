@@ -147,12 +147,14 @@ def _read_existing_coverage(project_root: Path) -> int:
         Coverage percentage as integer
     """
     # Use coverage report command to read existing data
+    # Use --ignore-errors to skip files that have been deleted since coverage was collected
     result = subprocess.run(
         [
             "coverage",
             "report",
             "--precision=0",  # No decimal places
             "--skip-empty",
+            "--ignore-errors",  # Skip files that no longer exist
         ],
         cwd=project_root,
         capture_output=True,
@@ -161,6 +163,15 @@ def _read_existing_coverage(project_root: Path) -> int:
     )
 
     output = result.stdout + result.stderr
+
+    # Check for stale coverage data (references deleted files)
+    if "No source for code" in output:
+        # Coverage file is stale - delete it and skip test
+        coverage_file = project_root / ".coverage"
+        coverage_file.unlink(missing_ok=True)
+        pytest.skip(
+            "Stale .coverage file deleted (referenced deleted source files).\nRun: pytest --cov to regenerate coverage data"
+        )
 
     # Parse coverage percentage
     # Format: "TOTAL    12345   1234    90%"

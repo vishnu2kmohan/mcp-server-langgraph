@@ -4,7 +4,7 @@
  * Rich chat input form with voice input, file uploads, and drag-drop support.
  */
 
-import { Send, Mic, MicOff, Paperclip, X, Loader2 } from "lucide-react";
+import { Send, Mic, MicOff, Paperclip, X, Loader2, Square } from "lucide-react";
 import type { UploadFile, DragHandlers } from "../../hooks/useFileUpload";
 
 // Re-export for test compatibility
@@ -15,6 +15,10 @@ export interface ChatInputFormProps {
   onInputChange: (value: string) => void;
   onSubmit: () => void;
   isProcessing: boolean;
+  /** Whether response is currently streaming (for stop button) */
+  isStreaming?: boolean;
+  /** Callback to stop streaming response */
+  onStopStreaming?: () => void;
   isListening: boolean;
   isVoiceSupported: boolean;
   voiceError: string | null;
@@ -34,6 +38,8 @@ export function ChatInputForm({
   onInputChange,
   onSubmit,
   isProcessing,
+  isStreaming = false,
+  onStopStreaming,
   isListening,
   isVoiceSupported,
   voiceError,
@@ -167,21 +173,34 @@ export function ChatInputForm({
           </button>
         )}
 
-        <button
-          type="submit"
-          disabled={!canSend}
-          aria-label="Send"
-          className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isProcessing ? (
-            <Loader2
-              className="w-5 h-5 animate-spin"
-              data-testid="send-button-loading"
-            />
-          ) : (
-            <Send className="w-5 h-5" />
-          )}
-        </button>
+        {/* Stop button when streaming, otherwise Send button */}
+        {isStreaming && onStopStreaming ? (
+          <button
+            type="button"
+            onClick={onStopStreaming}
+            aria-label="Stop generating"
+            className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            data-testid="stop-streaming-button"
+          >
+            <Square className="w-5 h-5" />
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={!canSend}
+            aria-label="Send"
+            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isProcessing ? (
+              <Loader2
+                className="w-5 h-5 animate-spin"
+                data-testid="send-button-loading"
+              />
+            ) : (
+              <Send className="w-5 h-5" />
+            )}
+          </button>
+        )}
       </form>
     </div>
   );

@@ -50,24 +50,23 @@ class TestOpenFGALazyInitialization:
           - get_openfga_client() should succeed synchronously
           - Actual OpenFgaClient should be created lazily on first async call
         """
-        # Arrange: Set OpenFGA config
-        monkeypatch.setenv("OPENFGA_API_URL", "http://localhost:8080")
-        monkeypatch.setenv("OPENFGA_STORE_ID", "test-store")
-        monkeypatch.setenv("OPENFGA_MODEL_ID", "test-model")
-
-        # Reload config to pick up monkeypatched env vars
-        import importlib
-
-        import mcp_server_langgraph.core.config as config_module
-        import mcp_server_langgraph.core.dependencies as deps_module
-
-        importlib.reload(config_module)
-        importlib.reload(deps_module)
-
-        # Reset singleton
+        # Reset singleton first
         import mcp_server_langgraph.core.dependencies as deps
 
         deps._openfga_client = None
+
+        # Patch settings attributes directly (monkeypatch.setenv doesn't work
+        # because settings are loaded at import time)
+        from mcp_server_langgraph.core import dependencies as deps_module
+
+        monkeypatch.setattr(deps_module.settings, "openfga_api_url", "http://localhost:8080")
+        monkeypatch.setattr(deps_module.settings, "openfga_store_id", "test-store")
+        monkeypatch.setattr(deps_module.settings, "openfga_store_name", None)
+        monkeypatch.setattr(deps_module.settings, "openfga_model_id", "test-model")
+        monkeypatch.setattr(deps_module.settings, "openfga_oidc_client_id", None)
+        monkeypatch.setattr(deps_module.settings, "openfga_oidc_client_secret", None)
+        monkeypatch.setattr(deps_module.settings, "openfga_oidc_issuer", None)
+        monkeypatch.setattr(deps_module.settings, "openfga_preshared_key", None)
 
         # Re-import to get updated function
         from mcp_server_langgraph.core.dependencies import get_openfga_client
@@ -90,24 +89,23 @@ class TestOpenFGALazyInitialization:
         This validates that the actual OpenFgaClient is created only when
         an async method is called, not during __init__.
         """
-        # Arrange: Set OpenFGA config
-        monkeypatch.setenv("OPENFGA_API_URL", "http://localhost:8080")
-        monkeypatch.setenv("OPENFGA_STORE_ID", "test-store")
-        monkeypatch.setenv("OPENFGA_MODEL_ID", "test-model")
-
-        # Reload config
-        import importlib
-
-        import mcp_server_langgraph.core.config as config_module
-        import mcp_server_langgraph.core.dependencies as deps_module
-
-        importlib.reload(config_module)
-        importlib.reload(deps_module)
-
-        # Reset singleton
+        # Reset singleton first
         import mcp_server_langgraph.core.dependencies as deps
 
         deps._openfga_client = None
+
+        # Patch settings attributes directly (monkeypatch.setenv doesn't work
+        # because settings are loaded at import time)
+        from mcp_server_langgraph.core import dependencies as deps_module
+
+        monkeypatch.setattr(deps_module.settings, "openfga_api_url", "http://localhost:8080")
+        monkeypatch.setattr(deps_module.settings, "openfga_store_id", "test-store")
+        monkeypatch.setattr(deps_module.settings, "openfga_store_name", None)
+        monkeypatch.setattr(deps_module.settings, "openfga_model_id", "test-model")
+        monkeypatch.setattr(deps_module.settings, "openfga_oidc_client_id", None)
+        monkeypatch.setattr(deps_module.settings, "openfga_oidc_client_secret", None)
+        monkeypatch.setattr(deps_module.settings, "openfga_oidc_issuer", None)
+        monkeypatch.setattr(deps_module.settings, "openfga_preshared_key", None)
 
         # Re-import
         from mcp_server_langgraph.core.dependencies import get_openfga_client
@@ -127,24 +125,18 @@ class TestOpenFGALazyInitialization:
 
         This is existing behavior - should continue to work after fix.
         """
-        # Arrange: Incomplete config (missing store_id and model_id)
-        monkeypatch.setenv("OPENFGA_API_URL", "http://localhost:8080")
-        monkeypatch.setenv("OPENFGA_STORE_ID", "")
-        monkeypatch.setenv("OPENFGA_MODEL_ID", "")
-
-        # Reload config
-        import importlib
-
-        import mcp_server_langgraph.core.config as config_module
-        import mcp_server_langgraph.core.dependencies as deps_module
-
-        importlib.reload(config_module)
-        importlib.reload(deps_module)
-
-        # Reset singleton
+        # Reset singleton first
         import mcp_server_langgraph.core.dependencies as deps
 
         deps._openfga_client = None
+
+        # Patch settings attributes directly - incomplete config (missing store_id and store_name)
+        from mcp_server_langgraph.core import dependencies as deps_module
+
+        monkeypatch.setattr(deps_module.settings, "openfga_api_url", "http://localhost:8080")
+        monkeypatch.setattr(deps_module.settings, "openfga_store_id", None)
+        monkeypatch.setattr(deps_module.settings, "openfga_store_name", None)
+        monkeypatch.setattr(deps_module.settings, "openfga_model_id", None)
 
         # Re-import
         from mcp_server_langgraph.core.dependencies import get_openfga_client

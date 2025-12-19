@@ -281,3 +281,145 @@ class TestTaskSerialization:
         assert response["id"] == "api-test"
         assert response["status"] == "completed"
         assert "result" in response
+
+
+@pytest.mark.xdist_group(name="mcp_tasks")
+class TestTaskUserFiltering:
+    """Tests for user-scoped task filtering.
+
+    SECURITY: Tasks should be scoped to users to prevent cross-user access.
+    """
+
+    def teardown_method(self) -> None:
+        """Clean up after each test."""
+        gc.collect()
+
+    def test_task_has_user_id_field(self) -> None:
+        """
+        GIVEN a Task model
+        WHEN creating a task with user_id
+        THEN the user_id should be stored
+        """
+        from mcp_server_langgraph.mcp.tasks import Task, TaskStatus
+
+        task = Task(
+            id="user-task-1",
+            operation="test",
+            status=TaskStatus.WORKING,
+            user_id="user:alice",
+        )
+
+        assert task.user_id == "user:alice"
+
+    def test_task_user_id_is_optional(self) -> None:
+        """
+        GIVEN a Task model
+        WHEN creating a task without user_id
+        THEN user_id should default to None
+        """
+        from mcp_server_langgraph.mcp.tasks import Task, TaskStatus
+
+        task = Task(
+            id="no-user-task",
+            operation="test",
+            status=TaskStatus.WORKING,
+        )
+
+        assert task.user_id is None
+
+    def test_create_task_with_user_id(self) -> None:
+        """
+        GIVEN a TaskHandler
+        WHEN creating a task with user_id
+        THEN the task should have that user_id
+        """
+        from mcp_server_langgraph.mcp.tasks import TaskHandler
+
+        handler = TaskHandler()
+        task = handler.create_task("user_operation", user_id="user:bob")
+
+        assert task.user_id == "user:bob"
+
+    def test_list_tasks_filters_by_user_id(self) -> None:
+        """
+        GIVEN multiple tasks from different users
+        WHEN listing tasks with a user_id filter
+        THEN only tasks from that user should be returned
+
+        SECURITY: This is critical for multi-tenant isolation.
+        """
+        from mcp_server_langgraph.mcp.tasks import TaskHandler
+
+        handler = TaskHandler()
+
+        # Create tasks for different users
+        handler.create_task("alice_task_1", user_id="user:alice")
+        handler.create_task("alice_task_2", user_id="user:alice")
+        handler.create_task("bob_task_1", user_id="user:bob")
+        handler.create_task("no_user_task")  # No user_id
+
+        # Filter by alice
+        alice_tasks = handler.list_tasks(user_id="user:alice")
+        assert len(alice_tasks) == 2
+        assert all(t.user_id == "user:alice" for t in alice_tasks)
+
+        # Filter by bob
+        bob_tasks = handler.list_tasks(user_id="user:bob")
+        assert len(bob_tasks) == 1
+        assert bob_tasks[0].user_id == "user:bob"
+
+    def test_list_tasks_without_filter_returns_all(self) -> None:
+        """
+        GIVEN multiple tasks from different users
+        WHEN listing tasks without a user_id filter
+        THEN all tasks should be returned
+
+        NOTE: This may be restricted to admin-only in future.
+        """
+        from mcp_server_langgraph.mcp.tasks import TaskHandler
+
+        handler = TaskHandler()
+
+        handler.create_task("task1", user_id="user:alice")
+        handler.create_task("task2", user_id="user:bob")
+        handler.create_task("task3")  # No user_id
+
+        all_tasks = handler.list_tasks()
+        assert len(all_tasks) == 3
+
+    def test_user_id_included_in_api_response(self) -> None:
+        """
+        GIVEN a Task with user_id
+        WHEN converting to API response
+        THEN user_id should be included in the response
+        """
+        from mcp_server_langgraph.mcp.tasks import Task, TaskStatus
+
+        task = Task(
+            id="api-user-task",
+            operation="test",
+            status=TaskStatus.WORKING,
+            user_id="user:charlie",
+        )
+
+        response = task.to_api_response()
+
+        assert response["user_id"] == "user:charlie"
+
+    def test_user_id_not_in_response_when_none(self) -> None:
+        """
+        GIVEN a Task without user_id
+        WHEN converting to API response
+        THEN user_id should not be in the response
+        """
+        from mcp_server_langgraph.mcp.tasks import Task, TaskStatus
+
+        task = Task(
+            id="no-user-api-task",
+            operation="test",
+            status=TaskStatus.WORKING,
+        )
+
+        response = task.to_api_response()
+
+        assert "user_id" not in response

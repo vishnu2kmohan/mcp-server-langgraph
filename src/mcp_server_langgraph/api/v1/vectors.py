@@ -141,11 +141,12 @@ def get_embedding_model() -> Any:
     elif provider == "google_vertex":
         # Vertex AI works with GCP credentials including Workload Identity Federation
         try:
-            from langchain_google_vertexai import VertexAIEmbeddings  # type: ignore[import-not-found]
+            from langchain_google_vertexai import VertexAIEmbeddings
 
             # Vertex AI uses GCP project from environment
             project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT_ID")
-            return VertexAIEmbeddings(model_name=model_name, project=project_id)
+            # model_name is a valid pydantic field but type stubs don't include it
+            return VertexAIEmbeddings(model_name=model_name, project=project_id)  # type: ignore[call-arg]
         except ImportError:
             raise ValueError(
                 "Vertex AI embeddings require 'langchain-google-vertexai' package. "

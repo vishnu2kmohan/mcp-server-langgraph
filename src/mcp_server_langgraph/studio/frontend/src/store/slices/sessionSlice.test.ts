@@ -23,6 +23,7 @@ import sessionReducer, {
   clearMessages,
   addMessage,
   updateMessage,
+  deleteMessage,
   closeSession,
   clearError,
   setSessions,
@@ -168,6 +169,90 @@ describe("sessionSlice", () => {
           "Complete response",
         );
         expect(selectMessages(store.getState())[0].isStreaming).toBe(false);
+      });
+    });
+
+    describe("deleteMessage", () => {
+      it("should delete message from current session", () => {
+        const store = createTestStore({
+          currentSession: {
+            id: "s1",
+            name: "Test",
+            config: {
+              modelProvider: "openai",
+              modelName: "gpt-4",
+              temperature: 0.7,
+              maxTokens: 4096,
+            },
+            messages: [
+              {
+                id: "m1",
+                role: "user",
+                content: "Hello",
+                timestamp: Date.now(),
+              },
+              {
+                id: "m2",
+                role: "assistant",
+                content: "Hi!",
+                timestamp: Date.now(),
+              },
+              {
+                id: "m3",
+                role: "user",
+                content: "How are you?",
+                timestamp: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        });
+
+        store.dispatch(deleteMessage("m2"));
+
+        const messages = selectMessages(store.getState());
+        expect(messages).toHaveLength(2);
+        expect(messages[0].id).toBe("m1");
+        expect(messages[1].id).toBe("m3");
+      });
+
+      it("should do nothing if message not found", () => {
+        const store = createTestStore({
+          currentSession: {
+            id: "s1",
+            name: "Test",
+            config: {
+              modelProvider: "openai",
+              modelName: "gpt-4",
+              temperature: 0.7,
+              maxTokens: 4096,
+            },
+            messages: [
+              {
+                id: "m1",
+                role: "user",
+                content: "Hello",
+                timestamp: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        });
+
+        store.dispatch(deleteMessage("non-existent"));
+
+        expect(selectMessages(store.getState())).toHaveLength(1);
+      });
+
+      it("should do nothing if no current session", () => {
+        const store = createTestStore();
+
+        // Should not throw
+        store.dispatch(deleteMessage("m1"));
+
+        expect(selectCurrentSession(store.getState())).toBeNull();
       });
     });
 
@@ -495,6 +580,75 @@ describe("sessionSlice", () => {
       expect(selectSessions(store.getState())).toHaveLength(1);
       expect(selectTotalCount(store.getState())).toBe(1);
     });
+
+    it("should include Authorization header when access_token is in localStorage", async () => {
+      // Set up access_token in localStorage
+      const mockToken = "test-access-token-12345";
+      localStorage.setItem("access_token", mockToken);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            id: "session-auth-test",
+            name: "Auth Test Session",
+            messages: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }),
+      });
+
+      const store = createTestStore();
+      await store.dispatch(createSession({ name: "Auth Test Session" }));
+
+      // Verify fetch was called with Authorization header
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/sessions",
+        expect.objectContaining({
+          method: "POST",
+          headers: expect.objectContaining({
+            Authorization: `Bearer ${mockToken}`,
+          }),
+        }),
+      );
+
+      // Clean up
+      localStorage.removeItem("access_token");
+    });
+
+    it("should include Authorization header from auth_token as fallback", async () => {
+      // Set up auth_token in localStorage (fallback key)
+      const mockToken = "test-auth-token-67890";
+      localStorage.setItem("auth_token", mockToken);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            id: "session-fallback-test",
+            name: "Fallback Auth Test",
+            messages: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }),
+      });
+
+      const store = createTestStore();
+      await store.dispatch(createSession({ name: "Fallback Auth Test" }));
+
+      // Verify fetch was called with Authorization header from fallback
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/sessions",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: `Bearer ${mockToken}`,
+          }),
+        }),
+      );
+
+      // Clean up
+      localStorage.removeItem("auth_token");
+    });
   });
 
   describe("loadSession thunk", () => {
@@ -584,6 +738,58 @@ describe("sessionSlice", () => {
 
       expect(selectSessionError(store.getState())).toBe("Session not found");
       expect(selectCurrentSession(store.getState())).toBeNull();
+    });
+
+    it("should read model config from API response (snake_case format)", async () => {
+      // API returns config in snake_case format matching backend SessionConfig model
+      const apiResponse = {
+        id: "session-config-test",
+        name: "Config Test Session",
+        config: {
+          model: "claude-3-opus",
+          temperature: 0.5,
+          max_tokens: 8192,
+        },
+        messages: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(apiResponse),
+      });
+
+      const store = createTestStore();
+      await store.dispatch(loadSession("session-config-test"));
+
+      const session = selectCurrentSession(store.getState());
+      expect(session?.config.modelName).toBe("claude-3-opus");
+      expect(session?.config.temperature).toBe(0.5);
+      expect(session?.config.maxTokens).toBe(8192);
+    });
+
+    it("should fall back to defaults when API response has no config", async () => {
+      const apiResponse = {
+        id: "session-no-config",
+        name: "No Config Session",
+        messages: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(apiResponse),
+      });
+
+      const store = createTestStore();
+      await store.dispatch(loadSession("session-no-config"));
+
+      const session = selectCurrentSession(store.getState());
+      // Should use defaults (aligned with backend: gpt-4o-mini)
+      expect(session?.config.modelName).toBe("gpt-4o-mini");
+      expect(session?.config.modelProvider).toBe("openai");
     });
   });
 

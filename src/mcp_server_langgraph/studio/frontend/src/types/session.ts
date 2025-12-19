@@ -24,12 +24,12 @@ export interface SessionConfig {
   systemPrompt?: string;
 }
 
-/** Default session configuration */
+/** Default session configuration - aligned with backend SessionConfigResponse */
 export const DEFAULT_SESSION_CONFIG: SessionConfig = {
   modelProvider: "openai",
-  modelName: "gpt-4",
+  modelName: "gpt-4o-mini", // Match backend default
   temperature: 0.7,
-  maxTokens: 4096,
+  maxTokens: 1000, // Match backend default
 };
 
 // ==============================================================================

@@ -470,6 +470,45 @@ def in_memory_span_exporter():
     exporter.clear()
 
 
+@pytest.fixture
+def test_infrastructure_ports():
+    """
+    Centralized source of truth for test infrastructure port mappings.
+
+    All test ports use offsets from standard ports to avoid conflicts with local development:
+    - postgres: 9432 (+4000 from 5432)
+    - redis: 9379 (+3000 from 6379) - consolidated for both checkpoints and sessions
+    - openfga: 9080 (+1000 from 8080), grpc: 9081
+    - qdrant: 9333 (+3000 from 6333), grpc: 9334
+    - keycloak: 9082, management: 9900
+
+    See tests/constants.py for the authoritative port definitions.
+
+    All xdist workers connect to the SAME ports - isolation is achieved via
+    PostgreSQL schemas, Redis DBs, and namespace prefixes, NOT port offsets.
+    """
+    from tests.constants import (
+        TEST_POSTGRES_PORT,
+        TEST_REDIS_PORT,
+        TEST_OPENFGA_HTTP_PORT,
+        TEST_OPENFGA_GRPC_PORT,
+        TEST_QDRANT_PORT,
+        TEST_KEYCLOAK_PORT,
+    )
+
+    return {
+        "postgres": TEST_POSTGRES_PORT,
+        "redis_checkpoints": TEST_REDIS_PORT,
+        "redis_sessions": TEST_REDIS_PORT,  # Consolidated - same as checkpoints
+        "qdrant": TEST_QDRANT_PORT,
+        "qdrant_grpc": TEST_QDRANT_PORT + 1,  # gRPC is port + 1
+        "openfga_http": TEST_OPENFGA_HTTP_PORT,
+        "openfga_grpc": TEST_OPENFGA_GRPC_PORT,
+        "keycloak": TEST_KEYCLOAK_PORT,
+        "keycloak_management": 9900,  # Management port
+    }
+
+
 # ==============================================================================
 # LiteLLM Async Client Cleanup (pytest hook)
 # ==============================================================================

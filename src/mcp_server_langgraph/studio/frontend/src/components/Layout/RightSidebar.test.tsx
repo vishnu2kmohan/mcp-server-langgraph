@@ -33,6 +33,7 @@ const defaultWorkspaceState: WorkspaceState = {
   leftSidebarCollapsed: false,
   rightSidebarWidth: 280,
   rightSidebarCollapsed: false,
+  rightSidebarPinned: false,
   bottomPanelHeight: 200,
   bottomPanelCollapsed: true,
   activeActivityId: "conversations",
@@ -474,6 +475,56 @@ describe("RightSidebar", () => {
       fireEvent.click(collapseButton);
 
       expect(store.getState().workspace.rightSidebarCollapsed).toBe(true);
+    });
+  });
+
+  describe("pin toggle", () => {
+    it("should render pin button in header (desktop mode)", () => {
+      renderWithProviders(<RightSidebar />);
+      expect(screen.getByLabelText(/pin sidebar/i)).toBeInTheDocument();
+    });
+
+    it("should toggle pinned state when pin button clicked", () => {
+      const store = createTestStore({
+        workspace: { rightSidebarPinned: false },
+      });
+      renderWithProviders(<RightSidebar />, { store });
+
+      const pinButton = screen.getByLabelText(/pin sidebar/i);
+      fireEvent.click(pinButton);
+
+      expect(store.getState().workspace.rightSidebarPinned).toBe(true);
+    });
+
+    it("should show unpin button when sidebar is pinned", () => {
+      renderWithProviders(<RightSidebar />, {
+        workspaceOverrides: { rightSidebarPinned: true },
+      });
+      expect(screen.getByLabelText(/unpin sidebar/i)).toBeInTheDocument();
+    });
+
+    it("should toggle unpinned state when unpin button clicked", () => {
+      const store = createTestStore({
+        workspace: { rightSidebarPinned: true },
+      });
+      renderWithProviders(<RightSidebar />, { store });
+
+      const unpinButton = screen.getByLabelText(/unpin sidebar/i);
+      fireEvent.click(unpinButton);
+
+      expect(store.getState().workspace.rightSidebarPinned).toBe(false);
+    });
+
+    it("should have tooltip explaining focus mode behavior", () => {
+      renderWithProviders(<RightSidebar />);
+      const pinButton = screen.getByLabelText(/pin sidebar/i);
+      expect(pinButton.getAttribute("title")).toMatch(/focus mode/i);
+    });
+
+    it("should not render pin button in mobile mode", () => {
+      const onClose = vi.fn();
+      renderWithProviders(<RightSidebar isOpen={true} onClose={onClose} />);
+      expect(screen.queryByLabelText(/pin sidebar/i)).not.toBeInTheDocument();
     });
   });
 

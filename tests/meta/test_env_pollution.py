@@ -201,7 +201,7 @@ class TestEnvironmentIsolationMigration:
     def test_critical_files_exist(self):
         """Validate critical files that need migration exist."""
         critical_files = [
-            "tests/integration/api/test_api_keys_endpoints.py",
+            # Note: test_api_keys_endpoints.py was removed as part of codebase refactoring
             "tests/unit/auth/test_auth.py",
             "tests/unit/auth/test_auth_factory.py",
             "tests/unit/mcp/test_mcp_stdio_server.py",
@@ -211,7 +211,7 @@ class TestEnvironmentIsolationMigration:
             "tests/integration/test_openfga_client.py",
             "tests/regression/test_service_principal_test_isolation.py",
             "tests/regression/test_performance_regression.py",
-            "tests/integration/api/test_service_principals_endpoints.py",
+            # Note: test_service_principals_endpoints.py was removed as part of codebase refactoring
         ]
 
         for file_path in critical_files:
@@ -233,8 +233,8 @@ class TestEnvironmentIsolationMigration:
 
         # Files that need migration
         files_to_check = [
-            "tests/integration/api/test_api_keys_endpoints.py",
             "tests/unit/auth/test_auth.py",
+            # Note: test_api_keys_endpoints.py was removed as part of codebase refactoring
         ]
 
         existing_files = [f for f in files_to_check if Path(f).exists()]

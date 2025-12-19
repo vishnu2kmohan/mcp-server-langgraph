@@ -24,6 +24,8 @@ except ImportError:
     FASTAPI_AVAILABLE = False
 
 if TYPE_CHECKING:
+    from fastapi import Request
+
     from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
 
@@ -56,12 +58,24 @@ def get_auth_middleware() -> "AuthMiddleware":
     """
     Get global auth middleware instance.
 
+    .. deprecated:: 2.9.0
+        Use :func:`get_auth_middleware_from_request` instead for proper DI pattern.
+        This function will be removed in version 3.0.0.
+
     Returns:
         AuthMiddleware instance
 
     Raises:
         RuntimeError: If auth middleware not initialized
     """
+    import warnings
+
+    warnings.warn(
+        "get_auth_middleware() is deprecated. Use get_auth_middleware_from_request(request) "
+        "for proper dependency injection. This will be removed in version 3.0.0.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if _global_auth_middleware is None:
         msg = "Auth middleware not initialized. Call set_global_auth_middleware() during app startup."
         raise RuntimeError(msg)
@@ -76,6 +90,73 @@ def clear_global_auth_middleware() -> None:
     """
     global _global_auth_middleware
     _global_auth_middleware = None
+
+
+# ============================================================================
+# DI-Based Auth Middleware Access (Recommended Pattern)
+# ============================================================================
+
+
+def get_auth_middleware_from_request(request: "Request") -> "AuthMiddleware | None":
+    """
+    Get AuthMiddleware from FastAPI request state (DI pattern).
+
+    This is the PREFERRED way to access auth middleware in FastAPI routes.
+    The middleware is initialized once during app lifespan startup and stored
+    in app.state.auth_middleware.
+
+    Benefits over global state pattern:
+    - Proper dependency injection (testable without global state)
+    - Request-scoped access (proper FastAPI idiom)
+    - No global mutable state (thread-safe)
+    - Explicit dependency chain (easier to trace)
+
+    Args:
+        request: FastAPI Request object (injected via Depends)
+
+    Returns:
+        AuthMiddleware if configured and initialized, None otherwise
+
+    Example:
+        @router.get("/protected")
+        async def protected_route(
+            auth: AuthMiddleware = Depends(get_auth_middleware_from_request),
+        ):
+            if auth:
+                user = await auth.verify_token(token)
+    """
+    return getattr(request.app.state, "auth_middleware", None)
+
+
+def require_auth_middleware_from_request(request: "Request") -> "AuthMiddleware":
+    """
+    Get AuthMiddleware from request state, raising if not initialized.
+
+    Use this when auth middleware is REQUIRED for the endpoint to function.
+    This is stricter than get_auth_middleware_from_request which returns None.
+
+    Args:
+        request: FastAPI Request object (injected via Depends)
+
+    Returns:
+        AuthMiddleware instance
+
+    Raises:
+        RuntimeError: If auth middleware not initialized in app.state
+
+    Example:
+        @router.get("/admin")
+        async def admin_route(
+            auth: AuthMiddleware = Depends(require_auth_middleware_from_request),
+        ):
+            # auth is guaranteed to be available
+            user = await auth.verify_token(token)
+    """
+    auth = get_auth_middleware_from_request(request)
+    if auth is None:
+        msg = "Auth middleware not initialized. Ensure app lifespan sets app.state.auth_middleware."
+        raise RuntimeError(msg)
+    return auth
 
 
 # ============================================================================
@@ -117,7 +198,10 @@ if FASTAPI_AVAILABLE:
 
         # Try to authenticate with Bearer token
         if token:
-            auth = get_auth_middleware()
+            # DI pattern: Try app.state first, fall back to global for backward compatibility
+            auth = get_auth_middleware_from_request(request)
+            if auth is None:
+                auth = get_auth_middleware()
             verification = await auth.verify_token(token)
 
             if verification.valid and verification.payload:
@@ -235,9 +319,13 @@ if FASTAPI_AVAILABLE:
 
 __all__ = [
     "FASTAPI_AVAILABLE",
+    # Global pattern (legacy, for backward compatibility)
     "set_global_auth_middleware",
     "get_auth_middleware",
     "clear_global_auth_middleware",
+    # DI pattern (recommended)
+    "get_auth_middleware_from_request",
+    "require_auth_middleware_from_request",
 ]
 
 if FASTAPI_AVAILABLE:

@@ -154,6 +154,7 @@ MockPanel.displayName = "MockPanel";
 /**
  * Mock PanelResizeHandle component.
  * Renders a div with role="separator" for accessibility testing.
+ * Supports onDoubleClick for testing collapse/expand functionality.
  */
 const MockPanelResizeHandle = ({
   children,
@@ -164,8 +165,22 @@ const MockPanelResizeHandle = ({
     hitAreaMargins: _hitAreaMargins,
     tabIndex: _tabIndex,
     onDragging: _onDragging,
-    ...domProps
+    ...restProps
   } = props;
+
+  // Extract only safe DOM props including event handlers
+  const domProps: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(restProps)) {
+    if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean" ||
+      typeof value === "function" // Support event handlers like onDoubleClick
+    ) {
+      domProps[key] = value;
+    }
+  }
+
   return React.createElement(
     "div",
     {

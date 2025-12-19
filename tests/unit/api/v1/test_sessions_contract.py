@@ -395,3 +395,435 @@ class TestSessionResponseSerialization:
         # THEN 'message_id' should be in output
         assert "message_id" in data
         assert data["message_id"] == "msg-456"
+
+
+@pytest.mark.xdist_group(name="test_session_config_response_contract")
+class TestSessionConfigResponseContract:
+    """Tests for SessionConfigResponse model contract.
+
+    TDD tests ensuring session responses include config with model information.
+    This enables the frontend StatusBar to display the actual model being used.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_session_config_response_exists(self) -> None:
+        """SessionConfigResponse model should exist in sessions module."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+
+        # Model should be importable
+        assert SessionConfigResponse is not None
+
+    @pytest.mark.unit
+    def test_session_config_response_has_model_field(self) -> None:
+        """SessionConfigResponse should have 'model' field."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+
+        schema = SessionConfigResponse.model_json_schema()
+        properties = schema.get("properties", {})
+
+        # 'model' should be in properties
+        assert "model" in properties, "SessionConfigResponse should have 'model' field"
+
+    @pytest.mark.unit
+    def test_session_config_response_has_temperature_field(self) -> None:
+        """SessionConfigResponse should have 'temperature' field."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+
+        schema = SessionConfigResponse.model_json_schema()
+        properties = schema.get("properties", {})
+
+        assert "temperature" in properties, "SessionConfigResponse should have 'temperature' field"
+
+    @pytest.mark.unit
+    def test_session_config_response_has_max_tokens_field(self) -> None:
+        """SessionConfigResponse should have 'max_tokens' field."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+
+        schema = SessionConfigResponse.model_json_schema()
+        properties = schema.get("properties", {})
+
+        assert "max_tokens" in properties, "SessionConfigResponse should have 'max_tokens' field"
+
+    @pytest.mark.unit
+    def test_session_config_response_defaults(self) -> None:
+        """SessionConfigResponse should have sensible defaults."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+
+        # WHEN creating with no arguments (uses defaults)
+        config = SessionConfigResponse()
+
+        # THEN defaults should match backend configuration
+        assert config.model == "gpt-4o-mini"
+        assert config.temperature == 0.7
+        assert config.max_tokens == 1000
+
+    @pytest.mark.unit
+    def test_session_config_response_accepts_custom_values(self) -> None:
+        """SessionConfigResponse should accept custom values."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+
+        # GIVEN custom config values
+        config = SessionConfigResponse(
+            model="claude-3-opus",
+            temperature=0.5,
+            max_tokens=8192,
+        )
+
+        # THEN values should be accessible
+        assert config.model == "claude-3-opus"
+        assert config.temperature == 0.5
+        assert config.max_tokens == 8192
+
+
+@pytest.mark.xdist_group(name="test_session_response_config_field")
+class TestSessionResponseConfigField:
+    """Tests for SessionResponse.config field integration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_session_response_has_config_field(self) -> None:
+        """SessionResponse should have 'config' field."""
+        schema = SessionResponse.model_json_schema()
+        properties = schema.get("properties", {})
+
+        assert "config" in properties, "SessionResponse should have 'config' field"
+
+    @pytest.mark.unit
+    def test_session_response_config_is_optional(self) -> None:
+        """SessionResponse.config should be optional."""
+        # GIVEN session data without config
+        session_data = {
+            "id": "session-123",
+            "name": "Test Session",
+            "status": "active",
+        }
+
+        # WHEN creating SessionResponse
+        response = SessionResponse(**session_data)
+
+        # THEN config should be None (optional field)
+        assert response.config is None
+
+    @pytest.mark.unit
+    def test_session_response_accepts_config(self) -> None:
+        """SessionResponse should accept config field."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+
+        # GIVEN session data with config
+        config = SessionConfigResponse(model="gpt-4o-mini")
+        session_data = {
+            "id": "session-123",
+            "name": "Test Session",
+            "status": "active",
+            "config": config,
+        }
+
+        # WHEN creating SessionResponse
+        response = SessionResponse(**session_data)
+
+        # THEN config should be accessible
+        assert response.config is not None
+        assert response.config.model == "gpt-4o-mini"
+
+    @pytest.mark.unit
+    def test_session_response_config_in_serialization(self) -> None:
+        """SessionResponse JSON should include config when present."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+
+        # GIVEN a SessionResponse with config
+        config = SessionConfigResponse(
+            model="claude-3-sonnet",
+            temperature=0.8,
+            max_tokens=4096,
+        )
+        response = SessionResponse(
+            id="session-123",
+            name="Test Session",
+            status="active",  # type: ignore[arg-type]
+            config=config,
+        )
+
+        # WHEN serializing to dict
+        data = response.model_dump()
+
+        # THEN config should be in output with correct values
+        assert "config" in data
+        assert data["config"]["model"] == "claude-3-sonnet"
+        assert data["config"]["temperature"] == 0.8
+        assert data["config"]["max_tokens"] == 4096
+
+
+@pytest.mark.xdist_group(name="test_session_config_update_contract")
+class TestSessionConfigUpdateContract:
+    """Tests for SessionConfigUpdateRequest model contract.
+
+    TDD tests ensuring users can update session config (model selection feature).
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_session_config_update_request_exists(self) -> None:
+        """SessionConfigUpdateRequest model should exist in sessions module."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigUpdateRequest
+
+        # Model should be importable
+        assert SessionConfigUpdateRequest is not None
+
+    @pytest.mark.unit
+    def test_session_config_update_request_has_model_field(self) -> None:
+        """SessionConfigUpdateRequest should have optional 'model' field."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigUpdateRequest
+
+        schema = SessionConfigUpdateRequest.model_json_schema()
+        properties = schema.get("properties", {})
+
+        assert "model" in properties, "SessionConfigUpdateRequest should have 'model' field"
+
+    @pytest.mark.unit
+    def test_session_config_update_request_all_fields_optional(self) -> None:
+        """SessionConfigUpdateRequest should allow partial updates."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigUpdateRequest
+
+        # WHEN creating with no arguments
+        request = SessionConfigUpdateRequest()
+
+        # THEN all fields should be None (optional)
+        assert request.model is None
+        assert request.temperature is None
+        assert request.max_tokens is None
+
+    @pytest.mark.unit
+    def test_session_config_update_request_accepts_model_only(self) -> None:
+        """SessionConfigUpdateRequest should accept model-only update."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigUpdateRequest
+
+        # GIVEN a request with only model
+        request = SessionConfigUpdateRequest(model="claude-3-opus")
+
+        # THEN only model should be set
+        assert request.model == "claude-3-opus"
+        assert request.temperature is None
+        assert request.max_tokens is None
+
+    @pytest.mark.unit
+    def test_session_config_update_request_accepts_all_fields(self) -> None:
+        """SessionConfigUpdateRequest should accept all config fields."""
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigUpdateRequest
+
+        # GIVEN a request with all fields
+        request = SessionConfigUpdateRequest(
+            model="gpt-4-turbo",
+            temperature=0.9,
+            max_tokens=16384,
+        )
+
+        # THEN all fields should be accessible
+        assert request.model == "gpt-4-turbo"
+        assert request.temperature == 0.9
+        assert request.max_tokens == 16384
+
+
+@pytest.mark.xdist_group(name="test_in_memory_session_config_update")
+class TestInMemorySessionConfigUpdate:
+    """Tests for InMemorySessionService.update_config method."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_update_config_method_exists(self) -> None:
+        """InMemorySessionService should have update_config method."""
+        service = InMemorySessionService()
+        assert hasattr(service, "update_config")
+        assert callable(service.update_config)
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_update_config_changes_model(self) -> None:
+        """update_config should change session's model."""
+        service = InMemorySessionService()
+        user_id = "test-user"
+
+        # GIVEN a session exists (note: signature is session_data, user_id)
+        session = await service.create_session({"name": "Test"}, user_id)
+        session_id = session["id"]
+
+        # WHEN updating the model
+        updated = await service.update_config(session_id, user_id, {"model": "claude-3-sonnet"})
+
+        # THEN the model should be updated
+        assert updated is not None
+        assert updated["config"]["model"] == "claude-3-sonnet"
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_update_config_partial_update(self) -> None:
+        """update_config should support partial updates."""
+        service = InMemorySessionService()
+        user_id = "test-user"
+
+        # GIVEN a session with default config
+        session = await service.create_session({"name": "Test"}, user_id)
+        session_id = session["id"]
+        original_temp = session["config"]["temperature"]
+
+        # WHEN updating only the model
+        updated = await service.update_config(session_id, user_id, {"model": "gpt-4-turbo"})
+
+        # THEN model should change but temperature should remain
+        assert updated is not None
+        assert updated["config"]["model"] == "gpt-4-turbo"
+        assert updated["config"]["temperature"] == original_temp
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_update_config_returns_none_for_nonexistent_session(self) -> None:
+        """update_config should return None for non-existent session."""
+        service = InMemorySessionService()
+
+        # WHEN updating config for non-existent session
+        result = await service.update_config("nonexistent", "user", {"model": "gpt-4"})
+
+        # THEN result should be None
+        assert result is None
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_update_config_enforces_user_ownership(self) -> None:
+        """update_config should not allow updating another user's session."""
+        service = InMemorySessionService()
+
+        # GIVEN a session owned by user1
+        session = await service.create_session({"name": "Test"}, "user1")
+        session_id = session["id"]
+
+        # WHEN user2 tries to update config
+        result = await service.update_config(session_id, "user2", {"model": "gpt-4"})
+
+        # THEN result should be None (access denied)
+        assert result is None
+
+
+@pytest.mark.xdist_group(name="test_redis_session_config_persistence")
+class TestRedisSessionConfigPersistence:
+    """Tests for Redis session service config persistence."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_update_config_calls_manager_update_session(self) -> None:
+        """update_config should call manager.update_session for persistence."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from mcp_server_langgraph.api.v1.sessions import RedisSessionService
+        from mcp_server_langgraph.storage.session.models import Session, SessionConfig
+
+        # GIVEN a mocked manager with a session
+        mock_manager = MagicMock()
+        mock_session = Session(
+            session_id="test-session",
+            name="Test",
+            user_id="user1",
+            config=SessionConfig(model="gpt-4o-mini", temperature=0.7, max_tokens=1000),
+        )
+        mock_manager.get_session = AsyncMock(return_value=mock_session)
+        mock_manager.update_session = AsyncMock(return_value=mock_session)
+
+        service = RedisSessionService(mock_manager)
+
+        # WHEN updating config
+        await service.update_config("test-session", "user1", {"model": "claude-3-sonnet", "temperature": 0.9})
+
+        # THEN manager.update_session should be called with new config
+        mock_manager.update_session.assert_called_once()
+        call_args = mock_manager.update_session.call_args
+        assert call_args[1]["session_id"] == "test-session"
+        assert call_args[1]["config"].model == "claude-3-sonnet"
+        assert call_args[1]["config"].temperature == 0.9
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_update_config_preserves_unchanged_fields(self) -> None:
+        """update_config should preserve config fields not being updated."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from mcp_server_langgraph.api.v1.sessions import RedisSessionService
+        from mcp_server_langgraph.storage.session.models import Session, SessionConfig
+
+        # GIVEN a session with specific config
+        mock_manager = MagicMock()
+        mock_session = Session(
+            session_id="test-session",
+            name="Test",
+            user_id="user1",
+            config=SessionConfig(model="gpt-4o-mini", temperature=0.7, max_tokens=2000),
+        )
+        mock_manager.get_session = AsyncMock(return_value=mock_session)
+        mock_manager.update_session = AsyncMock(return_value=mock_session)
+
+        service = RedisSessionService(mock_manager)
+
+        # WHEN updating only model
+        await service.update_config("test-session", "user1", {"model": "gpt-4-turbo"})
+
+        # THEN max_tokens should remain unchanged
+        call_args = mock_manager.update_session.call_args
+        config = call_args[1]["config"]
+        assert config.model == "gpt-4-turbo"
+        assert config.max_tokens == 2000  # preserved
+
+
+@pytest.mark.xdist_group(name="test_postgres_session_config_persistence")
+class TestPostgresSessionConfigPersistence:
+    """Tests for PostgreSQL session service config persistence."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_update_config_calls_manager_update_session(self) -> None:
+        """update_config should call manager.update_session for persistence."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from mcp_server_langgraph.api.v1.sessions import PostgresSessionService
+        from mcp_server_langgraph.storage.session.models import Session, SessionConfig
+
+        # GIVEN a mocked manager with a session
+        mock_manager = MagicMock()
+        mock_session = Session(
+            session_id="test-session",
+            name="Test",
+            user_id="user1",
+            config=SessionConfig(model="gpt-4o-mini", temperature=0.7, max_tokens=1000),
+        )
+        mock_manager.get_session = AsyncMock(return_value=mock_session)
+        mock_manager.update_session = AsyncMock(return_value=mock_session)
+
+        service = PostgresSessionService(mock_manager)
+
+        # WHEN updating config
+        await service.update_config("test-session", "user1", {"model": "claude-3-opus", "max_tokens": 4000})
+
+        # THEN manager.update_session should be called with new config
+        mock_manager.update_session.assert_called_once()
+        call_args = mock_manager.update_session.call_args
+        assert call_args[1]["session_id"] == "test-session"
+        assert call_args[1]["config"].model == "claude-3-opus"
+        assert call_args[1]["config"].max_tokens == 4000

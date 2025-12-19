@@ -30,7 +30,9 @@ import {
   AlertCircle,
   Search,
   BellOff,
+  ScrollText,
 } from "lucide-react";
+import { AuditEventPanel } from "../components/Settings/AuditEventPanel";
 
 type SettingsTab =
   | "profile"
@@ -38,7 +40,8 @@ type SettingsTab =
   | "notifications"
   | "appearance"
   | "security"
-  | "manage-keys";
+  | "manage-keys"
+  | "audit-log";
 
 interface ManagedUser {
   id: string;
@@ -176,11 +179,12 @@ export function SettingsPage() {
     { id: "security" as const, label: "Security", icon: Shield },
   ];
 
-  // Add admin-only tab
+  // Add admin-only tabs
   const tabs = isAdmin
     ? [
         ...baseTabs,
         { id: "manage-keys" as const, label: "Manage User Keys", icon: Users },
+        { id: "audit-log" as const, label: "Audit Log", icon: ScrollText },
       ]
     : baseTabs;
 
@@ -452,6 +456,19 @@ export function SettingsPage() {
                     Sign Out All Devices
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Audit Log Tab (Admin Only) */}
+            {activeTab === "audit-log" && isAdmin && (
+              <div className="space-y-6">
+                <div className="p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                  <p className="text-sm text-purple-800 dark:text-purple-200">
+                    Real-time audit event stream for compliance and security
+                    monitoring.
+                  </p>
+                </div>
+                <AuditEventPanel maxHeight="500px" />
               </div>
             )}
 

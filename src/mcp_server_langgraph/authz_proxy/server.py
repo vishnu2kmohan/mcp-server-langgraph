@@ -58,9 +58,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as e:
         logger.warning(f"Failed to instrument FastAPI app with OTEL: {e}")
 
-    # Create and register auth middleware globally
-    # This is required for get_current_user() dependency to work
+    # Create and register auth middleware
+    # Required for get_current_user() dependency to work
     auth_middleware = create_auth_middleware(settings)
+
+    # Store in app.state for DI-based access (recommended pattern)
+    app.state.auth_middleware = auth_middleware
+
+    # Also set global for backward compatibility
     set_global_auth_middleware(auth_middleware)
 
     # Initialize OpenFGA client (async initialization pattern)

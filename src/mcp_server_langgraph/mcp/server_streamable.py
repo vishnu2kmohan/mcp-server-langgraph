@@ -127,7 +127,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Store in app.state for FastAPI dependencies
     app.state.openfga_client = openfga_client
 
-    # Initialize global auth middleware for FastAPI dependencies
+    # Initialize auth middleware for FastAPI dependencies
     # This must happen AFTER observability is initialized (for logging)
     try:
         from mcp_server_langgraph.auth.middleware import FASTAPI_AVAILABLE, set_global_auth_middleware
@@ -137,12 +137,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             # Pass the async-initialized OpenFGA client to the server
             mcp_server = get_mcp_server(openfga_client=openfga_client)
 
-            # Set the auth middleware globally for FastAPI dependencies
+            # Store in app.state for DI-based access (recommended pattern)
+            app.state.auth_middleware = mcp_server.auth
+
+            # Also set global for backward compatibility
             set_global_auth_middleware(mcp_server.auth)
 
-            logger.info("Global auth middleware initialized for FastAPI dependencies")
+            logger.info("Auth middleware initialized for FastAPI dependencies (DI pattern)")
     except Exception as e:
-        logger.warning(f"Failed to initialize global auth middleware: {e}")
+        logger.warning(f"Failed to initialize auth middleware: {e}")
 
     # Initialize session service with Redis if available
     try:

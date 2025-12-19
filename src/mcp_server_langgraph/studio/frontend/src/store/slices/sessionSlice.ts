@@ -26,6 +26,28 @@ function generateMessageId(): string {
 }
 
 /**
+ * Get auth headers for API requests.
+ * Matches the logic in baseQueryWithReauth.ts for consistency.
+ */
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  // Check multiple storage keys for backward compatibility:
+  // - "access_token": Used by OAuth2 PKCE callback
+  // - "auth_token": Legacy key (deprecated)
+  const token =
+    localStorage.getItem("access_token") || localStorage.getItem("auth_token");
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return headers;
+}
+
+/**
  * Initial session state
  */
 export const initialSessionState: SessionState = {
@@ -85,6 +107,7 @@ export const fetchSessions = createAsyncThunk<
       ? `/api/v1/sessions?${queryString}`
       : "/api/v1/sessions";
     const response = await fetch(url, {
+      headers: getAuthHeaders(),
       credentials: "include",
     });
 
@@ -145,6 +168,7 @@ export const fetchMoreSessions = createAsyncThunk<
       ? `/api/v1/sessions?${queryString}`
       : "/api/v1/sessions";
     const response = await fetch(url, {
+      headers: getAuthHeaders(),
       credentials: "include",
     });
 
@@ -175,6 +199,57 @@ export const fetchMoreSessions = createAsyncThunk<
 });
 
 /**
+ * Transform API session config (snake_case) to client format (camelCase).
+ * Backend SessionConfig has: model, temperature, max_tokens
+ * Frontend SessionConfig has: modelName, modelProvider, temperature, maxTokens
+ */
+function transformApiConfig(
+  apiConfig: Record<string, unknown> | undefined,
+): Partial<SessionConfig> {
+  if (!apiConfig) return {};
+
+  const config: Partial<SessionConfig> = {};
+
+  // Map 'model' to 'modelName' (backend uses 'model' field)
+  if (typeof apiConfig.model === "string") {
+    config.modelName = apiConfig.model;
+  } else if (typeof apiConfig.modelName === "string") {
+    // Also support camelCase if already transformed
+    config.modelName = apiConfig.modelName;
+  }
+
+  // Map 'model_provider' or 'modelProvider'
+  if (typeof apiConfig.model_provider === "string") {
+    config.modelProvider =
+      apiConfig.model_provider as SessionConfig["modelProvider"];
+  } else if (typeof apiConfig.modelProvider === "string") {
+    config.modelProvider =
+      apiConfig.modelProvider as SessionConfig["modelProvider"];
+  }
+
+  // Map 'max_tokens' to 'maxTokens'
+  if (typeof apiConfig.max_tokens === "number") {
+    config.maxTokens = apiConfig.max_tokens;
+  } else if (typeof apiConfig.maxTokens === "number") {
+    config.maxTokens = apiConfig.maxTokens;
+  }
+
+  // Temperature (same name in both)
+  if (typeof apiConfig.temperature === "number") {
+    config.temperature = apiConfig.temperature;
+  }
+
+  // System prompt
+  if (typeof apiConfig.system_prompt === "string") {
+    config.systemPrompt = apiConfig.system_prompt;
+  } else if (typeof apiConfig.systemPrompt === "string") {
+    config.systemPrompt = apiConfig.systemPrompt;
+  }
+
+  return config;
+}
+
+/**
  * Transform API session response to ClientSession format.
  * Converts snake_case to camelCase and applies default config.
  */
@@ -182,12 +257,18 @@ function transformApiSession(
   apiSession: Record<string, unknown>,
   providedConfig?: Partial<SessionConfig>,
 ): ClientSession {
+  // Extract and transform config from API response
+  const apiConfig = transformApiConfig(
+    apiSession.config as Record<string, unknown> | undefined,
+  );
+
   return {
     id: apiSession.id as string,
     name: (apiSession.name as string) || "Untitled",
     config: {
       ...DEFAULT_SESSION_CONFIG,
-      ...providedConfig,
+      ...apiConfig, // Apply config from API response
+      ...providedConfig, // Override with explicitly provided config
     },
     messages: Array.isArray(apiSession.messages)
       ? (apiSession.messages as ChatMessage[])
@@ -215,9 +296,7 @@ export const createSession = createAsyncThunk<
   try {
     const response = await fetch("/api/v1/sessions", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ name, config }),
       credentials: "include",
     });
@@ -246,6 +325,7 @@ export const loadSession = createAsyncThunk<
 >("session/loadSession", async (sessionId, { rejectWithValue }) => {
   try {
     const response = await fetch(`/api/v1/sessions/${sessionId}`, {
+      headers: getAuthHeaders(),
       credentials: "include",
     });
 
@@ -274,6 +354,7 @@ export const deleteSession = createAsyncThunk<
   try {
     const response = await fetch(`/api/v1/sessions/${sessionId}`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
       credentials: "include",
     });
 
@@ -301,9 +382,7 @@ export const renameSession = createAsyncThunk<
   try {
     const response = await fetch(`/api/v1/sessions/${sessionId}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ name }),
       credentials: "include",
     });
@@ -351,9 +430,7 @@ export const sendMessage = createAsyncThunk<
         `/api/v1/sessions/${currentSession.id}/messages`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: getAuthHeaders(),
           body: JSON.stringify({ content }),
           credentials: "include",
         },
@@ -393,6 +470,7 @@ export const clearMessages = createAsyncThunk<
       `/api/v1/sessions/${currentSession.id}/messages`,
       {
         method: "DELETE",
+        headers: getAuthHeaders(),
         credentials: "include",
       },
     );
@@ -457,6 +535,18 @@ export const sessionSlice = createSlice({
             ...updates,
           };
         }
+      }
+    },
+
+    /**
+     * Delete a message from the current session
+     */
+    deleteMessage: (state, action: PayloadAction<string>) => {
+      if (state.currentSession) {
+        const messageId = action.payload;
+        state.currentSession.messages = state.currentSession.messages.filter(
+          (m) => m.id !== messageId,
+        );
       }
     },
 
@@ -661,6 +751,7 @@ export const {
   addUserMessage,
   addMessage,
   updateMessage,
+  deleteMessage,
   closeSession,
   clearError,
   setSessions,

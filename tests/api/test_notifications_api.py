@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.app import app
 
-pytestmark = pytest.mark.api
+pytestmark = [pytest.mark.unit, pytest.mark.api]
 
 
 @pytest.fixture
