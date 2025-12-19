@@ -1,7 +1,7 @@
 /**
- * CommandPalette Tests
+ * GenericCommandPalette Tests
  *
- * TDD tests for the Command Palette component.
+ * TDD tests for the Generic Command Palette component.
  * Tests cover:
  * - Modal rendering
  * - Search input
@@ -16,7 +16,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
-import { CommandPalette, CommandPaletteProps } from "./CommandPalette";
+import {
+  GenericCommandPalette,
+  GenericCommandPaletteProps,
+} from "./GenericCommandPalette";
 
 expect.extend(toHaveNoViolations);
 
@@ -43,14 +46,14 @@ const mockCommands = [
   },
 ];
 
-const defaultProps: CommandPaletteProps = {
+const defaultProps: GenericCommandPaletteProps = {
   isOpen: true,
   onClose: vi.fn(),
   commands: mockCommands,
   onExecute: vi.fn(),
 };
 
-describe("CommandPalette", () => {
+describe("GenericCommandPalette", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -61,19 +64,19 @@ describe("CommandPalette", () => {
 
   describe("rendering", () => {
     it("should render when open", () => {
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       expect(screen.getByTestId("command-palette")).toBeInTheDocument();
     });
 
     it("should not render when closed", () => {
-      render(<CommandPalette {...defaultProps} isOpen={false} />);
+      render(<GenericCommandPalette {...defaultProps} isOpen={false} />);
 
       expect(screen.queryByTestId("command-palette")).not.toBeInTheDocument();
     });
 
     it("should render search input", () => {
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       expect(
         screen.getByPlaceholderText(/type a command/i),
@@ -81,7 +84,7 @@ describe("CommandPalette", () => {
     });
 
     it("should render command list", () => {
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       expect(screen.getByText("New Session")).toBeInTheDocument();
       expect(screen.getByText("Open Settings")).toBeInTheDocument();
@@ -89,14 +92,14 @@ describe("CommandPalette", () => {
     });
 
     it("should display shortcuts when available", () => {
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       expect(screen.getByText("Cmd+N")).toBeInTheDocument();
       expect(screen.getByText("Cmd+,")).toBeInTheDocument();
     });
 
     it("should group commands by category", () => {
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       expect(screen.getByText("Session")).toBeInTheDocument();
       expect(screen.getByText("Application")).toBeInTheDocument();
@@ -110,7 +113,7 @@ describe("CommandPalette", () => {
   describe("search", () => {
     it("should filter commands when typing", async () => {
       const user = userEvent.setup();
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       await user.type(screen.getByPlaceholderText(/type a command/i), "new");
 
@@ -120,7 +123,7 @@ describe("CommandPalette", () => {
 
     it("should show no results message when no matches", async () => {
       const user = userEvent.setup();
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       await user.type(
         screen.getByPlaceholderText(/type a command/i),
@@ -131,7 +134,7 @@ describe("CommandPalette", () => {
     });
 
     it("should focus search input on open", async () => {
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByPlaceholderText(/type a command/i)).toHaveFocus();
@@ -146,7 +149,7 @@ describe("CommandPalette", () => {
   describe("keyboard navigation", () => {
     it("should navigate down with arrow down", async () => {
       const user = userEvent.setup();
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       await user.keyboard("{ArrowDown}");
 
@@ -156,7 +159,7 @@ describe("CommandPalette", () => {
 
     it("should navigate up with arrow up", async () => {
       const user = userEvent.setup();
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       await user.keyboard("{ArrowDown}{ArrowDown}{ArrowUp}");
 
@@ -166,7 +169,7 @@ describe("CommandPalette", () => {
 
     it("should execute command on Enter", async () => {
       const user = userEvent.setup();
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       await user.keyboard("{Enter}");
 
@@ -175,7 +178,7 @@ describe("CommandPalette", () => {
 
     it("should close on Escape", async () => {
       const user = userEvent.setup();
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       await user.keyboard("{Escape}");
 
@@ -190,7 +193,7 @@ describe("CommandPalette", () => {
   describe("click interactions", () => {
     it("should execute command on click", async () => {
       const user = userEvent.setup();
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       await user.click(screen.getByText("Open Settings"));
 
@@ -199,7 +202,7 @@ describe("CommandPalette", () => {
 
     it("should close when clicking backdrop", async () => {
       const user = userEvent.setup();
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       await user.click(screen.getByTestId("command-palette-backdrop"));
 
@@ -214,7 +217,10 @@ describe("CommandPalette", () => {
   describe("recent commands", () => {
     it("should display recent commands section", () => {
       render(
-        <CommandPalette {...defaultProps} recentCommandIds={["new-session"]} />,
+        <GenericCommandPalette
+          {...defaultProps}
+          recentCommandIds={["new-session"]}
+        />,
       );
 
       expect(screen.getByText(/recent/i)).toBeInTheDocument();
@@ -227,14 +233,14 @@ describe("CommandPalette", () => {
 
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
-      const { container } = render(<CommandPalette {...defaultProps} />);
+      const { container } = render(<GenericCommandPalette {...defaultProps} />);
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have proper ARIA attributes", () => {
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
       expect(screen.getByRole("combobox")).toBeInTheDocument();
@@ -242,13 +248,13 @@ describe("CommandPalette", () => {
     });
 
     it("should have aria-label on search input", () => {
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       expect(screen.getByRole("combobox")).toHaveAttribute("aria-label");
     });
 
     it("should have focused search input", async () => {
-      render(<CommandPalette {...defaultProps} />);
+      render(<GenericCommandPalette {...defaultProps} />);
 
       // Search input should be focused on open
       await waitFor(() => {
@@ -263,7 +269,9 @@ describe("CommandPalette", () => {
 
   describe("custom className", () => {
     it("should apply custom className", () => {
-      render(<CommandPalette {...defaultProps} className="custom-class" />);
+      render(
+        <GenericCommandPalette {...defaultProps} className="custom-class" />,
+      );
 
       expect(screen.getByTestId("command-palette")).toHaveClass("custom-class");
     });

@@ -1,7 +1,7 @@
 /**
- * CommandPalette Component
+ * GenericCommandPalette Component
  *
- * Quick actions / command palette modal.
+ * Reusable command palette modal for quick actions.
  * Features:
  * - Fuzzy search
  * - Keyboard navigation
@@ -11,6 +11,9 @@
  *
  * Implements WCAG 2.1 AA accessibility requirements.
  * Based on IDE command palette patterns.
+ *
+ * Note: This is the generic/reusable version. For the app-specific
+ * command palette with predefined commands, see Layout/CommandPalette.
  */
 
 import { useEffect, useRef, useState, useMemo } from "react";
@@ -21,7 +24,7 @@ import { Command } from "../../hooks/useCommandPalette";
 // Types
 // ==============================================================================
 
-export interface CommandPaletteProps {
+export interface GenericCommandPaletteProps {
   /** Whether palette is open */
   isOpen: boolean;
   /** Close handler */
@@ -58,14 +61,14 @@ function fuzzyMatch(query: string, target: string): boolean {
 // Component
 // ==============================================================================
 
-export function CommandPalette({
+export function GenericCommandPalette({
   isOpen,
   onClose,
   commands,
   onExecute,
   recentCommandIds = [],
   className = "",
-}: CommandPaletteProps) {
+}: GenericCommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -351,4 +354,4 @@ export function CommandPalette({
   );
 }
 
-export default CommandPalette;
+export default GenericCommandPalette;

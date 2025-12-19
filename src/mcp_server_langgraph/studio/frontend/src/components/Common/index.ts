@@ -31,3 +31,6 @@ export type {
 
 export { ThemeToggle } from "./ThemeToggle";
 export type { ThemeToggleProps, Theme } from "./ThemeToggle";
+
+export { GenericCommandPalette } from "./GenericCommandPalette";
+export type { GenericCommandPaletteProps } from "./GenericCommandPalette";
