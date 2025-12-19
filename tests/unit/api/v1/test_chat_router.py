@@ -53,7 +53,7 @@ class TestChatCompletionEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.create_completion.return_value = {
                 "id": str(uuid4()),
                 "message": {"role": "assistant", "content": "Hello!"},
@@ -79,7 +79,7 @@ class TestChatCompletionEndpoint:
         THEN response should contain assistant message
         """
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.create_completion.return_value = {
                 "id": str(uuid4()),
                 "message": {"role": "assistant", "content": "I can help!"},
@@ -162,7 +162,7 @@ class TestChatHistoryEndpoint:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_history.return_value = [
                 {"role": "user", "content": "Hello"},
                 {"role": "assistant", "content": "Hi!"},
@@ -182,7 +182,7 @@ class TestChatHistoryEndpoint:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_history.return_value = [
                 {"role": "user", "content": "Hello"},
                 {"role": "assistant", "content": "Hi!"},
@@ -204,7 +204,7 @@ class TestChatHistoryEndpoint:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_history.return_value = None
             mock_get_service.return_value = mock_service
 
@@ -231,7 +231,7 @@ class TestChatErrorHandling:
         from mcp_server_langgraph.api.v1.mcp_bridge import MCPElicitationRequiredError
 
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.create_completion.side_effect = MCPElicitationRequiredError(
                 "User authentication required",
                 elicitations=[
@@ -265,7 +265,7 @@ class TestChatErrorHandling:
         from mcp_server_langgraph.api.v1.mcp_bridge import MCPConnectionError
 
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.create_completion.side_effect = MCPConnectionError("MCP server connection refused")
             mock_get_service.return_value = mock_service
 
@@ -290,7 +290,7 @@ class TestChatErrorHandling:
         from mcp_server_langgraph.api.v1.mcp_bridge import MCPPermissionError
 
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.create_completion.side_effect = MCPPermissionError("Access denied to chat resource")
             mock_get_service.return_value = mock_service
 

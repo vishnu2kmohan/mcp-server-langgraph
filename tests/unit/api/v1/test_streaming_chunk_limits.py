@@ -43,7 +43,7 @@ class TestStreamingHandlerChunkSizeLimit:
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
-            send_notification=AsyncMock(),
+            send_notification=AsyncMock(),  # async-mock-configured (callback)
             max_chunk_size=32768,
         )
 

@@ -261,7 +261,7 @@ class TestStreamingWithConnectionLimits:
         handler = AuthenticatedMCPHandler(user_id="user:test")
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
-            send_notification=AsyncMock(),
+            send_notification=AsyncMock(),  # async-mock-configured (callback)
             connection_manager=manager,
             session_id="session1",
         )

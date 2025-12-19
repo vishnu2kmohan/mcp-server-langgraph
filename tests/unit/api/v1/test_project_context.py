@@ -58,7 +58,7 @@ def mock_current_user() -> dict[str, Any]:
 @pytest.fixture
 def mock_context_service() -> AsyncMock:
     """Mock context service."""
-    service = AsyncMock()
+    service = AsyncMock()  # async-mock-configured (return_value set below)
     service.get_context.return_value = MOCK_PROJECT_CONTEXT
     service.update_context.return_value = MOCK_PROJECT_CONTEXT
     service.delete_context.return_value = True

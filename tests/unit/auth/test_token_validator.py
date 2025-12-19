@@ -36,7 +36,7 @@ class TestTokenValidatorBasicVerification:
         """
         from mcp_server_langgraph.auth.token_validator import TokenValidator
 
-        mock_provider = AsyncMock()
+        mock_provider = AsyncMock()  # async-mock-configured (return_value set below)
         mock_provider.verify_token.return_value = TokenVerification(
             valid=True,
             payload={"sub": "user:alice", "jti": "abc123"},
@@ -57,13 +57,13 @@ class TestTokenValidatorBasicVerification:
         """
         from mcp_server_langgraph.auth.token_validator import TokenValidator
 
-        mock_provider = AsyncMock()
+        mock_provider = AsyncMock()  # async-mock-configured (return_value set below)
         mock_provider.verify_token.return_value = TokenVerification(
             valid=True,
             payload={"sub": "user:alice", "jti": "denied_jti"},
         )
 
-        mock_denylist = AsyncMock()
+        mock_denylist = AsyncMock()  # async-mock-configured (return_value set below)
         mock_denylist.is_denied.return_value = True
 
         validator = TokenValidator(
@@ -85,13 +85,13 @@ class TestTokenValidatorBasicVerification:
         """
         from mcp_server_langgraph.auth.token_validator import TokenValidator
 
-        mock_provider = AsyncMock()
+        mock_provider = AsyncMock()  # async-mock-configured (return_value set below)
         mock_provider.verify_token.return_value = TokenVerification(
             valid=True,
             payload={"sub": "user:alice", "jti": "valid_jti"},
         )
 
-        mock_denylist = AsyncMock()
+        mock_denylist = AsyncMock()  # async-mock-configured (return_value set below)
         mock_denylist.is_denied.return_value = False
 
         validator = TokenValidator(
@@ -111,7 +111,7 @@ class TestTokenValidatorBasicVerification:
         """
         from mcp_server_langgraph.auth.token_validator import TokenValidator
 
-        mock_provider = AsyncMock()
+        mock_provider = AsyncMock()  # async-mock-configured (return_value set below)
         mock_provider.verify_token.return_value = TokenVerification(
             valid=False,
             error="Token expired",
@@ -141,7 +141,7 @@ class TestTokenValidatorDPoPVerification:
         """
         from mcp_server_langgraph.auth.token_validator import TokenValidator
 
-        mock_provider = AsyncMock()
+        mock_provider = AsyncMock()  # async-mock-configured (return_value set below)
         mock_provider.verify_token.return_value = TokenVerification(
             valid=True,
             payload={"sub": "user:alice"},
@@ -170,7 +170,7 @@ class TestTokenValidatorDPoPVerification:
         """
         from mcp_server_langgraph.auth.token_validator import TokenValidator
 
-        mock_provider = AsyncMock()
+        mock_provider = AsyncMock()  # async-mock-configured (return_value set below)
         mock_provider.verify_token.return_value = TokenVerification(
             valid=True,
             payload={"sub": "user:alice"},  # No cnf claim
@@ -198,7 +198,7 @@ class TestTokenValidatorDPoPVerification:
         """
         from mcp_server_langgraph.auth.token_validator import TokenValidator
 
-        mock_provider = AsyncMock()
+        mock_provider = AsyncMock()  # async-mock-configured (return_value set below)
         mock_provider.verify_token.return_value = TokenVerification(
             valid=True,
             payload={

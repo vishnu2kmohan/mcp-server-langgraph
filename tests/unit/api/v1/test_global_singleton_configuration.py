@@ -238,9 +238,9 @@ class TestBootstrapConfiguresGlobalSingletons:
             patch("mcp_server_langgraph.bootstrap.init_http_client") as mock_http,
         ):
             mock_obs.return_value = MagicMock()
-            mock_auth.return_value = MagicMock(cleanup=AsyncMock())
-            mock_storage.return_value = MagicMock(cleanup=AsyncMock())
-            mock_http.return_value = MagicMock(cleanup=AsyncMock())
+            mock_auth.return_value = MagicMock(cleanup=AsyncMock())  # async-mock-configured (cleanup callback)
+            mock_storage.return_value = MagicMock(cleanup=AsyncMock())  # async-mock-configured (cleanup callback)
+            mock_http.return_value = MagicMock(cleanup=AsyncMock())  # async-mock-configured (cleanup callback)
 
             from mcp_server_langgraph.bootstrap import bootstrap_all
 

@@ -95,7 +95,7 @@ class TestSessionsListEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -111,7 +111,7 @@ class TestSessionsListEndpoint:
         THEN response should contain array of sessions
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = (
                 [{"id": "1", "title": "Test"}],
                 None,
@@ -133,7 +133,7 @@ class TestSessionsListEndpoint:
         """
         workflow_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = (
                 [{"id": "1", "workflow_id": workflow_id}],
                 None,
@@ -163,7 +163,7 @@ class TestSessionsGetEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_session.return_value = sample_session
             mock_get_service.return_value = mock_service
 
@@ -179,7 +179,7 @@ class TestSessionsGetEndpoint:
         THEN response should contain session data with messages
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_session.return_value = sample_session
             mock_get_service.return_value = mock_service
 
@@ -198,7 +198,7 @@ class TestSessionsGetEndpoint:
         THEN response should be 404 Not Found
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_session.return_value = None
             mock_get_service.return_value = mock_service
 
@@ -224,7 +224,7 @@ class TestSessionsCreateEndpoint:
         THEN response should be 201 Created
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.create_session.return_value = sample_session
             mock_get_service.return_value = mock_service
 
@@ -246,7 +246,7 @@ class TestSessionsCreateEndpoint:
         THEN response should contain created session with ID
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.create_session.return_value = sample_session
             mock_get_service.return_value = mock_service
 
@@ -279,7 +279,7 @@ class TestSessionsDeleteEndpoint:
         THEN response should be 204 No Content
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.delete_session.return_value = True
             mock_get_service.return_value = mock_service
 
@@ -295,7 +295,7 @@ class TestSessionsDeleteEndpoint:
         THEN response should be 404 Not Found
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.delete_session.return_value = False
             mock_get_service.return_value = mock_service
 
@@ -321,7 +321,7 @@ class TestSessionsMessagesEndpoint:
         THEN response should be 200 OK with messages array
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_session_messages.return_value = sample_session["messages"]
             mock_get_service.return_value = mock_service
 
@@ -339,7 +339,7 @@ class TestSessionsMessagesEndpoint:
         THEN response should be 201 Created
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             new_message = {"role": "user", "content": "New message"}
             mock_service.add_message.return_value = new_message
             mock_get_service.return_value = mock_service
@@ -373,7 +373,7 @@ class TestSessionsListSorting:
         THEN service should receive sorting parameters
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -391,7 +391,7 @@ class TestSessionsListSorting:
         THEN service should receive sorting parameters
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -407,7 +407,7 @@ class TestSessionsListSorting:
         THEN service should receive sorting parameters
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -437,7 +437,7 @@ class TestSessionsListFiltering:
         THEN service should receive status filter
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -454,7 +454,7 @@ class TestSessionsListFiltering:
         """
         workflow_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -484,7 +484,7 @@ class TestSessionsListSearch:
         THEN service should receive search query
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = (
                 [{"id": "1", "title": "Machine Learning Chat"}],
                 None,
@@ -503,7 +503,7 @@ class TestSessionsListSearch:
         THEN service should handle case-insensitive search
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -519,7 +519,7 @@ class TestSessionsListSearch:
         THEN service should handle both
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -535,7 +535,7 @@ class TestSessionsListSearch:
         THEN should return empty list
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -567,7 +567,7 @@ class TestSessionsListCombined:
         THEN service should handle both
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -584,7 +584,7 @@ class TestSessionsListCombined:
         """
         workflow_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.list_sessions.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -617,7 +617,7 @@ class TestMessageRatingEndpoint:
         THEN response should be 201 Created
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_session.return_value = sample_session
             mock_service.rate_message.return_value = {
                 "id": "rating-001",
@@ -641,7 +641,7 @@ class TestMessageRatingEndpoint:
         THEN response should contain rating data
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_session.return_value = sample_session
             mock_service.rate_message.return_value = {
                 "id": "rating-001",
@@ -667,7 +667,7 @@ class TestMessageRatingEndpoint:
         THEN response should be 201 Created
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_session.return_value = sample_session
             mock_service.rate_message.return_value = {
                 "id": "rating-001",
@@ -692,7 +692,7 @@ class TestMessageRatingEndpoint:
         THEN response should be 404 Not Found
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_session.return_value = None
             mock_get_service.return_value = mock_service
 

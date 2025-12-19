@@ -80,7 +80,7 @@ class TestAdminAuditLogsEndpoint:
     def _create_mock_repository(self, items: list[dict] | None = None, total: int = 0) -> AsyncMock:
         """Create a mock repository that returns the specified items."""
         # Use plain AsyncMock without spec to avoid importing database-related modules
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock()  # async-mock-configured (return_value set below)
         mock_repo.query.return_value = (items or [], total)
         return mock_repo
 

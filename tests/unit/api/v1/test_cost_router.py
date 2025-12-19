@@ -52,7 +52,7 @@ class TestCostSummaryEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_summary.return_value = {
                 "total_cost": 125.50,
                 "prompt_tokens": 50000,
@@ -74,7 +74,7 @@ class TestCostSummaryEndpoint:
         THEN response should contain cost summary
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_summary.return_value = {
                 "total_cost": 125.50,
                 "prompt_tokens": 50000,
@@ -106,7 +106,7 @@ class TestCostByModelEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_by_model.return_value = [
                 {"model": "gpt-4", "cost": 100.00, "requests": 500},
                 {"model": "gpt-3.5-turbo", "cost": 25.50, "requests": 1000},
@@ -125,7 +125,7 @@ class TestCostByModelEndpoint:
         THEN response should contain per-model breakdown
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_by_model.return_value = [
                 {"model": "gpt-4", "cost": 100.00, "requests": 500},
             ]
@@ -156,7 +156,7 @@ class TestCostHistoryEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_history.return_value = [
                 {"date": "2025-01-01", "cost": 10.00},
                 {"date": "2025-01-02", "cost": 15.00},
@@ -175,7 +175,7 @@ class TestCostHistoryEndpoint:
         THEN response should contain time series data
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
             mock_service.get_history.return_value = [
                 {"date": "2025-01-01", "cost": 10.00},
             ]

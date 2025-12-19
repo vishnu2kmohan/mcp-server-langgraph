@@ -275,7 +275,7 @@ class TestAuditMiddlewareErrorHandling:
         from mcp_server_langgraph.middleware.audit import AuditMiddleware
 
         # Create middleware with failing audit service
-        app = AsyncMock()
+        app = AsyncMock()  # async-mock-configured (return_value set below)
         app.return_value = Response(status_code=200)
 
         middleware = AuditMiddleware(app=app)

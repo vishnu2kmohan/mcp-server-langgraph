@@ -176,7 +176,7 @@ def mock_agent_state():
 @pytest.fixture
 async def mock_httpx_client():
     """Mock httpx async client"""
-    mock_client = AsyncMock()
+    mock_client = AsyncMock()  # async-mock-configured (return_value set below)
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"status": "ok"}
@@ -204,12 +204,12 @@ def mock_anthropic_client():
 async def mock_openfga_client(mock_openfga_response):
     """Mock OpenFGA client"""
     with patch("openfga_client.httpx.AsyncClient") as mock_client:
-        mock_response = AsyncMock()
+        mock_response = AsyncMock()  # async-mock-configured (return_value set below)
         mock_response.status_code = 200
         mock_response.json.return_value = mock_openfga_response["check"]
         mock_response.raise_for_status = MagicMock()
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock()  # async-mock-configured (return_value set below)
         mock_instance.post.return_value = mock_response
         mock_instance.get.return_value = mock_response
         mock_client.return_value.__aenter__.return_value = mock_instance

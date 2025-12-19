@@ -166,7 +166,7 @@ class TestStreamingHandlerUsesRateLimiter:
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
-            send_notification=AsyncMock(),
+            send_notification=AsyncMock(),  # async-mock-configured (callback)
             outbound_rate_limiter=rate_limiter,
         )
 

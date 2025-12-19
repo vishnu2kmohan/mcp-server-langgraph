@@ -274,7 +274,7 @@ class TestWebSearch:
 
         # Mock network error
         # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock()  # async-mock-configured (side_effect/return_value set below)
         mock_client_instance.post.side_effect = Exception("Network timeout")
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -300,7 +300,7 @@ class TestWebSearch:
         mock_response.raise_for_status = Mock(side_effect=Exception("Rate limit exceeded"))
 
         # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock()  # async-mock-configured (side_effect/return_value set below)
         mock_client_instance.post.return_value = mock_response
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -323,7 +323,7 @@ class TestWebSearch:
         mock_response.raise_for_status = MagicMock()
 
         # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock()  # async-mock-configured (side_effect/return_value set below)
         mock_client_instance.post.return_value = mock_response
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -344,7 +344,7 @@ class TestWebSearch:
 
         # Mock timeout error
         # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock()  # async-mock-configured (side_effect/return_value set below)
         mock_client_instance.post.side_effect = httpx.TimeoutException("Request timeout")
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 

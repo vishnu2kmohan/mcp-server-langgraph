@@ -82,7 +82,7 @@ def mock_current_user() -> dict[str, Any]:
 @pytest.fixture
 def mock_session_service() -> AsyncMock:
     """Mock session service."""
-    service = AsyncMock()
+    service = AsyncMock()  # async-mock-configured (return_value set below)
     service.get_session.return_value = MOCK_SESSION
     return service
 

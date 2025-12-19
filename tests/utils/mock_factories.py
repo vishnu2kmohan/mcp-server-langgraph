@@ -403,7 +403,7 @@ def create_behavioral_agent_graph(
     from langchain_core.messages import AIMessage, HumanMessage
     from unittest.mock import MagicMock
 
-    mock = AsyncMock()
+    mock = AsyncMock()  # async-mock-configured (return_value set below)
 
     # Setup state snapshot behavior
     if conversation_exists or messages:

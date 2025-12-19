@@ -47,7 +47,7 @@ class TestStreamingResetsIdleTimeout:
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
-            send_notification=AsyncMock(),
+            send_notification=AsyncMock(),  # async-mock-configured (callback)
             connection_manager=connection_manager,
         )
 
@@ -69,7 +69,7 @@ class TestStreamingResetsIdleTimeout:
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
-            send_notification=AsyncMock(),
+            send_notification=AsyncMock(),  # async-mock-configured (callback)
             session_id="test-session-123",
         )
 
