@@ -26,6 +26,12 @@ import workspaceReducer, {
   workspacePersistenceMiddleware,
   removeTabsByEntityId,
 } from "./slices/workspaceSlice";
+// Hybrid Canvas state (Phase 7 integration)
+import canvasReducer from "./slices/canvasSlice";
+import backgroundAgentReducer from "./slices/backgroundAgentSlice";
+import aiContextReducer from "./slices/aiContextSlice";
+import complianceReducer from "./slices/complianceSlice";
+import helpReducer from "./slices/helpSlice";
 
 // =============================================================================
 // Listener Middleware for Cross-Slice Side Effects
@@ -69,6 +75,16 @@ export const store = configureStore({
     observability: observabilityReducer,
     // Workspace layout state (JupyterLab-inspired)
     workspace: workspaceReducer,
+    // Hybrid Canvas layout state (Phase 7 - separate from workspace)
+    canvas: canvasReducer,
+    // Background agent state (Phase 7 - AI agents)
+    backgroundAgent: backgroundAgentReducer,
+    // AI context and suggestions state (Phase 7)
+    aiContext: aiContextReducer,
+    // Compliance dashboard state (Phase 7)
+    compliance: complianceReducer,
+    // Help pane state (Phase 7)
+    help: helpReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()

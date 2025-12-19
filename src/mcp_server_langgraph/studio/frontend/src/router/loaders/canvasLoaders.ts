@@ -17,6 +17,7 @@
 import type { LoaderFunctionArgs } from "react-router";
 import type { Session } from "../../types";
 import type { CanvasArtifact, ArtifactVersion } from "../../types/artifacts";
+import { getAuthToken } from "../../utils/storage";
 
 // =============================================================================
 // Types
@@ -46,9 +47,33 @@ export interface ArtifactLoaderData {
 
 const API_BASE = "/api/v1";
 
+/**
+ * Get auth headers for API requests.
+ * Uses centralized storage utility for consistent token access.
+ */
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  const token = getAuthToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return headers;
+}
+
+/**
+ * Fetch JSON with auth headers.
+ * Handles both authenticated and unauthenticated scenarios gracefully.
+ */
 async function fetchJson<T>(url: string): Promise<T | null> {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: getAuthHeaders(),
+      credentials: "include", // Forward-auth (Keycloak SSO) support
+    });
     if (!response.ok) {
       return null;
     }

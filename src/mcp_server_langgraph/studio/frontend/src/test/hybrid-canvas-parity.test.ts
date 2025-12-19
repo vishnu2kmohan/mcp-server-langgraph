@@ -115,10 +115,18 @@ describe("Hybrid Canvas Module Parity", () => {
   });
 
   describe("Router Guards (src/router/guards/)", () => {
-    it("exports auth and persona guards", async () => {
+    it("exports auth, persona, and hybrid shell guards", async () => {
       const module = await import("../router/guards");
       expect(module.AuthGuard).toBeDefined();
       expect(module.PersonaGuard).toBeDefined();
+      expect(module.HybridShellGuard).toBeDefined();
+    });
+
+    it("guards are React components", async () => {
+      const module = await import("../router/guards");
+      expect(typeof module.AuthGuard).toBe("function");
+      expect(typeof module.PersonaGuard).toBe("function");
+      expect(typeof module.HybridShellGuard).toBe("function");
     });
   });
 
@@ -142,6 +150,7 @@ describe("Hybrid Canvas Module Parity", () => {
       expect(help.HelpPane).not.toBe(undefined);
       expect(loaders.chatLoader).not.toBe(undefined);
       expect(guards.AuthGuard).not.toBe(undefined);
+      expect(guards.HybridShellGuard).not.toBe(undefined);
     });
   });
 });

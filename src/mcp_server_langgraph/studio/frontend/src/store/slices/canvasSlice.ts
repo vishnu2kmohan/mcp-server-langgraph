@@ -190,21 +190,23 @@ function persistState(state: CanvasState): void {
 // =============================================================================
 // Selectors
 // =============================================================================
+// Note: Selectors use a generic state type to avoid circular dependencies
+// with the main store. The store's RootState will include { canvas: CanvasState }
 
-interface RootState {
-  canvas: CanvasState;
-}
+type StateWithCanvas = { canvas: CanvasState };
 
-export const selectPanelSizes = (state: RootState) => state.canvas.panelSizes;
-export const selectSessionNavCollapsed = (state: RootState) =>
+export const selectPanelSizes = (state: StateWithCanvas) =>
+  state.canvas.panelSizes;
+export const selectSessionNavCollapsed = (state: StateWithCanvas) =>
   state.canvas.sessionNavCollapsed;
-export const selectCanvasCollapsed = (state: RootState) =>
+export const selectCanvasCollapsed = (state: StateWithCanvas) =>
   state.canvas.canvasCollapsed;
-export const selectActiveNavItem = (state: RootState) =>
+export const selectActiveNavItem = (state: StateWithCanvas) =>
   state.canvas.activeNavItem;
-export const selectSelectedArtifactId = (state: RootState) =>
+export const selectSelectedArtifactId = (state: StateWithCanvas) =>
   state.canvas.selectedArtifactId;
-export const selectPreferences = (state: RootState) => state.canvas.preferences;
+export const selectPreferences = (state: StateWithCanvas) =>
+  state.canvas.preferences;
 
 // =============================================================================
 // Exports

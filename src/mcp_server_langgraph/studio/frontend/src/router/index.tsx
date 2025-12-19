@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, Outlet } from "react-router";
 import { App } from "../App";
 import { AuthGuard } from "./guards/AuthGuard";
 import { PersonaGuard } from "./guards/PersonaGuard";
+import { HybridShellGuard } from "./guards/HybridShellGuard";
 import { HybridShellLayout } from "../layout";
 import { chatLoader, sessionsLoader } from "./loaders";
 
@@ -256,12 +257,20 @@ export const router = createBrowserRouter(
         // This is a completely separate route tree from legacy /studio/*
         // Feature-flagged via canvas_hybrid_shell
         // Does NOT render MainDock or AppShell - uses HybridShellLayout
+        //
+        // Guard Stack:
+        // 1. AuthGuard - Ensures user is authenticated
+        // 2. HybridShellGuard - Checks canvas_hybrid_shell feature flag
+        //    - If enabled: renders HybridShellLayout
+        //    - If disabled: redirects to legacy /studio/*
         {
           id: "studio-v2",
           path: "studio/v2",
           element: (
             <AuthGuard>
-              <HybridShellLayout />
+              <HybridShellGuard>
+                <HybridShellLayout />
+              </HybridShellGuard>
             </AuthGuard>
           ),
           // Load sessions for SessionNav on shell mount
