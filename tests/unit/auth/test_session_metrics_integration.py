@@ -131,7 +131,7 @@ class TestRedisSessionMetrics:
         from mcp_server_langgraph.auth.session import RedisSessionStore
 
         # Create a mock Redis client
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # async-mock-configured (return_value set below)
         mock_redis.lrange.return_value = []  # No existing sessions
         mock_redis.hset.return_value = True
         mock_redis.expire.return_value = True
@@ -174,7 +174,7 @@ class TestRedisSessionMetrics:
 
         # Create a mock Redis client with session data
         now = datetime.now(UTC)
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # async-mock-configured (return_value set below)
         mock_redis.hgetall.return_value = {
             "session_id": "test-session-id-32chars-minimum-x",
             "user_id": "user:test",
@@ -213,7 +213,7 @@ class TestRedisSessionMetrics:
         from mcp_server_langgraph.auth.session import RedisSessionStore
 
         # Create a mock Redis client
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # async-mock-configured (return_value set below)
         mock_redis.hget.return_value = "user:test"  # Return user_id
         mock_redis.delete.return_value = 1  # Session deleted
         mock_redis.lrem.return_value = 1
@@ -243,7 +243,7 @@ class TestRedisSessionMetrics:
         from mcp_server_langgraph.auth.session import RedisSessionStore
 
         # Create a mock Redis client that returns empty (no session)
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # async-mock-configured (return_value set below)
         mock_redis.hgetall.return_value = {}  # No session found
 
         # Create store and inject mock Redis

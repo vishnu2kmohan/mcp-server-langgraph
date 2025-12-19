@@ -102,12 +102,12 @@ class TestBearerSchemeIsolation:
             return mock_current_user
 
         def mock_get_api_key_manager_sync():
-            manager = AsyncMock()
+            manager = AsyncMock()  # async-mock-configured (return_value set below)
             manager.list_api_keys.return_value = []
             return manager
 
         def mock_get_keycloak_client_sync():
-            return AsyncMock()
+            return AsyncMock()  # async-mock-configured (used as return value)
 
         # ✅ CRITICAL: Override bearer_scheme BEFORE include_router (Revision 7)
         # Return HTTPAuthorizationCredentials to match production pattern
@@ -167,12 +167,12 @@ class TestBearerSchemeIsolation:
             return mock_current_user
 
         def mock_get_api_key_manager_sync():
-            manager = AsyncMock()
+            manager = AsyncMock()  # async-mock-configured (return_value set below)
             manager.list_api_keys.return_value = []
             return manager
 
         def mock_get_keycloak_client_sync():
-            return AsyncMock()
+            return AsyncMock()  # async-mock-configured (used as return value)
 
         # Only override get_current_user (not bearer_scheme)
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
@@ -395,10 +395,10 @@ class TestCodexReloadScenario:
             return mock_sp_manager
 
         def mock_get_openfga_sync():
-            return AsyncMock()
+            return AsyncMock()  # async-mock-configured (used as return value)
 
         def mock_get_keycloak_sync():
-            return AsyncMock()
+            return AsyncMock()  # async-mock-configured (used as return value)
 
         # ✅ CRITICAL: Override bearer_scheme BEFORE include_router()
         # This is the FIX for the Codex finding - ensures override applies to reloaded middleware

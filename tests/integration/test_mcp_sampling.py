@@ -397,7 +397,7 @@ class TestSamplingWithLLM:
     @pytest.fixture
     def mock_llm(self) -> AsyncMock:
         """Create mock LLM provider."""
-        llm = AsyncMock()
+        llm = AsyncMock()  # async-mock-configured (return_value set below)
         llm.agenerate.return_value = MagicMock(generations=[[MagicMock(text="Generated response")]])
         # Set model_name as a string to avoid Pydantic validation error
         llm.model_name = "mock-model-v1"

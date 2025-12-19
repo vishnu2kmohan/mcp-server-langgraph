@@ -241,46 +241,10 @@ class TestWorkflowCRUD:
         assert len(data) == 1
 
 
-@pytest.mark.unit
-@pytest.mark.xdist_group(name="test_studio_routes")
-class TestAISuggestions:
-    """Tests for AI suggestion endpoints."""
-
-    def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
-        gc.collect()
-
-    def test_get_suggestions_returns_suggestions(self, client: TestClient, mock_workflow_data: dict[str, Any]) -> None:
-        """GIVEN workflow data
-        WHEN POST /api/v1/studio/suggestions
-        THEN should return AI suggestions
-        """
-        request_data = {
-            "workflow": {
-                "nodes": mock_workflow_data["nodes"],
-                "edges": mock_workflow_data["edges"],
-            },
-            "max_suggestions": 5,
-        }
-
-        response = client.post("/api/v1/studio/suggestions", json=request_data)
-
-        assert response.status_code == 200
-        data = response.json()
-        assert "suggestions" in data
-        # The AI should return suggestions for a workflow with nodes
-        assert isinstance(data["suggestions"], list)
-
-    def test_get_suggestions_validates_workflow(self, client: TestClient) -> None:
-        """GIVEN invalid workflow data
-        WHEN POST /api/v1/studio/suggestions
-        THEN should return 422 Unprocessable Entity
-        """
-        request_data = {"workflow": {}, "max_suggestions": -1}  # Invalid max_suggestions
-
-        response = client.post("/api/v1/studio/suggestions", json=request_data)
-
-        assert response.status_code == 422
+# NOTE: AI suggestions tests have been moved to tests/api/test_ai_node_config_api.py
+# The endpoint /api/v1/studio/suggestions was consolidated into /api/v1/ai/suggestions
+# as part of the unified AI API. See TestAISuggestions class in that file for
+# comprehensive testing of the suggestions endpoint (40+ tests).
 
 
 @pytest.mark.unit

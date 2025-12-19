@@ -55,7 +55,7 @@ class TestResponseFormatControl:
         # Mock the agent graph to return a long response
         long_response = "Word " * 1000  # ~1000 tokens
         # Create async mock graph - must be AsyncMock so all methods (ainvoke, aget_state) are awaitable
-        mock_graph = mocker.AsyncMock()
+        mock_graph = mocker.AsyncMock()  # async-mock-configured (return_value set below)
         mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=long_response)]}
         # Bypass checkpointer code path (mock returns MagicMock for checkpointer which is not None,
         # leading to aget_state being called which is a MagicMock that can't be awaited)
@@ -91,7 +91,7 @@ class TestResponseFormatControl:
         # Mock agent response
         medium_response = "Word " * 500  # ~500 tokens (within detailed limit)
         # Create async mock graph - must be AsyncMock so all methods (ainvoke, aget_state) are awaitable
-        mock_graph = mocker.AsyncMock()
+        mock_graph = mocker.AsyncMock()  # async-mock-configured (return_value set below)
         mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=medium_response)]}
         # Bypass checkpointer code path to avoid MagicMock await issues
         mock_graph.checkpointer = None
@@ -122,7 +122,7 @@ class TestResponseFormatControl:
         """Test that default response_format is concise."""
         short_response = "Short answer"
         # Create async mock graph - must be AsyncMock so all methods (ainvoke, aget_state) are awaitable
-        mock_graph = mocker.AsyncMock()
+        mock_graph = mocker.AsyncMock()  # async-mock-configured (return_value set below)
         mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=short_response)]}
         # Bypass checkpointer code path to avoid MagicMock await issues
         mock_graph.checkpointer = None
@@ -473,7 +473,7 @@ class TestEndToEndToolImprovements:
         )  # Make it long enough to test truncation
 
         # Create async mock for graph - ainvoke must be AsyncMock for await
-        mock_graph = mocker.AsyncMock()
+        mock_graph = mocker.AsyncMock()  # async-mock-configured (return_value set below)
         mock_graph.ainvoke.return_value = {"messages": [AIMessage(content=agent_response)]}
         # Bypass checkpointer code path to avoid MagicMock await issues
         mock_graph.checkpointer = None
