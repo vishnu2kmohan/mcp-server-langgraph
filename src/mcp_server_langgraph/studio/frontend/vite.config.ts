@@ -132,11 +132,28 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router'],
-          state: ['@reduxjs/toolkit', 'react-redux'],
-          editor: ['@monaco-editor/react'],
-          flow: ['reactflow'],
-          markdown: ['react-markdown', 'remark-gfm'],
+          // React core (react, react-dom, react-router)
+          'vendor-react': ['react', 'react-dom', 'react-router'],
+          // Redux state management
+          'vendor-redux': ['@reduxjs/toolkit', 'react-redux'],
+          // UI libraries (lucide-react, sonner)
+          'vendor-ui': ['lucide-react', 'sonner'],
+          // Charting libraries (recharts and its dependencies)
+          'vendor-charts': ['recharts'],
+          // Code editor (monaco-editor, @monaco-editor/react)
+          'vendor-editor': ['@monaco-editor/react'],
+          // Markdown rendering (react-markdown, remark-gfm)
+          'vendor-markdown-base': ['react-markdown', 'remark-gfm', 'rehype-katex', 'remark-math'],
+          // Mermaid diagram library (large, split separately)
+          'vendor-mermaid': ['mermaid'],
+          // Flow diagram library
+          'vendor-flow': ['reactflow'],
+          // Syntax highlighting
+          'vendor-syntax': ['react-syntax-highlighter'],
+          // Code sandbox (very large, split separately)
+          'vendor-sandpack': ['@codesandbox/sandpack-react'],
+          // Math rendering (katex)
+          'vendor-math': ['katex'],
         },
       },
     },
