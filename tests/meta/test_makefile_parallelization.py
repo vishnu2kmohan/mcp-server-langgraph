@@ -18,6 +18,27 @@ import pytest
 pytestmark = pytest.mark.meta
 
 
+def read_all_makefiles() -> str:
+    """
+    Read Makefile content including all modular includes.
+
+    The Makefile uses 'include make/*.mk' to organize targets.
+    This function reads the main Makefile plus all included files.
+    """
+    makefile = Path("Makefile")
+    assert makefile.exists(), "Makefile not found"
+
+    content = makefile.read_text()
+
+    # Read all modular makefiles from make/ directory
+    make_dir = Path("make")
+    if make_dir.exists():
+        for mk_file in sorted(make_dir.glob("*.mk")):
+            content += "\n" + mk_file.read_text()
+
+    return content
+
+
 @pytest.mark.xdist_group(name="testmakefileparallelization")
 class TestMakefileParallelization:
     """Validate that test targets in Makefile use pytest-xdist for parallelization."""
@@ -35,10 +56,7 @@ class TestMakefileParallelization:
         WHEN: Reading the Makefile
         THEN: test-ci should include -n auto flag
         """
-        makefile = Path("Makefile")
-        assert makefile.exists(), "Makefile not found"
-
-        content = makefile.read_text()
+        content = read_all_makefiles()
 
         # Find test-ci target
         test_ci_pattern = r"test-ci:.*?\n\t.*?\$\(PYTEST\)([^\n]+)"
@@ -60,8 +78,7 @@ class TestMakefileParallelization:
         WHEN: Reading the Makefile
         THEN: test-mcp-server should include -n auto flag
         """
-        makefile = Path("Makefile")
-        content = makefile.read_text()
+        content = read_all_makefiles()
 
         # Find test-mcp-server target
         pattern = r"test-mcp-server:.*?\n\t.*?\$\(PYTEST\)([^\n]+)"
@@ -81,8 +98,7 @@ class TestMakefileParallelization:
         WHEN: Reading the Makefile
         THEN: test-precommit-validation should include -n auto flag
         """
-        makefile = Path("Makefile")
-        content = makefile.read_text()
+        content = read_all_makefiles()
 
         # Find test-precommit-validation target
         pattern = r"test-precommit-validation:.*?\n\t.*?\$\(UV_RUN\) pytest([^\n]+)"
@@ -104,8 +120,7 @@ class TestMakefileParallelization:
         WHEN: Reading the Makefile
         THEN: test-e2e should include -n auto flag
         """
-        makefile = Path("Makefile")
-        content = makefile.read_text()
+        content = read_all_makefiles()
 
         # Find test-e2e target (it has multiple lines before pytest call)
         pattern = r"test-e2e:.*?\$\(PYTEST\)([^\n]+)"
@@ -125,8 +140,7 @@ class TestMakefileParallelization:
         WHEN: Reading their echo messages
         THEN: Should mention 'parallel execution' or similar for user awareness
         """
-        makefile = Path("Makefile")
-        content = makefile.read_text()
+        content = read_all_makefiles()
 
         targets_to_check = [
             "test-ci",
@@ -167,8 +181,7 @@ class TestMakefileParallelizationBestPractices:
         WHEN: Reading the Makefile
         THEN: All such targets should use -n auto for optimal performance
         """
-        makefile = Path("Makefile")
-        content = makefile.read_text()
+        content = read_all_makefiles()
 
         # Find all pytest commands with -m unit marker
         # Use word boundary to match complete target names

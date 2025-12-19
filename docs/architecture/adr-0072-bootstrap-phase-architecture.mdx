@@ -1,0 +1,153 @@
+---
+title: ADR-0072 Bootstrap Phase Architecture
+description: 'Modular initialization phases replacing monolithic lifespan function'
+icon: 'rocket-launch'
+seoTitle: "ADR-0072: Bootstrap Phase Architecture"
+seoDescription: "Architecture Decision Record for decomposing app initialization into modular bootstrap phases for improved testability and parallel-safety."
+keywords: ["bootstrap", "lifespan", "FastAPI", "initialization", "pytest-xdist", "ADR"]
+contentType: "adr"
+---
+
+# ADR-0072: Bootstrap Phase Architecture
+
+**Status**: Accepted
+**Date**: 2025-12-18
+**Deciders**: Architecture Team
+**Related**: ADR-0019 (Async-First), ADR-0042 (Dependency Injection)
+
+## Context
+
+The MCP Server LangGraph application's `app.py` lifespan function had grown to 150+ lines of monolithic initialization code. This created several problems:
+
+1. **Testing friction**: Individual components couldn't be tested in isolation
+2. **Global singletons**: HttpClientManager, OpenFGA client stored as globals
+3. **Race conditions**: Parallel test execution (pytest-xdist) caused state pollution
+4. **Maintenance burden**: All startup logic in one function made changes risky
+
+Example of the problematic pattern:
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 150+ lines of initialization
+    global _openfga_client
+    _openfga_client = await create_openfga_client()
+
+    http_manager = HttpClientManager()
+    await http_manager.start()
+
+    # More globals...
+    yield
+    # Cleanup scattered throughout
+```
+
+## Decision
+
+Implement a modular bootstrap architecture with four phases, each handling a specific concern:
+
+### Bootstrap Package Structure
+
+```
+src/mcp_server_langgraph/bootstrap/
+├── __init__.py         # AppState, bootstrap_all()
+├── observability.py    # TelemetryState, init_observability()
+├── security.py         # SecurityState, init_auth()
+├── storage.py          # StorageState, init_storage()
+└── http.py             # HttpState, init_http_client()
+```
+
+### Phase Ordering (Dependency-Aware)
+
+```python
+async def bootstrap_all(settings: Settings) -> AppState:
+    # Phase 1: Observability (sync, needed first for logging)
+    telemetry = init_observability(settings)
+
+    # Phase 2: Security (async, OpenFGA initialization)
+    security = await init_auth(settings)
+
+    # Phase 3: Storage (async, audit service, schedulers)
+    storage = await init_storage(settings)
+
+    # Phase 4: HTTP client pool (async)
+    http = await init_http_client(settings)
+
+    return AppState(
+        telemetry=telemetry,
+        security=security,
+        storage=storage,
+        http=http,
+    )
+```
+
+### State Classes (Immutable References)
+
+```python
+@dataclass
+class SecurityState:
+    """Security component state."""
+    openfga_client: OpenFGAClient | None = None
+    auth_middleware: AuthMiddleware | None = None
+
+    async def cleanup(self) -> None:
+        if self.openfga_client:
+            await self.openfga_client.close()
+```
+
+### Simplified Lifespan
+
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    state = await bootstrap_all(settings)
+
+    # Attach to app.state (no globals!)
+    app.state.openfga_client = state.security.openfga_client
+    app.state.http_client_manager = state.http.http_client_manager
+    app.state.audit_service = state.storage.audit_service
+
+    yield
+
+    await state.cleanup()
+```
+
+## Consequences
+
+### Positive
+
+1. **Testability**: Each bootstrap module can be unit tested in isolation
+2. **No globals**: State attached to `app.state`, accessible via FastAPI Depends()
+3. **Parallel-safe**: No singleton pollution in pytest-xdist
+4. **Fail-fast**: Errors occur at startup, not runtime
+5. **Clear lifecycle**: Cleanup in reverse initialization order
+6. **Maintainability**: ~40 lines per module vs 150+ monolithic
+
+### Negative
+
+1. **Migration required**: Existing code accessing globals needs updates
+2. **Additional abstraction**: More files to navigate
+
+### Neutral
+
+1. **Dependency injection**: Works with FastAPI Depends() pattern (see ADR-0042)
+
+## Implementation
+
+Files created:
+- `src/mcp_server_langgraph/bootstrap/__init__.py`
+- `src/mcp_server_langgraph/bootstrap/observability.py`
+- `src/mcp_server_langgraph/bootstrap/security.py`
+- `src/mcp_server_langgraph/bootstrap/storage.py`
+- `src/mcp_server_langgraph/bootstrap/http.py`
+
+Tests:
+- `tests/unit/bootstrap/test_observability_bootstrap.py`
+- `tests/unit/bootstrap/test_security_bootstrap.py`
+- `tests/unit/bootstrap/test_storage_bootstrap.py`
+- `tests/unit/bootstrap/test_http_bootstrap.py`
+
+## References
+
+- [FastAPI Lifespan Events](https://fastapi.tiangolo.com/advanced/events/)
+- [12-Factor App - Disposability](https://12factor.net/disposability)
+- ADR-0042: Dependency Injection Fixes
+- ADR-0019: Async-First Architecture

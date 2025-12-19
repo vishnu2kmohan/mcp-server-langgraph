@@ -169,7 +169,7 @@ class TestApplicationStartupWithoutInfisical:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         # Mock LLM creation to avoid actual API calls
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config") as mock_llm:
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config") as mock_llm:
             mock_llm.return_value = MagicMock()
 
             graph = create_agent_graph()

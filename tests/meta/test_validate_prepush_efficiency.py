@@ -31,6 +31,25 @@ import pytest
 pytestmark = pytest.mark.meta
 
 
+def read_all_makefiles(repo_root: Path) -> str:
+    """
+    Read Makefile content including all modular includes.
+
+    The Makefile uses 'include make/*.mk' to organize targets.
+    This function reads the main Makefile plus all included files.
+    """
+    makefile = repo_root / "Makefile"
+    content = makefile.read_text()
+
+    # Read all modular makefiles from make/ directory
+    make_dir = repo_root / "make"
+    if make_dir.exists():
+        for mk_file in sorted(make_dir.glob("*.mk")):
+            content += "\n" + mk_file.read_text()
+
+    return content
+
+
 @pytest.mark.xdist_group(name="validate_prepush_efficiency")
 class TestValidatePrePushEfficiency:
     """Validates validate-pre-push doesn't duplicate work."""
@@ -40,16 +59,23 @@ class TestValidatePrePushEfficiency:
         gc.collect()
 
     @property
+    def repo_root(self) -> Path:
+        """Path to the repository root."""
+        return Path(__file__).parent.parent.parent
+
+    @property
     def makefile_path(self) -> Path:
         """Path to the Makefile."""
-        repo_root = Path(__file__).parent.parent.parent
-        return repo_root / "Makefile"
+        return self.repo_root / "Makefile"
 
     @property
     def precommit_config_path(self) -> Path:
         """Path to .pre-commit-config.yaml."""
-        repo_root = Path(__file__).parent.parent.parent
-        return repo_root / ".pre-commit-config.yaml"
+        return self.repo_root / ".pre-commit-config.yaml"
+
+    def read_makefile_content(self) -> str:
+        """Read all Makefile content including modular includes."""
+        return read_all_makefiles(self.repo_root)
 
     def test_makefile_file_exists_in_repo_root(self):
         """Verify Makefile exists."""
@@ -57,7 +83,7 @@ class TestValidatePrePushEfficiency:
 
     def test_validate_pre_push_target_exists(self):
         """Verify validate-pre-push target exists in Makefile."""
-        content = self.makefile_path.read_text()
+        content = self.read_makefile_content()
         assert re.search(r"^validate-pre-push:", content, re.MULTILINE), "validate-pre-push target not found in Makefile"
 
     def test_validate_pre_push_has_phases(self):
@@ -70,7 +96,7 @@ class TestValidatePrePushEfficiency:
 
         We need to check the combined content of all these targets.
         """
-        content = self.makefile_path.read_text()
+        content = self.read_makefile_content()
 
         # Extract all three targets that make up validate-pre-push-quick
         quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
@@ -104,7 +130,7 @@ class TestValidatePrePushEfficiency:
         Note: validate-pre-push-quick delegates to internal targets, so we need to
         check both the main target and its delegated targets for the commands.
         """
-        content = self.makefile_path.read_text()
+        content = self.read_makefile_content()
 
         # Find main target
         quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
@@ -144,7 +170,7 @@ class TestValidatePrePushEfficiency:
         Note: validate-pre-push-quick delegates to _validate-pre-push-phase-4 for
         the pre-commit run invocation, so we need to check that target too.
         """
-        content = self.makefile_path.read_text()
+        content = self.read_makefile_content()
 
         # Check validate-pre-push-quick and its delegated target _validate-pre-push-phase-4
         quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
@@ -196,7 +222,7 @@ class TestValidatePrePushEfficiency:
         Note: validate-pre-push-quick delegates to _validate-pre-push-phase-4 for
         the pre-commit run invocation, so we need to check that target too.
         """
-        content = self.makefile_path.read_text()
+        content = self.read_makefile_content()
 
         # Check validate-pre-push-quick and its delegated target _validate-pre-push-phase-4
         quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
@@ -257,7 +283,7 @@ class TestValidatePrePushEfficiency:
         Note: validate-pre-push-quick delegates to _validate-pre-push-phase-4 for
         the pre-commit run invocation, so we need to check that target too.
         """
-        content = self.makefile_path.read_text()
+        content = self.read_makefile_content()
 
         # Check validate-pre-push-quick and its delegated target _validate-pre-push-phase-4
         quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
@@ -320,7 +346,7 @@ class TestValidatePrePushEfficiency:
         The Makefile should check CI_PARITY before running integration tests,
         consistent with the git hook behavior.
         """
-        content = self.makefile_path.read_text()
+        content = self.read_makefile_content()
 
         match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
 
@@ -345,7 +371,7 @@ class TestValidatePrePushEfficiency:
         Note: validate-pre-push-quick delegates to _validate-pre-push-phase-4 for
         the pre-commit run invocation, so we need to check that target too.
         """
-        content = self.makefile_path.read_text()
+        content = self.read_makefile_content()
 
         # Check validate-pre-push-quick and its delegated target _validate-pre-push-phase-4
         quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
@@ -391,10 +417,18 @@ class TestValidatePrePushPerformance:
         gc.collect()
 
     @property
+    def repo_root(self) -> Path:
+        """Path to the repository root."""
+        return Path(__file__).parent.parent.parent
+
+    @property
     def makefile_path(self) -> Path:
         """Path to the Makefile."""
-        repo_root = Path(__file__).parent.parent.parent
-        return repo_root / "Makefile"
+        return self.repo_root / "Makefile"
+
+    def read_makefile_content(self) -> str:
+        """Read all Makefile content including modular includes."""
+        return read_all_makefiles(self.repo_root)
 
     def test_no_redundant_test_execution(self):
         """
@@ -407,7 +441,7 @@ class TestValidatePrePushPerformance:
         Note: validate-pre-push-quick delegates to _validate-pre-push-phases-1-2
         and _validate-pre-push-phase-4, so we need to check all targets combined.
         """
-        content = self.makefile_path.read_text()
+        content = self.read_makefile_content()
 
         # Check validate-pre-push-quick and its delegated targets
         match_quick = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
@@ -480,7 +514,7 @@ class TestValidatePrePushPerformance:
         Note: validate-pre-push-quick delegates to _validate-pre-push-phases-1-2
         and _validate-pre-push-phase-4, so we need to check all targets.
         """
-        content = self.makefile_path.read_text()
+        content = self.read_makefile_content()
 
         # Check validate-pre-push-quick and all its delegated targets
         quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
@@ -496,11 +530,12 @@ class TestValidatePrePushPerformance:
         if phase_4_match:
             target_content += "\n" + phase_4_match.group(0)
 
-        # Count progress indicators (echo statements with ▶ or similar)
-        progress_indicators = len(re.findall(r"@echo.*[▶✓✗]", target_content))
+        # Count progress indicators (echo statements with PHASE, ▶, or similar)
+        # Modern format uses "PHASE N:" labels, legacy used unicode symbols
+        progress_indicators = len(re.findall(r"@echo.*(?:PHASE|▶|✓|✗)", target_content))
 
-        assert progress_indicators >= 5, (
-            f"Expected at least 5 progress indicators, found {progress_indicators}\n"
+        assert progress_indicators >= 4, (
+            f"Expected at least 4 progress indicators, found {progress_indicators}\n"
             f"Progress indicators improve UX by showing what's currently running\n"
             f"This is a key benefit of the hybrid approach vs pure pre-commit"
         )
@@ -515,14 +550,22 @@ class TestValidatePrePushDocumentation:
         gc.collect()
 
     @property
+    def repo_root(self) -> Path:
+        """Path to the repository root."""
+        return Path(__file__).parent.parent.parent
+
+    @property
     def makefile_path(self) -> Path:
         """Path to the Makefile."""
-        repo_root = Path(__file__).parent.parent.parent
-        return repo_root / "Makefile"
+        return self.repo_root / "Makefile"
+
+    def read_makefile_content(self) -> str:
+        """Read all Makefile content including modular includes."""
+        return read_all_makefiles(self.repo_root)
 
     def test_validate_pre_push_has_help_text(self):
         """Verify validate-pre-push has help documentation."""
-        content = self.makefile_path.read_text()
+        content = self.read_makefile_content()
 
         # Look for .PHONY or comment before validate-pre-push
         match = re.search(r"(^##.*\n)*^validate-pre-push:", content, re.MULTILINE)

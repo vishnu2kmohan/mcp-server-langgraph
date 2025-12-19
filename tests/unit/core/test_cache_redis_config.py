@@ -201,7 +201,7 @@ class TestRedisFailover:
         # Should explicitly disable checkpointing
         assert settings.enable_checkpointing is False
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     def test_agent_works_without_checkpointing(self, mock_llm):
         """Agent should work when checkpointing is disabled"""
         from mcp_server_langgraph.core.agent import create_agent_graph
@@ -386,7 +386,7 @@ class TestRedisIntegration:
         gc.collect()
 
     @patch("redis.asyncio.from_url")
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_checkpointer_uses_redis_when_enabled(self, mock_llm, mock_redis):
         """Agent checkpointer should use Redis when enabled"""
         from mcp_server_langgraph.core.agent import create_agent_graph

@@ -2,6 +2,13 @@
 # Validation
 # ==============================================================================
 
+.PHONY: validate-openapi validate-deployments validate-docker-compose validate-lgtm-config \
+	validate-dashboards validate-docker-image validate-helm validate-kustomize validate-all \
+	validate-docs validate-workflows validate-commit validate-push-changed validate-push-full \
+	validate-push validate-full validate-pre-push validate-pre-push-quick validate-pre-push-full \
+	validate-pre-push-ci _validate-pre-push-phases-1-2 _validate-pre-push-phase-4 \
+	act-dry-run test-workflows test-precommit-validation
+
 validate-openapi:
 	@echo "Validating OpenAPI schema..."
 	OTEL_SDK_DISABLED=true $(UV_RUN) python scripts/validators/validate_openapi.py 2>&1 | grep -v -E "(WARNING|trace_id|span_id|resource\.|Transient error|exporter\.py|Traceback|File \"|ImportError:|pydantic-ai|fall back)"

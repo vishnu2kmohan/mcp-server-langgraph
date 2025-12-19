@@ -97,7 +97,7 @@ class TestMemoryCheckpointer:
         monkeypatch.setattr(settings, "enable_checkpointing", True)
 
         # Create agent graph with memory checkpointer and mocked LLM
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
             graph = create_agent_graph()
 
             # First message
@@ -145,7 +145,7 @@ class TestMemoryCheckpointer:
         monkeypatch.setattr(settings, "checkpoint_backend", "memory")
         monkeypatch.setattr(settings, "enable_checkpointing", True)
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
             graph = create_agent_graph()
 
             # Thread 1
@@ -203,7 +203,7 @@ class TestRedisCheckpointer:
 
         # Simulate Pod A with mocked LLM
         try:
-            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
                 graph_a = create_agent_graph()
 
             # Verify that Redis is actually being used (not fallback to MemorySaver)
@@ -235,7 +235,7 @@ class TestRedisCheckpointer:
             pytest.skip(f"Redis not available: {e}")
 
         # Simulate pod restart (new graph instance = Pod B) with mocked LLM
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
             graph_b = create_agent_graph()
 
         followup_state: AgentState = {

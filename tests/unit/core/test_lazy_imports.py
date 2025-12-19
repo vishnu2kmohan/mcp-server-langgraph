@@ -106,12 +106,12 @@ class TestLazyImports:
         assert OpenFGAClient is not None
         assert hasattr(OpenFGAClient, "__name__")
 
-    def test_lazy_import_of_agent_graph(self):
-        """Test that agent_graph is imported only when accessed"""
-        from mcp_server_langgraph import agent_graph  # noqa: F401
+    def test_lazy_import_of_create_agent_graph(self):
+        """Test that create_agent_graph is imported only when accessed"""
+        from mcp_server_langgraph import create_agent_graph  # noqa: F401
 
         # The import itself is the test - it should not raise ModuleNotFoundError
-        # agent_graph may be None until properly initialized in an app context
+        # create_agent_graph is a function that builds the agent graph
 
     def test_lazy_import_of_agent_state(self):
         """Test that AgentState is imported only when accessed"""
@@ -153,7 +153,7 @@ class TestLazyImports:
         expected_exports = {
             "__version__",
             "settings",
-            "agent_graph",
+            "create_agent_graph",
             "AgentState",
             "AuthMiddleware",
             "OpenFGAClient",
@@ -206,10 +206,10 @@ class TestBackwardsCompatibility:
 
         # These should work via __getattr__
         assert hasattr(mcp_server_langgraph, "AuthMiddleware")
-        assert hasattr(mcp_server_langgraph, "agent_graph")
+        assert hasattr(mcp_server_langgraph, "create_agent_graph")
         assert hasattr(mcp_server_langgraph, "settings")
 
         # Access them to verify __getattr__ works
         _ = mcp_server_langgraph.settings
         _ = mcp_server_langgraph.AuthMiddleware
-        _ = mcp_server_langgraph.agent_graph
+        _ = mcp_server_langgraph.create_agent_graph

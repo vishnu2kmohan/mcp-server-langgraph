@@ -102,7 +102,7 @@ class TestSettingsInjection:
         assert settings.jwt_secret_key == "test-key"
         assert settings.anthropic_api_key == "test-key"
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     def test_agent_accepts_settings_injection(self, mock_llm):
         """Agent graph creation should accept settings parameter"""
         from mcp_server_langgraph.core.agent import create_agent_graph
@@ -184,7 +184,7 @@ class TestInitializationOrder:
             init_observability(settings=test_settings, enable_file_logging=False)
 
         # Create agent with mocked LLM
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config") as mock_llm:
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config") as mock_llm:
             mock_llm.return_value = MagicMock()
             graph = create_agent_graph(settings=test_settings)
             assert graph is not None
@@ -262,7 +262,7 @@ class TestIntegrationPoints:
         assert app is not None
         assert hasattr(app, "routes")
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     def test_mcp_server_can_be_retrieved(self, mock_llm):
         """MCP server singleton should be retrievable"""
         from mcp_server_langgraph.mcp.server_streamable import get_mcp_server

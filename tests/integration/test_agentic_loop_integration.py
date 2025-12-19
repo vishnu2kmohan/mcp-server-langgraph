@@ -122,7 +122,7 @@ class TestAgenticLoopIntegration:
         test_settings.enable_context_compaction = False
         test_settings.enable_verification = False
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
             # Pass test_settings directly to create_agent_graph for proper dependency injection
             # This avoids MagicMock serialization issues with checkpointer
             graph = create_agent_graph(settings=test_settings)
@@ -150,7 +150,7 @@ class TestAgenticLoopIntegration:
         test_settings.enable_context_compaction = True
         test_settings.enable_verification = False
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.ContextManager", return_value=mock_context_manager):
                 # Pass test_settings directly to create_agent_graph for proper dependency injection
                 graph = create_agent_graph(settings=test_settings)
@@ -179,7 +179,7 @@ class TestAgenticLoopIntegration:
         test_settings.enable_verification = True
         test_settings.max_refinement_attempts = 3
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier_pass):
                 # Pass test_settings directly to create_agent_graph for proper dependency injection
                 graph = create_agent_graph(settings=test_settings)
@@ -212,7 +212,7 @@ class TestAgenticLoopIntegration:
         test_settings.enable_verification = True
         test_settings.max_refinement_attempts = 3
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier_fail):
                 # Pass test_settings directly to create_agent_graph for proper dependency injection
                 graph = create_agent_graph(settings=test_settings)
@@ -256,7 +256,7 @@ class TestAgenticLoopIntegration:
             )
         )
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
                 # Pass test_settings directly to create_agent_graph for proper dependency injection
                 graph = create_agent_graph(settings=test_settings)
@@ -338,7 +338,7 @@ class TestAgenticLoopIntegration:
             )
         )
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.ContextManager", return_value=mock_manager):
                 with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
                     # Pass test_settings directly to create_agent_graph for proper dependency injection
@@ -388,7 +388,7 @@ class TestAgentGraphStructure:
             enable_checkpointing=False,
         )
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config"):
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config"):
             graph = create_agent_graph(settings=test_settings)
 
             # Get compiled graph structure
@@ -407,7 +407,7 @@ class TestAgentGraphStructure:
             enable_checkpointing=False,
         )
 
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config"):
+        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config"):
             # Should not raise
             graph = create_agent_graph(settings=test_settings)
             assert graph is not None

@@ -62,7 +62,7 @@ class TestAgentGraph:
         assert hasattr(graph, "invoke")
         assert hasattr(graph, "stream")
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_route_input_to_respond(self, mock_create_llm):
         """Test routing to direct response"""
         from mcp_server_langgraph.core.agent import create_agent_graph
@@ -87,7 +87,7 @@ class TestAgentGraph:
         assert len(result["messages"]) > 1
         assert result["next_action"] == "end"
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_route_input_to_tools(self, mock_create_llm):
         """Test routing to tools when keywords detected"""
         from mcp_server_langgraph.core.agent import create_agent_graph
@@ -111,7 +111,7 @@ class TestAgentGraph:
         # Should go through tools node
         assert len(result["messages"]) > 2
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_route_with_calculate_keyword(self, mock_create_llm):
         """Test routing detects calculate keyword"""
         from mcp_server_langgraph.core.agent import create_agent_graph
@@ -134,7 +134,7 @@ class TestAgentGraph:
         assert result is not None
         assert result["next_action"] == "end"
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_agent_with_conversation_history(self, mock_create_llm):
         """Test agent handles conversation history"""
         from mcp_server_langgraph.core.agent import create_agent_graph
@@ -161,7 +161,7 @@ class TestAgentGraph:
         assert result is not None
         assert len(result["messages"]) > 3
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_checkpointing_works(self, mock_create_llm):
         """Test conversation checkpointing"""
         from mcp_server_langgraph.core.agent import create_agent_graph
@@ -218,7 +218,7 @@ class TestAgentGraph:
         assert isinstance(combined[1], AIMessage)
 
     @patch("mcp_server_langgraph.core.agent.LANGSMITH_AVAILABLE", False)
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_agent_without_langsmith(self, mock_create_llm):
         """Test agent works when LangSmith is not available"""
         from mcp_server_langgraph.core.agent import create_agent_graph
@@ -241,7 +241,7 @@ class TestAgentGraph:
         assert result is not None
         assert len(result["messages"]) > 0
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_agent_with_langsmith_enabled(self, mock_create_llm):
         """Test agent with LangSmith configuration"""
         from mcp_server_langgraph.core.agent import create_agent_graph
@@ -265,7 +265,7 @@ class TestAgentGraph:
         assert result is not None
         assert len(result["messages"]) > 0
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_routing_with_tool_keywords(self, mock_create_llm):
         """Test routing detects tool keywords"""
         from mcp_server_langgraph.core.agent import create_agent_graph
@@ -288,7 +288,7 @@ class TestAgentGraph:
 
         assert result is not None
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_handles_empty_message_content(self, mock_create_llm):
         """
         Test agent handles empty message content gracefully.
@@ -317,7 +317,7 @@ class TestAgentGraph:
         assert result is not None
         assert "messages" in result
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_handles_missing_optional_fields(self, mock_create_llm):
         """
         Test agent handles missing optional fields (user_id, request_id).
@@ -345,7 +345,7 @@ class TestAgentGraph:
         assert result is not None
         assert len(result["messages"]) > 0
 
-    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     async def test_handles_very_long_conversation_history(self, mock_create_llm):
         """
         Test agent handles very long conversation histories.

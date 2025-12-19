@@ -78,7 +78,7 @@ class TestConversationStatePersistence:
 
         # Mock pydantic agent to disable the real API call path
         with patch("mcp_server_langgraph.core.agent._initialize_pydantic_agent", return_value=None):
-            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
                 # Get the agent graph
                 graph = create_agent_graph(test_settings)
 
@@ -135,7 +135,7 @@ class TestConversationStatePersistence:
 
         # Mock pydantic agent to disable the real API call path
         with patch("mcp_server_langgraph.core.agent._initialize_pydantic_agent", return_value=None):
-            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
                 graph = create_agent_graph(test_settings)
 
                 # Act: Run graph THREE times
@@ -220,7 +220,7 @@ class TestConversationStatePersistence:
 
         # Mock pydantic agent to disable the real API call path
         with patch("mcp_server_langgraph.core.agent._initialize_pydantic_agent", return_value=None):
-            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
                 with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
                     graph = create_agent_graph(settings_with_verification)
 
@@ -265,7 +265,7 @@ class TestConversationStatePersistence:
 
         # Mock pydantic agent to disable the real API call path
         with patch("mcp_server_langgraph.core.agent._initialize_pydantic_agent", return_value=None):
-            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
                 graph = create_agent_graph(test_settings)
 
                 # Act

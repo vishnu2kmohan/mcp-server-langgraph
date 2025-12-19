@@ -176,10 +176,25 @@ def shared_makefile_path(shared_repo_root: Path) -> Path:
 
 
 @pytest.fixture(scope="module")
-def shared_makefile_content(shared_makefile_path: Path) -> str:
-    """Read Makefile content (shared across all tests in module)."""
+def shared_makefile_content(shared_makefile_path: Path, shared_repo_root: Path) -> str:
+    """
+    Read Makefile content including all modular includes.
+
+    The Makefile uses 'include make/*.mk' to organize targets.
+    This fixture reads the main Makefile plus all included files.
+    """
+    content = ""
     with open(shared_makefile_path) as f:
-        return f.read()
+        content = f.read()
+
+    # Read all modular makefiles from make/ directory
+    make_dir = shared_repo_root / "make"
+    if make_dir.exists():
+        for mk_file in sorted(make_dir.glob("*.mk")):
+            with open(mk_file) as f:
+                content += "\n" + f.read()
+
+    return content
 
 
 @pytest.fixture(scope="module")
@@ -502,12 +517,30 @@ class TestMakefileValidationTarget:
 
     def test_validate_pre_push_in_phony_targets(self, makefile_content: str):
         """Test that validate-pre-push is declared as .PHONY."""
-        # Extract .PHONY line
-        phony_match = re.search(r"^\.PHONY:.*$", makefile_content, re.MULTILINE)
-        assert phony_match, "Makefile should have .PHONY declaration"
+        # Simply search for "validate-pre-push" appearing after ".PHONY:" on same line
+        # or continuation lines (which start with tab after the \ continuation)
+        # The target is declared if it appears anywhere after a .PHONY declaration
+        # before the next non-continuation line
 
-        phony_line = phony_match.group(0)
-        assert "validate-pre-push" in phony_line, "validate-pre-push must be declared in .PHONY targets"
+        # Find all lines with .PHONY and their continuations
+        lines = makefile_content.split("\n")
+        in_phony_block = False
+        phony_targets = []
+
+        for line in lines:
+            if line.startswith(".PHONY:"):
+                in_phony_block = True
+                phony_targets.append(line)
+            elif in_phony_block and (line.startswith("\t") or line.startswith(" ")):
+                # Continuation line
+                phony_targets.append(line)
+            elif in_phony_block:
+                # End of .PHONY block
+                in_phony_block = False
+
+        all_phony_content = " ".join(phony_targets)
+        assert ".PHONY" in all_phony_content, "Makefile should have .PHONY declaration"
+        assert "validate-pre-push" in all_phony_content, "validate-pre-push must be declared in .PHONY targets"
 
     def test_validate_pre_push_runs_lockfile_check(self, validate_pre_push_sub_targets_content: str):
         """Test that validate-pre-push sub-targets validate lockfile."""
@@ -1192,17 +1225,18 @@ class TestMakefilePrePushParity:
         assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
 
         # Smoke tests are unit tests, so they are covered if unit tests are run
-        # Check for unit marker or smoke specific path
+        # Check for unit marker, smoke specific path, or consolidated orchestrator
         has_smoke_tests = (
             "unit" in validate_pre_push_sub_targets_content
             or "tests/smoke" in validate_pre_push_sub_targets_content
             or "smoke" in validate_pre_push_sub_targets_content
+            or "run_pre_push_tests.py" in validate_pre_push_sub_targets_content  # Orchestrator runs all tests
         )
 
         assert has_smoke_tests, (
             "Makefile validate-pre-push sub-targets must run smoke tests (covered by unit tests)\n"
             "Pre-push hook runs unit tests which includes smoke tests\n"
-            "Fix: Ensure 'unit' marker is present in validate-pre-push-full/quick targets"
+            "Fix: Ensure 'unit' marker or run_pre_push_tests.py is present in validate-pre-push-full/quick"
         )
 
     def test_makefile_includes_integration_tests(self, makefile_content: str):
@@ -1614,10 +1648,26 @@ class TestMakefileDependencyExtras:
         return repo_root / "Makefile"
 
     @pytest.fixture
-    def makefile_content(self, makefile_path: Path) -> str:
-        """Read Makefile content."""
+    def makefile_content(self, makefile_path: Path, repo_root: Path) -> str:
+        """
+        Read Makefile content including all modular includes.
+
+        The Makefile uses 'include make/*.mk' to organize targets.
+        This fixture reads the main Makefile plus all included files.
+        """
+        content = ""
+        # Read main Makefile
         with open(makefile_path) as f:
-            return f.read()
+            content = f.read()
+
+        # Read all modular makefiles from make/ directory
+        make_dir = repo_root / "make"
+        if make_dir.exists():
+            for mk_file in sorted(make_dir.glob("*.mk")):
+                with open(mk_file) as f:
+                    content += "\n" + f.read()
+
+        return content
 
     @pytest.fixture
     def ci_workflow_path(self, repo_root: Path) -> Path:
@@ -1942,10 +1992,26 @@ class TestContractTestMarkerParity:
         return repo_root / "Makefile"
 
     @pytest.fixture
-    def makefile_content(self, makefile_path: Path) -> str:
-        """Read Makefile content."""
+    def makefile_content(self, makefile_path: Path, repo_root: Path) -> str:
+        """
+        Read Makefile content including all modular includes.
+
+        The Makefile uses 'include make/*.mk' to organize targets.
+        This fixture reads the main Makefile plus all included files.
+        """
+        content = ""
+        # Read main Makefile
         with open(makefile_path) as f:
-            return f.read()
+            content = f.read()
+
+        # Read all modular makefiles from make/ directory
+        make_dir = repo_root / "make"
+        if make_dir.exists():
+            for mk_file in sorted(make_dir.glob("*.mk")):
+                with open(mk_file) as f:
+                    content += "\n" + f.read()
+
+        return content
 
     @pytest.fixture
     def ci_workflow_path(self, repo_root: Path) -> Path:
