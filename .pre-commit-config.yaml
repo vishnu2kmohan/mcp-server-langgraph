@@ -1469,7 +1469,7 @@ repos:
     entry: uv run --frozen python -u scripts/validators/check_async_mock_configuration.py
     language: system
     files: ^tests/.*test_.*\.py$
-    pass_filenames: false
+    pass_filenames: true
     always_run: false
     stages:
     - pre-commit

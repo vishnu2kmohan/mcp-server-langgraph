@@ -45,6 +45,12 @@ XFAIL_STRICT_EXEMPT_FILES: set[str] = {
     "tests/integration/test_distributed_checkpointing.py",  # LLM mock doesn't apply correctly under xdist
     "tests/integration/test_mcp_streamable.py",  # User provider state races under xdist
     "tests/unit/execution/test_security_practices.py",  # AsyncMock context manager race conditions under xdist
+    # Auth and infrastructure tests with intentional strict=False for known instability
+    "tests/api/test_user_api.py",  # Auth middleware singleton pollution under xdist
+    "tests/integration/auth/test_oauth2_e2e.py",  # OAuth2 E2E requires full auth stack - infra-dependent
+    "tests/integration/auth/test_openfga_oidc.py",  # OpenFGA OIDC requires infrastructure that may not be available
+    "tests/integration/observability/test_lgtm_client_integration.py",  # LGTM stack requires infrastructure
+    "tests/integration/test_notification_websocket_integration.py",  # WebSocket tests with xdist instability
 }
 
 

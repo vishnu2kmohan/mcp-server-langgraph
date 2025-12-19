@@ -28,7 +28,6 @@ See Also:
 """
 
 import gc
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -51,6 +50,7 @@ class MockAuthMiddleware:
 
     def __call__(self):
         return self.name
+
 
 pytestmark = pytest.mark.regression
 

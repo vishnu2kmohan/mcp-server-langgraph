@@ -329,8 +329,7 @@ class TestFastAPIDependencyOverridesPattern:
         # Skip if file was removed as part of codebase refactoring
         if not test_file.exists():
             pytest.skip(
-                "test_api_keys_endpoints.py no longer exists - "
-                "dependency overrides pattern validated in other test files"
+                "test_api_keys_endpoints.py no longer exists - dependency overrides pattern validated in other test files"
             )
         with open(test_file) as f:
             content = f.read()
