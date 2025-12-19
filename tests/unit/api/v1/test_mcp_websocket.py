@@ -774,7 +774,7 @@ class TestMCPWebSocketRateLimiting:
         # Simulate window expiry by resetting window_start
         import time
 
-        time.sleep(1.1)
+        time.sleep(1.1)  # noqa: sleep-duration - testing rate limit window expiry
 
         # Should allow again
         assert limiter.check_and_increment() is True
@@ -1158,7 +1158,7 @@ class TestMCPWebSocketKeycloakIntegration:
         """
         from mcp_server_langgraph.api.v1.mcp_websocket import validate_websocket_token
 
-        mock_validator = AsyncMock()
+        mock_validator = AsyncMock()  # async-mock-configured
         mock_validator.verify_token = AsyncMock(
             return_value={
                 "sub": "user-uuid-123",
@@ -1189,7 +1189,7 @@ class TestMCPWebSocketKeycloakIntegration:
 
         from mcp_server_langgraph.api.v1.mcp_websocket import validate_websocket_token
 
-        mock_validator = AsyncMock()
+        mock_validator = AsyncMock()  # async-mock-configured
         mock_validator.verify_token = AsyncMock(side_effect=jwt.ExpiredSignatureError("Token expired"))
 
         with patch(
@@ -1211,7 +1211,7 @@ class TestMCPWebSocketKeycloakIntegration:
 
         from mcp_server_langgraph.api.v1.mcp_websocket import validate_websocket_token
 
-        mock_validator = AsyncMock()
+        mock_validator = AsyncMock()  # async-mock-configured
         mock_validator.verify_token = AsyncMock(side_effect=jwt.InvalidTokenError("Invalid token"))
 
         with patch(
@@ -1240,7 +1240,7 @@ class TestMCPWebSocketOpenFGAIntegration:
         """
         from mcp_server_langgraph.api.v1.mcp_websocket import check_mcp_permission
 
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock()  # async-mock-configured
         mock_openfga.check = AsyncMock(return_value=True)
 
         with patch(
@@ -1265,7 +1265,7 @@ class TestMCPWebSocketOpenFGAIntegration:
         """
         from mcp_server_langgraph.api.v1.mcp_websocket import check_mcp_permission
 
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock()  # async-mock-configured
         mock_openfga.check = AsyncMock(return_value=False)
 
         with patch(
@@ -1388,7 +1388,7 @@ class TestMCPWebSocketMCPBridgeIntegration:
         )
 
         # Mock the MCPBridge
-        mock_bridge = AsyncMock()
+        mock_bridge = AsyncMock()  # async-mock-configured
         mock_bridge.send_chat_message = AsyncMock(return_value=MagicMock(content="Agent response from MCPBridge"))
         mock_bridge.is_configured = True
 
@@ -1449,7 +1449,7 @@ class TestMCPWebSocketMCPBridgeIntegration:
             roles=["user"],
         )
 
-        mock_bridge = AsyncMock()
+        mock_bridge = AsyncMock()  # async-mock-configured
         mock_bridge.send_chat_message = AsyncMock(side_effect=ChatError("MCP server unavailable"))
         mock_bridge.is_configured = True
 
@@ -1898,7 +1898,7 @@ class TestMCPWebSocketPerUserRateLimiting:
         # Simulate time passing and cleanup
         import time
 
-        time.sleep(1.1)
+        time.sleep(1.1)  # noqa: sleep-duration - testing connection timeout
 
         manager.cleanup_expired()
 

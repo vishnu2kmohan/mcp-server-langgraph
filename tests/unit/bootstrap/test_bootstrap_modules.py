@@ -239,7 +239,7 @@ class TestHttpBootstrap:
         """HttpState.cleanup() should close the http client."""
         from mcp_server_langgraph.bootstrap.http import HttpState
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock()  # async-mock-configured
         state = HttpState(http_client_manager=mock_manager)
 
         await state.cleanup()
@@ -281,9 +281,9 @@ class TestBootstrapLifecycle:
         """AppState.cleanup() should cleanup all components."""
         from mcp_server_langgraph.bootstrap import AppState
 
-        mock_security = AsyncMock()
-        mock_storage = AsyncMock()
-        mock_http = AsyncMock()
+        mock_security = AsyncMock()  # async-mock-configured
+        mock_storage = AsyncMock()  # async-mock-configured
+        mock_http = AsyncMock()  # async-mock-configured
 
         state = AppState(
             security=mock_security,
@@ -334,7 +334,7 @@ class TestBootstrapStreamingSettingsWiring:
             captured_settings.append(streaming_settings)
             # Return a mock WebSocketState
             mock_state = MagicMock()
-            mock_state.cleanup = AsyncMock()
+            mock_state.cleanup = AsyncMock()  # async-mock-configured
             return mock_state
 
         with patch(
@@ -375,7 +375,7 @@ class TestBootstrapStreamingSettingsWiring:
         async def mock_init_websocket(streaming_settings=None):
             captured_settings.append(streaming_settings)
             mock_state = MagicMock()
-            mock_state.cleanup = AsyncMock()
+            mock_state.cleanup = AsyncMock()  # async-mock-configured
             return mock_state
 
         with patch(

@@ -62,7 +62,7 @@ class TestStreamingHandlerChunkSizeLimit:
         )
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
-        send_notification = AsyncMock()
+        send_notification = AsyncMock()  # async-mock-configured
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
@@ -106,7 +106,7 @@ class TestStreamingHandlerChunkSizeLimit:
         )
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
-        send_notification = AsyncMock()
+        send_notification = AsyncMock()  # async-mock-configured
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,

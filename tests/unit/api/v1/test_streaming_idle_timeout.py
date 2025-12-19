@@ -89,7 +89,7 @@ class TestStreamingResetsIdleTimeout:
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
         mock_connection_manager = MagicMock()
-        send_notification = AsyncMock()
+        send_notification = AsyncMock()  # async-mock-configured
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,

@@ -100,7 +100,9 @@ spec:
             description: |
               Error budget is being consumed at {{ $value | printf "%.1f" }}x the sustainable rate.
               At this rate, the entire 30-day budget will be exhausted in {{ printf "%.1f" (30 / $value) }} days.
+            # TODO: Replace with actual runbook URL when documentation is deployed
             runbook: "https://docs.example.com/runbooks/slo-burn-critical"
+            # TODO: Replace with actual Grafana URL when dashboards are provisioned
             dashboard: "https://grafana.example.com/d/slo/slo-dashboard"
 
         # Page: 5% of 30-day budget consumed in 6 hours (6x burn rate)
@@ -121,6 +123,7 @@ spec:
             description: |
               Error budget is being consumed at {{ $value | printf "%.1f" }}x the sustainable rate.
               Investigate recent deployments or dependency issues.
+            # TODO: Replace with actual runbook URL when documentation is deployed
             runbook: "https://docs.example.com/runbooks/slo-burn-high"
 
         # Ticket: 10% of 30-day budget consumed in 3 days (3x burn rate)
@@ -158,6 +161,7 @@ spec:
             description: |
               P95 latency is {{ $value | humanizeDuration }}, exceeding the 500ms SLO target.
               Check for slow database queries, LLM provider issues, or resource contention.
+            # TODO: Replace with actual Grafana URL when dashboards are provisioned
             dashboard: "https://grafana.example.com/d/latency/latency-dashboard"
 
         - alert: SLOLatencyP99Breach
@@ -204,6 +208,7 @@ spec:
               The 30-day error budget has been fully consumed.
               Availability is below the 99.9% SLO target.
               Consider freezing deployments until stability is restored.
+            # TODO: Replace with actual runbook URL when documentation is deployed
             runbook: "https://docs.example.com/runbooks/error-budget-exhausted"
 
         - alert: SLOErrorBudgetLow

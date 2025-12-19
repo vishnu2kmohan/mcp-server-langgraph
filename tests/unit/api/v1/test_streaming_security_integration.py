@@ -44,7 +44,7 @@ class TestStreamingWithRateLimiting:
         )
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
-        send_notification = AsyncMock()
+        send_notification = AsyncMock()  # async-mock-configured
         rate_limiter = OutboundRateLimiter(max_notifications_per_second=10)
 
         streaming_handler = StreamingToolCallHandler(
@@ -144,7 +144,7 @@ class TestStreamingWithIdleTimeout:
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
         connection_manager = ConnectionManager()
-        send_notification = AsyncMock()
+        send_notification = AsyncMock()  # async-mock-configured
         session_id = "test-session"
 
         # Simulate a connection
@@ -319,7 +319,7 @@ class TestStreamingWithMessageSizeValidation:
         )
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
-        send_notification = AsyncMock()
+        send_notification = AsyncMock()  # async-mock-configured
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
@@ -380,7 +380,7 @@ class TestFullSecurityStackIntegration:
         connection_manager = ConnectionManager(max_connections_per_user=5)
         rate_limiter = OutboundRateLimiter(max_notifications_per_second=100)
         metrics_collector = StreamingMetricsCollector()
-        send_notification = AsyncMock()
+        send_notification = AsyncMock()  # async-mock-configured
         session_id = "test-session"
 
         # Set up connection

@@ -136,7 +136,7 @@ class TestCompileTimeParallelExecution:
                 mock_llm.return_value = MagicMock()
 
                 # Mock the parallel executor
-                mock_executor = AsyncMock()
+                mock_executor = AsyncMock()  # async-mock-configured
                 mock_executor.execute_parallel = AsyncMock(return_value=[])
                 mock_executor_class.return_value = mock_executor
 
@@ -291,7 +291,7 @@ class TestCompileTimeVerificationRouting:
             enable_checkpointing=False,
         )
 
-        mock_model = AsyncMock()
+        mock_model = AsyncMock()  # async-mock-configured
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))
 
         with patch("mcp_server_langgraph.llm.factory.create_llm_from_config") as mock_llm:

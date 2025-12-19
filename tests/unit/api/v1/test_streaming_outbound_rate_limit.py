@@ -129,7 +129,7 @@ class TestOutboundRateLimiterBehavior:
             await limiter.check_and_wait()
 
         # Wait for window to reset
-        await asyncio.sleep(1.1)
+        await asyncio.sleep(1.1)  # noqa: sleep-duration - testing rate limit window expiry
 
         # Should be able to send more without delay
         start = time.monotonic()
@@ -189,7 +189,7 @@ class TestStreamingHandlerUsesRateLimiter:
         # Create handler with low rate limit
         handler = AuthenticatedMCPHandler(user_id="user:test")
         rate_limiter = OutboundRateLimiter(max_notifications_per_second=10)
-        send_notification = AsyncMock()
+        send_notification = AsyncMock()  # async-mock-configured
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,

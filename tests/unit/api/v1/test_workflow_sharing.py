@@ -392,8 +392,8 @@ class TestWorkflowShareNotifications:
         request = AddWorkflowShareRequest(email="bob@example.com", permission="edit")
 
         # Mock the notification broadcaster
-        mock_broadcaster = AsyncMock()
-        mock_broadcaster.broadcast_to_user = AsyncMock()
+        mock_broadcaster = AsyncMock()  # async-mock-configured
+        mock_broadcaster.broadcast_to_user = AsyncMock()  # async-mock-configured
 
         with patch(
             "mcp_server_langgraph.api.v1.notification_websocket.get_notification_broadcaster",
@@ -438,7 +438,7 @@ class TestWorkflowShareNotifications:
         request = AddWorkflowShareRequest(email="bob@example.com", permission="view")
 
         # Mock broadcaster that raises exception
-        mock_broadcaster = AsyncMock()
+        mock_broadcaster = AsyncMock()  # async-mock-configured
         mock_broadcaster.broadcast_to_user = AsyncMock(side_effect=Exception("WebSocket error"))
 
         with patch(
@@ -483,8 +483,8 @@ class TestWorkflowShareNotifications:
         )
 
         request = AddWorkflowShareRequest(email="carol@example.com", permission="execute")
-        mock_broadcaster = AsyncMock()
-        mock_broadcaster.broadcast_to_user = AsyncMock()
+        mock_broadcaster = AsyncMock()  # async-mock-configured
+        mock_broadcaster.broadcast_to_user = AsyncMock()  # async-mock-configured
 
         with patch(
             "mcp_server_langgraph.api.v1.notification_websocket.get_notification_broadcaster",
