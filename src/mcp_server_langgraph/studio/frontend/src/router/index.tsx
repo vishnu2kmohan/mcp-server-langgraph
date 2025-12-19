@@ -3,6 +3,7 @@ import { App } from "../App";
 import { AuthGuard } from "./guards/AuthGuard";
 import { PersonaGuard } from "./guards/PersonaGuard";
 import { HybridShellLayout } from "../layout";
+import { chatLoader, sessionsLoader } from "./loaders";
 
 /**
  * Studio Router Configuration
@@ -250,27 +251,31 @@ export const router = createBrowserRouter(
         },
 
         // =================================================================
-        // Hybrid Canvas Studio (Phase 0 - Parallel Route)
+        // Hybrid Canvas Studio (Phase 2 - Parallel Route with Loaders)
         // =================================================================
         // This is a completely separate route tree from legacy /studio/*
         // Feature-flagged via canvas_hybrid_shell
         // Does NOT render MainDock or AppShell - uses HybridShellLayout
         {
+          id: "studio-v2",
           path: "studio/v2",
           element: (
             <AuthGuard>
               <HybridShellLayout />
             </AuthGuard>
           ),
+          // Load sessions for SessionNav on shell mount
+          loader: sessionsLoader,
           children: [
             // Default redirect to chat
             { index: true, element: <Navigate to="chat" replace /> },
-            // Phase 2: Chat route with loader
+            // Phase 2: Chat routes with loaders
             {
               path: "chat",
               children: [
                 {
                   index: true,
+                  loader: chatLoader,
                   lazy: async () => {
                     // Placeholder - will use ChatPage until CanvasChat is ready
                     const { ChatPage } = await import("../pages/ChatPage");
@@ -279,12 +284,11 @@ export const router = createBrowserRouter(
                 },
                 {
                   path: ":sessionId",
+                  loader: chatLoader,
                   lazy: async () => {
                     const { ChatPage } = await import("../pages/ChatPage");
                     return { Component: ChatPage };
                   },
-                  // Phase 2: Add loader here for React Router data loading
-                  // loader: chatLoader,
                 },
               ],
             },

@@ -24,6 +24,7 @@ import type {
   TransportProtocol,
 } from "../types/connection";
 import type { WorkflowSummary, Session, FeatureFlags } from "../types";
+import { canvasHandlers } from "./handlers/canvasHandlers";
 
 // =============================================================================
 // Mock Data Factories
@@ -712,6 +713,9 @@ export const handlers = [
       error_enabled: true,
     });
   }),
+
+  // Canvas Handlers (Phase 2)
+  ...canvasHandlers,
 ];
 
 // =============================================================================

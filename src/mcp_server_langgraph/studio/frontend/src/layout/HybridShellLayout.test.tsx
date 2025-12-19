@@ -29,6 +29,44 @@ vi.mock("react-resizable-panels", () => ({
   ),
 }));
 
+// Mock react-router hooks that need loader data
+vi.mock("react-router", async () => {
+  const actual = await vi.importActual("react-router");
+  return {
+    ...actual,
+    useRouteLoaderData: (id: string) => {
+      if (id === "studio-v2") {
+        return {
+          sessions: [
+            {
+              id: "session-1",
+              name: "Test Session 1",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              status: "active",
+            },
+            {
+              id: "session-2",
+              name: "Test Session 2",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              status: "active",
+            },
+          ],
+        };
+      }
+      if (id === "chat-session") {
+        return {
+          sessionId: "session-1",
+          artifacts: [],
+        };
+      }
+      return undefined;
+    },
+    useParams: () => ({}),
+  };
+});
+
 // Create test store with canvas slice
 const createTestStore = (preloadedState = {}) =>
   configureStore({
@@ -155,6 +193,20 @@ describe("HybridShellLayout", () => {
       expect(
         screen.getByPlaceholderText(/search sessions/i),
       ).toBeInTheDocument();
+    });
+
+    it("renders sessions from loader data", () => {
+      render(
+        <Provider store={createTestStore()}>
+          <MemoryRouter>
+            <HybridShellLayout />
+          </MemoryRouter>
+        </Provider>,
+      );
+
+      // Sessions should be displayed in the SessionNav
+      expect(screen.getByText("Test Session 1")).toBeInTheDocument();
+      expect(screen.getByText("Test Session 2")).toBeInTheDocument();
     });
   });
 

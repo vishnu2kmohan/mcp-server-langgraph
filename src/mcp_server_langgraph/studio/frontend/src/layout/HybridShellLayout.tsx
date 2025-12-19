@@ -13,9 +13,17 @@
  * |                      Status Bar                                 |
  * +----------------------------------------------------------------+
  */
-import { useCallback } from "react";
-import { Outlet, useNavigate } from "react-router";
+import { useCallback, useMemo } from "react";
+import {
+  Outlet,
+  useNavigate,
+  useRouteLoaderData,
+  useParams,
+} from "react-router";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import type { SessionsLoaderData, ChatLoaderData } from "../router/loaders";
+import type { Session } from "../types";
+import type { CanvasArtifact } from "../types/artifacts";
 import {
   MessageSquare,
   GitBranch,
@@ -33,8 +41,10 @@ import {
   selectActiveNavItem,
   selectCanvasCollapsed,
   selectSessionNavCollapsed,
+  selectSelectedArtifactId,
   setActiveNavItem,
   setPanelSizes,
+  setSelectedArtifactId,
   type CanvasPanelSizes,
 } from "../store/slices/canvasSlice";
 
@@ -163,7 +173,88 @@ function ActivityBar() {
 // SessionNav Component
 // =============================================================================
 
+interface GroupedSessions {
+  today: Session[];
+  yesterday: Session[];
+  older: Session[];
+}
+
+function groupSessionsByDate(sessions: Session[]): GroupedSessions {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+
+  const groups: GroupedSessions = { today: [], yesterday: [], older: [] };
+
+  for (const session of sessions) {
+    const sessionDate = new Date(session.created_at);
+    const sessionDay = new Date(
+      sessionDate.getFullYear(),
+      sessionDate.getMonth(),
+      sessionDate.getDate(),
+    );
+
+    if (sessionDay.getTime() === today.getTime()) {
+      groups.today.push(session);
+    } else if (sessionDay.getTime() === yesterday.getTime()) {
+      groups.yesterday.push(session);
+    } else {
+      groups.older.push(session);
+    }
+  }
+
+  return groups;
+}
+
 function SessionNav() {
+  const navigate = useNavigate();
+  const { sessionId: currentSessionId } = useParams();
+
+  // Get sessions from route loader data
+  const loaderData = useRouteLoaderData("studio-v2") as
+    | SessionsLoaderData
+    | undefined;
+
+  // Memoize sessions to prevent unnecessary re-renders
+  const sessions = useMemo(
+    () => loaderData?.sessions ?? [],
+    [loaderData?.sessions],
+  );
+
+  // Group sessions by date
+  const groupedSessions = useMemo(
+    () => groupSessionsByDate(sessions),
+    [sessions],
+  );
+
+  const handleSessionClick = useCallback(
+    (session: Session) => {
+      navigate(`/studio/v2/chat/${session.id}`);
+    },
+    [navigate],
+  );
+
+  const handleNewChat = useCallback(() => {
+    navigate("/studio/v2/chat");
+  }, [navigate]);
+
+  const renderSessionItem = (session: Session) => (
+    <button
+      key={session.id}
+      type="button"
+      onClick={() => handleSessionClick(session)}
+      className={cn(
+        "w-full text-left px-3 py-2 rounded-lg text-sm truncate",
+        "transition-colors",
+        session.id === currentSessionId
+          ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700",
+      )}
+    >
+      {session.name || `Session ${session.id.slice(0, 8)}`}
+    </button>
+  );
+
   return (
     <div
       data-testid="session-nav"
@@ -177,6 +268,7 @@ function SessionNav() {
       <div className="p-2 border-b border-gray-200 dark:border-gray-700">
         <button
           type="button"
+          onClick={handleNewChat}
           className={cn(
             "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg",
             "bg-primary-500 hover:bg-primary-600",
@@ -210,14 +302,46 @@ function SessionNav() {
         </div>
       </div>
 
-      {/* Session list placeholder */}
+      {/* Session list */}
       <div className="flex-1 overflow-y-auto p-2">
-        <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
-          Today
-        </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400 italic">
-          No sessions yet
-        </div>
+        {sessions.length === 0 ? (
+          <div className="text-sm text-gray-500 dark:text-gray-400 italic text-center mt-4">
+            No sessions yet
+          </div>
+        ) : (
+          <>
+            {groupedSessions.today.length > 0 && (
+              <div className="mb-3">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
+                  Today
+                </div>
+                <div className="space-y-1">
+                  {groupedSessions.today.map(renderSessionItem)}
+                </div>
+              </div>
+            )}
+            {groupedSessions.yesterday.length > 0 && (
+              <div className="mb-3">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
+                  Yesterday
+                </div>
+                <div className="space-y-1">
+                  {groupedSessions.yesterday.map(renderSessionItem)}
+                </div>
+              </div>
+            )}
+            {groupedSessions.older.length > 0 && (
+              <div className="mb-3">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
+                  Older
+                </div>
+                <div className="space-y-1">
+                  {groupedSessions.older.map(renderSessionItem)}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
@@ -272,7 +396,46 @@ function ConversationPanel() {
 // CanvasPanel Component
 // =============================================================================
 
+/** Get icon for artifact content type */
+function getArtifactIcon(contentType: CanvasArtifact["contentType"]) {
+  switch (contentType) {
+    case "code":
+      return <FileCode2 size={16} />;
+    case "markdown":
+      return <FileCode2 size={16} />;
+    case "json":
+      return <FileCode2 size={16} />;
+    default:
+      return <FileCode2 size={16} />;
+  }
+}
+
 function CanvasPanel() {
+  const dispatch = useAppDispatch();
+  const selectedArtifactId = useAppSelector(selectSelectedArtifactId);
+
+  // Get artifacts from the chat loader
+  const loaderData = useRouteLoaderData("chat-session") as
+    | ChatLoaderData
+    | undefined;
+  const artifacts = useMemo(
+    () => loaderData?.artifacts ?? [],
+    [loaderData?.artifacts],
+  );
+
+  // Find the selected artifact
+  const selectedArtifact = useMemo(
+    () => artifacts.find((a) => a.id === selectedArtifactId),
+    [artifacts, selectedArtifactId],
+  );
+
+  const handleArtifactSelect = useCallback(
+    (artifact: CanvasArtifact) => {
+      dispatch(setSelectedArtifactId(artifact.id));
+    },
+    [dispatch],
+  );
+
   return (
     <div
       data-testid="canvas-panel"
@@ -282,24 +445,82 @@ function CanvasPanel() {
         "border-l border-gray-200 dark:border-gray-700",
       )}
     >
-      {/* Canvas header */}
+      {/* Canvas header with artifact tabs */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
         <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
           Canvas
         </span>
+        {artifacts.length > 0 && (
+          <span className="text-xs text-gray-400">
+            {artifacts.length} artifact{artifacts.length !== 1 ? "s" : ""}
+          </span>
+        )}
       </div>
+
+      {/* Artifact tabs */}
+      {artifacts.length > 0 && (
+        <div className="flex gap-1 p-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+          {artifacts.map((artifact) => (
+            <button
+              key={artifact.id}
+              type="button"
+              onClick={() => handleArtifactSelect(artifact)}
+              className={cn(
+                "flex items-center gap-1 px-2 py-1 rounded text-xs whitespace-nowrap",
+                "transition-colors",
+                artifact.id === selectedArtifactId
+                  ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700",
+              )}
+            >
+              {getArtifactIcon(artifact.contentType)}
+              <span className="max-w-24 truncate">
+                {artifact.title || `Artifact ${artifact.id.slice(0, 6)}`}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Canvas content */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="flex items-center justify-center h-full text-gray-400">
-          <div className="text-center">
-            <FileCode2 size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="text-sm">No artifact selected</p>
-            <p className="text-xs mt-1 text-gray-500">
-              Select an artifact from the conversation to view and edit
-            </p>
+        {selectedArtifact ? (
+          <div className="h-full">
+            {/* Artifact header */}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {selectedArtifact.title || "Untitled"}
+              </h3>
+              <span className="text-xs text-gray-400">
+                v{selectedArtifact.version} &bull;{" "}
+                {selectedArtifact.contentType}
+              </span>
+            </div>
+            {/* Artifact content */}
+            <pre
+              className={cn(
+                "p-4 rounded-lg text-sm overflow-auto",
+                "bg-gray-100 dark:bg-gray-900",
+                "text-gray-800 dark:text-gray-200",
+                "font-mono",
+              )}
+            >
+              {selectedArtifact.content}
+            </pre>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-400">
+            <div className="text-center">
+              <FileCode2 size={48} className="mx-auto mb-4 opacity-50" />
+              <p className="text-sm">No artifact selected</p>
+              <p className="text-xs mt-1 text-gray-500">
+                {artifacts.length > 0
+                  ? "Select an artifact from the tabs above"
+                  : "Artifacts will appear here when generated"}
+              </p>
+            </div>
+          </div>
+        )}
         {/* Outlet for nested routes (artifact detail, etc.) */}
         <Outlet />
       </div>
