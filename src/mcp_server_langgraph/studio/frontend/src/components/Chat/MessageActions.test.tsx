@@ -246,4 +246,149 @@ describe("MessageActions", () => {
       expect(container).toHaveClass("custom-class");
     });
   });
+
+  // ===========================================================================
+  // Enhanced Actions (Sprint 2.5)
+  // ===========================================================================
+
+  describe("copy code blocks", () => {
+    const contentWithCode = `Here is some code:
+\`\`\`javascript
+function hello() {
+  console.log("Hello World");
+}
+\`\`\`
+And some more text.`;
+
+    it("should show copy code button when message has code blocks", () => {
+      render(<MessageActions {...defaultProps} content={contentWithCode} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      expect(screen.getByTestId("action-copy-code")).toBeInTheDocument();
+    });
+
+    it("should not show copy code button when no code blocks", () => {
+      render(<MessageActions {...defaultProps} content="No code here" />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      expect(screen.queryByTestId("action-copy-code")).not.toBeInTheDocument();
+    });
+
+    it("should copy only code blocks when copy code is clicked", async () => {
+      render(<MessageActions {...defaultProps} content={contentWithCode} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      fireEvent.click(screen.getByTestId("action-copy-code"));
+
+      await waitFor(() => {
+        expect(mockClipboard.writeText).toHaveBeenCalledWith(
+          expect.stringContaining("function hello()"),
+        );
+      });
+    });
+  });
+
+  describe("feedback actions", () => {
+    it("should show thumbs up button", () => {
+      render(<MessageActions {...defaultProps} onFeedback={() => {}} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      expect(screen.getByTestId("action-thumbs-up")).toBeInTheDocument();
+    });
+
+    it("should show thumbs down button", () => {
+      render(<MessageActions {...defaultProps} onFeedback={() => {}} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      expect(screen.getByTestId("action-thumbs-down")).toBeInTheDocument();
+    });
+
+    it("should call onFeedback with positive when thumbs up clicked", () => {
+      const onFeedback = vi.fn();
+      render(<MessageActions {...defaultProps} onFeedback={onFeedback} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      fireEvent.click(screen.getByTestId("action-thumbs-up"));
+
+      expect(onFeedback).toHaveBeenCalledWith("msg-001", "positive");
+    });
+
+    it("should call onFeedback with negative when thumbs down clicked", () => {
+      const onFeedback = vi.fn();
+      render(<MessageActions {...defaultProps} onFeedback={onFeedback} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      fireEvent.click(screen.getByTestId("action-thumbs-down"));
+
+      expect(onFeedback).toHaveBeenCalledWith("msg-001", "negative");
+    });
+
+    it("should highlight active feedback state", () => {
+      render(
+        <MessageActions
+          {...defaultProps}
+          onFeedback={() => {}}
+          feedbackState="positive"
+        />,
+      );
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+
+      const thumbsUp = screen.getByTestId("action-thumbs-up");
+      expect(thumbsUp).toHaveAttribute("data-active", "true");
+    });
+  });
+
+  describe("bookmark action", () => {
+    it("should show bookmark button when onBookmark is provided", () => {
+      render(<MessageActions {...defaultProps} onBookmark={() => {}} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      expect(screen.getByTestId("action-bookmark")).toBeInTheDocument();
+    });
+
+    it("should call onBookmark when bookmark is clicked", () => {
+      const onBookmark = vi.fn();
+      render(<MessageActions {...defaultProps} onBookmark={onBookmark} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      fireEvent.click(screen.getByTestId("action-bookmark"));
+
+      expect(onBookmark).toHaveBeenCalledWith("msg-001");
+    });
+
+    it("should show filled bookmark icon when bookmarked", () => {
+      render(
+        <MessageActions {...defaultProps} onBookmark={() => {}} isBookmarked />,
+      );
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+
+      const bookmark = screen.getByTestId("action-bookmark");
+      expect(bookmark).toHaveAttribute("data-bookmarked", "true");
+    });
+  });
+
+  describe("share action", () => {
+    it("should show share button when onShare is provided", () => {
+      render(<MessageActions {...defaultProps} onShare={() => {}} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      expect(screen.getByTestId("action-share")).toBeInTheDocument();
+    });
+
+    it("should call onShare when share is clicked", () => {
+      const onShare = vi.fn();
+      render(<MessageActions {...defaultProps} onShare={onShare} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      fireEvent.click(screen.getByTestId("action-share"));
+
+      expect(onShare).toHaveBeenCalledWith("msg-001");
+    });
+  });
+
+  describe("branch action", () => {
+    it("should show branch button when onBranch is provided", () => {
+      render(<MessageActions {...defaultProps} onBranch={() => {}} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      expect(screen.getByTestId("action-branch")).toBeInTheDocument();
+    });
+
+    it("should call onBranch when branch is clicked", () => {
+      const onBranch = vi.fn();
+      render(<MessageActions {...defaultProps} onBranch={onBranch} />);
+      fireEvent.click(screen.getByTestId("message-actions-trigger"));
+      fireEvent.click(screen.getByTestId("action-branch"));
+
+      expect(onBranch).toHaveBeenCalledWith("msg-001");
+    });
+  });
 });

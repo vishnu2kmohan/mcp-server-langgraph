@@ -14,7 +14,7 @@
  * - Delete confirmation dialog
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   MoreHorizontal,
   Copy,
@@ -23,11 +23,19 @@ import {
   RefreshCw,
   Trash2,
   Loader2,
+  Code2,
+  ThumbsUp,
+  ThumbsDown,
+  Bookmark,
+  Share2,
+  GitBranch,
 } from "lucide-react";
 
 // =============================================================================
 // Types
 // =============================================================================
+
+export type FeedbackType = "positive" | "negative";
 
 export interface MessageActionsProps {
   /** The message ID */
@@ -42,6 +50,18 @@ export interface MessageActionsProps {
   onRegenerate?: (messageId: string) => void;
   /** Callback when delete is triggered */
   onDelete?: (messageId: string) => void;
+  /** Callback when feedback is given */
+  onFeedback?: (messageId: string, type: FeedbackType) => void;
+  /** Current feedback state */
+  feedbackState?: FeedbackType;
+  /** Callback when bookmark is clicked */
+  onBookmark?: (messageId: string) => void;
+  /** Whether message is bookmarked */
+  isBookmarked?: boolean;
+  /** Callback when share is clicked */
+  onShare?: (messageId: string) => void;
+  /** Callback when branch is clicked */
+  onBranch?: (messageId: string) => void;
   /** Whether regeneration is in progress */
   isRegenerating?: boolean;
   /** Additional CSS classes */
@@ -52,6 +72,17 @@ export interface MessageActionsProps {
 // Component
 // =============================================================================
 
+// Helper to extract code blocks from content
+function extractCodeBlocks(content: string): string[] {
+  const codeBlockRegex = /```[\w]*\n([\s\S]*?)```/g;
+  const blocks: string[] = [];
+  let match;
+  while ((match = codeBlockRegex.exec(content)) !== null) {
+    blocks.push(match[1].trim());
+  }
+  return blocks;
+}
+
 export function MessageActions({
   messageId,
   content,
@@ -59,6 +90,12 @@ export function MessageActions({
   onEdit,
   onRegenerate,
   onDelete,
+  onFeedback,
+  feedbackState,
+  onBookmark,
+  isBookmarked = false,
+  onShare,
+  onBranch,
   isRegenerating = false,
   className = "",
 }: MessageActionsProps) {
@@ -69,6 +106,10 @@ export function MessageActions({
 
   const isUser = role === "user";
   const isAssistant = role === "assistant";
+
+  // Check if content has code blocks
+  const codeBlocks = useMemo(() => extractCodeBlocks(content), [content]);
+  const hasCodeBlocks = codeBlocks.length > 0;
 
   // Handle click outside to close menu
   useEffect(() => {
@@ -150,6 +191,45 @@ export function MessageActions({
     setShowDeleteConfirm(false);
   }, []);
 
+  // Copy code blocks only
+  const handleCopyCode = useCallback(async () => {
+    try {
+      const codeText = codeBlocks.join("\n\n");
+      await navigator.clipboard.writeText(codeText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy code:", err);
+    }
+  }, [codeBlocks]);
+
+  // Feedback actions
+  const handleThumbsUp = useCallback(() => {
+    onFeedback?.(messageId, "positive");
+  }, [messageId, onFeedback]);
+
+  const handleThumbsDown = useCallback(() => {
+    onFeedback?.(messageId, "negative");
+  }, [messageId, onFeedback]);
+
+  // Bookmark action
+  const handleBookmark = useCallback(() => {
+    onBookmark?.(messageId);
+    setIsOpen(false);
+  }, [messageId, onBookmark]);
+
+  // Share action
+  const handleShare = useCallback(() => {
+    onShare?.(messageId);
+    setIsOpen(false);
+  }, [messageId, onShare]);
+
+  // Branch action
+  const handleBranch = useCallback(() => {
+    onBranch?.(messageId);
+    setIsOpen(false);
+  }, [messageId, onBranch]);
+
   return (
     <div
       ref={containerRef}
@@ -219,6 +299,100 @@ export function MessageActions({
                   </>
                 )}
               </button>
+
+              {/* Copy Code Action - only when message has code blocks */}
+              {hasCodeBlocks && (
+                <button
+                  data-testid="action-copy-code"
+                  onClick={handleCopyCode}
+                  role="menuitem"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Code2 size={16} />
+                  <span>Copy Code</span>
+                </button>
+              )}
+
+              {/* Feedback Actions */}
+              {onFeedback && (
+                <div className="flex items-center px-3 py-2 gap-2 border-t border-gray-100 dark:border-gray-700">
+                  <button
+                    data-testid="action-thumbs-up"
+                    onClick={handleThumbsUp}
+                    data-active={feedbackState === "positive"}
+                    role="menuitem"
+                    className={`p-1.5 rounded transition-colors ${
+                      feedbackState === "positive"
+                        ? "text-green-600 bg-green-100 dark:bg-green-900/30"
+                        : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                    aria-label="Thumbs up"
+                  >
+                    <ThumbsUp size={16} />
+                  </button>
+                  <button
+                    data-testid="action-thumbs-down"
+                    onClick={handleThumbsDown}
+                    data-active={feedbackState === "negative"}
+                    role="menuitem"
+                    className={`p-1.5 rounded transition-colors ${
+                      feedbackState === "negative"
+                        ? "text-red-600 bg-red-100 dark:bg-red-900/30"
+                        : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                    aria-label="Thumbs down"
+                  >
+                    <ThumbsDown size={16} />
+                  </button>
+                </div>
+              )}
+
+              {/* Bookmark Action */}
+              {onBookmark && (
+                <button
+                  data-testid="action-bookmark"
+                  onClick={handleBookmark}
+                  data-bookmarked={isBookmarked}
+                  role="menuitem"
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                    isBookmarked
+                      ? "text-yellow-600 dark:text-yellow-400"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <Bookmark
+                    size={16}
+                    fill={isBookmarked ? "currentColor" : "none"}
+                  />
+                  <span>{isBookmarked ? "Bookmarked" : "Bookmark"}</span>
+                </button>
+              )}
+
+              {/* Share Action */}
+              {onShare && (
+                <button
+                  data-testid="action-share"
+                  onClick={handleShare}
+                  role="menuitem"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Share2 size={16} />
+                  <span>Share</span>
+                </button>
+              )}
+
+              {/* Branch Action */}
+              {onBranch && (
+                <button
+                  data-testid="action-branch"
+                  onClick={handleBranch}
+                  role="menuitem"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <GitBranch size={16} />
+                  <span>Branch</span>
+                </button>
+              )}
 
               {/* Edit Action - user messages only */}
               {isUser && onEdit && (
