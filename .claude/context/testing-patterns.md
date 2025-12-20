@@ -1,6 +1,6 @@
 # Testing Patterns Context
 
-**Last Updated**: 2025-10-20
+**Last Updated**: 2025-12-19
 **Purpose**: Reference guide for writing tests in mcp-server-langgraph
 **Test Count**: 437+ tests across multiple categories
 
@@ -930,6 +930,143 @@ def mock_prometheus():
         ])
         yield prom
 ```
+
+---
+
+## 🔒 Test Isolation Patterns (Vitest/Jest)
+
+### Critical: Mock Cleanup in Vitest
+
+**Problem**: `vi.clearAllMocks()` only clears mock call history, NOT mock implementations set via `mockReturnValue()`. This leads to test pollution.
+
+```typescript
+// ❌ BAD: Previous test's mockReturnValue persists
+beforeEach(() => {
+  vi.clearAllMocks();
+  // This does NOT reset mockReturnValue() implementations!
+});
+
+it("test A - sets loading state", () => {
+  (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+    isLoading: true,  // This persists to subsequent tests!
+    data: null,
+  });
+  // ...
+});
+
+it("test B - expects default state", () => {
+  // FAILS: Still sees isLoading: true from test A
+  renderComponent();
+  expect(screen.getByText("Content")).toBeInTheDocument();
+});
+```
+
+```typescript
+// ✅ GOOD: Reset mocks to default values in beforeEach
+beforeEach(() => {
+  vi.clearAllMocks();
+
+  // Reset to default values - this IS needed for isolation
+  (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+    data: mockData,
+    isLoading: false,
+    error: null,
+  });
+});
+```
+
+### Vitest Mock Functions Reference
+
+| Function | Clears Call History | Resets mockReturnValue | Restores Original |
+|----------|---------------------|------------------------|-------------------|
+| `vi.clearAllMocks()` | ✅ Yes | ❌ No | ❌ No |
+| `vi.resetAllMocks()` | ✅ Yes | ✅ Yes (to undefined) | ❌ No |
+| `vi.restoreAllMocks()` | ✅ Yes | ✅ Yes | ✅ Yes (spies only) |
+
+### Spy Isolation Pattern
+
+**Problem**: `vi.spyOn()` on global objects may not restore properly.
+
+```typescript
+// ❌ BAD: Relying on afterEach to restore
+it("test A - mocks localStorage", () => {
+  vi.spyOn(localStorage, "getItem").mockReturnValue("cached");
+  // ...
+});
+
+it("test B - expects clean localStorage", () => {
+  // May still see mocked value if restoration fails
+  const value = localStorage.getItem("key");
+});
+```
+
+```typescript
+// ✅ GOOD: Explicit mock in each test that needs specific behavior
+it("test B - expects null from localStorage", () => {
+  vi.spyOn(localStorage, "getItem").mockImplementation(() => null);
+
+  const value = localStorage.getItem("key");
+  expect(value).toBeNull();
+});
+```
+
+### RTK Query Hook Mocking Pattern
+
+When mocking RTK Query hooks, always reset them in `beforeEach`:
+
+```typescript
+// At file level
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetDataQuery: vi.fn(() => ({
+      data: null,
+      isLoading: false,
+      error: null,
+    })),
+  };
+});
+
+// Import after mock
+import { useGetDataQuery } from "../api";
+
+describe("Component", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // ⚠️ CRITICAL: Reset to default values
+    (useGetDataQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: mockDefaultData,
+      isLoading: false,
+      error: null,
+    });
+  });
+
+  it("shows loading state", () => {
+    // Override for this specific test
+    (useGetDataQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: null,
+      isLoading: true,
+      error: null,
+    });
+    // ...
+  });
+
+  it("shows data", () => {
+    // Uses default from beforeEach - no override needed
+    renderComponent();
+    expect(screen.getByText("Data")).toBeInTheDocument();
+  });
+});
+```
+
+### Key Takeaways
+
+1. **Always reset mocks in beforeEach** - Don't rely on `vi.clearAllMocks()` alone
+2. **Explicit > Implicit** - If a test needs specific mock state, set it explicitly
+3. **Default values matter** - Set sensible defaults that most tests expect
+4. **Order tests don't depend** - Each test should set up its own preconditions
 
 ---
 

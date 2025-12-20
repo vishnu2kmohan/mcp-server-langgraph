@@ -243,3 +243,51 @@ beforeAll(() => {
   global.IntersectionObserver =
     MockIntersectionObserver as unknown as typeof IntersectionObserver;
 });
+
+// =============================================================================
+// Service Worker Mock
+// =============================================================================
+// jsdom doesn't support service workers. Mock navigator.serviceWorker to prevent
+// crashes when PWA code tries to register/unregister service workers.
+beforeAll(() => {
+  const mockServiceWorkerContainer = {
+    register: vi.fn().mockResolvedValue({
+      installing: null,
+      waiting: null,
+      active: null,
+      scope: "/",
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      update: vi.fn().mockResolvedValue(undefined),
+      unregister: vi.fn().mockResolvedValue(true),
+    }),
+    getRegistration: vi.fn().mockResolvedValue(undefined),
+    getRegistrations: vi.fn().mockResolvedValue([]),
+    ready: Promise.resolve({
+      installing: null,
+      waiting: null,
+      active: null,
+      scope: "/",
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      update: vi.fn().mockResolvedValue(undefined),
+      unregister: vi.fn().mockResolvedValue(true),
+    }),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+    controller: null,
+    oncontrollerchange: null,
+    onmessage: null,
+    onmessageerror: null,
+    startMessages: vi.fn(),
+  };
+
+  Object.defineProperty(navigator, "serviceWorker", {
+    value: mockServiceWorkerContainer,
+    writable: true,
+    configurable: true,
+  });
+});

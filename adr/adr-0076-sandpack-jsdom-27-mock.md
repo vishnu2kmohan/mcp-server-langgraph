@@ -121,6 +121,48 @@ Track upstream issues:
 - [Sandpack React Library](https://sandpack.codesandbox.io/)
 - [Vitest Module Mocking](https://vitest.dev/guide/mocking.html)
 
+## Known Issue: Worker Crash on Cleanup
+
+After test completion, an intermittent libuv assertion failure may occur:
+
+```
+node: src/unix/stream.c:456: uv__stream_destroy: Assertion
+`!uv__io_active(&stream->io_watcher, POLLIN | POLLOUT)' failed.
+```
+
+### Behavior
+
+- All tests complete and pass correctly BEFORE the crash
+- The crash occurs during worker process cleanup, NOT during tests
+- Does NOT affect test results or coverage
+- Non-deterministic - may not occur on every run
+
+### Root Cause
+
+This is a libuv race condition where stream handles are still active when
+the worker process attempts to exit. It's triggered by jsdom's interaction
+with native I/O operations. Common triggers include:
+
+1. MSW (Mock Service Worker) cleanup
+2. WebSocket mock cleanup
+3. Service Worker registration mocks
+
+### Mitigations Implemented
+
+1. Service worker mock in `setup.ts` to prevent undefined property access
+2. Global unhandledRejection/uncaughtException handlers
+3. Using `pool: 'forks'` for better process isolation
+
+### Tracking
+
+- Node.js issue: https://github.com/nodejs/node/issues/30507
+- Vitest issue: https://github.com/vitest-dev/vitest/issues/1171
+
+### Status
+
+**Accepted risk** - The crash is cosmetic and doesn't affect test reliability.
+All 5600+ tests pass correctly before the worker cleanup crash.
+
 ## Related ADRs
 
 - ADR-0044: Test Infrastructure Quick Wins
