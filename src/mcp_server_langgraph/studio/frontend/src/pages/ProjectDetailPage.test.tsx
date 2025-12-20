@@ -225,6 +225,31 @@ describe("ProjectDetailPage", () => {
       error: null,
       refetch: mockRefetch,
     });
+    // Reset observability mocks to default values
+    // This is necessary because vi.clearAllMocks() does not reset mockReturnValue()
+    (
+      useGetProjectObservabilityQuery as ReturnType<typeof vi.fn>
+    ).mockReturnValue({
+      data: {
+        traceCount: 100,
+        requestsTotal: 500,
+        errorsTotal: 10,
+        avgLatencyMs: 150,
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    (useGetProjectLogsQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: { logs: [], total: 0 },
+      isLoading: false,
+      error: null,
+    });
+    (useGetProjectAlertsQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: { alerts: [], total: 0 },
+      isLoading: false,
+      error: null,
+    });
     // Keep fetch mock for child tab operations (observability, cost)
     vi.stubGlobal(
       "fetch",

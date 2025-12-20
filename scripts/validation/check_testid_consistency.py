@@ -28,8 +28,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 
 # Frontend paths
 FRONTEND_ROOT = REPO_ROOT / "src" / "mcp_server_langgraph" / "studio" / "frontend"
-COMPONENTS_DIR = FRONTEND_ROOT / "src" / "components"
-PAGES_DIR = FRONTEND_ROOT / "src" / "pages"
+SRC_DIR = FRONTEND_ROOT / "src"  # Search all of src/ for test IDs
 E2E_DIR = FRONTEND_ROOT / "e2e"
 
 # Known issues to ignore (pre-existing test ID mismatches tracked for future fix)
@@ -41,6 +40,10 @@ KNOWN_UNMATCHED_TESTIDS: frozenset[str] = frozenset(
         "metric",  # admin-journey.spec.ts:124 - uses partial match
         "user",  # admin-journey.spec.ts:173 - uses partial match
         "chat-messages",  # api-verification.spec.ts:412 - optional component
+        # Hybrid Canvas WIP - components being developed
+        "nav-chat",  # hybrid-shell-smoke.spec.ts - ActivityBar component
+        "nav-admin",  # hybrid-shell-smoke.spec.ts - ActivityBar component
+        "new-chat-button",  # hybrid-shell-smoke.spec.ts - SessionNav component
     }
 )
 
@@ -72,25 +75,22 @@ def extract_testids_from_components() -> set[str]:
     # Captures the base pattern before any ${} interpolation
     template_pattern = re.compile(r"data-testid=\{`([^`$]+)")
 
-    # Directories to search
-    search_dirs = [COMPONENTS_DIR, PAGES_DIR]
+    # Search all of src/ for data-testid attributes
+    if not SRC_DIR.exists():
+        return testids
 
-    for search_dir in search_dirs:
-        if not search_dir.exists():
-            continue
+    for tsx_file in SRC_DIR.rglob("*.tsx"):
+        content = tsx_file.read_text(encoding="utf-8")
 
-        for tsx_file in search_dir.rglob("*.tsx"):
-            content = tsx_file.read_text(encoding="utf-8")
+        # Find static test IDs
+        for match in static_pattern.finditer(content):
+            testids.add(match.group(1))
 
-            # Find static test IDs
-            for match in static_pattern.finditer(content):
-                testids.add(match.group(1))
-
-            # Find template literal base patterns
-            for match in template_pattern.finditer(content):
-                # Add the base pattern with wildcard indicator
-                base = match.group(1).rstrip("-")
-                testids.add(f"{base}-*")
+        # Find template literal base patterns
+        for match in template_pattern.finditer(content):
+            # Add the base pattern with wildcard indicator
+            base = match.group(1).rstrip("-")
+            testids.add(f"{base}-*")
 
     return testids
 

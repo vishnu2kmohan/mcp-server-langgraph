@@ -233,7 +233,10 @@ describe("useHeartMetricsTracker", () => {
     });
 
     it("should return 0 for first visit", () => {
-      // localStorage is cleared in beforeEach, so this is a first visit
+      // Explicitly mock localStorage to return null (no previous visit)
+      // This ensures test isolation from any prior localStorage.getItem spies
+      vi.spyOn(localStorage, "getItem").mockImplementation(() => null);
+
       const { result } = renderHook(() => useHeartMetricsTracker());
 
       expect(result.current.daysSinceLastVisit).toBe(0);
