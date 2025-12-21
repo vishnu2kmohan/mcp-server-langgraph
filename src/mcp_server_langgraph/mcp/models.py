@@ -161,3 +161,26 @@ class SearchToolsInput(BaseModel):
         le=50,
         description="Maximum number of tools to return",
     )
+
+
+class InterruptInput(BaseModel):
+    """
+    Input schema for session_interrupt tool.
+
+    Follows Claude Agent SDK interrupt pattern for graceful cancellation.
+    """
+
+    session_id: str = Field(
+        description="Session ID to interrupt (e.g., thread_id from agent_chat)",
+        min_length=1,
+        max_length=256,
+    )
+    action: Literal["signal", "check", "clear"] = Field(
+        default="signal",
+        description=(
+            "Interrupt action to perform. "
+            "'signal' interrupts the session. "
+            "'check' returns current interrupt status. "
+            "'clear' clears the interrupt flag."
+        ),
+    )
