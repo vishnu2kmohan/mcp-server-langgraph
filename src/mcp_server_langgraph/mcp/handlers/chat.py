@@ -3,6 +3,8 @@ Chat Tool Handler
 
 Handles agent_chat tool invocations for the MCP server.
 Implements Anthropic best practices for token-efficient responses.
+
+Includes hook system integration following Claude Agent SDK patterns.
 """
 
 from typing import Any, Literal
@@ -12,10 +14,14 @@ from mcp.types import TextContent
 
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.core.agent import AgentState
+from mcp_server_langgraph.core.hook_registry import HookRegistry
 from mcp_server_langgraph.mcp.handlers.base import AbstractToolHandler
 from mcp_server_langgraph.mcp.models import ChatInput
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import format_response
+
+# Tool name for hook matching
+CHAT_TOOL_NAME = "agent_chat"
 
 
 class ChatToolHandler(AbstractToolHandler):
@@ -27,15 +33,18 @@ class ChatToolHandler(AbstractToolHandler):
     - Token-efficient responses with truncation
     - Clear error messages
     - Performance tracking
+
+    Includes hook integration for PreToolUse and PostToolUse.
     """
 
     def __init__(
         self,
         auth: AuthMiddleware,
         agent_graph: Any,
+        hook_registry: HookRegistry | None = None,
     ) -> None:
         """Initialize chat handler with dependencies."""
-        super().__init__(auth, agent_graph)
+        super().__init__(auth, agent_graph, hook_registry=hook_registry)
 
     async def handle(
         self,
@@ -72,6 +81,30 @@ class ChatToolHandler(AbstractToolHandler):
             span.set_attribute("user.id", user_id)
             span.set_attribute("response.format", response_format_type)
 
+            # Create hook context
+            request_id = str(span.get_span_context().trace_id) if span.get_span_context() else None
+            hook_context = self.get_hook_context(
+                session_id=thread_id,
+                user_id=user_id,
+                request_id=request_id,
+            )
+
+            # Dispatch PreToolUse hook
+            pre_result = await self.dispatch_pre_handler_hook(
+                tool_name=CHAT_TOOL_NAME,
+                tool_input=arguments,
+                context=hook_context,
+            )
+
+            # Check for deny from pre-hook
+            if not pre_result.should_proceed:
+                deny_message = pre_result.message or "Chat request blocked by policy"
+                logger.warning(
+                    "Chat blocked by pre-hook",
+                    extra={"user_id": user_id, "thread_id": thread_id, "reason": deny_message},
+                )
+                return [TextContent(type="text", text=f"Request denied: {deny_message}")]
+
             # Check if conversation exists
             conversation_exists = await self._check_conversation_exists(thread_id)
 
@@ -102,15 +135,39 @@ class ChatToolHandler(AbstractToolHandler):
 
             try:
                 result = await self.agent_graph.ainvoke(initial_state, config)
-                return await self._process_result(result, message, thread_id, user_id, response_format_type, span)
+                response_content = await self._process_result(result, message, thread_id, user_id, response_format_type, span)
+                response_text = response_content[0].text if response_content else ""
+
+                # Dispatch PostToolUse hook (success case)
+                await self.dispatch_post_handler_hook(
+                    tool_name=CHAT_TOOL_NAME,
+                    tool_input=arguments,
+                    tool_output=response_text,
+                    is_error=False,
+                    context=hook_context,
+                )
+
+                return response_content
+
             except Exception as e:
+                error_message = str(e)
                 logger.error(
                     f"Error processing chat: {e}",
-                    extra={"error": str(e), "thread_id": thread_id},
+                    extra={"error": error_message, "thread_id": thread_id},
                     exc_info=True,
                 )
                 metrics.failed_calls.add(1, {"tool": "agent_chat", "error": type(e).__name__})
                 span.record_exception(e)
+
+                # Dispatch PostToolUse hook (error case)
+                await self.dispatch_post_handler_hook(
+                    tool_name=CHAT_TOOL_NAME,
+                    tool_input=arguments,
+                    tool_output=f"Error: {error_message}",
+                    is_error=True,
+                    context=hook_context,
+                )
+
                 raise
 
     async def _check_conversation_exists(self, thread_id: str) -> bool:

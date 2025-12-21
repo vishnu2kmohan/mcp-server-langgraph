@@ -318,14 +318,19 @@ repos:
     files: ^src/mcp_server_langgraph/studio/frontend/.*\.(ts|tsx)$
     always_run: false
     stages:
+    - pre-commit
     - pre-push
     description: 'Validates frontend TypeScript compiles without errors.
 
       Added 2025-12-13 to catch TypeScript errors before they reach Docker build.
+      Updated 2025-12-20 to run on pre-commit for early unused variable detection.
 
       Runs tsc --noEmit on the studio frontend codebase. This ensures type safety
       and catches errors that unit tests might miss (unused variables, type mismatches,
       missing properties in interfaces, etc.).
+
+      With noUnusedLocals and noUnusedParameters enabled in tsconfig.json, this hook
+      now catches unused variable issues early at commit time.
 
       Duration: ~3-5s when node_modules cached, ~30s on first run.
 
