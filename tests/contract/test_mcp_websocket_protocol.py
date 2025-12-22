@@ -227,7 +227,7 @@ class TestMCPProtocolResources:
             "result": {
                 "resources": [
                     {
-                        "uri": "config://playground/session-1",
+                        "uri": "config://studio/session-1",
                         "name": "Session Configuration",
                         "mimeType": "application/json",
                     }
@@ -250,7 +250,7 @@ class TestMCPProtocolResources:
             "jsonrpc": "2.0",
             "id": 5,
             "method": "resources/read",
-            "params": {"uri": "config://playground/session-1"},
+            "params": {"uri": "config://studio/session-1"},
         }
 
         assert request["method"] == "resources/read"

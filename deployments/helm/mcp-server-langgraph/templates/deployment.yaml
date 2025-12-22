@@ -264,6 +264,27 @@ spec:
               name: {{ include "mcp-server-langgraph.secretName" . }}
               key: microsoft-client-secret
               optional: true
+
+        # Multi-Agent Orchestrators (ADR-0078)
+        # FeatureFlags use FF_ prefix for all environment variables
+        - name: FF_ENABLE_ORCHESTRATED_AI_UX
+          value: {{ .Values.config.enableOrchestratedAiUx | quote }}
+        - name: FF_ENABLE_ORCHESTRATED_ALERT_ANALYSIS
+          value: {{ .Values.config.enableOrchestratedAlertAnalysis | quote }}
+        - name: FF_ENABLE_ORCHESTRATOR_RESILIENCE
+          value: {{ .Values.config.enableOrchestratorResilience | quote }}
+        - name: FF_ORCHESTRATION_COST_LIMIT
+          value: {{ .Values.config.orchestrationCostLimit | quote }}
+        - name: FF_SESSION_COST_LIMIT
+          value: {{ .Values.config.sessionCostLimit | quote }}
+        - name: FF_COST_ALERT_THRESHOLDS
+          value: {{ .Values.config.costAlertThresholds | quote }}
+        - name: FF_ORCHESTRATOR_TIMEOUT_SECONDS
+          value: {{ .Values.config.orchestratorTimeoutSeconds | quote }}
+        - name: FF_ORCHESTRATOR_MAX_CONCURRENT
+          value: {{ .Values.config.orchestratorMaxConcurrent | quote }}
+        - name: FF_ORCHESTRATOR_CIRCUIT_BREAKER_THRESHOLD
+          value: {{ .Values.config.orchestratorCircuitBreakerThreshold | quote }}
         startupProbe:
           httpGet:
             path: {{ .Values.healthChecks.startup.path }}

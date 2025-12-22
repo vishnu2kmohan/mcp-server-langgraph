@@ -1,0 +1,168 @@
+# Resilience Remediation Webhook Handler Deployment
+#
+# Receives Alertmanager webhooks and triggers automated remediation.
+#
+# Reference: ADR-0026 - Comprehensive Client Resilience Patterns
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: remediation-webhook
+  namespace: default
+  labels:
+    app: remediation-webhook
+    app.kubernetes.io/name: remediation-webhook
+    app.kubernetes.io/component: automation
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: remediation-webhook
+  namespace: default
+  labels:
+    app: remediation-webhook
+rules:
+  # Pod management for restarts
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "delete"]
+  # Deployment/StatefulSet management for scaling and rollouts
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale", "statefulsets/scale"]
+    verbs: ["get", "patch", "update"]
+  # Events for audit trail
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create"]
+  # ConfigMaps for LLM provider switching
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: remediation-webhook
+  namespace: default
+  labels:
+    app: remediation-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: remediation-webhook
+subjects:
+  - kind: ServiceAccount
+    name: remediation-webhook
+    namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: remediation-webhook
+  namespace: default
+  labels:
+    app: remediation-webhook
+    app.kubernetes.io/name: remediation-webhook
+    app.kubernetes.io/component: automation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: remediation-webhook
+  template:
+    metadata:
+      labels:
+        app: remediation-webhook
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: remediation-webhook
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: webhook
+          image: remediation-webhook:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: DRY_RUN
+              value: "false"
+            - name: COOLDOWN_SECONDS
+              value: "300"
+            - name: FALLBACK_LLM_PROVIDER
+              value: "ollama"
+          resources:
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: remediation-webhook
+  namespace: default
+  labels:
+    app: remediation-webhook
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: remediation-webhook
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: remediation-webhook
+  namespace: default
+  labels:
+    app: remediation-webhook
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels:
+      app: remediation-webhook

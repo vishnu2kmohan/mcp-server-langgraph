@@ -314,6 +314,71 @@ config:
   # Enhanced Note-Taking - Structured Information Extraction
   enableLlmExtraction: "false"  # Use LLM for note extraction
 
+  # ===========================================================================
+  # Anthropic Best Practices (ADR-0072)
+  # ===========================================================================
+  # Phase 1: Foundation
+  enableToolExamples: "true"      # Tool input examples (72% -> 90% accuracy improvement)
+  enableThinkTool: "true"         # Think tool for structured reasoning (54% improvement)
+  enableDeferLoading: "false"     # Defer tool loading for token efficiency (experimental)
+  # Phase 2: PII Tokenization (COMPLIANCE CRITICAL)
+  enablePiiTokenization: "false"  # PII detection and tokenization (GDPR/HIPAA, experimental)
+  # Phase 3: Skills System
+  enableSkillsSystem: "false"     # SKILL.md-based skills system (experimental)
+  enableSkillsMarketplace: "false"  # Anthropic skills marketplace integration (experimental)
+  # Phase 4: Multi-Agent & Sandbox
+  enableProgrammaticTools: "false"  # Programmatic tool calling from sandbox (experimental)
+  enableMultiAgentOrchestration: "false"  # Orchestrator-worker pattern (experimental)
+  enableAgenticMemory: "false"    # NOTES.md structured note-taking (experimental)
+
+  # ===========================================================================
+  # Multi-Agent Orchestrators (ADR-0078)
+  # ===========================================================================
+  # Parallel execution orchestrators for AI analysis tasks.
+  # Enable for 3-4x performance improvement over sequential execution.
+  # See: docs/guides/multi-agent-orchestrators.mdx for API documentation
+  # See: docs-internal/runbooks/ORCHESTRATOR_OPERATIONS.md for monitoring
+  # All values map to FF_* environment variables (FeatureFlags prefix)
+
+  # UX Orchestrator - Parallel AI UX composite analysis
+  # Runs persona, disclosure, and error analysis in parallel
+  # API: POST /api/v1/ai/composite-analysis
+  # Env: FF_ENABLE_ORCHESTRATED_AI_UX
+  enableOrchestratedAiUx: "false"
+
+  # Alert Orchestrator - Parallel alert correlation and root cause analysis
+  # Runs correlation, root cause, remediation, and pattern detection in parallel
+  # API: POST /api/v1/alerts/correlate
+  # Env: FF_ENABLE_ORCHESTRATED_ALERT_ANALYSIS
+  enableOrchestratedAlertAnalysis: "false"
+
+  # Orchestrator Resilience - Enable circuit breaker, timeout, bulkhead patterns
+  # Env: FF_ENABLE_ORCHESTRATOR_RESILIENCE
+  enableOrchestratorResilience: "true"
+
+  # Orchestrator Cost Tracking
+  # Per-orchestration limit in USD (prevents runaway costs, range: 0.01-100.0)
+  # Env: FF_ORCHESTRATION_COST_LIMIT
+  orchestrationCostLimit: "0.50"
+  # Per-session limit in USD (range: 0.10-1000.0)
+  # Env: FF_SESSION_COST_LIMIT
+  sessionCostLimit: "5.00"
+  # Cost alert thresholds as comma-separated percentages
+  # Env: FF_COST_ALERT_THRESHOLDS (parsed as JSON list)
+  costAlertThresholds: "[0.5, 0.75, 0.9]"
+
+  # Orchestrator Timeout - Maximum execution time in seconds (range: 30-600)
+  # Env: FF_ORCHESTRATOR_TIMEOUT_SECONDS
+  orchestratorTimeoutSeconds: "300"
+
+  # Orchestrator Bulkhead - Maximum concurrent orchestrations (range: 1-20)
+  # Env: FF_ORCHESTRATOR_MAX_CONCURRENT
+  orchestratorMaxConcurrent: "5"
+
+  # Circuit Breaker - Failures before circuit opens (range: 1-10)
+  # Env: FF_ORCHESTRATOR_CIRCUIT_BREAKER_THRESHOLD
+  orchestratorCircuitBreakerThreshold: "3"
+
   # Conversation Checkpointing (Distributed State)
   checkpointBackend: "redis"  # memory or redis (use redis for production)
   checkpointRedisUrl: "redis://redis-session:6379/1"  # Use db 1
@@ -375,6 +440,13 @@ secrets:
   infisicalClientSecret: ""
   infisicalProjectId: ""
 
+  # Web Push Notification VAPID Keys (required for push notifications)
+  # Generate with: npx web-push generate-vapid-keys
+  # Reference: ADR-0026 - Comprehensive Client Resilience Patterns
+  vapidPublicKey: ""
+  vapidPrivateKey: ""
+  vapidClaimsEmail: "admin@example.com"
+
 # External Secrets Operator integration
 externalSecrets:
   enabled: false
@@ -414,6 +486,13 @@ externalSecrets:
     - secretKey: microsoft-client-secret
       remoteRef:
         key: mcp-server-langgraph/microsoft-client-secret
+    # Web Push VAPID Keys (ADR-0026 - Push Notifications)
+    - secretKey: vapid-public-key
+      remoteRef:
+        key: mcp-server-langgraph/vapid-public-key
+    - secretKey: vapid-private-key
+      remoteRef:
+        key: mcp-server-langgraph/vapid-private-key
 
 # OpenFGA dependency
 openfga:
@@ -641,14 +720,27 @@ kube-prometheus-stack:
         group_interval: 10s
         repeat_interval: 12h
         routes:
+          # Route critical alerts to MCP Server for AI remediation + Slack
           - match:
               severity: critical
             receiver: slack-critical
             group_wait: 0s
             repeat_interval: 4h
+            continue: true  # Continue to mcp-server-alerts
+          - match:
+              severity: critical
+            receiver: mcp-server-alerts
+            group_wait: 0s
+            repeat_interval: 4h
+          # Route warning alerts to MCP Server for AI remediation + Slack
           - match:
               severity: warning
             receiver: slack-warnings
+            repeat_interval: 12h
+            continue: true  # Continue to mcp-server-alerts
+          - match:
+              severity: warning
+            receiver: mcp-server-alerts
             repeat_interval: 12h
           - match:
               severity: info
@@ -658,6 +750,14 @@ kube-prometheus-stack:
         - name: 'default'
           webhook_configs:
             - url: 'http://localhost:5001/webhook'
+        # MCP Server Alert Integration (ADR-0026)
+        # Routes critical/warning alerts to mcp-server for AI-powered remediation
+        - name: 'mcp-server-alerts'
+          webhook_configs:
+            - url: 'http://{{ .Release.Name }}-mcp-server-langgraph:80/api/v1/webhooks/alertmanager'
+              send_resolved: true
+              http_config:
+                bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         - name: 'slack-critical'
           slack_configs:
             - api_url: '<YOUR_SLACK_WEBHOOK_URL>'

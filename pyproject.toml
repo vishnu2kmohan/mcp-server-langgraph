@@ -281,6 +281,11 @@ observability-full = [
     "opentelemetry-exporter-otlp-proto-http>=1.38.0",
 ]
 
+# Visual verification for agent loops (headless browser screenshot capture)
+visual-verification = [
+    "playwright>=1.49.0",  # Headless browser for screenshot capture
+]
+
 # ==============================================================================
 # COMBINED EXTRAS
 # ==============================================================================
@@ -760,6 +765,8 @@ filterwarnings = [
     "ignore:Support for class-based `config` is deprecated.*:DeprecationWarning",
     # Internal warnings
     "ignore:coroutine.*was never awaited.*:RuntimeWarning:mcp_server_langgraph.resilience.circuit_breaker",
+    # Mock-related warning in push_store tests (session.add on AsyncMock)
+    "ignore:coroutine.*AsyncMockMixin._execute_mock_call.*was never awaited.*:RuntimeWarning:mcp_server_langgraph.notifications.push_store",
     "ignore:Pydantic serializer warnings.*:UserWarning:pydantic.main",
     # Test environment expected warnings (OpenAI Codex Finding 2025-11-15)
     # InMemory auth provider is intentionally used in tests for isolation
@@ -787,7 +794,9 @@ markers = [
     "openfga: OpenFGA integration tests",
     "infisical: Infisical integration tests",
     "mcp: MCP protocol tests",
+    "tools: Tool implementation tests (bash, file, web tools)",
     "llm: LLM API tests (expensive, requires API keys, skipped in CI)",
+    "ai: AI UX service tests (persona analysis, disclosure, nudges, error recovery)",
     "observability: OpenTelemetry/metrics/logging tests",
     "metrics: Prometheus/OTel metrics instrumentation tests",
     "monitoring: Cost metrics and usage tracking tests",
@@ -813,6 +822,9 @@ markers = [
     "deployment: Deployment configuration and validation tests (Helm, Kustomize, placeholders)",
     "preview: Preview environment deployment tests",
     "skip_resilience_reset: Opt-out of autouse resilience state reset fixture (for circuit breaker tests)",
+    "resilience: Resilience pattern tests (circuit breaker, retry, timeout, fallback)",
+    "chaos: Chaos engineering tests (service unavailability, graceful degradation)",
+    "cache: Caching layer tests (L1/L2 cache, Redis, fallback)",
     "infrastructure: Infrastructure and deployment configuration tests",
     "database: Database integration tests (schema setup, migrations, queries)",
     "diagnostic: Diagnostic and troubleshooting tests",
@@ -823,6 +835,8 @@ markers = [
     "ci: CI/CD pipeline and workflow tests",
     "asyncio: Async tests using pytest-asyncio",
     "xdist_group: Test grouping for pytest-xdist parallel execution (prevents memory issues)",
+    "config: Configuration and settings tests",
+    "requires_infra: Tests requiring external infrastructure (Keycloak, Redis, etc.)",
     "external_deps: Tests requiring external dependencies or services",
     "meta: Meta tests (test suite validation, CI/CD checks)",
     "requires_kustomize: Tests requiring kustomize CLI tool",
@@ -835,6 +849,8 @@ markers = [
     "docker: Docker image and Dockerfile tests",
     "playground: Interactive playground tests (API, WebSocket, sessions)",
     "websocket: WebSocket endpoint tests (streaming, real-time)",
+    "notifications: Notification system tests (push, preferences, broadcast)",
+    "alerts: Alert infrastructure tests (WebSocket streaming, Alertmanager webhook, AI recommendations)",
     "builder: Visual workflow builder tests",
     "redis: Redis-backed storage tests (sessions, checkpoints)",
     "postgres: PostgreSQL-backed storage tests (workflows, sessions, durable persistence)",
@@ -853,6 +869,27 @@ markers = [
     "hipaa: HIPAA compliance tests (45 CFR 164.312(b), ePHI audit logging)",
     "fedramp: FedRAMP compliance tests (NIST 800-53 AU controls, federal authorization)",
     "eu_ai_act: EU AI Act compliance tests (Articles 12, 19, 72 high-risk AI logging)",
+    "tool_examples: Tests for tool input_examples feature (Anthropic best practices)",
+    "think_tool: Tests for think tool reasoning (structured reasoning during tool chains)",
+    "screenshot_tool: Tests for screenshot capture tool (visual verification in agent loops)",
+    "visual_verification: Tests for visual verification integration (screenshot + LLM-as-judge)",
+    "defer_loading: Tests for defer loading pattern (token efficiency for tool lists)",
+    "skills: Tests for skills system (SKILL.md parsing, registry, execution)",
+    "skills_marketplace: Tests for marketplace integration (Anthropic skills, multi-marketplace)",
+    "pii: Tests for PII tokenization (detection, tokenization, untokenization)",
+    "programmatic_tools: Tests for programmatic tool calling from sandbox",
+    "multi_agent: Tests for orchestrator-worker pattern (parallel subagents, artifact storage)",
+    "hitl: Tests for Human-in-the-Loop (confidence-based approval, clarification workflows)",
+    "push_notifications: Tests for Web Push notification integration (VAPID, service worker)",
+    "memory: Tests for structured note-taking and agentic memory (NOTES.md, checkpoints)",
+    "sdk: Tests for Claude Agent SDK integration (SDK-agnostic interface, hooks, state)",
+    "hooks: Tests for SDK hook system (PreToolUse, PostToolUse, lifecycle hooks)",
+    "desktop_extension: Tests for .mcpb desktop extension packaging (manifest, builder, platforms)",
+    "privacy: Privacy and PII protection tests (tokenization, middleware, lookup table)",
+    "coverage: Coverage improvement tests (edge cases, missing branches)",
+    "agents: Multi-agent orchestration tests (orchestrator, coordinator, subagent)",
+    "orchestrator: Orchestrator-specific tests (model registry, task routing, cost tracking)",
+    "ai_explanations: AI Explanation generation tests (orchestrated explanation for HITL dialogs)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

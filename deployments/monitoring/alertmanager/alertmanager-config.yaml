@@ -1,0 +1,339 @@
+# Alertmanager Configuration for Resilience Alerts
+# Reference: ADR-0026 - Comprehensive Client Resilience Patterns
+#
+# Deploy to: Alertmanager
+#
+# Usage:
+#   1. Update receiver configurations with your actual endpoints
+#   2. Copy to Alertmanager config directory
+#   3. Reload Alertmanager: curl -X POST http://alertmanager:9093/-/reload
+#
+# Environment Variables Required:
+#   - SLACK_WEBHOOK_URL: Slack incoming webhook URL
+#   - PAGERDUTY_SERVICE_KEY: PagerDuty integration key
+#   - OPSGENIE_API_KEY: OpsGenie API key (optional)
+#
+global:
+  # Default settings
+  resolve_timeout: 5m
+
+  # Slack configuration (used by slack receivers)
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+
+  # PagerDuty configuration
+  pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+
+  # OpsGenie configuration (optional)
+  # opsgenie_api_url: 'https://api.opsgenie.com/'
+
+
+# ==============================================================================
+# Inhibition Rules
+# ==============================================================================
+# Prevent lower-severity alerts when higher-severity alerts are firing
+
+inhibit_rules:
+  # If a critical alert is firing, suppress warnings for the same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']
+
+  # If CircuitBreakerOpen is firing, suppress related retry/timeout alerts
+  - source_match:
+      alertname: 'CircuitBreakerOpen'
+    target_match_re:
+      alertname: 'RetryExhaustionHigh|TimeoutRateHigh'
+    equal: ['service']
+
+  # If HTTPPoolExhausted is firing, suppress HTTPPoolNearCapacity
+  - source_match:
+      alertname: 'HTTPPoolExhausted'
+    target_match:
+      alertname: 'HTTPPoolNearCapacity'
+
+
+# ==============================================================================
+# Routing Tree
+# ==============================================================================
+
+route:
+  # Default receiver for unmatched alerts
+  receiver: 'slack-platform-warnings'
+
+  # Group alerts by these labels
+  group_by: ['alertname', 'severity', 'service', 'provider']
+
+  # Wait before sending initial notification (allows grouping)
+  group_wait: 30s
+
+  # Wait before sending new alerts to existing group
+  group_interval: 5m
+
+  # Wait before resending notification for resolved alert
+  repeat_interval: 4h
+
+  # Child routes (evaluated in order, first match wins)
+  routes:
+    # ===========================================================================
+    # Critical Alerts -> PagerDuty + Slack
+    # ===========================================================================
+    - match:
+        severity: critical
+      receiver: 'pagerduty-critical'
+      continue: true  # Also send to Slack
+
+    - match:
+        severity: critical
+      receiver: 'slack-platform-critical'
+
+    # ===========================================================================
+    # Circuit Breaker Alerts (Critical Services)
+    # ===========================================================================
+    - match:
+        alertname: CircuitBreakerOpen
+      match_re:
+        service: 'redis|keycloak|openfga|postgres'
+      receiver: 'pagerduty-critical'
+      continue: true
+
+    - match:
+        alertname: CircuitBreakerOpen
+      match_re:
+        service: 'redis|keycloak|openfga|postgres'
+      receiver: 'slack-platform-critical'
+
+    # Circuit Breaker Alerts (Observability Services - Warning only)
+    - match:
+        alertname: CircuitBreakerOpenWarning
+      receiver: 'slack-platform-warnings'
+
+    # ===========================================================================
+    # LLM Provider Alerts
+    # ===========================================================================
+    - match_re:
+        alertname: 'AdaptiveBulkheadAtFloor|AdaptiveBulkheadErrorRateHigh|RateLimitTokenExhaustion'
+      receiver: 'slack-llm-alerts'
+      group_by: ['alertname', 'provider']
+
+    # ===========================================================================
+    # HTTP Pool Exhaustion (Critical)
+    # ===========================================================================
+    - match:
+        alertname: HTTPPoolExhausted
+      receiver: 'pagerduty-critical'
+      continue: true
+
+    - match:
+        alertname: HTTPPoolExhausted
+      receiver: 'slack-platform-critical'
+
+    # HTTP Pool Near Capacity (Warning)
+    - match:
+        alertname: HTTPPoolNearCapacity
+      receiver: 'slack-platform-warnings'
+
+    # ===========================================================================
+    # Retry and Timeout Alerts (Warning)
+    # ===========================================================================
+    - match_re:
+        alertname: 'RetryExhaustionHigh|TimeoutRateHigh|BulkheadRejectionsHigh'
+      receiver: 'slack-platform-warnings'
+
+    # ===========================================================================
+    # Automated Remediation Routes
+    # ===========================================================================
+    # These routes trigger automated remediation actions for specific alerts.
+    # Remediation runs BEFORE human notification to enable fast recovery.
+
+    # Circuit Breaker Extended Open -> Restart dependent pods
+    - match:
+        alertname: CircuitBreakerOpen
+      match_re:
+        service: 'redis|keycloak|openfga|postgres'
+      receiver: 'remediation-webhook'
+      continue: true  # Also notify humans
+
+    # HTTP Pool Exhaustion -> Scale horizontally
+    - match:
+        alertname: HTTPPoolExhausted
+      receiver: 'remediation-webhook'
+      continue: true
+
+    # LLM Provider Throttling -> Switch to fallback provider
+    - match_re:
+        alertname: 'AdaptiveBulkheadAtFloor'
+      receiver: 'remediation-webhook'
+      continue: true
+
+    # High Retry Exhaustion -> Restart affected service
+    - match:
+        alertname: RetryExhausted
+      receiver: 'remediation-webhook'
+      continue: true
+
+    # ===========================================================================
+    # MCP Server Admin Dashboard (Real-time UI + AI Recommendations)
+    # ===========================================================================
+    # Route all critical and warning alerts to MCP server for:
+    #   - Real-time WebSocket broadcast to Admin Dashboard
+    #   - AI-powered root cause analysis and remediation recommendations
+    #   - Human-in-the-loop remediation approval workflow
+    - match_re:
+        severity: 'critical|warning'
+      receiver: 'mcp-server-dashboard'
+      continue: true  # Also send to other receivers (Slack, PagerDuty)
+
+    # ===========================================================================
+    # Informational Alerts (Dashboard only)
+    # ===========================================================================
+    - match:
+        severity: info
+      receiver: 'null'  # Don't notify, just show in dashboard
+
+
+# ==============================================================================
+# Receivers
+# ==============================================================================
+
+receivers:
+  # Null receiver (for info-level alerts - dashboard only)
+  - name: 'null'
+
+  # ---------------------------------------------------------------------------
+  # Slack Receivers
+  # ---------------------------------------------------------------------------
+  - name: 'slack-platform-critical'
+    slack_configs:
+      - channel: '#platform-critical'
+        username: 'AlertManager'
+        icon_emoji: ':fire:'
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+        title: '{{ .Status | toUpper }}: {{ .CommonAnnotations.summary }}'
+        text: |
+          *Alert:* {{ .CommonLabels.alertname }}
+          *Severity:* {{ .CommonLabels.severity }}
+          *Service:* {{ .CommonLabels.service }}{{ if .CommonLabels.provider }} | *Provider:* {{ .CommonLabels.provider }}{{ end }}
+
+          {{ .CommonAnnotations.description }}
+
+          *Runbook:* {{ .CommonAnnotations.runbook_url }}
+          *Dashboard:* {{ .CommonAnnotations.dashboard_url }}
+        send_resolved: true
+        actions:
+          - type: button
+            text: 'Runbook'
+            url: '{{ .CommonAnnotations.runbook_url }}'
+          - type: button
+            text: 'Dashboard'
+            url: '{{ .CommonAnnotations.dashboard_url }}'
+
+  - name: 'slack-platform-warnings'
+    slack_configs:
+      - channel: '#platform-alerts'
+        username: 'AlertManager'
+        icon_emoji: ':warning:'
+        color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
+        title: '{{ .Status | toUpper }}: {{ .CommonAnnotations.summary }}'
+        text: |
+          *Alert:* {{ .CommonLabels.alertname }}
+          *Severity:* {{ .CommonLabels.severity }}
+          {{ if .CommonLabels.service }}*Service:* {{ .CommonLabels.service }}{{ end }}
+          {{ if .CommonLabels.provider }}*Provider:* {{ .CommonLabels.provider }}{{ end }}
+          {{ if .CommonLabels.function }}*Function:* {{ .CommonLabels.function }}{{ end }}
+
+          {{ .CommonAnnotations.description }}
+        send_resolved: true
+
+  - name: 'slack-llm-alerts'
+    slack_configs:
+      - channel: '#llm-monitoring'
+        username: 'AlertManager'
+        icon_emoji: ':robot_face:'
+        color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
+        title: 'LLM {{ .Status | toUpper }}: {{ .CommonAnnotations.summary }}'
+        text: |
+          *Alert:* {{ .CommonLabels.alertname }}
+          *Provider:* {{ .CommonLabels.provider }}
+
+          {{ .CommonAnnotations.description }}
+
+          *Current Limit:* Check adaptive_bulkhead.limit metric
+          *Error Rate:* Check adaptive_bulkhead.error_rate metric
+        send_resolved: true
+
+  # ---------------------------------------------------------------------------
+  # PagerDuty Receiver (Critical alerts)
+  # ---------------------------------------------------------------------------
+  - name: 'pagerduty-critical'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        severity: '{{ .CommonLabels.severity }}'
+        description: '{{ .CommonAnnotations.summary }}'
+        details:
+          alertname: '{{ .CommonLabels.alertname }}'
+          service: '{{ .CommonLabels.service }}'
+          provider: '{{ .CommonLabels.provider }}'
+          description: '{{ .CommonAnnotations.description }}'
+          runbook_url: '{{ .CommonAnnotations.runbook_url }}'
+        # Include link to runbook
+        links:
+          - href: '{{ .CommonAnnotations.runbook_url }}'
+            text: 'Runbook'
+          - href: '{{ .CommonAnnotations.dashboard_url }}'
+            text: 'Dashboard'
+
+  # ---------------------------------------------------------------------------
+  # OpsGenie Receiver (Alternative to PagerDuty)
+  # ---------------------------------------------------------------------------
+  # - name: 'opsgenie-critical'
+  #   opsgenie_configs:
+  #     - api_key: '${OPSGENIE_API_KEY}'
+  #       message: '{{ .CommonAnnotations.summary }}'
+  #       description: '{{ .CommonAnnotations.description }}'
+  #       priority: '{{ if eq .CommonLabels.severity "critical" }}P1{{ else if eq .CommonLabels.severity "warning" }}P3{{ else }}P5{{ end }}'
+  #       tags: 'resilience,{{ .CommonLabels.service }},{{ .CommonLabels.alertname }}'
+
+  # ---------------------------------------------------------------------------
+  # Automated Remediation Webhook
+  # ---------------------------------------------------------------------------
+  # Triggers automated remediation actions for resilience alerts.
+  # See: deployments/remediation/ for implementation details.
+  #
+  # NOTE: This receiver should be added to routes where automated remediation
+  # is desired. Use 'continue: true' to also send to human receivers.
+  - name: 'remediation-webhook'
+    webhook_configs:
+      - url: 'http://remediation-webhook.default.svc.cluster.local/webhook'
+        send_resolved: false  # Only trigger on firing, not resolved
+        max_alerts: 5  # Limit alerts per webhook to prevent overload
+        http_config:
+          follow_redirects: true
+
+  # ---------------------------------------------------------------------------
+  # MCP Server Admin Dashboard Webhook
+  # ---------------------------------------------------------------------------
+  # Routes alerts to the MCP Server's alertmanager webhook endpoint for
+  # real-time display in the Admin Dashboard with AI-powered recommendations.
+  # See: ADR-0026 - Comprehensive Client Resilience Patterns
+  #
+  # The MCP server webhook:
+  #   1. Broadcasts alerts to connected WebSocket clients
+  #   2. Triggers AI recommendation pre-computation for critical alerts
+  #   3. Enables remediation approval workflow in Admin UI
+  - name: 'mcp-server-dashboard'
+    webhook_configs:
+      - url: '${MCP_SERVER_ALERTMANAGER_WEBHOOK_URL:-http://mcp-server-langgraph:8000/api/v1/webhooks/alertmanager}'
+        send_resolved: true  # Send both firing and resolved alerts
+        max_alerts: 20
+        http_config:
+          follow_redirects: true
+
+
+# ==============================================================================
+# Templates
+# ==============================================================================
+
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'

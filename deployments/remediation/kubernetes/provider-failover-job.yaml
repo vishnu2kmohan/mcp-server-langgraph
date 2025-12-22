@@ -1,0 +1,150 @@
+# LLM Provider Failover Job
+#
+# Kubernetes Job that switches LLM provider when primary is throttled.
+#
+# Usage:
+#   kubectl create job llm-failover --from=cronjob/provider-failover
+#
+# Reference: ADR-0026 - Comprehensive Client Resilience Patterns
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: provider-failover
+  namespace: default
+  labels:
+    app: remediation
+    app.kubernetes.io/name: provider-failover
+    app.kubernetes.io/component: automation
+spec:
+  # Suspended by default - triggered by webhook or manual job creation
+  suspend: true
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 600
+      template:
+        metadata:
+          labels:
+            app: remediation-job
+        spec:
+          serviceAccountName: remediation-webhook
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
+          containers:
+            - name: remediation
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/bash
+                - -c
+              args:
+                - |
+                  set -euo pipefail
+
+                  TARGET_PROVIDER="${TARGET_PROVIDER:-ollama}"
+                  DEPLOYMENT="${DEPLOYMENT:-mcp-server-langgraph}"
+                  NAMESPACE="${NAMESPACE:-default}"
+                  DRY_RUN="${DRY_RUN:-false}"
+                  COOLDOWN_FILE="/tmp/llm-switch-cooldown"
+                  COOLDOWN_SECONDS="${COOLDOWN_SECONDS:-600}"
+
+                  VALID_PROVIDERS="openai anthropic google azure ollama"
+
+                  log_info() { echo "[INFO] $(date '+%Y-%m-%d %H:%M:%S') $1"; }
+                  log_warn() { echo "[WARN] $(date '+%Y-%m-%d %H:%M:%S') $1"; }
+                  log_error() { echo "[ERROR] $(date '+%Y-%m-%d %H:%M:%S') $1"; }
+
+                  # Validate provider
+                  if ! echo "$VALID_PROVIDERS" | grep -qw "$TARGET_PROVIDER"; then
+                      log_error "Invalid provider: $TARGET_PROVIDER"
+                      log_error "Valid: $VALID_PROVIDERS"
+                      exit 1
+                  fi
+
+                  # Check cooldown
+                  if [[ -f "$COOLDOWN_FILE" ]]; then
+                      LAST_RUN=$(cat "$COOLDOWN_FILE")
+                      CURRENT_TIME=$(date +%s)
+                      ELAPSED=$((CURRENT_TIME - LAST_RUN))
+                      if [[ $ELAPSED -lt $COOLDOWN_SECONDS ]]; then
+                          REMAINING=$((COOLDOWN_SECONDS - ELAPSED))
+                          log_warn "Cooldown active. ${REMAINING}s remaining. Skipping."
+                          exit 0
+                      fi
+                  fi
+
+                  log_info "Starting LLM provider switch to: $TARGET_PROVIDER"
+
+                  # Check deployment exists
+                  if ! kubectl get deployment "$DEPLOYMENT" -n "$NAMESPACE" &>/dev/null; then
+                      log_error "Deployment $DEPLOYMENT not found"
+                      exit 1
+                  fi
+
+                  # Check for skip annotation
+                  SKIP=$(kubectl get deployment "$DEPLOYMENT" -n "$NAMESPACE" \
+                      -o jsonpath='{.metadata.annotations.remediation\.llm-switch\.skip}' 2>/dev/null || echo "")
+                  if [[ "$SKIP" == "true" ]]; then
+                      log_warn "LLM switch skip annotation found. Skipping."
+                      exit 0
+                  fi
+
+                  # Get current provider
+                  CURRENT=$(kubectl get deployment "$DEPLOYMENT" -n "$NAMESPACE" \
+                      -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="LLM_PROVIDER")].value}' 2>/dev/null || echo "unknown")
+                  log_info "Current provider: $CURRENT"
+
+                  if [[ "$CURRENT" == "$TARGET_PROVIDER" ]]; then
+                      log_info "Already using $TARGET_PROVIDER. No action needed."
+                      exit 0
+                  fi
+
+                  log_info "Switching from $CURRENT to $TARGET_PROVIDER"
+
+                  if [[ "$DRY_RUN" == "true" ]]; then
+                      log_warn "[DRY RUN] Would switch to $TARGET_PROVIDER"
+                  else
+                      kubectl set env deployment/"$DEPLOYMENT" "LLM_PROVIDER=$TARGET_PROVIDER" -n "$NAMESPACE"
+                      kubectl rollout status deployment "$DEPLOYMENT" -n "$NAMESPACE" --timeout=300s
+                      date +%s > "$COOLDOWN_FILE"
+                      kubectl create event --type=Normal --reason=ResilienceRemediation \
+                          --message="Switched LLM provider from $CURRENT to $TARGET_PROVIDER due to throttling" \
+                          --for="deployment/$DEPLOYMENT" -n "$NAMESPACE" 2>/dev/null || true
+                      log_info "Provider switch complete: $CURRENT -> $TARGET_PROVIDER"
+                  fi
+              env:
+                - name: TARGET_PROVIDER
+                  value: "ollama"  # Override when creating job
+                - name: DEPLOYMENT
+                  value: "mcp-server-langgraph"
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: DRY_RUN
+                  value: "false"
+                - name: COOLDOWN_SECONDS
+                  value: "600"
+              resources:
+                limits:
+                  cpu: "100m"
+                  memory: "128Mi"
+                requests:
+                  cpu: "50m"
+                  memory: "64Mi"
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir: {}

@@ -1245,6 +1245,95 @@ pytest -n 4             # Use 4 workers
 
 ---
 
+## 🔐 Pydantic Feature Flag Mocking Pattern
+
+When testing `@feature_gated` decorated functions, standard mocking approaches fail because:
+1. `FeatureFlags` is a Pydantic model that intercepts `__setattr__` and `__delattr__`
+2. `is_test_mode` is a read-only property derived from `FF_TEST_MODE` environment variable
+3. The decorator captures `feature_flags` singleton from `core.feature_flags` module
+
+**Pattern for Testing Feature-Gated Functions**:
+```python
+import os
+from unittest.mock import patch
+
+import pytest
+
+from mcp_server_langgraph.core.exceptions import FeatureDisabledError
+from mcp_server_langgraph.core.feature_flags import feature_flags
+
+
+def test_feature_gated_function_raises_when_disabled():
+    """Test that @feature_gated raises FeatureDisabledError when flag disabled."""
+    # Save original flag value
+    original_flag = feature_flags.enable_some_feature
+
+    try:
+        # 1. Disable the feature flag
+        feature_flags.enable_some_feature = False
+
+        # 2. Unset FF_TEST_MODE to disable test mode bypass
+        env_without_test_mode = {k: v for k, v in os.environ.items() if k != "FF_TEST_MODE"}
+        with patch.dict(os.environ, env_without_test_mode, clear=True):
+            # 3. Call the decorated function - should raise
+            with pytest.raises(FeatureDisabledError) as exc_info:
+                some_feature_gated_function()
+
+            assert "Some Feature" in str(exc_info.value)
+    finally:
+        # 4. Restore original flag value
+        feature_flags.enable_some_feature = original_flag
+```
+
+**Why Standard Mocking Fails**:
+```python
+# ❌ WRONG: Can't patch method on Pydantic model
+with patch.object(feature_flags, "require_feature", side_effect=...):
+    ...  # AttributeError: FeatureFlags has no field "require_feature"
+
+# ❌ WRONG: Can't set read-only property
+feature_flags.is_test_mode = False  # AttributeError: property has no setter
+
+# ❌ WRONG: Can't patch module that doesn't import feature_flags
+with patch("some_module.feature_flags", mock):
+    ...  # AttributeError: module has no attribute 'feature_flags'
+```
+
+**Real-World Example** (from `test_feature_flag_sync.py`):
+```python
+@pytest.mark.asyncio
+async def test_orchestrator_requires_multi_agent_flag(self):
+    """Test that Orchestrator.decompose_task() checks multi-agent flag."""
+    import os
+    from unittest.mock import patch
+
+    from mcp_server_langgraph.agents.orchestrator import Orchestrator
+    from mcp_server_langgraph.core.exceptions import FeatureDisabledError
+    from mcp_server_langgraph.core.feature_flags import feature_flags
+
+    orchestrator = Orchestrator()
+    original_flag = feature_flags.enable_multi_agent_orchestration
+
+    try:
+        feature_flags.enable_multi_agent_orchestration = False
+        env_without_test_mode = {k: v for k, v in os.environ.items() if k != "FF_TEST_MODE"}
+
+        with patch.dict(os.environ, env_without_test_mode, clear=True):
+            with pytest.raises(FeatureDisabledError) as exc_info:
+                orchestrator.decompose_task("Test task")
+            assert "Multi-Agent Orchestration" in str(exc_info.value)
+    finally:
+        feature_flags.enable_multi_agent_orchestration = original_flag
+```
+
+**Key Points**:
+- Always save/restore original flag values for test isolation
+- Use `patch.dict(os.environ, ...)` to control `is_test_mode`
+- This tests the REAL `require_feature()` behavior, not a mock
+- Works for any `@feature_gated` decorated sync/async function
+
+---
+
 **Related Files**:
 - Test Configuration: `pyproject.toml` (pytest settings)
 - Test Requirements: `requirements-dev.txt`
@@ -1254,4 +1343,4 @@ pytest -n 4             # Use 4 workers
 ---
 
 **Auto-Generated**: This file should be updated when new test patterns emerge
-**Last Review**: 2025-10-20
+**Last Review**: 2025-12-21

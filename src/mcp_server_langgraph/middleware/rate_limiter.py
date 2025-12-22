@@ -42,6 +42,8 @@ ENDPOINT_RATE_LIMITS = {
     "oauth2_start": "10/minute",  # Prevent OAuth2 flow abuse
     "oauth2_callback": "20/minute",  # Allow reasonable callback rate
     "suggestions": "60/minute",  # AI suggestion endpoints (configurable via FF_SUGGESTION_RATE_LIMIT_PER_MINUTE)
+    "ai_ux": "30/minute",  # AI UX endpoints (LLM-backed, cost control)
+    "alertmanager_webhook": "120/minute",  # Alertmanager webhook (ADR-0026)
 }
 
 # Path-based rate limits (applied via slowapi's path_limits in setup_rate_limiting)
@@ -59,6 +61,23 @@ PATH_RATE_LIMITS: dict[str, str] = {
     "/api/v1/auth/backchannel-logout": "20/minute",  # Backchannel logout (RFC 7009)
     "/api/v1/user/login": "10/minute",  # Legacy ROPC login (deprecated)
     "/api/v1/user/logout": "30/minute",  # Logout
+    # Webhooks - ADR-0026 Comprehensive Client Resilience Patterns
+    "/api/v1/webhooks/alertmanager": "120/minute",  # Alertmanager webhook
+    # Push notifications - prevent subscription spam
+    "/api/v1/notifications/push/subscribe": "10/minute",  # Push subscription
+    # Artifacts search - AI-intensive endpoints (Hybrid Canvas)
+    "/api/v1/artifacts/search": f"{settings.artifacts_search_rate_limit}/minute",
+    # AI UX endpoints - LLM-backed, cost control (Phase 6)
+    "/api/v1/ai/persona/analyze": "30/minute",
+    "/api/v1/ai/disclosure/analyze": "30/minute",
+    "/api/v1/ai/empty-state/suggestions": "60/minute",
+    "/api/v1/ai/errors/analyze": "30/minute",
+    "/api/v1/ai/nudges/recommend": "60/minute",
+    "/api/v1/ai/onboarding/personalize": "20/minute",
+    "/api/v1/ai/metrics/insights": "10/minute",
+    "/api/v1/ai/composite": "20/minute",
+    "/api/v1/ai/composite/stream": "20/minute",
+    "/api/v1/ai/composite/batch": "10/minute",  # Lower limit for batch operations
 }
 
 
@@ -271,11 +290,8 @@ class _LimiterProxy:
     def __getattr__(self, name: str) -> Any:
         return getattr(get_limiter(), name)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        return get_limiter()(*args, **kwargs)
 
-
-limiter = _LimiterProxy()  # type: ignore[assignment]
+limiter: Limiter = _LimiterProxy()  # type: ignore[assignment]
 
 
 async def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):  # type: ignore[no-untyped-def]
@@ -439,3 +455,8 @@ def rate_limit_for_oauth2_callback(func: Callable[..., Any]) -> Callable[..., An
 def rate_limit_for_suggestions(func: Callable[..., Any]) -> Callable[..., Any]:
     """Rate limit decorator for AI suggestion endpoints"""
     return limiter.limit(ENDPOINT_RATE_LIMITS["suggestions"])(func)  # type: ignore[no-any-return]
+
+
+def rate_limit_for_ai_ux(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Rate limit decorator for AI UX endpoints (Phase 6 AI-Native Integration)"""
+    return limiter.limit(ENDPOINT_RATE_LIMITS["ai_ux"])(func)  # type: ignore[no-any-return]

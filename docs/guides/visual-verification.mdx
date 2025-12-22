@@ -1,0 +1,335 @@
+---
+title: 'Visual Verification Guide'
+description: 'LLM-as-judge visual verification with screenshot capture, caching, and retry logic'
+icon: 'eye'
+contentType: 'how-to'
+seoTitle: 'Visual Verification Guide - MCP Server LangGraph'
+seoDescription: 'Implement visual verification using LLM-as-judge with screenshot capture, caching for performance, and retry logic for resilience'
+keywords:
+  - visual-verification
+  - llm-as-judge
+  - screenshot
+  - caching
+  - retry
+  - resilience
+---
+
+# Visual Verification
+
+MCP Server LangGraph includes visual verification capabilities using LLM-as-judge pattern for validating UI states and web content.
+
+## Overview
+
+Visual verification allows agents to:
+
+| Feature | Description |
+|---------|-------------|
+| **Screenshot Capture** | Capture webpage screenshots for visual analysis |
+| **LLM-as-Judge** | Use vision-capable LLMs to evaluate visual state |
+| **Screenshot Caching** | Cache screenshots by URL to avoid redundant captures |
+| **Retry Logic** | Automatic retry with exponential backoff for transient errors |
+| **Prometheus Metrics** | Comprehensive metrics for monitoring and alerting |
+
+---
+
+## Basic Usage
+
+### Simple Verification
+
+```python
+from mcp_server_langgraph.llm.verifier import OutputVerifier
+
+verifier = OutputVerifier()
+
+result = await verifier.verify_with_visual(
+    url="https://example.com/login",
+    expected_state="Login form visible with email and password fields",
+)
+
+if result.passed:
+    print(f"Verification passed with score: {result.overall_score}")
+else:
+    print(f"Verification failed: {result.feedback}")
+    for issue in result.critical_issues:
+        print(f"  - {issue}")
+```
+
+### With Custom Criteria
+
+```python
+from mcp_server_langgraph.llm.verifier import (
+    OutputVerifier,
+    VisualVerificationCriterion,
+)
+
+result = await verifier.verify_with_visual(
+    url="https://example.com/dashboard",
+    expected_state="Dashboard shows user metrics",
+    criteria=[
+        VisualVerificationCriterion.UI_LAYOUT,
+        VisualVerificationCriterion.CONTENT_VISIBLE,
+        VisualVerificationCriterion.ELEMENT_PRESENT,
+    ],
+    threshold=0.8,  # Require 80% confidence
+)
+
+# Access individual criterion scores
+print(f"UI Layout: {result.criterion_scores.get('ui_layout', 0)}")
+print(f"Content Visible: {result.criterion_scores.get('content_visible', 0)}")
+```
+
+### Viewport and Full-Page Options
+
+```python
+# Mobile viewport
+result = await verifier.verify_with_visual(
+    url="https://example.com/mobile",
+    expected_state="Mobile-responsive layout",
+    viewport_width=375,
+    viewport_height=812,
+)
+
+# Full-page screenshot
+result = await verifier.verify_with_visual(
+    url="https://example.com/article",
+    expected_state="Article with all content sections",
+    full_page=True,
+)
+```
+
+---
+
+## Screenshot Caching
+
+Screenshots are cached by URL to improve performance for repeated verifications.
+
+### Cache Configuration
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `SCREENSHOT_CACHE_TTL` | 300s | Cache duration in seconds |
+| `SCREENSHOT_CACHE_PREFIX` | `visual_screenshot` | Redis key prefix |
+
+### Cache Behavior
+
+```python
+# First call: captures screenshot and caches it
+result1 = await verifier.verify_with_visual(
+    url="https://example.com",
+    expected_state="Page loaded",
+)
+
+# Second call: uses cached screenshot (no recapture)
+result2 = await verifier.verify_with_visual(
+    url="https://example.com",
+    expected_state="Page content visible",
+)
+
+# Disable caching for fresh screenshot
+result3 = await verifier.verify_with_visual(
+    url="https://example.com",
+    expected_state="Page state changed",
+    use_screenshot_cache=False,
+)
+```
+
+### Cache Key Generation
+
+Cache keys are generated from normalized URLs:
+
+```python
+from mcp_server_langgraph.llm.verifier import generate_screenshot_cache_key
+
+# Same key for equivalent URLs
+key1 = generate_screenshot_cache_key("https://example.com/page")
+key2 = generate_screenshot_cache_key("https://example.com/page/")
+assert key1 == key2  # Trailing slash normalized
+
+# Different keys for different URLs
+key3 = generate_screenshot_cache_key("https://example.com/other")
+assert key1 != key3
+```
+
+---
+
+## Retry Logic
+
+Visual verification includes automatic retry for transient errors, aligned with the codebase resilience patterns.
+
+### Retry Configuration
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `VISUAL_VERIFICATION_MAX_ATTEMPTS` | 3 | Maximum retry attempts |
+| `VISUAL_VERIFICATION_BASE_DELAY` | 1.0s | Initial backoff delay |
+| `VISUAL_VERIFICATION_MAX_DELAY` | 10.0s | Maximum backoff delay |
+
+### Retryable Errors
+
+| Error Type | Retried | Notes |
+|------------|---------|-------|
+| `httpx.TimeoutException` | Yes | Network timeout |
+| `httpx.ConnectError` | Yes | Connection refused |
+| `httpx.ReadError` | Yes | Network read failure |
+| HTTP 429 (Rate Limit) | Yes | With longer backoff |
+| HTTP 502/503/504 | Yes | Server errors |
+| HTTP 529 (Overload) | Yes | Extended retry |
+| `ValidationError` | No | Configuration error |
+| `AuthenticationError` | No | Invalid credentials |
+| `AuthorizationError` | No | Permission denied |
+
+### Exponential Backoff
+
+```
+Attempt 1: 1.0s delay (base delay)
+Attempt 2: 2.0s delay (exponential)
+Attempt 3: 4.0s delay (exponential)
+```
+
+For HTTP 529 (overload), delays are extended by 1.5x.
+
+---
+
+## Result Structure
+
+The `VisualVerificationResult` contains comprehensive information:
+
+```python
+@dataclass
+class VisualVerificationResult:
+    passed: bool              # True if verification passed
+    overall_score: float      # 0.0-1.0 confidence score
+    feedback: str             # Human-readable feedback
+    requires_refinement: bool # True if action needed
+    critical_issues: list     # Blocking issues found
+    url: str                  # URL that was verified
+    screenshot_captured: bool # True if screenshot was taken
+    visual_observations: list # Observations from LLM
+    criterion_scores: dict    # Per-criterion scores
+```
+
+---
+
+## Prometheus Metrics
+
+Visual verification exports the following metrics:
+
+### Counters
+
+| Metric | Labels | Description |
+|--------|--------|-------------|
+| `visual_verification_requests_total` | `status` | Total verifications by status |
+| `visual_verification_urls_total` | - | Total URLs verified |
+| `visual_verification_retries_total` | `operation` | Retry attempts |
+| `screenshot_cache_hits_total` | - | Cache hits |
+| `screenshot_cache_misses_total` | - | Cache misses |
+
+### Histograms
+
+| Metric | Buckets | Description |
+|--------|---------|-------------|
+| `visual_verification_duration_seconds` | 0.5-60s | Verification latency |
+| `visual_verification_score` | 0.1-1.0 | Score distribution |
+
+### Grafana Dashboard
+
+A dedicated Grafana dashboard is available at:
+`monitoring/grafana/dashboards/Application/visual-verification.json`
+
+Dashboard panels include:
+- Verification success rate over time
+- Latency percentiles (p50, p90, p99)
+- Score distribution histogram
+- Cache hit/miss ratio
+- Retry rate by operation type
+
+---
+
+## Error Handling
+
+Visual verification gracefully handles errors without raising exceptions:
+
+```python
+# Screenshot capture failure
+result = await verifier.verify_with_visual(
+    url="https://unreachable.example.com",
+    expected_state="Page loads",
+)
+if not result.passed:
+    print(f"Failed: {result.feedback}")
+    # "Visual verification failed: Screenshot capture failed after 3 retry attempts"
+
+# LLM verification failure
+result = await verifier.verify_with_visual(
+    url="https://example.com",
+    expected_state="Page loads",
+)
+if not result.passed and "LLM" in result.feedback:
+    print("LLM verification failed, consider retrying later")
+```
+
+---
+
+## Integration with Agent Graph
+
+Visual verification integrates with the agent graph for automated UI testing:
+
+```python
+from mcp_server_langgraph.core import visual_verification_helper
+
+# Extract and verify URLs from agent output
+urls = visual_verification_helper.extract_urls_from_text(agent_output)
+prioritized = visual_verification_helper.prioritize_urls(urls)
+
+results = await visual_verification_helper.perform_visual_verification(
+    urls=prioritized[:5],  # Verify top 5 URLs
+    expected_states={
+        "https://example.com/login": "Login form visible",
+        "https://example.com/dashboard": "Dashboard loaded",
+    },
+)
+
+combined = visual_verification_helper.combine_verification_results(results)
+print(f"Overall verification: {combined.passed}")
+```
+
+---
+
+## Best Practices
+
+### Performance
+
+1. **Use caching** for repeated URL verifications
+2. **Limit URLs** per verification batch (5-10 max)
+3. **Use specific expected states** for faster LLM evaluation
+
+### Reliability
+
+1. **Set appropriate thresholds** (0.7-0.8 for most cases)
+2. **Handle partial failures** gracefully
+3. **Monitor retry metrics** for backend issues
+
+### Cost Optimization
+
+1. **Reuse cached screenshots** when possible
+2. **Batch similar URLs** together
+3. **Use viewport size appropriate** for test case
+
+---
+
+## Configuration Reference
+
+Environment variables:
+
+```bash
+# Cache settings
+SCREENSHOT_CACHE_TTL=300  # Cache duration in seconds
+
+# Retry settings
+VISUAL_VERIFICATION_MAX_ATTEMPTS=3
+VISUAL_VERIFICATION_BASE_DELAY=1.0
+VISUAL_VERIFICATION_MAX_DELAY=10.0
+
+# LLM settings
+VISUAL_VERIFICATION_MODEL=gpt-4-vision-preview  # Vision-capable model
+```

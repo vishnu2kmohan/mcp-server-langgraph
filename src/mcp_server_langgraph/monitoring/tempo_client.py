@@ -8,6 +8,10 @@ Provides a high-level interface for querying Tempo/Jaeger traces with:
 - Duration percentile analysis
 - Error trace filtering
 
+Resilience patterns (ADR-0026):
+- Retry with exponential backoff (2.0x) for transient failures
+- Circuit breaker to fail fast when Tempo is repeatedly unavailable
+
 Supports both Grafana Tempo and Jaeger APIs for backward compatibility.
 
 Reference:
@@ -15,6 +19,7 @@ Reference:
 - TraceQL: https://grafana.com/docs/tempo/latest/traceql/
 """
 
+import asyncio
 import logging
 import ssl
 from dataclasses import dataclass, field
@@ -23,9 +28,11 @@ from typing import Any
 
 import certifi
 import httpx
+import pybreaker
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +164,11 @@ class TempoClient:
 
     async def get_trace(self, trace_id: str) -> TraceInfo | None:
         """
-        Get a trace by its ID.
+        Get a trace by its ID with retry and circuit breaker.
+
+        Resilience patterns applied:
+        - Circuit breaker: Skip if circuit is OPEN
+        - Retry with exponential backoff: 2.0x multiplier
 
         Args:
             trace_id: The trace ID to look up
@@ -168,22 +179,59 @@ class TempoClient:
         await self._ensure_initialized()
         assert self.client is not None
 
+        # Check circuit breaker
+        breaker = get_circuit_breaker("tempo")
+        if breaker.current_state == pybreaker.STATE_OPEN:
+            logger.debug("Tempo circuit breaker open, skipping get_trace")
+            raise pybreaker.CircuitBreakerError(breaker)
+
         url = f"{self.config.url}/api/traces/{trace_id}"
 
-        try:
-            response = await self.client.get(url)
+        # Retry with exponential backoff
+        max_attempts = self.config.retry_attempts
+        base_delay = 1.0
+        backoff_multiplier = self.config.retry_backoff
 
-            if response.status_code == 404:
-                return None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                response = await self.client.get(url)
 
-            response.raise_for_status()
-            data = response.json()
+                if response.status_code == 404:
+                    return None
 
-            return self._parse_trace(data)
+                response.raise_for_status()
+                data = response.json()
 
-        except httpx.HTTPError as e:
-            logger.exception(f"Failed to fetch trace {trace_id}: {e}")
-            raise
+                # Success - notify circuit breaker
+                breaker.state.on_success()
+
+                return self._parse_trace(data)
+
+            except httpx.ConnectError as e:
+                # Transient connection error - retry with backoff
+                if attempt < max_attempts:
+                    delay = base_delay * (backoff_multiplier ** (attempt - 1))
+                    logger.warning(
+                        f"Tempo get_trace failed (attempt {attempt}/{max_attempts}), retrying: {e}",
+                        extra={"trace_id": trace_id, "attempt": attempt},
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+
+                # All retries exhausted - record failure for circuit breaker
+                logger.error(f"Tempo get_trace failed after {max_attempts} attempts: {e}", extra={"trace_id": trace_id})
+                try:
+                    breaker._inc_counter()
+                    breaker.state.on_failure(e)
+                except pybreaker.CircuitBreakerError:
+                    logger.debug("Tempo circuit breaker opened due to repeated failures")
+                raise
+
+            except httpx.HTTPError as e:
+                logger.exception(f"Failed to fetch trace {trace_id}: {e}")
+                raise
+
+        return None
 
     async def search(
         self,
@@ -253,25 +301,62 @@ class TempoClient:
             else:
                 params["tags"] = tag_str
 
-        try:
-            response = await self.client.get(url, params=params)
-            response.raise_for_status()
-            data = response.json()
+        # Check circuit breaker
+        breaker = get_circuit_breaker("tempo")
+        if breaker.current_state == pybreaker.STATE_OPEN:
+            logger.debug("Tempo circuit breaker open, skipping search")
+            raise pybreaker.CircuitBreakerError(breaker)
 
-            traces = []
-            for trace_data in data.get("traces", []):
-                trace = self._parse_trace_summary(trace_data)
-                if trace:
-                    traces.append(trace)
+        # Retry with exponential backoff
+        max_attempts = self.config.retry_attempts
+        base_delay = 1.0
+        backoff_multiplier = self.config.retry_backoff
 
-            return TraceSearchResult(
-                traces=traces,
-                total_traces=len(traces),
-            )
+        for attempt in range(1, max_attempts + 1):
+            try:
+                response = await self.client.get(url, params=params)
+                response.raise_for_status()
+                data = response.json()
 
-        except httpx.HTTPError as e:
-            logger.exception(f"Failed to search traces: {e}")
-            raise
+                traces = []
+                for trace_data in data.get("traces", []):
+                    trace = self._parse_trace_summary(trace_data)
+                    if trace:
+                        traces.append(trace)
+
+                # Success - notify circuit breaker
+                breaker.state.on_success()
+
+                return TraceSearchResult(
+                    traces=traces,
+                    total_traces=len(traces),
+                )
+
+            except httpx.ConnectError as e:
+                # Transient connection error - retry with backoff
+                if attempt < max_attempts:
+                    delay = base_delay * (backoff_multiplier ** (attempt - 1))
+                    logger.warning(
+                        f"Tempo search failed (attempt {attempt}/{max_attempts}), retrying: {e}",
+                        extra={"attempt": attempt},
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+
+                # All retries exhausted - record failure for circuit breaker
+                logger.error(f"Tempo search failed after {max_attempts} attempts: {e}")
+                try:
+                    breaker._inc_counter()
+                    breaker.state.on_failure(e)
+                except pybreaker.CircuitBreakerError:
+                    logger.debug("Tempo circuit breaker opened due to repeated failures")
+                raise
+
+            except httpx.HTTPError as e:
+                logger.exception(f"Failed to search traces: {e}")
+                raise
+
+        return TraceSearchResult(traces=[], total_traces=0)
 
     async def search_by_attribute(
         self,

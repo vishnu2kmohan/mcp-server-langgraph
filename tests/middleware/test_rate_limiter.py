@@ -21,6 +21,7 @@ from slowapi.errors import RateLimitExceeded
 
 from mcp_server_langgraph.middleware.rate_limiter import (
     ENDPOINT_RATE_LIMITS,
+    PATH_RATE_LIMITS,
     RATE_LIMITS,
     custom_rate_limit_exceeded_handler,
     exempt_from_rate_limit,
@@ -133,6 +134,27 @@ class TestRateLimitConstants:
         # Auth should be strict to prevent brute force
         assert login_limit <= 10
         assert register_limit <= 10
+
+    def test_path_rate_limits_defined(self):
+        """Test path-based rate limits are defined"""
+        assert "/api/v1/auth/login" in PATH_RATE_LIMITS
+        assert "/api/v1/auth/callback" in PATH_RATE_LIMITS
+        assert "/api/v1/artifacts/search" in PATH_RATE_LIMITS
+
+    def test_artifacts_search_rate_limit(self):
+        """Test artifacts search has configurable rate limit"""
+        from mcp_server_langgraph.core.config import settings
+
+        artifacts_search_limit = PATH_RATE_LIMITS.get("/api/v1/artifacts/search")
+        assert artifacts_search_limit is not None
+
+        # Should match the configured setting
+        expected_limit = f"{settings.artifacts_search_rate_limit}/minute"
+        assert artifacts_search_limit == expected_limit
+
+        # Default should be 30/minute
+        limit_value = int(artifacts_search_limit.split("/")[0])
+        assert limit_value == settings.artifacts_search_rate_limit
 
 
 @pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
@@ -794,3 +816,33 @@ class TestSuggestionRateLimiting:
 
         # Decorator should be applied
         assert hasattr(suggestions_endpoint, "__wrapped__")
+
+
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
+class TestAIUXRateLimiting:
+    """Test AI UX endpoint rate limiting (Phase 6 AI-Native Integration)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_ai_ux_rate_limit_defined(self):
+        """Test that ai_ux rate limit is defined"""
+        assert "ai_ux" in ENDPOINT_RATE_LIMITS
+
+    def test_ai_ux_rate_limit_value(self):
+        """Test ai_ux rate limit has appropriate value for LLM endpoints"""
+        ai_ux_limit = int(ENDPOINT_RATE_LIMITS["ai_ux"].split("/")[0])
+        # AI UX should have LLM-appropriate limit (around 30/minute like llm_chat)
+        assert 20 <= ai_ux_limit <= 60
+
+    def test_rate_limit_for_ai_ux_decorator_exists(self):
+        """Test that rate_limit_for_ai_ux decorator is available"""
+        from mcp_server_langgraph.middleware.rate_limiter import rate_limit_for_ai_ux
+
+        @rate_limit_for_ai_ux
+        async def ai_ux_endpoint(request: Request):
+            return {"analysis": {}}
+
+        # Decorator should be applied
+        assert hasattr(ai_ux_endpoint, "__wrapped__")

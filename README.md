@@ -72,10 +72,12 @@ This project uses **19 GitHub Actions workflows** with Google Cloud Platform (GC
 - [Documentation](#documentation) - Complete guides and references
 - [Requirements](#requirements) - System and service requirements
 - [Usage](#usage) - MCP server usage and client configuration
+- [Claude Agent SDK Usage](#claude-agent-sdk-usage) - SDK patterns for sophisticated agents
 - [Testing Strategy](#testing-strategy) - Multi-layered testing approach
 - [Feature Flags](#feature-flags) - Dynamic feature control
 - [Observability](#observability) - LangSmith and OpenTelemetry
 - [Configuration](#configuration) - Environment variables and settings
+- [Resilience Patterns](#resilience-patterns) - Circuit breakers, retry, timeouts
 - [Security Considerations](#security-considerations) - Production checklist
 - [API Gateway & Rate Limiting](#api-gateway-rate-limiting) - Kong integration
 - [Quality Practices](#quality-practices) - Code quality standards
@@ -179,6 +181,20 @@ Install optional features on demand: **Code Execution** (`[code-execution]`), **
 **Code Execution**: Requires Docker (local) or Kubernetes (production). Enable with `ENABLE_CODE_EXECUTION=true`.
 
 **See**: [Installation Guide](docs/getting-started/installation.mdx#optional-dependencies) | [Code Execution Summary](docs-internal/code-execution-implementation-summary.md) | [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx)
+
+### 🤖 Claude Agent SDK Patterns (NEW)
+
+Production-ready SDK-inspired patterns for building sophisticated agents:
+
+- **Hook System**: PreToolUse/PostToolUse hooks for audit, validation, and security
+- **Interrupt Support**: Graceful cancellation of long-running operations
+- **Structured Output**: JSON Schema validation for type-safe responses
+- **File Checkpointing**: Rewind file changes with automatic rollback (experimental)
+- **AgentDefinition**: Declarative subagent creation for multi-agent orchestration
+
+**LLM Agnostic**: Works with any provider via LiteLLM (not Claude-only)
+
+**See**: [SDK Usage Guide](#claude-agent-sdk-usage) | [ADR-0077](adr/adr-0077-claude-agent-sdk-integration.md)
 
 ### 🧪 Quality & Testing
 27+ property tests, 20+ contract tests, performance regression tracking, mutation testing (80%+ target), strict typing (gradual rollout), OpenAPI validation. See [Testing Strategy](docs/advanced/testing.mdx).
@@ -563,6 +579,149 @@ workflow.add_node("custom_tool", custom_tool)
 workflow.add_edge("router", "custom_tool")
 ```
 
+## Claude Agent SDK Usage
+
+The SDK module provides production-ready patterns inspired by Claude Agent SDK, implemented as LLM-agnostic infrastructure that works with any provider via LiteLLM.
+
+### Quick Start
+
+```python
+from mcp_server_langgraph.sdk import (
+    LangGraphAgentClient,
+    InProcessToolServer,
+    SecurityHookRegistry,
+    HookResult,
+    AgentStateManager,
+)
+
+# Create an agent client
+client = LangGraphAgentClient()
+
+# Simple query
+response = await client.query("What files are in the current directory?")
+print(response)
+```
+
+### Security Hooks
+
+Intercept tool calls for audit, validation, and security:
+
+```python
+from mcp_server_langgraph.sdk import (
+    SecurityHookRegistry,
+    HookResult,
+    pii_detection_hook,
+    command_allowlist_hook,
+)
+
+# Create registry with built-in security hooks
+registry = SecurityHookRegistry()
+
+# Register PII detection (blocks SSNs, credit cards, etc.)
+registry.register("PreToolUse", "*", pii_detection_hook)
+
+# Register command allowlist (blocks dangerous bash commands)
+registry.register("PreToolUse", "Bash", command_allowlist_hook)
+
+# Custom audit hook
+async def audit_hook(input_data, tool_use_id, context):
+    print(f"Tool called: {context.get('tool_name')} with {input_data}")
+    return HookResult.allow()
+
+registry.register("PostToolUse", "*", audit_hook)
+
+# Use with client
+client = LangGraphAgentClient(hook_registry=registry)
+```
+
+### Interrupt Long-Running Operations
+
+Gracefully cancel operations that take too long:
+
+```python
+import asyncio
+from mcp_server_langgraph.sdk import LangGraphAgentClient
+
+client = LangGraphAgentClient()
+
+# Start a long-running task
+task = asyncio.create_task(
+    client.query("Analyze all files in the repository", session_id="my-session")
+)
+
+# Wait 30 seconds, then interrupt if still running
+await asyncio.sleep(30)
+if not task.done():
+    await client.interrupt(session_id="my-session")
+    print("Operation interrupted gracefully")
+```
+
+### Multi-Agent Orchestration
+
+Use AgentDefinition for declarative subagent creation:
+
+```python
+from mcp_server_langgraph.agents import (
+    Orchestrator,
+    ModelSelector,
+)
+from mcp_server_langgraph.sdk import LangGraphAgentClient
+
+# Create client with orchestrator
+client = LangGraphAgentClient(model_tier="complex")
+
+# Run orchestrated task with multiple subagents
+result = await client.run_orchestrated_task(
+    task="Research quantum computing advances and summarize findings",
+    subagent_count=3,
+    strategy="parallel",  # or "sequential"
+)
+
+print(f"Completed {result['subtask_count']} subtasks")
+print(f"Synthesis: {result['synthesis']}")
+```
+
+### Session State Management
+
+Persist state across queries with checkpointing:
+
+```python
+from mcp_server_langgraph.sdk import LangGraphAgentClient
+
+client = LangGraphAgentClient()
+session_id = "research-session-001"
+
+# Phase 1: Research
+await client.query("Research AI safety approaches", session_id=session_id)
+await client.checkpoint_session(
+    session_id=session_id,
+    phase="research",
+    summary="Completed initial research phase",
+)
+
+# Phase 2: Analysis (can resume later)
+state = await client.state_manager.resume_session(session_id)
+print(f"Resuming from phase: {state['checkpoints'][-1]['phase']}")
+```
+
+### Feature Flags
+
+Enable/disable SDK features via environment variables:
+
+```bash
+# Production-ready (enabled by default)
+FF_ENABLE_SDK_HOOKS=true           # Hook system for tool lifecycle
+FF_ENABLE_SDK_INTERRUPT=true       # Graceful cancellation
+FF_ENABLE_SDK_STRUCTURED_OUTPUT=true  # JSON Schema validation
+FF_ENABLE_SDK_AGENT_DEFINITION=true   # Declarative subagent creation
+
+# Experimental (disabled by default, opt-in)
+FF_ENABLE_SDK_FILE_CHECKPOINTING=false  # File rollback (adds I/O overhead)
+FF_ENABLE_SDK_CAN_USE_TOOL=false        # Dynamic permission checks
+```
+
+**See**: [ADR-0077](adr/adr-0077-claude-agent-sdk-integration.md) for architecture decisions and implementation details.
+
 ## Configuration
 
 All settings via environment variables, Infisical, or `.env` file. Key variable categories:
@@ -586,6 +745,50 @@ Example queries:
 - Request rate: `rate(agent_tool_calls_total[5m])`
 - Error rate: `rate(agent_calls_failed_total[5m])`
 - P95 latency: `histogram_quantile(0.95, agent_response_duration_bucket)`
+
+## Resilience Patterns
+
+Production-grade resilience with circuit breakers, retry with backoff, timeouts, bulkheads, and rate limiting. All external service clients (Keycloak, Redis, OpenFGA, LLM providers) are hardened against transient failures.
+
+### Key Patterns
+
+| Pattern | Description | Configuration |
+|---------|-------------|---------------|
+| **Circuit Breaker** | Fail-fast when services are unhealthy | `fail_max=5-10`, `timeout=30-60s` |
+| **Retry with Backoff** | Exponential backoff with jitter | `max_attempts=3`, `base=1.0`, `multiplier=2.0` |
+| **Timeout** | Operation-type aware timeouts | `auth=5s`, `db=60s`, `llm=60s` |
+| **Bulkhead** | Isolate resource pools | `max_concurrent=8-50` per resource |
+| **Rate Limiting** | Token bucket per LLM provider | Provider-aware limits |
+| **Adaptive Bulkhead** | AIMD-based concurrency for LLM calls | Auto-adjusts to rate limits |
+
+### Health Endpoint
+
+The `/health/ready` endpoint includes real-time resilience stats:
+
+```json
+{
+  "status": "healthy",
+  "resilience_stats": {
+    "circuit_breakers": {
+      "keycloak": "CLOSED",
+      "redis": "CLOSED",
+      "openfga": "CLOSED"
+    },
+    "http_pool": {
+      "active_connections": 5,
+      "utilization": 0.05
+    }
+  }
+}
+```
+
+### Monitoring
+
+- **Grafana Dashboard**: Infrastructure → Resilience Patterns
+- **Alerts**: Circuit breaker open, retry exhaustion, pool saturation
+- **SLO Integration**: Resilience health score correlates with error budget burn
+
+**See**: [ADR-0026: Resilience Patterns](docs-internal/ADR-0026-RESILIENCE-PATTERNS.md) | [Operations Runbook](docs-internal/runbooks/RESILIENCE_OPERATIONS.md)
 
 ## Security Considerations
 

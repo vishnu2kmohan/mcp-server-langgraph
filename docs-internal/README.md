@@ -18,6 +18,22 @@ Technical architecture and design documentation:
 - `PYDANTIC_AI_INTEGRATION.md` - Pydantic AI integration details
 - `STRICT_TYPING_GUIDE.md` - Gradual mypy strict mode rollout
 
+### 🖥️ frontend/
+Studio Frontend (React/TypeScript) internal documentation:
+- `FRONTEND_API_AUDIT.md` - API endpoint usage audit
+- `MCP_CONNECTIONS_FEATURE.md` - MCP connections feature spec
+- `STATE_MANAGEMENT_PATTERNS.md` - Redux/React state patterns
+- `STORAGE_MIGRATION.md` - LocalStorage migration guide
+- `UNIFIED_API_AUDIT.md` - Unified API architecture audit
+- `WORKFLOW_WEBSOCKET_CONTRACT.md` - WebSocket contract spec
+- `bundle-baseline.md` - Bundle size baseline metrics
+- `compliance-api-readiness.md` - Compliance API gap analysis
+- `feature-flags-mapping.md` - Feature flag mapping
+- `rbac-gaps-analysis.md` - RBAC gaps analysis
+- `testing/` - Frontend testing guides:
+  - `TESTING_OOM_PREVENTION.md` - OOM prevention patterns for Vitest
+  - `TESTING_PATTERNS.md` - React Testing Library patterns
+
 ### 🔍 audits/
 **Active** audit reports and assessments (timestamped):
 - `DOCUMENTATION_AUDIT_2025-11-10.md` - Latest documentation audit
@@ -93,6 +109,6 @@ When adding new internal documentation:
 
 ---
 
-**Last Updated:** 2025-11-10
+**Last Updated:** 2025-12-20
 **Maintained By:** Repository Maintainers
 **Last Archived:** 2025-11-10 (22 files archived)

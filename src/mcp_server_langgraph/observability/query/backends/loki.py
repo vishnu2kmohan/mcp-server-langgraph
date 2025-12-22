@@ -4,11 +4,16 @@ Grafana Loki implementation of LoggingQueryClient.
 Provides LogQL-based log querying through the abstract interface,
 enabling backend swapping without code changes.
 
+Resilience patterns (ADR-0026):
+- Retry with exponential backoff (2.0x) for transient failures
+- Circuit breaker to fail fast when Loki is repeatedly unavailable
+
 Reference:
 - Loki API: https://grafana.com/docs/loki/latest/reference/api/
 - LogQL: https://grafana.com/docs/loki/latest/query/
 """
 
+import asyncio
 import logging
 import os
 import ssl
@@ -17,6 +22,9 @@ from typing import Any
 
 import certifi
 import httpx
+import pybreaker
+
+from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
 
 from ..interfaces import (
     LogEntry,
@@ -124,20 +132,57 @@ class LokiLoggingClient(LoggingQueryClient):
             "direction": "backward",  # Most recent first
         }
 
-        try:
-            response = await self._client.get(
-                f"{self._url}/loki/api/v1/query_range",
-                params=params,
-            )
-            response.raise_for_status()
-            data = response.json()
+        # Check circuit breaker
+        breaker = get_circuit_breaker("loki")
+        if breaker.current_state == pybreaker.STATE_OPEN:
+            logger.debug("Loki circuit breaker open, skipping search")
+            raise pybreaker.CircuitBreakerError(breaker)
 
-            entries = self._parse_query_result(data)
-            return LogSearchResult(entries=entries, total_count=len(entries))
+        # Retry with exponential backoff
+        max_attempts = 3
+        base_delay = 1.0
+        backoff_multiplier = 2.0
 
-        except httpx.HTTPError as e:
-            logger.exception(f"Loki query failed: {e}")
-            raise
+        for attempt in range(1, max_attempts + 1):
+            try:
+                response = await self._client.get(
+                    f"{self._url}/loki/api/v1/query_range",
+                    params=params,
+                )
+                response.raise_for_status()
+                data = response.json()
+
+                # Success - notify circuit breaker
+                breaker.state.on_success()
+
+                entries = self._parse_query_result(data)
+                return LogSearchResult(entries=entries, total_count=len(entries))
+
+            except httpx.ConnectError as e:
+                # Transient connection error - retry with backoff
+                if attempt < max_attempts:
+                    delay = base_delay * (backoff_multiplier ** (attempt - 1))
+                    logger.warning(
+                        f"Loki query failed (attempt {attempt}/{max_attempts}), retrying: {e}",
+                        extra={"attempt": attempt},
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+
+                # All retries exhausted - record failure for circuit breaker
+                logger.error(f"Loki query failed after {max_attempts} attempts: {e}")
+                try:
+                    breaker._inc_counter()
+                    breaker.state.on_failure(e)
+                except pybreaker.CircuitBreakerError:
+                    logger.debug("Loki circuit breaker opened due to repeated failures")
+                raise
+
+            except httpx.HTTPError as e:
+                logger.exception(f"Loki query failed: {e}")
+                raise
+
+        return LogSearchResult(entries=[], total_count=0)
 
     async def get_logs_for_trace(
         self,

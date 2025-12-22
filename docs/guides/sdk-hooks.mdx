@@ -1,0 +1,556 @@
+---
+title: 'SDK Security Hooks'
+description: 'Implement security hooks for tool lifecycle interception'
+---
+
+# SDK Security Hooks Guide
+
+The SDK module provides a powerful hook system inspired by Claude Agent SDK patterns, enabling you to intercept tool calls for audit, validation, security enforcement, and custom transformations.
+
+## Overview
+
+Hooks are functions that execute at specific points in the agent lifecycle:
+
+| Hook Type | When It Runs | Use Cases |
+|-----------|-------------|-----------|
+| **PreToolUse** | Before tool execution | Validate inputs, block dangerous operations, transform arguments |
+| **PostToolUse** | After tool execution | Audit logging, transform outputs, trigger follow-up actions |
+| **UserPromptSubmit** | Before query processing | Modify prompts, log interactions, apply content policies |
+| **Stop** | After query/task completion | Cleanup, final logging, resource release |
+
+## Hook Execution Order
+
+Hooks execute in **registration order**. The first hook that returns `deny` stops execution:
+
+```
+UserPromptSubmit (if query) -> PreToolUse -> Tool Execution -> PostToolUse -> Stop
+```
+
+For tool calls within a query:
+1. **UserPromptSubmit** - Validates/modifies the initial prompt
+2. **PreToolUse** - Validates/modifies each tool call (first deny stops)
+3. **Tool Execution** - The actual tool runs
+4. **PostToolUse** - Audits/transforms output (runs even on tool error)
+5. **Stop** - Cleanup after query/task completion
+
+## Hook Function Signature
+
+All hooks share the same signature:
+
+```python
+async def hook_function(
+    input_data: dict[str, Any],    # Hook-specific data (see below)
+    tool_use_id: str,              # Unique ID for this operation
+    context: dict[str, Any],       # Session/user context
+) -> HookResult:
+    return HookResult.allow()      # or HookResult.deny("reason")
+```
+
+### Input Data by Hook Type
+
+| Hook Type | `input_data` Contents |
+|-----------|----------------------|
+| **PreToolUse** | `{"tool_name": str, "tool_input": dict}` |
+| **PostToolUse** | `{"tool_name": str, "tool_input": dict, "tool_output": Any, "is_error": bool}` |
+| **UserPromptSubmit** | `{"prompt": str}` |
+| **Stop** | `{"reason": str, "is_error": bool, "result": Any}` |
+
+## Quick Start
+
+```python
+from mcp_server_langgraph.sdk import (
+    SecurityHookRegistry,
+    HookResult,
+    LangGraphAgentClient,
+)
+
+# Create a hook registry
+registry = SecurityHookRegistry()
+
+# Register a simple audit hook
+async def audit_hook(input_data, tool_use_id, context):
+    tool_name = input_data.get("tool_name", "unknown")
+    print(f"[AUDIT] Tool '{tool_name}' called with: {input_data}")
+    return HookResult.allow()
+
+registry.register("PreToolUse", "*", audit_hook)
+
+# Use with client
+client = LangGraphAgentClient(hook_registry=registry)
+```
+
+## HookResult Actions
+
+Hooks return a `HookResult` that determines what happens next:
+
+### Allow (Continue Execution)
+
+```python
+async def allow_hook(input_data, tool_use_id, context):
+    return HookResult.allow()
+```
+
+### Allow with Modified Input
+
+```python
+async def sanitize_hook(input_data, tool_use_id, context):
+    # Modify the input before tool execution
+    sanitized = {**input_data}
+    tool_input = sanitized.get("tool_input", {})
+    if "password" in tool_input:
+        tool_input["password"] = "***REDACTED***"
+        sanitized["tool_input"] = tool_input
+    return HookResult.allow(modified_input=sanitized)
+```
+
+### Deny (Block Execution)
+
+```python
+async def deny_hook(input_data, tool_use_id, context):
+    return HookResult.deny("Operation not permitted for this user")
+```
+
+## Built-in Security Hooks
+
+The SDK includes production-ready security hooks:
+
+### PII Detection Hook
+
+Blocks tool calls that contain personally identifiable information:
+
+```python
+from mcp_server_langgraph.sdk import pii_detection_hook
+
+registry = SecurityHookRegistry()
+registry.register("PreToolUse", "*", pii_detection_hook)
+
+# Blocks calls containing:
+# - Social Security Numbers (XXX-XX-XXXX)
+# - Credit card numbers (16 digits)
+# - Email addresses in sensitive contexts
+# - Phone numbers
+```
+
+### Command Allowlist Hook
+
+Prevents execution of dangerous bash commands:
+
+```python
+from mcp_server_langgraph.sdk import command_allowlist_hook
+
+registry = SecurityHookRegistry()
+registry.register("PreToolUse", "Bash", command_allowlist_hook)
+
+# Blocks dangerous patterns:
+# - rm -rf /
+# - chmod 777
+# - curl | bash
+# - wget && sh
+# - sudo commands (unless explicitly allowed)
+```
+
+### Rate Limit Hook
+
+Prevents excessive tool usage:
+
+```python
+from mcp_server_langgraph.sdk import rate_limit_hook
+
+registry = SecurityHookRegistry()
+registry.register("PreToolUse", "*", rate_limit_hook)
+
+# Default limits:
+# - 100 calls per minute per tool
+# - 1000 total calls per minute per session
+```
+
+## Tool-Specific Hooks
+
+Register hooks for specific tools using the tool name:
+
+```python
+# Hook only for file write operations
+async def file_write_audit(input_data, tool_use_id, context):
+    file_path = input_data.get("file_path", "unknown")
+    print(f"[FILE AUDIT] Writing to: {file_path}")
+    return HookResult.allow()
+
+registry.register("PreToolUse", "Write", file_write_audit)
+
+# Hook only for bash commands
+async def bash_audit(input_data, tool_use_id, context):
+    command = input_data.get("command", "")
+    print(f"[BASH AUDIT] Executing: {command}")
+    return HookResult.allow()
+
+registry.register("PreToolUse", "Bash", bash_audit)
+```
+
+## Custom Security Policies
+
+### Path Restriction Policy
+
+Block access to sensitive directories:
+
+```python
+SENSITIVE_PATHS = ["/etc", "/var/secrets", "/root", "~/.ssh"]
+
+async def path_restriction_hook(input_data, tool_use_id, context):
+    tool_input = input_data.get("tool_input", {})
+    file_path = tool_input.get("file_path", "")
+
+    for sensitive in SENSITIVE_PATHS:
+        if file_path.startswith(sensitive) or sensitive in file_path:
+            return HookResult.deny(f"Access to {sensitive} is restricted")
+
+    return HookResult.allow()
+
+registry.register("PreToolUse", "Read", path_restriction_hook)
+registry.register("PreToolUse", "Write", path_restriction_hook)
+registry.register("PreToolUse", "Glob", path_restriction_hook)
+```
+
+### Content Classification Policy
+
+Classify and log content types:
+
+```python
+import re
+
+async def content_classification_hook(input_data, tool_use_id, context):
+    content = str(input_data)
+    classifications = []
+
+    if re.search(r'api[_-]?key|secret|password', content, re.I):
+        classifications.append("SENSITIVE_CREDENTIALS")
+
+    if re.search(r'SELECT|INSERT|UPDATE|DELETE', content, re.I):
+        classifications.append("SQL_QUERY")
+
+    if re.search(r'<script|javascript:', content, re.I):
+        classifications.append("POTENTIAL_XSS")
+
+    if classifications:
+        print(f"[CLASSIFICATION] {classifications}: {tool_use_id}")
+
+    return HookResult.allow()
+
+registry.register("PreToolUse", "*", content_classification_hook)
+```
+
+### User Permission Policy
+
+Check user permissions before tool execution:
+
+```python
+async def permission_check_hook(input_data, tool_use_id, context):
+    user = context.get("user", {})
+    tool_name = input_data.get("tool_name", "")
+
+    # Admin-only tools
+    admin_tools = ["Delete", "Admin", "SystemConfig"]
+    if tool_name in admin_tools and "admin" not in user.get("roles", []):
+        return HookResult.deny(f"Tool '{tool_name}' requires admin role")
+
+    # Premium-only tools
+    premium_tools = ["VectorSearch", "BatchProcess"]
+    if tool_name in premium_tools and "premium" not in user.get("roles", []):
+        return HookResult.deny(f"Tool '{tool_name}' requires premium subscription")
+
+    return HookResult.allow()
+
+registry.register("PreToolUse", "*", permission_check_hook)
+```
+
+## PostToolUse Hooks
+
+Execute actions after tool completion. The `input_data` contains:
+- `tool_name`: Name of the tool that executed
+- `tool_input`: Original input to the tool
+- `tool_output`: Output from the tool (or error message)
+- `is_error`: Boolean indicating if tool execution failed
+
+### Audit Logging
+
+```python
+import json
+from datetime import datetime
+
+async def audit_log_hook(input_data, tool_use_id, context):
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "tool_use_id": tool_use_id,
+        "tool_name": input_data.get("tool_name"),
+        "is_error": input_data.get("is_error", False),
+        "user_id": context.get("user_id"),
+        "session_id": context.get("session_id"),
+    }
+
+    # Send to audit system
+    print(f"[AUDIT LOG] {json.dumps(log_entry)}")
+    return HookResult.allow()
+
+registry.register("PostToolUse", "*", audit_log_hook)
+```
+
+### Result Sanitization
+
+```python
+import re
+
+async def result_sanitization_hook(input_data, tool_use_id, context):
+    tool_output = input_data.get("tool_output", "")
+
+    # Redact sensitive patterns from output
+    sanitized = re.sub(r'password\s*=\s*\S+', 'password=***', str(tool_output))
+    sanitized = re.sub(
+        r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
+        '[EMAIL]',
+        sanitized
+    )
+
+    # Log if sanitization occurred
+    if sanitized != str(tool_output):
+        print(f"[AUDIT] Sanitized output for {input_data.get('tool_name')}")
+
+    return HookResult.allow()
+
+registry.register("PostToolUse", "*", result_sanitization_hook)
+```
+
+## UserPromptSubmit Hooks
+
+Execute before query processing. The `input_data` contains:
+- `prompt`: The user's query string
+
+### Content Policy Enforcement
+
+```python
+async def content_policy_hook(input_data, tool_use_id, context):
+    prompt = input_data.get("prompt", "")
+
+    # Block prohibited content
+    blocked_patterns = ["jailbreak", "ignore previous", "disregard instructions"]
+    for pattern in blocked_patterns:
+        if pattern.lower() in prompt.lower():
+            return HookResult.deny(f"Prompt contains prohibited content: {pattern}")
+
+    return HookResult.allow()
+
+registry.register("UserPromptSubmit", "*", content_policy_hook)
+```
+
+### Prompt Modification
+
+```python
+async def add_context_hook(input_data, tool_use_id, context):
+    prompt = input_data.get("prompt", "")
+    user_tier = context.get("user_tier", "free")
+
+    # Add tier-specific context
+    modified_prompt = f"[User tier: {user_tier}] {prompt}"
+
+    return HookResult.allow(modified_input={"prompt": modified_prompt})
+
+registry.register("UserPromptSubmit", "*", add_context_hook)
+```
+
+## Stop Hooks
+
+Execute after query/task completion. The `input_data` contains:
+- `reason`: Why the agent stopped ("completed", "error", "interrupted")
+- `is_error`: Boolean indicating if operation failed
+- `result`: The operation result (if successful)
+
+### Cleanup Hook
+
+```python
+async def cleanup_hook(input_data, tool_use_id, context):
+    reason = input_data.get("reason", "unknown")
+    is_error = input_data.get("is_error", False)
+
+    if is_error:
+        print(f"[CLEANUP] Task failed with reason: {reason}")
+        # Trigger error reporting
+    else:
+        print(f"[CLEANUP] Task completed successfully")
+
+    return HookResult.allow()
+
+registry.register("Stop", "*", cleanup_hook)
+```
+
+## Combining Multiple Hooks
+
+Hooks execute in registration order. First deny wins:
+
+```python
+# Order matters - security checks first, then audit
+registry.register("PreToolUse", "*", permission_check_hook)     # 1. Check permissions
+registry.register("PreToolUse", "*", pii_detection_hook)        # 2. Block PII
+registry.register("PreToolUse", "Bash", command_allowlist_hook) # 3. Block dangerous commands
+registry.register("PreToolUse", "*", audit_log_hook)            # 4. Log (only if allowed)
+```
+
+## Default Security Hooks
+
+Use the pre-configured default hooks for common security needs:
+
+```python
+from mcp_server_langgraph.sdk import DEFAULT_SECURITY_HOOKS
+
+# Includes:
+# - PII detection
+# - Command allowlist
+# - Rate limiting
+# - Basic audit logging
+
+client = LangGraphAgentClient(hook_registry=DEFAULT_SECURITY_HOOKS)
+```
+
+## Feature Flag Control
+
+Enable/disable hooks via feature flags:
+
+```bash
+# Enable hook system (default: true)
+FF_ENABLE_SDK_HOOKS=true
+```
+
+```python
+from mcp_server_langgraph.core.feature_flags import feature_flags
+
+if feature_flags.enable_sdk_hooks:
+    client = LangGraphAgentClient(hook_registry=registry)
+else:
+    client = LangGraphAgentClient()  # No hooks
+```
+
+## Integration with OpenFGA
+
+Combine hooks with OpenFGA for comprehensive authorization:
+
+```python
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
+
+openfga = OpenFGAClient()
+
+async def openfga_permission_hook(input_data, tool_use_id, context):
+    user_id = context.get("user", {}).get("id")
+    tool_name = input_data.get("tool_name", "")
+    tool_input = input_data.get("tool_input", {})
+    resource = tool_input.get("file_path") or tool_input.get("resource_id")
+
+    # Check fine-grained permission
+    allowed = await openfga.check(
+        user=f"user:{user_id}",
+        relation="can_use",
+        object=f"tool:{tool_name}",
+    )
+
+    if not allowed:
+        return HookResult.deny(f"User lacks permission for {tool_name}")
+
+    # Check resource access if applicable
+    if resource:
+        resource_allowed = await openfga.check(
+            user=f"user:{user_id}",
+            relation="can_access",
+            object=f"file:{resource}",
+        )
+        if not resource_allowed:
+            return HookResult.deny(f"User lacks access to {resource}")
+
+    return HookResult.allow()
+
+registry.register("PreToolUse", "*", openfga_permission_hook)
+```
+
+## Testing Hooks
+
+Test your hooks with pytest:
+
+```python
+import pytest
+from mcp_server_langgraph.sdk import SecurityHookRegistry, HookResult
+
+@pytest.mark.asyncio
+async def test_pii_detection_blocks_ssn():
+    from mcp_server_langgraph.sdk import pii_detection_hook
+
+    input_with_ssn = {
+        "tool_name": "search",
+        "tool_input": {"message": "My SSN is 123-45-6789"}
+    }
+    result = await pii_detection_hook(input_with_ssn, "test-id", {})
+
+    assert result.allowed is False
+    assert "PII" in result.reason
+
+@pytest.mark.asyncio
+async def test_custom_hook_allows_valid_input():
+    async def my_hook(input_data, tool_use_id, context):
+        tool_input = input_data.get("tool_input", {})
+        if tool_input.get("valid"):
+            return HookResult.allow()
+        return HookResult.deny("Invalid input")
+
+    result = await my_hook({"tool_input": {"valid": True}}, "test-id", {})
+    assert result.allowed is True
+```
+
+## Unified Hook Registry
+
+For advanced use cases, the `UnifiedHookRegistry` bridges SDK hooks with core hooks, providing timeout handling and observability:
+
+```python
+from mcp_server_langgraph.sdk import UnifiedHookRegistry
+
+# Create unified registry with custom timeout
+registry = UnifiedHookRegistry(default_timeout=30.0)
+
+# Register SDK-style hooks
+registry.register_sdk_hook("PreToolUse", "*", my_sdk_hook)
+
+# Register core-style hooks (from mcp_server_langgraph.core.hooks)
+from mcp_server_langgraph.core.hooks import HookResult as CoreHookResult
+
+async def core_hook(input_data, tool_use_id, context):
+    return CoreHookResult(behavior="allow")
+
+registry.register_core_hook("PreToolUse", "*", core_hook)
+```
+
+### Features
+
+- **Timeout handling**: Hooks exceeding timeout raise `asyncio.TimeoutError`
+- **Prometheus metrics**: Hook executions, denials, and durations are tracked
+- **OpenTelemetry tracing**: Each hook creates a span for distributed tracing
+- **Mixed hook support**: SDK and core hooks can be combined in any order
+
+### Metrics
+
+The unified registry emits these Prometheus metrics:
+
+| Metric | Type | Labels |
+|--------|------|--------|
+| `sdk_hook_executions_total` | Counter | hook_name, event_type, tool_name, result |
+| `sdk_hook_duration_ms` | Histogram | hook_name, event_type |
+| `sdk_hook_denials_total` | Counter | hook_name, event_type, tool_name |
+| `sdk_hook_timeouts_total` | Counter | hook_name, event_type, tool_name |
+
+## Best Practices
+
+1. **Order hooks by priority**: Security checks first, then audit logging
+2. **Keep hooks fast**: Hooks run on every tool call - avoid expensive operations
+3. **Use async properly**: All hooks should be async functions
+4. **Log hook decisions**: Track why hooks allowed/denied for debugging
+5. **Test hooks thoroughly**: Hooks are critical security infrastructure
+6. **Use feature flags**: Allow disabling hooks for debugging if needed
+7. **Set appropriate timeouts**: Use `UnifiedHookRegistry` for timeout control
+
+## See Also
+
+- [ADR-0077: Claude Agent SDK Integration](../architecture/adr-0077.mdx)
+- [Security Considerations](../deployment/security.mdx)
+- [OpenFGA Setup Guide](./openfga-setup.mdx)

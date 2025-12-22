@@ -5,7 +5,7 @@
 # It creates all databases required by different components:
 #   - openfga_test: OpenFGA authorization (created by POSTGRES_DB env var)
 #   - keycloak_test: Keycloak authentication
-#   - gdpr_test: GDPR compliance data
+#   - compliance_test: Multi-framework compliance (GDPR, HIPAA, SOC2, FedRAMP)
 #   - mcp_test: MCP server builder workflows
 #
 # IMPORTANT: This script runs as postgres superuser during initdb phase.
@@ -25,14 +25,16 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE keycloak_test;
     GRANT ALL PRIVILEGES ON DATABASE keycloak_test TO postgres;
 
-    CREATE DATABASE gdpr_test;
-    GRANT ALL PRIVILEGES ON DATABASE gdpr_test TO postgres;
+    -- compliance_test: Multi-framework compliance storage (GDPR, HIPAA, SOC2, FedRAMP)
+    -- Renamed from gdpr_test in v2.8 to reflect broader compliance scope
+    CREATE DATABASE compliance_test;
+    GRANT ALL PRIVILEGES ON DATABASE compliance_test TO postgres;
 
     CREATE DATABASE mcp_test;
     GRANT ALL PRIVILEGES ON DATABASE mcp_test TO postgres;
 
     -- Log success
-    \echo 'Created test databases: keycloak_test, gdpr_test, mcp_test'
+    \echo 'Created test databases: keycloak_test, compliance_test, mcp_test'
 EOSQL
 
 echo "✓ Test databases created successfully"
@@ -47,16 +49,17 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "mcp_test" <<-EOSQL
 EOSQL
 echo "✓ TimescaleDB extension enabled"
 
-# Apply GDPR schema to gdpr_test database (legacy - kept for backwards compatibility)
-# The GDPR schema is required for E2E tests (test_infrastructure fixture checks for these tables)
+# Apply compliance schema to compliance_test database
+# The compliance schema is required for E2E tests (test_infrastructure fixture checks for these tables)
+# Supports GDPR, HIPAA, SOC2, and FedRAMP compliance data storage
 # See: tests/fixtures/docker_fixtures.py - _verify_schema_ready()
 if [ -f "/docker-entrypoint-initdb.d/01-migrations/001_gdpr_schema.sql" ]; then
-    echo "Applying GDPR schema to gdpr_test database..."
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "gdpr_test" \
+    echo "Applying compliance schema to compliance_test database..."
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "compliance_test" \
         -f /docker-entrypoint-initdb.d/01-migrations/001_gdpr_schema.sql
-    echo "✓ GDPR schema applied to gdpr_test"
+    echo "✓ Compliance schema applied to compliance_test"
 else
-    echo "⚠ GDPR schema migration not found at /docker-entrypoint-initdb.d/01-migrations/001_gdpr_schema.sql"
+    echo "⚠ Compliance schema migration not found at /docker-entrypoint-initdb.d/01-migrations/001_gdpr_schema.sql"
 fi
 
 # NOTE: mcp_test database schema is now managed by Alembic (alembic-migrate-test service)

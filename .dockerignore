@@ -111,6 +111,9 @@ docker-compose*.yml
 docker-compose*.yaml
 .dockerignore
 docker/
+# Include keycloak healthcheck script (needed by Dockerfile.keycloak)
+!docker/keycloak/
+!docker/keycloak/healthcheck.sh
 
 # ==============================================================================
 # Documentation (not needed in image)

@@ -21,8 +21,8 @@
     { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "LLM Performance", "tooltip": "View LLM Performance Dashboard", "type": "link", "url": "/d/llm-performance/llm-performance" },
     { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Authentication", "tooltip": "View Authentication Dashboard", "type": "link", "url": "/d/authentication/authentication" },
     { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "OpenFGA", "tooltip": "View OpenFGA Authorization Dashboard", "type": "link", "url": "/d/openfga/openfga" },
-    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Playground", "tooltip": "View Playground Dashboard", "type": "link", "url": "/d/playground/playground" },
-    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Builder", "tooltip": "View Builder Dashboard", "type": "link", "url": "/d/builder/builder" },
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Resilience", "tooltip": "View Resilience Patterns Dashboard", "type": "link", "url": "/d/resilience-patterns/resilience-patterns" },
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Studio", "tooltip": "View Studio Dashboard", "type": "link", "url": "/d/studio/studio" },
     { "asDropdown": false, "icon": "doc", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": true, "title": "📖 Runbooks", "tooltip": "View All Runbooks", "type": "link", "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/README.md" }
   ],
   "liveNow": false,
@@ -301,6 +301,98 @@
       ],
       "title": "Resource Utilization",
       "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "id": 103,
+      "panels": [],
+      "title": "Resilience Status",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Composite resilience health score (0-100%). Combines circuit breaker state, retry exhaustion, HTTP pool utilization, and LLM provider health. GREEN >= 70%, YELLOW >= 50%, RED < 50%. Click link above for detailed resilience dashboard.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 0.5 }, { "color": "green", "value": 0.7 }] },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 16 },
+      "id": 104,
+      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": true, "showThresholdMarkers": true },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "slo:resilience:health_score or vector(1)", "legendFormat": "", "refId": "A" }],
+      "title": "Resilience Health",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Number of critical service circuit breakers currently OPEN. Zero is healthy. Non-zero indicates service degradation - check resilience dashboard for details.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [{ "options": { "0": { "color": "green", "index": 0, "text": "All Closed" } }, "type": "value" }],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 16 },
+      "id": 105,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(circuit_breaker_state{service=~\"redis|keycloak|openfga|postgres\"} == 1) or vector(0)", "legendFormat": "", "refId": "A" }],
+      "title": "Open Circuit Breakers",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "HTTP connection pool utilization percentage. GREEN < 70%, YELLOW < 85%, RED >= 85%. High utilization may cause request queueing.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 }] },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 16 },
+      "id": 106,
+      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "http_pool_utilization or vector(0)", "legendFormat": "", "refId": "A" }],
+      "title": "HTTP Pool Usage",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "LLM providers with adaptive bulkhead at minimum capacity (rate limited or errors). Zero is healthy. Non-zero indicates provider degradation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [{ "options": { "0": { "color": "green", "index": 0, "text": "All Healthy" } }, "type": "value" }],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 3 }] },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 16 },
+      "id": 107,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(adaptive_bulkhead_limit <= 2) or vector(0)", "legendFormat": "", "refId": "A" }],
+      "title": "Throttled LLM Providers",
+      "type": "stat"
     }
   ],
   "refresh": "10s",

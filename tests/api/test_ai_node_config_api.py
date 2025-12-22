@@ -731,14 +731,10 @@ class TestConversationHistoryValidation:
 
         ff_module = sys.modules["mcp_server_langgraph.core.feature_flags"]
 
-        # Create a mock feature flags instance with validation disabled
-        class MockFeatureFlags:
-            enable_conversation_history_validation = False
-            max_conversation_history_messages = 5
-            max_input_length = 10000
-            enable_llm_suggestions = True
+        # Use shared MockFeatureFlags with validation disabled
+        from tests.fixtures.feature_flags_fixtures import MockFeatureFlags
 
-        mock_flags = MockFeatureFlags()
+        mock_flags = MockFeatureFlags(enable_conversation_history_validation=False)
         # Patch the module-level global and the getter function
         monkeypatch.setattr(ff_module, "feature_flags", mock_flags)
         monkeypatch.setattr("mcp_server_langgraph.api.v1.ai.get_feature_flags", lambda: mock_flags)
@@ -1038,15 +1034,10 @@ class TestSuggestionFeedback:
 
         ff_module = sys.modules["mcp_server_langgraph.core.feature_flags"]
 
-        # Create a mock feature flags instance with quality tracking disabled
-        class MockFeatureFlags:
-            enable_suggestion_quality_tracking = False
-            enable_conversation_history_validation = True
-            max_conversation_history_messages = 5
-            max_input_length = 10000
-            enable_llm_suggestions = True
+        # Use shared MockFeatureFlags with quality tracking disabled
+        from tests.fixtures.feature_flags_fixtures import MockFeatureFlags
 
-        mock_flags = MockFeatureFlags()
+        mock_flags = MockFeatureFlags(enable_suggestion_quality_tracking=False)
         monkeypatch.setattr(ff_module, "feature_flags", mock_flags)
         monkeypatch.setattr("mcp_server_langgraph.api.v1.ai.get_feature_flags", lambda: mock_flags)
 

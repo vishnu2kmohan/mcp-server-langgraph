@@ -41,3 +41,259 @@ templates: []
 
 # Mute timings (none configured in test environment)
 muteTimes: []
+
+# =============================================================================
+# Grafana-Native Alert Rules for SLO/Resilience Correlation
+# =============================================================================
+# These alerts correlate SLO burn rate with circuit breaker state changes and
+# latency spikes with LLM provider adaptive bulkhead adjustments.
+#
+# Reference: ADR-0026 - Comprehensive Client Resilience Patterns
+# =============================================================================
+groups:
+  - orgId: 1
+    name: SLO-Resilience Correlation
+    folder: Resilience
+    interval: 1m
+    rules:
+      # -------------------------------------------------------------------------
+      # SLO Burn Rate + Circuit Breaker Correlation
+      # -------------------------------------------------------------------------
+      - uid: slo-cb-correlation
+        title: SLO Burn Rate Correlates with Circuit Breaker Open
+        condition: C
+        data:
+          # A: SLO error budget burn rate (from recording rule)
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: slo:error_budget:burn_rate_1h
+              instant: true
+              refId: A
+          # B: Any critical circuit breaker open
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: sum(circuit_breaker_state{service=~"redis|keycloak|openfga|postgres"} == 1) or vector(0)
+              instant: true
+              refId: B
+          # C: Correlation condition - both elevated
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($A > 3) && ($B > 0)
+              refId: C
+        noDataState: OK
+        execErrState: Alerting
+        for: 2m
+        annotations:
+          summary: SLO burn rate elevated while circuit breaker open
+          description: |
+            **Correlation Detected**: High SLO error budget burn rate ({{ $values.A.Value }}x)
+            coincides with {{ $values.B.Value }} open circuit breaker(s).
+
+            This indicates the circuit breaker is correctly protecting the system from
+            a failing dependency, but the outage is impacting SLO.
+
+            **Recommended Actions**:
+            1. Check the open circuit breaker(s): `circuit_breaker_state == 1`
+            2. Investigate the underlying service failure
+            3. Monitor error budget consumption rate
+          runbook_url: https://docs/runbooks/RESILIENCE_OPERATIONS.md#circuit-breaker-open
+          dashboard_url: /d/resilience-patterns/resilience-patterns
+        labels:
+          severity: warning
+          correlation: slo-circuit-breaker
+          team: platform
+
+      # -------------------------------------------------------------------------
+      # Latency Spike + LLM Adaptive Bulkhead Correlation
+      # -------------------------------------------------------------------------
+      - uid: latency-bulkhead-correlation
+        title: Latency Spike Correlates with LLM Provider Throttling
+        condition: C
+        data:
+          # A: P95 latency (from recording rule)
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: slo:latency:p95_seconds
+              instant: true
+              refId: A
+          # B: Any LLM provider adaptive bulkhead at floor (limit <= 2)
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: sum(adaptive_bulkhead_limit <= 2) or vector(0)
+              instant: true
+              refId: B
+          # C: Correlation condition - latency high and bulkhead at floor
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($A > 0.5) && ($B > 0)
+              refId: C
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: Latency spike correlates with LLM provider throttling
+          description: |
+            **Correlation Detected**: P95 latency ({{ $values.A.Value }}s) exceeds 500ms threshold
+            while {{ $values.B.Value }} LLM provider(s) have adaptive bulkhead at minimum.
+
+            This indicates LLM providers are rate-limiting or experiencing errors,
+            causing request queuing and increased latency.
+
+            **Recommended Actions**:
+            1. Check LLM provider status pages (OpenAI, Anthropic, etc.)
+            2. Review `adaptive_bulkhead_limit` and `adaptive_bulkhead_error_rate` metrics
+            3. Consider switching to fallback provider if available
+            4. Reduce request volume if possible
+          runbook_url: https://docs/runbooks/RESILIENCE_OPERATIONS.md#adaptive-bulkhead-at-floor
+          dashboard_url: /d/resilience-patterns/resilience-patterns
+        labels:
+          severity: warning
+          correlation: latency-bulkhead
+          team: platform
+
+      # -------------------------------------------------------------------------
+      # Circuit Breaker Flapping + Error Budget Correlation
+      # -------------------------------------------------------------------------
+      - uid: cb-flapping-budget-correlation
+        title: Circuit Breaker Instability Affecting Error Budget
+        condition: C
+        data:
+          # A: Circuit breaker state changes rate
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: sum(rate(circuit_breaker_state_changes_total[10m])) or vector(0)
+              instant: true
+              refId: A
+          # B: Error budget remaining
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: slo:error_budget:remaining_percent
+              instant: true
+              refId: B
+          # C: Correlation - flapping and budget consumption
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($A > 0.05) && ($B < 0.5)
+              refId: C
+        noDataState: OK
+        execErrState: Alerting
+        for: 10m
+        annotations:
+          summary: Circuit breaker instability consuming error budget
+          description: |
+            **Correlation Detected**: Circuit breakers are flapping ({{ $values.A.Value }} state changes/s)
+            while error budget is below 50% ({{ $values.B.Value | printf "%.1f" }}% remaining).
+
+            This indicates an unstable dependency that's repeatedly failing and recovering,
+            causing intermittent errors that consume error budget.
+
+            **Recommended Actions**:
+            1. Identify the flapping circuit breaker(s)
+            2. Consider increasing circuit breaker thresholds temporarily
+            3. Investigate root cause of intermittent failures
+            4. Review fail_max and timeout settings
+          runbook_url: https://docs/runbooks/RESILIENCE_OPERATIONS.md#circuit-breaker-flapping
+          dashboard_url: /d/resilience-patterns/resilience-patterns
+        labels:
+          severity: warning
+          correlation: flapping-budget
+          team: platform
+
+      # -------------------------------------------------------------------------
+      # HTTP Pool Saturation + Timeout Correlation
+      # -------------------------------------------------------------------------
+      - uid: pool-timeout-correlation
+        title: HTTP Pool Saturation Causing Timeouts
+        condition: C
+        data:
+          # A: HTTP pool utilization
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: http_pool_utilization or vector(0)
+              instant: true
+              refId: A
+          # B: Timeout rate
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: sum(rate(timeout_exceeded_total[5m])) or vector(0)
+              instant: true
+              refId: B
+          # C: Correlation - pool near capacity and timeouts increasing
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($A > 0.7) && ($B > 0.1)
+              refId: C
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: HTTP connection pool saturation causing timeouts
+          description: |
+            **Correlation Detected**: HTTP connection pool is at {{ $values.A.Value | printf "%.0f" }}%
+            capacity while timeout rate is {{ $values.B.Value | printf "%.2f" }}/s.
+
+            Requests are waiting for available connections, causing timeout breaches.
+
+            **Recommended Actions**:
+            1. Scale horizontally to add more connection capacity
+            2. Review slow HTTP calls that may be holding connections
+            3. Consider increasing connection pool size
+            4. Check for connection leaks
+          runbook_url: https://docs/runbooks/RESILIENCE_OPERATIONS.md#http-pool-exhaustion
+          dashboard_url: /d/resilience-patterns/resilience-patterns
+        labels:
+          severity: warning
+          correlation: pool-timeout
+          team: platform

@@ -537,14 +537,37 @@ services:
       # -XX:+ExitOnOutOfMemoryError: Fast-fail on OOM instead of hanging
       - JAVA_OPTS_APPEND=-Xms384m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
     healthcheck:
-      # Best Practice: Use /health/ready endpoint on management port 9000
+      # ===========================================================================
+      # OIDC-Ready Healthcheck: Two-Phase Validation
+      # ===========================================================================
       # Reference: https://www.keycloak.org/observability/health
-      # Keycloak 26.x exposes health endpoints on port 9000 (management port)
-      # curl is not available in image, use bash TCP redirect
-      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/9000' && timeout 5 bash -c 'echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n\" > /dev/tcp/localhost/9000' || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
+      #            https://www.keycloak.org/server/containers
+      #
+      # Phase 1: /health/ready on management port 9000 (JVM + DB ready)
+      # Phase 2: OIDC discovery endpoint on HTTP port 8080 (OIDC fully functional)
+      #
+      # This ensures dependent services (OpenFGA, traefik-forward-auth) get valid
+      # OIDC configuration. Without Phase 2, services may start before Keycloak's
+      # realm endpoints are available, causing OIDC discovery failures.
+      #
+      # Bash TCP Socket Pattern (curl/wget not available in Keycloak 26+):
+      #   { printf 'request' >&0; grep 'pattern'; } 0<>/dev/tcp/host/port
+      #
+      # This opens bidirectional socket, sends HTTP request, reads response,
+      # and validates it contains expected pattern.
+      # ===========================================================================
+      test:
+        - CMD-SHELL
+        - |
+          # Phase 1: Check /authn/health/ready on management port 9000
+          # NOTE: KC_HTTP_RELATIVE_PATH=/authn applies to ALL endpoints including health
+          { printf 'HEAD /authn/health/ready HTTP/1.0\r\nHost: localhost\r\n\r\n' >&0; grep -q 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000 || exit 1
+          # Phase 2: Check OIDC discovery endpoint on HTTP port 8080
+          # This validates that the default realm is available and OIDC is functional
+          { printf 'GET /authn/realms/default/.well-known/openid-configuration HTTP/1.0\r\nHost: localhost\r\n\r\n' >&0; grep -q '"issuer"'; } 0<>/dev/tcp/localhost/8080 || exit 1
+      interval: 10s  # Codex Fix: interval must be >= timeout
+      timeout: 10s  # Increased to allow time for both checks
+      retries: 15  # Reduced since interval increased (150s max)
       start_period: 60s  # Per ADR-0053: Keycloak requires at least 60s to initialize
     deploy:
       resources:
@@ -870,9 +893,15 @@ services:
       - QDRANT__LOG_LEVEL=WARN  # Reduced logging
       - TESTING=true
     healthcheck:
-      # Use CMD-SHELL with timeout for robust health checking
-      # Qdrant image lacks wget/curl, so we use bash's /dev/tcp feature with timeout
-      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/localhost/6333' || exit 1"]
+      # HTTP healthcheck using bash TCP socket pattern (no wget/curl in Qdrant image)
+      # Uses /readyz endpoint to verify service is ready to accept requests
+      # Bash TCP pattern: { printf 'request' >&0; grep 'pattern'; } 0<>/dev/tcp/host/port
+      # NOTE: Must explicitly use bash (not sh) for /dev/tcp to work
+      # Reference: https://qdrant.tech/documentation/concepts/administration/#health-check
+      test:
+        - CMD-SHELL
+        - |
+          bash -c '{ printf "GET /readyz HTTP/1.0\r\nHost: localhost\r\n\r\n" >&0; grep -q "HTTP/1.. 200"; } 0<>/dev/tcp/localhost/6333'
       interval: 3s
       timeout: 3s
       retries: 15  # Increased from 10 to allow more startup time (45s max)
@@ -1047,11 +1076,23 @@ services:
       # This prevents startup validation from blocking the server while dependencies
       # are being checked. Docker Compose health checks already ensure dependencies.
       - TESTING=true
+      # -----------------------------------------------------------------------
+      # PostgreSQL Databases (all on postgres-test:5432)
+      # -----------------------------------------------------------------------
+      # DB Allocation:
+      #   - mcp_test:       Main MCP server data (sessions, workflows, audit logs)
+      #   - compliance_test: Multi-framework compliance (GDPR, HIPAA, SOC2, FedRAMP)
+      #   - openfga_test:   OpenFGA authorization (tuples, permissions) - used by openfga-test
+      #   - keycloak_test:  Keycloak identity (users, realms, clients) - used by keycloak-test
       - POSTGRES_HOST=postgres-test
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres-test:5432/mcp_test
-      - GDPR_POSTGRES_URL=postgresql://postgres:postgres@postgres-test:5432/gdpr_test
-      - GDPR_STORAGE_BACKEND=postgres
+      # Compliance database for GDPR/HIPAA/SOC2/FedRAMP data (user profiles, consents, audit)
+      - COMPLIANCE_POSTGRES_URL=postgresql://postgres:postgres@postgres-test:5432/compliance_test
+      - COMPLIANCE_STORAGE_BACKEND=postgres
       - WORKFLOW_STORAGE_BACKEND=postgres
+      # -----------------------------------------------------------------------
+      # Keycloak Authentication (Docker network internal URLs)
+      # -----------------------------------------------------------------------
       # Keycloak URL for backend-to-Keycloak communication (Docker network)
       # Backend uses this for token exchange, introspection, admin API calls
       # Must be reachable from inside Docker container
@@ -1071,9 +1112,24 @@ services:
       # The gateway routes to Keycloak and Keycloak returns tokens with iss: http://localhost/authn/realms/default
       # which matches OpenFGA's OPENFGA_AUTHN_OIDC_ISSUER setting
       - OPENFGA_OIDC_ISSUER=http://localhost/authn/realms/default
-      - REDIS_URL=redis://redis-test:6379/1
+      # -----------------------------------------------------------------------
+      # Redis Databases (all on redis-test:6379)
+      # -----------------------------------------------------------------------
+      # DB Allocation:
+      #   - DB 0: User sessions (AuthMiddleware, 24h TTL)
+      #   - DB 1: LangGraph conversation checkpoints (7-day TTL)
+      #   - DB 2: L2 distributed cache (CacheService)
+      #   - DB 3: API key lookup cache (indexed, 1h TTL)
+      # Session storage for authenticated users (db 0)
       - REDIS_SESSION_URL=redis://redis-test:6379/0
+      # LangGraph agent conversation state checkpoints (db 1)
       - CHECKPOINT_REDIS_URL=redis://redis-test:6379/1
+      # Redis host/port for rate limiting and distributed cache
+      - REDIS_HOST=redis-test
+      - REDIS_PORT=6379
+      # -----------------------------------------------------------------------
+      # Vector Database (Qdrant)
+      # -----------------------------------------------------------------------
       - QDRANT_URL=http://qdrant-test:6333
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       # LGTM Stack configuration (Loki, Grafana, Tempo, Mimir)
@@ -1096,6 +1152,51 @@ services:
       - FF_ENABLE_SUGGESTION_PREWARM=true
       # Enable suggestion quality tracking for click-through metrics
       - FF_ENABLE_SUGGESTION_QUALITY_TRACKING=true
+      # -----------------------------------------------------------------------
+      # Canvas/Studio v2 UI Feature Flags (Phased Rollout)
+      # -----------------------------------------------------------------------
+      # All phases enabled for testing. In production, enable incrementally.
+      # See: src/mcp_server_langgraph/core/feature_flags.py for descriptions
+      - FF_CANVAS_HYBRID_SHELL=true      # Phase 1: Hybrid Canvas shell at /studio/v2
+      - FF_CANVAS_EDITABLE=true          # Phase 2: Editable artifacts in Canvas panel
+      - FF_CANVAS_AGENTS=true            # Phase 4: Background agent panel
+      - FF_CANVAS_AI_PALETTE=true        # Phase 4: AI fallback in command palette
+      - FF_ENABLE_AI_SUGGESTIONS=true    # Phase 4: AI-powered suggestions in Canvas and Chat
+      - FF_CANVAS_COMPLIANCE=true        # Phase 5: Compliance dashboards (GDPR, HIPAA, SOC2, FedRAMP)
+      - FF_CANVAS_HELP=true              # Phase 6: In-app help pane with contextual assistance
+      # -----------------------------------------------------------------------
+      # AI UX Features (Phase 6 AI-Native Integration)
+      # -----------------------------------------------------------------------
+      # All AI-powered UX features enabled for comprehensive testing
+      - FF_ENABLE_AI_DISCLOSURE=true     # AI progressive disclosure analysis
+      - FF_ENABLE_AI_EMPTY_STATES=true   # AI-powered empty state suggestions
+      - FF_ENABLE_AI_NUDGES=true         # AI smart nudge recommendations
+      - FF_ENABLE_AI_ERROR_RECOVERY=true # AI error classification and recovery
+      - FF_ENABLE_AI_ONBOARDING=true     # AI onboarding personalization
+      - FF_ENABLE_AI_METRICS_INSIGHTS=true # AI HEART metrics insights
+      - FF_ENABLE_AI_PERSONA_ANALYSIS=true # AI persona behavior analysis
+      # -----------------------------------------------------------------------
+      # Anthropic Best Practices (ADR-0072)
+      # All flags enabled in test environment for comprehensive integration/e2e testing
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_TOOL_EXAMPLES=true    # Tool input examples (72% -> 90% accuracy)
+      - FF_ENABLE_THINK_TOOL=true       # Think tool for structured reasoning
+      - FF_ENABLE_DEFER_LOADING=true    # Defer_loading for token efficiency
+      - FF_ENABLE_SKILLS_SYSTEM=true    # SKILL.md-based skills
+      - FF_ENABLE_SKILLS_MARKETPLACE=true # Anthropic skills marketplace
+      - FF_ENABLE_PII_TOKENIZATION=true # GDPR/HIPAA: PII detection and tokenization
+      - FF_ENABLE_PROGRAMMATIC_TOOLS=true # Tool calling from sandbox
+      - FF_ENABLE_MULTI_AGENT_ORCHESTRATION=true # Orchestrator-worker pattern
+      - FF_ENABLE_AGENTIC_MEMORY=true   # NOTES.md structured note-taking
+      # Claude Agent SDK integration (ADR-0077)
+      - FF_ENABLE_SDK_HOOKS=true        # SDK hook system for tool lifecycle
+      - FF_ENABLE_SDK_FILE_CHECKPOINTING=true # File rollback capability
+      - FF_ENABLE_SDK_INTERRUPT=true    # Graceful interrupt support
+    # Map localhost to traefik-gateway so MCP server can resolve OIDC issuer URLs from Keycloak
+    # OPENFGA_OIDC_ISSUER=http://localhost/authn/realms/default requires localhost to resolve to gateway
+    # Same pattern as openfga-test (line 333-334) for consistent OIDC token acquisition
+    extra_hosts:
+      - "localhost:host-gateway"
     volumes:
       # Mount GCP ADC credentials for Vertex AI (local development only)
       - ~/.config/gcloud/application_default_credentials.json:/app/.config/gcloud/application_default_credentials.json:ro
@@ -1105,6 +1206,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+      start_period: 30s  # Allow time for OIDC token acquisition and dependency connections
     init: true  # Proper process cleanup for Python app
     deploy:
       resources:
@@ -1588,8 +1690,10 @@ services:
     volumes:
       - ./docker/mimir/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
       - ./docker/mimir/alertmanager-fallback.yaml:/etc/mimir/alertmanager-fallback.yaml:ro
-      # Ruler storage is configured in mimir-config.yaml to use /tmp/mimir/ruler
-      # which is created by mimir-init with correct permissions (UID 10001)
+      # Alerting rules for Mimir ruler (auto-loaded on startup)
+      - ./docker/mimir/rules:/tmp/mimir/ruleconfigs:ro
+      # Ruler storage is configured in mimir-config.yaml to use /tmp/mimir/ruleconfigs
+      # which is now mounted from docker/mimir/rules/ with pre-defined alerting rules
       - mimir-data:/tmp/mimir
     # NOTE: Mimir uses distroless image with no wget/curl
     # See: https://github.com/grafana/mimir/issues/9034
@@ -1651,9 +1755,15 @@ services:
     environment:
       - ALLOY_DEPLOY_MODE=compose
     healthcheck:
-      # Alloy exposes /-/ready endpoint for readiness checks
-      # NOTE: grafana/alloy image doesn't have wget/curl, use bash TCP check
-      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/localhost/12345' || exit 1"]
+      # HTTP healthcheck using bash TCP socket pattern (no wget/curl in Alloy image)
+      # Uses /-/ready endpoint to verify collector is ready to receive telemetry
+      # Bash TCP pattern: { printf 'request' >&0; grep 'pattern'; } 0<>/dev/tcp/host/port
+      # NOTE: Must explicitly use bash (not sh) for /dev/tcp to work
+      # Reference: https://grafana.com/docs/alloy/latest/reference/cli/run/#http-endpoints
+      test:
+        - CMD-SHELL
+        - |
+          bash -c '{ printf "GET /-/ready HTTP/1.0\r\nHost: localhost\r\n\r\n" >&0; grep -q "HTTP/1.. 200"; } 0<>/dev/tcp/localhost/12345'
       interval: 10s
       timeout: 5s
       retries: 5

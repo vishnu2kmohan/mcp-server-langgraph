@@ -11,9 +11,9 @@ dashboards/
 ├── Overview/              # Main overview dashboard
 │   └── langgraph-agent.json
 ├── Application/           # Application-specific dashboards
-│   ├── builder.json
-│   ├── playground.json
-│   └── llm-performance.json
+│   ├── llm-performance.json
+│   ├── skills-agents.json
+│   └── unified-api.json
 ├── Auth/                  # Authentication & Authorization
 │   ├── authentication.json
 │   ├── openfga.json
@@ -29,6 +29,10 @@ dashboards/
     ├── sla-monitoring.json
     └── soc2-compliance.json (includes GDPR metrics)
 ```
+
+> **Note**: The separate `builder.json` and `playground.json` dashboards have been consolidated
+> into the Unified API v1 Dashboard (`/d/unified-api-v1/unified-api-v1`). See the [CHANGELOG](../../../CHANGELOG.md)
+> for migration details.
 
 The folder structure is provisioned via `foldersFromFilesStructure: true` in `dashboards.yml`.
 
@@ -79,7 +83,46 @@ The folder structure is provisioned via `foldersFromFilesStructure: true` in `da
 - Role sync oversight
 - Policy effectiveness evaluation
 
-### 3. `llm-performance.json` - LLM Performance Dashboard (NEW in v2.1.0)
+### 3. `skills-agents.json` - Skills & Agents Dashboard (NEW - ADR-0072)
+
+**Skills execution and multi-agent orchestration metrics:**
+
+**Skills Section:**
+- **Skill Executions/sec** - Successful skill execution rate
+- **Skill Error Rate** - Percentage of failed skill executions
+- **Skill Duration p95** - 95th percentile execution latency
+- **Skill Loads/sec** - Skill loading operations rate
+- **Skill Execution Rate by Skill** - Time series by skill name
+- **Skill Duration by Skill** - p50/p95 latency by skill
+- **Skill Errors by Type** - Error breakdown (script_not_found, missing_secrets, etc.)
+- **Marketplace Fetch Rate** - Cache hit/miss for marketplace operations
+
+**Multi-Agent Orchestration Section:**
+- **Orchestrator Executions/sec** - Task decomposition operations
+- **Subagent Executions/sec** - Worker agent execution rate
+- **Subagent Error Rate** - Worker failure percentage
+- **Orchestrator Duration p95** - End-to-end orchestration latency
+- **Subagent Execution by Model** - Model usage (gemini, claude, gpt)
+- **Subagent Duration by Model** - Latency comparison by LLM
+
+**Model Selection & Verification Section:**
+- **Model Selection by Tier & Vendor** - simple/complicated/complex by google/anthropic/openai
+- **Model Fallbacks** - Fallback activations when primary unavailable
+- **Cross-Vendor Verification** - Gemini→Claude and Claude→Gemini verification
+
+**Artifacts & Synthesis Section:**
+- **Artifact Operations** - Store/retrieve operations
+- **Synthesis Operations** - Success/failure rate
+- **Synthesis Duration** - p50/p95/p99 latency
+
+**Use Cases:**
+- Skills system performance monitoring
+- Multi-agent orchestration oversight
+- Model selection analysis
+- Cross-vendor verification tracking
+- Artifact storage health
+
+### 4. `llm-performance.json` - LLM Performance Dashboard (NEW in v2.1.0)
 
 **LLM and agent performance metrics:**
 
@@ -242,42 +285,7 @@ The folder structure is provisioned via `foldersFromFilesStructure: true` in `da
 - Connection pool tuning
 - Eviction policy validation
 
-### 10. `builder.json` - Workflow Builder Dashboard (NEW in v2.2.0)
-
-**Workflow creation and node management metrics:**
-
-- **Service Status** - Builder service availability
-- **Workflow Creation Rate** - Workflows created per second
-- **Node Count by Workflow** - Average nodes per workflow
-- **Build Duration Percentiles** - p50, p95, p99 for workflow builds
-- **Validation Errors** - Schema validation failures
-- **Active Workflows** - Currently active workflow count
-
-**Use Cases:**
-- Workflow builder performance monitoring
-- Build time optimization
-- Error tracking and debugging
-- Capacity planning
-
-### 11. `playground.json` - Interactive Playground Dashboard (NEW in v2.2.0)
-
-**Interactive testing and experimentation metrics:**
-
-- **Service Status** - Playground service availability
-- **LLM Token Usage** - Tokens consumed by model
-- **Tool Call Rate** - Tool invocations per second
-- **Tool Duration Percentiles** - p50, p95, p99 for tool execution
-- **Trace Count** - OpenTelemetry traces generated
-- **Span Count** - Trace spans by operation
-- **Session Duration** - Average playground session length
-
-**Use Cases:**
-- LLM experimentation monitoring
-- Tool performance analysis
-- Usage pattern insights
-- Cost estimation (token tracking)
-
-### 12. `qdrant.json` - Qdrant Vector Database Dashboard (NEW in v2.2.0)
+### 10. `qdrant.json` - Qdrant Vector Database Dashboard (NEW in v2.2.0)
 
 **Vector search and embedding storage metrics:**
 
@@ -370,9 +378,8 @@ The folder structure is provisioned via `foldersFromFilesStructure: true` in `da
 # Create ConfigMap with all dashboards (v2.2.0)
 kubectl create configmap grafana-dashboards \
   --from-file=Overview/langgraph-agent.json \
-  --from-file=Application/builder.json \
-  --from-file=Application/playground.json \
   --from-file=Application/llm-performance.json \
+  --from-file=Application/unified-api.json \
   --from-file=Auth/authentication.json \
   --from-file=Auth/openfga.json \
   --from-file=Auth/keycloak.json \
@@ -572,6 +579,30 @@ Ensure these metrics are exported by the application:
 - `llm_tokens_total` - Token usage by model and type
 - `llm_requests_total` - LLM requests by provider and status
 - `llm_request_duration_seconds_bucket` - LLM request latency histogram
+
+### Skills Metrics (NEW - ADR-0072)
+- `skill_execution_count_total` - Skill executions by skill_name, script_name, success
+- `skill_execution_duration_bucket` - Skill execution latency histogram
+- `skill_execution_errors_total` - Skill errors by error_type
+- `skill_load_count_total` - Skill load operations by skill_name, source, success
+- `skill_marketplace_fetch_total` - Marketplace fetches by marketplace_name, operation, success, cached
+
+### Multi-Agent Metrics (NEW - ADR-0072)
+- `agent_orchestrator_execution_count_total` - Orchestrator executions by success
+- `agent_orchestrator_execution_duration_bucket` - Orchestrator latency histogram
+- `agent_orchestrator_tasks_count_total` - Tasks by status (total, successful, failed)
+- `agent_subagent_execution_count_total` - Subagent executions by model, vendor, success
+- `agent_subagent_execution_duration_bucket` - Subagent latency histogram
+- `agent_subagent_errors_count_total` - Subagent errors by error_type, model, vendor
+- `agent_model_selection_count_total` - Model selections by tier, vendor, model
+- `agent_model_fallback_count_total` - Fallbacks by tier, fallback_vendor
+- `agent_verification_count_total` - Cross-vendor verifications by primary_vendor, verifier_vendor
+- `agent_verification_same_vendor_count_total` - Same-vendor fallbacks by vendor
+- `agent_artifact_operation_count_total` - Artifact operations by operation (store/retrieve)
+- `agent_artifact_size_bucket` - Artifact size histogram
+- `agent_synthesis_count_total` - Synthesis operations by success
+- `agent_synthesis_duration_bucket` - Synthesis latency histogram
+- `agent_synthesis_errors_count_total` - Synthesis errors by error_type
 
 ### Playground Metrics (NEW in v2.2.0)
 - `playground_llm_tokens_total` - Tokens consumed in playground

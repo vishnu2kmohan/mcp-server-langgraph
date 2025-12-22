@@ -1,0 +1,186 @@
+# Circuit Breaker Remediation Job
+#
+# Kubernetes Job that can be triggered to restart pods when circuit breaker is open.
+# Can be triggered manually or by Alertmanager via the webhook handler.
+#
+# Usage:
+#   kubectl create job cb-restart-redis --from=cronjob/circuit-breaker-remediation
+#
+# Reference: ADR-0026 - Comprehensive Client Resilience Patterns
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: remediation-scripts
+  namespace: default
+  labels:
+    app: remediation
+    app.kubernetes.io/name: remediation-scripts
+    app.kubernetes.io/component: automation
+data:
+  restart-circuit-breaker-pods.sh: |
+    #!/bin/bash
+    set -euo pipefail
+
+    SERVICE="${1:-}"
+    NAMESPACE="${2:-default}"
+    DRY_RUN="${DRY_RUN:-false}"
+    COOLDOWN_FILE="/tmp/remediation-cooldown-${SERVICE}"
+    COOLDOWN_SECONDS="${COOLDOWN_SECONDS:-300}"
+
+    log_info() { echo "[INFO] $(date '+%Y-%m-%d %H:%M:%S') $1"; }
+    log_warn() { echo "[WARN] $(date '+%Y-%m-%d %H:%M:%S') $1"; }
+    log_error() { echo "[ERROR] $(date '+%Y-%m-%d %H:%M:%S') $1"; }
+
+    if [[ -z "$SERVICE" ]]; then
+        log_error "Usage: $0 <service> [namespace]"
+        exit 1
+    fi
+
+    # Check cooldown
+    if [[ -f "$COOLDOWN_FILE" ]]; then
+        LAST_RUN=$(cat "$COOLDOWN_FILE")
+        CURRENT_TIME=$(date +%s)
+        ELAPSED=$((CURRENT_TIME - LAST_RUN))
+        if [[ $ELAPSED -lt $COOLDOWN_SECONDS ]]; then
+            REMAINING=$((COOLDOWN_SECONDS - ELAPSED))
+            log_warn "Cooldown active. ${REMAINING}s remaining. Skipping."
+            exit 0
+        fi
+    fi
+
+    log_info "Starting circuit breaker remediation for: $SERVICE"
+
+    # Map service to workload
+    case "$SERVICE" in
+        redis) WORKLOAD_TYPE="statefulset"; WORKLOAD_NAME="redis" ;;
+        keycloak) WORKLOAD_TYPE="deployment"; WORKLOAD_NAME="keycloak" ;;
+        openfga) WORKLOAD_TYPE="deployment"; WORKLOAD_NAME="openfga" ;;
+        postgres) WORKLOAD_TYPE="statefulset"; WORKLOAD_NAME="postgres" ;;
+        *) log_error "Unknown service: $SERVICE"; exit 1 ;;
+    esac
+
+    # Check workload exists
+    if ! kubectl get "$WORKLOAD_TYPE" "$WORKLOAD_NAME" -n "$NAMESPACE" &>/dev/null; then
+        log_error "Workload $WORKLOAD_TYPE/$WORKLOAD_NAME not found"
+        exit 1
+    fi
+
+    # Check for skip annotation
+    SKIP=$(kubectl get deployment mcp-server-langgraph -n "$NAMESPACE" \
+        -o jsonpath='{.metadata.annotations.remediation\.skip}' 2>/dev/null || echo "")
+    if [[ "$SKIP" == "true" ]]; then
+        log_warn "Skip annotation found. Skipping."
+        exit 0
+    fi
+
+    # Get pod status
+    PODS=$(kubectl get pods -n "$NAMESPACE" -l "app=$WORKLOAD_NAME" -o jsonpath='{.items[*].metadata.name}')
+    if [[ -z "$PODS" ]]; then
+        log_warn "No pods found for $WORKLOAD_NAME"
+        exit 0
+    fi
+
+    # Check pod health
+    UNHEALTHY=0
+    for POD in $PODS; do
+        READY=$(kubectl get pod "$POD" -n "$NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}')
+        if [[ "$READY" != "True" ]]; then
+            ((UNHEALTHY++))
+            log_warn "Pod $POD is not ready"
+        fi
+    done
+
+    if [[ $UNHEALTHY -eq 0 ]]; then
+        log_info "All pods healthy. Circuit breaker may close naturally."
+        exit 0
+    fi
+
+    log_info "Found $UNHEALTHY unhealthy pod(s). Triggering restart."
+
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log_warn "[DRY RUN] Would restart $WORKLOAD_TYPE/$WORKLOAD_NAME"
+    else
+        kubectl rollout restart "$WORKLOAD_TYPE/$WORKLOAD_NAME" -n "$NAMESPACE"
+        kubectl rollout status "$WORKLOAD_TYPE/$WORKLOAD_NAME" -n "$NAMESPACE" --timeout=300s
+        date +%s > "$COOLDOWN_FILE"
+        kubectl create event --type=Normal --reason=ResilienceRemediation \
+            --message="Restarted $WORKLOAD_TYPE/$WORKLOAD_NAME for circuit breaker" \
+            --for="$WORKLOAD_TYPE/$WORKLOAD_NAME" -n "$NAMESPACE" 2>/dev/null || true
+        log_info "Restart complete."
+    fi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: circuit-breaker-remediation
+  namespace: default
+  labels:
+    app: remediation
+    app.kubernetes.io/name: circuit-breaker-remediation
+    app.kubernetes.io/component: automation
+spec:
+  # Suspended by default - triggered by webhook or manual job creation
+  suspend: true
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 600
+      template:
+        metadata:
+          labels:
+            app: remediation-job
+        spec:
+          serviceAccountName: remediation-webhook
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
+          containers:
+            - name: remediation
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/bash
+                - /scripts/restart-circuit-breaker-pods.sh
+              args:
+                - "$(SERVICE)"
+                - "$(NAMESPACE)"
+              env:
+                - name: SERVICE
+                  value: "redis"  # Override when creating job
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: DRY_RUN
+                  value: "false"
+                - name: COOLDOWN_SECONDS
+                  value: "300"
+              resources:
+                limits:
+                  cpu: "100m"
+                  memory: "128Mi"
+                requests:
+                  cpu: "50m"
+                  memory: "64Mi"
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: scripts
+              configMap:
+                name: remediation-scripts
+                defaultMode: 0755
+            - name: tmp
+              emptyDir: {}

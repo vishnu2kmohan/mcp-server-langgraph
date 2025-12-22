@@ -312,6 +312,232 @@ jobs:
           retention-days: 30
 
   # ============================================================================
+  # Collect Frontend Memory Metrics
+  # ============================================================================
+  collect-frontend-memory:
+    name: Collect Frontend Memory Metrics
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Run on schedule or manual dispatch (not on workflow_run to avoid duplicate work)
+    if: github.event_name == 'schedule' || github.event.inputs.force_update == 'true'
+
+    outputs:
+      peak_heap_mb: ${{ steps.memory.outputs.peak_heap_mb }}
+      final_heap_mb: ${{ steps.memory.outputs.final_heap_mb }}
+      delta_mb: ${{ steps.memory.outputs.delta_mb }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/mcp_server_langgraph/studio/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: src/mcp_server_langgraph/studio/frontend
+        run: npm ci
+
+      - name: Run frontend tests with memory tracking
+        id: memory
+        working-directory: src/mcp_server_langgraph/studio/frontend
+        run: |
+          # Run a subset of tests with memory tracking enabled
+          npm test -- --run src/test/ 2>&1 | tee test-output.txt || true
+
+          # Extract memory trend data from output
+          if grep -q "::memory-trend-start::" test-output.txt; then
+            # Extract JSON between markers
+            sed -n '/::memory-trend-start::/,/::memory-trend-end::/p' test-output.txt | \
+              grep -v '::memory-trend' > memory-trend.json
+
+            # Parse summary values
+            PEAK_HEAP=$(jq -r '.summary.peakHeapUsedMB' memory-trend.json)
+            FINAL_HEAP=$(jq -r '.summary.finalHeapUsedMB' memory-trend.json)
+            DELTA=$(jq -r '.summary.totalDeltaMB' memory-trend.json)
+
+            echo "peak_heap_mb=$PEAK_HEAP" >> $GITHUB_OUTPUT
+            echo "final_heap_mb=$FINAL_HEAP" >> $GITHUB_OUTPUT
+            echo "delta_mb=$DELTA" >> $GITHUB_OUTPUT
+
+            echo "📊 Memory Metrics:"
+            echo "  Peak Heap: ${PEAK_HEAP}MB"
+            echo "  Final Heap: ${FINAL_HEAP}MB"
+            echo "  Delta: ${DELTA}MB"
+          else
+            echo "⚠️ No memory trend data found in output"
+            echo "peak_heap_mb=0" >> $GITHUB_OUTPUT
+            echo "final_heap_mb=0" >> $GITHUB_OUTPUT
+            echo "delta_mb=0" >> $GITHUB_OUTPUT
+          fi
+        env:
+          CI: 'true'
+          VITEST_MEMORY_TREND: 'true'
+
+      - name: Check memory thresholds
+        if: steps.memory.outputs.peak_heap_mb != '0'
+        run: |
+          PEAK_HEAP="${{ steps.memory.outputs.peak_heap_mb }}"
+          DELTA="${{ steps.memory.outputs.delta_mb }}"
+
+          # Memory threshold configuration
+          WARN_THRESHOLD_MB=150   # Warning at 150MB peak heap
+          ERROR_THRESHOLD_MB=250  # Error at 250MB peak heap
+          DELTA_WARN_MB=50        # Warning if memory grew by 50MB+ since suite start
+
+          echo "📊 Memory Threshold Analysis"
+          echo "  Peak Heap: ${PEAK_HEAP}MB"
+          echo "  Delta: ${DELTA}MB"
+          echo ""
+
+          # Check peak heap thresholds
+          if (( $(echo "$PEAK_HEAP >= $ERROR_THRESHOLD_MB" | bc -l) )); then
+            echo "::error title=Memory Threshold Exceeded::Peak heap usage (${PEAK_HEAP}MB) exceeds error threshold (${ERROR_THRESHOLD_MB}MB). Consider investigating memory leaks."
+            echo "MEMORY_STATUS=error" >> $GITHUB_ENV
+          elif (( $(echo "$PEAK_HEAP >= $WARN_THRESHOLD_MB" | bc -l) )); then
+            echo "::warning title=High Memory Usage::Peak heap usage (${PEAK_HEAP}MB) exceeds warning threshold (${WARN_THRESHOLD_MB}MB). Monitor for memory growth."
+            echo "MEMORY_STATUS=warning" >> $GITHUB_ENV
+          else
+            echo "✅ Peak heap (${PEAK_HEAP}MB) is within acceptable limits"
+            echo "MEMORY_STATUS=ok" >> $GITHUB_ENV
+          fi
+
+          # Check memory growth (delta)
+          # Remove potential negative sign for comparison
+          DELTA_ABS=$(echo "$DELTA" | tr -d '-')
+          if (( $(echo "$DELTA >= $DELTA_WARN_MB" | bc -l) )); then
+            echo "::warning title=Significant Memory Growth::Memory grew by ${DELTA}MB during test suite. This may indicate a memory leak."
+          elif (( $(echo "$DELTA <= -$DELTA_WARN_MB" | bc -l 2>/dev/null) )); then
+            echo "ℹ️ Memory decreased by ${DELTA_ABS}MB (GC working well)"
+          else
+            echo "✅ Memory growth (${DELTA}MB) is within normal range"
+          fi
+
+      - name: Checkout gh-pages for existing data
+        uses: actions/checkout@v6
+        with:
+          ref: gh-pages
+          path: gh-pages-data
+        continue-on-error: true
+
+      - name: Check memory regression against history
+        if: steps.memory.outputs.peak_heap_mb != '0'
+        run: |
+          echo "🔍 Memory Regression Detection"
+          echo ""
+
+          CURRENT_PEAK="${{ steps.memory.outputs.peak_heap_mb }}"
+
+          # Regression detection configuration
+          WARN_PERCENT=10   # Warning at 10% increase from last run
+          ERROR_PERCENT=20  # Error at 20% increase from last run
+
+          # Check if we have historical data
+          if [ -f "gh-pages-data/trends/memory-trends.json" ]; then
+            # Get the last run's peak heap
+            PREVIOUS_PEAK=$(jq -r '.runs[-1].peakHeapMB // empty' gh-pages-data/trends/memory-trends.json 2>/dev/null || echo "")
+
+            if [ -n "$PREVIOUS_PEAK" ] && [ "$PREVIOUS_PEAK" != "null" ] && [ "$PREVIOUS_PEAK" != "0" ]; then
+              # Calculate percent change
+              PERCENT_CHANGE=$(echo "scale=2; (($CURRENT_PEAK - $PREVIOUS_PEAK) / $PREVIOUS_PEAK) * 100" | bc -l)
+
+              echo "  Previous run: ${PREVIOUS_PEAK}MB"
+              echo "  Current run:  ${CURRENT_PEAK}MB"
+              echo "  Change:       ${PERCENT_CHANGE}%"
+              echo ""
+
+              # Calculate rolling average (last 5 runs)
+              ROLLING_AVG=$(jq -r '[.runs[-5:][].peakHeapMB] | add / length' gh-pages-data/trends/memory-trends.json 2>/dev/null || echo "0")
+              echo "  Rolling average (5 runs): ${ROLLING_AVG}MB"
+
+              # Check thresholds
+              if (( $(echo "$PERCENT_CHANGE >= $ERROR_PERCENT" | bc -l) )); then
+                echo ""
+                echo "::error title=Memory Regression Detected::Peak heap increased by ${PERCENT_CHANGE}% (${PREVIOUS_PEAK}MB → ${CURRENT_PEAK}MB). Exceeds ${ERROR_PERCENT}% error threshold. Investigate potential memory leak."
+              elif (( $(echo "$PERCENT_CHANGE >= $WARN_PERCENT" | bc -l) )); then
+                echo ""
+                echo "::warning title=Memory Increase Warning::Peak heap increased by ${PERCENT_CHANGE}% (${PREVIOUS_PEAK}MB → ${CURRENT_PEAK}MB). Exceeds ${WARN_PERCENT}% warning threshold."
+              elif (( $(echo "$PERCENT_CHANGE < 0" | bc -l) )); then
+                echo ""
+                echo "✅ Memory improved by ${PERCENT_CHANGE#-}% (${PREVIOUS_PEAK}MB → ${CURRENT_PEAK}MB)"
+              else
+                echo ""
+                echo "✅ Memory stable (${PERCENT_CHANGE}% change, within thresholds)"
+              fi
+
+              # Also check against rolling average
+              if [ "$ROLLING_AVG" != "0" ]; then
+                AVG_CHANGE=$(echo "scale=2; (($CURRENT_PEAK - $ROLLING_AVG) / $ROLLING_AVG) * 100" | bc -l)
+                if (( $(echo "$AVG_CHANGE >= 25" | bc -l) )); then
+                  echo "::warning title=Above Rolling Average::Current run (${CURRENT_PEAK}MB) is ${AVG_CHANGE}% above 5-run average (${ROLLING_AVG}MB)"
+                fi
+              fi
+            else
+              echo "  ℹ️ Previous run data not available or zero, skipping regression check"
+            fi
+          else
+            echo "  ℹ️ No historical memory data found. This run will establish the baseline."
+          fi
+
+      - name: Generate memory trends JSON
+        run: |
+          mkdir -p trends
+
+          # Create or update memory trends JSON
+          python << 'EOF'
+          import json
+          import os
+          from datetime import datetime
+          from pathlib import Path
+
+          # Load existing trends from gh-pages if available
+          trends_file = Path("gh-pages-data/trends/memory-trends.json")
+          if trends_file.exists():
+              with open(trends_file) as f:
+                  trends = json.load(f)
+          else:
+              trends = {"runs": [], "metadata": {"created": datetime.now().isoformat()}}
+
+          # Add new run data
+          new_run = {
+              "timestamp": datetime.now().isoformat(),
+              "commit": os.environ.get("GITHUB_SHA", "unknown")[:8],
+              "branch": os.environ.get("GITHUB_REF_NAME", "unknown"),
+              "peakHeapMB": float(os.environ.get("PEAK_HEAP_MB") or "0"),
+              "finalHeapMB": float(os.environ.get("FINAL_HEAP_MB") or "0"),
+              "deltaMB": float(os.environ.get("DELTA_MB") or "0"),
+              "testSuite": "frontend"
+          }
+          trends["runs"].append(new_run)
+
+          # Keep last 100 runs
+          trends["runs"] = trends["runs"][-100:]
+          trends["metadata"]["updated"] = datetime.now().isoformat()
+
+          # Save trends
+          Path("trends").mkdir(exist_ok=True)
+          with open("trends/memory-trends.json", "w") as f:
+              json.dump(trends, f, indent=2)
+
+          print(f"✅ Added memory run data: {new_run['timestamp']}")
+          print(f"📊 Total memory runs tracked: {len(trends['runs'])}")
+          EOF
+        env:
+          PEAK_HEAP_MB: ${{ steps.memory.outputs.peak_heap_mb }}
+          FINAL_HEAP_MB: ${{ steps.memory.outputs.final_heap_mb }}
+          DELTA_MB: ${{ steps.memory.outputs.delta_mb }}
+
+      - name: Upload memory trends artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: memory-trends-data
+          path: trends/
+          retention-days: 30
+
+  # ============================================================================
   # Generate Badges
   # ============================================================================
   generate-badges:
@@ -323,6 +549,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Checkout gh-pages for existing data
+        uses: actions/checkout@v6
+        with:
+          ref: gh-pages
+          path: gh-pages-data
+        continue-on-error: true
 
       - name: Set up Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -401,6 +634,31 @@ jobs:
             --right-text="3.11 | 3.12 | 3.13" \
             --right-color="blue" \
             > badges/python.svg
+
+          # Memory badge - reads from existing trends or shows N/A
+          # Try to get latest memory data from gh-pages
+          MEMORY_TEXT="N/A"
+          MEMORY_COLOR="lightgrey"
+          if [ -f "gh-pages-data/trends/memory-trends.json" ]; then
+            PEAK_HEAP=$(jq -r '.runs[-1].peakHeapMB // empty' gh-pages-data/trends/memory-trends.json 2>/dev/null || echo "")
+            if [ -n "$PEAK_HEAP" ] && [ "$PEAK_HEAP" != "null" ]; then
+              MEMORY_TEXT="${PEAK_HEAP}MB"
+              # Color based on memory usage: green < 100MB, yellow < 200MB, red >= 200MB
+              if (( $(echo "$PEAK_HEAP < 100" | bc -l) )); then
+                MEMORY_COLOR="brightgreen"
+              elif (( $(echo "$PEAK_HEAP < 200" | bc -l) )); then
+                MEMORY_COLOR="yellow"
+              else
+                MEMORY_COLOR="red"
+              fi
+            fi
+          fi
+
+          uv run --frozen python -m pybadges \
+            --left-text="memory" \
+            --right-text="$MEMORY_TEXT" \
+            --right-color="$MEMORY_COLOR" \
+            > badges/memory.svg
 
           echo "✅ Generated badges:"
           ls -la badges/
@@ -574,6 +832,7 @@ jobs:
                           <img src="badges/build.svg" alt="Build Status">
                           <img src="badges/coverage.svg" alt="Coverage">
                           <img src="badges/tests.svg" alt="Tests">
+                          <img src="badges/memory.svg" alt="Memory Usage">
                           <img src="badges/python.svg" alt="Python Versions">
                       </div>
                   </header>
@@ -598,11 +857,155 @@ jobs:
                       </div>
 
                       <div class="card">
+                          <h2>🧠 Frontend Memory</h2>
+                          <div class="metric blue" id="memory-metric">--</div>
+                          <div class="metric-label">peak heap (MB)</div>
+                          <div class="test-breakdown">
+                              <span id="memory-final">Final: --MB</span>
+                              <span id="memory-delta">Delta: --MB</span>
+                          </div>
+                          <div id="memory-regression" class="test-breakdown" style="margin-top: 0.5rem;">
+                              <span id="regression-status" style="padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 500;">Loading...</span>
+                          </div>
+                          <script>
+                              fetch('trends/memory-trends.json')
+                                  .then(r => r.json())
+                                  .then(data => {
+                                      if (data.runs && data.runs.length > 0) {
+                                          const latest = data.runs[data.runs.length - 1];
+                                          document.getElementById('memory-metric').textContent = latest.peakHeapMB.toFixed(1);
+                                          document.getElementById('memory-final').textContent = 'Final: ' + latest.finalHeapMB.toFixed(1) + 'MB';
+                                          const deltaSign = latest.deltaMB >= 0 ? '+' : '';
+                                          document.getElementById('memory-delta').textContent = 'Delta: ' + deltaSign + latest.deltaMB.toFixed(1) + 'MB';
+                                          document.getElementById('memory-delta').style.color = latest.deltaMB > 50 ? 'var(--accent-red)' : latest.deltaMB > 20 ? 'var(--accent-yellow)' : 'var(--accent-green)';
+
+                                          // Regression detection
+                                          const regressionEl = document.getElementById('regression-status');
+                                          if (data.runs.length >= 2) {
+                                              const previous = data.runs[data.runs.length - 2];
+                                              const percentChange = ((latest.peakHeapMB - previous.peakHeapMB) / previous.peakHeapMB) * 100;
+                                              const changeText = (percentChange >= 0 ? '+' : '') + percentChange.toFixed(1) + '% vs last';
+
+                                              if (percentChange >= 20) {
+                                                  regressionEl.textContent = '⚠️ Regression: ' + changeText;
+                                                  regressionEl.style.background = 'rgba(248, 81, 73, 0.2)';
+                                                  regressionEl.style.color = 'var(--accent-red)';
+                                              } else if (percentChange >= 10) {
+                                                  regressionEl.textContent = '⚡ Warning: ' + changeText;
+                                                  regressionEl.style.background = 'rgba(210, 153, 34, 0.2)';
+                                                  regressionEl.style.color = 'var(--accent-yellow)';
+                                              } else if (percentChange < 0) {
+                                                  regressionEl.textContent = '📉 Improved: ' + changeText;
+                                                  regressionEl.style.background = 'rgba(63, 185, 80, 0.2)';
+                                                  regressionEl.style.color = 'var(--accent-green)';
+                                              } else {
+                                                  regressionEl.textContent = '✅ Stable: ' + changeText;
+                                                  regressionEl.style.background = 'rgba(63, 185, 80, 0.2)';
+                                                  regressionEl.style.color = 'var(--accent-green)';
+                                              }
+                                          } else {
+                                              regressionEl.textContent = '📊 Baseline (first run)';
+                                              regressionEl.style.background = 'rgba(88, 166, 255, 0.2)';
+                                              regressionEl.style.color = 'var(--accent-blue)';
+                                          }
+                                      }
+                                  })
+                                  .catch(() => {
+                                      document.getElementById('regression-status').textContent = 'No data';
+                                      document.getElementById('regression-status').style.color = 'var(--text-secondary)';
+                                  });
+                          </script>
+                      </div>
+
+                      <div class="card" style="grid-column: span 2;">
+                          <h2>📈 Memory Trend (Last 20 Runs)</h2>
+                          <div id="memory-chart-container" style="height: 200px; position: relative;">
+                              <svg id="memory-chart" width="100%" height="100%" viewBox="0 0 600 180" preserveAspectRatio="xMidYMid meet">
+                                  <text x="300" y="90" text-anchor="middle" fill="var(--text-secondary)" font-size="14">Loading memory trend data...</text>
+                              </svg>
+                          </div>
+                          <div id="chart-legend" class="test-breakdown" style="margin-top: 0.5rem; justify-content: center;">
+                              <span style="color: var(--accent-blue);">● Peak Heap (MB)</span>
+                              <span style="color: var(--accent-green);">● Final Heap (MB)</span>
+                          </div>
+                          <script>
+                              fetch('trends/memory-trends.json')
+                                  .then(r => r.json())
+                                  .then(data => {
+                                      if (!data.runs || data.runs.length === 0) return;
+
+                                      const runs = data.runs.slice(-20);
+                                      const svg = document.getElementById('memory-chart');
+                                      const width = 600, height = 180;
+                                      const margin = { top: 20, right: 40, bottom: 30, left: 50 };
+                                      const chartWidth = width - margin.left - margin.right;
+                                      const chartHeight = height - margin.top - margin.bottom;
+
+                                      const allValues = runs.flatMap(r => [r.peakHeapMB || 0, r.finalHeapMB || 0]);
+                                      const maxVal = Math.max(...allValues, 100);
+                                      const minVal = Math.min(...allValues, 0);
+                                      const yRange = maxVal - minVal || 1;
+
+                                      const scaleX = (i) => margin.left + (i / (runs.length - 1 || 1)) * chartWidth;
+                                      const scaleY = (v) => margin.top + chartHeight - ((v - minVal) / yRange) * chartHeight;
+
+                                      let svgContent = '';
+
+                                      // Grid lines
+                                      for (let i = 0; i <= 4; i++) {
+                                          const y = margin.top + (i / 4) * chartHeight;
+                                          const val = maxVal - (i / 4) * yRange;
+                                          svgContent += '<line x1="' + margin.left + '" y1="' + y + '" x2="' + (width - margin.right) + '" y2="' + y + '" stroke="var(--border-color)" stroke-dasharray="2,2"/>';
+                                          svgContent += '<text x="' + (margin.left - 5) + '" y="' + (y + 4) + '" text-anchor="end" fill="var(--text-secondary)" font-size="10">' + val.toFixed(0) + '</text>';
+                                      }
+
+                                      // Peak heap line (blue)
+                                      let peakPath = 'M';
+                                      runs.forEach((r, i) => {
+                                          const x = scaleX(i);
+                                          const y = scaleY(r.peakHeapMB || 0);
+                                          peakPath += (i === 0 ? '' : 'L') + x + ',' + y;
+                                      });
+                                      svgContent += '<path d="' + peakPath + '" fill="none" stroke="var(--accent-blue)" stroke-width="2"/>';
+
+                                      // Final heap line (green)
+                                      let finalPath = 'M';
+                                      runs.forEach((r, i) => {
+                                          const x = scaleX(i);
+                                          const y = scaleY(r.finalHeapMB || 0);
+                                          finalPath += (i === 0 ? '' : 'L') + x + ',' + y;
+                                      });
+                                      svgContent += '<path d="' + finalPath + '" fill="none" stroke="var(--accent-green)" stroke-width="2"/>';
+
+                                      // Data points with tooltips
+                                      runs.forEach((r, i) => {
+                                          const x = scaleX(i);
+                                          const commit = r.commit || '?';
+                                          svgContent += '<circle cx="' + x + '" cy="' + scaleY(r.peakHeapMB || 0) + '" r="4" fill="var(--accent-blue)"><title>' + commit + ': ' + (r.peakHeapMB || 0).toFixed(1) + 'MB peak</title></circle>';
+                                          svgContent += '<circle cx="' + x + '" cy="' + scaleY(r.finalHeapMB || 0) + '" r="3" fill="var(--accent-green)"><title>' + commit + ': ' + (r.finalHeapMB || 0).toFixed(1) + 'MB final</title></circle>';
+                                      });
+
+                                      // X-axis labels (first and last commit)
+                                      if (runs.length > 0) {
+                                          svgContent += '<text x="' + margin.left + '" y="' + (height - 5) + '" text-anchor="start" fill="var(--text-secondary)" font-size="10">' + (runs[0].commit || '') + '</text>';
+                                          svgContent += '<text x="' + (width - margin.right) + '" y="' + (height - 5) + '" text-anchor="end" fill="var(--text-secondary)" font-size="10">' + (runs[runs.length - 1].commit || '') + '</text>';
+                                      }
+
+                                      svg.innerHTML = svgContent;
+                                  })
+                                  .catch(() => {
+                                      document.getElementById('memory-chart').innerHTML = '<text x="300" y="90" text-anchor="middle" fill="var(--text-secondary)" font-size="14">No memory trend data available</text>';
+                                  });
+                          </script>
+                      </div>
+
+                      <div class="card">
                           <h2>📈 Reports & Trends</h2>
                           <div class="links">
                               <a href="coverage/">📁 Coverage Report (HTML)</a>
                               <a href="dev/bench/">⚡ Benchmark Dashboard</a>
                               <a href="trends/test-durations.json">📊 Test Duration Trends (JSON)</a>
+                              <a href="trends/memory-trends.json">🧠 Memory Trends (JSON)</a>
                           </div>
                       </div>
 
@@ -824,6 +1227,19 @@ jobs:
           mkdir -p gh-pages/trends
           cp -r artifacts/trends-data/* gh-pages/trends/
 
+          echo "📁 Copying memory trends (if available)..."
+          if [ -d artifacts/memory-trends-data ]; then
+            cp -r artifacts/memory-trends-data/* gh-pages/trends/
+            echo "  ✅ Memory trends copied"
+          else
+            echo "  ⚠️ No memory trends artifact (only generated on schedule)"
+            # Bootstrap empty memory-trends.json if it doesn't exist
+            if [ ! -f gh-pages/trends/memory-trends.json ]; then
+              echo '{"runs":[],"metadata":{"created":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","updated":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}}' > gh-pages/trends/memory-trends.json
+              echo "  📝 Created initial memory-trends.json"
+            fi
+          fi
+
           echo "📁 Copying dashboard..."
           cp artifacts/dashboard/index.html gh-pages/index.html
 
@@ -900,3 +1316,4 @@ jobs:
           echo "- [Coverage Report](https://vishnu2kmohan.github.io/mcp-server-langgraph/coverage/)" >> $GITHUB_STEP_SUMMARY
           echo "- [Benchmark Dashboard](https://vishnu2kmohan.github.io/mcp-server-langgraph/dev/bench/)" >> $GITHUB_STEP_SUMMARY
           echo "- [Self-Hosted Badges](https://vishnu2kmohan.github.io/mcp-server-langgraph/badges/)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Memory Trends](https://vishnu2kmohan.github.io/mcp-server-langgraph/trends/memory-trends.json)" >> $GITHUB_STEP_SUMMARY

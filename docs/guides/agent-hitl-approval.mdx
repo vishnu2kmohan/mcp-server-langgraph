@@ -1,0 +1,359 @@
+---
+title: Agent Human-in-the-Loop Approval
+description: Configure confidence-based human-in-the-loop for AI agent approvals
+icon: 'user-check'
+contentType: how-to
+seoTitle: Agent HITL Approval - Configure Confidence-Based Human Review
+seoDescription: Set up human-in-the-loop approval workflows for AI agents based on confidence thresholds. Learn to configure automatic pauses, approval dialogs, and notifications.
+keywords:
+  - human-in-the-loop
+  - hitl
+  - agent approval
+  - confidence threshold
+  - ai safety
+  - agent oversight
+  - multi-agent orchestrator
+---
+
+# Agent Human-in-the-Loop Approval
+
+This guide explains how to configure the confidence-based Human-in-the-Loop (HITL) system that automatically pauses AI agents for human approval when confidence is below a configurable threshold.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Configuration](#configuration)
+- [Frontend Settings](#frontend-settings)
+- [Backend Feature Flags](#backend-feature-flags)
+- [Approval Workflow](#approval-workflow)
+- [WebSocket Integration](#websocket-integration)
+- [Observability](#observability)
+- [Best Practices](#best-practices)
+
+## Overview
+
+The HITL system provides a safety layer for multi-agent orchestration by:
+
+1. **Tracking confidence scores** for agent decisions
+2. **Automatically pausing** when confidence drops below threshold
+3. **Presenting approval dialogs** to users for review
+4. **Sending notifications** (push and sound) for pending approvals
+5. **Resuming execution** after user decision
+
+### When Agents Pause for Approval
+
+| Trigger | Description |
+|---------|-------------|
+| **Low confidence** | Agent confidence below threshold (default: 70%) |
+| **Destructive actions** | Actions that modify or delete data |
+| **External API calls** | Actions sending data to external services |
+| **Policy requirements** | Organization-mandated approval points |
+| **Clarification needed** | Agent needs user input to proceed |
+
+### Confidence Levels
+
+| Level | Threshold | Color | Behavior |
+|-------|-----------|-------|----------|
+| High | >= 90% | Green | Auto-approve (configurable) |
+| Medium | 70-89% | Blue | Proceed with notification |
+| Low | 50-69% | Amber | **Require approval** |
+| Critical | < 50% | Red | Halt with explanation |
+
+## Configuration
+
+### Frontend Settings (SettingsPanel)
+
+Navigate to **Settings > Agent Approval** to configure HITL behavior:
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Enable agent approval** | Toggle HITL system on/off | `true` |
+| **Confidence threshold** | Pause below this confidence (50-90%) | `70%` |
+| **Auto-approve threshold** | Skip approval above this (85-100%) | `90%` |
+| **Push notifications** | Get notified when approval needed | `true` |
+| **Sound alerts** | Play sound for pending approvals | `true` |
+
+### User Preferences Structure
+
+```typescript
+interface HITLPreferences {
+  enabled: boolean;              // Enable/disable HITL
+  confidenceThreshold: number;   // 0-1, pause below this
+  autoApproveThreshold: number;  // 0-1, auto-approve above this
+  pushNotificationsEnabled: boolean;
+  soundEnabled: boolean;
+  taskOverrides: Record<string, {
+    enabled: boolean;
+    threshold: number;
+  }>;
+}
+```
+
+## Backend Feature Flags
+
+Configure HITL behavior via environment variables:
+
+```bash
+# Enable/disable HITL system
+ENABLE_AGENT_HITL=true
+
+# Default confidence threshold (0-1)
+AGENT_HITL_CONFIDENCE_THRESHOLD=0.7
+
+# Auto-approve threshold (0-1)
+AGENT_HITL_AUTO_APPROVE_THRESHOLD=0.9
+
+# Approval timeout in seconds
+AGENT_HITL_APPROVAL_TIMEOUT=3600
+```
+
+### Feature Flag Configuration
+
+```python
+# src/mcp_server_langgraph/core/feature_flags.py
+class FeatureFlags(BaseSettings):
+    enable_agent_hitl: bool = True
+    agent_hitl_confidence_threshold: float = 0.7
+    agent_hitl_auto_approve_threshold: float = 0.9
+    agent_hitl_approval_timeout_seconds: int = 3600
+```
+
+## Approval Workflow
+
+### 1. Agent Requests Approval
+
+When an agent's confidence drops below threshold:
+
+```python
+from mcp_server_langgraph.core.interrupts.confidence import confidence_approval_node
+
+# In orchestrator
+result = await execute_subtask(subtask)
+
+if result.confidence < threshold:
+    # Agent pauses and requests approval
+    approval = await request_approval(subtask, result)
+
+    if not approval.approved:
+        result.error = "Rejected by reviewer"
+```
+
+### 2. Frontend Receives Notification
+
+The `useAgentRequestWebSocket` hook receives the approval request:
+
+```typescript
+const { pendingApprovals } = useAgentRequestWebSocket({
+  onApprovalRequired: (approval) => {
+    // Show dialog, play sound, send push notification
+    openApprovalDialog(approval);
+  },
+});
+```
+
+### 3. User Reviews and Decides
+
+The `AgentApprovalDialog` component displays:
+
+- Confidence gauge (visual indicator)
+- Agent name and task description
+- Proposed action preview
+- Context and artifacts
+- Approve/Reject buttons with optional reason
+
+### 4. Execution Resumes
+
+After user decision:
+
+```typescript
+// User approves
+await handleApprove(approvalId, { reason: "Looks correct" });
+
+// OR user rejects
+await handleReject(approvalId, { reason: "Incorrect approach" });
+```
+
+## WebSocket Integration
+
+### Connection
+
+Connect to the agent request WebSocket:
+
+```
+ws://localhost:8000/api/v1/agents/requests/ws?token={jwt}
+```
+
+### Message Types
+
+**Server → Client:**
+
+```json
+{
+  "type": "approval_required",
+  "payload": {
+    "approval_id": "req_abc123",
+    "session_id": "session_xyz",
+    "task_id": "task_001",
+    "agent_name": "Research Assistant",
+    "confidence": 0.65,
+    "threshold": 0.70,
+    "proposed_action": "Send analysis to external API",
+    "context": { "artifacts": ["analysis.json"] }
+  }
+}
+```
+
+```json
+{
+  "type": "execution_resumed",
+  "payload": {
+    "approval_id": "req_abc123",
+    "status": "approved"
+  }
+}
+```
+
+**Client → Server:**
+
+```json
+{
+  "type": "approval_response",
+  "payload": {
+    "approval_id": "req_abc123",
+    "approved": true,
+    "reason": "Verified approach is correct"
+  }
+}
+```
+
+## API Endpoints
+
+### REST API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/agents/approvals/pending` | List pending approvals |
+| `GET` | `/api/v1/agents/approvals/{id}` | Get approval details |
+| `POST` | `/api/v1/agents/approvals/{id}/approve` | Approve request |
+| `POST` | `/api/v1/agents/approvals/{id}/reject` | Reject request |
+
+### Example: Approve Request
+
+```bash
+curl -X POST /api/v1/agents/approvals/req_abc123/approve \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"reason": "Verified", "approved_by": "user@example.com"}'
+```
+
+## Observability
+
+### Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `mcp_hitl_requests_total` | Counter | Total HITL requests by type |
+| `mcp_hitl_decisions_total` | Counter | Decisions (approved/rejected/timeout) |
+| `mcp_hitl_response_latency_seconds` | Histogram | Time from request to decision |
+| `mcp_hitl_trigger_confidence` | Histogram | Confidence that triggered HITL |
+| `mcp_hitl_pending_requests` | Gauge | Currently pending requests |
+
+### Grafana Dashboard
+
+Access the HITL metrics dashboard at:
+
+```
+/grafana/d/hitl-metrics/agent-hitl-approval
+```
+
+Dashboard panels:
+- Request rate by type
+- Confidence distribution
+- Response latency heatmap
+- Decision breakdown
+- Pending queue depth
+
+### Logging
+
+HITL events are logged with structured format:
+
+```json
+{
+  "event": "hitl_request_created",
+  "request_type": "approval",
+  "request_id": "req_abc123",
+  "agent_name": "Research Assistant",
+  "confidence": 0.65,
+  "trigger_reason": "low_confidence"
+}
+```
+
+Query in Loki:
+
+```logql
+{app="mcp-server-langgraph"} |= "hitl_request_created"
+```
+
+## Best Practices
+
+### 1. Don't Over-Review
+
+HITL doesn't mean reviewing every action. Let workflows run until truly necessary:
+
+- Trust high-confidence decisions (> 90%)
+- Focus on critical checkpoints
+- Use auto-approve for routine actions
+
+### 2. Design Smart Thresholds
+
+| Task Type | Recommended Threshold |
+|-----------|----------------------|
+| Read-only queries | 60% |
+| Data modifications | 75% |
+| External API calls | 80% |
+| Destructive actions | 90% |
+
+### 3. Avoid User Fatigue
+
+- Use batch approvals for similar requests
+- Implement smart defaults based on patterns
+- Show progressive disclosure (summary first)
+
+### 4. Handle Timeouts
+
+Configure appropriate timeouts:
+
+```yaml
+AGENT_HITL_APPROVAL_TIMEOUT: 3600  # 1 hour
+AGENT_HITL_TIMEOUT_ACTION: "reject"  # or "auto_approve"
+```
+
+### 5. Explain "Why"
+
+Always display the reason for interruption:
+
+```
+Why you're seeing this:
+- Confidence (65%) is below threshold (70%)
+- This action sends data to an external service
+- Organization policy requires approval
+```
+
+## Clarification Requests
+
+Beyond approvals, agents may ask for clarification:
+
+| Type | Use Case |
+|------|----------|
+| `text` | Free-form response needed |
+| `choice` | Select from options |
+| `confirmation` | Yes/No decision |
+| `file` | File upload required |
+
+The `ClarificationDialog` component handles these interactions separately from approval workflows.
+
+## Related Documentation
+
+- [Agent Architecture](/guides/agent-architecture) - Overall agent design
+- [Push Notifications](/guides/push-notifications) - Notification setup
+- [Feature Flags](/api-reference/configuration#feature-flags) - Flag configuration
+- [Alert Management](/guides/alert-management) - Alert workflows

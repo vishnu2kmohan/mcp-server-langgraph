@@ -45,7 +45,7 @@ class TestSubmitHeartMetrics:
             "/api/v1/metrics/heart",
             json={
                 "session_id": "test-session-123",
-                "app_name": "builder",
+                "app_name": "studio",
             },
         )
         assert response.status_code == 201
@@ -59,7 +59,7 @@ class TestSubmitHeartMetrics:
             "/api/v1/metrics/heart",
             json={
                 "session_id": "test-session-456",
-                "app_name": "playground",
+                "app_name": "studio",
                 "task_success": {
                     "tasks_started": 10,
                     "tasks_completed": 8,
@@ -106,7 +106,7 @@ class TestSubmitHeartMetrics:
             "/api/v1/metrics/heart",
             json={
                 "session_id": "test-session",
-                "app_name": "builder",
+                "app_name": "studio",
                 "happiness": {"nps_score": 11},  # Max is 10
             },
         )
@@ -127,7 +127,7 @@ class TestSubmitEvents:
             "/api/v1/metrics/events",
             json={
                 "session_id": "test-session-123",
-                "app_name": "builder",
+                "app_name": "studio",
                 "events": [
                     {"feature_name": "code_generation", "event_type": "used"},
                     {"feature_name": "dark_mode", "event_type": "clicked"},
@@ -145,7 +145,7 @@ class TestSubmitEvents:
             "/api/v1/metrics/events",
             json={
                 "session_id": "test-session",
-                "app_name": "builder",
+                "app_name": "studio",
                 "events": [],
             },
         )
@@ -158,7 +158,7 @@ class TestSubmitEvents:
             "/api/v1/metrics/events",
             json={
                 "session_id": "test-session",
-                "app_name": "playground",
+                "app_name": "studio",
                 "events": [
                     {
                         "feature_name": "error",
@@ -196,9 +196,9 @@ class TestAggregateMetrics:
 
     def test_get_aggregate_with_app_filter(self, client):
         """Should accept app filter parameter."""
-        response = client.get("/api/v1/metrics/heart/aggregate?app=builder")
+        response = client.get("/api/v1/metrics/heart/aggregate?app=studio")
         assert response.status_code == 200
-        assert response.json()["app_name"] == "builder"
+        assert response.json()["app_name"] == "studio"
 
 
 @pytest.mark.xdist_group(name="metrics_api")
@@ -209,13 +209,12 @@ class TestDashboard:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_get_dashboard_returns_both_apps_data(self, client):
-        """Should return dashboard data."""
+    def test_get_dashboard_returns_studio_data(self, client):
+        """Should return dashboard data with unified studio metrics."""
         response = client.get("/api/v1/metrics/dashboard")
         assert response.status_code == 200
         data = response.json()
-        assert "builder" in data
-        assert "playground" in data
+        assert "studio" in data
         assert "total_metrics_count" in data
         assert "total_events_count" in data
         assert "generated_at" in data

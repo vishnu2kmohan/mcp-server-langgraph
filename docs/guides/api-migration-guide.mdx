@@ -362,6 +362,82 @@ The unified API has updated CORS configuration. Ensure your origin is allowed:
 CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5173"]
 ```
 
+## HEART Metrics API - App Name Migration
+
+<Warning>
+**Breaking Change**: The `app_name` field in the HEART Metrics API has been changed from `Literal["builder", "playground"]` to `Literal["studio"]`.
+</Warning>
+
+### What Changed
+
+The separate `builder` and `playground` application identifiers have been consolidated into a single `studio` identifier:
+
+```diff
+- app_name: "builder" | "playground"
++ app_name: "studio"
+```
+
+### Affected Endpoints
+
+| Endpoint | Change |
+|----------|--------|
+| `POST /api/v1/metrics/heart` | `app_name` now only accepts `"studio"` |
+| `POST /api/v1/metrics/events` | `app_name` now only accepts `"studio"` |
+| `GET /api/v1/metrics/heart/aggregate` | `app` query parameter now only accepts `"studio"` |
+| `GET /api/v1/metrics/dashboard` | Response contains single `"studio"` key |
+
+### Migration Examples
+
+```diff
+# Before
+- POST /api/v1/metrics/heart
+- { "session_id": "abc", "app_name": "builder" }
+
+# After
++ POST /api/v1/metrics/heart
++ { "session_id": "abc", "app_name": "studio" }
+```
+
+```diff
+# Before - Dashboard response
+- { "builder": {...}, "playground": {...}, "generated_at": "..." }
+
+# After - Dashboard response
++ { "studio": {...}, "generated_at": "..." }
+```
+
+### Historical Data
+
+Existing metrics stored with `app_name: "builder"` or `app_name: "playground"` will **not** appear in dashboard queries after migration. If historical data continuity is required, run a data migration to update the `app_name` field in your metrics store.
+
+## MCP Resources URI Scheme Migration
+
+<Warning>
+**Breaking Change**: All MCP resource URIs have been migrated from `playground://` to `studio://`.
+</Warning>
+
+### URI Mapping
+
+| Old URI | New URI |
+|---------|---------|
+| `playground://session/{id}/traces` | `studio://session/{id}/traces` |
+| `playground://session/{id}/logs` | `studio://session/{id}/logs` |
+| `playground://session/{id}/metrics` | `studio://session/{id}/metrics` |
+| `playground://session/{id}/alerts` | `studio://session/{id}/alerts` |
+| `config://playground/default` | `config://studio/default` |
+
+### Client Migration
+
+Update any MCP clients that subscribe to or read these resources:
+
+```diff
+# Before
+- resources/subscribe uri="playground://session/abc123/traces"
+
+# After
++ resources/subscribe uri="studio://session/abc123/traces"
+```
+
 ## Related Documentation
 
 - [CHANGELOG](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/CHANGELOG.md) - Full release notes

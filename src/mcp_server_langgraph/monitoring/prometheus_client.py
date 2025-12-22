@@ -9,6 +9,10 @@ Provides a high-level interface for querying Prometheus metrics with:
 - Custom PromQL queries
 - Time-range aggregations
 
+Resilience patterns (ADR-0026):
+- Retry with exponential backoff (2.0x) for transient failures
+- Circuit breaker to fail fast when Prometheus is repeatedly unavailable
+
 Resolves production TODOs:
 - monitoring/sla.py:157 - Query actual downtime
 - monitoring/sla.py:235 - Query actual response times
@@ -16,6 +20,7 @@ Resolves production TODOs:
 - core/compliance/evidence.py:419 - Uptime data for SOC2 evidence
 """
 
+import asyncio
 import logging
 import ssl
 from dataclasses import dataclass
@@ -24,9 +29,11 @@ from typing import Any
 
 import certifi
 import httpx
+import pybreaker
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +145,11 @@ class PrometheusClient:
 
     async def query(self, promql: str, time: datetime | None = None) -> list[QueryResult]:
         """
-        Execute instant query.
+        Execute instant query with retry and circuit breaker.
+
+        Resilience patterns applied:
+        - Circuit breaker: Skip query if circuit is OPEN
+        - Retry with exponential backoff: 2.0x multiplier for transient failures
 
         Args:
             promql: PromQL query string
@@ -150,27 +161,75 @@ class PrometheusClient:
         if not self._initialized:
             await self.initialize()
 
+        # Check circuit breaker - fail fast if circuit is OPEN
+        breaker = get_circuit_breaker("prometheus")
+        if breaker.current_state == pybreaker.STATE_OPEN:
+            logger.debug("Prometheus circuit breaker open, skipping query")
+            raise pybreaker.CircuitBreakerError(breaker)
+
         params = {"query": promql}
         if time:
             params["time"] = time.timestamp()  # type: ignore[assignment]
 
         url = f"{self.config.url}/api/v1/query"
 
-        try:
-            response = await self.client.get(url, params=params)  # type: ignore[union-attr]
-            response.raise_for_status()
+        # Retry with exponential backoff
+        max_attempts = self.config.retry_attempts
+        base_delay = 1.0
+        backoff_multiplier = self.config.retry_backoff  # Should be 2.0
 
-            data = response.json()
+        for attempt in range(1, max_attempts + 1):
+            try:
+                response = await self.client.get(url, params=params)  # type: ignore[union-attr]
+                response.raise_for_status()
 
-            if data.get("status") != "success":
-                msg = f"Prometheus query failed: {data.get('error', 'Unknown error')}"
-                raise ValueError(msg)
+                data = response.json()
 
-            return self._parse_query_result(data["data"]["result"])
+                if data.get("status") != "success":
+                    msg = f"Prometheus query failed: {data.get('error', 'Unknown error')}"
+                    raise ValueError(msg)
 
-        except Exception as e:
-            logger.error(f"Prometheus query failed: {e}", exc_info=True, extra={"query": promql})
-            raise
+                # Success - notify circuit breaker
+                breaker.state.on_success()
+
+                return self._parse_query_result(data["data"]["result"])
+
+            except httpx.ConnectError as e:
+                # Transient connection error - retry with backoff
+                if attempt < max_attempts:
+                    delay = base_delay * (backoff_multiplier ** (attempt - 1))
+                    logger.warning(
+                        f"Prometheus query failed (attempt {attempt}/{max_attempts}), retrying: {e}",
+                        extra={"query": promql, "attempt": attempt},
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+
+                # All retries exhausted - record failure for circuit breaker
+                logger.error(f"Prometheus query failed after {max_attempts} attempts: {e}", extra={"query": promql})
+                try:
+                    breaker._inc_counter()
+                    breaker.state.on_failure(e)
+                except pybreaker.CircuitBreakerError:
+                    logger.debug("Prometheus circuit breaker opened due to repeated failures")
+                raise
+
+            except httpx.TimeoutException as e:
+                # Timeout - record failure (don't retry, already waited)
+                logger.error(f"Prometheus query timed out: {e}", extra={"query": promql})
+                try:
+                    breaker._inc_counter()
+                    breaker.state.on_failure(e)
+                except pybreaker.CircuitBreakerError:
+                    logger.debug("Prometheus circuit breaker opened due to repeated failures")
+                raise
+
+            except Exception as e:
+                logger.error(f"Prometheus query failed: {e}", exc_info=True, extra={"query": promql})
+                raise
+
+        # Should not reach here, but just in case
+        raise RuntimeError("Prometheus query exhausted all retry attempts")
 
     async def query_range(
         self,

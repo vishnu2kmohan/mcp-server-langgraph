@@ -297,6 +297,57 @@ class ObservabilityConfig:
             unit="1",
         )
 
+        # Rate limit metrics (ADR-0026)
+        self.rate_limit_token_exhausted_counter = self.meter.create_counter(
+            name="rate_limit.token_exhausted",
+            description="Total rate limit token exhaustion events",
+            unit="1",
+        )
+        self.rate_limit_wait_time_histogram = self.meter.create_histogram(
+            name="rate_limit.wait_time",
+            description="Time spent waiting for rate limit tokens",
+            unit="ms",
+        )
+        self.rate_limit_tokens_available_gauge = self.meter.create_gauge(
+            name="rate_limit.tokens_available",
+            description="Current rate limit tokens available",
+            unit="1",
+        )
+
+        # Adaptive bulkhead metrics (ADR-0026)
+        self.adaptive_bulkhead_limit_gauge = self.meter.create_gauge(
+            name="adaptive_bulkhead.limit",
+            description="Current adaptive bulkhead concurrency limit",
+            unit="1",
+        )
+        self.adaptive_bulkhead_error_rate_gauge = self.meter.create_gauge(
+            name="adaptive_bulkhead.error_rate",
+            description="Current adaptive bulkhead error rate (0-1)",
+            unit="1",
+        )
+        self.adaptive_bulkhead_adjustment_counter = self.meter.create_counter(
+            name="adaptive_bulkhead.adjustments",
+            description="Total adaptive bulkhead limit adjustments",
+            unit="1",
+        )
+
+        # HTTP connection pool metrics (ADR-0026)
+        self.http_pool_active_connections_gauge = self.meter.create_gauge(
+            name="http_pool.active_connections",
+            description="Current active HTTP connections",
+            unit="1",
+        )
+        self.http_pool_max_connections_gauge = self.meter.create_gauge(
+            name="http_pool.max_connections",
+            description="Maximum HTTP connections configured",
+            unit="1",
+        )
+        self.http_pool_utilization_gauge = self.meter.create_gauge(
+            name="http_pool.utilization",
+            description="HTTP connection pool utilization (0-1)",
+            unit="1",
+        )
+
         # Error counter by type (for custom exceptions)
         self.error_counter = self.meter.create_counter(
             name="error.total",
@@ -900,4 +951,61 @@ fallback_used_counter = type(
 
 error_counter = type(
     "LazyMetric", (), {"add": lambda self, *args, **kwargs: _safe_metric_operation("error_counter", "add", *args, **kwargs)}
+)()
+
+# Rate limit metrics (ADR-0026)
+rate_limit_token_exhausted_counter = type(
+    "LazyMetric",
+    (),
+    {"add": lambda self, *args, **kwargs: _safe_metric_operation("rate_limit_token_exhausted_counter", "add", *args, **kwargs)},
+)()
+
+rate_limit_wait_time_histogram = type(
+    "LazyMetric",
+    (),
+    {"record": lambda self, *args, **kwargs: _safe_metric_operation("rate_limit_wait_time_histogram", "record", *args, **kwargs)},
+)()
+
+rate_limit_tokens_available_gauge = type(
+    "LazyMetric",
+    (),
+    {"set": lambda self, *args, **kwargs: _safe_metric_operation("rate_limit_tokens_available_gauge", "set", *args, **kwargs)},
+)()
+
+# Adaptive bulkhead metrics (ADR-0026)
+adaptive_bulkhead_limit_gauge = type(
+    "LazyMetric",
+    (),
+    {"set": lambda self, *args, **kwargs: _safe_metric_operation("adaptive_bulkhead_limit_gauge", "set", *args, **kwargs)},
+)()
+
+adaptive_bulkhead_error_rate_gauge = type(
+    "LazyMetric",
+    (),
+    {"set": lambda self, *args, **kwargs: _safe_metric_operation("adaptive_bulkhead_error_rate_gauge", "set", *args, **kwargs)},
+)()
+
+adaptive_bulkhead_adjustment_counter = type(
+    "LazyMetric",
+    (),
+    {"add": lambda self, *args, **kwargs: _safe_metric_operation("adaptive_bulkhead_adjustment_counter", "add", *args, **kwargs)},
+)()
+
+# HTTP connection pool metrics (ADR-0026)
+http_pool_active_connections_gauge = type(
+    "LazyMetric",
+    (),
+    {"set": lambda self, *args, **kwargs: _safe_metric_operation("http_pool_active_connections_gauge", "set", *args, **kwargs)},
+)()
+
+http_pool_max_connections_gauge = type(
+    "LazyMetric",
+    (),
+    {"set": lambda self, *args, **kwargs: _safe_metric_operation("http_pool_max_connections_gauge", "set", *args, **kwargs)},
+)()
+
+http_pool_utilization_gauge = type(
+    "LazyMetric",
+    (),
+    {"set": lambda self, *args, **kwargs: _safe_metric_operation("http_pool_utilization_gauge", "set", *args, **kwargs)},
 )()

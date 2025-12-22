@@ -1,0 +1,146 @@
+# Scale on HTTP Pool Saturation Job
+#
+# Kubernetes Job that scales deployment when HTTP pool is exhausted.
+#
+# Usage:
+#   kubectl create job scale-remediation --from=cronjob/scale-on-saturation
+#
+# Reference: ADR-0026 - Comprehensive Client Resilience Patterns
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scale-on-saturation
+  namespace: default
+  labels:
+    app: remediation
+    app.kubernetes.io/name: scale-on-saturation
+    app.kubernetes.io/component: automation
+spec:
+  # Suspended by default - triggered by webhook or manual job creation
+  suspend: true
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 600
+      template:
+        metadata:
+          labels:
+            app: remediation-job
+        spec:
+          serviceAccountName: remediation-webhook
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
+          containers:
+            - name: remediation
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/bash
+                - -c
+              args:
+                - |
+                  set -euo pipefail
+
+                  DEPLOYMENT="${DEPLOYMENT:-mcp-server-langgraph}"
+                  NAMESPACE="${NAMESPACE:-default}"
+                  MAX_REPLICAS="${MAX_REPLICAS:-10}"
+                  DRY_RUN="${DRY_RUN:-false}"
+                  COOLDOWN_FILE="/tmp/scale-cooldown-${DEPLOYMENT}"
+                  COOLDOWN_SECONDS="${COOLDOWN_SECONDS:-300}"
+
+                  log_info() { echo "[INFO] $(date '+%Y-%m-%d %H:%M:%S') $1"; }
+                  log_warn() { echo "[WARN] $(date '+%Y-%m-%d %H:%M:%S') $1"; }
+                  log_error() { echo "[ERROR] $(date '+%Y-%m-%d %H:%M:%S') $1"; }
+
+                  # Check cooldown
+                  if [[ -f "$COOLDOWN_FILE" ]]; then
+                      LAST_RUN=$(cat "$COOLDOWN_FILE")
+                      CURRENT_TIME=$(date +%s)
+                      ELAPSED=$((CURRENT_TIME - LAST_RUN))
+                      if [[ $ELAPSED -lt $COOLDOWN_SECONDS ]]; then
+                          REMAINING=$((COOLDOWN_SECONDS - ELAPSED))
+                          log_warn "Cooldown active. ${REMAINING}s remaining. Skipping."
+                          exit 0
+                      fi
+                  fi
+
+                  log_info "Starting scale remediation for: $DEPLOYMENT"
+
+                  # Check deployment exists
+                  if ! kubectl get deployment "$DEPLOYMENT" -n "$NAMESPACE" &>/dev/null; then
+                      log_error "Deployment $DEPLOYMENT not found"
+                      exit 1
+                  fi
+
+                  # Get current replicas
+                  CURRENT=$(kubectl get deployment "$DEPLOYMENT" -n "$NAMESPACE" \
+                      -o jsonpath='{.spec.replicas}')
+                  log_info "Current replicas: $CURRENT"
+
+                  # Calculate target (50% increase, min +1)
+                  INCREASE=$((CURRENT / 2))
+                  if [[ $INCREASE -lt 1 ]]; then
+                      INCREASE=1
+                  fi
+                  TARGET=$((CURRENT + INCREASE))
+
+                  # Enforce max
+                  if [[ $TARGET -gt $MAX_REPLICAS ]]; then
+                      log_warn "Capping at max replicas: $MAX_REPLICAS"
+                      TARGET=$MAX_REPLICAS
+                  fi
+
+                  if [[ $TARGET -eq $CURRENT ]]; then
+                      log_info "Already at max replicas. No action needed."
+                      exit 0
+                  fi
+
+                  log_info "Scaling $DEPLOYMENT from $CURRENT to $TARGET replicas"
+
+                  if [[ "$DRY_RUN" == "true" ]]; then
+                      log_warn "[DRY RUN] Would scale to $TARGET replicas"
+                  else
+                      kubectl scale deployment "$DEPLOYMENT" --replicas="$TARGET" -n "$NAMESPACE"
+                      kubectl rollout status deployment "$DEPLOYMENT" -n "$NAMESPACE" --timeout=300s
+                      date +%s > "$COOLDOWN_FILE"
+                      kubectl create event --type=Normal --reason=ResilienceRemediation \
+                          --message="Scaled $DEPLOYMENT from $CURRENT to $TARGET due to pool saturation" \
+                          --for="deployment/$DEPLOYMENT" -n "$NAMESPACE" 2>/dev/null || true
+                      log_info "Scale complete."
+                  fi
+              env:
+                - name: DEPLOYMENT
+                  value: "mcp-server-langgraph"
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: MAX_REPLICAS
+                  value: "10"
+                - name: DRY_RUN
+                  value: "false"
+                - name: COOLDOWN_SECONDS
+                  value: "300"
+              resources:
+                limits:
+                  cpu: "100m"
+                  memory: "128Mi"
+                requests:
+                  cpu: "50m"
+                  memory: "64Mi"
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir: {}

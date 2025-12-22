@@ -1,0 +1,52 @@
+{
+  "lifecycle-test-beee975d": {
+    "state": {
+      "step": 1,
+      "data": "initial",
+      "checkpoints": [
+        {
+          "phase": "phase1",
+          "summary": "First phase complete",
+          "timestamp": "2025-12-22T06:04:45.658370+00:00"
+        },
+        {
+          "phase": "phase2",
+          "summary": "Second phase complete",
+          "timestamp": "2025-12-22T06:04:45.658455+00:00"
+        },
+        {
+          "phase": "phase3",
+          "summary": "Third phase complete",
+          "timestamp": "2025-12-22T06:04:45.658531+00:00"
+        }
+      ]
+    },
+    "updated_at": "2025-12-22T06:04:45.658535+00:00"
+  },
+  "test-session-001": {
+    "state": {
+      "last_query": "First query",
+      "last_response": "[gemini-3-flash] Processed: First query..."
+    },
+    "updated_at": "2025-12-22T06:05:30.179133+00:00"
+  },
+  "test-checkpoint-session-d5fa4ce1": {
+    "state": {
+      "checkpoints": [
+        {
+          "phase": "research",
+          "summary": "Completed initial research phase",
+          "timestamp": "2025-12-22T06:05:30.941180+00:00"
+        }
+      ]
+    },
+    "updated_at": "2025-12-22T06:05:30.941192+00:00"
+  },
+  "workflow-session": {
+    "state": {
+      "last_query": "Research AI safety",
+      "last_response": "[gemini-3-flash] Processed: Research AI safety..."
+    },
+    "updated_at": "2025-12-22T06:05:34.807540+00:00"
+  }
+}

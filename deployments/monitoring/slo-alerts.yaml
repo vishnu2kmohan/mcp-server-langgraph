@@ -296,3 +296,386 @@ spec:
             description: |
               {{ $value | humanizePercentage }} of PostgreSQL connections in use.
               May cause request queueing and latency increases.
+
+    # =========================================================================
+    # Resilience Pattern SLO Impact
+    # =========================================================================
+    # These alerts connect resilience metrics to SLO impact, providing
+    # early warning when resilience patterns indicate potential SLO breaches.
+    #
+    # Reference: ADR-0026 - Comprehensive Client Resilience Patterns
+    # =========================================================================
+    - name: slo.resilience
+      interval: 30s
+      rules:
+        # Recording Rules - Resilience impact on availability
+        - record: slo:resilience:circuit_breaker_open_ratio
+          expr: |
+            sum(circuit_breaker_state{service=~"redis|keycloak|openfga|postgres"} == 1)
+            / count(circuit_breaker_state{service=~"redis|keycloak|openfga|postgres"})
+
+        - record: slo:resilience:retry_exhaustion_rate_5m
+          expr: |
+            sum(rate(retry_exhausted_total[5m]))
+
+        - record: slo:resilience:http_pool_utilization
+          expr: |
+            http_pool_utilization
+
+        - record: slo:resilience:llm_adaptive_bulkhead_at_floor
+          expr: |
+            sum(adaptive_bulkhead_limit <= 2)
+
+        # Circuit Breaker Open impacts availability SLO
+        - alert: SLOResilienceCircuitBreakerImpact
+          expr: |
+            slo:resilience:circuit_breaker_open_ratio > 0
+          for: 2m
+          labels:
+            severity: critical
+            slo: availability
+            resilience_pattern: circuit_breaker
+          annotations:
+            summary: "Circuit breaker open - availability SLO at risk"
+            description: |
+              {{ $value | humanizePercentage }} of critical service circuit breakers are OPEN.
+              This directly impacts the 99.9% availability SLO as requests to these
+              services are failing fast.
+
+              Open circuit breakers: Check circuit_breaker_state{} metric.
+            runbook_url: "https://docs/runbooks/RESILIENCE_OPERATIONS.md#circuit-breaker-open"
+            dashboard_url: "https://grafana/d/resilience-patterns"
+
+        # High retry exhaustion indicates systemic failures
+        - alert: SLOResilienceRetryExhaustion
+          expr: |
+            slo:resilience:retry_exhaustion_rate_5m > 0.5
+          for: 5m
+          labels:
+            severity: warning
+            slo: availability
+            resilience_pattern: retry
+          annotations:
+            summary: "Retry exhaustion affecting availability"
+            description: |
+              Retry exhaustion rate is {{ $value | humanize }}/s.
+              Operations are failing after all retry attempts, indicating persistent
+              issues that may impact the availability SLO.
+            runbook_url: "https://docs/runbooks/RESILIENCE_OPERATIONS.md#high-retry-exhaustion"
+
+        # HTTP connection pool saturation affects all external calls
+        - alert: SLOResilienceHTTPPoolSaturation
+          expr: |
+            slo:resilience:http_pool_utilization > 0.85
+          for: 5m
+          labels:
+            severity: warning
+            slo: saturation
+            resilience_pattern: connection_pool
+          annotations:
+            summary: "HTTP connection pool saturation impacting SLO"
+            description: |
+              HTTP connection pool is at {{ $value | humanizePercentage }} capacity.
+              This may cause request queueing, increasing latency and potentially
+              impacting both latency and availability SLOs.
+            runbook_url: "https://docs/runbooks/RESILIENCE_OPERATIONS.md#http-pool-exhaustion"
+
+        # LLM provider degradation (adaptive bulkhead at floor)
+        - alert: SLOResilienceLLMProviderDegraded
+          expr: |
+            slo:resilience:llm_adaptive_bulkhead_at_floor > 0
+          for: 10m
+          labels:
+            severity: warning
+            slo: latency
+            resilience_pattern: adaptive_bulkhead
+          annotations:
+            summary: "LLM provider degraded - latency SLO at risk"
+            description: |
+              {{ $value }} LLM providers have adaptive bulkheads at minimum capacity.
+              This indicates rate limiting or errors from LLM providers, which may
+              increase queue times and impact the latency SLO.
+            runbook_url: "https://docs/runbooks/RESILIENCE_OPERATIONS.md#adaptive-bulkhead-at-floor"
+
+        # Combined resilience health indicator for SLO correlation
+        - record: slo:resilience:health_score
+          expr: |
+            (
+              (1 - clamp_max(slo:resilience:circuit_breaker_open_ratio, 1)) * 0.4
+              + (1 - clamp_max(slo:resilience:retry_exhaustion_rate_5m / 1, 1)) * 0.3
+              + (1 - clamp_max(slo:resilience:http_pool_utilization, 1)) * 0.2
+              + (1 - clamp_max(slo:resilience:llm_adaptive_bulkhead_at_floor / 6, 1)) * 0.1
+            )
+
+        # Alert when overall resilience health is degraded
+        - alert: SLOResilienceHealthDegraded
+          expr: |
+            slo:resilience:health_score < 0.7
+          for: 5m
+          labels:
+            severity: warning
+            slo: availability
+            resilience_pattern: composite
+          annotations:
+            summary: "Resilience health score degraded"
+            description: |
+              Overall resilience health score is {{ $value | humanizePercentage }}.
+              Multiple resilience patterns are indicating stress, increasing the
+              risk of SLO breaches. Review circuit breakers, retry rates, and
+              connection pools.
+            dashboard_url: "https://grafana/d/resilience-patterns"
+
+    # =========================================================================
+    # Push Notification SLO Alerts
+    # =========================================================================
+    # Reference: ADR-0026 - Comprehensive Client Resilience Patterns
+    # Target: 99.5% push notification delivery success rate
+    # =========================================================================
+    - name: slo.push_notifications
+      interval: 30s
+      rules:
+        # Recording Rules - Push notification delivery metrics
+        - record: slo:push:delivery_success_ratio_5m
+          expr: |
+            sum(rate(push_notifications_sent_total{status="success"}[5m]))
+            / sum(rate(push_notifications_sent_total[5m]))
+
+        - record: slo:push:delivery_success_ratio_1h
+          expr: |
+            sum(rate(push_notifications_sent_total{status="success"}[1h]))
+            / sum(rate(push_notifications_sent_total[1h]))
+
+        - record: slo:push:delivery_success_ratio_24h
+          expr: |
+            sum(rate(push_notifications_sent_total{status="success"}[24h]))
+            / sum(rate(push_notifications_sent_total[24h]))
+
+        - record: slo:push:latency_p95_seconds
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(push_notifications_latency_seconds_bucket[5m])) by (le)
+            )
+
+        - record: slo:push:expired_subscription_rate_1h
+          expr: |
+            sum(rate(push_subscriptions_expired_total[1h]))
+
+        # Push notification delivery SLO breach (99.5% target)
+        - alert: SLOPushDeliveryBreach
+          expr: |
+            slo:push:delivery_success_ratio_1h < 0.995
+          for: 5m
+          labels:
+            severity: warning
+            slo: push_delivery
+            target: "99.5%"
+          annotations:
+            summary: "Push notification delivery below 99.5% SLO"
+            description: |
+              Push notification delivery success rate is {{ $value | humanizePercentage }},
+              below the 99.5% SLO target.
+
+              Check for:
+              - Expired push subscriptions
+              - VAPID key configuration issues
+              - Network connectivity to push services
+            runbook_url: "https://docs/runbooks/push-notification-delivery"
+            dashboard_url: "https://grafana/d/alert-dashboard"
+
+        # Critical - sustained delivery failures
+        - alert: SLOPushDeliveryCritical
+          expr: |
+            slo:push:delivery_success_ratio_1h < 0.90
+          for: 10m
+          labels:
+            severity: critical
+            slo: push_delivery
+            target: "99.5%"
+          annotations:
+            summary: "Critical push notification delivery failures"
+            description: |
+              Push notification delivery success rate is {{ $value | humanizePercentage }},
+              well below the 99.5% SLO target. Admins may not receive critical alerts.
+
+              Immediate action required:
+              1. Check push service connectivity
+              2. Verify VAPID keys are valid
+              3. Check for mass subscription expiry
+            runbook_url: "https://docs/runbooks/push-notification-critical"
+
+        # Push notification latency degradation
+        - alert: SLOPushLatencyHigh
+          expr: |
+            slo:push:latency_p95_seconds > 2.0
+          for: 5m
+          labels:
+            severity: warning
+            slo: push_latency
+          annotations:
+            summary: "Push notification latency exceeds 2s"
+            description: |
+              P95 push notification delivery latency is {{ $value | humanizeDuration }}.
+              Critical alerts may be delayed to admin devices.
+
+        # High subscription expiration rate
+        - alert: SLOPushSubscriptionExpiry
+          expr: |
+            slo:push:expired_subscription_rate_1h > 10
+          for: 15m
+          labels:
+            severity: info
+            slo: push_subscriptions
+          annotations:
+            summary: "High push subscription expiration rate"
+            description: |
+              {{ $value | humanize }} push subscriptions expired in the last hour.
+              Users may need to re-subscribe to push notifications.
+
+    # =========================================================================
+    # Cleanup Job SLO Alerts
+    # =========================================================================
+    # Reference: ADR-0026 - Comprehensive Client Resilience Patterns
+    # =========================================================================
+    - name: slo.cleanup_jobs
+      interval: 1m
+      rules:
+        # Recording Rules - Cleanup job metrics
+        - record: slo:cleanup:last_run_age_seconds
+          expr: |
+            time() - max(push_cleanup_last_run_timestamp_seconds)
+
+        - record: slo:cleanup:failure_rate_1h
+          expr: |
+            sum(rate(push_cleanup_runs_total{status="failure"}[1h]))
+            / sum(rate(push_cleanup_runs_total[1h]))
+
+        - record: slo:cleanup:subscriptions_cleaned_rate_1h
+          expr: |
+            sum(rate(push_cleanup_subscriptions_cleaned_total[1h]))
+
+        # Cleanup job hasn't run in expected interval
+        - alert: SLOCleanupJobStale
+          expr: |
+            slo:cleanup:last_run_age_seconds > 7200
+          for: 5m
+          labels:
+            severity: warning
+            slo: cleanup_job
+            component: push_subscriptions
+          annotations:
+            summary: "Push subscription cleanup job stale"
+            description: |
+              The push subscription cleanup job hasn't run in {{ $value | humanizeDuration }}.
+              Expected interval is 1 hour.
+
+              Check:
+              - Background task scheduler
+              - Application health
+              - Resource availability
+            runbook_url: "https://docs/runbooks/cleanup-job-stale"
+
+        # Cleanup job failures
+        - alert: SLOCleanupJobFailures
+          expr: |
+            slo:cleanup:failure_rate_1h > 0.1
+          for: 10m
+          labels:
+            severity: warning
+            slo: cleanup_job
+            component: push_subscriptions
+          annotations:
+            summary: "Push subscription cleanup job failures"
+            description: |
+              Cleanup job failure rate is {{ $value | humanizePercentage }}.
+              Stale subscriptions may accumulate, impacting performance.
+
+        # Cleanup job completely failed (no runs in 24h)
+        - alert: SLOCleanupJobDead
+          expr: |
+            slo:cleanup:last_run_age_seconds > 86400
+          for: 5m
+          labels:
+            severity: critical
+            slo: cleanup_job
+            component: push_subscriptions
+          annotations:
+            summary: "Push subscription cleanup job dead"
+            description: |
+              The cleanup job hasn't run in over 24 hours.
+              This may indicate a critical failure in the background task system.
+            runbook_url: "https://docs/runbooks/cleanup-job-dead"
+
+    # =========================================================================
+    # AI Remediation SLO Alerts
+    # =========================================================================
+    # Reference: ADR-0026 - Comprehensive Client Resilience Patterns
+    # =========================================================================
+    - name: slo.ai_remediation
+      interval: 30s
+      rules:
+        # Recording Rules - AI recommendation metrics
+        - record: slo:ai:recommendation_acceptance_rate_24h
+          expr: |
+            sum(rate(remediation_feedback_total{action="approved"}[24h]))
+            / sum(rate(remediation_feedback_total[24h]))
+
+        - record: slo:ai:recommendation_generation_latency_p95
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(ai_recommendation_latency_seconds_bucket[5m])) by (le)
+            )
+
+        - record: slo:ai:recommendation_error_rate_1h
+          expr: |
+            sum(rate(ai_recommendation_total{status="error"}[1h]))
+            / sum(rate(ai_recommendation_total[1h]))
+
+        # Low AI recommendation acceptance rate
+        - alert: SLOAIAcceptanceRateLow
+          expr: |
+            slo:ai:recommendation_acceptance_rate_24h < 0.5
+            and
+            sum(rate(remediation_feedback_total[24h])) > 0.001
+          for: 1h
+          labels:
+            severity: info
+            slo: ai_quality
+            component: remediation
+          annotations:
+            summary: "AI recommendation acceptance rate below 50%"
+            description: |
+              AI recommendation acceptance rate is {{ $value | humanizePercentage }}.
+              Consider reviewing rejection patterns to improve recommendation quality.
+
+              Check the rejection reasons in the feedback store for patterns.
+            dashboard_url: "https://grafana/d/alert-dashboard"
+
+        # AI recommendation generation errors
+        - alert: SLOAIRecommendationErrors
+          expr: |
+            slo:ai:recommendation_error_rate_1h > 0.1
+          for: 10m
+          labels:
+            severity: warning
+            slo: ai_quality
+            component: recommendation
+          annotations:
+            summary: "High AI recommendation generation error rate"
+            description: |
+              {{ $value | humanizePercentage }} of AI recommendation requests are failing.
+              Check LLM provider connectivity and rate limits.
+
+        # AI recommendation latency degradation
+        - alert: SLOAIRecommendationSlow
+          expr: |
+            slo:ai:recommendation_generation_latency_p95 > 30
+          for: 5m
+          labels:
+            severity: warning
+            slo: ai_latency
+            component: recommendation
+          annotations:
+            summary: "AI recommendation generation slow (>30s)"
+            description: |
+              P95 AI recommendation generation latency is {{ $value | humanizeDuration }}.
+              This may delay remediation for critical alerts.

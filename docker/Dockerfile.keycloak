@@ -66,6 +66,12 @@ LABEL org.opencontainers.image.licenses="Apache-2.0"
 # This is the critical step that eliminates runtime augmentation
 COPY --from=builder /opt/keycloak/lib/quarkus/ /opt/keycloak/lib/quarkus/
 
+# Copy healthcheck script for OIDC-ready validation
+# This script performs two-phase healthcheck:
+# 1. /authn/health/ready on management port 9000 (JVM + DB ready)
+# 2. OIDC discovery endpoint on port 8080 (OIDC functional)
+COPY --chmod=755 docker/keycloak/healthcheck.sh /opt/keycloak/bin/healthcheck.sh
+
 # Set working directory
 WORKDIR /opt/keycloak
 
@@ -74,9 +80,15 @@ WORKDIR /opt/keycloak
 USER 1000
 
 # Health check for container orchestration
-# Uses Keycloak's built-in health endpoint (enabled via KC_HEALTH_ENABLED=true)
+# Uses custom healthcheck script that validates both management health
+# and OIDC discovery endpoints are ready.
+#
+# For Kubernetes, the default image healthcheck only checks Phase 1 (fast).
+# For docker-compose, override with SKIP_OIDC_CHECK=false for Phase 2.
+#
+# Reference: https://www.keycloak.org/server/containers
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl --fail --silent http://localhost:8080/health/ready || exit 1
+    CMD ["/opt/keycloak/bin/healthcheck.sh"]
 
 # Expose ports
 # 8080 - HTTP

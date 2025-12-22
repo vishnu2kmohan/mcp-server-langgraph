@@ -61,6 +61,7 @@ class FeatureFlags(BaseSettings):
 
 ### Usage
 
+**Direct Flag Access:**
 ```python
 from mcp_server_langgraph.core.feature_flags import feature_flags
 
@@ -69,6 +70,39 @@ if feature_flags.enable_pydantic_ai_routing:
 else:
     decision = keyword_based_routing(message)
 ```
+
+**Feature-Gated Functions (Recommended):**
+```python
+from mcp_server_langgraph.core.feature_flags import feature_gated
+
+@feature_gated("enable_multi_agent_orchestration", "Multi-Agent Orchestration")
+def decompose_task(self, task: str) -> TaskDecomposition:
+    # Only runs if feature is enabled
+    ...
+
+@feature_gated("enable_programmatic_tools", "Programmatic Tools")
+async def call_tool(self, name: str, args: dict) -> ToolResult:
+    # Works with async functions too
+    ...
+```
+
+### Testing Utilities
+
+**FF_TEST_MODE**: Environment variable that bypasses all feature flag checks when set to `true`.
+
+```bash
+# Enable test mode (all feature checks pass)
+export FF_TEST_MODE=true
+```
+
+```python
+# Check if test mode is active
+if feature_flags.is_test_mode:
+    # All feature checks are bypassed
+    pass
+```
+
+This enables testing of feature-gated functionality without enabling each flag individually.
 
 ## Consequences
 
@@ -96,17 +130,38 @@ else:
 
 ## Implementation
 
-30+ feature flags across categories:
+90+ feature flags across categories:
 - Pydantic AI (3 flags)
-- LLM (3 flags)
-- Authorization (3 flags)
+- LLM (4 flags)
+- Authorization (4 flags)
 - Observability (4 flags)
 - Performance (4 flags)
 - Agent Behavior (3 flags)
 - Security (4 flags)
 - Experimental (3 flags)
+- UI/UX Features (15+ flags)
+- AI Features (12+ flags)
+- Multi-Agent Orchestration (8+ flags)
+- SDK Integration (6 flags)
+- Multi-Framework Parity (6 flags)
+- HITL (5 flags)
+- Tools & Skills (8+ flags)
+- Context Management (6+ flags)
+
+### Multi-Framework Parity Flags (ADR-0077/0078/0079)
+
+These flags control features added for parity with Claude Agent SDK, Google ADK, and OpenAI Agents SDK:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `enable_computer_use` | `false` | Computer automation tools (mouse, keyboard, browser) |
+| `enable_loop_agent` | `false` | LoopAgent orchestration pattern (Google ADK parity) |
+| `enable_session_fork` | `false` | Session forking for conversation branching |
+| `enable_llm_hooks` | `true` | LLM-level callbacks (BEFORE_MODEL, AFTER_MODEL) |
+| `enable_session_hooks` | `true` | Session lifecycle hooks |
+| `enable_handoff_pattern` | `true` | Agent-to-agent handoff |
 
 ## References
 
-- Implementation: `src/mcp_server_langgraph/core/feature_flags.py:1-281`
-- Related ADRs: [ADR-0005](adr-0005-pydantic-ai-integration.md)
+- Implementation: `src/mcp_server_langgraph/core/feature_flags.py`
+- Related ADRs: [ADR-0005](adr-0005-pydantic-ai-integration.md), [ADR-0077](adr-0077-claude-agent-sdk-integration.md), [ADR-0078](adr-0078-multi-agent-orchestrator-patterns.md)

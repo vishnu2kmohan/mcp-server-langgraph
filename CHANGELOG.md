@@ -7,7 +7,100 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- **HEART Metrics API - `app_name` Field** - The `app_name` field in the HEART Metrics API has been changed from `Literal["builder", "playground"]` to `Literal["studio"]`:
+  - **Affected endpoints**:
+    - `POST /api/v1/metrics/heart` - `app_name` parameter now only accepts `"studio"`
+    - `POST /api/v1/metrics/events` - `app_name` parameter now only accepts `"studio"`
+    - `GET /api/v1/metrics/heart/aggregate` - `app` query parameter now only accepts `"studio"`
+    - `GET /api/v1/metrics/dashboard` - Response now contains single `"studio"` key instead of separate `"builder"` and `"playground"` keys
+  - **Migration**: Update all API calls to use `app_name: "studio"` instead of `"builder"` or `"playground"`
+  - **Historical data**: Existing metrics with old app names will not appear in dashboard queries. Run a data migration if historical data continuity is required.
+  - Files: `src/mcp_server_langgraph/api/metrics.py`
+
+- **MCP Resources URI Scheme** - All MCP resource URIs have been migrated from `playground://` to `studio://`:
+  - **Affected URIs**:
+    - `studio://session/{session_id}/traces` (was `playground://session/{session_id}/traces`)
+    - `studio://session/{session_id}/logs` (was `playground://session/{session_id}/logs`)
+    - `studio://session/{session_id}/metrics` (was `playground://session/{session_id}/metrics`)
+    - `studio://session/{session_id}/alerts` (was `playground://session/{session_id}/alerts`)
+  - **Migration**: Update any MCP clients that subscribe to or read these resources
+  - Files: `src/mcp_server_langgraph/mcp/resources.py`, `src/mcp_server_langgraph/api/v1/mcp_websocket.py`
+
+### Removed
+
+- **Deprecated Grafana Dashboards** - Removed deprecated Builder and Playground dashboards:
+  - `monitoring/grafana/dashboards/Application/builder.json` - Use Unified API v1 Dashboard (`/d/unified-api-v1/unified-api-v1`)
+  - `monitoring/grafana/dashboards/Application/playground.json` - Use Unified API v1 Dashboard
+  - `deployments/helm/mcp-server-langgraph/dashboards/builder.json` - Removed from Helm chart
+  - `deployments/helm/mcp-server-langgraph/dashboards/playground.json` - Removed from Helm chart
+
 ### Added
+
+- **Multi-Agent Orchestrator Pattern (ADR-0078)** - Parallel execution orchestrators for AI analysis:
+  - **BaseOrchestrator** (`src/mcp_server_langgraph/agents/base_orchestrator.py`):
+    - Abstract base class with `asyncio.gather(return_exceptions=True)` for parallel task execution
+    - Generic type parameters (`TaskT`, `ResultT`) for type-safe task/result handling
+    - Feature flag integration for gradual rollout
+    - Automatic exception-to-failed-result conversion for graceful degradation
+  - **UXOrchestrator** (`src/mcp_server_langgraph/agents/ux_orchestrator.py`):
+    - Parallel execution of persona, disclosure, and error analysis
+    - Cross-service insights synthesis (e.g., persona → disclosure recommendations)
+    - Feature flag: `enable_orchestrated_ai_ux` (default: false for gradual rollout)
+    - API endpoint: `POST /api/v1/ai/composite-analysis`
+  - **AlertOrchestrator** (`src/mcp_server_langgraph/agents/alert_orchestrator.py`):
+    - Parallel execution of correlation, root cause, remediation, and pattern detection
+    - Multi-alert correlation with AI-powered root cause analysis
+    - Feature flag: `enable_orchestrated_alert_analysis` (default: false for gradual rollout)
+    - API endpoint: `POST /api/v1/alerts/correlate`
+  - **CostTracker** (`src/mcp_server_langgraph/agents/cost_tracker.py`):
+    - Per-orchestration and session cost limits with configurable thresholds
+    - Budget alerts at 50%, 75%, 90% utilization
+    - LiteLLM integration for accurate model pricing
+  - **Observability Metrics**:
+    - `agent.ux_orchestration.count` / `agent.alert_orchestration.count`
+    - `agent.orchestration.parallel_speedup` (histogram, expect 3-4x)
+    - `agent.orchestration.cost.dollars` / `agent.orchestration.cost.alert`
+  - **Grafana Dashboard**: `monitoring/grafana/dashboards/Application/orchestrator-metrics.json`
+  - **Documentation**:
+    - ADR: `docs/architecture/adr-0078-multi-agent-orchestrator-patterns.mdx`
+    - Guide: `docs/guides/multi-agent-orchestrators.mdx`
+    - Runbook: `docs-internal/runbooks/ORCHESTRATOR_OPERATIONS.md`
+  - **Performance**: 3-4x speedup for multi-task analysis (parallel vs sequential)
+  - **Tests**: 546 unit tests, 3 integration tests, 1 E2E test for orchestrators
+
+- **AI-Native Explanations for HITL Dialogs (Plan Section 10.2)** - AI-generated explanations for Human-in-the-Loop approval dialogs:
+  - **ExplanationOrchestrator** (`src/mcp_server_langgraph/agents/explanation_orchestrator.py`):
+    - Parallel execution of 4 analysis tasks: uncertainty, risk, alternatives, evidence extraction
+    - 3-4x speedup via `asyncio.gather` (parallel vs sequential LLM calls)
+    - Synthesizes results into `AIExplanation` model
+    - Feature flag: `enable_ai_explanations` (default: false for gradual rollout)
+  - **CachedExplanationOrchestrator**:
+    - Redis-backed caching layer with configurable TTL (default: 1 hour)
+    - Cache key bucketing by 0.05 confidence increments for better hit rate
+    - Graceful fallback to LLM generation on cache failures
+    - Configurable via `ai_explanation_cache_ttl` feature flag
+  - **AI Explanation Models** (`src/mcp_server_langgraph/core/interrupts/ai_explanation.py`):
+    - `AIExplanation`: Core model with `why_uncertain`, `what_could_go_wrong`, `safer_alternatives`
+    - `ConfidenceFactor`: Individual factors with weight and evidence
+    - `AlternativeSuggestion`: Safer alternatives with trade-off descriptions
+    - `ApprovalRequired.ai_explanation`: Optional field on approval model
+  - **Frontend UI** (`src/mcp_server_langgraph/studio/frontend/src/components/Admin/AgentApprovalDialog.tsx`):
+    - Expandable explanation section in approval dialogs
+    - Displays uncertainty reasons, risk analysis, and alternatives
+    - Shows confidence factors with visual weight indicators
+    - Cached indicator for quick cache-hit responses
+  - **Observability Metrics** (`src/mcp_server_langgraph/agents/metrics.py`):
+    - `ai.explanation.generation.count` (by success, cached)
+    - `ai.explanation.generation.latency_ms` (histogram)
+    - `ai.explanation.cache.hit_rate` (gauge)
+    - `ai.explanation.analysis.count` (by analysis_type)
+  - **Tests**:
+    - Unit tests: `test_explanation_orchestrator.py`, `test_explanation_caching.py`, `test_explanation_metrics.py`
+    - E2E tests: `test_ai_explanation_e2e.py` (9 integration tests)
+    - Frontend tests: `AgentApprovalDialog.test.tsx` (50 tests including AI explanation section)
+
 - **Unified Studio Frontend** - Consolidated Builder and Playground into single React application:
   - **Docker Multi-Stage Build**: Added `frontend-builder` stage (Node.js 22) for React/Vite build
   - **FastAPI SPAStaticFiles**: Unified frontend served from `/studio` via SPAStaticFiles (no nginx required)
@@ -74,6 +167,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `enable_code_export` - Code export functionality
   - `enable_ai_suggestions` - AI-powered suggestions
   - `enable_mcp_websocket` - Experimental MCP WebSocket
+
+- **ADR-0072: Anthropic Engineering Best Practices** - Implementation of patterns from 10 Anthropic engineering articles:
+  - **Feature Flags for Experimental Features** (`src/mcp_server_langgraph/core/feature_flags.py`):
+    - `enable_skills_system` - Skills loading and execution (default: false)
+    - `enable_skills_marketplace` - Marketplace integration for skill discovery (default: false)
+    - `enable_multi_agent` - Orchestrator-worker multi-agent pattern (default: false)
+    - `enable_agentic_memory` - NOTES.md and checkpoint-based memory (default: false)
+    - `enable_programmatic_tools` - Tool calling from sandbox code (default: false)
+    - Feature flag gating via `require_feature()` with `FeatureDisabledError`
+  - **Skills System** (`src/mcp_server_langgraph/skills/`):
+    - `models.py` - Skill, SkillDependency, SkillConfig data models
+    - `loader.py` - SKILL.md YAML frontmatter parser
+    - `registry.py` - Local skill registry with caching
+    - `executor.py` - Sandboxed skill script execution
+    - `marketplace.py` - Multi-marketplace integration (Anthropic + enterprise)
+    - `metrics.py` - OpenTelemetry metrics for skill execution
+    - MCP handlers: `skills/list`, `skills/get`, `skills/execute`
+  - **Multi-Agent Orchestration** (`src/mcp_server_langgraph/agents/`):
+    - `orchestrator.py` - Lead agent for task decomposition
+    - `subagent.py` - Worker agents with clean context windows
+    - `coordinator.py` - Task coordination and parallelization
+    - `artifacts.py` - External artifact storage (avoids "game of telephone")
+    - `model_selector.py` - Three-tier model selection (simple/complicated/complex)
+    - `metrics.py` - OpenTelemetry metrics for orchestrator/subagent operations
+    - Cross-vendor verification: Gemini primary, Claude judge (reduces bias)
+  - **Agentic Memory** (`src/mcp_server_langgraph/memory/`):
+    - `notes.py` - NOTES.md management for persistent memory
+    - `checkpoints.py` - Phase summaries before context limits
+  - **Programmatic Tool Calling** (`src/mcp_server_langgraph/execution/tool_bridge.py`):
+    - `ToolBridge` class for sandbox code to invoke MCP tools
+    - `call_tool()` / `gather_tools()` for single/parallel execution
+    - Token-efficient intermediate results (no return to model context)
+  - **Grafana Dashboard** (`monitoring/grafana/dashboards/Application/skills-agents.json`):
+    - Skills metrics: execution rate, error rate, duration percentiles, marketplace fetch
+    - Agent metrics: orchestrator/subagent execution, model selection, verification, synthesis
+    - Tags: `mcp-server`, `skills`, `agents`, `adr-0072`
+  - **Integration Tests** (`tests/integration/test_feature_flag_sync.py`):
+    - `TestADR0072FeatureFlags` - Feature flag definition and behavior tests
+    - `TestADR0072ModuleIntegration` - Module-level feature flag enforcement
+  - ADR Document: `docs-internal/ADR-0072-ANTHROPIC-BEST-PRACTICES.md`
 
 - **Storage Layer Consolidation** - Unified repository pattern:
   - `src/mcp_server_langgraph/storage/` - New storage directory:

@@ -494,8 +494,15 @@ jobs:
     - name: Run type checking
       run: npm run typecheck
 
-    - name: Run tests
+    - name: Run tests with memory limit
       run: npm test -- --run
+      env:
+        # Memory limit to catch OOM regressions early
+        # Tests should pass with 1GB; OOM issues cause heap exhaustion at ~4GB
+        NODE_OPTIONS: '--max-old-space-size=1024'
+        # Enable memory monitoring to detect memory leaks during test runs
+        # Configured in src/test/memoryMonitor.ts (warning at 512MB, error at 1GB)
+        VITEST_MEMORY_MONITOR: 'true'
 
     - name: Verify no orphan vitest processes
       run: |

@@ -143,6 +143,37 @@ class AuditEventType(StrEnum):
     DATA_ANONYMIZE = "data.anonymize"
     """Data anonymization (GDPR Art. 17)."""
 
+    # Artifact events (Hybrid Canvas - SOC 2, GDPR)
+    ARTIFACT_CREATED = "artifact.created"
+    """Artifact created in canvas."""
+
+    ARTIFACT_UPDATED = "artifact.updated"
+    """Artifact content or metadata updated."""
+
+    ARTIFACT_DELETED = "artifact.deleted"
+    """Artifact deleted."""
+
+    ARTIFACT_FORKED = "artifact.forked"
+    """Artifact forked to new version tree."""
+
+    ARTIFACT_VERSION_CREATED = "artifact.version.created"
+    """New version of artifact created."""
+
+    ARTIFACT_VERSION_CLEANUP = "artifact.version.cleanup"
+    """Old artifact versions cleaned up."""
+
+    ARTIFACT_SEARCH = "artifact.search"
+    """Semantic search performed on artifacts."""
+
+    ARTIFACT_SIMILAR_SEARCH = "artifact.similar.search"
+    """Similar artifacts search performed."""
+
+    ARTIFACT_CLOUD_UPLOAD = "artifact.cloud.upload"
+    """Large artifact uploaded to cloud storage."""
+
+    ARTIFACT_CLOUD_DOWNLOAD = "artifact.cloud.download"
+    """Large artifact downloaded from cloud storage."""
+
     # AI operation events (EU AI Act Articles 12, 19, 72)
     AI_INVOKE = "ai.invoke"
     """AI model invocation."""
@@ -162,6 +193,29 @@ class AuditEventType(StrEnum):
 
     ADMIN_ACTION = "admin.action"
     """Administrative action (FedRAMP AU-2 required)."""
+
+    # Remediation events (ADR-0026 - Alert remediation workflow)
+    REMEDIATION_APPROVED = "remediation.approved"
+    """Alert remediation action approved by admin."""
+
+    REMEDIATION_REJECTED = "remediation.rejected"
+    """Alert remediation action rejected by admin."""
+
+    REMEDIATION_EXECUTED = "remediation.executed"
+    """Alert remediation action executed."""
+
+    REMEDIATION_FAILED = "remediation.failed"
+    """Alert remediation action execution failed."""
+
+    # Agent HITL (Human-in-the-Loop) events
+    AGENT_REQUEST_APPROVED = "agent_request.approved"
+    """Agent HITL request approved by reviewer."""
+
+    AGENT_REQUEST_REJECTED = "agent_request.rejected"
+    """Agent HITL request rejected by reviewer."""
+
+    AGENT_REQUEST_RESPONDED = "agent_request.responded"
+    """Agent clarification request responded to."""
 
     SERVICE_START = "service.start"
     """Service startup."""

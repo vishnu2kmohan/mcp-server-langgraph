@@ -252,6 +252,49 @@ GOOGLE_CLOUD_PROJECT=${GCP_PROJECT}
 ## Ollama
 OLLAMA_BASE_URL=http://ollama:11434
 ```
+
+#### Alert Notification Variables
+
+**Web Push (VAPID)**:
+
+Web Push notifications require VAPID (Voluntary Application Server Identification) keys for secure browser push notifications. Generate keys using:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+```properties
+## Web Push VAPID Configuration
+VAPID_PUBLIC_KEY=BLc4xRLA...your-public-key
+VAPID_PRIVATE_KEY=your-private-key
+VAPID_CLAIMS_EMAIL=admin@yourdomain.com
+```
+
+<Warning>
+VAPID keys are required for push notifications. Without them, the push notification system will be disabled and alerts will only be delivered via WebSocket.
+</Warning>
+
+**Database URL for Production Stores**:
+
+In production/staging environments, push subscriptions and AI feedback are stored in PostgreSQL. Configure the database URL:
+
+```properties
+## Database for persistent stores (production/staging)
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/mcp_server
+
+## Compliance storage backend
+COMPLIANCE_STORAGE_BACKEND=postgres
+COMPLIANCE_POSTGRES_URL=postgresql+asyncpg://user:password@localhost:5432/mcp_server
+```
+
+<Info>
+**Environment-Aware Store Selection**: The application automatically selects the appropriate storage backend based on environment:
+- **Development/Test**: In-memory stores (no persistence)
+- **Production/Staging**: PostgreSQL stores (requires `DATABASE_URL`)
+
+This enables fast local development while ensuring data durability in production.
+</Info>
+
 ### Configuration Files
 
 #### .env File Structure
@@ -734,6 +777,154 @@ async def validate_startup_config():
 #### Feature Flags
 
 Enable features based on environment:
+
+<ParamField path="FF_TEST_MODE" type="boolean" default="false">
+  **Testing Feature Flag Bypass**
+
+  When set to `true`, all feature flag checks via `require_feature()` and `@feature_gated` decorator are bypassed. This enables testing of feature-gated functionality without needing to enable each feature flag individually.
+
+  **Use Cases:**
+  - Integration tests that need all features available
+  - Development environments for rapid prototyping
+  - CI/CD pipelines testing disabled features
+
+  **Security Note:** Never enable in production. This flag is automatically set in the test environment via `conftest.py`.
+</ParamField>
+
+##### Using the `@feature_gated` Decorator
+
+The `@feature_gated` decorator provides a cleaner alternative to calling `require_feature()` manually:
+
+```python
+from mcp_server_langgraph.core.feature_flags import feature_flags, feature_gated
+
+# Instead of this pattern:
+def execute_task(self, task: str):
+    feature_flags.require_feature("enable_multi_agent_orchestration", "Multi-Agent Orchestration")
+    # ... implementation
+
+# Use the decorator:
+@feature_gated("enable_multi_agent_orchestration", "Multi-Agent Orchestration")
+def execute_task(self, task: str):
+    # ... implementation
+
+# Works with async functions too:
+@feature_gated("enable_programmatic_tools", "Programmatic Tools")
+async def call_tool(self, tool_name: str, args: dict) -> ToolResult:
+    # ... implementation
+```
+
+**Benefits:**
+- Cleaner, more declarative syntax
+- Automatic handling of sync/async functions
+- Consistent error messages
+- Respects `FF_TEST_MODE` for testing
+
+##### Test Mode Example
+
+```python
+# In tests/conftest.py - enables test mode for all tests
+import os
+os.environ["FF_TEST_MODE"] = "true"
+
+# Or for specific tests, temporarily disable test mode to verify feature gating:
+from mcp_server_langgraph.core.feature_flags import feature_flags
+
+def test_feature_flag_blocks_when_disabled():
+    # Store and modify
+    original_test_mode = feature_flags.is_test_mode
+    feature_flags.is_test_mode = False  # Disable bypass
+    feature_flags.enable_multi_agent_orchestration = False
+
+    try:
+        with pytest.raises(FeatureDisabledError):
+            orchestrator.execute()  # Should fail
+    finally:
+        # Restore
+        feature_flags.is_test_mode = original_test_mode
+```
+
+##### Multi-Framework Parity Feature Flags
+
+The following feature flags enable capabilities for parity with Claude Agent SDK, Google ADK, and OpenAI Agents SDK (see ADR-0077, ADR-0078, ADR-0079):
+
+<ParamField path="FF_ENABLE_COMPUTER_USE" type="boolean" default="false">
+  **Computer Use Tools**
+
+  Enables computer automation tools (mouse, keyboard, browser navigation). When enabled, agents can interact with browser-based UIs via simulated clicks, typing, and navigation.
+
+  **Tools enabled:**
+  - `mouse_click`, `mouse_move`, `mouse_drag`
+  - `keyboard_type`, `keyboard_press`
+  - `scroll`, `navigate`, `go_back`, `go_forward`
+  - `fill_form`, `select_option`
+  - `get_screen_info`, `get_element_info`
+
+  **Security Note:** Enable only in sandboxed environments. URL validation blocks localhost/internal IPs.
+</ParamField>
+
+<ParamField path="FF_ENABLE_LOOP_AGENT" type="boolean" default="false">
+  **LoopAgent Orchestration Pattern**
+
+  Enables the LoopAgent pattern from Google ADK for iterative task execution until a termination condition is met.
+
+  **Use Cases:**
+  - Iterative refinement workflows
+  - Retry-until-success patterns
+  - Progressive data processing
+
+  **Example:**
+  ```python
+  loop_agent = LoopAgent(
+      max_iterations=10,
+      termination_condition=lambda state: state.get("done", False)
+  )
+  ```
+</ParamField>
+
+<ParamField path="FF_ENABLE_SESSION_FORK" type="boolean" default="false">
+  **Session Fork Capability**
+
+  Enables conversation branching for Claude Agent SDK parity. Create multiple alternative conversation paths from a single point.
+
+  **Use Cases:**
+  - A/B testing different agent responses
+  - Parallel exploration of approaches
+  - Safe experimentation without affecting main session
+
+  **API:**
+  ```python
+  fork_manager = SessionForkManager(checkpointer)
+  fork_result = await fork_manager.fork_session(
+      session_id="main-session",
+      fork_point="checkpoint-123"
+  )
+  ```
+</ParamField>
+
+<ParamField path="FF_ENABLE_LLM_HOOKS" type="boolean" default="true">
+  **LLM-Level Callbacks**
+
+  Enables `BEFORE_MODEL` and `AFTER_MODEL` hooks for intercepting LLM requests/responses.
+
+  **Capabilities:**
+  - Modify prompts before LLM call
+  - Cache LLM responses
+  - Filter/redact LLM output
+  - Add disclaimers to responses
+</ParamField>
+
+<ParamField path="FF_ENABLE_SESSION_HOOKS" type="boolean" default="true">
+  **Session Lifecycle Hooks**
+
+  Enables `SESSION_START` and `SESSION_END` hooks for session lifecycle management.
+</ParamField>
+
+<ParamField path="FF_ENABLE_HANDOFF_PATTERN" type="boolean" default="true">
+  **Agent-to-Agent Handoff**
+
+  Enables explicit agent-to-agent handoffs from OpenAI Agents SDK pattern.
+</ParamField>
 
 ```python
 class FeatureFlags:

@@ -587,6 +587,74 @@ extraEnv:
 
     **Production**: Fix SSL certificate or add CA cert
   </Accordion>
+
+  <Accordion title="Healthcheck returns 404 Not Found">
+    **Root Cause**: When `KC_HTTP_RELATIVE_PATH=/authn` is configured, ALL endpoints
+    are prefixed with `/authn`, including health endpoints on the management port (9000).
+
+    **Problem**: Using `/health/ready` returns 404 when Keycloak is configured with a relative path.
+
+    **Solution**: Always use `/authn/health/ready` when `KC_HTTP_RELATIVE_PATH=/authn` is set.
+
+    ```bash
+    # WRONG (returns 404 when KC_HTTP_RELATIVE_PATH=/authn)
+    curl http://localhost:9000/health/ready
+
+    # CORRECT (works with KC_HTTP_RELATIVE_PATH=/authn)
+    curl http://localhost:9000/authn/health/ready
+
+    # Also applies to:
+    # - /authn/health/live
+    # - /authn/metrics
+    ```
+
+    **Docker healthcheck pattern** (bash TCP socket - no curl available in Keycloak 26+):
+    ```bash
+    # Phase 1: Health check on management port
+    { printf 'HEAD /authn/health/ready HTTP/1.0\r\nHost: localhost\r\n\r\n' >&0; \
+      grep -q 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000
+
+    # Phase 2: OIDC discovery validation on HTTP port
+    { printf 'GET /authn/realms/default/.well-known/openid-configuration HTTP/1.0\r\nHost: localhost\r\n\r\n' >&0; \
+      grep -q '"issuer"'; } 0<>/dev/tcp/localhost/8080
+    ```
+
+    <Warning>
+    **Important**: Keycloak 26+ images do NOT include `curl` or `wget` (security hardening).
+    Use the bash `/dev/tcp` socket pattern for healthchecks.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="OIDC discovery endpoint not ready">
+    Dependent services (OpenFGA, traefik-forward-auth) may fail to start if Keycloak's
+    OIDC discovery endpoint isn't ready.
+
+    **Symptoms**:
+    - OpenFGA fails with "failed to fetch OIDC configuration"
+    - traefik-forward-auth returns 500 errors
+    - Services timeout waiting for Keycloak
+
+    **Solution**: Use a two-phase healthcheck that validates OIDC discovery:
+
+    ```yaml
+    # docker-compose.yml
+    keycloak:
+      healthcheck:
+        test:
+          - CMD-SHELL
+          - |
+            # Phase 1: JVM ready
+            { printf 'HEAD /authn/health/ready HTTP/1.0\r\nHost: localhost\r\n\r\n' >&0; grep -q 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000 || exit 1
+            # Phase 2: OIDC discovery ready
+            { printf 'GET /authn/realms/default/.well-known/openid-configuration HTTP/1.0\r\nHost: localhost\r\n\r\n' >&0; grep -q '"issuer"'; } 0<>/dev/tcp/localhost/8080 || exit 1
+        interval: 5s
+        timeout: 10s
+        retries: 30
+        start_period: 60s
+    ```
+
+    This ensures dependent services only start when OIDC is fully functional.
+  </Accordion>
 </AccordionGroup>
 
 ### Next Steps

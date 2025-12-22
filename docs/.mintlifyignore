@@ -2,7 +2,9 @@
 # Only ignore files/dirs within the docs/ directory that shouldn't be scanned
 
 # Internal documentation (not for public Mintlify site)
+# Note: Internal docs belong in docs-internal/, NOT docs/internal/
 ../docs-internal/
+internal/
 
 # Archive directories
 ../archive/

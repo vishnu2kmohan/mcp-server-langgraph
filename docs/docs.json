@@ -333,7 +333,9 @@
             "group": "Quick Start",
             "pages": [
               "guides/presets",
-              "guides/agent-architecture"
+              "guides/agent-architecture",
+              "guides/agent-hitl-approval",
+              "guides/multi-agent-orchestrators"
             ]
           },
           {
@@ -359,6 +361,7 @@
             "pages": [
               "guides/schedulers",
               "guides/resilience-patterns",
+              "guides/visual-verification",
               "guides/versioning-strategy"
             ]
           },
@@ -408,7 +411,9 @@
             "group": "Observability",
             "pages": [
               "guides/observability",
-              "guides/log-queries"
+              "guides/log-queries",
+              "guides/alert-management",
+              "guides/push-notifications"
             ]
           }
         ]
@@ -546,7 +551,8 @@
               "architecture/adr-0024-agentic-loop-implementation",
               "architecture/adr-0025-anthropic-best-practices-enhancements",
               "architecture/adr-0026-lazy-observability-initialization",
-              "architecture/adr-0029-custom-exception-hierarchy"
+              "architecture/adr-0029-custom-exception-hierarchy",
+              "architecture/adr-0078-multi-agent-orchestrator-patterns"
             ]
           },
           {
