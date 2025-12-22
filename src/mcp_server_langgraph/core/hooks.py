@@ -46,10 +46,40 @@ if TYPE_CHECKING:
 
 
 class HookEvent(Enum):
-    """Hook event types matching Claude Agent SDK."""
+    """Hook event types matching Claude Agent SDK.
 
+    Tool-level hooks:
+        PRE_TOOL_USE: Before tool execution
+        POST_TOOL_USE: After tool execution
+
+    LLM-level hooks (ADR-0080):
+        BEFORE_MODEL: Before LLM call (can modify prompt, cache, skip)
+        AFTER_MODEL: After LLM response (can filter output, add disclaimers)
+
+    Session-level hooks:
+        SESSION_START: Session begins
+        SESSION_END: Session ends
+
+    Agent-level hooks:
+        USER_PROMPT_SUBMIT: When user submits prompt
+        STOP: When agent stops
+        SUBAGENT_STOP: When a subagent stops
+        PRE_COMPACT: Before message compaction
+    """
+
+    # Tool-level hooks
     PRE_TOOL_USE = "PreToolUse"
     POST_TOOL_USE = "PostToolUse"
+
+    # LLM-level hooks (ADR-0080)
+    BEFORE_MODEL = "BeforeModel"
+    AFTER_MODEL = "AfterModel"
+
+    # Session-level hooks (ADR-0080)
+    SESSION_START = "SessionStart"
+    SESSION_END = "SessionEnd"
+
+    # Agent-level hooks
     USER_PROMPT_SUBMIT = "UserPromptSubmit"
     STOP = "Stop"
     SUBAGENT_STOP = "SubagentStop"
@@ -76,21 +106,30 @@ class HookResult:
     Determines whether to proceed with the operation and any modifications.
 
     Attributes:
-        behavior: "allow" to proceed, "deny" to block
-        message: Reason for deny (displayed to user)
-        updated_input: Modified input args (for PreToolUse)
+        behavior: "allow" to proceed, "deny" to block, "skip" to bypass operation
+        message: Reason for deny/skip (displayed to user)
+        updated_input: Modified input args (for PreToolUse/BeforeModel)
         system_message: Message to add to transcript
+        early_return: Cached/predefined response to return (skips LLM call)
+        modified_output: Transformed output content (for AfterModel)
     """
 
-    behavior: Literal["allow", "deny"] = "allow"
+    behavior: Literal["allow", "deny", "skip"] = "allow"
     message: str | None = None
     updated_input: dict[str, Any] | None = None
     system_message: str | None = None
+    early_return: Any | None = None
+    modified_output: str | None = None
 
     @property
     def should_proceed(self) -> bool:
         """Whether the operation should proceed."""
         return self.behavior == "allow"
+
+    @property
+    def should_skip(self) -> bool:
+        """Whether to skip the operation and use early_return."""
+        return self.behavior == "skip" and self.early_return is not None
 
 
 @dataclass
@@ -142,8 +181,100 @@ class StopInput:
     result: str | None = None
 
 
+@dataclass
+class TokenUsage:
+    """Token usage information for LLM calls.
+
+    Tracks prompt and completion token counts for cost tracking and monitoring.
+    """
+
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+
+
+@dataclass
+class BeforeModelInput:
+    """Input data for BeforeModel hooks (ADR-0080).
+
+    Provides LLM request details before execution. Hooks can:
+    - Modify the request (prompt injection, context addition)
+    - Return cached response (skip LLM call entirely)
+    - Block forbidden content before token spend
+    """
+
+    messages: list[dict[str, Any]]
+    model: str
+    temperature: float | None = None
+    max_tokens: int | None = None
+    tools: list[dict[str, Any]] | None = None
+    config: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class AfterModelInput:
+    """Input data for AfterModel hooks (ADR-0080).
+
+    Provides LLM response details after execution. Hooks can:
+    - Filter or redact output content
+    - Add disclaimers or formatting
+    - Transform response structure
+    """
+
+    content: str
+    tool_calls: list[dict[str, Any]] | None = None
+    usage: TokenUsage | None = None
+    model: str = ""
+    finish_reason: str = ""
+    latency_ms: float = 0.0
+
+
+@dataclass
+class SessionStartInput:
+    """Input data for SessionStart hooks (ADR-0080).
+
+    Provides session initialization context. Hooks can:
+    - Validate session parameters
+    - Initialize session-specific resources
+    - Set up monitoring/logging
+    """
+
+    session_id: str
+    user_id: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    timestamp: datetime | None = None
+
+
+@dataclass
+class SessionEndInput:
+    """Input data for SessionEnd hooks (ADR-0080).
+
+    Provides session completion context. Hooks can:
+    - Clean up session resources
+    - Record session metrics
+    - Persist session state
+    """
+
+    session_id: str
+    user_id: str | None = None
+    duration_ms: float = 0.0
+    message_count: int = 0
+    token_usage: TokenUsage | None = None
+    reason: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
 # Type alias for hook input types
-HookInput: TypeAlias = PreToolUseInput | PostToolUseInput | UserPromptSubmitInput | StopInput
+HookInput: TypeAlias = (
+    PreToolUseInput
+    | PostToolUseInput
+    | UserPromptSubmitInput
+    | StopInput
+    | BeforeModelInput
+    | AfterModelInput
+    | SessionStartInput
+    | SessionEndInput
+)
 
 
 class HookCallbackProtocol(Protocol):
@@ -206,6 +337,8 @@ class HookMatcher:
 
 
 __all__ = [
+    "AfterModelInput",
+    "BeforeModelInput",
     "HookCallback",
     "HookCallbackProtocol",
     "HookContext",
@@ -215,6 +348,9 @@ __all__ = [
     "HookResult",
     "PostToolUseInput",
     "PreToolUseInput",
+    "SessionEndInput",
+    "SessionStartInput",
     "StopInput",
+    "TokenUsage",
     "UserPromptSubmitInput",
 ]

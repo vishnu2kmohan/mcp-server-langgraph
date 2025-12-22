@@ -664,3 +664,137 @@ class NotImplementedError(InternalServerError):
     default_message = "Feature not implemented"
     default_error_code = "server.not_implemented"
     default_status_code = 501
+
+
+# ==============================================================================
+# Feature Flag Errors (503)
+# ==============================================================================
+
+
+class FeatureDisabledError(MCPServerException):
+    """Feature is disabled via feature flag"""
+
+    default_message = "Feature is disabled"
+    default_error_code = "feature.disabled"
+    default_status_code = 503
+
+    def __init__(
+        self,
+        feature_name: str,
+        flag_name: str,
+        message: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize with feature and flag details.
+
+        Args:
+            feature_name: Human-readable feature name
+            flag_name: Feature flag attribute name
+            message: Optional custom message
+            **kwargs: Additional error details
+        """
+        default_msg = f"{feature_name} is disabled. Enable via feature flag: {flag_name}"
+        super().__init__(
+            message=message or default_msg,
+            metadata={"feature": feature_name, "flag": flag_name, **kwargs},
+        )
+
+
+# ==============================================================================
+# Budget Errors (403 - Forbidden)
+# ==============================================================================
+
+
+class BudgetExceededError(MCPServerException):
+    """Budget limit has been exceeded.
+
+    Used when session or orchestration cost exceeds configured limits.
+    Prevents further execution to control costs.
+    """
+
+    default_message = "Budget exceeded"
+    default_error_code = "budget.exceeded"
+    default_status_code = 403
+    default_category = ErrorCategory.CLIENT_ERROR
+    default_retry_policy = RetryPolicy.NEVER
+
+    def _generate_user_message(self) -> str:
+        limit = self.metadata.get("limit", "unknown")
+        current = self.metadata.get("current", "unknown")
+        return f"Budget limit of ${limit} exceeded (current: ${current}). Please wait for the next billing cycle or increase your budget."
+
+
+# ==============================================================================
+# Session Errors (404 - Not Found)
+# ==============================================================================
+
+
+class SessionNotFoundError(MCPServerException):
+    """Session does not exist or has expired.
+
+    Used when attempting to access, fork, or modify a session that
+    cannot be found in the session store.
+    """
+
+    default_message = "Session not found"
+    default_error_code = "session.not_found"
+    default_status_code = 404
+    default_category = ErrorCategory.CLIENT_ERROR
+    default_retry_policy = RetryPolicy.NEVER
+
+    def __init__(
+        self,
+        session_id: str,
+        message: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize with session details.
+
+        Args:
+            session_id: ID of the session that was not found
+            message: Optional custom message
+            **kwargs: Additional error details
+        """
+        default_msg = f"Session '{session_id}' not found or has expired"
+        super().__init__(
+            message=message or default_msg,
+            metadata={"session_id": session_id, **kwargs},
+        )
+
+
+class CheckpointNotFoundError(MCPServerException):
+    """Checkpoint does not exist within a session.
+
+    Used when attempting to fork or rewind to a checkpoint that
+    cannot be found in the session history.
+    """
+
+    default_message = "Checkpoint not found"
+    default_error_code = "checkpoint.not_found"
+    default_status_code = 404
+    default_category = ErrorCategory.CLIENT_ERROR
+    default_retry_policy = RetryPolicy.NEVER
+
+    def __init__(
+        self,
+        checkpoint_id: str,
+        session_id: str | None = None,
+        message: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize with checkpoint details.
+
+        Args:
+            checkpoint_id: ID of the checkpoint that was not found
+            session_id: Optional session ID for context
+            message: Optional custom message
+            **kwargs: Additional error details
+        """
+        if session_id:
+            default_msg = f"Checkpoint '{checkpoint_id}' not found in session '{session_id}'"
+        else:
+            default_msg = f"Checkpoint '{checkpoint_id}' not found"
+        super().__init__(
+            message=message or default_msg,
+            metadata={"checkpoint_id": checkpoint_id, "session_id": session_id, **kwargs},
+        )

@@ -609,6 +609,112 @@ class DynamicContextLoader:
 
             return loaded
 
+    async def load_batch_deduplicated(
+        self,
+        references: list[ContextReference],
+        max_tokens: int = 4000,
+        dedup_threshold: float | None = None,
+    ) -> list[LoadedContext]:
+        """
+        Load multiple contexts with semantic deduplication.
+
+        Implements Phase 3.4 semantic deduplication to avoid loading
+        contexts that are semantically too similar to already-loaded ones.
+
+        Args:
+            references: List of references to load (should be pre-sorted by relevance)
+            max_tokens: Maximum total tokens
+            dedup_threshold: Similarity threshold for deduplication (uses feature flag if None)
+
+        Returns:
+            List of loaded contexts within token budget, with duplicates removed
+        """
+        from mcp_server_langgraph.core.context_ranker import is_semantically_duplicate
+        from mcp_server_langgraph.core.feature_flags import feature_flags
+
+        with tracer.start_as_current_span("context.load_batch_deduplicated") as span:
+            loaded = []
+            seen_embeddings: list[list[float]] = []
+            total_tokens = 0
+            skipped_duplicates = 0
+
+            # Use feature flag threshold if not specified
+            threshold = dedup_threshold or feature_flags.context_deduplication_threshold
+
+            for ref in references:
+                # Get the embedding for this context from Qdrant
+                try:
+                    results = await asyncio.to_thread(
+                        self.client.retrieve,
+                        collection_name=self.collection_name,
+                        ids=[ref.ref_id],
+                        with_vectors=True,
+                    )
+                    if not results:
+                        continue
+
+                    # Extract embedding from result
+                    result = results[0]
+                    raw_vector = result.vector
+                    # Handle Qdrant's VectorStructOutput union type:
+                    # - list[float] for simple dense vectors (our case)
+                    # - dict[str, ...] for named vectors
+                    # - list[list[float]] for multi-vectors
+                    embedding: list[float] = []
+                    if raw_vector is not None:
+                        if isinstance(raw_vector, list) and raw_vector:
+                            # Check if it's list[float] (dense) or list[list[float]] (multi)
+                            if isinstance(raw_vector[0], float):
+                                embedding = raw_vector  # type: ignore[assignment]
+                            # Skip dict and list[list] as we only use dense vectors
+
+                    # Check for semantic duplicates
+                    if embedding and is_semantically_duplicate(
+                        embedding, seen_embeddings, threshold=threshold
+                    ):
+                        skipped_duplicates += 1
+                        logger.debug(
+                            f"Skipping duplicate context: {ref.ref_id}",
+                            extra={"threshold": threshold},
+                        )
+                        continue
+
+                    # Load the context
+                    context = await self.load_context(ref)
+
+                    if total_tokens + context.token_count <= max_tokens:
+                        loaded.append(context)
+                        total_tokens += context.token_count
+                        if embedding:
+                            seen_embeddings.append(embedding)
+                    else:
+                        logger.info(
+                            f"Token limit reached, loaded {len(loaded)}/{len(references)} contexts",
+                            extra={"total_tokens": total_tokens, "limit": max_tokens},
+                        )
+                        break
+
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to process context {ref.ref_id} for deduplication: {e}",
+                    )
+                    continue
+
+            span.set_attribute("contexts_loaded", len(loaded))
+            span.set_attribute("total_tokens", total_tokens)
+            span.set_attribute("duplicates_skipped", skipped_duplicates)
+
+            logger.info(
+                "Loaded deduplicated contexts",
+                extra={
+                    "loaded": len(loaded),
+                    "skipped_duplicates": skipped_duplicates,
+                    "total_tokens": total_tokens,
+                },
+            )
+
+            return loaded
+
     def to_messages(self, loaded_contexts: list[LoadedContext]) -> list[BaseMessage]:
         """
         Convert loaded contexts to LangChain messages.

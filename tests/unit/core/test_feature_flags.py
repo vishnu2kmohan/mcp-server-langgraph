@@ -496,6 +496,57 @@ class TestUIFeaturesForRole:
 
 
 @pytest.mark.xdist_group(name="feature_flags")
+class TestCanvasHybridShellFeatureFlags:
+    """Test canvas hybrid shell feature flags for /studio/v2 UI."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_canvas_hybrid_shell_disabled_by_default(self):
+        """Test that canvas hybrid shell is disabled by default (gradual rollout)."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.canvas_hybrid_shell is False
+
+    @pytest.mark.unit
+    def test_canvas_hybrid_shell_can_be_enabled(self):
+        """Test that canvas hybrid shell can be enabled via constructor."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(canvas_hybrid_shell=True)
+        assert flags.canvas_hybrid_shell is True
+
+    @pytest.mark.unit
+    def test_canvas_hybrid_shell_included_in_ui_features(self):
+        """Test that canvas_hybrid_shell is exposed in get_ui_features_for_role."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(canvas_hybrid_shell=True)
+        features = flags.get_ui_features_for_role("admin")
+
+        assert "canvas_hybrid_shell" in features
+        assert features["canvas_hybrid_shell"] is True
+
+    @pytest.mark.unit
+    def test_canvas_hybrid_shell_available_for_all_roles(self):
+        """Test that canvas_hybrid_shell is available regardless of role."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(canvas_hybrid_shell=True)
+
+        admin_features = flags.get_ui_features_for_role("admin")
+        user_features = flags.get_ui_features_for_role("user")
+        viewer_features = flags.get_ui_features_for_role("viewer")
+
+        assert admin_features["canvas_hybrid_shell"] is True
+        assert user_features["canvas_hybrid_shell"] is True
+        assert viewer_features["canvas_hybrid_shell"] is True
+
+
+@pytest.mark.xdist_group(name="feature_flags")
 class TestUXEnhancementFeatureFlags:
     """Test UX enhancement feature flags (Priority 1-3 from competitive analysis)."""
 
@@ -617,3 +668,497 @@ class TestUXEnhancementFeatureFlags:
         assert "keyboard_shortcuts" in features
         assert "theme_customization" in features
         assert "confirmation_dialogs" in features
+
+
+@pytest.mark.xdist_group(name="feature_flags")
+class TestAIUXFeatureFlags:
+    """Test AI UX feature flags for Phase 6 AI-Native Integration."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_enable_ai_disclosure_default_true(self):
+        """Test that AI disclosure analysis is enabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_ai_disclosure is True
+
+    @pytest.mark.unit
+    def test_enable_ai_empty_states_default_true(self):
+        """Test that AI empty states is enabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_ai_empty_states is True
+
+    @pytest.mark.unit
+    def test_enable_ai_nudges_default_true(self):
+        """Test that AI nudges is enabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_ai_nudges is True
+
+    @pytest.mark.unit
+    def test_enable_ai_error_recovery_default_true(self):
+        """Test that AI error recovery is enabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_ai_error_recovery is True
+
+    @pytest.mark.unit
+    def test_enable_ai_onboarding_default_true(self):
+        """Test that AI onboarding is enabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_ai_onboarding is True
+
+    @pytest.mark.unit
+    def test_enable_ai_metrics_insights_default_true(self):
+        """Test that AI metrics insights is enabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_ai_metrics_insights is True
+
+    @pytest.mark.unit
+    def test_enable_ai_persona_analysis_default_true(self):
+        """Test that AI persona analysis is enabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_ai_persona_analysis is True
+
+    @pytest.mark.unit
+    def test_ai_ux_flags_configurable(self):
+        """Test that AI UX features are configurable."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(
+            enable_ai_disclosure=False,
+            enable_ai_empty_states=False,
+            enable_ai_nudges=False,
+            enable_ai_error_recovery=False,
+            enable_ai_onboarding=False,
+            enable_ai_metrics_insights=False,
+            enable_ai_persona_analysis=False,
+        )
+
+        assert flags.enable_ai_disclosure is False
+        assert flags.enable_ai_empty_states is False
+        assert flags.enable_ai_nudges is False
+        assert flags.enable_ai_error_recovery is False
+        assert flags.enable_ai_onboarding is False
+        assert flags.enable_ai_metrics_insights is False
+        assert flags.enable_ai_persona_analysis is False
+
+    @pytest.mark.unit
+    def test_get_ui_features_includes_ai_ux_flags(self):
+        """Test that UI features include AI UX flags."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        features = flags.get_ui_features_for_role("admin")
+
+        # Verify all AI UX flags are included
+        assert "ai_disclosure" in features
+        assert "ai_empty_states" in features
+        assert "ai_nudges" in features
+        assert "ai_error_recovery" in features
+        assert "ai_onboarding" in features
+        assert "ai_metrics_insights" in features
+        assert "ai_persona_analysis" in features
+
+    @pytest.mark.unit
+    def test_ai_ux_flags_available_for_all_roles(self):
+        """Test that AI UX flags are available for all roles."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        admin_features = flags.get_ui_features_for_role("admin")
+        user_features = flags.get_ui_features_for_role("user")
+
+        # AI features should be available to all roles
+        assert admin_features["ai_disclosure"] is True
+        assert user_features["ai_disclosure"] is True
+        assert admin_features["ai_nudges"] is True
+        assert user_features["ai_nudges"] is True
+
+
+@pytest.mark.xdist_group(name="feature_flags_decorator")
+class TestFeatureGatedDecorator:
+    """Test the @feature_gated decorator for easier testing."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_feature_gated_decorator_exists(self):
+        """Test that the feature_gated decorator is importable."""
+        from mcp_server_langgraph.core.feature_flags import feature_gated
+
+        assert feature_gated is not None
+        assert callable(feature_gated)
+
+    @pytest.mark.unit
+    def test_feature_gated_allows_enabled_feature(self):
+        """Test that decorator allows execution when feature is enabled."""
+        from mcp_server_langgraph.core.feature_flags import feature_gated
+
+        @feature_gated("enable_streaming_responses", "Streaming Responses")
+        def test_func():
+            return "success"
+
+        # enable_streaming_responses is True by default
+        result = test_func()
+        assert result == "success"
+
+    @pytest.mark.unit
+    def test_feature_gated_blocks_disabled_feature(self):
+        """Test that decorator raises FeatureDisabledError when feature is disabled."""
+        from mcp_server_langgraph.core.exceptions import FeatureDisabledError
+        from mcp_server_langgraph.core.feature_flags import feature_gated
+
+        @feature_gated("enable_skills_system", "Skills System")
+        def test_func():
+            return "success"
+
+        # enable_skills_system is False by default
+        with pytest.raises(FeatureDisabledError) as exc_info:
+            test_func()
+
+        assert "Skills System" in str(exc_info.value)
+
+    @pytest.mark.unit
+    def test_feature_gated_preserves_function_signature(self):
+        """Test that decorator preserves the original function signature."""
+        from mcp_server_langgraph.core.feature_flags import feature_gated
+
+        @feature_gated("enable_streaming_responses", "Streaming Responses")
+        def greet(name: str, greeting: str = "Hello") -> str:
+            """Greet someone."""
+            return f"{greeting}, {name}!"
+
+        # Function name and docstring should be preserved
+        assert greet.__name__ == "greet"
+        assert greet.__doc__ == "Greet someone."
+
+        # Function should work with arguments
+        result = greet("World")
+        assert result == "Hello, World!"
+
+        result = greet("Alice", greeting="Hi")
+        assert result == "Hi, Alice!"
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_feature_gated_works_with_async_functions(self):
+        """Test that decorator works with async functions."""
+        from mcp_server_langgraph.core.feature_flags import feature_gated
+
+        @feature_gated("enable_streaming_responses", "Streaming Responses")
+        async def async_func():
+            return "async success"
+
+        result = await async_func()
+        assert result == "async success"
+
+    @pytest.mark.unit
+    def test_feature_gated_works_with_class_methods(self):
+        """Test that decorator works with class methods."""
+        from mcp_server_langgraph.core.feature_flags import feature_gated
+
+        class TestClass:
+            @feature_gated("enable_streaming_responses", "Streaming Responses")
+            def method(self, value: int) -> int:
+                return value * 2
+
+        obj = TestClass()
+        result = obj.method(21)
+        assert result == 42
+
+    @pytest.mark.unit
+    def test_feature_gated_is_mockable(self, monkeypatch):
+        """Test that decorated functions can be easily mocked for testing."""
+        import sys
+
+        from mcp_server_langgraph.core.feature_flags import feature_gated
+
+        @feature_gated("enable_skills_system", "Skills System")
+        def protected_func():
+            return "protected result"
+
+        # Use shared MockFeatureFlags with the feature enabled
+        from tests.fixtures.feature_flags_fixtures import MockFeatureFlags
+
+        # Patch the feature_flags
+        ff_module = sys.modules["mcp_server_langgraph.core.feature_flags"]
+        monkeypatch.setattr(ff_module, "feature_flags", MockFeatureFlags(enable_skills_system=True))
+
+        # Now the function should work
+        result = protected_func()
+        assert result == "protected result"
+
+
+@pytest.mark.xdist_group(name="feature_flags_test_mode")
+class TestFeatureFlagsTestMode:
+    """Test the test-mode override via environment variable."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_test_mode_bypasses_feature_check(self, monkeypatch):
+        """Test that FF_TEST_MODE=true bypasses all feature flag checks."""
+        # Set test mode before importing
+        monkeypatch.setenv("FF_TEST_MODE", "true")
+
+        # Re-import to pick up the env var
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        # Even disabled features should pass in test mode
+        # This should NOT raise FeatureDisabledError
+        flags.require_feature("enable_skills_system", "Skills System")
+
+    @pytest.mark.unit
+    def test_test_mode_is_case_insensitive(self, monkeypatch):
+        """Test that FF_TEST_MODE accepts various true values."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        for value in ["true", "TRUE", "True", "1", "yes", "YES"]:
+            monkeypatch.setenv("FF_TEST_MODE", value)
+            flags = FeatureFlags()
+
+            # Should not raise
+            flags.require_feature("enable_skills_system", "Skills System")
+
+    @pytest.mark.unit
+    def test_test_mode_false_enforces_flags(self, monkeypatch):
+        """Test that FF_TEST_MODE=false still enforces feature flags."""
+        from mcp_server_langgraph.core.exceptions import FeatureDisabledError
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        monkeypatch.setenv("FF_TEST_MODE", "false")
+        flags = FeatureFlags()
+
+        with pytest.raises(FeatureDisabledError):
+            flags.require_feature("enable_skills_system", "Skills System")
+
+    @pytest.mark.unit
+    def test_test_mode_not_set_enforces_flags(self, monkeypatch):
+        """Test that without FF_TEST_MODE, feature flags are enforced."""
+        from mcp_server_langgraph.core.exceptions import FeatureDisabledError
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        monkeypatch.delenv("FF_TEST_MODE", raising=False)
+        flags = FeatureFlags()
+
+        with pytest.raises(FeatureDisabledError):
+            flags.require_feature("enable_skills_system", "Skills System")
+
+    @pytest.mark.unit
+    def test_is_test_mode_property(self):
+        """Test that FeatureFlags has an is_test_mode property."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        # Should have the property
+        assert hasattr(flags, "is_test_mode")
+
+    @pytest.mark.unit
+    def test_is_test_mode_returns_correct_value(self, monkeypatch):
+        """Test that is_test_mode property returns correct value."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        # Test mode off
+        monkeypatch.delenv("FF_TEST_MODE", raising=False)
+        flags = FeatureFlags()
+        assert flags.is_test_mode is False
+
+        # Test mode on
+        monkeypatch.setenv("FF_TEST_MODE", "true")
+        flags = FeatureFlags()
+        assert flags.is_test_mode is True
+
+
+@pytest.mark.xdist_group(name="feature_flags_hitl")
+class TestHITLFeatureFlags:
+    """Test Human-in-the-Loop (HITL) feature flags for confidence-based approval."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_enable_agent_hitl_default_true(self):
+        """Test that agent HITL is enabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_agent_hitl is True
+
+    @pytest.mark.unit
+    def test_enable_agent_hitl_configurable(self):
+        """Test that agent HITL can be disabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_agent_hitl=False)
+        assert flags.enable_agent_hitl is False
+
+    @pytest.mark.unit
+    def test_agent_hitl_confidence_threshold_default(self):
+        """Test that HITL confidence threshold defaults to 0.7."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.agent_hitl_confidence_threshold == 0.7
+
+    @pytest.mark.unit
+    def test_agent_hitl_confidence_threshold_configurable(self):
+        """Test that HITL confidence threshold is configurable."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(agent_hitl_confidence_threshold=0.8)
+        assert flags.agent_hitl_confidence_threshold == 0.8
+
+    @pytest.mark.unit
+    def test_agent_hitl_confidence_threshold_validation(self):
+        """Test that HITL confidence threshold must be 0-1."""
+        from pydantic import ValidationError
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        with pytest.raises(ValidationError):
+            FeatureFlags(agent_hitl_confidence_threshold=1.5)
+
+        with pytest.raises(ValidationError):
+            FeatureFlags(agent_hitl_confidence_threshold=-0.1)
+
+    @pytest.mark.unit
+    def test_agent_hitl_auto_approve_threshold_default(self):
+        """Test that auto-approve threshold defaults to 0.9."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.agent_hitl_auto_approve_threshold == 0.9
+
+    @pytest.mark.unit
+    def test_agent_hitl_auto_approve_threshold_configurable(self):
+        """Test that auto-approve threshold is configurable."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(agent_hitl_auto_approve_threshold=0.95)
+        assert flags.agent_hitl_auto_approve_threshold == 0.95
+
+    @pytest.mark.unit
+    def test_agent_hitl_auto_approve_threshold_validation(self):
+        """Test that auto-approve threshold must be 0-1."""
+        from pydantic import ValidationError
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        with pytest.raises(ValidationError):
+            FeatureFlags(agent_hitl_auto_approve_threshold=1.2)
+
+        with pytest.raises(ValidationError):
+            FeatureFlags(agent_hitl_auto_approve_threshold=-0.5)
+
+    @pytest.mark.unit
+    def test_agent_hitl_approval_timeout_seconds_default(self):
+        """Test that approval timeout defaults to 3600 seconds (1 hour)."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.agent_hitl_approval_timeout_seconds == 3600
+
+    @pytest.mark.unit
+    def test_agent_hitl_approval_timeout_seconds_configurable(self):
+        """Test that approval timeout is configurable."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(agent_hitl_approval_timeout_seconds=7200)
+        assert flags.agent_hitl_approval_timeout_seconds == 7200
+
+    @pytest.mark.unit
+    def test_agent_hitl_approval_timeout_validation(self):
+        """Test that approval timeout has valid range (60s - 86400s)."""
+        from pydantic import ValidationError
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        # Too low (less than 60 seconds)
+        with pytest.raises(ValidationError):
+            FeatureFlags(agent_hitl_approval_timeout_seconds=30)
+
+        # Too high (more than 24 hours)
+        with pytest.raises(ValidationError):
+            FeatureFlags(agent_hitl_approval_timeout_seconds=100000)
+
+    @pytest.mark.unit
+    def test_enable_agent_hitl_push_notifications_default_true(self):
+        """Test that HITL push notifications are enabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_agent_hitl_push_notifications is True
+
+    @pytest.mark.unit
+    def test_enable_agent_hitl_push_notifications_configurable(self):
+        """Test that HITL push notifications can be disabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_agent_hitl_push_notifications=False)
+        assert flags.enable_agent_hitl_push_notifications is False
+
+    @pytest.mark.unit
+    def test_enable_agent_hitl_websocket_default_true(self):
+        """Test that HITL WebSocket is enabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_agent_hitl_websocket is True
+
+    @pytest.mark.unit
+    def test_enable_agent_hitl_websocket_configurable(self):
+        """Test that HITL WebSocket can be disabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_agent_hitl_websocket=False)
+        assert flags.enable_agent_hitl_websocket is False
+
+    @pytest.mark.unit
+    def test_get_ui_features_includes_hitl_flags(self):
+        """Test that UI features include HITL flags."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        features = flags.get_ui_features_for_role("admin")
+
+        assert "agent_hitl" in features
+        assert features["agent_hitl"] is True
+
+    @pytest.mark.unit
+    def test_get_ui_features_hitl_available_for_all_roles(self):
+        """Test that HITL features are available to all roles."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        admin_features = flags.get_ui_features_for_role("admin")
+        user_features = flags.get_ui_features_for_role("user")
+        viewer_features = flags.get_ui_features_for_role("viewer")
+
+        assert admin_features["agent_hitl"] is True
+        assert user_features["agent_hitl"] is True
+        assert viewer_features["agent_hitl"] is True

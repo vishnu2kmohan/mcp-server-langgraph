@@ -15,9 +15,8 @@ from __future__ import annotations
 import asyncio
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from enum import Enum
-from typing import ClassVar
 
 
 class FileOperation(Enum):
@@ -43,7 +42,7 @@ class FileChangeRecord:
     file_path: str
     operation: FileOperation
     content_before: bytes | None
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass
@@ -60,7 +59,7 @@ class Checkpoint:
 
     checkpoint_id: str
     message_id: str
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     changes: list[FileChangeRecord] = field(default_factory=list)
 
 
@@ -203,7 +202,7 @@ class FileJournal:
 
 # Singleton instance
 _file_journal: FileJournal | None = None
-_singleton_lock: ClassVar[asyncio.Lock] = asyncio.Lock()
+_singleton_lock: asyncio.Lock = asyncio.Lock()
 
 
 def get_file_journal() -> FileJournal:

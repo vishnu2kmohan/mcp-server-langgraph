@@ -40,6 +40,7 @@ _TOPOLOGY_FIELDS: frozenset[str] = frozenset(
     {
         "enable_context_compaction",
         "enable_verification",
+        "enable_visual_verification",
         "enable_dynamic_context_loading",
         "enable_checkpointing",
     }
@@ -70,6 +71,13 @@ class AgentConfig:
     verification_quality_threshold: float = 0.7
     max_refinement_attempts: int = 3
 
+    # Visual Verification (screenshot-based UI verification)
+    enable_visual_verification: bool = False
+    visual_verification_text_weight: float = 0.6
+    visual_verification_visual_weight: float = 0.4
+    visual_verification_max_urls: int = 3  # Max URLs to verify per response
+    visual_verification_url_priority: str = "last"  # "first", "last", or "all"
+
     # Dynamic Context Loading
     enable_dynamic_context_loading: bool = False
 
@@ -79,6 +87,9 @@ class AgentConfig:
 
     # Checkpointing
     enable_checkpointing: bool = True
+
+    # Interrupt Checking (Claude Agent SDK pattern)
+    enable_interrupt_checking: bool = True
 
     @property
     def graph_version(self) -> str:
@@ -96,6 +107,7 @@ class AgentConfig:
         topology_values = (
             self.enable_context_compaction,
             self.enable_verification,
+            self.enable_visual_verification,
             self.enable_dynamic_context_loading,
             self.enable_checkpointing,
         )
@@ -134,6 +146,12 @@ class AgentConfig:
             enable_verification=getattr(settings, "enable_verification", True),
             verification_quality_threshold=getattr(settings, "verification_quality_threshold", 0.7),
             max_refinement_attempts=getattr(settings, "max_refinement_attempts", 3),
+            # Visual Verification
+            enable_visual_verification=getattr(settings, "enable_visual_verification", False),
+            visual_verification_text_weight=getattr(settings, "visual_verification_text_weight", 0.6),
+            visual_verification_visual_weight=getattr(settings, "visual_verification_visual_weight", 0.4),
+            visual_verification_max_urls=getattr(settings, "visual_verification_max_urls", 3),
+            visual_verification_url_priority=getattr(settings, "visual_verification_url_priority", "last"),
             # Dynamic Context
             enable_dynamic_context_loading=getattr(settings, "enable_dynamic_context_loading", False),
             # Parallel Execution
@@ -141,6 +159,8 @@ class AgentConfig:
             max_parallel_tools=getattr(settings, "max_parallel_tools", 5),
             # Checkpointing
             enable_checkpointing=getattr(settings, "enable_checkpointing", True),
+            # Interrupt Checking
+            enable_interrupt_checking=getattr(settings, "enable_interrupt_checking", True),
         )
 
 

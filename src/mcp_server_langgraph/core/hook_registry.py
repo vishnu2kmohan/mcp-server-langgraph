@@ -29,13 +29,17 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.core.hooks import (
+    AfterModelInput,
+    BeforeModelInput,
     HookContext,
     HookEvent,
     HookMatcher,
     HookResult,
     PostToolUseInput,
     PreToolUseInput,
+    TokenUsage,
 )
 
 if TYPE_CHECKING:
@@ -126,19 +130,26 @@ class HookDispatcher:
         self,
         event: HookEvent,
         input_data: PreToolUseInput | PostToolUseInput | Any,
-        tool_use_id: str | None,
-        context: HookContext,
+        tool_use_id: str | None = None,
+        context: HookContext | None = None,
+        *,
+        tool_name: str | None = None,
     ) -> HookResult:
         """Dispatch hooks for an event.
 
-        Executes all matching hooks in order, stopping on first deny.
+        Executes all matching hooks in order, stopping on first deny or skip.
         Passes updated input from one hook to the next.
+
+        Feature flag enforcement:
+        - When FF_ENABLE_SDK_HOOKS=false, hooks are skipped (returns allow)
+        - When FF_ENABLE_SDK_HOOKS=true (default), hooks execute normally
 
         Args:
             event: The hook event type
             input_data: The input data for the hooks
             tool_use_id: Optional tool use ID
             context: The hook context
+            tool_name: Optional tool name for matching (keyword-only)
 
         Returns:
             Combined HookResult from all executed hooks
@@ -146,19 +157,23 @@ class HookDispatcher:
         Raises:
             asyncio.TimeoutError: If a hook exceeds its timeout
         """
+        # Feature flag enforcement: skip hooks when disabled
+        if not feature_flags.enable_sdk_hooks:
+            return HookResult()
+
         matchers = self.registry.get_matchers(event)
 
-        # Determine tool name for matching
-        tool_name: str | None = None
-        if hasattr(input_data, "tool_name"):
-            tool_name = input_data.tool_name
+        # Determine tool name for matching - explicit parameter takes precedence
+        effective_tool_name = tool_name
+        if effective_tool_name is None and hasattr(input_data, "tool_name"):
+            effective_tool_name = input_data.tool_name
 
         combined_result = HookResult()
         current_input = input_data
 
         for matcher in matchers:
             # Check if matcher applies to this tool
-            if tool_name is not None and not matcher.matches(tool_name):
+            if effective_tool_name is not None and not matcher.matches(effective_tool_name):
                 continue
 
             # Execute all hooks in this matcher
@@ -183,9 +198,22 @@ class HookDispatcher:
                 if result.system_message is not None:
                     combined_result.system_message = result.system_message
 
+                # Handle early_return for BEFORE_MODEL hooks
+                if result.early_return is not None:
+                    combined_result.early_return = result.early_return
+
+                # Handle modified_output for AFTER_MODEL hooks
+                if result.modified_output is not None:
+                    combined_result.modified_output = result.modified_output
+
                 # Stop on deny
                 if result.behavior == "deny":
                     combined_result.behavior = "deny"
+                    return combined_result
+
+                # Stop on skip (e.g., cache hit for BEFORE_MODEL)
+                if result.behavior == "skip":
+                    combined_result.behavior = "skip"
                     return combined_result
 
         return combined_result
@@ -254,6 +282,106 @@ class HookDispatcher:
             input_data,
             tool_use_id,
             context,
+        )
+
+    async def dispatch_before_model(
+        self,
+        messages: list[dict[str, Any]],
+        model: str,
+        context: HookContext,
+        *,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        tools: list[dict[str, Any]] | None = None,
+        config: dict[str, Any] | None = None,
+    ) -> HookResult:
+        """Convenience method for dispatching BeforeModel hooks (ADR-0080).
+
+        Before LLM call hooks can:
+        - Modify the request (prompt injection, context addition)
+        - Return cached response (skip LLM call entirely with early_return)
+        - Block forbidden content before token spend (deny)
+
+        Args:
+            messages: Messages to send to the LLM
+            model: Model identifier
+            context: The hook context with session/user info
+            temperature: Optional temperature setting
+            max_tokens: Optional max tokens setting
+            tools: Optional tools configuration
+            config: Optional additional configuration
+
+        Returns:
+            HookResult with behavior, early_return, or updated_input
+        """
+        # Check feature flag for LLM hooks
+        if not feature_flags.enable_llm_hooks:
+            return HookResult()
+
+        input_data = BeforeModelInput(
+            messages=messages,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            tools=tools,
+            config=config or {},
+        )
+        return await self.dispatch(
+            HookEvent.BEFORE_MODEL,
+            input_data,
+            tool_use_id=None,
+            context=context,
+            tool_name="llm",  # Use "llm" as the tool name for matching
+        )
+
+    async def dispatch_after_model(
+        self,
+        content: str,
+        model: str,
+        context: HookContext,
+        *,
+        tool_calls: list[dict[str, Any]] | None = None,
+        usage: TokenUsage | None = None,
+        finish_reason: str = "",
+        latency_ms: float = 0.0,
+    ) -> HookResult:
+        """Convenience method for dispatching AfterModel hooks (ADR-0080).
+
+        After LLM call hooks can:
+        - Filter or redact output content
+        - Add disclaimers or formatting
+        - Transform response structure via modified_output
+
+        Args:
+            content: LLM response content
+            model: Model identifier
+            context: The hook context with session/user info
+            tool_calls: Optional tool calls from response
+            usage: Optional token usage statistics
+            finish_reason: Optional finish reason
+            latency_ms: Optional latency in milliseconds
+
+        Returns:
+            HookResult with behavior or modified_output
+        """
+        # Check feature flag for LLM hooks
+        if not feature_flags.enable_llm_hooks:
+            return HookResult()
+
+        input_data = AfterModelInput(
+            content=content,
+            model=model,
+            tool_calls=tool_calls,
+            usage=usage,
+            finish_reason=finish_reason,
+            latency_ms=latency_ms,
+        )
+        return await self.dispatch(
+            HookEvent.AFTER_MODEL,
+            input_data,
+            tool_use_id=None,
+            context=context,
+            tool_name="llm",  # Use "llm" as the tool name for matching
         )
 
 

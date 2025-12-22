@@ -36,6 +36,11 @@ from mcp_server_langgraph.core.interrupts.approval import (
     create_approval_workflow,
     reject_action,
 )
+from mcp_server_langgraph.core.interrupts.ai_explanation import (
+    AIExplanation,
+    AlternativeSuggestion,
+    ConfidenceFactor,
+)
 
 pytestmark = [pytest.mark.unit]
 
@@ -157,6 +162,139 @@ class TestApprovalRequiredModel:
         # Verify can be deserialized
         data = json.loads(json_str)
         assert data["approval_id"] == "test_002"
+
+
+# ==============================================================================
+# ApprovalRequired AI Explanation Integration Tests
+# ==============================================================================
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="core_interrupts_approval_tests")
+class TestApprovalRequiredAIExplanation:
+    """Test ApprovalRequired with AI explanation field (AI-Native HITL Enhancements)."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_approval_required_accepts_ai_explanation(self):
+        """ApprovalRequired should accept optional ai_explanation field."""
+        explanation = AIExplanation(
+            why_uncertain="The input contains ambiguous terms.",
+            what_could_go_wrong="May delete wrong files.",
+        )
+
+        approval = ApprovalRequired(
+            approval_id="test_123",
+            node_name="risky_action",
+            action_description="Delete temporary files",
+            ai_explanation=explanation,
+        )
+
+        assert approval.ai_explanation is not None
+        assert approval.ai_explanation.why_uncertain == "The input contains ambiguous terms."
+        assert approval.ai_explanation.what_could_go_wrong == "May delete wrong files."
+
+    def test_approval_required_ai_explanation_default_none(self):
+        """ApprovalRequired should default ai_explanation to None."""
+        approval = ApprovalRequired(
+            approval_id="test_456",
+            node_name="test_node",
+            action_description="Test action",
+        )
+
+        assert approval.ai_explanation is None
+
+    def test_approval_required_ai_explanation_with_alternatives(self):
+        """ApprovalRequired should accept ai_explanation with alternatives."""
+        explanation = AIExplanation(
+            why_uncertain="Multiple interpretations possible.",
+            what_could_go_wrong="Wrong file selected.",
+            safer_alternatives=[
+                AlternativeSuggestion(
+                    action="List files first",
+                    confidence=0.95,
+                    trade_off="Extra step required",
+                ),
+            ],
+        )
+
+        approval = ApprovalRequired(
+            approval_id="test_789",
+            node_name="file_action",
+            action_description="Process files",
+            ai_explanation=explanation,
+        )
+
+        assert len(approval.ai_explanation.safer_alternatives) == 1
+        assert approval.ai_explanation.safer_alternatives[0].action == "List files first"
+
+    def test_approval_required_ai_explanation_with_confidence_factors(self):
+        """ApprovalRequired should accept ai_explanation with confidence factors."""
+        explanation = AIExplanation(
+            why_uncertain="Query is ambiguous.",
+            what_could_go_wrong="Incorrect action.",
+            confidence_factors=[
+                ConfidenceFactor(
+                    factor="ambiguous_input",
+                    weight=-0.2,
+                    evidence="Query uses vague terms",
+                ),
+            ],
+        )
+
+        approval = ApprovalRequired(
+            approval_id="test_001",
+            node_name="action_node",
+            action_description="Execute action",
+            ai_explanation=explanation,
+        )
+
+        assert len(approval.ai_explanation.confidence_factors) == 1
+        assert approval.ai_explanation.confidence_factors[0].factor == "ambiguous_input"
+
+    def test_approval_required_serialization_with_ai_explanation(self):
+        """ApprovalRequired with ai_explanation should serialize correctly."""
+        explanation = AIExplanation(
+            why_uncertain="Test uncertainty",
+            what_could_go_wrong="Test risk",
+        )
+
+        approval = ApprovalRequired(
+            approval_id="test_serialize",
+            node_name="test_node",
+            action_description="Test action",
+            ai_explanation=explanation,
+        )
+
+        data = approval.model_dump()
+
+        assert "ai_explanation" in data
+        assert data["ai_explanation"]["why_uncertain"] == "Test uncertainty"
+        assert data["ai_explanation"]["what_could_go_wrong"] == "Test risk"
+
+    def test_approval_required_json_serialization_with_ai_explanation(self):
+        """ApprovalRequired with ai_explanation should JSON serialize correctly."""
+        explanation = AIExplanation(
+            why_uncertain="JSON test",
+            what_could_go_wrong="Serialization test",
+        )
+
+        approval = ApprovalRequired(
+            approval_id="test_json",
+            node_name="test_node",
+            action_description="Test action",
+            ai_explanation=explanation,
+        )
+
+        json_str = approval.model_dump_json()
+        assert isinstance(json_str, str)
+
+        # Verify can be deserialized
+        import json as json_module
+        data = json_module.loads(json_str)
+        assert data["ai_explanation"]["why_uncertain"] == "JSON test"
 
 
 # ==============================================================================

@@ -99,6 +99,45 @@ class HttpClientManager:
 
         return self._client
 
+    def get_pool_stats(self) -> dict[str, int | float]:
+        """
+        Get connection pool statistics.
+
+        Returns pool configuration and approximate state.
+        Note: httpx doesn't expose active connection count directly,
+        so this returns configuration values that can be used for
+        capacity monitoring.
+
+        Returns:
+            Dictionary with pool statistics
+        """
+        # Default pool configuration values
+        defaults = {
+            "max_connections": 200,
+            "max_keepalive_connections": 100,
+            "keepalive_expiry": 30.0,
+        }
+
+        if self._client is None:
+            return {**defaults, "initialized": False}
+
+        # Try to access internal pool limits (httpx internals, may change)
+        try:
+            transport = self._client._transport
+            if hasattr(transport, "_pool") and hasattr(transport._pool, "_limits"):
+                limits = transport._pool._limits
+                return {
+                    "max_connections": limits.max_connections or defaults["max_connections"],
+                    "max_keepalive_connections": limits.max_keepalive_connections or defaults["max_keepalive_connections"],
+                    "keepalive_expiry": limits.keepalive_expiry or defaults["keepalive_expiry"],
+                    "initialized": True,
+                }
+        except AttributeError:
+            pass
+
+        # Fallback to defaults if internal access fails
+        return {**defaults, "initialized": True}
+
     async def close(self) -> None:
         """
         Close the HTTP client and release connections.

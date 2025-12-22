@@ -4,7 +4,7 @@ Storage Configuration Module.
 Settings for PostgreSQL, Redis, Qdrant, and cloud storage backends.
 """
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import SettingsConfigDict
 
 from mcp_server_langgraph.core.config.base import DomainSettings
@@ -49,7 +49,13 @@ class StorageSettings(DomainSettings):
     checkpoint_backend: str = "memory"  # "memory", "redis"
     checkpoint_redis_url: str = Field(
         default="redis://localhost:6379/1",
-        validation_alias="redis_checkpoint_url",
+        # Accept multiple input names:
+        # - CHECKPOINT_REDIS_URL: Primary (docker-compose.test.yml, .env.example)
+        # - REDIS_CHECKPOINT_URL: SCREAMING_SNAKE_CASE alternative
+        # - redis_checkpoint_url: snake_case for constructor args (test compatibility)
+        validation_alias=AliasChoices(
+            "CHECKPOINT_REDIS_URL", "REDIS_CHECKPOINT_URL", "redis_checkpoint_url"
+        ),
     )
     checkpoint_redis_ttl: int = 604800  # 7 days
 

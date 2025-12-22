@@ -27,6 +27,7 @@ Usage:
 from __future__ import annotations
 
 import operator
+import re
 from typing import TYPE_CHECKING, Annotated, Any, Literal, Sequence, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -51,6 +52,7 @@ class AgentState(TypedDict):
     next_action: str
     user_id: str | None
     request_id: str | None
+    session_id: str | None  # For interrupt checking (Claude Agent SDK pattern)
     routing_confidence: float | None
     reasoning: str | None
 
@@ -383,7 +385,11 @@ def build_agent_graph(
         return {**state, "messages": [response]}
 
     async def verify_response(state: AgentState) -> AgentState:
-        """Verify response quality using LLM-as-judge pattern."""
+        """Verify response quality using LLM-as-judge pattern.
+
+        When visual verification is enabled and the response contains URLs,
+        this function also performs visual verification and combines the results.
+        """
         # Note: This node is only added if enable_verification=True
         response_message = state["messages"][-1]
         response_content = response_message.content if hasattr(response_message, "content") else str(response_message)
@@ -394,21 +400,64 @@ def build_agent_graph(
 
         try:
             logger.info("Verifying response quality")
-            verification_result = await output_verifier.verify_response(  # type: ignore[union-attr]
+
+            # Text verification (always performed)
+            text_result = await output_verifier.verify_response(  # type: ignore[union-attr]
                 response=response_text,
                 user_request=user_request,
                 conversation_context=conversation_context,
             )
 
-            state["verification_passed"] = verification_result.passed
-            state["verification_score"] = verification_result.overall_score
-            state["verification_feedback"] = verification_result.feedback
+            # Visual verification (conditional on config and URL presence)
+            # Uses extracted helper functions for cleaner code
+            from mcp_server_langgraph.core.visual_verification_helper import (
+                combine_verification_results,
+                extract_urls_from_text,
+                perform_visual_verification,
+                prioritize_urls,
+            )
+
+            visual_results: list[Any] = []
+            if config.enable_visual_verification:
+                # Extract and prioritize URLs
+                all_urls = extract_urls_from_text(response_text)
+
+                if all_urls:
+                    urls_to_verify = prioritize_urls(
+                        urls=all_urls,
+                        priority=config.visual_verification_url_priority,
+                        max_urls=config.visual_verification_max_urls,
+                    )
+
+                    logger.info(
+                        f"Visual verification enabled, found {len(all_urls)} URL(s), "
+                        f"verifying {len(urls_to_verify)} (priority: {config.visual_verification_url_priority})"
+                    )
+
+                    # Perform visual verification on prioritized URLs
+                    visual_results = await perform_visual_verification(
+                        urls=urls_to_verify,
+                        expected_state=user_request,
+                        output_verifier=output_verifier,
+                    )
+
+            # Combine text and visual results using configurable weights
+            combined = combine_verification_results(
+                text_result=text_result,
+                visual_results=visual_results,
+                text_weight=config.visual_verification_text_weight,
+                visual_weight=config.visual_verification_visual_weight,
+            )
+
+            state["verification_passed"] = combined["passed"]
+            state["verification_score"] = combined["score"]
+            state["verification_feedback"] = combined["feedback"]
 
             refinement_attempts = state.get("refinement_attempts", 0)
 
-            if verification_result.passed:
+            if state["verification_passed"]:
                 state["next_action"] = "end"
-                logger.info(f"Verification passed, score: {verification_result.overall_score}")
+                logger.info(f"Verification passed, score: {state['verification_score']}")
             elif (refinement_attempts or 0) < config.max_refinement_attempts:
                 state["next_action"] = "refine"
                 logger.info(f"Verification failed, refining (attempt {(refinement_attempts or 0) + 1})")

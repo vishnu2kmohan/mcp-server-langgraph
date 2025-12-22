@@ -79,6 +79,13 @@ class Settings(BaseSettings):
     email_from_address: str | None = None  # From email address
     email_to_addresses: str | None = None  # Comma-separated list of email addresses
 
+    # Web Push (VAPID) Configuration
+    # Generate keys with: npx web-push generate-vapid-keys
+    # Required for browser push notifications (critical alerts, etc.)
+    vapid_public_key: str | None = None  # VAPID public key (base64-encoded)
+    vapid_private_key: str | None = None  # VAPID private key (base64-encoded)
+    vapid_claims_email: str = "admin@example.com"  # Contact email for VAPID claims
+
     # Web Search API Configuration (for search_tools.py)
     tavily_api_key: str | None = None  # Tavily API key (recommended for AI)
     serper_api_key: str | None = None  # Serper API key (Google search)
@@ -212,6 +219,11 @@ class Settings(BaseSettings):
     verification_quality_threshold: float = 0.7  # Minimum score to pass (0.0-1.0)
     max_refinement_attempts: int = 3  # Maximum refinement iterations
     verification_mode: str = "standard"  # "standard", "strict", "lenient"
+    enable_visual_verification: bool = False  # Enable visual verification with screenshots
+    visual_verification_text_weight: float = 0.6  # Weight for text verification (0.0-1.0)
+    visual_verification_visual_weight: float = 0.4  # Weight for visual verification (0.0-1.0)
+    visual_verification_max_urls: int = 3  # Max URLs to verify per response
+    visual_verification_url_priority: str = "last"  # "first", "last", or "all"
 
     # Dynamic Context Loading (Just-in-Time) - Anthropic Best Practice
     enable_dynamic_context_loading: bool = False  # Enable semantic search-based context loading
@@ -306,7 +318,13 @@ class Settings(BaseSettings):
     checkpoint_backend: str = "memory"  # "memory", "redis"
     checkpoint_redis_url: str = Field(
         default="redis://localhost:6379/1",  # Use db 1 (sessions use db 0)
-        validation_alias="redis_checkpoint_url",  # Accept both names
+        # Accept multiple input names:
+        # - CHECKPOINT_REDIS_URL: Primary (docker-compose.test.yml, .env.example)
+        # - REDIS_CHECKPOINT_URL: SCREAMING_SNAKE_CASE alternative
+        # - redis_checkpoint_url: snake_case for constructor args (test compatibility)
+        validation_alias=AliasChoices(
+            "CHECKPOINT_REDIS_URL", "REDIS_CHECKPOINT_URL", "redis_checkpoint_url"
+        ),
     )
     checkpoint_redis_ttl: int = 604800  # 7 days TTL for conversation checkpoints
 
@@ -380,8 +398,12 @@ class Settings(BaseSettings):
     # Session Management
     session_backend: str = "memory"  # "memory", "redis"
     redis_url: str = Field(
-        default="redis://localhost:6379/0",
-        validation_alias="redis_session_url",  # Accept both names
+        default="redis://localhost:6379/0",  # db 0 for sessions (see db allocation below)
+        # Accept multiple input names (order matters - first match wins):
+        # - REDIS_SESSION_URL: Primary (explicit session-specific, takes precedence)
+        # - REDIS_URL: Fallback (common convention, used if REDIS_SESSION_URL not set)
+        # - redis_session_url: snake_case for constructor args (test compatibility)
+        validation_alias=AliasChoices("REDIS_SESSION_URL", "REDIS_URL", "redis_session_url"),
     )
     redis_host: str = "localhost"  # Redis host for rate limiting and cache
     redis_port: int = 6379  # Redis port for rate limiting and cache
@@ -420,11 +442,38 @@ class Settings(BaseSettings):
     # - "memory": In-memory using fakeredis (development only, requires fakeredis package)
     workflow_storage_backend: str = "postgres"  # "postgres" (recommended), "redis", "memory"
 
-    # GDPR/HIPAA/SOC2 Compliance Storage (ADR-0041: Pure PostgreSQL)
+    # GDPR/HIPAA/SOC2/FedRAMP Compliance Storage (ADR-0041: Pure PostgreSQL)
     # Storage for user profiles, preferences, consents, conversations, and audit logs
     # CRITICAL: Must use "postgres" in production (in-memory is DEVELOPMENT ONLY)
-    gdpr_storage_backend: str = "memory"  # "postgres" (production), "memory" (dev/test only)
-    gdpr_postgres_url: str = "postgresql://postgres:postgres@localhost:5432/gdpr"
+    # NOTE: Renamed from gdpr_* to compliance_* in v2.8 for clarity (supports multiple frameworks)
+    compliance_storage_backend: str = Field(
+        default="memory",  # "postgres" (production), "memory" (dev/test only)
+        # Accept multiple input names (order matters - first match wins):
+        # - compliance_storage_backend: Primary snake_case (constructor args)
+        # - COMPLIANCE_STORAGE_BACKEND: Primary SCREAMING_SNAKE_CASE (env vars)
+        # - GDPR_STORAGE_BACKEND: Deprecated alias (backward compatibility)
+        # - gdpr_storage_backend: Deprecated snake_case (test compatibility)
+        validation_alias=AliasChoices(
+            "compliance_storage_backend",
+            "COMPLIANCE_STORAGE_BACKEND",
+            "GDPR_STORAGE_BACKEND",
+            "gdpr_storage_backend",
+        ),
+    )
+    compliance_postgres_url: str = Field(
+        default="postgresql://postgres:postgres@localhost:5432/compliance",
+        # Accept multiple input names (order matters - first match wins):
+        # - compliance_postgres_url: Primary snake_case (constructor args)
+        # - COMPLIANCE_POSTGRES_URL: Primary SCREAMING_SNAKE_CASE (env vars)
+        # - GDPR_POSTGRES_URL: Deprecated alias (backward compatibility)
+        # - gdpr_postgres_url: Deprecated snake_case (test compatibility)
+        validation_alias=AliasChoices(
+            "compliance_postgres_url",
+            "COMPLIANCE_POSTGRES_URL",
+            "GDPR_POSTGRES_URL",
+            "gdpr_postgres_url",
+        ),
+    )
 
     # GDPR Storage Configuration
     # - User profiles: Until deletion request (GDPR Article 17)
@@ -467,6 +516,66 @@ class Settings(BaseSettings):
     azure_storage_container: str | None = None  # Azure blob container for audit logs
     azure_storage_prefix: str = "audit-logs/"  # Blob prefix for audit logs
     azure_storage_connection_string: str | None = None  # Azure storage connection string
+
+    # ==========================================================================
+    # Artifacts Storage Configuration (Hybrid Canvas Multi-Layer Storage)
+    # ==========================================================================
+    # Multi-layer storage system:
+    # - PostgreSQL: Primary storage with versioning and metadata
+    # - Redis: Cache layer for hot artifacts (frequently accessed)
+    # - Cloud Storage: Hybrid storage for large content (>1MB)
+    # - Qdrant: Vector embeddings for semantic search
+    #
+    # Storage Backend Selection
+    artifacts_storage_backend: str = Field(
+        default="memory",  # "postgres" (production), "memory" (dev/test only)
+        validation_alias=AliasChoices(
+            "artifacts_storage_backend",
+            "ARTIFACTS_STORAGE_BACKEND",
+        ),
+    )
+
+    # PostgreSQL configuration (uses database_url by default)
+    artifacts_postgres_url: str | None = Field(
+        default=None,  # If None, uses database_url
+        validation_alias=AliasChoices(
+            "artifacts_postgres_url",
+            "ARTIFACTS_POSTGRES_URL",
+        ),
+    )
+
+    # Redis cache configuration (uses redis_url by default)
+    artifacts_redis_url: str | None = Field(
+        default=None,  # If None, uses redis_url
+        validation_alias=AliasChoices(
+            "artifacts_redis_url",
+            "ARTIFACTS_REDIS_URL",
+        ),
+    )
+    artifacts_redis_db: int = 4  # Redis database for artifacts cache (isolated)
+    artifacts_cache_ttl: int = 3600  # 1 hour TTL for cached artifacts
+    artifacts_cache_enabled: bool = True  # Enable Redis cache layer
+
+    # Version management
+    artifacts_max_versions: int = 100  # Maximum versions per artifact
+    artifacts_version_cleanup_enabled: bool = True  # Auto-cleanup old versions
+    artifacts_version_cleanup_days: int = 90  # Days to keep old versions
+
+    # Content size limits
+    artifacts_max_content_size: int = 10 * 1024 * 1024  # 10MB max content size
+    artifacts_cloud_threshold: int = 1 * 1024 * 1024  # 1MB threshold for cloud storage
+
+    # Cloud storage for large artifacts (uses same buckets as audit logs)
+    artifacts_cloud_storage_enabled: bool = False  # Enable cloud storage for large artifacts
+    artifacts_cloud_storage_prefix: str = "artifacts/"  # Object prefix in bucket
+
+    # Semantic search configuration (uses Qdrant)
+    artifacts_semantic_search_enabled: bool = True  # Enable vector search
+    artifacts_qdrant_collection: str = "artifacts"  # Qdrant collection name
+
+    # Rate limiting for search endpoints
+    artifacts_search_rate_limit: int = 30  # Requests per minute per user
+    artifacts_search_rate_window: int = 60  # Rate limit window in seconds
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -530,10 +639,11 @@ class Settings(BaseSettings):
                 "Generate a strong secret key and set it via environment variable."
             )
 
-        # Check 4: GDPR storage must use database in production
-        if self.gdpr_storage_backend == "memory":
+        # Check 4: Compliance storage must use database in production
+        if self.compliance_storage_backend == "memory":
             errors.append(
-                "GDPR_STORAGE_BACKEND=memory is not allowed in production. Use GDPR_STORAGE_BACKEND=postgres for compliance."
+                "COMPLIANCE_STORAGE_BACKEND=memory is not allowed in production. "
+                "Use COMPLIANCE_STORAGE_BACKEND=postgres for GDPR/HIPAA/SOC2/FedRAMP compliance."
             )
 
         # Check 5: Code execution should be explicitly enabled if needed
@@ -784,6 +894,27 @@ class Settings(BaseSettings):
     def redis_session_url(self) -> str:
         """Alias for redis_url (test compatibility)"""
         return self.redis_url
+
+    # ========================================================================
+    # COMPLIANCE STORAGE ALIASES (backward compatibility for gdpr_* names)
+    # ========================================================================
+    @property
+    def gdpr_storage_backend(self) -> str:
+        """
+        Deprecated alias for compliance_storage_backend (backward compatibility).
+
+        Use compliance_storage_backend instead for new code.
+        """
+        return self.compliance_storage_backend
+
+    @property
+    def gdpr_postgres_url(self) -> str:
+        """
+        Deprecated alias for compliance_postgres_url (backward compatibility).
+
+        Use compliance_postgres_url instead for new code.
+        """
+        return self.compliance_postgres_url
 
     def get_secret(self, key: str, fallback: str | None = None) -> str | None:
         """

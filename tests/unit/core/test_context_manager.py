@@ -18,19 +18,29 @@ pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def context_manager():
-    """Create ContextManager instance for testing."""
+    """Create ContextManager instance for testing with fixed threshold.
+
+    Note: Disables model-aware compaction to test backward-compatible
+    fixed threshold behavior. For model-aware tests, see
+    test_context_manager_model_aware.py.
+    """
     # Mock the settings to avoid loading real config
     mock_settings = MagicMock()
     mock_settings.model_name = "test-model"
     mock_settings.llm_provider = "test-provider"
 
-    # Create context manager with test config
-    manager = ContextManager(
-        compaction_threshold=1000,  # Lower threshold for testing
-        target_after_compaction=500,
-        recent_message_count=2,
-        settings=mock_settings,
-    )
+    # Patch feature flag to disable model-aware compaction for backward compat tests
+    with patch("mcp_server_langgraph.core.context_manager.feature_flags") as mock_flags:
+        mock_flags.enable_model_aware_compaction = False
+        mock_flags.context_compaction_threshold_percentage = 0.5
+
+        # Create context manager with test config
+        manager = ContextManager(
+            compaction_threshold=1000,  # Lower threshold for testing
+            target_after_compaction=500,
+            recent_message_count=2,
+            settings=mock_settings,
+        )
 
     # Mock the LLM to avoid actual API calls
     manager.llm = AsyncMock(return_value=None)  # Container for configured methods
@@ -81,14 +91,22 @@ class TestContextManager:
 
     @pytest.mark.unit
     def test_needs_compaction_short_conversation(self, context_manager, short_conversation):
-        """Test that short conversations don't trigger compaction."""
-        needs_compaction = context_manager.needs_compaction(short_conversation)
+        """Test that short conversations don't trigger compaction with fixed threshold."""
+        with patch("mcp_server_langgraph.core.context_manager.feature_flags") as mock_flags:
+            mock_flags.enable_model_aware_compaction = False
+            needs_compaction = context_manager.needs_compaction(short_conversation)
         assert needs_compaction is False
 
     @pytest.mark.unit
     def test_needs_compaction_long_conversation(self, context_manager, long_conversation):
-        """Test that long conversations trigger compaction."""
-        needs_compaction = context_manager.needs_compaction(long_conversation)
+        """Test that long conversations trigger compaction with fixed threshold.
+
+        Uses fixed threshold (disabled model-aware compaction) for
+        backward compatibility testing.
+        """
+        with patch("mcp_server_langgraph.core.context_manager.feature_flags") as mock_flags:
+            mock_flags.enable_model_aware_compaction = False
+            needs_compaction = context_manager.needs_compaction(long_conversation)
         assert needs_compaction is True
 
     @pytest.mark.asyncio

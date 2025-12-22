@@ -13,7 +13,9 @@ References:
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.agents.model_registry import get_default_registry
 from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
+from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.llm.factory import create_summarization_model
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import count_tokens
@@ -76,6 +78,8 @@ class ContextManager:
         target_after_compaction: int = 4000,
         recent_message_count: int = 5,
         settings=None,
+        model_name: str | None = None,
+        compaction_threshold_percentage: float | None = None,
     ):
         """
         Initialize context manager.
@@ -85,6 +89,8 @@ class ContextManager:
             target_after_compaction: Target token count after compaction (default: 4000)
             recent_message_count: Number of recent messages to keep uncompacted (default: 5)
             settings: Application settings (if None, uses global settings)
+            model_name: Model name for model-aware thresholds (optional, uses settings if not provided)
+            compaction_threshold_percentage: Override for compaction threshold percentage (0.1-0.9)
         """
         self.compaction_threshold = compaction_threshold
         self.target_after_compaction = target_after_compaction
@@ -98,19 +104,62 @@ class ContextManager:
 
         self.settings = settings
         self.llm = create_summarization_model(settings)
+
+        # Model-aware context compaction (Phase 2 Enhancement)
+        self.model_name = model_name if model_name else settings.model_name
+        self._model_registry = get_default_registry()
+
+        # Use provided percentage or fall back to feature flag
+        self._compaction_threshold_percentage = (
+            compaction_threshold_percentage
+            if compaction_threshold_percentage is not None
+            else feature_flags.context_compaction_threshold_percentage
+        )
+
         logger.info(
             "ContextManager initialized",
             extra={
                 "compaction_threshold": compaction_threshold,
                 "target_after_compaction": target_after_compaction,
                 "recent_message_count": recent_message_count,
-                "model": settings.model_name,
+                "model": self.model_name,
+                "model_aware_enabled": feature_flags.enable_model_aware_compaction,
+                "threshold_percentage": self._compaction_threshold_percentage,
             },
         )
+
+    def get_dynamic_threshold(self) -> int:
+        """
+        Get model-aware compaction threshold.
+
+        Calculates threshold based on model's effective context limit and
+        configured percentage.
+
+        Returns:
+            Token count threshold for compaction
+        """
+        caps = self._model_registry.get(self.model_name)
+        effective_limit = caps.effective_limit if caps.effective_limit else caps.context_limit
+        return int(effective_limit * self._compaction_threshold_percentage)
+
+    def get_dynamic_target(self) -> int:
+        """
+        Get model-aware target token count after compaction.
+
+        Target is typically half of the compaction threshold to ensure
+        sufficient headroom after compaction.
+
+        Returns:
+            Target token count after compaction
+        """
+        return self.get_dynamic_threshold() // 2
 
     def needs_compaction(self, messages: list[BaseMessage]) -> bool:
         """
         Check if conversation needs compaction.
+
+        Uses model-aware threshold when enable_model_aware_compaction is True,
+        otherwise falls back to fixed compaction_threshold.
 
         Args:
             messages: Conversation messages
@@ -119,20 +168,28 @@ class ContextManager:
             True if token count exceeds threshold
         """
         # Use model-aware token counting
-        model_name = self.settings.model_name
-        total_tokens = sum(count_tokens(self._message_to_text(msg), model=model_name) for msg in messages)
+        total_tokens = sum(count_tokens(self._message_to_text(msg), model=self.model_name) for msg in messages)
+
+        # Determine threshold based on feature flag
+        if feature_flags.enable_model_aware_compaction:
+            threshold = self.get_dynamic_threshold()
+        else:
+            threshold = self.compaction_threshold
 
         with tracer.start_as_current_span("context.check_compaction") as span:
             span.set_attribute("message.count", len(messages))
             span.set_attribute("token.count", total_tokens)
-            span.set_attribute("needs.compaction", total_tokens > self.compaction_threshold)
+            span.set_attribute("threshold", threshold)
+            span.set_attribute("model_aware_enabled", feature_flags.enable_model_aware_compaction)
+            span.set_attribute("needs.compaction", total_tokens > threshold)
 
-            if total_tokens > self.compaction_threshold:
+            if total_tokens > threshold:
                 logger.info(
                     "Compaction needed",
                     extra={
                         "total_tokens": total_tokens,
-                        "threshold": self.compaction_threshold,
+                        "threshold": threshold,
+                        "model_aware_enabled": feature_flags.enable_model_aware_compaction,
                         "message_count": len(messages),
                     },
                 )
@@ -331,6 +388,86 @@ Focus on high-signal information that maintains conversation context.
         """
         content_lower = content.lower()
         return any(kw.lower() in content_lower for kw in keywords)
+
+    def reorder_for_attention(self, messages: list[BaseMessage]) -> list[BaseMessage]:
+        """
+        Reorder messages to mitigate "Lost in the Middle" problem.
+
+        LLMs pay more attention to content at the start and end of context.
+        This method reorders messages after compaction to place:
+        - System messages (with key decisions) at the START
+        - Recent conversation messages in the MIDDLE
+        - Summary/anchor at the END
+
+        Before: [system] + [summary] + [recent]
+        After:  [system] + [recent] + [summary]
+
+        Args:
+            messages: List of messages (typically post-compaction)
+
+        Returns:
+            Reordered list of messages with summary at end
+        """
+        if not feature_flags.enable_lost_in_middle_mitigation:
+            return messages
+
+        if not messages:
+            return messages
+
+        # Separate by type
+        system_messages: list[BaseMessage] = []
+        summary_messages: list[BaseMessage] = []
+        other_messages: list[BaseMessage] = []
+
+        for msg in messages:
+            if isinstance(msg, SystemMessage):
+                # Check if it's a summary
+                if "<conversation_summary>" in str(msg.content).lower():
+                    summary_messages.append(msg)
+                else:
+                    system_messages.append(msg)
+            else:
+                other_messages.append(msg)
+
+        # Reorder: system first, then conversation, then summary at end
+        reordered = system_messages + other_messages + summary_messages
+
+        return reordered
+
+    def extract_key_decisions(self, messages: list[BaseMessage]) -> list[BaseMessage]:
+        """
+        Extract messages containing key decisions and requirements.
+
+        Identifies messages with decision or requirement keywords
+        for prioritization in context ordering.
+
+        Args:
+            messages: List of messages to analyze
+
+        Returns:
+            List of messages containing key decisions/requirements
+        """
+        key_messages: list[BaseMessage] = []
+
+        # Keywords indicating decisions or requirements
+        decision_keywords = EXTRACTION_KEYWORDS.get("decisions", [])
+        requirement_keywords = EXTRACTION_KEYWORDS.get("requirements", [])
+
+        for msg in messages:
+            content = str(msg.content) if hasattr(msg, "content") else str(msg)
+            content_lower = content.lower()
+
+            # Check for decision keywords
+            if any(kw.lower() in content_lower for kw in decision_keywords):
+                key_messages.append(msg)
+                continue
+
+            # Check for requirement keywords
+            if any(kw.lower() in content_lower for kw in requirement_keywords):
+                key_messages.append(msg)
+                continue
+
+        return key_messages
 
     def extract_key_information(self, messages: list[BaseMessage]) -> dict[str, list[str]]:
         """

@@ -5,10 +5,16 @@ Enables gradual rollouts, A/B testing, and safe feature deployment.
 All flags are configurable via environment variables for different environments.
 """
 
-from typing import Any
+import functools
+import os
+from collections.abc import Callable
+from typing import Any, ParamSpec, TypeVar
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 class FeatureFlags(BaseSettings):
@@ -188,6 +194,42 @@ class FeatureFlags(BaseSettings):
     )
 
     # UI Features (Unified Studio/BFF)
+    # =========================================================================
+    # Canvas Hybrid Shell Feature Flags (Phased Rollout)
+    # =========================================================================
+    canvas_hybrid_shell: bool = Field(
+        default=False,
+        description="Phase 1: Enable HybridShellLayout at /studio/v2 for new canvas-based UI",
+    )
+
+    canvas_editable: bool = Field(
+        default=False,
+        description="Phase 2: Enable editable artifacts in Canvas panel",
+    )
+
+    canvas_agents: bool = Field(
+        default=False,
+        description="Phase 4: Enable background agent panel",
+    )
+
+    canvas_ai_palette: bool = Field(
+        default=False,
+        description="Phase 4: Enable AI fallback in command palette",
+    )
+
+    canvas_compliance: bool = Field(
+        default=False,
+        description="Phase 5: Enable compliance dashboards (GDPR, HIPAA, SOC2, FedRAMP)",
+    )
+
+    canvas_help: bool = Field(
+        default=False,
+        description="Phase 6: Enable in-app help pane with contextual assistance",
+    )
+
+    # =========================================================================
+    # Core UI Features
+    # =========================================================================
     enable_workflows_feature: bool = Field(
         default=True,
         description="Enable workflow builder UI feature",
@@ -376,6 +418,446 @@ class FeatureFlags(BaseSettings):
         description="Enable agents to reflect on tool usage effectiveness",
     )
 
+    # =========================================================================
+    # Claude Agent SDK Patterns (SDK-Inspired Features)
+    # See ADR-0077 for architecture decisions and implementation details.
+    #
+    # Production-Ready (default=True):
+    #   - sdk_hooks: Tool lifecycle interception for audit, validation, security
+    #   - sdk_interrupt: Graceful cancellation of long-running operations
+    #   - sdk_structured_output: JSON Schema validation for type-safe responses
+    #
+    # Experimental (default=False, requires explicit opt-in):
+    #   - sdk_file_checkpointing: File change rollback (adds I/O overhead)
+    #   - sdk_can_use_tool: Dynamic permission checks (supplements OpenFGA)
+    #   - sdk_agent_definition: Declarative subagent creation pattern
+    # =========================================================================
+    enable_sdk_hooks: bool = Field(
+        default=True,
+        description="Enable Claude Agent SDK hook system (PreToolUse, PostToolUse, UserPromptSubmit, Stop). Production-ready.",
+    )
+
+    enable_sdk_interrupt: bool = Field(
+        default=True,
+        description="Enable Claude Agent SDK interrupt capability for graceful operation cancellation. Production-ready.",
+    )
+
+    enable_sdk_file_checkpointing: bool = Field(
+        default=False,
+        description="Enable Claude Agent SDK file checkpointing for rollback capability. Adds I/O overhead - enable for file-heavy operations.",
+    )
+
+    enable_sdk_structured_output: bool = Field(
+        default=True,
+        description="Enable Claude Agent SDK structured output validation via JSON Schema. Production-ready.",
+    )
+
+    enable_sdk_can_use_tool: bool = Field(
+        default=False,
+        description="Enable Claude Agent SDK can_use_tool callback for dynamic tool permission checks. Supplements OpenFGA for real-time decisions.",
+    )
+
+    enable_sdk_agent_definition: bool = Field(
+        default=True,
+        description="Enable Claude Agent SDK AgentDefinition pattern for declarative subagent creation. Simplifies multi-agent orchestration.",
+    )
+
+    # =========================================================================
+    # Multi-Framework Parity Features (ADR-0079 to ADR-0082)
+    # =========================================================================
+    # These features implement capabilities from Claude Agent SDK, Google ADK,
+    # and OpenAI Agents SDK while maintaining LLM-agnostic design.
+    # =========================================================================
+    enable_llm_hooks: bool = Field(
+        default=True,
+        description="Enable LLM-level hooks (BEFORE_MODEL, AFTER_MODEL) for request/response interception. Enables caching, filtering, and prompt modification.",
+    )
+
+    enable_session_hooks: bool = Field(
+        default=True,
+        description="Enable session lifecycle hooks (SESSION_START, SESSION_END) for initialization and cleanup.",
+    )
+
+    enable_handoff_pattern: bool = Field(
+        default=True,
+        description="Enable Handoff pattern (ADR-0081) for explicit agent-to-agent control transfer with context filtering. Production-ready.",
+    )
+
+    enable_mcp_client: bool = Field(
+        default=True,
+        description="Enable MCP client capabilities (ADR-0082) to consume tools from external MCP servers. Production-ready.",
+    )
+
+    # =========================================================================
+    # MCP Extensions (Plan Section 10.4-10.5)
+    # =========================================================================
+    enable_orchestration_mcp_resources: bool = Field(
+        default=False,
+        description="Expose multi-agent orchestration as MCP resources (orchestrator://tasks, artifacts, subagents). Experimental.",
+    )
+
+    enable_orchestration_mcp_tools: bool = Field(
+        default=False,
+        description="Expose orchestration operations as MCP tools (decompose, execute, status, cancel). Experimental.",
+    )
+
+    enable_hooks_mcp_extension: bool = Field(
+        default=False,
+        description="Enable hooks MCP tool for listing registered hooks and available events. Experimental.",
+    )
+
+    enable_bash_tool: bool = Field(
+        default=False,
+        description="Enable enhanced bash tool for sandboxed command execution beyond Python.",
+    )
+
+    enable_computer_use: bool = Field(
+        default=False,
+        description="Enable computer use tools for screen capture, input simulation, and browser automation.",
+    )
+
+    enable_loop_agent: bool = Field(
+        default=False,
+        description="Enable LoopAgent pattern (Google ADK parity) for iterative task execution with termination conditions.",
+    )
+
+    enable_session_fork: bool = Field(
+        default=False,
+        description="Enable session fork capability (Claude Agent SDK parity) for branching conversation history.",
+    )
+
+    enable_encrypted_sessions: bool = Field(
+        default=False,
+        description="Enable at-rest encryption for session data. Provides GDPR/HIPAA compliance for sensitive session storage.",
+    )
+
+    # =========================================================================
+    # Anthropic Best Practices Features (ADR-0072)
+    # =========================================================================
+    enable_tool_examples: bool = Field(
+        default=True,
+        description="Enable input_examples for tools to improve accuracy (72% -> 90% improvement)",
+    )
+
+    enable_think_tool: bool = Field(
+        default=True,
+        description="Enable think tool for structured reasoning during tool chains (54% improvement)",
+    )
+
+    enable_defer_loading: bool = Field(
+        default=False,
+        description="Enable defer_loading for tools to reduce initial token usage (experimental)",
+    )
+
+    enable_skills_system: bool = Field(
+        default=False,
+        description="Enable SKILL.md-based skills system for agent capabilities (experimental)",
+    )
+
+    enable_skills_marketplace: bool = Field(
+        default=False,
+        description="Enable skills marketplace integration with Anthropic skills repo (experimental)",
+    )
+
+    enable_pii_tokenization: bool = Field(
+        default=False,
+        description="Enable PII tokenization layer for compliance (GDPR/HIPAA, experimental)",
+    )
+
+    enable_programmatic_tools: bool = Field(
+        default=False,
+        description="Enable programmatic tool calling from sandbox code (experimental)",
+    )
+
+    enable_multi_agent_orchestration: bool = Field(
+        default=False,
+        description="Enable orchestrator-worker pattern for parallel task execution (experimental)",
+    )
+
+    max_subagents: int = Field(
+        default=10,
+        ge=1,
+        le=50,
+        description="Maximum number of parallel subagents in orchestrator (1-50)",
+    )
+
+    # Cost Tracking Flags (Phase 5)
+    enable_cost_tracking: bool = Field(
+        default=True,
+        description="Enable token and cost budget tracking for orchestrations",
+    )
+
+    orchestration_cost_limit: float = Field(
+        default=0.50,
+        ge=0.01,
+        le=100.0,
+        description="Maximum cost in dollars per single orchestration (0.01-100.0)",
+    )
+
+    session_cost_limit: float = Field(
+        default=5.00,
+        ge=0.10,
+        le=1000.0,
+        description="Maximum cost in dollars per session (0.10-1000.0)",
+    )
+
+    cost_alert_thresholds: list[float] = Field(
+        default=[0.5, 0.75, 0.9],
+        description="Percentage thresholds for cost alerts (e.g., [0.5, 0.75, 0.9])",
+    )
+
+    # Thinking Budget Flags (Phase 6)
+    enable_thinking_budget: bool = Field(
+        default=True,
+        description="Enable thinking budget management for extended reasoning",
+    )
+
+    default_thinking_level: str = Field(
+        default="medium",
+        description="Default thinking level (low, medium, high, ultra)",
+    )
+
+    # Dynamic Context Splitting Flags (Phase 7)
+    enable_dynamic_context_splitting: bool = Field(
+        default=True,
+        description="Enable dynamic context splitting for large tasks",
+    )
+
+    context_split_threshold: float = Field(
+        default=0.8,
+        ge=0.5,
+        le=0.95,
+        description="Percentage of effective limit that triggers splitting (0.5-0.95)",
+    )
+
+    # Context Engineering Optimizations (Phase 3)
+    enable_short_tool_descriptions: bool = Field(
+        default=True,
+        description="Use short-form tool descriptions to reduce token usage (~40% savings)",
+    )
+
+    enable_lost_in_middle_mitigation: bool = Field(
+        default=True,
+        description="Reorder context to place key info at start/end for better attention",
+    )
+
+    enable_context_ranking: bool = Field(
+        default=True,
+        description="Rank contexts by relevance before loading into context window",
+    )
+
+    enable_semantic_deduplication: bool = Field(
+        default=True,
+        description="Deduplicate semantically similar contexts to reduce redundancy",
+    )
+
+    context_deduplication_threshold: float = Field(
+        default=0.92,
+        ge=0.5,
+        le=0.99,
+        description="Similarity threshold for context deduplication (0.5-0.99)",
+    )
+
+    enable_agentic_memory: bool = Field(
+        default=False,
+        description="Enable structured note-taking (NOTES.md) and checkpoints for agentic memory (experimental)",
+    )
+
+    # Model-Aware Context Compaction (Phase 2 Orchestrator Enhancement)
+    enable_model_aware_compaction: bool = Field(
+        default=True,
+        description="Enable model-aware context compaction using model registry context limits",
+    )
+
+    context_compaction_threshold_percentage: float = Field(
+        default=0.5,
+        ge=0.1,
+        le=0.9,
+        description="Percentage of model's effective context limit that triggers compaction (0.1-0.9)",
+    )
+
+    # Model Capabilities Routing (Phase 1 Orchestrator Enhancement)
+    enable_model_capabilities_routing: bool = Field(
+        default=True,
+        description="Enable capability-aware model routing via model registry",
+    )
+
+    # =========================================================================
+    # Orchestrator Resilience (Phase 10)
+    # =========================================================================
+    enable_orchestrator_resilience: bool = Field(
+        default=True,
+        description="Enable resilience patterns (circuit breaker, timeout, bulkhead) for orchestrator",
+    )
+
+    orchestrator_timeout_seconds: int = Field(
+        default=300,
+        ge=30,
+        le=600,
+        description="Maximum time in seconds for orchestrator execution (30-600)",
+    )
+
+    orchestrator_max_concurrent: int = Field(
+        default=5,
+        ge=1,
+        le=20,
+        description="Maximum concurrent orchestrations allowed (bulkhead limit) (1-20)",
+    )
+
+    orchestrator_circuit_breaker_threshold: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description="Number of failures before circuit breaker opens (1-10)",
+    )
+
+    # =========================================================================
+    # AI UX Service Migration (Phase 11)
+    # =========================================================================
+    enable_orchestrated_ai_ux: bool = Field(
+        default=False,
+        description="Enable orchestrated AI UX composite analysis for parallel execution (gradual rollout)",
+    )
+
+    # =========================================================================
+    # Alert Recommendations Migration (Phase 12)
+    # =========================================================================
+    enable_orchestrated_alert_analysis: bool = Field(
+        default=False,
+        description="Enable orchestrated alert analysis for parallel correlation and root cause (gradual rollout)",
+    )
+
+    # =========================================================================
+    # Studio AI Orchestration (HybridShell AI Enhancement)
+    # =========================================================================
+    enable_studio_ai: bool = Field(
+        default=False,
+        description="Enable unified Studio AI orchestration for HybridShell AI capabilities (gradual rollout)",
+    )
+
+    # =========================================================================
+    # AI UX Features (Phase 6 AI-Native Integration)
+    # =========================================================================
+    enable_ai_disclosure: bool = Field(
+        default=True,
+        description="Enable AI-powered progressive disclosure analysis for adaptive UI complexity",
+    )
+
+    enable_ai_empty_states: bool = Field(
+        default=True,
+        description="Enable AI-powered empty state suggestions with contextual CTAs",
+    )
+
+    enable_ai_nudges: bool = Field(
+        default=True,
+        description="Enable AI-powered smart nudge recommendations based on user behavior",
+    )
+
+    enable_ai_error_recovery: bool = Field(
+        default=True,
+        description="Enable AI-powered error classification and recovery suggestions",
+    )
+
+    enable_ai_onboarding: bool = Field(
+        default=True,
+        description="Enable AI-powered onboarding personalization based on detected intent",
+    )
+
+    enable_ai_metrics_insights: bool = Field(
+        default=True,
+        description="Enable AI-generated HEART metrics insights and predictions",
+    )
+
+    enable_ai_persona_analysis: bool = Field(
+        default=True,
+        description="Enable AI-powered persona behavior analysis and mismatch detection",
+    )
+
+    # AI UX Advanced Features
+    enable_ai_ux: bool = Field(
+        default=True,
+        description="Master switch for all AI UX features (disclosure, nudges, error recovery, etc.)",
+    )
+
+    enable_ai_ux_parallel_graph: bool = Field(
+        default=True,
+        description="Enable parallel graph execution using LangGraph Send API for faster analysis",
+    )
+
+    enable_ai_ux_streaming: bool = Field(
+        default=True,
+        description="Enable streaming responses for composite analysis via SSE",
+    )
+
+    enable_ai_ux_websocket: bool = Field(
+        default=True,
+        description="Enable WebSocket for real-time AI suggestions and live updates",
+    )
+
+    enable_ai_ux_redis_cache: bool = Field(
+        default=False,
+        description="Enable Redis caching for LLM responses (reduces cost, requires Redis)",
+    )
+
+    ai_ux_redis_cache_ttl_seconds: int = Field(
+        default=300,
+        ge=60,
+        le=3600,
+        description="TTL for Redis-cached AI UX responses (60s-1h)",
+    )
+
+    enable_batch_composite_analysis: bool = Field(
+        default=True,
+        description="Enable batch composite analysis (runs persona, disclosure, error analyses in parallel)",
+    )
+
+    # =========================================================================
+    # AI-Native Enhancements for HITL Dialogs
+    # =========================================================================
+    enable_ai_explanations: bool = Field(
+        default=False,
+        description="Enable AI-generated explanations for HITL dialogs using ExplanationOrchestrator (gradual rollout)",
+    )
+
+    # =========================================================================
+    # Human-in-the-Loop (HITL) Features for Confidence-Based Agent Approval
+    # =========================================================================
+    enable_agent_hitl: bool = Field(
+        default=True,
+        description="Enable confidence-based human-in-the-loop for agent approvals",
+    )
+
+    agent_hitl_confidence_threshold: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=1.0,
+        description="Confidence threshold below which human approval is required (0.0-1.0)",
+    )
+
+    agent_hitl_auto_approve_threshold: float = Field(
+        default=0.9,
+        ge=0.0,
+        le=1.0,
+        description="Confidence threshold at or above which auto-approval occurs (0.0-1.0)",
+    )
+
+    agent_hitl_approval_timeout_seconds: int = Field(
+        default=3600,
+        ge=60,
+        le=86400,
+        description="Timeout for approval requests in seconds (60s-24h, default 1h)",
+    )
+
+    enable_agent_hitl_push_notifications: bool = Field(
+        default=True,
+        description="Enable push notifications for HITL approval requests",
+    )
+
+    enable_agent_hitl_websocket: bool = Field(
+        default=True,
+        description="Enable WebSocket for real-time HITL approval requests and updates",
+    )
+
     model_config = SettingsConfigDict(
         env_prefix="FF_",  # All flags use FF_ prefix in environment
         env_file=".env",
@@ -383,6 +865,21 @@ class FeatureFlags(BaseSettings):
         case_sensitive=False,
         extra="ignore",  # Ignore extra fields from environment
     )
+
+    @property
+    def is_test_mode(self) -> bool:
+        """
+        Check if running in test mode.
+
+        When FF_TEST_MODE is set to a truthy value (true, 1, yes),
+        all feature flag checks in require_feature() are bypassed.
+        This enables testing of disabled features without complex mocking.
+
+        Returns:
+            True if FF_TEST_MODE is set to a truthy value, False otherwise.
+        """
+        test_mode = os.environ.get("FF_TEST_MODE", "").lower()
+        return test_mode in ("true", "1", "yes")
 
     def is_feature_enabled(self, feature_name: str) -> bool:
         """
@@ -395,6 +892,34 @@ class FeatureFlags(BaseSettings):
             True if feature is enabled, False otherwise
         """
         return getattr(self, feature_name, False)
+
+    def require_feature(self, feature_name: str, display_name: str | None = None) -> None:
+        """
+        Require a feature to be enabled, raising FeatureDisabledError if not.
+
+        Use this at the entry point of feature-gated functionality.
+
+        When FF_TEST_MODE is set to a truthy value, all feature checks are
+        bypassed to enable testing of disabled features.
+
+        Args:
+            feature_name: Name of the feature flag attribute
+            display_name: Human-readable feature name for error message
+
+        Raises:
+            FeatureDisabledError: If the feature is disabled and not in test mode
+        """
+        # Test mode bypasses all feature flag checks
+        if self.is_test_mode:
+            return
+
+        if not self.is_feature_enabled(feature_name):
+            from mcp_server_langgraph.core.exceptions import FeatureDisabledError
+
+            raise FeatureDisabledError(
+                feature_name=display_name or feature_name.replace("enable_", "").replace("_", " ").title(),
+                flag_name=f"FF_{feature_name.upper()}",
+            )
 
     def get_feature_value(self, feature_name: str, default: Any | None = None) -> Any:
         """
@@ -450,6 +975,14 @@ class FeatureFlags(BaseSettings):
         is_admin = role.lower() == "admin"
 
         return {
+            # Canvas/Studio v2 UI (phased rollout)
+            "canvas_hybrid_shell": self.canvas_hybrid_shell,
+            "canvas_editable": self.canvas_editable,
+            "canvas_agents": self.canvas_agents,
+            "canvas_ai_palette": self.canvas_ai_palette,
+            "canvas_compliance": self.canvas_compliance,
+            "canvas_help": self.canvas_help,
+            # Core features
             "workflows": self.enable_workflows_feature,
             "sessions": self.enable_sessions_feature,
             # Cost dashboard: admins always see it; users only if enable_cost_dashboard_users
@@ -477,6 +1010,17 @@ class FeatureFlags(BaseSettings):
             "keyboard_shortcuts": self.enable_keyboard_shortcuts,
             "theme_customization": self.enable_theme_customization,
             "confirmation_dialogs": self.enable_confirmation_dialogs,
+            # AI UX Features (Phase 6 AI-Native Integration)
+            "ai_disclosure": self.enable_ai_disclosure,
+            "ai_empty_states": self.enable_ai_empty_states,
+            "ai_nudges": self.enable_ai_nudges,
+            "ai_error_recovery": self.enable_ai_error_recovery,
+            "ai_onboarding": self.enable_ai_onboarding,
+            "ai_metrics_insights": self.enable_ai_metrics_insights,
+            "ai_persona_analysis": self.enable_ai_persona_analysis,
+            "batch_composite_analysis": self.enable_batch_composite_analysis,
+            # HITL Features
+            "agent_hitl": self.enable_agent_hitl,
         }
 
 
@@ -504,3 +1048,60 @@ def is_enabled(feature_name: str) -> bool:
             # Use Pydantic AI routing
     """
     return feature_flags.is_feature_enabled(feature_name)
+
+
+# Alias for backward compatibility
+is_feature_enabled = is_enabled
+
+
+def feature_gated(feature_name: str, display_name: str | None = None) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """
+    Decorator to gate a function behind a feature flag.
+
+    This decorator provides a cleaner alternative to calling require_feature()
+    at the beginning of a function. It automatically checks the feature flag
+    and raises FeatureDisabledError if the feature is disabled.
+
+    The decorator is designed to be easily mockable in tests - you can simply
+    mock the decorated function directly without needing to patch feature flags.
+
+    Args:
+        feature_name: Name of the feature flag attribute (e.g., 'enable_skills_system')
+        display_name: Human-readable feature name for error messages (optional)
+
+    Returns:
+        A decorator that wraps the function with feature flag checking
+
+    Raises:
+        FeatureDisabledError: If the feature is disabled when the function is called
+
+    Example:
+        @feature_gated("enable_skills_system", "Skills System")
+        def execute_skill(skill_name: str) -> SkillResult:
+            # This function only runs if enable_skills_system is True
+            ...
+
+        @feature_gated("enable_multi_agent_orchestration")
+        async def run_orchestrated_task(task: str) -> str:
+            # Works with async functions too
+            ...
+    """
+    import asyncio
+
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        @functools.wraps(func)
+        def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            feature_flags.require_feature(feature_name, display_name)
+            return func(*args, **kwargs)
+
+        @functools.wraps(func)
+        async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            feature_flags.require_feature(feature_name, display_name)
+            return await func(*args, **kwargs)  # type: ignore[misc, no-any-return]
+
+        # Choose the appropriate wrapper based on whether the function is async
+        if asyncio.iscoroutinefunction(func):
+            return async_wrapper  # type: ignore[return-value]
+        return sync_wrapper
+
+    return decorator

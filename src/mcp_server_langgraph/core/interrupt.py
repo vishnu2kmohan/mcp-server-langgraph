@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 import functools
 from collections.abc import Awaitable, Callable
-from typing import Any, ClassVar, TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -115,7 +115,7 @@ class InterruptController:
 
 # Singleton instance
 _interrupt_controller: InterruptController | None = None
-_singleton_lock: ClassVar[asyncio.Lock] = asyncio.Lock()
+_singleton_lock: asyncio.Lock = asyncio.Lock()
 
 
 def get_interrupt_controller() -> InterruptController:
@@ -148,7 +148,8 @@ def _default_session_id_extractor(state: dict[str, Any]) -> str:
     Returns:
         The session_id, or "unknown" if not found.
     """
-    return state.get("session_id", "unknown")
+    session_id = state.get("session_id", "unknown")
+    return str(session_id)
 
 
 def interrupt_aware_node(

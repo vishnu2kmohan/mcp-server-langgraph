@@ -12,6 +12,11 @@ Features:
 - Metrics and observability
 - Tiered cache promotion/demotion
 
+Resilience patterns (ADR-0026):
+- Retry with exponential backoff for transient Redis failures
+- Circuit breaker to fail fast when Redis is repeatedly unavailable
+- L1 fallback when Redis is down (graceful degradation)
+
 See ADR-0028 for design rationale.
 """
 
@@ -19,16 +24,19 @@ import asyncio
 import functools
 import hashlib
 import pickle
+import time
 from collections.abc import Callable
 from typing import Any, ParamSpec, TypeVar
 from urllib.parse import urlparse, urlunparse
 
+import pybreaker
 import redis
 import redis.asyncio as aioredis
 from cachetools import TTLCache
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, tracer
+from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -221,6 +229,11 @@ class CacheService:
         """
         Get value from cache (L1 → L2 → None).
 
+        Resilience patterns applied:
+        - Circuit breaker: Skip L2 when Redis is repeatedly failing
+        - Retry with backoff: Retry transient connection errors (2 attempts)
+        - L1 fallback: Always try L1 first, graceful degradation
+
         Args:
             key: Cache key
             level: Cache level to search (l1 or l2)
@@ -242,23 +255,78 @@ class CacheService:
 
         # Try L2 if enabled
         if level == CacheLayer.L2 and self.redis_available and self.redis is not None:
-            try:
-                data = self.redis.get(key)
-                if data:
-                    value = pickle.loads(data)  # type: ignore[arg-type]
+            # Check circuit breaker - skip L2 if circuit is open
+            breaker = get_circuit_breaker("redis")
+            if breaker.current_state == pybreaker.STATE_OPEN:
+                logger.debug(f"Redis circuit breaker open, skipping L2 for: {key}")
+                self.stats["l2_misses"] += 1
+                self._emit_cache_miss_metric(level, key)
+                return None
 
-                    # Promote to L1
-                    self.l1_cache[key] = value
+            # Retry logic for transient connection errors
+            max_attempts = 2
+            base_delay = 0.1  # 100ms base delay for cache (fast)
 
-                    self.stats["l2_hits"] += 1
-                    logger.debug(f"L2 cache hit: {key}")
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    data = self.redis.get(key)
+                    if data:
+                        value = pickle.loads(data)  # type: ignore[arg-type]
 
-                    # Emit metric
-                    self._emit_cache_hit_metric(CacheLayer.L2, key)
+                        # Promote to L1
+                        self.l1_cache[key] = value
 
-                    return value
-            except Exception as e:
-                logger.warning(f"L2 cache get failed: {e}", extra={"key": key})
+                        self.stats["l2_hits"] += 1
+                        logger.debug(f"L2 cache hit: {key}")
+
+                        # Success - notify circuit breaker
+                        breaker.state.on_success()
+
+                        # Emit metric
+                        self._emit_cache_hit_metric(CacheLayer.L2, key)
+
+                        return value
+                    else:
+                        # Key not found in Redis (not an error)
+                        break
+
+                except redis.exceptions.ConnectionError as e:
+                    # Transient connection error - retry with backoff
+                    if attempt < max_attempts:
+                        delay = base_delay * (2 ** (attempt - 1))
+                        logger.warning(
+                            f"L2 cache get failed (attempt {attempt}/{max_attempts}), retrying: {e}",
+                            extra={"key": key, "attempt": attempt},
+                        )
+                        time.sleep(delay)
+                        continue
+
+                    # All retries exhausted - record failure for circuit breaker
+                    logger.warning(f"L2 cache get failed after {max_attempts} attempts: {e}", extra={"key": key})
+                    try:
+                        breaker._inc_counter()
+                        breaker.state.on_failure(e)
+                    except pybreaker.CircuitBreakerError:
+                        # Circuit breaker just opened - graceful degradation
+                        logger.debug("Redis circuit breaker opened due to repeated failures")
+                        pass
+
+                except redis.exceptions.TimeoutError as e:
+                    # Timeout - don't retry (already waited), record failure
+                    logger.warning(f"L2 cache get timed out: {e}", extra={"key": key})
+                    try:
+                        breaker._inc_counter()
+                        breaker.state.on_failure(e)
+                    except pybreaker.CircuitBreakerError:
+                        # Circuit breaker just opened - graceful degradation
+                        logger.debug("Redis circuit breaker opened due to repeated failures")
+                        pass
+                    break
+
+                except Exception as e:
+                    # Other errors - don't retry
+                    logger.warning(f"L2 cache get failed: {e}", extra={"key": key})
+                    break
 
         self.stats["l2_misses"] += 1
 
@@ -277,6 +345,11 @@ class CacheService:
         """
         Set value in cache.
 
+        Resilience patterns applied:
+        - Circuit breaker: Skip L2 when Redis is repeatedly failing
+        - Retry with backoff: Retry transient connection errors (2 attempts)
+        - L1 always set: Graceful degradation ensures L1 is always updated
+
         Args:
             key: Cache key
             value: Value to cache
@@ -287,17 +360,67 @@ class CacheService:
         if ttl is None:
             ttl = self._get_ttl_from_key(key)
 
-        # Set in L1
+        # Set in L1 (always succeeds, in-memory)
         if level in (CacheLayer.L1, CacheLayer.L2):
             self.l1_cache[key] = value
 
-        # Set in L2
+        # Set in L2 with resilience patterns
         if level == CacheLayer.L2 and self.redis_available and self.redis is not None:
-            try:
-                self.redis.setex(key, ttl, pickle.dumps(value))
-                logger.debug(f"L2 cache set: {key} (TTL: {ttl}s)")
-            except Exception as e:
-                logger.warning(f"L2 cache set failed: {e}", extra={"key": key})
+            # Check circuit breaker - skip L2 if circuit is open
+            breaker = get_circuit_breaker("redis")
+            if breaker.current_state == pybreaker.STATE_OPEN:
+                logger.debug(f"Redis circuit breaker open, skipping L2 set for: {key}")
+            else:
+                # Retry logic for transient connection errors
+                max_attempts = 2
+                base_delay = 0.1  # 100ms base delay for cache (fast)
+
+                for attempt in range(1, max_attempts + 1):
+                    try:
+                        self.redis.setex(key, ttl, pickle.dumps(value))
+                        logger.debug(f"L2 cache set: {key} (TTL: {ttl}s)")
+
+                        # Success - notify circuit breaker
+                        breaker.state.on_success()
+                        break
+
+                    except redis.exceptions.ConnectionError as e:
+                        # Transient connection error - retry with backoff
+                        if attempt < max_attempts:
+                            delay = base_delay * (2 ** (attempt - 1))
+                            logger.warning(
+                                f"L2 cache set failed (attempt {attempt}/{max_attempts}), retrying: {e}",
+                                extra={"key": key, "attempt": attempt},
+                            )
+                            time.sleep(delay)
+                            continue
+
+                        # All retries exhausted - record failure for circuit breaker
+                        logger.warning(f"L2 cache set failed after {max_attempts} attempts: {e}", extra={"key": key})
+                        try:
+                            breaker._inc_counter()
+                            breaker.state.on_failure(e)
+                        except pybreaker.CircuitBreakerError:
+                            # Circuit breaker just opened - graceful degradation
+                            logger.debug("Redis circuit breaker opened due to repeated failures")
+                            pass
+
+                    except redis.exceptions.TimeoutError as e:
+                        # Timeout - don't retry (already waited), record failure
+                        logger.warning(f"L2 cache set timed out: {e}", extra={"key": key})
+                        try:
+                            breaker._inc_counter()
+                            breaker.state.on_failure(e)
+                        except pybreaker.CircuitBreakerError:
+                            # Circuit breaker just opened - graceful degradation
+                            logger.debug("Redis circuit breaker opened due to repeated failures")
+                            pass
+                        break
+
+                    except Exception as e:
+                        # Other errors - don't retry
+                        logger.warning(f"L2 cache set failed: {e}", extra={"key": key})
+                        break
 
         self.stats["sets"] += 1
 
@@ -351,6 +474,11 @@ class CacheService:
 
         Non-blocking version of get() using redis.asyncio.
 
+        Resilience patterns applied:
+        - Circuit breaker: Skip L2 when Redis is repeatedly failing
+        - Retry with backoff: Retry transient connection errors (2 attempts)
+        - L1 fallback: Always try L1 first, graceful degradation
+
         Args:
             key: Cache key
             level: Cache level to search (l1 or l2)
@@ -371,21 +499,76 @@ class CacheService:
         if level == CacheLayer.L2:
             async_redis = await self._ensure_async_redis()
             if async_redis:
-                try:
-                    data = await async_redis.get(key)
-                    if data:
-                        value = pickle.loads(data)
+                # Check circuit breaker - skip L2 if circuit is open
+                breaker = get_circuit_breaker("redis")
+                if breaker.current_state == pybreaker.STATE_OPEN:
+                    logger.debug(f"Redis circuit breaker open, skipping async L2 for: {key}")
+                    self.stats["l2_misses"] += 1
+                    self._emit_cache_miss_metric(level, key)
+                    return None
 
-                        # Promote to L1
-                        self.l1_cache[key] = value
+                # Retry logic for transient connection errors
+                max_attempts = 2
+                base_delay = 0.1  # 100ms base delay for cache (fast)
 
-                        self.stats["l2_hits"] += 1
-                        logger.debug(f"L2 cache hit (async): {key}")
-                        self._emit_cache_hit_metric(CacheLayer.L2, key)
+                for attempt in range(1, max_attempts + 1):
+                    try:
+                        data = await async_redis.get(key)
+                        if data:
+                            value = pickle.loads(data)
 
-                        return value
-                except Exception as e:
-                    logger.warning(f"L2 async cache get failed: {e}", extra={"key": key})
+                            # Promote to L1
+                            self.l1_cache[key] = value
+
+                            self.stats["l2_hits"] += 1
+                            logger.debug(f"L2 cache hit (async): {key}")
+                            self._emit_cache_hit_metric(CacheLayer.L2, key)
+
+                            # Success - notify circuit breaker
+                            breaker.state.on_success()
+
+                            return value
+                        else:
+                            # Key not found in Redis (not an error)
+                            break
+
+                    except redis.exceptions.ConnectionError as e:
+                        # Transient connection error - retry with backoff
+                        if attempt < max_attempts:
+                            delay = base_delay * (2 ** (attempt - 1))
+                            logger.warning(
+                                f"L2 async cache get failed (attempt {attempt}/{max_attempts}), retrying: {e}",
+                                extra={"key": key, "attempt": attempt},
+                            )
+                            await asyncio.sleep(delay)
+                            continue
+
+                        # All retries exhausted - record failure for circuit breaker
+                        logger.warning(f"L2 async cache get failed after {max_attempts} attempts: {e}", extra={"key": key})
+                        try:
+                            breaker._inc_counter()
+                            breaker.state.on_failure(e)
+                        except pybreaker.CircuitBreakerError:
+                            # Circuit breaker just opened - graceful degradation
+                            logger.debug("Redis circuit breaker opened due to repeated failures")
+                            pass
+
+                    except redis.exceptions.TimeoutError as e:
+                        # Timeout - don't retry (already waited), record failure
+                        logger.warning(f"L2 async cache get timed out: {e}", extra={"key": key})
+                        try:
+                            breaker._inc_counter()
+                            breaker.state.on_failure(e)
+                        except pybreaker.CircuitBreakerError:
+                            # Circuit breaker just opened - graceful degradation
+                            logger.debug("Redis circuit breaker opened due to repeated failures")
+                            pass
+                        break
+
+                    except Exception as e:
+                        # Other errors - don't retry
+                        logger.warning(f"L2 async cache get failed: {e}", extra={"key": key})
+                        break
 
         self.stats["l2_misses"] += 1
         self._emit_cache_miss_metric(level, key)
@@ -403,6 +586,11 @@ class CacheService:
 
         Non-blocking version of set() using redis.asyncio.
 
+        Resilience patterns applied:
+        - Circuit breaker: Skip L2 when Redis is repeatedly failing
+        - Retry with backoff: Retry transient connection errors (2 attempts)
+        - L1 always set: Graceful degradation ensures L1 is always updated
+
         Args:
             key: Cache key
             value: Value to cache
@@ -413,19 +601,69 @@ class CacheService:
         if ttl is None:
             ttl = self._get_ttl_from_key(key)
 
-        # Set in L1 (sync, in-memory)
+        # Set in L1 (sync, in-memory) - always succeeds
         if level in (CacheLayer.L1, CacheLayer.L2):
             self.l1_cache[key] = value
 
-        # Set in L2 (async)
+        # Set in L2 (async) with resilience patterns
         if level == CacheLayer.L2:
             async_redis = await self._ensure_async_redis()
             if async_redis:
-                try:
-                    await async_redis.setex(key, ttl, pickle.dumps(value))
-                    logger.debug(f"L2 async cache set: {key} (TTL: {ttl}s)")
-                except Exception as e:
-                    logger.warning(f"L2 async cache set failed: {e}", extra={"key": key})
+                # Check circuit breaker - skip L2 if circuit is open
+                breaker = get_circuit_breaker("redis")
+                if breaker.current_state == pybreaker.STATE_OPEN:
+                    logger.debug(f"Redis circuit breaker open, skipping async L2 set for: {key}")
+                else:
+                    # Retry logic for transient connection errors
+                    max_attempts = 2
+                    base_delay = 0.1  # 100ms base delay for cache (fast)
+
+                    for attempt in range(1, max_attempts + 1):
+                        try:
+                            await async_redis.setex(key, ttl, pickle.dumps(value))
+                            logger.debug(f"L2 async cache set: {key} (TTL: {ttl}s)")
+
+                            # Success - notify circuit breaker
+                            breaker.state.on_success()
+                            break
+
+                        except redis.exceptions.ConnectionError as e:
+                            # Transient connection error - retry with backoff
+                            if attempt < max_attempts:
+                                delay = base_delay * (2 ** (attempt - 1))
+                                logger.warning(
+                                    f"L2 async cache set failed (attempt {attempt}/{max_attempts}), retrying: {e}",
+                                    extra={"key": key, "attempt": attempt},
+                                )
+                                await asyncio.sleep(delay)
+                                continue
+
+                            # All retries exhausted - record failure for circuit breaker
+                            logger.warning(f"L2 async cache set failed after {max_attempts} attempts: {e}", extra={"key": key})
+                            try:
+                                breaker._inc_counter()
+                                breaker.state.on_failure(e)
+                            except pybreaker.CircuitBreakerError:
+                                # Circuit breaker just opened - graceful degradation
+                                logger.debug("Redis circuit breaker opened due to repeated failures")
+                                pass
+
+                        except redis.exceptions.TimeoutError as e:
+                            # Timeout - don't retry (already waited), record failure
+                            logger.warning(f"L2 async cache set timed out: {e}", extra={"key": key})
+                            try:
+                                breaker._inc_counter()
+                                breaker.state.on_failure(e)
+                            except pybreaker.CircuitBreakerError:
+                                # Circuit breaker just opened - graceful degradation
+                                logger.debug("Redis circuit breaker opened due to repeated failures")
+                                pass
+                            break
+
+                        except Exception as e:
+                            # Other errors - don't retry
+                            logger.warning(f"L2 async cache set failed: {e}", extra={"key": key})
+                            break
 
         self.stats["sets"] += 1
         self._emit_cache_set_metric(level, key)

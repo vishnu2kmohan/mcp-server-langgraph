@@ -4,6 +4,7 @@ Compliance Configuration Module.
 Settings for GDPR, HIPAA, SOC2, FedRAMP compliance requirements.
 """
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import SettingsConfigDict
 
 from mcp_server_langgraph.core.config.base import DomainSettings
@@ -29,9 +30,26 @@ class ComplianceSettings(DomainSettings):
     # HIPAA Compliance
     hipaa_integrity_secret: str | None = None
 
-    # GDPR/HIPAA/SOC2 Compliance Storage
-    gdpr_storage_backend: str = "memory"  # "postgres" (production), "memory" (dev)
-    gdpr_postgres_url: str = "postgresql://postgres:postgres@localhost:5432/gdpr"
+    # GDPR/HIPAA/SOC2/FedRAMP Compliance Storage
+    # NOTE: Renamed from gdpr_* to compliance_* in v2.8 for clarity (supports multiple frameworks)
+    compliance_storage_backend: str = Field(
+        default="memory",  # "postgres" (production), "memory" (dev)
+        validation_alias=AliasChoices(
+            "compliance_storage_backend",
+            "COMPLIANCE_STORAGE_BACKEND",
+            "GDPR_STORAGE_BACKEND",
+            "gdpr_storage_backend",
+        ),
+    )
+    compliance_postgres_url: str = Field(
+        default="postgresql://postgres:postgres@localhost:5432/compliance",
+        validation_alias=AliasChoices(
+            "compliance_postgres_url",
+            "COMPLIANCE_POSTGRES_URL",
+            "GDPR_POSTGRES_URL",
+            "gdpr_postgres_url",
+        ),
+    )
 
     # Data Security & Compliance (for regulated workloads)
     enable_context_encryption: bool = False

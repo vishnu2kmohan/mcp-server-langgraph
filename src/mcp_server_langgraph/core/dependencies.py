@@ -12,7 +12,7 @@ from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mcp_server_langgraph.auth.api_keys import APIKeyManager
-from mcp_server_langgraph.auth.keycloak import KeycloakClient
+from mcp_server_langgraph.auth.keycloak import KeycloakClient, TokenValidator
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 from mcp_server_langgraph.auth.token_denylist import TokenDenylist, create_token_denylist
@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 # Singleton instances (will be initialized on first use)
 _keycloak_client: KeycloakClient | None = None
 _openfga_client: OpenFGAClient | None = None
+_token_validator: TokenValidator | None = None
 _service_principal_manager: ServicePrincipalManager | None = None
 _api_key_manager: APIKeyManager | None = None
 _user_provider: UserProvider | None = None
@@ -61,6 +62,44 @@ def get_keycloak_client() -> KeycloakClient:
         _keycloak_client = KeycloakClient(config=keycloak_config)
 
     return _keycloak_client
+
+
+def get_token_validator() -> TokenValidator | None:
+    """
+    Get Keycloak TokenValidator instance (singleton).
+
+    Returns None if Keycloak is not configured (auth_provider != 'keycloak').
+    This allows graceful degradation for non-Keycloak deployments.
+
+    Returns:
+        TokenValidator instance for JWT validation, or None if not configured.
+    """
+    global _token_validator
+
+    if _token_validator is None:
+        # Only create validator for Keycloak auth
+        if settings.auth_provider.lower() != "keycloak":
+            logger.debug(
+                f"Token validator not created: auth_provider is '{settings.auth_provider}', not 'keycloak'"
+            )
+            return None
+
+        from mcp_server_langgraph.auth.keycloak import KeycloakConfig
+
+        keycloak_config = KeycloakConfig(
+            server_url=settings.keycloak_server_url,
+            public_url=settings.keycloak_public_url,
+            realm=settings.keycloak_realm,
+            admin_realm=settings.keycloak_admin_realm,
+            client_id=settings.keycloak_client_id,
+            client_secret=settings.keycloak_client_secret,
+            admin_username=settings.keycloak_admin_username,
+            admin_password=settings.keycloak_admin_password,
+        )
+        _token_validator = TokenValidator(config=keycloak_config)
+        logger.info("Keycloak TokenValidator initialized for JWT validation")
+
+    return _token_validator
 
 
 def get_openfga_client() -> OpenFGAClient | None:

@@ -77,6 +77,7 @@ class AgentState(TypedDict):
     next_action: str
     user_id: str | None
     request_id: str | None
+    session_id: str | None  # For interrupt checking (Claude Agent SDK pattern)
     routing_confidence: float | None  # Confidence from Pydantic AI routing
     reasoning: str | None  # Reasoning from Pydantic AI
 
