@@ -177,6 +177,173 @@ export function AgentExecutionTracePanel({
           </pre>
         </details>
       )}
+
+      {/* Sprint 5: AI-Powered Trace Intelligence */}
+      {enableAI && (
+        <>
+          {/* AI Summary Panel */}
+          {aiSummary && (
+            <div
+              className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800"
+              data-testid="ai-trace-summary"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-blue-600 dark:text-blue-400 font-semibold font-sans text-xs">
+                  AI Summary
+                </span>
+                {aiLoading && (
+                  <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                )}
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 font-sans text-xs">
+                {aiSummary}
+              </p>
+
+              {/* Key Actions */}
+              {keyActions && keyActions.length > 0 && (
+                <div className="mt-2">
+                  <span className="text-gray-500 dark:text-gray-400 text-xs font-sans">
+                    Key actions:
+                  </span>
+                  <ul className="mt-1 space-y-0.5">
+                    {keyActions.map((action, idx) => (
+                      <li
+                        key={idx}
+                        className="text-gray-600 dark:text-gray-300 text-xs font-sans flex items-center gap-1"
+                      >
+                        <span className="text-blue-500">•</span>
+                        {action}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Health Score Indicator */}
+          {healthScore !== null && (
+            <div
+              className="mt-2 flex items-center gap-2"
+              data-testid="ai-health-score"
+            >
+              <span className="text-gray-500 dark:text-gray-400 text-xs font-sans">
+                Health:
+              </span>
+              <div className="flex items-center gap-1">
+                <div className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      healthScore >= 0.8
+                        ? "bg-green-500"
+                        : healthScore >= 0.6
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
+                    }`}
+                    style={{ width: `${healthScore * 100}%` }}
+                  />
+                </div>
+                <span
+                  className={`text-xs font-semibold ${
+                    healthScore >= 0.8
+                      ? "text-green-600 dark:text-green-400"
+                      : healthScore >= 0.6
+                        ? "text-yellow-600 dark:text-yellow-400"
+                        : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {Math.round(healthScore * 100)}%
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Bottleneck Indicators */}
+          {bottlenecks && bottlenecks.length > 0 && (
+            <div
+              className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800"
+              data-testid="ai-bottleneck-indicator"
+            >
+              <span className="text-yellow-700 dark:text-yellow-400 text-xs font-semibold font-sans">
+                Bottlenecks Detected:
+              </span>
+              <ul className="mt-1 space-y-1">
+                {bottlenecks.map((bottleneck, idx) => (
+                  <li
+                    key={idx}
+                    className="text-yellow-600 dark:text-yellow-300 text-xs font-sans flex items-center justify-between"
+                  >
+                    <span>{bottleneck.step_name}</span>
+                    <span className="font-mono">
+                      {bottleneck.duration_ms}ms ({bottleneck.percentage_of_total}%)
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Anomaly Warnings */}
+          {anomalies && anomalies.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {anomalies.map((anomaly, idx) => (
+                <div
+                  key={idx}
+                  className={`p-2 rounded text-xs font-sans flex items-start gap-2 ${
+                    anomaly.severity === "error"
+                      ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"
+                      : anomaly.severity === "warning"
+                        ? "bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300"
+                        : "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
+                  }`}
+                  data-testid="ai-anomaly-badge"
+                >
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                      anomaly.severity === "error"
+                        ? "bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200"
+                        : anomaly.severity === "warning"
+                          ? "bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200"
+                          : "bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200"
+                    }`}
+                  >
+                    {anomaly.severity}
+                  </span>
+                  <div className="flex-1">
+                    <span className="font-semibold">{anomaly.step_name}:</span>{" "}
+                    {anomaly.message}
+                    {anomaly.suggested_fix && (
+                      <p className="mt-1 text-gray-600 dark:text-gray-400 italic">
+                        Suggestion: {anomaly.suggested_fix}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Optimization Suggestions */}
+          {optimizationSuggestions && optimizationSuggestions.length > 0 && (
+            <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+              <span className="text-green-700 dark:text-green-400 text-xs font-semibold font-sans">
+                Optimization Suggestions:
+              </span>
+              <ul className="mt-1 space-y-0.5">
+                {optimizationSuggestions.map((suggestion, idx) => (
+                  <li
+                    key={idx}
+                    className="text-green-600 dark:text-green-300 text-xs font-sans flex items-center gap-1"
+                  >
+                    <span className="text-green-500">💡</span>
+                    {suggestion}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
