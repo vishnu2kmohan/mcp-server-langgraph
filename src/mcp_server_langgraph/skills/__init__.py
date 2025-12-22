@@ -45,6 +45,12 @@ from mcp_server_langgraph.skills.marketplace import (
     MarketplaceRegistry,
 )
 from mcp_server_langgraph.skills import metrics
+from mcp_server_langgraph.skills.auto_update import (
+    AutoUpdateScheduler,
+    SkillUpdate,
+    SkillVersion,
+    compare_versions,
+)
 from mcp_server_langgraph.skills.models import SandboxConfig, SecretVolume, Skill
 from mcp_server_langgraph.skills.registry import SkillRegistry
 
@@ -79,4 +85,9 @@ __all__ = [
     "DependencyResolution",
     # Metrics
     "metrics",
+    # Auto-Update
+    "AutoUpdateScheduler",
+    "SkillVersion",
+    "SkillUpdate",
+    "compare_versions",
 ]
