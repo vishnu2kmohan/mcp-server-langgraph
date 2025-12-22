@@ -374,6 +374,26 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
                     user_id=task.user_id,
                     **task.data,
                 )
+            elif task.task_type == "nav_prediction":
+                # UX Intelligence: Predict and reorder navigation items
+                result = await self._ai_ux_service.predict_navigation(
+                    user_id=task.user_id,
+                    current_page=task.data.get("current_page", ""),
+                    recent_pages=task.data.get("recent_pages", []),
+                )
+            elif task.task_type == "contextual_help":
+                # UX Intelligence: Show context-aware help content
+                result = await self._ai_ux_service.get_contextual_help(
+                    user_id=task.user_id,
+                    current_page=task.data.get("current_page", ""),
+                    active_feature=task.data.get("active_feature", ""),
+                )
+            elif task.task_type == "learning_path":
+                # UX Intelligence: Personalized learning recommendations
+                result = await self._ai_ux_service.get_learning_path(
+                    user_id=task.user_id,
+                    persona=task.data.get("persona"),
+                )
             else:
                 return StudioResult(
                     task_type=task.task_type,

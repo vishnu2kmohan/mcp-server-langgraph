@@ -408,6 +408,26 @@ export type {
   DecisionHistoryResult,
 } from "./useHITLIntelligence";
 
+// UX Intelligence (Sprint 6)
+export {
+  useNavPrediction,
+  useContextualHelp,
+  useLearningPath,
+} from "./useUXIntelligence";
+export type {
+  PredictedNavItem,
+  NavPredictionOptions,
+  NavPredictionResult,
+  HelpTopic,
+  QuickAction,
+  ContextualHelpOptions,
+  ContextualHelpResult,
+  LearningStep,
+  SkillLevel,
+  LearningPathOptions,
+  LearningPathResult,
+} from "./useUXIntelligence";
+
 // HITL dialogs state management (extracted from HybridShellLayout)
 export { useHITLDialogs } from "./useHITLDialogs";
 export type {
