@@ -176,3 +176,8 @@ v1_router.include_router(remediation_approval_router, tags=["remediations"])
 
 # Alert recommendation REST API (AI-powered analysis)
 v1_router.include_router(alert_recommendation_router, tags=["alerts"])
+
+# Skills management REST API (auto-update, marketplace)
+from mcp_server_langgraph.api.v1.skills import router as skills_router
+
+v1_router.include_router(skills_router, tags=["skills"])

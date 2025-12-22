@@ -577,6 +577,10 @@ class Settings(BaseSettings):
     artifacts_search_rate_limit: int = 30  # Requests per minute per user
     artifacts_search_rate_window: int = 60  # Rate limit window in seconds
 
+    # Skills Marketplace Auto-Update (ADR-0072)
+    skill_update_interval_hours: int = 24  # Hours between update checks
+    skill_auto_apply_updates: bool = False  # Auto-apply updates (requires admin approval if False)
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -409,3 +409,81 @@ class AutoUpdateScheduler:
             marketplace=marketplace,
             installed_at=datetime.now(UTC),
         )
+
+
+# =============================================================================
+# Singleton & Lifecycle Management
+# =============================================================================
+
+_auto_update_scheduler: AutoUpdateScheduler | None = None
+
+
+def get_feature_flags() -> Any:
+    """Get feature flags (lazy import to avoid circular deps)."""
+    from mcp_server_langgraph.core.feature_flags import get_feature_flags as _get_ff
+
+    return _get_ff()
+
+
+def is_auto_update_enabled() -> bool:
+    """Check if auto-update is enabled via feature flag.
+
+    Returns:
+        True if SKILLS_MARKETPLACE feature flag is enabled
+    """
+    flags = get_feature_flags()
+    return getattr(flags, "enable_skills_marketplace", False)
+
+
+def get_auto_update_scheduler() -> AutoUpdateScheduler:
+    """Get the singleton auto-update scheduler.
+
+    Returns:
+        The global AutoUpdateScheduler instance
+    """
+    global _auto_update_scheduler
+    if _auto_update_scheduler is None:
+        _auto_update_scheduler = AutoUpdateScheduler()
+    return _auto_update_scheduler
+
+
+def reset_auto_update_scheduler() -> None:
+    """Reset the singleton scheduler (for testing)."""
+    global _auto_update_scheduler
+    _auto_update_scheduler = None
+
+
+async def initialize_auto_update_scheduler(
+    update_interval_hours: int = 24,
+    auto_apply: bool = False,
+) -> AutoUpdateScheduler | None:
+    """Initialize and start the auto-update scheduler.
+
+    Args:
+        update_interval_hours: Hours between update checks
+        auto_apply: Whether to auto-apply updates
+
+    Returns:
+        The initialized scheduler, or None if disabled
+    """
+    global _auto_update_scheduler
+
+    if not is_auto_update_enabled():
+        logger.info("Skills marketplace auto-update disabled by feature flag")
+        return None
+
+    _auto_update_scheduler = AutoUpdateScheduler(
+        update_interval_hours=update_interval_hours,
+        auto_apply=auto_apply,
+    )
+    await _auto_update_scheduler.start()
+    logger.info(f"Auto-update scheduler started (interval: {update_interval_hours}h)")
+    return _auto_update_scheduler
+
+
+async def shutdown_auto_update_scheduler() -> None:
+    """Shutdown the auto-update scheduler."""
+    global _auto_update_scheduler
+    if _auto_update_scheduler is not None:
+        await _auto_update_scheduler.stop()
+        logger.info("Auto-update scheduler stopped")
