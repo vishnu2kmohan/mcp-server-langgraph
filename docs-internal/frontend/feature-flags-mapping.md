@@ -50,15 +50,15 @@
 
 ---
 
-## Proposed Canvas Feature Flags
+## Canvas Feature Flags
 
-Per the plan, these flags control the Hybrid Canvas rollout:
+These flags control the Hybrid Canvas feature rollout:
 
 ### Phase 1-2 Flags
 
 | Flag Name | Purpose | Default | Gate |
 |-----------|---------|---------|------|
-| `canvas_hybrid_shell` | Enable HybridShellLayout at /studio/v2 | `false` | Route access |
+| ~~`canvas_hybrid_shell`~~ | ~~Enable HybridShellLayout at /studio~~ | N/A | **REMOVED** - HybridShell is now the default at `/studio` |
 | `canvas_editable` | Enable artifact editing in Canvas | `false` | Edit buttons |
 
 ### Phase 3-4 Flags
@@ -88,6 +88,44 @@ Per the plan, these flags control the Hybrid Canvas rollout:
 - Use case: Allows operators to force users to see insights on each session
 - Keyboard shortcut: Cmd+I (Mac) / Ctrl+I (Windows/Linux) toggles visibility
 
+### Granular Intelligence Feature Flags (Sprint 1-4)
+
+These flags control specific AI Intelligence capabilities in the HybridShell UI:
+
+| Flag Name (Backend) | Frontend Property | Purpose | Default | Task Categories |
+|---------------------|-------------------|---------|---------|-----------------|
+| `enable_studio_ai` | Global enabled | Master toggle for all Studio AI | `false` | All 8 categories |
+| `enable_session_intelligence` | `sessionIntelligence` | Session summarize/group/similarity | `false` | session |
+| `enable_conversation_intelligence` | `conversationIntelligence` | Intent detection/context optimization/goal tracking | `false` | conversation |
+| `enable_canvas_intelligence` | `canvasIntelligence` | Code analysis/artifact suggestions/diff explanation | `false` | canvas |
+| `enable_trace_intelligence` | `traceIntelligence` | Trace summarization/cost projection/anomaly detection | `false` | trace |
+| `enable_diagram_intelligence` | `diagramIntelligence` | Diagram analysis/diagram-to-code generation | `false` | diagram |
+| `enable_hitl_ai` | `hitlIntelligence` | HITL risk assessment (beyond basic HITL approvals) | `false` | hitl |
+| `enable_genui` | `genuiComponents` | Generative UI - dynamic component rendering | `false` | command |
+
+**Granular Flag Behavior:**
+- Each granular flag can be enabled independently
+- Falls back to `enable_studio_ai` master flag when granular flag is not set
+- Mapped in `useAIIntelligenceConfig.ts` hook
+- Exposed via `get_ui_features_for_role()` backend method
+
+**Frontend Mapping (useAIIntelligenceConfig.ts):**
+```typescript
+// Helper to check granular flag with fallback to master flag
+const isIntelligenceEnabled = (granularFlag: string): boolean =>
+  isEnabled(granularFlag) || isEnabled("enable_studio_ai");
+
+features: {
+  sessionIntelligence: isIntelligenceEnabled("enable_session_intelligence"),
+  conversationIntelligence: isIntelligenceEnabled("enable_conversation_intelligence"),
+  canvasIntelligence: isIntelligenceEnabled("enable_canvas_intelligence"),
+  traceIntelligence: isIntelligenceEnabled("enable_trace_intelligence"),
+  diagramIntelligence: isIntelligenceEnabled("enable_diagram_intelligence"),
+  hitlIntelligence: isEnabled("enable_hitl_ai"),
+  genuiComponents: isEnabled("enable_genui"),
+}
+```
+
 ---
 
 ## Implementation in FeatureFlags Interface
@@ -98,9 +136,7 @@ Add to `src/types/api.ts`:
 export interface FeatureFlags {
   // ... existing flags ...
 
-  // Canvas Hybrid Shell (Phase 0+)
-  /** Enable Hybrid Canvas shell at /studio/v2 */
-  canvas_hybrid_shell?: boolean;
+  // Canvas Features (HybridShell is now default at /studio)
   /** Enable editable artifacts in Canvas panel */
   canvas_editable?: boolean;
   /** Enable background agent panel */
@@ -121,21 +157,23 @@ export interface FeatureFlags {
 
 ## Usage Pattern
 
-### Route-Level Gating (App.tsx or router)
+### Route-Level Structure (router/index.tsx)
+
+HybridShellLayout is now the default at `/studio`:
 
 ```typescript
-const { isEnabled } = useFeatureFlags();
-
-// In router
+// In router - HybridShell is the default shell
 {
-  path: "studio/v2",
-  element: isEnabled('canvas_hybrid_shell') ? (
+  path: "studio",
+  element: (
     <AuthGuard>
       <HybridShellLayout />
     </AuthGuard>
-  ) : (
-    <Navigate to="/studio" replace />
   ),
+  children: [
+    { index: true, element: <Navigate to="chat" replace /> },
+    // ... all studio routes
+  ],
 }
 ```
 
@@ -156,19 +194,19 @@ return (
 
 ## Rollback Strategy
 
-Per the plan, feature flags enable instant rollback:
+HybridShellLayout is now the default at `/studio`. Feature flags control individual canvas features:
 
 ```typescript
-// If issues detected:
-// 1. Set canvas_hybrid_shell = false in backend
-// 2. Users immediately fall back to /studio (legacy AppShell)
-// 3. No code deployment required
+// Feature-level rollback (no shell-level rollback needed):
+// 1. Set canvas_editable = false to disable artifact editing
+// 2. Set canvas_agents = false to disable agent panel
+// 3. Set canvas_compliance = false to disable compliance dashboards
+// 4. No code deployment required for feature rollbacks
 
-// Route-level kill switch
+// Route-level feature gates
 const ROUTE_FLAGS = {
-  '/studio/v2/chat': 'canvas_chat_enabled',
-  '/studio/v2/workflows': 'canvas_workflows_enabled',
-  '/studio/v2/compliance': 'canvas_compliance_enabled',
+  '/studio/compliance': 'canvas_compliance',
+  '/studio/help': 'canvas_help',
 };
 ```
 
@@ -200,20 +238,30 @@ http.get('/api/v1/features', () => {
     // Existing flags
     url_content_fetch: true,
     slash_commands: true,
-    // Canvas flags (enable for development)
-    canvas_hybrid_shell: true,
-    canvas_editable: false,
-    canvas_agents: false,
+    // Canvas feature flags (HybridShell is now default)
+    canvas_editable: true,
+    canvas_agents: true,
+    canvas_ai_palette: true,
+    canvas_compliance: true,
+    canvas_help: true,
   });
 }),
 ```
 
 ---
 
-## Next Steps
+## Status
 
-1. **Phase 0:** Document complete (this file)
-2. **Phase 1:** Add `canvas_hybrid_shell` to FeatureFlags interface
-3. **Phase 1:** Add MSW mock for development
-4. **Phase 1:** Add route-level gating in router/index.tsx
-5. **Coordinate:** Sync flag names with backend team
+**COMPLETED:** HybridShellLayout is now the default UI at `/studio`.
+
+- ~~Phase 1: Add `canvas_hybrid_shell` flag~~ - **REMOVED** (HybridShell is default)
+- ✅ Phase 2: `canvas_editable` controls artifact editing
+- ✅ Phase 3-4: `canvas_agents`, `canvas_ai_palette` control agent features
+- ✅ Phase 5: `canvas_compliance`, `canvas_help` control advanced features
+- ✅ Phase 6+: `batch_composite_analysis`, `insights_session_dismissal` control AI UX features
+
+**Granular Intelligence Flags (Sprint 1-4):**
+- ✅ Sprint 1: Frontend feature flag integration (`useAIIntelligenceConfig.ts`)
+- ✅ Sprint 1: AIIntelligenceContext extended with new feature types
+- ✅ Sprint 1: All 7 granular flags mapped with fallback to master flag
+- 🔄 Sprint 2: Session Intelligence implementation (in progress)

@@ -55,6 +55,12 @@ export interface AIFeatureFlags {
   sessionIntelligence?: boolean;
   /** Conversation intelligence (intent, goal) */
   conversationIntelligence?: boolean;
+  /** Diagram intelligence (analysis, to-code) */
+  diagramIntelligence?: boolean;
+  /** HITL AI intelligence (risk assessment beyond basic HITL) */
+  hitlIntelligence?: boolean;
+  /** Generative UI components */
+  genuiComponents?: boolean;
 }
 
 export interface AICacheConfig {
@@ -140,6 +146,9 @@ const DEFAULT_FEATURES: Required<AIFeatureFlags> = {
   canvasIntelligence: false,
   sessionIntelligence: false,
   conversationIntelligence: false,
+  diagramIntelligence: false,
+  hitlIntelligence: false,
+  genuiComponents: false,
 };
 
 const DEFAULT_CACHE_CONFIG: Required<AICacheConfig> = {
