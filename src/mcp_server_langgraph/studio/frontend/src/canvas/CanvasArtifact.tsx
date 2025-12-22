@@ -1,13 +1,19 @@
 /**
- * CanvasArtifact - Phase 1
+ * CanvasArtifact - Phase 1 + Sprint 4 AI Enhancement
  *
  * Editable artifact component that renders different content types
  * (code, markdown, JSON, etc.) with editing capabilities.
+ *
+ * Features:
+ * - Code, markdown, JSON content rendering
+ * - Inline editing with save/cancel
+ * - AI-powered code analysis (Sprint 4)
  */
 import { useState, useCallback, useMemo } from "react";
-import { Edit2, Save, X, Sparkles } from "lucide-react";
+import { Edit2, Save, X, Sparkles, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import type { CanvasArtifact as CanvasArtifactType } from "../types/artifacts";
 import { cn } from "../utils/cn";
+import { useCodeAnalysis } from "../hooks";
 
 // =============================================================================
 // Types
@@ -34,6 +40,12 @@ export interface CanvasArtifactProps {
   ariaLabel?: string;
   /** Additional class name */
   className?: string;
+  /** User ID for AI features (Sprint 4) */
+  userId?: string;
+  /** Session ID for AI features (Sprint 4) */
+  sessionId?: string;
+  /** Enable AI-powered code analysis (Sprint 4) */
+  enableAI?: boolean;
 }
 
 // =============================================================================
@@ -81,6 +93,9 @@ export function CanvasArtifact({
   onEdit,
   ariaLabel,
   className,
+  userId,
+  sessionId,
+  enableAI = false,
 }: CanvasArtifactProps) {
   // Manage edit state internally if not controlled by parent
   const [internalEditing, setInternalEditing] = useState(false);
@@ -95,6 +110,26 @@ export function CanvasArtifact({
 
   const aiConfidence = artifact.editMetadata?.aiConfidence;
   const language = artifact.editMetadata?.language;
+
+  // Determine if this is a code artifact that can be analyzed
+  const isCodeArtifact = artifact.contentType === "code";
+
+  // Sprint 4: AI-powered code analysis
+  const {
+    complexity: aiComplexity,
+    qualityScore: aiQualityScore,
+    issues: aiIssues,
+    suggestions: aiSuggestions,
+    isLoading: aiLoading,
+    error: aiError,
+    refetch: refetchAI,
+  } = useCodeAnalysis({
+    userId: userId ?? "anonymous",
+    sessionId: sessionId ?? undefined,
+    code: artifact.content,
+    language: language ?? undefined,
+    enabled: enableAI && isCodeArtifact && !!userId,
+  });
 
   const handleContentChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -296,6 +331,148 @@ export function CanvasArtifact({
           )}
         </div>
       </div>
+
+      {/* AI Code Analysis Panel (Sprint 4) */}
+      {enableAI && userId && isCodeArtifact && (
+        <div
+          data-testid="ai-code-analysis"
+          className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles size={16} className="text-primary-500" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Code Analysis
+            </span>
+            {aiLoading && (
+              <Loader2 size={14} className="animate-spin text-primary-500" />
+            )}
+            {aiError && (
+              <button
+                type="button"
+                onClick={() => refetchAI()}
+                className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400"
+              >
+                Retry
+              </button>
+            )}
+          </div>
+
+          {aiLoading && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Analyzing code...
+            </p>
+          )}
+
+          {aiError && (
+            <p className="text-sm text-red-600 dark:text-red-400">
+              Failed to analyze code. Click retry to try again.
+            </p>
+          )}
+
+          {!aiLoading && !aiError && (
+            <div className="space-y-2">
+              {/* Metrics Row */}
+              <div className="flex items-center gap-4">
+                {aiComplexity !== null && (
+                  <div
+                    data-testid="complexity-score"
+                    className="flex items-center gap-1.5"
+                  >
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Complexity:
+                    </span>
+                    <span
+                      className={cn(
+                        "px-1.5 py-0.5 text-xs font-medium rounded",
+                        aiComplexity <= 10
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                          : aiComplexity <= 20
+                            ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
+                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+                      )}
+                    >
+                      {aiComplexity}
+                    </span>
+                  </div>
+                )}
+
+                {aiQualityScore !== null && (
+                  <div
+                    data-testid="quality-score"
+                    className="flex items-center gap-1.5"
+                  >
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Quality:
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {aiQualityScore >= 0.8 ? (
+                        <CheckCircle2 size={12} className="text-green-500" />
+                      ) : aiQualityScore >= 0.6 ? (
+                        <AlertTriangle size={12} className="text-yellow-500" />
+                      ) : (
+                        <AlertTriangle size={12} className="text-red-500" />
+                      )}
+                      <span
+                        className={cn(
+                          "text-xs font-medium",
+                          aiQualityScore >= 0.8
+                            ? "text-green-600 dark:text-green-400"
+                            : aiQualityScore >= 0.6
+                              ? "text-yellow-600 dark:text-yellow-400"
+                              : "text-red-600 dark:text-red-400",
+                        )}
+                      >
+                        {Math.round(aiQualityScore * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Issues */}
+              {aiIssues && aiIssues.length > 0 && (
+                <div data-testid="code-issues" className="space-y-1">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Issues ({aiIssues.length}):
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {aiIssues.slice(0, 3).map((issue, idx) => (
+                      <span
+                        key={idx}
+                        className={cn(
+                          "px-2 py-0.5 text-xs rounded-full",
+                          issue.severity === "error"
+                            ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                            : issue.severity === "warning"
+                              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
+                              : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+                        )}
+                        title={issue.message}
+                      >
+                        {issue.type}
+                        {issue.line && ` (L${issue.line})`}
+                      </span>
+                    ))}
+                    {aiIssues.length > 3 && (
+                      <span className="px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400">
+                        +{aiIssues.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Suggestions */}
+              {aiSuggestions && aiSuggestions.length > 0 && (
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="font-medium">Suggestion:</span>{" "}
+                  {aiSuggestions[0].description}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 p-4 overflow-auto">{renderContent()}</div>
