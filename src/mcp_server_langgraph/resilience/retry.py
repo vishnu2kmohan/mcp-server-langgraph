@@ -226,6 +226,7 @@ def should_retry_exception(exception: Exception) -> bool:
             AuthenticationError,
             AuthorizationError,
             ExternalServiceError,
+            LLMProviderError,
             RateLimitError,
             ResilienceError,
             ValidationError,
@@ -243,6 +244,12 @@ def should_retry_exception(exception: Exception) -> bool:
         # Never retry rate limits from our own service
         if isinstance(exception, RateLimitError):
             return False
+
+        # Never retry hook denials (deterministic, won't change on retry)
+        if isinstance(exception, LLMProviderError):
+            metadata = getattr(exception, "metadata", {}) or {}
+            if metadata.get("hook_denied"):
+                return False
 
         # Always retry external service errors
         if isinstance(exception, ExternalServiceError):
@@ -481,6 +488,11 @@ def retry_with_backoff(  # noqa: C901
 
                         # Check if we should filter this exception type
                         if retry_on and not isinstance(e, retry_on):
+                            raise
+
+                        # Check if this specific exception should not be retried
+                        # (e.g., hook denials are deterministic and won't change on retry)
+                        if not should_retry_exception(e):
                             raise
 
                         # Check if we should switch to overload config

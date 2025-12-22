@@ -72,7 +72,7 @@ class HeartMetricsBatch(BaseModel):
     """Batch of HEART metrics for submission"""
 
     session_id: str = Field(description="Anonymous session identifier")
-    app_name: Literal["builder", "playground"] = Field(description="Source application")
+    app_name: Literal["studio"] = Field(description="Source application")
     task_success: TaskMetrics | None = None
     engagement: EngagementMetrics | None = None
     happiness: HappinessMetrics | None = None
@@ -101,7 +101,7 @@ class EventBatch(BaseModel):
     """Batch of feature events"""
 
     session_id: str = Field(description="Anonymous session identifier")
-    app_name: Literal["builder", "playground"] = Field(description="Source application")
+    app_name: Literal["studio"] = Field(description="Source application")
     events: list[FeatureEvent] = Field(description="List of events")
 
 
@@ -193,7 +193,7 @@ async def submit_heart_metrics(batch: HeartMetricsBatch) -> MetricsReceiptRespon
         POST /api/v1/metrics/heart
         {
             "session_id": "abc-123",
-            "app_name": "builder",
+            "app_name": "studio",
             "task_success": {"tasks_started": 5, "tasks_completed": 4, "tasks_errored": 1},
             "happiness": {"satisfaction_score": 4}
         }
@@ -237,7 +237,7 @@ async def submit_events(batch: EventBatch) -> EventReceiptResponse:
         POST /api/v1/metrics/events
         {
             "session_id": "abc-123",
-            "app_name": "builder",
+            "app_name": "studio",
             "events": [
                 {"feature_name": "code_generation", "event_type": "used"},
                 {"feature_name": "dark_mode", "event_type": "clicked"}
@@ -278,7 +278,7 @@ async def get_aggregate_metrics(
 
     Example:
         ```
-        GET /api/v1/metrics/heart/aggregate?period=7d&app=builder
+        GET /api/v1/metrics/heart/aggregate?period=7d&app=studio
         ```
     """
     # Filter metrics by app if specified
@@ -344,14 +344,12 @@ async def get_dashboard() -> dict[str, Any]:
     """
     Get dashboard data for admin UI.
 
-    Returns aggregated metrics for both apps and recent event counts.
+    Returns aggregated metrics for Studio and recent event counts.
     """
-    builder_metrics = await get_aggregate_metrics(period="7d", app="builder")
-    playground_metrics = await get_aggregate_metrics(period="7d", app="playground")
+    studio_metrics = await get_aggregate_metrics(period="7d", app="studio")
 
     return {
-        "builder": builder_metrics.model_dump(),
-        "playground": playground_metrics.model_dump(),
+        "studio": studio_metrics.model_dump(),
         "total_metrics_count": len(_metrics_store),
         "total_events_count": len(_events_store),
         "generated_at": datetime.now(UTC).isoformat(),

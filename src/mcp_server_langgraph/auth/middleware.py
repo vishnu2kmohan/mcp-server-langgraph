@@ -5,15 +5,19 @@ Now supports:
 - Pluggable user providers (InMemory, Keycloak, custom)
 - Session management (Token-based or Session-based)
 - Fine-grained authorization via OpenFGA
+- can_use_tool callback for dynamic tool permission (Claude Agent SDK pattern)
 
 Architecture (Phase 2.1 SRP decomposition):
 - AuthorizationService: Handles authorization logic (auth/authorization.py)
 - MockResourceGenerator: Handles mock data for dev/test (auth/mock_resources.py)
 - AuthMiddleware: Facade coordinating authentication, authorization, and sessions
+
+Claude Agent SDK Integration:
+- can_use_tool callback for dynamic tool permission checks
 """
 
 from functools import wraps
-from typing import Any, Optional, cast
+from typing import Any, Callable, Coroutine, Optional, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -24,7 +28,14 @@ from mcp_server_langgraph.auth.session import SessionData, SessionStore
 from mcp_server_langgraph.auth.token_denylist import TokenDenylist
 from mcp_server_langgraph.auth.user_provider import AuthResponse, InMemoryUserProvider, TokenVerification, UserProvider
 from mcp_server_langgraph.auth.dpop import DPoPEnforcer, DPoPReplayCache
+from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.observability.telemetry import logger, tracer
+
+# Type alias for can_use_tool callback (Claude Agent SDK pattern)
+CanUseToolCallback = Callable[
+    [str, dict[str, Any], dict[str, Any]],
+    Coroutine[Any, Any, dict[str, Any]],
+]
 
 # FastAPI imports for dependency injection (optional, only if using FastAPI endpoints)
 
@@ -138,6 +149,7 @@ class AuthMiddleware:
         token_denylist: TokenDenylist | None = None,
         dpop_replay_cache: DPoPReplayCache | None = None,
         dpop_required: bool = False,
+        can_use_tool: CanUseToolCallback | None = None,
     ):
         """
         Initialize AuthMiddleware
@@ -153,6 +165,10 @@ class AuthMiddleware:
             dpop_replay_cache: DPoP jti replay cache for replay protection (RFC 9449)
             dpop_required: If True, ALL tokens require DPoP proof (strict mode, RFC 9449 Section 10).
                           If False (default), only tokens with cnf.jkt claim require DPoP.
+            can_use_tool: Optional callback for dynamic tool permission checks (Claude Agent SDK pattern).
+                         Signature: async (tool: str, input: dict, context: dict) -> dict
+                         Returns: {"behavior": "allow"} or {"behavior": "deny", "message": "..."}
+                         Can also return {"updatedInput": {...}} to modify the input.
         """
         self.secret_key = secret_key
         self.openfga = openfga_client
@@ -161,6 +177,7 @@ class AuthMiddleware:
         self.token_denylist = token_denylist
         self.dpop_replay_cache = dpop_replay_cache
         self.dpop_required = dpop_required
+        self._can_use_tool_callback = can_use_tool
 
         # Use provided user provider or default to in-memory for backward compatibility
         if user_provider is None:
@@ -263,6 +280,60 @@ class AuthMiddleware:
             resource=resource,
             context=context,
         )
+
+    async def can_use_tool(
+        self,
+        tool: str,
+        input: dict[str, Any],
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Check if a tool can be used with the given input.
+
+        Claude Agent SDK pattern for dynamic tool permission checks.
+        This allows for fine-grained, context-aware decisions beyond
+        static OpenFGA rules.
+
+        Gated by enable_sdk_can_use_tool feature flag.
+
+        Args:
+            tool: Tool name (e.g., "Write", "Bash", "calculator")
+            input: Tool input arguments
+            context: Execution context (e.g., {"user_id": "alice"})
+
+        Returns:
+            Permission result dict with:
+            - behavior: "allow" or "deny"
+            - message: Optional denial message
+            - updatedInput: Optional modified input (for sanitization)
+        """
+        # Check feature flag
+        if not feature_flags.enable_sdk_can_use_tool:
+            return {"behavior": "allow"}
+
+        # If no callback configured, allow by default
+        if self._can_use_tool_callback is None:
+            return {"behavior": "allow"}
+
+        # Invoke the callback
+        try:
+            result = await self._can_use_tool_callback(tool, input, context)
+            logger.debug(
+                "can_use_tool callback invoked",
+                extra={
+                    "tool": tool,
+                    "behavior": result.get("behavior", "allow"),
+                    "user_id": context.get("user_id"),
+                },
+            )
+            return result
+        except Exception as e:
+            # On callback error, deny for safety
+            logger.error(
+                f"can_use_tool callback error: {e}",
+                extra={"tool": tool, "user_id": context.get("user_id")},
+            )
+            return {"behavior": "deny", "message": f"Error in permission check: {e}"}
 
     def _get_mock_resources(self, user_id: str, relation: str, resource_type: str) -> list[str]:
         """

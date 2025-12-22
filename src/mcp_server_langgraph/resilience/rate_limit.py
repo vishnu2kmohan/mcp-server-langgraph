@@ -276,6 +276,17 @@ def reset_all_token_buckets() -> None:
         logger.warning("All token buckets reset (testing only)")
 
 
+def get_all_token_buckets() -> dict[str, TokenBucket]:
+    """
+    Get all registered token buckets.
+
+    Returns:
+        Dict mapping provider name to TokenBucket instance
+    """
+    with _bucket_lock:
+        return dict(_provider_token_buckets)
+
+
 # =============================================================================
 # Rate Limiter Decorator
 # =============================================================================

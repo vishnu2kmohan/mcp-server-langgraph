@@ -36,28 +36,28 @@ class TestResourceModels:
     def test_resource_creation_with_uri_and_name_succeeds(self) -> None:
         """Test basic resource creation."""
         resource = Resource(
-            uri="playground://session/abc123/traces",
+            uri="studio://session/abc123/traces",
             name="Session Traces",
             description="OpenTelemetry traces for this session",
             mimeType="application/json",
         )
-        assert resource.uri == "playground://session/abc123/traces"
+        assert resource.uri == "studio://session/abc123/traces"
         assert resource.name == "Session Traces"
         assert resource.mimeType == "application/json"
 
     def test_resource_without_mime_type(self) -> None:
         """Test resource without explicit MIME type."""
         resource = Resource(
-            uri="playground://session/abc123/logs",
+            uri="studio://session/abc123/logs",
             name="Session Logs",
         )
-        assert resource.uri == "playground://session/abc123/logs"
+        assert resource.uri == "studio://session/abc123/logs"
         assert resource.mimeType is None
 
     def test_resource_content_text(self) -> None:
         """Test text resource content."""
         content = ResourceContent(
-            uri="playground://session/abc123/summary",
+            uri="studio://session/abc123/summary",
             mimeType="text/plain",
             text="Session summary: 5 messages, 3 tool calls",
         )
@@ -68,7 +68,7 @@ class TestResourceModels:
         """Test JSON resource content."""
         data = {"traces": [{"id": "trace-1", "name": "chat"}]}
         content = ResourceContent(
-            uri="playground://session/abc123/traces",
+            uri="studio://session/abc123/traces",
             mimeType="application/json",
             text=json.dumps(data),
         )
@@ -78,7 +78,7 @@ class TestResourceModels:
     def test_resource_content_blob(self) -> None:
         """Test binary resource content (base64)."""
         content = ResourceContent(
-            uri="playground://session/abc123/screenshot",
+            uri="studio://session/abc123/screenshot",
             mimeType="image/png",
             blob="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB",  # Base64
         )
@@ -88,7 +88,7 @@ class TestResourceModels:
     def test_resource_template_with_uri_pattern_succeeds(self) -> None:
         """Test resource template with URI pattern."""
         template = ResourceTemplate(
-            uriTemplate="playground://session/{session_id}/traces",
+            uriTemplate="studio://session/{session_id}/traces",
             name="Session Traces",
             description="Traces for a specific session",
             mimeType="application/json",
@@ -100,11 +100,11 @@ class TestResourceModels:
         response = ResourcesListResponse(
             resources=[
                 Resource(
-                    uri="playground://session/abc/traces",
+                    uri="studio://session/abc/traces",
                     name="Traces",
                 ),
                 Resource(
-                    uri="playground://session/abc/logs",
+                    uri="studio://session/abc/logs",
                     name="Logs",
                 ),
             ]
@@ -116,7 +116,7 @@ class TestResourceModels:
         response = ResourceReadResponse(
             contents=[
                 ResourceContent(
-                    uri="playground://session/abc/metrics",
+                    uri="studio://session/abc/metrics",
                     mimeType="application/json",
                     text='{"latency_p50_ms": 150}',
                 )
@@ -142,19 +142,19 @@ class TestResourceHandler:
     def test_register_resource_adds_to_resource_list(self, handler: ResourceHandler) -> None:
         """Test registering a new resource."""
         handler.register_resource(
-            uri="playground://session/abc/traces",
+            uri="studio://session/abc/traces",
             name="Session Traces",
             description="Traces for session abc",
             mime_type="application/json",
         )
         resources = handler.list_resources()
         assert len(resources) == 1
-        assert resources[0].uri == "playground://session/abc/traces"
+        assert resources[0].uri == "studio://session/abc/traces"
 
     def test_register_template_adds_to_template_list(self, handler: ResourceHandler) -> None:
         """Test registering a resource template."""
         handler.register_template(
-            uri_template="playground://session/{session_id}/traces",
+            uri_template="studio://session/{session_id}/traces",
             name="Session Traces",
             description="Traces for any session",
             mime_type="application/json",
@@ -174,11 +174,11 @@ class TestResourceHandler:
             )
 
         handler.register_provider(
-            uri_pattern="playground://session/*/traces",
+            uri_pattern="studio://session/*/traces",
             provider=traces_provider,
         )
 
-        assert handler.has_provider("playground://session/abc/traces")
+        assert handler.has_provider("studio://session/abc/traces")
 
     @pytest.mark.asyncio
     async def test_read_resource(self, handler: ResourceHandler) -> None:
@@ -192,16 +192,16 @@ class TestResourceHandler:
             )
 
         handler.register_resource(
-            uri="playground://session/abc/logs",
+            uri="studio://session/abc/logs",
             name="Logs",
             mime_type="application/json",
         )
         handler.register_provider(
-            uri_pattern="playground://session/*/logs",
+            uri_pattern="studio://session/*/logs",
             provider=logs_provider,
         )
 
-        content = await handler.read_resource("playground://session/abc/logs")
+        content = await handler.read_resource("studio://session/abc/logs")
         assert content.mimeType == "application/json"
         assert "info" in content.text
 
@@ -209,38 +209,38 @@ class TestResourceHandler:
     async def test_read_nonexistent_resource(self, handler: ResourceHandler) -> None:
         """Test error when reading nonexistent resource."""
         with pytest.raises(ValueError, match="not found"):
-            await handler.read_resource("playground://nonexistent")
+            await handler.read_resource("studio://nonexistent")
 
     def test_expand_template_with_args_produces_full_uri(self, handler: ResourceHandler) -> None:
         """Test expanding a URI template."""
         handler.register_template(
-            uri_template="playground://session/{session_id}/{resource_type}",
+            uri_template="studio://session/{session_id}/{resource_type}",
             name="Session Resource",
         )
 
         expanded = handler.expand_template(
-            "playground://session/{session_id}/{resource_type}",
+            "studio://session/{session_id}/{resource_type}",
             {"session_id": "abc123", "resource_type": "traces"},
         )
 
-        assert expanded == "playground://session/abc123/traces"
+        assert expanded == "studio://session/abc123/traces"
 
     def test_list_resources_for_session(self, handler: ResourceHandler) -> None:
         """Test listing resources filtered by session."""
         handler.register_resource(
-            uri="playground://session/session1/traces",
+            uri="studio://session/session1/traces",
             name="Session 1 Traces",
         )
         handler.register_resource(
-            uri="playground://session/session1/logs",
+            uri="studio://session/session1/logs",
             name="Session 1 Logs",
         )
         handler.register_resource(
-            uri="playground://session/session2/traces",
+            uri="studio://session/session2/traces",
             name="Session 2 Traces",
         )
 
-        session1_resources = handler.list_resources(filter_pattern="playground://session/session1/*")
+        session1_resources = handler.list_resources(filter_pattern="studio://session/session1/*")
         assert len(session1_resources) == 2
 
 
@@ -261,7 +261,7 @@ class TestResourceJSONRPC:
     def test_resources_list_jsonrpc_format(self, handler: ResourceHandler) -> None:
         """Test resources/list response in JSON-RPC format."""
         handler.register_resource(
-            uri="playground://session/abc/traces",
+            uri="studio://session/abc/traces",
             name="Traces",
             description="Session traces",
             mime_type="application/json",
@@ -286,15 +286,15 @@ class TestResourceJSONRPC:
             )
 
         handler.register_resource(
-            uri="playground://test/resource",
+            uri="studio://test/resource",
             name="Test",
         )
         handler.register_provider(
-            uri_pattern="playground://test/*",
+            uri_pattern="studio://test/*",
             provider=provider,
         )
 
-        content = await handler.read_resource("playground://test/resource")
+        content = await handler.read_resource("studio://test/resource")
         jsonrpc_response = ResourceReadResponse(contents=[content]).to_jsonrpc(request_id=2)
 
         assert jsonrpc_response["jsonrpc"] == "2.0"
@@ -319,13 +319,13 @@ class TestResourceSubscriptions:
     def test_subscribe_to_resource(self, handler: ResourceHandler) -> None:
         """Test subscribing to resource changes."""
         handler.register_resource(
-            uri="playground://session/abc/logs",
+            uri="studio://session/abc/logs",
             name="Logs",
         )
 
         callback = MagicMock()
         subscription_id = handler.subscribe(
-            uri="playground://session/abc/logs",
+            uri="studio://session/abc/logs",
             callback=callback,
         )
 
@@ -335,13 +335,13 @@ class TestResourceSubscriptions:
     def test_unsubscribe_from_resource(self, handler: ResourceHandler) -> None:
         """Test unsubscribing from resource changes."""
         handler.register_resource(
-            uri="playground://session/abc/logs",
+            uri="studio://session/abc/logs",
             name="Logs",
         )
 
         callback = MagicMock()
         subscription_id = handler.subscribe(
-            uri="playground://session/abc/logs",
+            uri="studio://session/abc/logs",
             callback=callback,
         )
 
@@ -360,29 +360,29 @@ class TestResourceSubscriptions:
             )
 
         handler.register_resource(
-            uri="playground://session/abc/logs",
+            uri="studio://session/abc/logs",
             name="Logs",
         )
         handler.register_provider(
-            uri_pattern="playground://session/*/logs",
+            uri_pattern="studio://session/*/logs",
             provider=provider,
         )
 
         callback = AsyncMock()  # async-mock-configured
         handler.subscribe(
-            uri="playground://session/abc/logs",
+            uri="studio://session/abc/logs",
             callback=callback,
         )
 
-        await handler.notify_change("playground://session/abc/logs")
+        await handler.notify_change("studio://session/abc/logs")
 
         callback.assert_called_once()
 
 
 @pytest.mark.xdist_group(name="mcp_resources")
 @pytest.mark.integration
-class TestPlaygroundResources:
-    """Test Playground-specific resources."""
+class TestStudioResources:
+    """Test Studio-specific resources."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
@@ -391,10 +391,10 @@ class TestPlaygroundResources:
     def test_session_traces_resource(self) -> None:
         """Test session traces resource structure."""
         from mcp_server_langgraph.mcp.resources import (
-            create_playground_resource_handler,
+            create_studio_resource_handler,
         )
 
-        handler = create_playground_resource_handler()
+        handler = create_studio_resource_handler()
         templates = handler.list_templates()
 
         # Should have traces template
@@ -408,10 +408,10 @@ class TestPlaygroundResources:
     def test_session_logs_resource(self) -> None:
         """Test session logs resource structure."""
         from mcp_server_langgraph.mcp.resources import (
-            create_playground_resource_handler,
+            create_studio_resource_handler,
         )
 
-        handler = create_playground_resource_handler()
+        handler = create_studio_resource_handler()
         templates = handler.list_templates()
 
         logs_template = next(
@@ -423,10 +423,10 @@ class TestPlaygroundResources:
     def test_session_metrics_resource(self) -> None:
         """Test session metrics resource structure."""
         from mcp_server_langgraph.mcp.resources import (
-            create_playground_resource_handler,
+            create_studio_resource_handler,
         )
 
-        handler = create_playground_resource_handler()
+        handler = create_studio_resource_handler()
         templates = handler.list_templates()
 
         metrics_template = next(
@@ -438,10 +438,10 @@ class TestPlaygroundResources:
     def test_session_alerts_resource(self) -> None:
         """Test session alerts resource structure."""
         from mcp_server_langgraph.mcp.resources import (
-            create_playground_resource_handler,
+            create_studio_resource_handler,
         )
 
-        handler = create_playground_resource_handler()
+        handler = create_studio_resource_handler()
         templates = handler.list_templates()
 
         alerts_template = next(

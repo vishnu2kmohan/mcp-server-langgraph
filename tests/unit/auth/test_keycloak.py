@@ -166,11 +166,15 @@ class TestTokenValidator:
     async def test_get_jwks_success(self, keycloak_config, jwks_response):
         """Test successful JWKS retrieval"""
         validator = TokenValidator(keycloak_config)
-        with patch("httpx.AsyncClient") as mock_client:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_response = MagicMock()
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            mock_manager = MagicMock()
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_manager.get_client = AsyncMock(return_value=mock_client)
+            mock_get_manager.return_value = mock_manager
             jwks = await validator.get_jwks()
             assert "keys" in jwks
             assert len(jwks["keys"]) == 1
@@ -180,39 +184,51 @@ class TestTokenValidator:
     async def test_get_jwks_caching(self, keycloak_config, jwks_response):
         """Test JWKS caching works"""
         validator = TokenValidator(keycloak_config)
-        with patch("httpx.AsyncClient") as mock_client:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_response = MagicMock()
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            mock_manager = MagicMock()
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_manager.get_client = AsyncMock(return_value=mock_client)
+            mock_get_manager.return_value = mock_manager
             jwks1 = await validator.get_jwks()
             jwks2 = await validator.get_jwks()
             assert jwks1 == jwks2
-            assert mock_client.return_value.__aenter__.return_value.get.call_count == 1
+            assert mock_client.get.call_count == 1
 
     @pytest.mark.asyncio
     async def test_get_jwks_force_refresh(self, keycloak_config, jwks_response):
         """Test forced JWKS refresh"""
         validator = TokenValidator(keycloak_config)
-        with patch("httpx.AsyncClient") as mock_client:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_response = MagicMock()
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            mock_manager = MagicMock()
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_manager.get_client = AsyncMock(return_value=mock_client)
+            mock_get_manager.return_value = mock_manager
             await validator.get_jwks()
             await validator.get_jwks(force_refresh=True)
-            assert mock_client.return_value.__aenter__.return_value.get.call_count == 2
+            assert mock_client.get.call_count == 2
 
     @pytest.mark.asyncio
     async def test_get_jwks_http_error(self, keycloak_config):
         """Test JWKS retrieval handles HTTP errors"""
         validator = TokenValidator(keycloak_config)
-        with patch("httpx.AsyncClient") as mock_client:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_response = MagicMock()
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 "Error", request=MagicMock(), response=MagicMock()
             )
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            mock_manager = MagicMock()
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_manager.get_client = AsyncMock(return_value=mock_client)
+            mock_get_manager.return_value = mock_manager
             with pytest.raises(httpx.HTTPStatusError):
                 await validator.get_jwks()
 
@@ -233,11 +249,15 @@ class TestTokenValidator:
         }
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
-        with patch("httpx.AsyncClient") as mock_client:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_response = MagicMock()
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            mock_manager = MagicMock()
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_manager.get_client = AsyncMock(return_value=mock_client)
+            mock_get_manager.return_value = mock_manager
             decoded = await validator.verify_token(token)
             assert decoded["sub"] == "user-id-123"
             assert decoded["preferred_username"] == "alice"
@@ -258,11 +278,15 @@ class TestTokenValidator:
         }
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
-        with patch("httpx.AsyncClient") as mock_client:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_response = MagicMock()
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            mock_manager = MagicMock()
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_manager.get_client = AsyncMock(return_value=mock_client)
+            mock_get_manager.return_value = mock_manager
             with pytest.raises(jwt.ExpiredSignatureError):
                 await validator.verify_token(token)
 
@@ -282,14 +306,18 @@ class TestTokenValidator:
         payload = {"sub": "user-id-123", "aud": "test-client", "exp": datetime.now(UTC) + timedelta(hours=1)}
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "unknown-kid"})
-        with patch("httpx.AsyncClient") as mock_client:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_response = MagicMock()
             mock_response.json.return_value = {"keys": []}
             mock_response.raise_for_status = MagicMock()
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            mock_manager = MagicMock()
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_manager.get_client = AsyncMock(return_value=mock_client)
+            mock_get_manager.return_value = mock_manager
             with pytest.raises(jwt.InvalidTokenError, match="Public key not found"):
                 await validator.verify_token(token)
-            assert mock_client.return_value.__aenter__.return_value.get.call_count == 2
+            assert mock_client.get.call_count == 2
 
     @pytest.mark.asyncio
     async def test_verify_token_with_wrong_issuer_raises_error(self, keycloak_config, rsa_keypair, jwks_response):
@@ -313,11 +341,15 @@ class TestTokenValidator:
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
 
-        with patch("httpx.AsyncClient") as mock_client:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_response = MagicMock()
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            mock_manager = MagicMock()
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_manager.get_client = AsyncMock(return_value=mock_client)
+            mock_get_manager.return_value = mock_manager
             with pytest.raises(jwt.InvalidIssuerError):
                 await validator.verify_token(token)
 
@@ -339,11 +371,15 @@ class TestTokenValidator:
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
 
-        with patch("httpx.AsyncClient") as mock_client:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_response = MagicMock()
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            mock_manager = MagicMock()
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_manager.get_client = AsyncMock(return_value=mock_client)
+            mock_get_manager.return_value = mock_manager
             decoded = await validator.verify_token(token)
             assert decoded["sub"] == "user-id-123"
             assert decoded["iss"] == expected_issuer
@@ -370,11 +406,15 @@ class TestTokenValidator:
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
 
-        with patch("httpx.AsyncClient") as mock_client:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_response = MagicMock()
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+            mock_manager = MagicMock()
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_manager.get_client = AsyncMock(return_value=mock_client)
+            mock_get_manager.return_value = mock_manager
             with pytest.raises(jwt.ImmatureSignatureError):
                 await validator.verify_token(token)
 
@@ -713,8 +753,12 @@ class TestTokenValidatorErrorPaths:
         }
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_client.side_effect = Exception("Network error")
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
+            mock_manager = MagicMock()
+            mock_client = AsyncMock()
+            mock_client.get.side_effect = Exception("Network error")
+            mock_manager.get_client = AsyncMock(return_value=mock_client)
+            mock_get_manager.return_value = mock_manager
             with pytest.raises(Exception, match="Network error"):
                 await validator.verify_token(token)
 

@@ -20,7 +20,7 @@ Storage:
 from __future__ import annotations
 
 import logging
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
@@ -160,7 +160,7 @@ def get_preferences_store() -> dict[str, dict[str, Any]]:
 
 def get_user_id(current_user: dict[str, Any]) -> str:
     """Extract user ID from authenticated user dict."""
-    return current_user.get("user_id", "anonymous")
+    return cast(str, current_user.get("user_id", "anonymous"))
 
 
 # ==============================================================================

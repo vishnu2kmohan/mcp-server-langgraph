@@ -135,6 +135,23 @@ class AdaptiveBulkhead:
         """Get current concurrency limit (integer)."""
         return int(self._current_limit)
 
+    @property
+    def error_rate(self) -> float:
+        """Get current error rate from sliding window."""
+        return self.get_error_rate()
+
+    @property
+    def success_count(self) -> int:
+        """Get count of successes in current window."""
+        with self._lock:
+            return sum(1 for s in self._samples if s)
+
+    @property
+    def failure_count(self) -> int:
+        """Get count of failures in current window."""
+        with self._lock:
+            return sum(1 for s in self._samples if not s)
+
     def record_success(self) -> None:
         """Record a successful operation."""
         with self._lock:
@@ -289,6 +306,17 @@ def reset_all_adaptive_bulkheads() -> None:
     with _bulkhead_lock:
         _provider_adaptive_bulkheads.clear()
         logger.warning("All adaptive bulkheads reset (testing only)")
+
+
+def get_all_adaptive_bulkheads() -> dict[str, AdaptiveBulkhead]:
+    """
+    Get all registered adaptive bulkheads.
+
+    Returns:
+        Dict mapping provider name to AdaptiveBulkhead instance
+    """
+    with _bulkhead_lock:
+        return dict(_provider_adaptive_bulkheads)
 
 
 def get_all_adaptive_bulkhead_stats() -> dict[str, dict[str, int | float]]:

@@ -15,7 +15,6 @@ import pytest
 
 pytestmark = [
     pytest.mark.unit,
-    pytest.mark.asyncio,
 ]
 
 
@@ -115,6 +114,7 @@ class TestNotificationPreferences:
         assert restored.error_enabled == prefs.error_enabled
 
 
+@pytest.mark.asyncio
 @pytest.mark.xdist_group(name="test_notification_preferences_repository")
 class TestInMemoryPreferencesRepository:
     """Tests for in-memory preferences repository."""
@@ -273,6 +273,7 @@ class TestInMemoryPreferencesRepository:
         assert result.error_enabled is True
 
 
+@pytest.mark.asyncio
 @pytest.mark.xdist_group(name="test_notification_preferences_broadcaster")
 class TestBroadcasterWithPreferences:
     """Tests for broadcaster with preferences integration."""

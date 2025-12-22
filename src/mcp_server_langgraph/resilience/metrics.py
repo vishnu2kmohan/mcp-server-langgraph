@@ -112,6 +112,52 @@ bulkhead_queue_depth_gauge = meter.create_gauge(
 
 
 # ==============================================================================
+# Rate Limit Metrics
+# ==============================================================================
+
+rate_limit_token_exhausted_counter = meter.create_counter(
+    name="rate_limit.token_exhausted",
+    description="Total rate limit token exhaustion events",
+    unit="1",
+)
+
+rate_limit_wait_time_histogram = meter.create_histogram(
+    name="rate_limit.wait_time",
+    description="Time spent waiting for rate limit tokens",
+    unit="ms",
+)
+
+rate_limit_tokens_available_gauge = meter.create_gauge(
+    name="rate_limit.tokens_available",
+    description="Current rate limit tokens available",
+    unit="1",
+)
+
+
+# ==============================================================================
+# Adaptive Bulkhead Metrics
+# ==============================================================================
+
+adaptive_bulkhead_limit_gauge = meter.create_gauge(
+    name="adaptive_bulkhead.limit",
+    description="Current adaptive bulkhead concurrency limit",
+    unit="1",
+)
+
+adaptive_bulkhead_error_rate_gauge = meter.create_gauge(
+    name="adaptive_bulkhead.error_rate",
+    description="Current adaptive bulkhead error rate (0-1)",
+    unit="1",
+)
+
+adaptive_bulkhead_adjustment_counter = meter.create_counter(
+    name="adaptive_bulkhead.adjustments",
+    description="Total adaptive bulkhead limit adjustments",
+    unit="1",
+)
+
+
+# ==============================================================================
 # Fallback Metrics
 # ==============================================================================
 
@@ -276,6 +322,103 @@ def record_fallback_event(
 
     if fallback_type == "cache":
         fallback_cache_hits_counter.add(1, attributes)
+
+
+def record_rate_limit_exhaustion(provider: str) -> None:
+    """
+    Record a rate limit token exhaustion event.
+
+    Args:
+        provider: LLM provider name (anthropic, openai, vertex_ai, etc.)
+    """
+    attributes = {"provider": provider}
+    rate_limit_token_exhausted_counter.add(1, attributes)
+
+
+def record_rate_limit_wait_time(provider: str, wait_time_ms: float) -> None:
+    """
+    Record time spent waiting for rate limit tokens.
+
+    Args:
+        provider: LLM provider name
+        wait_time_ms: Wait time in milliseconds
+    """
+    attributes = {"provider": provider}
+    rate_limit_wait_time_histogram.record(wait_time_ms, attributes)
+
+
+def record_adaptive_bulkhead_adjustment(
+    provider: str,
+    direction: str,
+    new_limit: int,
+) -> None:
+    """
+    Record an adaptive bulkhead limit adjustment.
+
+    Args:
+        provider: LLM provider name
+        direction: Adjustment direction (increase, decrease)
+        new_limit: New concurrency limit after adjustment
+    """
+    attributes = {
+        "provider": provider,
+        "direction": direction,
+        "new_limit": str(new_limit),
+    }
+    adaptive_bulkhead_adjustment_counter.add(1, attributes)
+
+
+def update_adaptive_bulkhead_stats(
+    provider: str,
+    current_limit: int,
+    error_rate: float,
+) -> None:
+    """
+    Update adaptive bulkhead gauges with current stats.
+
+    Args:
+        provider: LLM provider name
+        current_limit: Current concurrency limit
+        error_rate: Current error rate (0.0 to 1.0)
+    """
+    attributes = {"provider": provider}
+    adaptive_bulkhead_limit_gauge.set(current_limit, attributes)
+    adaptive_bulkhead_error_rate_gauge.set(error_rate, attributes)
+
+
+# ==============================================================================
+# HTTP Connection Pool Metrics
+# ==============================================================================
+
+# Import pool metrics from centralized location
+from mcp_server_langgraph.observability.telemetry import (
+    http_pool_active_connections_gauge,
+    http_pool_max_connections_gauge,
+    http_pool_utilization_gauge,
+)
+
+
+def record_pool_metrics(
+    active_connections: int,
+    max_connections: int,
+) -> None:
+    """
+    Record HTTP connection pool metrics.
+
+    Args:
+        active_connections: Current number of active connections
+        max_connections: Maximum connections configured
+    """
+    http_pool_active_connections_gauge.set(active_connections)
+    http_pool_max_connections_gauge.set(max_connections)
+
+    # Calculate utilization (0.0 to 1.0)
+    if max_connections > 0:
+        utilization = active_connections / max_connections
+    else:
+        utilization = 0.0
+
+    http_pool_utilization_gauge.set(utilization)
 
 
 # ==============================================================================

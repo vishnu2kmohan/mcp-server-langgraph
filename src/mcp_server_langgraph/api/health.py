@@ -7,6 +7,8 @@ systems are properly initialized before the app accepts requests.
 This module prevents the classes of issues found in OpenAI Codex audit from recurring.
 """
 
+from typing import Any
+
 from fastapi import APIRouter, status
 from pydantic import BaseModel
 
@@ -36,6 +38,7 @@ class ReadinessResult(BaseModel):
 
     status: str  # "ready" or "not_ready"
     checks: dict[str, bool]
+    resilience_stats: dict[str, Any] | None = None
 
 
 class StartupResult(BaseModel):
@@ -56,6 +59,124 @@ class DependencyStatus(BaseModel):
 
 class SystemValidationError(Exception):
     """Raised when critical system validation fails at startup"""
+
+
+def validate_circuit_breakers_healthy() -> tuple[bool, str]:
+    """
+    Validate that critical circuit breakers are not in OPEN state.
+
+    Returns:
+        Tuple of (is_healthy, message)
+
+    Related to: ADR-0026 - Resilience Patterns
+    """
+    import pybreaker
+
+    from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
+
+    # Critical circuit breakers that should be checked
+    critical_breakers = ["redis", "keycloak", "openfga", "postgres"]
+    # Non-critical but important circuit breakers
+    warning_breakers = ["prometheus", "tempo", "loki"]
+
+    open_critical = []
+    open_warning = []
+
+    for name in critical_breakers:
+        try:
+            breaker = get_circuit_breaker(name)
+            if breaker.current_state == pybreaker.STATE_OPEN:
+                open_critical.append(name)
+        except Exception:
+            pass  # Circuit breaker not initialized
+
+    for name in warning_breakers:
+        try:
+            breaker = get_circuit_breaker(name)
+            if breaker.current_state == pybreaker.STATE_OPEN:
+                open_warning.append(name)
+        except Exception:
+            pass  # Circuit breaker not initialized
+
+    if open_critical:
+        return False, f"Critical circuit breakers OPEN: {', '.join(open_critical)}"
+
+    if open_warning:
+        return True, f"Warning: non-critical circuit breakers OPEN: {', '.join(open_warning)}"
+
+    return True, "All circuit breakers healthy (CLOSED)"
+
+
+def get_resilience_stats() -> dict[str, Any]:
+    """
+    Gather current resilience component statistics.
+
+    Returns a dictionary containing:
+    - adaptive_bulkheads: Per-provider concurrency limits and error rates
+    - rate_limits: Per-provider rate limit token availability
+    - circuit_breakers: Per-service circuit breaker states
+
+    Returns:
+        Dict with resilience component statistics
+
+    Related to: ADR-0026 - Comprehensive Client Resilience Patterns
+    """
+    import pybreaker
+
+    from mcp_server_langgraph.resilience.adaptive import get_all_adaptive_bulkheads
+    from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
+    from mcp_server_langgraph.resilience.rate_limit import get_all_token_buckets
+
+    stats: dict[str, Any] = {
+        "adaptive_bulkheads": {},
+        "rate_limits": {},
+        "circuit_breakers": {},
+    }
+
+    # Gather adaptive bulkhead stats
+    try:
+        bulkheads = get_all_adaptive_bulkheads()
+        for provider, bulkhead in bulkheads.items():
+            stats["adaptive_bulkheads"][provider] = {
+                "current_limit": bulkhead.current_limit,
+                "error_rate": round(bulkhead.error_rate, 4),
+                "success_count": bulkhead.success_count,
+                "failure_count": bulkhead.failure_count,
+            }
+    except Exception as e:
+        logger.debug(f"Could not gather adaptive bulkhead stats: {e}")
+
+    # Gather circuit breaker stats
+    all_breakers = ["redis", "keycloak", "openfga", "postgres", "llm", "prometheus", "tempo", "loki"]
+    for name in all_breakers:
+        try:
+            breaker = get_circuit_breaker(name)
+            state = breaker.current_state
+            # Map pybreaker states to human-readable strings
+            if state == pybreaker.STATE_CLOSED:
+                stats["circuit_breakers"][name] = "CLOSED"
+            elif state == pybreaker.STATE_OPEN:
+                stats["circuit_breakers"][name] = "OPEN"
+            elif state == pybreaker.STATE_HALF_OPEN:
+                stats["circuit_breakers"][name] = "HALF_OPEN"
+            else:
+                stats["circuit_breakers"][name] = str(state)
+        except Exception:
+            pass  # Circuit breaker not initialized for this service
+
+    # Gather rate limit (token bucket) stats
+    try:
+        buckets = get_all_token_buckets()
+        for provider, bucket in buckets.items():
+            stats["rate_limits"][provider] = {
+                "available_tokens": round(bucket.tokens, 2),
+                "capacity": round(bucket.capacity, 2),
+                "refill_rate": round(bucket.refill_rate, 4),
+            }
+    except Exception as e:
+        logger.debug(f"Could not gather rate limit stats: {e}")
+
+    return stats
 
 
 def validate_observability_initialized() -> tuple[bool, str]:
@@ -606,6 +727,7 @@ async def readiness_probe() -> ReadinessResult:
     Readiness probe endpoint for Kubernetes readinessProbe.
 
     Checks that all dependencies (database, cache, observability) are healthy.
+    Also checks that critical circuit breakers are not OPEN.
     When not ready, K8s will remove the pod from service endpoints.
 
     Returns:
@@ -623,7 +745,11 @@ async def readiness_probe() -> ReadinessResult:
     checks = {
         "observability": validate_observability_initialized()[0],
         "database": (await validate_database_connectivity_async())[0],
+        "circuit_breakers": validate_circuit_breakers_healthy()[0],
     }
+
+    # Gather resilience component stats for observability
+    resilience_stats = get_resilience_stats()
 
     # All checks must pass for ready status
     all_ready = all(checks.values())
@@ -631,6 +757,7 @@ async def readiness_probe() -> ReadinessResult:
     return ReadinessResult(
         status="ready" if all_ready else "not_ready",
         checks=checks,
+        resilience_stats=resilience_stats,
     )
 
 

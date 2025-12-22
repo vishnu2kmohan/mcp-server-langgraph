@@ -472,3 +472,203 @@ class TestOpenFGAClientAuthenticationPriority:
             # the token was cached, which means OIDC was used
             assert client._initialized is True
             assert client._oidc_token_expires_at is not None
+
+
+@pytest.mark.xdist_group(name="test_openfga_oidc_client")
+class TestOpenFGAClientOIDCRetryLogic:
+    """Test OIDC token acquisition retry logic for transient failures.
+
+    These tests verify resilience patterns for startup scenarios where
+    Keycloak may not be immediately reachable due to Docker networking
+    or service startup timing.
+
+    Reference: ADR-0026 - Resilience Patterns
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_get_oidc_token_retries_on_connect_error(self):
+        """
+        GIVEN: OpenFGAClient with OIDC config
+        WHEN: Connection fails twice then succeeds
+        THEN: Should retry and eventually return token
+
+        User Journey: Startup resilience when Keycloak is still initializing
+        """
+        client = OpenFGAClient(
+            api_url="http://localhost:8080",
+            oidc_client_id="test-client",
+            oidc_client_secret="test-secret",
+            oidc_issuer="http://keycloak/realms/default",
+        )
+
+        # Mock response for successful attempt
+        mock_success_response = MagicMock()
+        mock_success_response.status_code = 200
+        mock_success_response.json.return_value = {
+            "access_token": "eventually-obtained-token",
+            "expires_in": 3600,
+            "token_type": "Bearer",
+        }
+        mock_success_response.raise_for_status = MagicMock()
+
+        call_count = 0
+
+        async def mock_post(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count < 3:
+                # First two attempts fail with connection error
+                raise httpx.ConnectError("All connection attempts failed")
+            # Third attempt succeeds
+            return mock_success_response
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.post = mock_post
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            # Patch asyncio.sleep to avoid actual delays in tests
+            with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                token = await client._get_oidc_access_token()
+
+                # Should have made 3 attempts
+                assert call_count == 3
+
+                # Should have slept between retries (exponential backoff)
+                assert mock_sleep.call_count == 2
+                # First retry: 1s delay
+                mock_sleep.assert_any_call(pytest.approx(1.0, rel=0.1))
+                # Second retry: 2s delay (exponential)
+                mock_sleep.assert_any_call(pytest.approx(2.0, rel=0.1))
+
+                # Should return token from successful attempt
+                assert token == "eventually-obtained-token"
+
+    @pytest.mark.asyncio
+    async def test_get_oidc_token_raises_after_max_retries(self):
+        """
+        GIVEN: OpenFGAClient with OIDC config
+        WHEN: All retry attempts fail with connection error
+        THEN: Should raise OpenFGAUnavailableError after exhausting retries
+
+        User Journey: Clear failure mode when Keycloak is truly unreachable
+        """
+        from mcp_server_langgraph.core.exceptions import OpenFGAUnavailableError
+
+        client = OpenFGAClient(
+            api_url="http://localhost:8080",
+            oidc_client_id="test-client",
+            oidc_client_secret="test-secret",
+            oidc_issuer="http://keycloak/realms/default",
+        )
+
+        async def mock_post_always_fails(*args, **kwargs):
+            raise httpx.ConnectError("All connection attempts failed")
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.post = mock_post_always_fails
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            with patch("asyncio.sleep", new_callable=AsyncMock):
+                with pytest.raises(OpenFGAUnavailableError) as exc_info:
+                    await client._get_oidc_access_token()
+
+                assert "Failed to connect to Keycloak after 3 attempts" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_get_oidc_token_does_not_retry_on_http_error(self):
+        """
+        GIVEN: OpenFGAClient with OIDC config
+        WHEN: Keycloak returns HTTP 401 (invalid credentials)
+        THEN: Should NOT retry (not a transient error)
+
+        User Journey: Fast failure for authentication errors (not transient)
+        """
+        client = OpenFGAClient(
+            api_url="http://localhost:8080",
+            oidc_client_id="test-client",
+            oidc_client_secret="wrong-secret",
+            oidc_issuer="http://keycloak/realms/default",
+        )
+
+        call_count = 0
+
+        mock_response = MagicMock()
+        mock_response.status_code = 401
+        mock_response.text = "Invalid client credentials"
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "401 Unauthorized", request=MagicMock(), response=mock_response
+        )
+
+        async def mock_post(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            return mock_response
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.post = mock_post
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            with pytest.raises(OpenFGAError) as exc_info:
+                await client._get_oidc_access_token()
+
+            # Should only attempt once (no retry for HTTP errors)
+            assert call_count == 1
+            assert "HTTP 401" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_get_oidc_token_logs_retry_attempts(self):
+        """
+        GIVEN: OpenFGAClient with OIDC config
+        WHEN: Connection fails and retries
+        THEN: Should log warning for each retry attempt
+
+        User Journey: Observability for debugging startup issues
+        """
+        client = OpenFGAClient(
+            api_url="http://localhost:8080",
+            oidc_client_id="test-client",
+            oidc_client_secret="test-secret",
+            oidc_issuer="http://keycloak/realms/default",
+        )
+
+        mock_success_response = MagicMock()
+        mock_success_response.status_code = 200
+        mock_success_response.json.return_value = {
+            "access_token": "token",
+            "expires_in": 3600,
+            "token_type": "Bearer",
+        }
+        mock_success_response.raise_for_status = MagicMock()
+
+        call_count = 0
+
+        async def mock_post(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise httpx.ConnectError("Connection refused")
+            return mock_success_response
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.post = mock_post
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            with patch("asyncio.sleep", new_callable=AsyncMock):
+                with patch(
+                    "mcp_server_langgraph.auth.openfga.logger"
+                ) as mock_logger:
+                    await client._get_oidc_access_token()
+
+                    # Should log warning for the retry
+                    mock_logger.warning.assert_called()
+                    warning_call = mock_logger.warning.call_args[0][0]
+                    assert "attempt" in warning_call.lower()
+                    assert "retry" in warning_call.lower()

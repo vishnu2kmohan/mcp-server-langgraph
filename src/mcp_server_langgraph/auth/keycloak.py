@@ -4,8 +4,14 @@ Keycloak integration for authentication and user management
 Provides production-ready authentication using Keycloak as the identity provider.
 Supports multiple authentication flows, token verification, and role/group mapping
 to OpenFGA for fine-grained authorization.
+
+Resilience patterns (ADR-0026):
+- Connection pooling: Uses shared HttpClientManager singleton
+- Retry with exponential backoff: Retries transient connection failures
+- Circuit breaker: Fails fast when Keycloak is repeatedly unavailable
 """
 
+import asyncio
 from datetime import datetime, timedelta, UTC
 from typing import Any
 from urllib.parse import urlparse
@@ -19,6 +25,7 @@ from mcp_server_langgraph.auth.metrics import (
     record_login_attempt,
     record_token_verification,
 )
+from mcp_server_langgraph.core.http_client import get_http_client_manager
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
@@ -150,7 +157,12 @@ class TokenValidator:
 
     async def get_jwks(self, force_refresh: bool = False) -> dict[str, Any]:
         """
-        Get JSON Web Key Set from Keycloak
+        Get JSON Web Key Set from Keycloak.
+
+        Resilience patterns applied:
+        - Retry with exponential backoff for transient connection failures
+        - Uses shared HTTP client manager for connection pooling
+        - Circuit breaker protection via _fetch_jwks_with_retry
 
         Args:
             force_refresh: Force refresh of cached keys
@@ -158,8 +170,6 @@ class TokenValidator:
         Returns:
             JWKS dictionary
         """
-        import time
-
         with tracer.start_as_current_span("keycloak.get_jwks"):
             # Check cache
             if not force_refresh and self._jwks_cache and self._jwks_cache_time:
@@ -171,29 +181,143 @@ class TokenValidator:
             # Cache miss - need to fetch
             record_jwks_operation("miss", "success")
 
-            # Fetch from Keycloak
-            start_time = time.perf_counter()
-            async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
-                try:
-                    response = await client.get(self.config.jwks_uri)
-                    response.raise_for_status()
-                    jwks = response.json()
-                    duration_ms = (time.perf_counter() - start_time) * 1000
+            # Fetch from Keycloak with retry and circuit breaker
+            jwks = await self._fetch_jwks_with_retry()
 
-                    # Cache the result
-                    self._jwks_cache = jwks
-                    self._jwks_cache_time = datetime.now(UTC)
+            # Cache the result
+            self._jwks_cache = jwks
+            self._jwks_cache_time = datetime.now(UTC)
 
-                    record_jwks_operation("refresh", "success", duration_ms)
-                    logger.info("JWKS fetched and cached", extra={"keys_count": len(jwks.get("keys", []))})
-                    return jwks  # type: ignore[no-any-return]
+            logger.info("JWKS fetched and cached", extra={"keys_count": len(jwks.get("keys", []))})
+            return jwks
 
-                except httpx.HTTPError as e:
-                    duration_ms = (time.perf_counter() - start_time) * 1000
-                    record_jwks_operation("refresh", "failure", duration_ms)
-                    logger.error(f"Failed to fetch JWKS: {e}", exc_info=True)
-                    metrics.failed_calls.add(1, {"operation": "get_jwks"})
-                    raise
+    async def _fetch_jwks_with_retry(self) -> dict[str, Any]:
+        """
+        Fetch JWKS with retry logic and circuit breaker protection.
+
+        Resilience patterns:
+        - Retry with exponential backoff: 3 attempts, 1s→2s delays
+        - Circuit breaker: Fails fast after 5 consecutive failures
+        - Only retries on ConnectError (not HTTP status errors or timeouts)
+
+        Returns:
+            JWKS dictionary
+
+        Raises:
+            httpx.ConnectError: If all retry attempts fail
+            httpx.HTTPStatusError: If Keycloak returns an error status (no retry)
+            httpx.TimeoutException: If request times out (no retry)
+            pybreaker.CircuitBreakerError: If circuit breaker is open
+        """
+        import time
+
+        import pybreaker
+
+        from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
+
+        # Get the keycloak circuit breaker
+        breaker = get_circuit_breaker("keycloak")
+
+        # Check if circuit breaker is open
+        if breaker.current_state == pybreaker.STATE_OPEN:
+            logger.warning(
+                "Keycloak circuit breaker is open, failing fast",
+                extra={"service": "keycloak", "state": breaker.current_state},
+            )
+            raise pybreaker.CircuitBreakerError(breaker)
+
+        max_attempts = 3
+        base_delay = 1.0  # seconds
+
+        start_time = time.perf_counter()
+
+        for attempt in range(1, max_attempts + 1):
+            try:
+                # Use shared HTTP client manager for connection pooling
+                http_manager = get_http_client_manager()
+                client = await http_manager.get_client()
+
+                response = await client.get(self.config.jwks_uri)
+                response.raise_for_status()
+                jwks = response.json()
+                duration_ms = (time.perf_counter() - start_time) * 1000
+
+                # Success - reset circuit breaker state
+                breaker.state.on_success()
+
+                record_jwks_operation("refresh", "success", duration_ms)
+                return jwks  # type: ignore[no-any-return]
+
+            except httpx.ConnectError as e:
+                # Transient connection error - retry with exponential backoff
+                if attempt < max_attempts:
+                    delay = base_delay * (2 ** (attempt - 1))  # 1s, 2s
+                    logger.warning(
+                        f"JWKS fetch failed (attempt {attempt}/{max_attempts}), retrying in {delay}s",
+                        extra={
+                            "attempt": attempt,
+                            "max_attempts": max_attempts,
+                            "delay": delay,
+                            "error": str(e),
+                        },
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+
+                # All retries exhausted - record failure for circuit breaker
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_jwks_operation("refresh", "failure", duration_ms)
+                logger.error(
+                    f"Failed to fetch JWKS after {max_attempts} attempts: {e}",
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "get_jwks"})
+
+                # Record failure for circuit breaker
+                breaker._inc_counter()
+                breaker.state.on_failure(e)
+
+                raise
+
+            except httpx.TimeoutException as e:
+                # Timeout - don't retry, record failure for circuit breaker
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_jwks_operation("refresh", "failure", duration_ms)
+                logger.error(f"JWKS fetch timed out: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "get_jwks"})
+
+                # Record failure for circuit breaker
+                breaker._inc_counter()
+                breaker.state.on_failure(e)
+
+                raise
+
+            except httpx.HTTPStatusError as e:
+                # HTTP error (4xx/5xx) - don't retry, it's likely a configuration error
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_jwks_operation("refresh", "failure", duration_ms)
+                logger.error(f"Failed to fetch JWKS: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "get_jwks"})
+                # Note: We don't count HTTP errors as circuit breaker failures
+                # because they indicate configuration issues, not service unavailability
+                raise
+
+            except httpx.HTTPError as e:
+                # Other HTTP errors
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                record_jwks_operation("refresh", "failure", duration_ms)
+                logger.error(f"Failed to fetch JWKS: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "get_jwks"})
+
+                # Record failure for circuit breaker
+                breaker._inc_counter()
+                breaker.state.on_failure(e)
+
+                raise
+
+        # This should never be reached, but mypy needs it
+        msg = "Unreachable code in _fetch_jwks_with_retry"
+        raise RuntimeError(msg)  # pragma: no cover
 
     async def verify_token(self, token: str) -> dict[str, Any]:
         """

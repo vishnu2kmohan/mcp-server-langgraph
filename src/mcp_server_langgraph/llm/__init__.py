@@ -1,5 +1,6 @@
 """LLM abstraction and validation modules."""
 
+from mcp_server_langgraph.llm import visual_verification_metrics
 from mcp_server_langgraph.llm.factory import create_llm_from_config
 from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper, create_pydantic_agent
 from mcp_server_langgraph.llm.validators import (
@@ -19,4 +20,5 @@ __all__ = [
     "create_llm_from_config",
     "create_pydantic_agent",
     "validate_llm_response",
+    "visual_verification_metrics",
 ]

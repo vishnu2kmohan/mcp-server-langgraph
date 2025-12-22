@@ -1568,10 +1568,10 @@ class MCPMessageHandler:
         # Standard resources available
         self._resources = [
             {
-                "uri": "config://playground/default",
+                "uri": "config://studio/default",
                 "name": "Default Configuration",
                 "mimeType": "application/json",
-                "description": "Default playground configuration",
+                "description": "Default studio configuration",
             }
         ]
 
@@ -2403,12 +2403,11 @@ def get_token_validator() -> Any | None:
         TokenValidator instance or None if not configured.
     """
     try:
-        # Dynamic import - function may not exist in all deployments
-        from mcp_server_langgraph.auth.factory import get_token_validator as _get_validator  # type: ignore[attr-defined]
+        from mcp_server_langgraph.core.dependencies import get_token_validator as _get_validator
 
         return _get_validator()
     except ImportError:
-        logger.debug("Auth factory not available, token validation disabled")
+        logger.debug("Core dependencies not available, token validation disabled")
         return None
     except Exception as e:
         logger.warning(f"Failed to get token validator: {e}")
@@ -2423,12 +2422,11 @@ def get_openfga_client() -> Any | None:
         OpenFGAClient instance or None if not configured.
     """
     try:
-        # Dynamic import - function may not exist in all deployments
-        from mcp_server_langgraph.auth.factory import get_openfga_client as _get_openfga  # type: ignore[attr-defined]
+        from mcp_server_langgraph.core.dependencies import get_openfga_client as _get_openfga
 
         return _get_openfga()
     except ImportError:
-        logger.debug("Auth factory not available, OpenFGA disabled")
+        logger.debug("Core dependencies not available, OpenFGA disabled")
         return None
     except Exception as e:
         logger.warning(f"Failed to get OpenFGA client: {e}")

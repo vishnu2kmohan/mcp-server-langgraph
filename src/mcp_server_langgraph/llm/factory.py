@@ -12,10 +12,15 @@ Enhanced with resilience patterns (ADR-0026):
 - Exponential backoff between fallback attempts
 """
 
+from __future__ import annotations
+
 import asyncio
 import os
 from enum import Enum
-from typing import Any, assert_never
+from typing import TYPE_CHECKING, Any, assert_never
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.core.hook_registry import HookDispatcher
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from litellm import acompletion
@@ -29,9 +34,13 @@ from mcp_server_langgraph.core.exceptions import (
     LLMRateLimitError,
     LLMTimeoutError,
 )
+from mcp_server_langgraph.core.feature_flags import feature_flags
+from mcp_server_langgraph.core.hooks import HookContext
 from mcp_server_langgraph.llm.metrics import record_llm_request_duration, record_llm_token_usage
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_timeout
+from mcp_server_langgraph.resilience.adaptive import get_provider_adaptive_bulkhead
+from mcp_server_langgraph.resilience.rate_limit import get_provider_token_bucket
 from mcp_server_langgraph.resilience.retry import extract_retry_after_from_exception, is_overload_error
 
 # Fallback resilience constants
@@ -112,6 +121,7 @@ class LLMFactory:
         enable_fallback: bool = True,
         fallback_models: list[str] | None = None,
         telemetry: TelemetryProvider | _DefaultTelemetry | None = None,
+        hook_dispatcher: HookDispatcher | None = None,
         **kwargs,
     ):
         """
@@ -127,6 +137,7 @@ class LLMFactory:
             enable_fallback: Enable fallback to alternative models
             fallback_models: List of fallback model names
             telemetry: Telemetry provider for logging/metrics/tracing (Phase 2.4 DIP)
+            hook_dispatcher: Hook dispatcher for BEFORE_MODEL/AFTER_MODEL hooks (ADR-0080)
             **kwargs: Additional provider-specific parameters
         """
         self.provider = provider
@@ -141,6 +152,9 @@ class LLMFactory:
 
         # Phase 2.4 DIP: Injectable telemetry with backward-compatible default
         self.telemetry = telemetry if telemetry is not None else get_default_telemetry()
+
+        # ADR-0080: Optional hook dispatcher for LLM-level hooks
+        self.hook_dispatcher = hook_dispatcher
 
         # Note: _setup_environment is now called by factory functions with config
         # This allows multi-provider credential setup for fallbacks
@@ -372,7 +386,13 @@ class LLMFactory:
     @retry_with_backoff(max_attempts=3, exponential_base=2)
     @with_timeout(operation_type="llm")
     @with_bulkhead(resource_type="llm")
-    async def ainvoke(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
+    async def ainvoke(
+        self,
+        messages: list[BaseMessage | dict[str, Any]],
+        *,
+        hook_context: HookContext | None = None,
+        **kwargs,
+    ) -> AIMessage:  # type: ignore[no-untyped-def]
         """
         Asynchronous LLM invocation with full resilience protection.
 
@@ -382,8 +402,13 @@ class LLMFactory:
         - Timeout: 60s timeout for LLM operations
         - Bulkhead: Limit to 10 concurrent LLM calls
 
+        ADR-0080 Hook Support:
+        - BEFORE_MODEL: Dispatched before LLM call (can skip with cached response or deny)
+        - AFTER_MODEL: Dispatched after LLM response (can modify output)
+
         Args:
             messages: List of messages
+            hook_context: Optional hook context for BEFORE_MODEL/AFTER_MODEL hooks
             **kwargs: Additional parameters for the model
 
         Returns:
@@ -411,6 +436,50 @@ class LLMFactory:
 
             formatted_messages = self._format_messages(messages)
 
+            # ADR-0080: Dispatch BEFORE_MODEL hook
+            # This allows hooks to: modify request, return cached response, or deny request
+            if self.hook_dispatcher and feature_flags.enable_llm_hooks:
+                # Create default context if not provided
+                ctx = hook_context or HookContext(session_id="default")
+
+                before_result = await self.hook_dispatcher.dispatch_before_model(
+                    messages=formatted_messages,
+                    model=self.model_name,
+                    context=ctx,
+                    temperature=kwargs.get("temperature", self.temperature),
+                    max_tokens=kwargs.get("max_tokens", self.max_tokens),
+                )
+
+                # Handle deny behavior
+                if before_result.behavior == "deny":
+                    msg = before_result.message or "LLM request denied by hook"
+                    span.set_attribute("hook.before_model.denied", True)
+                    raise LLMProviderError(
+                        message=msg,
+                        metadata={"model": self.model_name, "provider": self.provider, "hook_denied": True},
+                    )
+
+                # Handle skip behavior (e.g., cache hit)
+                if before_result.behavior == "skip" and before_result.early_return is not None:
+                    span.set_attribute("hook.before_model.skipped", True)
+                    return AIMessage(content=str(before_result.early_return))
+
+                # Handle updated input (modified messages)
+                if before_result.updated_input is not None and isinstance(before_result.updated_input, list):
+                    formatted_messages = before_result.updated_input
+
+            # Acquire rate limit token before calling API (pre-emptive rate limiting)
+            # This prevents hitting provider rate limits by queuing requests locally
+            rate_limit_bucket = get_provider_token_bucket(self.provider)
+            await rate_limit_bucket.acquire(timeout=30.0)
+            span.set_attribute("rate_limit.provider", self.provider)
+            span.set_attribute("rate_limit.tokens_after_acquire", rate_limit_bucket.tokens)
+
+            # Get adaptive bulkhead for self-tuning concurrency limits
+            adaptive_bulkhead = get_provider_adaptive_bulkhead(self.provider)
+            span.set_attribute("bulkhead.current_limit", adaptive_bulkhead.current_limit)
+            span.set_attribute("bulkhead.error_rate", adaptive_bulkhead.get_error_rate())
+
             params = {
                 "model": self.model_name,
                 "messages": formatted_messages,
@@ -420,8 +489,13 @@ class LLMFactory:
                 **self.kwargs,
             }
 
+            # Use adaptive bulkhead semaphore to enforce concurrency limit
+            # This prevents overwhelming the LLM provider with too many concurrent requests
+            semaphore = adaptive_bulkhead.get_semaphore()
+
             try:
-                response: ModelResponse = await acompletion(**params)
+                async with semaphore:
+                    response: ModelResponse = await acompletion(**params)
 
                 content = response.choices[0].message.content  # type: ignore[union-attr]
 
@@ -441,6 +515,9 @@ class LLMFactory:
 
                 self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
 
+                # Record success for adaptive bulkhead (increases limit on success streak)
+                adaptive_bulkhead.record_success()
+
                 self.telemetry.logger.info(
                     "Async LLM invocation successful",
                     extra={
@@ -448,6 +525,36 @@ class LLMFactory:
                         "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
                     },
                 )
+
+                # ADR-0080: Dispatch AFTER_MODEL hook
+                # This allows hooks to: filter output, add disclaimers, transform response
+                if self.hook_dispatcher and feature_flags.enable_llm_hooks:
+                    from mcp_server_langgraph.core.hooks import TokenUsage as HookTokenUsage
+
+                    ctx = hook_context or HookContext(session_id="default")
+
+                    # Build token usage for hook
+                    hook_usage = None
+                    if response.usage:
+                        hook_usage = HookTokenUsage(
+                            prompt_tokens=response.usage.prompt_tokens or 0,
+                            completion_tokens=response.usage.completion_tokens or 0,
+                            total_tokens=response.usage.total_tokens or 0,
+                        )
+
+                    after_result = await self.hook_dispatcher.dispatch_after_model(
+                        content=content or "",
+                        model=self.model_name,
+                        context=ctx,
+                        usage=hook_usage,
+                        latency_ms=duration_ms,
+                        finish_reason=response.choices[0].finish_reason or "",
+                    )
+
+                    # Handle modified output
+                    if after_result.modified_output is not None:
+                        content = after_result.modified_output
+                        span.set_attribute("hook.after_model.modified", True)
 
                 return AIMessage(content=content)
 
@@ -457,6 +564,8 @@ class LLMFactory:
 
                 # Check for overload errors (529 or equivalent) - handle first
                 if is_overload_error(e):
+                    # Record error for adaptive bulkhead (decreases limit)
+                    adaptive_bulkhead.record_error()
                     retry_after = extract_retry_after_from_exception(e)
                     raise LLMOverloadError(
                         message=f"LLM provider overloaded: {e}",
@@ -469,6 +578,8 @@ class LLMFactory:
                         cause=e,
                     )
                 elif "rate limit" in error_msg or "429" in error_msg:
+                    # Record error for adaptive bulkhead (decreases limit)
+                    adaptive_bulkhead.record_error()
                     # Extract Retry-After header for rate limit errors (same pattern as overload)
                     retry_after = extract_retry_after_from_exception(e)
                     raise LLMRateLimitError(

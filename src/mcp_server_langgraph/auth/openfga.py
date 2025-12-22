@@ -221,11 +221,15 @@ class OpenFGAClient:
         This implements OAuth 2.0 client credentials grant (RFC 6749 Section 4.4)
         for service-to-service authentication.
 
+        Includes retry logic for transient connection failures (e.g., during startup
+        when Keycloak may not be immediately reachable). Uses exponential backoff.
+
         Returns:
             OIDC access token or None if OIDC is not configured
 
         Raises:
-            OpenFGAError: If token acquisition fails
+            OpenFGAError: If token acquisition fails due to HTTP errors
+            OpenFGAUnavailableError: If connection fails after all retry attempts
         """
         if not self.oidc_client_id or not self.oidc_client_secret or not self.oidc_issuer:
             logger.debug("OIDC not configured, skipping token acquisition")
@@ -251,52 +255,84 @@ class OpenFGAClient:
             },
         )
 
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    token_endpoint,
-                    data={
-                        "grant_type": "client_credentials",
-                        "client_id": self.oidc_client_id,
-                        "client_secret": self.oidc_client_secret,
-                    },
-                    timeout=10.0,
-                )
-                response.raise_for_status()
+        # Retry configuration for transient connection failures
+        max_attempts = 3
+        base_delay = 1.0  # seconds
 
-                token_response = response.json()
-                access_token = token_response.get("access_token")
-                expires_in = token_response.get("expires_in", 300)  # Default 5 minutes
+        for attempt in range(1, max_attempts + 1):
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        token_endpoint,
+                        data={
+                            "grant_type": "client_credentials",
+                            "client_id": self.oidc_client_id,
+                            "client_secret": self.oidc_client_secret,
+                        },
+                        timeout=10.0,
+                    )
+                    response.raise_for_status()
 
-                if not access_token:
-                    msg = "No access_token in Keycloak token response"
-                    logger.error(msg)
-                    raise OpenFGAError(msg)
+                    token_response = response.json()
+                    access_token = token_response.get("access_token")
+                    expires_in = token_response.get("expires_in", 300)  # Default 5 minutes
 
-                # Cache the token
-                import time
+                    if not access_token:
+                        msg = "No access_token in Keycloak token response"
+                        logger.error(msg)
+                        raise OpenFGAError(msg)
 
-                self._oidc_access_token = access_token
-                self._oidc_token_expires_at = time.time() + expires_in
+                    # Cache the token
+                    self._oidc_access_token = access_token
+                    self._oidc_token_expires_at = time.time() + expires_in
 
-                logger.info(
-                    "OIDC access token obtained successfully",
-                    extra={
-                        "expires_in": expires_in,
-                        "token_type": token_response.get("token_type", "Bearer"),
-                    },
-                )
+                    logger.info(
+                        "OIDC access token obtained successfully",
+                        extra={
+                            "expires_in": expires_in,
+                            "token_type": token_response.get("token_type", "Bearer"),
+                            "attempt": attempt,
+                        },
+                    )
 
-                return cast(str, access_token)
+                    return cast(str, access_token)
 
-        except httpx.HTTPStatusError as e:
-            msg = f"Failed to obtain OIDC access token: HTTP {e.response.status_code}"
-            logger.error(msg, extra={"response": e.response.text}, exc_info=True)
-            raise OpenFGAError(msg) from e
-        except Exception as e:
-            msg = f"Failed to obtain OIDC access token: {e}"
-            logger.error(msg, exc_info=True)
-            raise OpenFGAError(msg) from e
+            except httpx.ConnectError as e:
+                # Transient connection errors - retry with exponential backoff
+                if attempt < max_attempts:
+                    delay = base_delay * (2 ** (attempt - 1))  # Exponential backoff
+                    logger.warning(
+                        f"OIDC token acquisition failed (attempt {attempt}/{max_attempts}), "
+                        f"retrying in {delay}s: {e}",
+                        extra={
+                            "attempt": attempt,
+                            "max_attempts": max_attempts,
+                            "delay": delay,
+                            "token_endpoint": token_endpoint,
+                        },
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                # All retries exhausted
+                msg = f"Failed to connect to Keycloak after {max_attempts} attempts: {e}"
+                logger.error(msg, exc_info=True)
+                raise OpenFGAUnavailableError(msg) from e
+
+            except httpx.HTTPStatusError as e:
+                # HTTP errors (401, 403, etc.) - do NOT retry, these are not transient
+                msg = f"Failed to obtain OIDC access token: HTTP {e.response.status_code}"
+                logger.error(msg, extra={"response": e.response.text}, exc_info=True)
+                raise OpenFGAError(msg) from e
+
+            except Exception as e:
+                # Other unexpected errors - do NOT retry
+                msg = f"Failed to obtain OIDC access token: {e}"
+                logger.error(msg, exc_info=True)
+                raise OpenFGAError(msg) from e
+
+        # This should never be reached, but satisfy type checker
+        msg = "OIDC token acquisition failed unexpectedly"
+        raise OpenFGAError(msg)
 
     async def _ensure_initialized(self) -> None:
         """

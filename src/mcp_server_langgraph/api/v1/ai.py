@@ -12,7 +12,7 @@ Reference: Phase B - AI Feature Exposure
 import re
 from collections.abc import AsyncGenerator
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
@@ -558,13 +558,17 @@ async def get_ai_suggestions(
         # Validate and sanitize conversation history
         history = _validate_and_sanitize_history(suggestion_request.conversation_history)
 
-        suggestions = await _generate_chat_followup_suggestions(
+        chat_suggestions = await _generate_chat_followup_suggestions(
             content=suggestion_request.content,
             max_suggestions=suggestion_request.max_suggestions,
             session_id=suggestion_request.session_id,
             conversation_history=history,
         )
-        return UnifiedSuggestionsResponse(suggestions=suggestions)
+        return UnifiedSuggestionsResponse(
+            suggestions=cast(
+                list["ChatFollowUpSuggestion | WorkflowSuggestion"], chat_suggestions
+            )
+        )
 
     elif suggestion_request.type == SuggestionType.WORKFLOW:
         # Validate required field for workflow
@@ -574,11 +578,15 @@ async def get_ai_suggestions(
                 detail="'workflow' field is required for workflow type",
             )
 
-        suggestions = await _generate_workflow_suggestions(
+        workflow_suggestions = await _generate_workflow_suggestions(
             workflow=suggestion_request.workflow,
             max_suggestions=suggestion_request.max_suggestions,
         )
-        return UnifiedSuggestionsResponse(suggestions=suggestions)
+        return UnifiedSuggestionsResponse(
+            suggestions=cast(
+                list["ChatFollowUpSuggestion | WorkflowSuggestion"], workflow_suggestions
+            )
+        )
 
     else:
         raise HTTPException(
@@ -635,19 +643,19 @@ async def _stream_suggestions(
                 yield f"event: error\ndata: {json.dumps({'error': 'workflow field required'})}\n\n"
                 return
 
-            suggestions = await _generate_workflow_suggestions(
+            wf_suggestions = await _generate_workflow_suggestions(
                 workflow=request.workflow,
                 max_suggestions=request.max_suggestions,
             )
 
-            # Stream each suggestion
-            for suggestion in suggestions:
-                event_data = {
-                    "type": suggestion.type,
-                    "description": suggestion.description,
-                    "confidence": suggestion.confidence,
+            # Stream each workflow suggestion
+            for wf_suggestion in wf_suggestions:
+                wf_event_data: dict[str, str | float] = {
+                    "type": wf_suggestion.type,
+                    "description": wf_suggestion.description,
+                    "confidence": wf_suggestion.confidence,
                 }
-                yield f"event: suggestion\ndata: {json.dumps(event_data)}\n\n"
+                yield f"event: suggestion\ndata: {json.dumps(wf_event_data)}\n\n"
 
         # Send done event
         yield f"event: done\ndata: {json.dumps({'done': True})}\n\n"
@@ -940,7 +948,7 @@ async def submit_suggestion_feedback(
     flags = get_feature_flags()
     if not flags.enable_suggestion_quality_tracking:
         # Silently accept but don't track when disabled
-        return SuggestionFeedbackResponse(recorded=False)
+        return SuggestionFeedbackResponse(recorded=False, feedback_id=None)
 
     logger.info(
         "Suggestion feedback submitted",

@@ -12,10 +12,13 @@ from fastapi import APIRouter
 
 from mcp_server_langgraph.api.v1.admin import admin_router
 from mcp_server_langgraph.api.v1.agents import agents_router
+from mcp_server_langgraph.api.v1.artifacts import artifacts_router
 from mcp_server_langgraph.api.v1.auth import auth_router
 from mcp_server_langgraph.api.v1.notifications import notifications_router
 from mcp_server_langgraph.api.v1.notification_preferences import notification_preferences_router
 from mcp_server_langgraph.api.v1.ai import ai_router
+from mcp_server_langgraph.api.v1.ai_ux import ai_ux_router
+from mcp_server_langgraph.api.v1.studio_ai import studio_ai_router
 from mcp_server_langgraph.api.v1.audit import router as unified_audit_router
 from mcp_server_langgraph.api.v1.audit_websocket import router as audit_ws_router
 from mcp_server_langgraph.api.v1.compliance_reports import router as compliance_reports_router
@@ -44,6 +47,12 @@ from mcp_server_langgraph.api.v1.workflows import workflows_router
 from mcp_server_langgraph.api.v1.workflow_execution_ws import workflow_execution_router
 from mcp_server_langgraph.api.v1.workflow_executions import workflow_executions_router
 
+# Alert infrastructure imports (ADR-0026 - Comprehensive Client Resilience Patterns)
+from mcp_server_langgraph.api.v1.alert_websocket import alert_websocket_router
+from mcp_server_langgraph.api.v1.alertmanager_webhook import alertmanager_webhook_router
+from mcp_server_langgraph.api.v1.remediation_approvals import remediation_approval_router
+from mcp_server_langgraph.api.v1.alert_recommendations import alert_recommendation_router
+
 # Main v1 router that includes all sub-routers
 v1_router = APIRouter()
 
@@ -70,6 +79,9 @@ v1_router.include_router(workflow_executions_router)
 
 # Include sessions CRUD endpoints
 v1_router.include_router(sessions_router)
+
+# Include artifacts CRUD endpoints (Hybrid Canvas feature)
+v1_router.include_router(artifacts_router)
 
 # Include workflow bootstrap endpoints
 v1_router.include_router(workflow_bootstrap_router)
@@ -128,6 +140,12 @@ v1_router.include_router(compliance_reports_router, prefix="/compliance", tags=[
 # Include AI-native endpoints (node config assistance, suggestions)
 v1_router.include_router(ai_router, prefix="/ai", tags=["ai"])
 
+# Include AI UX endpoints (disclosure, nudges, error recovery, onboarding, metrics)
+v1_router.include_router(ai_ux_router, prefix="/ai", tags=["ai-ux"])
+
+# Include Studio AI endpoints (unified HybridShell AI capabilities - Sprint 1)
+v1_router.include_router(studio_ai_router, prefix="/studio", tags=["studio-ai"])
+
 # Include push notification endpoints (PWA support)
 v1_router.include_router(notifications_router)
 
@@ -145,3 +163,16 @@ v1_router.include_router(session_export_router)
 
 # Include project context endpoints
 v1_router.include_router(project_context_router)
+
+# Include alert infrastructure endpoints (ADR-0026 - Comprehensive Client Resilience Patterns)
+# Alert WebSocket for real-time streaming to Admin persona
+v1_router.include_router(alert_websocket_router, prefix="/ws", tags=["alerts"])
+
+# Alertmanager webhook receiver for Mimir/Prometheus alerts
+v1_router.include_router(alertmanager_webhook_router, tags=["webhooks"])
+
+# Remediation approval queue REST API
+v1_router.include_router(remediation_approval_router, tags=["remediations"])
+
+# Alert recommendation REST API (AI-powered analysis)
+v1_router.include_router(alert_recommendation_router, tags=["alerts"])
