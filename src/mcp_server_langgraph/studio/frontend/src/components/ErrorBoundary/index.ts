@@ -1,6 +1,12 @@
 /**
- * ErrorBoundary Module
+ * ErrorBoundary Components Index
  *
- * Exports error boundary component with telemetry integration.
+ * Error boundary components for graceful error handling.
  */
-export { ErrorBoundary, type ErrorInfo, type ErrorBoundaryProps, type FallbackRenderProps } from "./ErrorBoundary";
+
+export { AIErrorBoundary } from "./AIErrorBoundary";
+export type {
+  AIErrorBoundaryProps,
+  AIErrorFallbackProps,
+  AIErrorFallback,
+} from "./AIErrorBoundary";
