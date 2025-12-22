@@ -150,9 +150,11 @@ TASK_TYPE_TO_CATEGORY: dict[str, TaskCategory] = {
     # Diagram category
     "diagram_analyze": TaskCategory.DIAGRAM,
     "diagram_to_code": TaskCategory.DIAGRAM,
-    # Trace category
+    # Trace category (includes cost intelligence)
     "trace_summarize": TaskCategory.TRACE,
     "trace_anomaly": TaskCategory.TRACE,
+    "cost_project": TaskCategory.TRACE,
+    "token_predict": TaskCategory.TRACE,
     # HITL category
     "risk_assess": TaskCategory.HITL,
     "decision_history": TaskCategory.HITL,
@@ -160,9 +162,6 @@ TASK_TYPE_TO_CATEGORY: dict[str, TaskCategory] = {
     "command_interpret": TaskCategory.COMMAND,
     "inline_suggest": TaskCategory.COMMAND,
     "ai_edit_generate": TaskCategory.COMMAND,
-    # Cost category (mapped to UX for simplicity)
-    "cost_project": TaskCategory.UX,
-    "token_predict": TaskCategory.UX,
 }
 
 
@@ -666,18 +665,70 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
     async def _handle_trace_task(self, task: StudioTask) -> StudioResult:
         """Handle Trace Intelligence tasks.
 
+        Supports the following task types:
+        - trace_summarize: Generate one-sentence summary of agent execution
+        - trace_anomaly: Detect bottlenecks and anomalies in execution
+        - cost_project: Estimate real-time session costs
+        - token_predict: Forecast token usage and optimization opportunities
+
         Args:
             task: The trace task to execute
 
         Returns:
             StudioResult from the trace task
         """
-        # Placeholder - to be implemented with LLM calls
-        return StudioResult(
-            task_type=task.task_type,
-            success=True,
-            result={"status": "placeholder", "message": "Trace task placeholder"},
-        )
+        if self._ai_ux_service is None:
+            return StudioResult(
+                task_type=task.task_type,
+                success=False,
+                error="AI UX service not configured for trace tasks",
+            )
+
+        try:
+            result: dict[str, Any] | None = None
+
+            if task.task_type == "trace_summarize":
+                result = await self._ai_ux_service.summarize_trace(
+                    trace_id=task.data.get("trace_id", ""),
+                    user_id=task.user_id,
+                    session_id=task.session_id,
+                )
+            elif task.task_type == "trace_anomaly":
+                result = await self._ai_ux_service.detect_trace_anomalies(
+                    trace_id=task.data.get("trace_id", ""),
+                    user_id=task.user_id,
+                    session_id=task.session_id,
+                )
+            elif task.task_type == "cost_project":
+                result = await self._ai_ux_service.project_cost(
+                    session_id=task.data.get("session_id", task.session_id),
+                    user_id=task.user_id,
+                )
+            elif task.task_type == "token_predict":
+                result = await self._ai_ux_service.predict_tokens(
+                    session_id=task.data.get("session_id", task.session_id),
+                    user_id=task.user_id,
+                )
+            else:
+                return StudioResult(
+                    task_type=task.task_type,
+                    success=False,
+                    error=f"Unknown trace task type: {task.task_type}",
+                )
+
+            return StudioResult(
+                task_type=task.task_type,
+                success=True,
+                result=result or {},
+            )
+
+        except Exception as e:
+            logger.exception(f"Error in trace task {task.task_type}: {e}")
+            return StudioResult(
+                task_type=task.task_type,
+                success=False,
+                error=str(e),
+            )
 
     async def _handle_hitl_task(self, task: StudioTask) -> StudioResult:
         """Handle HITL Intelligence tasks.

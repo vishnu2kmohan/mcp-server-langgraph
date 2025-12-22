@@ -3010,6 +3010,125 @@ Compare with last period and generate actionable insights."""
         }
 
     # =========================================================================
+    # Trace Intelligence Methods (Sprint 5)
+    # =========================================================================
+
+    async def summarize_trace(
+        self,
+        trace_id: str,
+        user_id: str = "",
+        session_id: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Generate one-sentence summary of agent execution trace.
+
+        Args:
+            trace_id: Trace identifier
+            user_id: User identifier
+            session_id: Optional session identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            Trace summary with key metrics
+        """
+        # Placeholder implementation - would query actual trace data
+        return {
+            "summary": f"Agent completed workflow trace {trace_id[:8]}... with multiple tool calls",
+            "total_duration_ms": 2500,
+            "step_count": 5,
+            "tool_call_count": 3,
+            "success": True,
+            "key_actions": [
+                "Initialized context",
+                "Processed user request",
+                "Generated response",
+            ],
+        }
+
+    async def detect_trace_anomalies(
+        self,
+        trace_id: str,
+        user_id: str = "",
+        session_id: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Detect bottlenecks and anomalies in execution trace.
+
+        Args:
+            trace_id: Trace identifier
+            user_id: User identifier
+            session_id: Optional session identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            Anomaly detection results with suggestions
+        """
+        # Placeholder implementation
+        return {
+            "anomalies": [],
+            "bottlenecks": [],
+            "health_score": 0.85,
+            "optimization_suggestions": [
+                "Consider caching frequently accessed data",
+            ],
+        }
+
+    async def project_cost(
+        self,
+        session_id: str | None = None,
+        user_id: str = "",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Estimate real-time session costs.
+
+        Args:
+            session_id: Session identifier
+            user_id: User identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            Cost projection with budget information
+        """
+        # Placeholder implementation - would query actual cost data
+        return {
+            "current_cost": 0.0025,
+            "projected_cost": 0.02,
+            "cost_breakdown": {
+                "input_tokens": 0.001,
+                "output_tokens": 0.0015,
+            },
+            "budget_remaining": 4.98,
+            "budget_percentage_used": 0.4,
+            "estimated_remaining_messages": 250,
+        }
+
+    async def predict_tokens(
+        self,
+        session_id: str | None = None,
+        user_id: str = "",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Forecast token usage and optimization opportunities.
+
+        Args:
+            session_id: Session identifier
+            user_id: User identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            Token prediction with optimization info
+        """
+        # Placeholder implementation
+        return {
+            "current_tokens": 5000,
+            "projected_tokens": 9000,
+            "context_utilization": 0.45,
+            "optimization_available": True,
+            "optimization_savings": 1500,
+            "recommended_action": "Consider summarizing older messages to free context space",
+        }
+
+    # =========================================================================
     # Utility Methods
     # =========================================================================
 

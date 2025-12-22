@@ -7,12 +7,79 @@
  * - Execution steps fallback
  * - Token usage
  * - Raw output
+ * - Sprint 5: AI-powered trace intelligence
  */
 
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
 import { AgentExecutionTracePanel } from "./AgentExecutionTracePanel";
 import type { AgentExecutionTrace } from "../../types/chat";
+
+// Mock the API module for AI features
+vi.mock("../../api", () => ({
+  useStudioAnalyzeMutation: vi.fn(() => [
+    vi.fn(() => ({
+      unwrap: () =>
+        Promise.resolve({
+          analyses: {
+            trace_summarize: {
+              summary: "Agent completed 5-step workflow in 2.3s with 2 tool calls",
+              total_duration_ms: 2300,
+              step_count: 5,
+              tool_call_count: 2,
+              success: true,
+              key_actions: ["Retrieved data", "Processed request", "Generated response"],
+            },
+            trace_anomaly: {
+              anomalies: [
+                {
+                  type: "slow_step",
+                  step_name: "database_query",
+                  severity: "warning",
+                  message: "Step took 1.5s, 3x slower than average",
+                },
+              ],
+              bottlenecks: [
+                {
+                  step_name: "database_query",
+                  duration_ms: 1500,
+                  percentage_of_total: 65,
+                },
+              ],
+              health_score: 0.72,
+              optimization_suggestions: ["Consider parallel execution for independent steps"],
+            },
+          },
+          cross_insights: [],
+          failed_analyses: [],
+          total_cost: "0.001",
+        }),
+    })),
+    { isLoading: false },
+  ]),
+}));
+
+// Create test store
+const createTestStore = () =>
+  configureStore({
+    reducer: {
+      test: (state = {}) => state,
+    },
+  });
+
+interface WrapperProps {
+  children: React.ReactNode;
+}
+const Wrapper = ({ children }: WrapperProps) => {
+  const store = createTestStore();
+  return <Provider store={store}>{children}</Provider>;
+};
+
+const renderWithProvider = (ui: React.ReactElement) => {
+  return render(ui, { wrapper: Wrapper });
+};
 
 // Mock LangGraphNodeVisualization to simplify testing
 vi.mock("./LangGraphNodeVisualization", () => ({
@@ -43,13 +110,13 @@ describe("AgentExecutionTracePanel", () => {
         steps: [{ name: "test", status: "completed" }],
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(screen.getByTestId("agent-trace-panel")).toBeInTheDocument();
     });
 
     it("renders empty state when trace is undefined", () => {
-      render(<AgentExecutionTracePanel trace={undefined} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={undefined} />);
 
       expect(
         screen.getByTestId("agent-trace-panel-empty")
@@ -64,7 +131,7 @@ describe("AgentExecutionTracePanel", () => {
         steps: [{ name: "test", status: "completed" }],
       };
 
-      render(
+      renderWithProvider(
         <AgentExecutionTracePanel trace={trace} className="custom-class" />
       );
 
@@ -84,7 +151,7 @@ describe("AgentExecutionTracePanel", () => {
         currentNode: "2",
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(
         screen.getByTestId("langgraph-node-visualization")
@@ -102,7 +169,7 @@ describe("AgentExecutionTracePanel", () => {
         currentNode: "2",
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       const viz = screen.getByTestId("langgraph-node-visualization");
       expect(viz).toHaveAttribute("data-nodes", "2");
@@ -116,7 +183,7 @@ describe("AgentExecutionTracePanel", () => {
         steps: [{ name: "fallback", status: "completed" }],
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(
         screen.queryByTestId("langgraph-node-visualization")
@@ -133,7 +200,7 @@ describe("AgentExecutionTracePanel", () => {
         ],
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(screen.getByText("Execution Steps:")).toBeInTheDocument();
       expect(screen.getByText("Step 1")).toBeInTheDocument();
@@ -145,7 +212,7 @@ describe("AgentExecutionTracePanel", () => {
         steps: [{ name: "Completed Step", status: "completed" }],
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       const stepItem = screen.getByText("Completed Step").closest("li");
       expect(stepItem).toBeInTheDocument();
@@ -159,7 +226,7 @@ describe("AgentExecutionTracePanel", () => {
         steps: [{ name: "Running Step", status: "running" }],
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       const stepItem = screen.getByText("Running Step").closest("li");
       expect(stepItem).toBeInTheDocument();
@@ -174,7 +241,7 @@ describe("AgentExecutionTracePanel", () => {
         steps: [{ name: "Pending Step", status: "pending" }],
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       const stepItem = screen.getByText("Pending Step").closest("li");
       expect(stepItem).toBeInTheDocument();
@@ -188,7 +255,7 @@ describe("AgentExecutionTracePanel", () => {
         steps: [{ name: "Fast Step", status: "completed", duration: 150 }],
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(screen.getByText("(150ms)")).toBeInTheDocument();
     });
@@ -199,7 +266,7 @@ describe("AgentExecutionTracePanel", () => {
         tokens: { input: 100, output: 50 },
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(screen.queryByText("Execution Steps:")).not.toBeInTheDocument();
     });
@@ -210,7 +277,7 @@ describe("AgentExecutionTracePanel", () => {
         steps: [{ name: "Step", status: "completed" }],
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(screen.getByText("Workflow Execution:")).toBeInTheDocument();
       expect(screen.queryByText("Execution Steps:")).not.toBeInTheDocument();
@@ -223,7 +290,7 @@ describe("AgentExecutionTracePanel", () => {
         tokens: { input: 1500, output: 750 },
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(screen.getByText(/Input: 1500 tokens/)).toBeInTheDocument();
       expect(screen.getByText(/Output: 750 tokens/)).toBeInTheDocument();
@@ -234,7 +301,7 @@ describe("AgentExecutionTracePanel", () => {
         steps: [{ name: "test", status: "completed" }],
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(screen.queryByText(/Input:/)).not.toBeInTheDocument();
       expect(screen.queryByText(/Output:/)).not.toBeInTheDocument();
@@ -247,7 +314,7 @@ describe("AgentExecutionTracePanel", () => {
         rawOutput: "This is the raw LLM output",
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(screen.getByText("Raw Output")).toBeInTheDocument();
       expect(
@@ -260,7 +327,7 @@ describe("AgentExecutionTracePanel", () => {
         steps: [{ name: "test", status: "completed" }],
       };
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(screen.queryByText("Raw Output")).not.toBeInTheDocument();
     });
@@ -270,11 +337,196 @@ describe("AgentExecutionTracePanel", () => {
     it("shows placeholder when trace has no usable data", () => {
       const trace: AgentExecutionTrace = {};
 
-      render(<AgentExecutionTracePanel trace={trace} />);
+      renderWithProvider(<AgentExecutionTracePanel trace={trace} />);
 
       expect(
         screen.getByText(/processing.*trace data will appear/i)
       ).toBeInTheDocument();
+    });
+  });
+
+  // =============================================================================
+  // Sprint 5: AI-Powered Trace Intelligence (TDD - RED Phase)
+  // =============================================================================
+  describe("Sprint 5: AI-powered trace intelligence", () => {
+    const traceWithAI: AgentExecutionTrace = {
+      steps: [
+        { name: "fetch_data", status: "completed", duration: 150 },
+        { name: "database_query", status: "completed", duration: 1500 },
+        { name: "process_results", status: "completed", duration: 200 },
+        { name: "generate_response", status: "completed", duration: 450 },
+      ],
+      tokens: { input: 1500, output: 750 },
+    };
+
+    describe("AI summary panel", () => {
+      it("displays AI-generated trace summary when enableAI is true", () => {
+        renderWithProvider(
+          <AgentExecutionTracePanel
+            trace={traceWithAI}
+            userId="user-123"
+            sessionId="session-456"
+            traceId="trace-789"
+            enableAI={true}
+          />
+        );
+
+        expect(screen.getByTestId("ai-trace-summary")).toBeInTheDocument();
+        expect(
+          screen.getByText(/Agent completed 5-step workflow/i)
+        ).toBeInTheDocument();
+      });
+
+      it("does not show AI summary when enableAI is false", () => {
+        renderWithProvider(
+          <AgentExecutionTracePanel
+            trace={traceWithAI}
+            userId="user-123"
+            sessionId="session-456"
+            traceId="trace-789"
+            enableAI={false}
+          />
+        );
+
+        expect(screen.queryByTestId("ai-trace-summary")).not.toBeInTheDocument();
+      });
+
+      it("shows key actions from AI analysis", () => {
+        renderWithProvider(
+          <AgentExecutionTracePanel
+            trace={traceWithAI}
+            userId="user-123"
+            sessionId="session-456"
+            traceId="trace-789"
+            enableAI={true}
+          />
+        );
+
+        expect(screen.getByText(/Retrieved data/)).toBeInTheDocument();
+        expect(screen.getByText(/Processed request/)).toBeInTheDocument();
+        expect(screen.getByText(/Generated response/)).toBeInTheDocument();
+      });
+    });
+
+    describe("AI anomaly detection", () => {
+      it("displays bottleneck indicators for slow steps", () => {
+        renderWithProvider(
+          <AgentExecutionTracePanel
+            trace={traceWithAI}
+            userId="user-123"
+            sessionId="session-456"
+            traceId="trace-789"
+            enableAI={true}
+          />
+        );
+
+        expect(screen.getByTestId("ai-bottleneck-indicator")).toBeInTheDocument();
+        expect(screen.getByText(/database_query/)).toBeInTheDocument();
+        expect(screen.getByText(/65%/)).toBeInTheDocument();
+      });
+
+      it("shows health score indicator", () => {
+        renderWithProvider(
+          <AgentExecutionTracePanel
+            trace={traceWithAI}
+            userId="user-123"
+            sessionId="session-456"
+            traceId="trace-789"
+            enableAI={true}
+          />
+        );
+
+        expect(screen.getByTestId("ai-health-score")).toBeInTheDocument();
+        expect(screen.getByText(/72%/)).toBeInTheDocument();
+      });
+
+      it("displays optimization suggestions", () => {
+        renderWithProvider(
+          <AgentExecutionTracePanel
+            trace={traceWithAI}
+            userId="user-123"
+            sessionId="session-456"
+            traceId="trace-789"
+            enableAI={true}
+          />
+        );
+
+        expect(
+          screen.getByText(/Consider parallel execution/i)
+        ).toBeInTheDocument();
+      });
+
+      it("shows warning badge for anomalies", () => {
+        renderWithProvider(
+          <AgentExecutionTracePanel
+            trace={traceWithAI}
+            userId="user-123"
+            sessionId="session-456"
+            traceId="trace-789"
+            enableAI={true}
+          />
+        );
+
+        expect(screen.getByTestId("ai-anomaly-badge")).toBeInTheDocument();
+        expect(screen.getByText(/3x slower than average/)).toBeInTheDocument();
+      });
+    });
+
+    describe("AI loading states", () => {
+      it("shows loading indicator while AI analysis is in progress", () => {
+        // Mock loading state
+        vi.mocked(
+          vi.fn(() => ({
+            useStudioAnalyzeMutation: vi.fn(() => [
+              vi.fn(),
+              { isLoading: true },
+            ]),
+          }))
+        );
+
+        renderWithProvider(
+          <AgentExecutionTracePanel
+            trace={traceWithAI}
+            userId="user-123"
+            sessionId="session-456"
+            traceId="trace-789"
+            enableAI={true}
+          />
+        );
+
+        // The component should still render trace data while AI loads
+        expect(screen.getByTestId("agent-trace-panel")).toBeInTheDocument();
+      });
+    });
+
+    describe("AI feature requirements", () => {
+      it("requires userId prop when enableAI is true", () => {
+        renderWithProvider(
+          <AgentExecutionTracePanel
+            trace={traceWithAI}
+            enableAI={true}
+            userId="user-123"
+            sessionId="session-456"
+            traceId="trace-789"
+          />
+        );
+
+        expect(screen.getByTestId("ai-trace-summary")).toBeInTheDocument();
+      });
+
+      it("requires traceId prop for AI trace analysis", () => {
+        renderWithProvider(
+          <AgentExecutionTracePanel
+            trace={traceWithAI}
+            enableAI={true}
+            userId="user-123"
+            sessionId="session-456"
+            traceId="trace-789"
+          />
+        );
+
+        expect(screen.getByTestId("ai-trace-summary")).toBeInTheDocument();
+      });
     });
   });
 });

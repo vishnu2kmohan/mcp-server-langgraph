@@ -6,11 +6,13 @@
  * - Execution steps fallback (when no nodes)
  * - Token usage statistics
  * - Raw output (collapsible)
+ * - Sprint 5: AI-powered trace intelligence
  *
  * Extracted from ChatMessages.tsx for improved modularity.
  */
 
 import { LangGraphNodeVisualization } from "./LangGraphNodeVisualization";
+import { useTraceSummary, useTraceAnomaly } from "../../hooks";
 import type { AgentExecutionTrace } from "../../types/chat";
 
 export interface AgentExecutionTracePanelProps {
@@ -18,6 +20,14 @@ export interface AgentExecutionTracePanelProps {
   trace: AgentExecutionTrace | undefined;
   /** Optional additional CSS classes */
   className?: string;
+  /** User ID for AI analysis (required when enableAI is true) */
+  userId?: string;
+  /** Session ID for AI analysis */
+  sessionId?: string;
+  /** Trace ID for AI trace analysis */
+  traceId?: string;
+  /** Enable AI-powered trace intelligence (Sprint 5) */
+  enableAI?: boolean;
 }
 
 /**
@@ -35,7 +45,38 @@ function hasUsableData(trace: AgentExecutionTrace): boolean {
 export function AgentExecutionTracePanel({
   trace,
   className = "",
+  userId = "",
+  sessionId = "",
+  traceId = "",
+  enableAI = false,
 }: AgentExecutionTracePanelProps) {
+  // Sprint 5: AI-powered trace intelligence hooks
+  const {
+    summary: aiSummary,
+    keyActions,
+    isLoading: summaryLoading,
+  } = useTraceSummary({
+    userId,
+    sessionId,
+    traceId,
+    enabled: enableAI && !!traceId,
+  });
+
+  const {
+    anomalies,
+    bottlenecks,
+    healthScore,
+    optimizationSuggestions,
+    isLoading: anomalyLoading,
+  } = useTraceAnomaly({
+    userId,
+    sessionId,
+    traceId,
+    enabled: enableAI && !!traceId,
+  });
+
+  const aiLoading = summaryLoading || anomalyLoading;
+
   // Empty state when trace is undefined
   if (!trace) {
     return (

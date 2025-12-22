@@ -240,6 +240,9 @@ export function useAgentRequestWebSocket(
   const wsRef = useRef<WebSocket | null>(null);
   const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isReconnectRef = useRef(false);
+  const sessionIdRef = useRef(sessionId);
+  sessionIdRef.current = sessionId;
 
   // Store callbacks in refs to avoid reconnecting on callback change
   const callbacksRef = useRef({
@@ -339,6 +342,16 @@ export function useAgentRequestWebSocket(
       ws.onopen = () => {
         setStatus("connected");
         startPingInterval();
+
+        // Send subscribe message if sessionId is provided
+        if (sessionIdRef.current) {
+          ws.send(JSON.stringify({ type: "subscribe", session_id: sessionIdRef.current }));
+        }
+
+        // On reconnect, request pending items to sync state
+        if (isReconnectRef.current) {
+          ws.send(JSON.stringify({ type: "get_pending" }));
+        }
       };
 
       ws.onclose = () => {
@@ -380,6 +393,8 @@ export function useAgentRequestWebSocket(
   // Reconnect to WebSocket
   const reconnect = useCallback(() => {
     disconnect();
+    // Mark as reconnection to trigger get_pending on connect
+    isReconnectRef.current = true;
     // Small delay before reconnecting
     reconnectTimeoutRef.current = setTimeout(() => {
       connect();

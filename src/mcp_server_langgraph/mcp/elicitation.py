@@ -286,6 +286,83 @@ def approval_node_to_elicitation(approval_node: Any) -> Elicitation:
     )
 
 
+def approval_with_explanation_to_elicitation(
+    approval: Any,
+) -> Elicitation:
+    """Convert an ApprovalRequired with AI explanation to an elicitation request.
+
+    Enhanced version that includes AI-generated explanations and alternatives
+    in the elicitation schema (SEP-1330).
+
+    Args:
+        approval: ApprovalRequired object, optionally with ai_explanation
+
+    Returns:
+        Elicitation configured for approval workflow with AI explanation
+    """
+    # Build base schema for approval
+    properties: dict[str, dict[str, Any]] = {
+        "approved": {
+            "type": "boolean",
+            "description": "Approve this action?",
+        },
+        "reason": {
+            "type": "string",
+            "description": "Optional reason for your decision",
+        },
+    }
+
+    # Get action description and explanation
+    action_description = getattr(approval, "action_description", "Perform action")
+    ai_explanation = getattr(approval, "ai_explanation", None)
+    risk_level = getattr(approval, "risk_level", "medium")
+
+    # Build message with AI explanation if available
+    message = f"Approve: {action_description}"
+    if risk_level in ("high", "critical"):
+        message = f"[{risk_level.upper()}] {message}"
+
+    if ai_explanation is not None:
+        why_uncertain = getattr(ai_explanation, "why_uncertain", "")
+        what_could_go_wrong = getattr(ai_explanation, "what_could_go_wrong", "")
+
+        if why_uncertain:
+            message = f"{message}\n\n**Why I'm uncertain:** {why_uncertain}"
+        if what_could_go_wrong:
+            message = f"{message}\n\n**Risk:** {what_could_go_wrong}"
+
+        # Add alternatives as enum options (SEP-1330)
+        safer_alternatives = getattr(ai_explanation, "safer_alternatives", []) or []
+        if safer_alternatives:
+            alt_values = ["original"] + [f"alt_{i}" for i in range(len(safer_alternatives))]
+            alt_names = [action_description] + [
+                f"{alt.action} (confidence: {alt.confidence:.0%})"
+                for alt in safer_alternatives
+            ]
+
+            properties["selected_action"] = {
+                "type": "string",
+                "enum": alt_values,
+                "enumNames": alt_names,
+                "default": "original",
+                "title": "Preferred Action",
+                "description": "Choose the original action or a safer alternative",
+            }
+
+    schema = ElicitationSchema(
+        type="object",
+        properties=properties,
+        required=["approved"],
+    )
+
+    return Elicitation(
+        id=getattr(approval, "approval_id", str(uuid.uuid4())),
+        request_id=0,  # Will be set by handler
+        message=message,
+        requestedSchema=schema,
+    )
+
+
 def elicitation_response_to_approval(
     response: ElicitationResponse,
     approval_id: str,

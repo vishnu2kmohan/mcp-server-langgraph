@@ -21,7 +21,8 @@ from mcp_server_langgraph.mcp.resources import (
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.agents.artifacts import ArtifactStorage
-    from mcp_server_langgraph.agents.orchestrator import TaskDecomposition
+    from mcp_server_langgraph.agents.coordinator import Coordinator
+    from mcp_server_langgraph.agents.orchestrator import Orchestrator, TaskDecomposition
     from mcp_server_langgraph.agents.subagent import SubagentResult
 
 
@@ -201,6 +202,123 @@ class OrchestratorResourceProvider:
             mimeType="application/json",
             text=json.dumps({"subagents": subagent_data}, default=str),
         )
+
+
+async def task_provider(
+    uri: str,
+    orchestrator: "Orchestrator | None" = None,
+) -> ResourceContent:
+    """Provider for task resources.
+
+    Standalone function for retrieving task data.
+
+    Args:
+        uri: Resource URI (orchestrator://tasks/{task_id})
+        orchestrator: Orchestrator instance to query
+
+    Returns:
+        ResourceContent with task data as JSON
+
+    Raises:
+        ValueError: If task not found
+    """
+    parsed = parse_orchestrator_uri(uri)
+    task_id = parsed["task_id"]
+
+    if orchestrator is None:
+        raise ValueError("Orchestrator not provided")
+
+    task_data = orchestrator.get_task(task_id)
+    if task_data is None:
+        raise ValueError(f"Task not found: {task_id}")
+
+    return ResourceContent(
+        uri=uri,
+        mimeType="application/json",
+        text=json.dumps(task_data, default=str),
+    )
+
+
+async def artifact_provider(
+    uri: str,
+    artifact_storage: "ArtifactStorage | None" = None,
+) -> ResourceContent:
+    """Provider for artifact resources.
+
+    Standalone function for retrieving artifact data.
+
+    Args:
+        uri: Resource URI (orchestrator://artifacts/{task_id}/{artifact_name})
+        artifact_storage: ArtifactStorage instance to query
+
+    Returns:
+        ResourceContent with artifact data as JSON
+
+    Raises:
+        ValueError: If artifact not found
+    """
+    parsed = parse_orchestrator_uri(uri)
+    task_id = parsed["task_id"]
+    artifact_name = parsed["artifact_name"]
+
+    if artifact_storage is None:
+        raise ValueError("ArtifactStorage not provided")
+
+    if not artifact_name:
+        raise ValueError(f"Artifact name required in URI: {uri}")
+
+    artifact = artifact_storage.retrieve(task_id, artifact_name)
+    if artifact is None:
+        raise ValueError(f"Artifact not found: {uri}")
+
+    return ResourceContent(
+        uri=uri,
+        mimeType="application/json",
+        text=json.dumps(
+            {
+                "task_id": artifact.task_id,
+                "name": artifact.name,
+                "data": artifact.data,
+                "created_at": artifact.created_at.isoformat(),
+                "metadata": artifact.metadata,
+            },
+            default=str,
+        ),
+    )
+
+
+async def subagents_provider(
+    uri: str,
+    coordinator: "Coordinator | None" = None,
+) -> ResourceContent:
+    """Provider for subagent status resources.
+
+    Standalone function for retrieving subagent execution status.
+
+    Args:
+        uri: Resource URI (orchestrator://subagents/{task_id})
+        coordinator: Coordinator instance to query
+
+    Returns:
+        ResourceContent with subagent statuses as JSON
+    """
+    parsed = parse_orchestrator_uri(uri)
+    task_id = parsed["task_id"]
+
+    if coordinator is None:
+        return ResourceContent(
+            uri=uri,
+            mimeType="application/json",
+            text=json.dumps({"subagents": []}, default=str),
+        )
+
+    subagents = coordinator.get_subagents(task_id)
+
+    return ResourceContent(
+        uri=uri,
+        mimeType="application/json",
+        text=json.dumps({"subagents": subagents}, default=str),
+    )
 
 
 def create_orchestrator_resource_handler() -> ResourceHandler:

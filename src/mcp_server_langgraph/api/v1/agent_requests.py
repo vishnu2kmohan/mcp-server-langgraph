@@ -39,6 +39,8 @@ from mcp_server_langgraph.audit.models import (
 )
 from mcp_server_langgraph.audit.service import UnifiedAuditService
 from mcp_server_langgraph.auth.middleware import get_current_user
+from mcp_server_langgraph.core.feature_flags import feature_flags
+from mcp_server_langgraph.core.interrupts.ai_explanation import AIExplanation
 from mcp_server_langgraph.core.interrupts.clarification import (
     ClarificationOption,
     ClarificationType,
@@ -142,6 +144,10 @@ class AgentRequest(BaseModel):
     context: dict[str, Any] = Field(
         default_factory=dict,
         description="Additional context for the request",
+    )
+    ai_explanation: AIExplanation | None = Field(
+        default=None,
+        description="AI-generated explanation for HITL dialog (when enable_ai_explanations is True)",
     )
 
 
@@ -450,6 +456,7 @@ class AgentRequestQueue:
         threshold: float,
         proposed_action: str,
         context: dict[str, Any] | None = None,
+        trigger_reason: str = "low_confidence",
     ) -> AgentRequest:
         """
         Queue an approval request for low-confidence decision.
@@ -462,11 +469,38 @@ class AgentRequestQueue:
             threshold: Threshold that triggered the request.
             proposed_action: What the agent wants to do.
             context: Additional context.
+            trigger_reason: Reason that triggered the request (default: low_confidence).
 
         Returns:
             The created AgentRequest.
         """
         request_id = f"req_{uuid4().hex[:12]}"
+
+        # Generate AI explanation if feature is enabled
+        ai_explanation: AIExplanation | None = None
+        if feature_flags.enable_ai_explanations:
+            try:
+                from mcp_server_langgraph.agents.explanation_orchestrator import (
+                    CachedExplanationOrchestrator,
+                )
+
+                orchestrator = CachedExplanationOrchestrator()
+                reasoning_trace = (context or {}).get("reasoning_trace", [])
+                ai_explanation = await orchestrator.generate_explanation_cached(
+                    approval_id=request_id,
+                    agent_name=agent_name,
+                    proposed_action=proposed_action,
+                    confidence=confidence,
+                    threshold=threshold,
+                    trigger_reason=trigger_reason,
+                    reasoning_trace=reasoning_trace,
+                )
+            except Exception as e:
+                logger.warning(
+                    "Failed to generate AI explanation",
+                    extra={"request_id": request_id, "error": str(e)},
+                )
+                # Continue without explanation - graceful degradation
 
         request = AgentRequest(
             request_id=request_id,
@@ -478,9 +512,11 @@ class AgentRequestQueue:
             threshold=threshold,
             question=f"Confidence {confidence:.0%} is below threshold {threshold:.0%}. Approve action?",
             proposed_action=proposed_action,
+            trigger_reason=trigger_reason,
             status=AgentRequestStatus.PENDING,
             requested_at=datetime.now(UTC).isoformat(),
             context=context or {},
+            ai_explanation=ai_explanation,
         )
 
         self._requests[request_id] = request
@@ -490,6 +526,7 @@ class AgentRequestQueue:
                 "request_id": request_id,
                 "agent_name": agent_name,
                 "confidence": confidence,
+                "has_ai_explanation": ai_explanation is not None,
             },
         )
 

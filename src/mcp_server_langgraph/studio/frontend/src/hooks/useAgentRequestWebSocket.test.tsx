@@ -451,6 +451,118 @@ describe("useAgentRequestWebSocket", () => {
       expect(MockWebSocket.instances.length).toBeGreaterThan(initialCount);
     });
   });
+
+  describe("Subscription Restoration", () => {
+    it("should send subscribe message with sessionId on connect", async () => {
+      renderHook(
+        () => useAgentRequestWebSocket({ sessionId: "session-123" }),
+        { wrapper: createWrapper(store) }
+      );
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100);
+      });
+
+      const ws = MockWebSocket.instances[0];
+      expect(ws.send).toHaveBeenCalledWith(
+        JSON.stringify({ type: "subscribe", session_id: "session-123" })
+      );
+    });
+
+    it("should request pending items on reconnect", async () => {
+      const { result } = renderHook(
+        () => useAgentRequestWebSocket({ sessionId: "session-123" }),
+        { wrapper: createWrapper(store) }
+      );
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100);
+      });
+
+      const firstWs = MockWebSocket.instances[0];
+      firstWs.send.mockClear();
+
+      // Disconnect and reconnect
+      await act(async () => {
+        result.current.disconnect();
+        await vi.advanceTimersByTimeAsync(100);
+      });
+
+      await act(async () => {
+        result.current.reconnect();
+        // 100ms for reconnect timeout + extra for WebSocket onopen to fire
+        await vi.advanceTimersByTimeAsync(200);
+      });
+
+      const secondWs = MockWebSocket.instances[1];
+      // Should send subscribe message on reconnect
+      expect(secondWs.send).toHaveBeenCalledWith(
+        JSON.stringify({ type: "subscribe", session_id: "session-123" })
+      );
+      // Should request pending items
+      expect(secondWs.send).toHaveBeenCalledWith(
+        JSON.stringify({ type: "get_pending" })
+      );
+    });
+
+    it("should preserve pending approvals during temporary disconnect", async () => {
+      const { result } = renderHook(
+        () => useAgentRequestWebSocket({ sessionId: "session-123" }),
+        { wrapper: createWrapper(store) }
+      );
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100);
+      });
+
+      // Receive an approval request
+      act(() => {
+        MockWebSocket.instances[0].simulateMessage({
+          type: "approval_required",
+          payload: {
+            request_id: "req-001",
+            session_id: "session-123",
+            task_id: "task-001",
+            agent_name: "Test Agent",
+            confidence: 0.5,
+            threshold: 0.7,
+            proposed_action: "Test action",
+            trigger_reason: "low_confidence",
+            context: {},
+            requested_at: "2024-01-15T10:36:00Z",
+          },
+        });
+      });
+
+      expect(result.current.pendingApprovals).toHaveLength(1);
+
+      // Disconnect
+      await act(async () => {
+        result.current.disconnect();
+        await vi.advanceTimersByTimeAsync(100);
+      });
+
+      // Pending approvals should be preserved
+      expect(result.current.pendingApprovals).toHaveLength(1);
+      expect(result.current.pendingApprovals[0].request_id).toBe("req-001");
+    });
+
+    it("should not send subscribe message if no sessionId provided", async () => {
+      renderHook(() => useAgentRequestWebSocket(), {
+        wrapper: createWrapper(store),
+      });
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100);
+      });
+
+      const ws = MockWebSocket.instances[0];
+      const subscribeCalls = ws.send.mock.calls.filter(
+        (call: string[]) => call[0] && JSON.parse(call[0]).type === "subscribe"
+      );
+      expect(subscribeCalls).toHaveLength(0);
+    });
+  });
 });
 
 describe("parseAgentRequestMessage", () => {

@@ -371,6 +371,27 @@ export type {
   DiagramToCodeResult,
 } from "./useCanvasIntelligence";
 
+// Trace + Cost Intelligence (Sprint 5)
+export {
+  useTraceSummary,
+  useTraceAnomaly,
+  useCostProjection,
+  useTokenPrediction,
+} from "./useTraceIntelligence";
+export type {
+  TraceSummaryOptions,
+  TraceSummaryResult,
+  TraceAnomalyOptions,
+  TraceAnomaly,
+  TraceBottleneck,
+  TraceAnomalyResult,
+  CostProjectionOptions,
+  CostBreakdown,
+  CostProjectionResult,
+  TokenPredictionOptions,
+  TokenPredictionResult,
+} from "./useTraceIntelligence";
+
 // HITL dialogs state management (extracted from HybridShellLayout)
 export { useHITLDialogs } from "./useHITLDialogs";
 export type {
