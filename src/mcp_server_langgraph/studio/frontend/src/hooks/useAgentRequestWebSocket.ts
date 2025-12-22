@@ -17,6 +17,8 @@
  */
 
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
+import { useAppSelector } from "../store/hooks";
+import { selectIsAuthenticated } from "../store/slices/authSlice";
 import { getAuthToken } from "../utils/storage";
 
 // =============================================================================
@@ -194,7 +196,7 @@ export function parseAgentRequestMessage(data: unknown): AgentRequestMessage | n
 
 function getDefaultWebSocketUrl(sessionId?: string): string {
   if (typeof window === "undefined") {
-    return "ws://localhost:8000/ws/agents/requests";
+    return "ws://localhost:8000/api/v1/ws/agents/requests";
   }
 
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -212,7 +214,7 @@ function getDefaultWebSocketUrl(sessionId?: string): string {
   }
 
   const queryString = params.toString();
-  return `${protocol}//${host}/ws/agents/requests${queryString ? `?${queryString}` : ""}`;
+  return `${protocol}//${host}/api/v1/ws/agents/requests${queryString ? `?${queryString}` : ""}`;
 }
 
 // =============================================================================
@@ -233,6 +235,7 @@ export function useAgentRequestWebSocket(
     onExecutionResumed,
   } = options;
 
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
   const [pendingApprovals, setPendingApprovals] = useState<ApprovalRequiredPayload[]>([]);
   const [pendingClarifications, setPendingClarifications] = useState<ClarificationRequiredPayload[]>([]);
@@ -241,6 +244,7 @@ export function useAgentRequestWebSocket(
   const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isReconnectRef = useRef(false);
+  const manualCloseRef = useRef(false);
   const sessionIdRef = useRef(sessionId);
   sessionIdRef.current = sessionId;
 
@@ -258,8 +262,18 @@ export function useAgentRequestWebSocket(
     onExecutionResumed,
   };
 
-  // Compute WebSocket URL
-  const wsUrl = useMemo(() => url ?? getDefaultWebSocketUrl(sessionId), [url, sessionId]);
+  // Compute WebSocket URL - recalculate when auth state changes
+  // This ensures the token query param is included when user becomes authenticated
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- isAuthenticated triggers recalculation
+  const wsUrl = useMemo(() => url ?? getDefaultWebSocketUrl(sessionId), [url, sessionId, isAuthenticated]);
+
+  // Track effective enabled state - only connect when authenticated
+  // WebSocket requires valid auth token, so we only connect when authenticated
+  const effectiveEnabled = enabled && isAuthenticated;
+
+  // Track previous effective enabled state to detect changes
+  // Initialize to undefined to detect first render
+  const prevEnabledRef = useRef<boolean | undefined>(undefined);
 
   // Handle incoming messages
   const handleMessage = useCallback((event: MessageEvent) => {
@@ -334,6 +348,13 @@ export function useAgentRequestWebSocket(
       return;
     }
 
+    // Clean up existing connection without triggering onclose
+    if (wsRef.current) {
+      wsRef.current.onclose = null;
+      wsRef.current.close();
+    }
+
+    manualCloseRef.current = false;
     setStatus("connecting");
 
     try {
@@ -355,7 +376,10 @@ export function useAgentRequestWebSocket(
       };
 
       ws.onclose = () => {
-        setStatus("disconnected");
+        // Only set status if not a manual/cleanup close
+        if (!manualCloseRef.current) {
+          setStatus("disconnected");
+        }
         stopPingInterval();
       };
 
@@ -375,6 +399,8 @@ export function useAgentRequestWebSocket(
 
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {
+    manualCloseRef.current = true;
+
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
@@ -387,6 +413,8 @@ export function useAgentRequestWebSocket(
       wsRef.current = null;
     }
 
+    // Status will be set by onclose handler (but blocked by manualCloseRef)
+    // For explicit disconnect calls, we still want to show disconnected status
     setStatus("disconnected");
   }, [stopPingInterval]);
 
@@ -402,15 +430,50 @@ export function useAgentRequestWebSocket(
   }, [disconnect, connect]);
 
   // Connect on mount, disconnect on unmount
+  // Handle auth state transitions to reconnect when user authenticates
   useEffect(() => {
-    if (enabled) {
+    const isFirstRender = prevEnabledRef.current === undefined;
+    const wasEnabled = prevEnabledRef.current === true;
+    const isNowEnabled = effectiveEnabled;
+
+    if (!isNowEnabled) {
+      // Currently disabled - disconnect if we were previously enabled
+      if (wasEnabled) {
+        manualCloseRef.current = true;
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
+        stopPingInterval();
+        if (wsRef.current) {
+          wsRef.current.close();
+          wsRef.current = null;
+        }
+        setStatus("disconnected");
+      }
+    } else if (isFirstRender || (!wasEnabled && isNowEnabled)) {
+      // First render with enabled=true, OR transitioning from disabled to enabled
       connect();
     }
 
+    prevEnabledRef.current = effectiveEnabled;
+
+    // Cleanup on unmount - close WebSocket without triggering status updates
     return () => {
-      disconnect();
+      manualCloseRef.current = true;
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      stopPingInterval();
+      if (wsRef.current) {
+        // Set onclose to null before closing to prevent any state updates during unmount
+        wsRef.current.onclose = null;
+        wsRef.current.close();
+        wsRef.current = null;
+      }
     };
-  }, [enabled, connect, disconnect]);
+  }, [effectiveEnabled, connect, stopPingInterval]);
 
   return {
     status,

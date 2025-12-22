@@ -15,7 +15,8 @@
 
 import { useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { useAppDispatch } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { selectIsAuthenticated } from "../store/slices/authSlice";
 import { addAlert, type Alert } from "../store/slices/alertSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { getAuthToken } from "../utils/storage";
@@ -135,7 +136,7 @@ export function parseAlertMessage(
  */
 function getDefaultWebSocketUrl(): string {
   if (typeof window === "undefined") {
-    return "ws://localhost:8000/ws/alerts";
+    return "ws://localhost:8000/api/v1/ws/alerts";
   }
 
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -145,7 +146,7 @@ function getDefaultWebSocketUrl(): string {
   const token = getAuthToken();
   const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
 
-  return `${protocol}//${host}/ws/alerts${tokenParam}`;
+  return `${protocol}//${host}/api/v1/ws/alerts${tokenParam}`;
 }
 
 // =============================================================================
@@ -188,9 +189,12 @@ export function useAlertWebSocket(
 ): UseAlertWebSocketReturn {
   const { url, enabled = true, showToasts = true } = options;
   const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
-  // Compute WebSocket URL
-  const wsUrl = useMemo(() => url ?? getDefaultWebSocketUrl(), [url]);
+  // Compute WebSocket URL - recalculate when auth state changes
+  // This ensures the token query param is included when user becomes authenticated
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- isAuthenticated triggers recalculation
+  const wsUrl = useMemo(() => url ?? getDefaultWebSocketUrl(), [url, isAuthenticated]);
 
   // Handle incoming messages
   const handleMessage = useCallback(
@@ -237,26 +241,31 @@ export function useAlertWebSocket(
     onMessage: handleMessage,
   });
 
-  // Track if enabled - if not, override status
-  const status: ConnectionStatus = enabled ? realtimeStatus : "disconnected";
+  // Track if enabled - if not authenticated or explicitly disabled, override status
+  // WebSocket requires valid auth token, so we only connect when authenticated
+  const effectiveEnabled = enabled && isAuthenticated;
+  const status: ConnectionStatus = effectiveEnabled
+    ? realtimeStatus
+    : "disconnected";
 
-  // Track previous enabled state to detect changes
-  const prevEnabledRef = useRef(enabled);
+  // Track previous effective enabled state to detect changes
+  const prevEnabledRef = useRef(effectiveEnabled);
 
-  // Disconnect when disabled, reconnect when enabled changes from false to true
+  // Disconnect when disabled or unauthenticated, reconnect when transitioning to enabled+authenticated
   useEffect(() => {
     const wasDisabled = !prevEnabledRef.current;
-    const isNowEnabled = enabled;
+    const isNowEnabled = effectiveEnabled;
 
-    if (!enabled) {
+    if (!effectiveEnabled) {
       realtimeDisconnect();
     } else if (wasDisabled && isNowEnabled) {
-      // Only reconnect when transitioning from disabled to enabled
+      // Only reconnect when transitioning from disabled to enabled+authenticated
+      // This handles both explicit enable changes and authentication state changes
       realtimeReconnect();
     }
 
-    prevEnabledRef.current = enabled;
-  }, [enabled, realtimeDisconnect, realtimeReconnect]);
+    prevEnabledRef.current = effectiveEnabled;
+  }, [effectiveEnabled, realtimeDisconnect, realtimeReconnect]);
 
   return {
     status,

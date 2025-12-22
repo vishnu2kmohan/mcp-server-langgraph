@@ -13,6 +13,8 @@
 
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
+import { useAppSelector } from "../store/hooks";
+import { selectIsAuthenticated } from "../store/slices/authSlice";
 import { getAuthToken } from "../utils/storage";
 
 // ============================================================================
@@ -213,8 +215,8 @@ export interface UseMCPWebSocketReturn {
 function getDefaultMCPWebSocketUrl(authenticated: boolean): string {
   if (typeof window === "undefined") {
     return authenticated
-      ? "ws://localhost:8000/api/v1/mcp/ws/auth"
-      : "ws://localhost:8000/api/v1/mcp/ws";
+      ? "ws://localhost:8000/api/v1/ws/mcp/auth"
+      : "ws://localhost:8000/api/v1/ws/mcp";
   }
 
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -222,7 +224,7 @@ function getDefaultMCPWebSocketUrl(authenticated: boolean): string {
 
   // Get access token for authentication using storage utility
   const token = getAuthToken();
-  const endpoint = authenticated ? "/api/v1/mcp/ws/auth" : "/api/v1/mcp/ws";
+  const endpoint = authenticated ? "/api/v1/ws/mcp/auth" : "/api/v1/ws/mcp";
   const tokenParam =
     authenticated && token ? `?token=${encodeURIComponent(token)}` : "";
 
@@ -293,6 +295,8 @@ export function useMCPWebSocket(
     onStreamingEnd,
   } = options;
 
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+
   // State
   const [isInitialized, setIsInitialized] = useState(false);
   const [serverInfo, setServerInfo] = useState<MCPServerInfo | null>(null);
@@ -330,11 +334,17 @@ export function useMCPWebSocket(
     };
   }, [onStreamingChunk, onStreamingStart, onStreamingEnd]);
 
-  // Compute WebSocket URL
-  const wsUrl = useMemo(
-    () => url ?? getDefaultMCPWebSocketUrl(authenticated),
-    [url, authenticated],
-  );
+  // Compute WebSocket URL - recalculate when auth state changes
+  // This ensures the token query param is included when user becomes authenticated
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- isAuthenticated triggers recalculation
+  const wsUrl = useMemo(() => url ?? getDefaultMCPWebSocketUrl(authenticated), [url, authenticated, isAuthenticated]);
+
+  // Track effective enabled state - only connect when authenticated (for authenticated endpoints)
+  // WebSocket requires valid auth token, so we only connect when authenticated
+  const effectiveEnabled = authenticated ? enabled && isAuthenticated : enabled;
+
+  // Track previous effective enabled state to detect changes
+  const prevEnabledRef = useRef(effectiveEnabled);
 
   // Handle incoming messages
   const handleMessage = useCallback((data: unknown) => {
@@ -398,8 +408,25 @@ export function useMCPWebSocket(
     },
   });
 
-  // Track if enabled - if not, override status
-  const status: ConnectionStatus = enabled ? realtimeStatus : "disconnected";
+  // Track if enabled - if not authenticated or explicitly disabled, override status
+  // WebSocket requires valid auth token, so we only connect when authenticated
+  const status: ConnectionStatus = effectiveEnabled ? realtimeStatus : "disconnected";
+
+  // Disconnect when disabled or unauthenticated, reconnect when transitioning to enabled+authenticated
+  useEffect(() => {
+    const wasDisabled = !prevEnabledRef.current;
+    const isNowEnabled = effectiveEnabled;
+
+    if (!effectiveEnabled) {
+      disconnect();
+    } else if (wasDisabled && isNowEnabled) {
+      // Only reconnect when transitioning from disabled to enabled+authenticated
+      // This handles both explicit enable changes and authentication state changes
+      reconnect();
+    }
+
+    prevEnabledRef.current = effectiveEnabled;
+  }, [effectiveEnabled, disconnect, reconnect]);
 
   // Send an MCP request and wait for response
   const sendRequest = useCallback(
@@ -536,7 +563,7 @@ export function useMCPWebSocket(
 
   // Auto-initialize when connected
   useEffect(() => {
-    if (status === "connected" && !isInitialized && enabled) {
+    if (status === "connected" && !isInitialized && effectiveEnabled) {
       initialize()
         .then(() => {
           // Also fetch tools, resources, prompts
@@ -549,7 +576,7 @@ export function useMCPWebSocket(
   }, [
     status,
     isInitialized,
-    enabled,
+    effectiveEnabled,
     initialize,
     listTools,
     listResources,
