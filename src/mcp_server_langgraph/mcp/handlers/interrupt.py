@@ -118,5 +118,5 @@ class InterruptHandler:
 
             else:
                 # This should never happen due to Pydantic validation
-                msg = f"Invalid action: {action}. Must be 'signal', 'check', or 'clear'."
+                msg = f"Invalid action: {action}. Must be 'signal', 'check', or 'clear'."  # type: ignore[unreachable]
                 raise ValueError(msg)

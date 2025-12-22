@@ -204,6 +204,7 @@ class ChatToolHandler(AbstractToolHandler):
             "next_action": "",
             "user_id": user_id,
             "request_id": str(span.get_span_context().trace_id) if span.get_span_context() else None,
+            "session_id": None,
             "routing_confidence": None,
             "reasoning": None,
             "compaction_applied": None,

@@ -160,8 +160,21 @@ with native I/O operations. Common triggers include:
 
 ### Status
 
-**Accepted risk** - The crash is cosmetic and doesn't affect test reliability.
-All 5600+ tests pass correctly before the worker cleanup crash.
+**Mitigated** - OOM issue resolved with increased heap limit and worker limits.
+All 8000+ tests now pass without OOM crashes.
+
+### OOM Fix (2025-12-20)
+
+Additional memory management improvements were implemented:
+
+1. **Increased Node.js heap limit**: Added `--max-old-space-size=8192` to npm test scripts
+2. **Added GC exposure**: Added `--expose-gc` flag to enable explicit garbage collection
+3. **Reduced worker ceiling**: Lowered max workers from 16 to 8 to prevent heap saturation
+4. **Added explicit GC**: `setup.ts` now calls `global.gc()` after each test if available
+5. **Reduced concurrency**: Lowered `maxConcurrency` from 10 to 5 tests per file
+6. **Increased teardown timeout**: Extended from 5s to 10s for GC time
+
+These changes prevent the "Reached heap limit Allocation failed - JavaScript heap out of memory" error that occurred when running the full 8000+ test suite.
 
 ## Related ADRs
 
