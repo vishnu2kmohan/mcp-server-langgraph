@@ -2,8 +2,8 @@
 
 **Status**: Implemented (All Phases Complete)
 **Date**: 2025-12-20
-**Updated**: 2025-12-21
-**Total Tests**: 420
+**Updated**: 2025-12-22
+**Total Tests**: 434
 **Authors**: Claude Code (AI-assisted)
 
 ## Context
@@ -151,7 +151,33 @@ We will implement the following enhancements across 16 PRs in 5 phases:
 - Adds latency for screenshot capture and verification
 - Increases token usage with image data
 
-### 8. Secure Secret Injection
+### 8. Domain Proxy for Network Allowlist Enforcement
+
+**Decision**: Implement HTTP proxy-based domain filtering for sandbox network control.
+
+**Implementation** (Added 2025-12-22):
+- `DomainProxyConfig` - Pydantic model for proxy configuration
+- `DomainMatcher` - Wildcard domain matching (e.g., `*.google.com`)
+- `DomainProxyServer` - Async HTTP proxy with allowlist enforcement
+- `ResourceLimits.proxy_config` - Integration with sandbox resource limits
+
+**Files**:
+- `src/mcp_server_langgraph/execution/domain_proxy.py` (NEW)
+- `src/mcp_server_langgraph/execution/resource_limits.py` (MODIFIED)
+- `tests/unit/execution/test_domain_proxy.py` (14 tests)
+
+**Rationale**:
+- Network allowlisting was not implemented (failed closed to "none")
+- Proxy-based filtering enables fine-grained domain control without iptables/nftables
+- Transparent to containerized code via HTTP_PROXY/HTTPS_PROXY environment variables
+
+**Security**:
+- Fails closed (empty allowlist blocks all domains)
+- Wildcard `*.example.com` matches subdomains but NOT bare domain
+- Metrics recorded for blocked/allowed requests
+- Logs blocked requests for audit trail
+
+### 9. Secure Secret Injection
 
 **Decision**: Support all Kubernetes secret types and Docker equivalents.
 
@@ -244,7 +270,15 @@ We will implement the following enhancements across 16 PRs in 5 phases:
 - [x] PR 15: Code & DevOps Skills - `skills/code-review`, `skills/test-generation`, `skills/deployment`
 - [x] PR 16: Compliance & Security Skills - `skills/gdpr-audit`, `skills/hipaa-audit`, `skills/security-scan`
 
-**Total Tests: 420 passing** (99 Phase 1-2 + 73 Visual Verification + 70 Phase 3 + 217 Phase 4 + 19 Integration + 19 Packaging)
+### Sandbox Security Enhancement ✅
+- [x] Domain Proxy for Network Allowlist (14 tests) - `execution/domain_proxy.py`
+  - DomainProxyConfig with allowed domains, proxy port, DNS port
+  - DomainMatcher with wildcard support (*.example.com)
+  - DomainProxyServer with async start/stop
+  - ResourceLimits integration via proxy_config field
+  - Metrics for blocked/allowed requests
+
+**Total Tests: 434 passing** (99 Phase 1-2 + 73 Visual Verification + 70 Phase 3 + 217 Phase 4 + 19 Integration + 19 Packaging + 14 Domain Proxy)
 **Example Skills: 9 SKILL.md files** (3 Research, 3 DevOps, 3 Compliance)
 
 ### Observability Integration ✅
