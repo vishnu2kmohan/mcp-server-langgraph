@@ -9,6 +9,7 @@
  * - Command palette trigger
  * - Active state highlighting
  * - Keyboard accessible
+ * - AI-powered navigation predictions (Sprint 6)
  */
 /* eslint-disable react-refresh/only-export-components -- Exports NavItem types and constants alongside component */
 import { useCallback, useMemo } from "react";
@@ -34,6 +35,7 @@ import {
 } from "../store/slices/canvasSlice";
 import { selectSidebarItems } from "../store/slices/personaSlice";
 import { cn } from "../utils/cn";
+import { useNavPrediction } from "../hooks/useUXIntelligence";
 
 // =============================================================================
 // Types
@@ -128,9 +130,17 @@ export const BOTTOM_ITEMS: NavItem[] = [
 
 export interface ActivityBarProps {
   className?: string;
+  /** Enable AI-powered navigation predictions (Sprint 6) */
+  enableAI?: boolean;
+  /** Reorder navigation items based on AI predictions */
+  reorderByPrediction?: boolean;
 }
 
-export function ActivityBar({ className }: ActivityBarProps) {
+export function ActivityBar({
+  className,
+  enableAI = false,
+  reorderByPrediction = false,
+}: ActivityBarProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const activeNavItem = useAppSelector(selectActiveNavItem);
@@ -138,11 +148,40 @@ export function ActivityBar({ className }: ActivityBarProps) {
   // RBAC: Get allowed sidebar items from persona slice (deny-by-default)
   const allowedItems = useAppSelector(selectSidebarItems);
 
+  // AI Navigation Predictions (Sprint 6)
+  const { predictions, isLoading: predictionsLoading } = useNavPrediction({
+    currentPage: activeNavItem ?? "chat",
+    recentPages: [], // Could be tracked via session history
+    enabled: enableAI,
+  });
+
+  // Create a set of predicted item IDs for quick lookup
+  const predictedItemIds = useMemo(() => {
+    if (!enableAI || !predictions.length) return new Set<string>();
+    return new Set(predictions.map((p) => p.itemId));
+  }, [enableAI, predictions]);
+
   // Filter navigation items based on persona permissions
-  const visibleNavItems = useMemo(
-    () => NAV_ITEMS.filter((item) => allowedItems.includes(item.id)),
-    [allowedItems],
-  );
+  const visibleNavItems = useMemo(() => {
+    const filtered = NAV_ITEMS.filter((item) => allowedItems.includes(item.id));
+
+    // Optionally reorder based on predictions
+    if (enableAI && reorderByPrediction && predictions.length > 0) {
+      // Create a score map from predictions
+      const scoreMap = new Map(
+        predictions.map((p) => [p.itemId, p.score])
+      );
+
+      // Sort by prediction score (higher first), then original order
+      return [...filtered].sort((a, b) => {
+        const scoreA = scoreMap.get(a.id) ?? 0;
+        const scoreB = scoreMap.get(b.id) ?? 0;
+        return scoreB - scoreA;
+      });
+    }
+
+    return filtered;
+  }, [allowedItems, enableAI, reorderByPrediction, predictions]);
 
   // Filter bottom items based on persona permissions
   const visibleBottomItems = useMemo(
@@ -185,26 +224,41 @@ export function ActivityBar({ className }: ActivityBarProps) {
     >
       {/* Main navigation icons - RBAC filtered */}
       <div className="flex flex-col gap-1" role="group" aria-label="Primary navigation">
-        {visibleNavItems.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            data-testid={`nav-${item.id}`}
-            aria-label={item.label}
-            title={item.label}
-            onClick={() => handleNavClick(item)}
-            className={cn(
-              "p-2 rounded-lg transition-all",
-              "focus:outline-none focus:ring-2 focus:ring-primary-500",
-              activeNavItem === item.id &&
-                "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-              activeNavItem !== item.id &&
-                "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
-            )}
-          >
-            {item.icon}
-          </button>
-        ))}
+        {visibleNavItems.map((item) => {
+          const isPredicted = predictedItemIds.has(item.id);
+          return (
+            <button
+              key={item.id}
+              type="button"
+              data-testid={`nav-${item.id}`}
+              aria-label={item.label}
+              title={isPredicted ? `${item.label} (Suggested)` : item.label}
+              onClick={() => handleNavClick(item)}
+              className={cn(
+                "p-2 rounded-lg transition-all relative",
+                "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                activeNavItem === item.id &&
+                  "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+                activeNavItem !== item.id &&
+                  "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+              )}
+            >
+              {item.icon}
+              {/* AI Prediction Indicator */}
+              {enableAI && isPredicted && !predictionsLoading && (
+                <span
+                  data-testid="nav-prediction-indicator"
+                  className={cn(
+                    "absolute -top-0.5 -right-0.5 w-2 h-2",
+                    "bg-amber-400 dark:bg-amber-500 rounded-full",
+                    "animate-pulse"
+                  )}
+                  aria-label="AI suggested"
+                />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Spacer */}

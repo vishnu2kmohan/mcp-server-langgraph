@@ -8,11 +8,13 @@
  * - Full-text search across topics
  * - Category-based organization
  * - Topic selection callback
+ * - AI-powered contextual help (Sprint 6)
  */
 
 import { useState, useMemo } from "react";
-import { HelpCircle, Search, X, Loader2, BookOpen } from "lucide-react";
+import { HelpCircle, Search, X, Loader2, BookOpen, Sparkles, Zap } from "lucide-react";
 import { cn } from "../utils/cn";
+import { useContextualHelp } from "../hooks/useUXIntelligence";
 
 // =============================================================================
 // Types
@@ -31,6 +33,14 @@ export interface HelpPaneProps {
   onTopicSelect: (topic: HelpTopic) => void;
   isLoading?: boolean;
   className?: string;
+  /** Enable AI-powered contextual help (Sprint 6) */
+  enableAI?: boolean;
+  /** Current page for contextual suggestions */
+  currentPage?: string;
+  /** Current feature being used */
+  currentFeature?: string;
+  /** Callback for quick action click */
+  onQuickAction?: (action: { id: string; label: string; action: string }) => void;
 }
 
 // =============================================================================
@@ -59,8 +69,24 @@ export function HelpPane({
   onTopicSelect,
   isLoading = false,
   className,
+  enableAI = false,
+  currentPage,
+  currentFeature,
+  onQuickAction,
 }: HelpPaneProps) {
   const [searchQuery, setSearchQuery] = useState("");
+
+  // AI Contextual Help (Sprint 6)
+  const {
+    topics: aiTopics,
+    quickActions,
+    summary: contextSummary,
+    isLoading: aiLoading,
+  } = useContextualHelp({
+    currentPage: currentPage ?? "",
+    currentFeature,
+    enabled: enableAI,
+  });
 
   // Filter topics based on search
   const filteredTopics = useMemo(() => {
@@ -142,6 +168,89 @@ export function HelpPane({
           )}
         </div>
       </div>
+
+      {/* AI Contextual Help Section (Sprint 6) */}
+      {enableAI && !searchQuery && (
+        <div
+          data-testid="ai-contextual-help-section"
+          className="p-3 border-b border-gray-200 dark:border-gray-700"
+        >
+          {/* Context Summary */}
+          {contextSummary && (
+            <div className="mb-3 p-2 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-sm">
+              <div className="flex items-center gap-1.5 text-primary-700 dark:text-primary-400 font-medium mb-1">
+                <Sparkles size={14} />
+                <span>Suggested for you</span>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 text-xs">
+                {contextSummary}
+              </p>
+            </div>
+          )}
+
+          {/* Quick Actions */}
+          {quickActions.length > 0 && (
+            <div className="space-y-1">
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                Quick Actions
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {quickActions.map((action) => (
+                  <button
+                    key={action.id}
+                    type="button"
+                    onClick={() => onQuickAction?.(action)}
+                    className={cn(
+                      "inline-flex items-center gap-1 px-2 py-1 rounded text-xs",
+                      "bg-gray-100 dark:bg-gray-800",
+                      "text-gray-700 dark:text-gray-300",
+                      "hover:bg-primary-100 dark:hover:bg-primary-900/30",
+                      "transition-colors"
+                    )}
+                  >
+                    <Zap size={12} />
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* AI-Suggested Topics */}
+          {aiTopics.length > 0 && (
+            <div className="mt-3 space-y-1.5">
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Related Topics
+              </div>
+              {aiTopics.slice(0, 3).map((topic) => (
+                <button
+                  key={topic.id}
+                  type="button"
+                  onClick={() => onTopicSelect(topic)}
+                  className={cn(
+                    "w-full text-left p-2 rounded-lg text-sm",
+                    "bg-gray-50 dark:bg-gray-800",
+                    "hover:bg-primary-50 dark:hover:bg-primary-900/20",
+                    "transition-colors"
+                  )}
+                >
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {topic.title}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Loading state for AI */}
+          {aiLoading && (
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Loader2 size={12} className="animate-spin" />
+              <span>Finding relevant help...</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-3">

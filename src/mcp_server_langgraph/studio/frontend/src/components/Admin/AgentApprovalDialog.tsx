@@ -25,8 +25,13 @@ import {
   FileText,
   Lightbulb,
   TrendingDown,
+  Shield,
+  History,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import type { AIExplanation } from "../../types/hitl";
+import { useRiskAssessment, useDecisionHistory } from "../../hooks";
 
 // =============================================================================
 // Types
@@ -79,6 +84,10 @@ export interface AgentApprovalDialogProps {
   error?: string | null;
   /** Current user email for attribution */
   currentUser?: string;
+  /** Enable AI-powered HITL Intelligence (Sprint 6) */
+  enableAI?: boolean;
+  /** User ID for AI context */
+  userId?: string;
 }
 
 // =============================================================================
@@ -126,6 +135,24 @@ function formatNumber(num: number): string {
 // Main Component
 // =============================================================================
 
+/**
+ * Get risk level color
+ */
+function getRiskLevelColor(level: string): string {
+  switch (level) {
+    case "low":
+      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+    case "medium":
+      return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
+    case "high":
+      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+    case "critical":
+      return "bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-300";
+    default:
+      return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+  }
+}
+
 export function AgentApprovalDialog({
   request,
   isOpen,
@@ -136,8 +163,39 @@ export function AgentApprovalDialog({
   isRejecting = false,
   error = null,
   currentUser = "unknown",
+  enableAI = false,
+  userId = "",
 }: AgentApprovalDialogProps) {
   const [reason, setReason] = useState("");
+
+  // Sprint 6: HITL Intelligence hooks
+  const {
+    riskScore,
+    riskLevel,
+    riskFactors,
+    mitigations,
+    recommendation,
+    explanation: riskExplanation,
+    isLoading: riskLoading,
+  } = useRiskAssessment({
+    userId,
+    requestId: request.request_id,
+    actionType: request.trigger_reason,
+    parameters: { proposed_action: request.proposed_action },
+    enabled: enableAI && isOpen,
+  });
+
+  const {
+    similarDecisions,
+    approvalRate,
+    totalSimilar,
+    suggestedAction,
+    isLoading: historyLoading,
+  } = useDecisionHistory({
+    userId,
+    actionType: request.trigger_reason,
+    enabled: enableAI && isOpen,
+  });
 
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -372,6 +430,173 @@ export function AgentApprovalDialog({
                   )}
               </div>
             </details>
+          )}
+
+          {/* Sprint 6: Risk Assessment Panel */}
+          {enableAI && (
+            <div
+              data-testid="risk-assessment-panel"
+              className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-purple-900 dark:text-purple-100 flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  AI Risk Assessment
+                </h3>
+                {riskLoading && (
+                  <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+                )}
+              </div>
+
+              {!riskLoading && riskScore !== null && (
+                <>
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <span className="text-sm text-purple-600 dark:text-purple-400">Risk Score</span>
+                      <p data-testid="risk-score" className="text-lg font-bold text-purple-900 dark:text-purple-100">
+                        {Math.round((riskScore || 0) * 100)}%
+                      </p>
+                    </div>
+                    <span
+                      data-testid="risk-level"
+                      className={`px-2 py-1 rounded text-xs font-medium ${getRiskLevelColor(riskLevel || "")}`}
+                    >
+                      {riskLevel?.toUpperCase() || "UNKNOWN"}
+                    </span>
+                  </div>
+
+                  {/* Risk Factors */}
+                  {riskFactors && riskFactors.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-purple-800 dark:text-purple-200">Risk Factors:</p>
+                      <ul className="space-y-1">
+                        {riskFactors.map((factor, index) => (
+                          <li
+                            key={index}
+                            className="text-xs text-purple-700 dark:text-purple-300 flex items-center gap-2"
+                          >
+                            <span className="font-mono text-purple-500">
+                              {Math.round((factor.weight || 0) * 100)}%
+                            </span>
+                            <span>{factor.description || factor.factor}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Mitigations */}
+                  {mitigations && mitigations.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-purple-800 dark:text-purple-200">Suggested Mitigations:</p>
+                      <ul className="space-y-1">
+                        {mitigations.map((mitigation, index) => (
+                          <li key={index} className="text-xs text-purple-700 dark:text-purple-300 pl-3">
+                            • {mitigation}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* AI Recommendation */}
+                  {recommendation && (
+                    <div
+                      data-testid="ai-recommendation"
+                      className="mt-2 p-2 bg-purple-100 dark:bg-purple-900/40 rounded text-sm"
+                    >
+                      <span className="font-medium text-purple-800 dark:text-purple-200">
+                        AI Recommendation:{" "}
+                      </span>
+                      <span className="text-purple-700 dark:text-purple-300 capitalize">
+                        {recommendation}
+                      </span>
+                      {riskExplanation && (
+                        <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                          {riskExplanation}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Sprint 6: Decision History Panel */}
+          {enableAI && (
+            <div
+              data-testid="decision-history-panel"
+              className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-indigo-900 dark:text-indigo-100 flex items-center gap-2">
+                  <History className="w-4 h-4" />
+                  Similar Decisions
+                </h3>
+                {historyLoading && (
+                  <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
+                )}
+              </div>
+
+              {!historyLoading && totalSimilar !== null && (
+                <>
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <span className="text-sm text-indigo-600 dark:text-indigo-400">
+                        {totalSimilar} similar decisions found
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-indigo-600 dark:text-indigo-400">Approval Rate</span>
+                      <p data-testid="approval-rate" className="text-lg font-bold text-indigo-900 dark:text-indigo-100">
+                        {Math.round((approvalRate || 0) * 100)}%
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Recent Similar Decisions */}
+                  {similarDecisions && similarDecisions.length > 0 && (
+                    <div className="space-y-2">
+                      {similarDecisions.slice(0, 2).map((decision, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 text-xs text-indigo-700 dark:text-indigo-300 p-2 bg-indigo-100 dark:bg-indigo-900/40 rounded"
+                        >
+                          {decision.decision === "approved" ? (
+                            <ThumbsUp className="w-3 h-3 text-green-500" />
+                          ) : (
+                            <ThumbsDown className="w-3 h-3 text-red-500" />
+                          )}
+                          <span className="capitalize">{decision.decision}</span>
+                          <span className="text-indigo-500">by {decision.decided_by}</span>
+                          {decision.reasoning && (
+                            <span className="truncate text-indigo-600 dark:text-indigo-400">
+                              — {decision.reasoning}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Suggested Action */}
+                  {suggestedAction && (
+                    <div
+                      data-testid="suggested-action"
+                      className="mt-2 p-2 bg-indigo-100 dark:bg-indigo-900/40 rounded text-sm"
+                    >
+                      <span className="font-medium text-indigo-800 dark:text-indigo-200">
+                        Based on history:{" "}
+                      </span>
+                      <span className="text-indigo-700 dark:text-indigo-300 capitalize">
+                        {suggestedAction}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           )}
 
           {/* Agent Info */}

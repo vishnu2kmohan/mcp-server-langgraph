@@ -257,6 +257,26 @@ export const handlers = [
   }),
 
   // Workflows
+  // NOTE: Static paths MUST come before parameterized paths to avoid conflicts
+
+  // Workflows shared with the current user (static path - must be before :id)
+  http.get("/api/v1/workflows/shared-with-me", async () => {
+    await delay(100);
+    return HttpResponse.json([
+      createMockWorkflow({
+        id: "wf-shared-1",
+        name: "Shared Data Pipeline",
+        description: "A shared workflow from another user",
+      }),
+      createMockWorkflow({
+        id: "wf-shared-2",
+        name: "Shared Code Review Bot",
+        description: "Another shared workflow",
+      }),
+    ]);
+  }),
+
+  // Workflow List
   http.get("/api/v1/workflows", async ({ request }) => {
     await delay(100);
     const url = new URL(request.url);
@@ -277,6 +297,7 @@ export const handlers = [
     });
   }),
 
+  // Workflow by ID (parameterized path - must come after static paths)
   http.get("/api/v1/workflows/:id", async ({ params }) => {
     await delay(50);
     const workflow = mockWorkflows.find((w) => w.id === params.id);
@@ -308,6 +329,24 @@ export const handlers = [
   }),
 
   // Sessions
+  // NOTE: Static paths MUST come before parameterized paths to avoid conflicts
+
+  // Generate session title (static path - must be before :sessionId)
+  http.post("/api/v1/sessions/generate-title", async ({ request }) => {
+    await delay(200);
+    const body = (await request.json()) as {
+      messages?: Array<{ role: string; content: string }>;
+    };
+    // Generate a mock title based on the first user message
+    const userMessage = body.messages?.find((m) => m.role === "user");
+    const baseTitle = userMessage?.content?.slice(0, 30) || "New Conversation";
+    return HttpResponse.json({
+      title: `${baseTitle}${baseTitle.length >= 30 ? "..." : ""}`,
+      generated_at: new Date().toISOString(),
+    });
+  }),
+
+  // Session List
   http.get("/api/v1/sessions", async ({ request }) => {
     await delay(100);
     const url = new URL(request.url);
@@ -400,6 +439,74 @@ export const handlers = [
   ),
 
   // Connections
+  // NOTE: Static paths MUST come before parameterized paths to avoid conflicts
+  // Order: audit, templates, bulk operations, then :id handlers
+
+  // Connection Audit Logs (static path - must be before :id)
+  http.get("/api/v1/connections/audit/logs", async () => {
+    await delay(100);
+    return HttpResponse.json({
+      items: [
+        {
+          id: "audit-1",
+          connection_id: "conn-1",
+          action: "created",
+          user_id: "user-123",
+          timestamp: new Date().toISOString(),
+          details: { name: "Production Server" },
+        },
+      ],
+      next_cursor: null,
+      has_more: false,
+    });
+  }),
+
+  // Connection Templates (static path - must be before :id)
+  http.get("/api/v1/connections/templates", async () => {
+    await delay(100);
+    return HttpResponse.json({
+      templates: [
+        {
+          id: "tpl-1",
+          name: "OpenAI",
+          description: "Connect to OpenAI API",
+          auth_type: "api_key",
+          config_schema: {
+            type: "object",
+            properties: { api_key: { type: "string" } },
+          },
+        },
+        {
+          id: "tpl-2",
+          name: "Google Cloud",
+          description: "Connect to Google Cloud services",
+          auth_type: "oauth2",
+          config_schema: { type: "object", properties: {} },
+        },
+      ],
+    });
+  }),
+
+  // Bulk Connection Operations (static paths - must be before :id)
+  http.post("/api/v1/connections/bulk/test", async () => {
+    await delay(200);
+    return HttpResponse.json({
+      results: [
+        { id: "conn-1", success: true, latency_ms: 150 },
+        { id: "conn-2", success: false, error: "Connection refused" },
+      ],
+    });
+  }),
+
+  http.post("/api/v1/connections/bulk/delete", async () => {
+    await delay(100);
+    return HttpResponse.json({
+      deleted: ["conn-1", "conn-2"],
+      failed: [],
+    });
+  }),
+
+  // Connection List
   http.get("/api/v1/connections", async ({ request }) => {
     await delay(100);
     const url = new URL(request.url);
@@ -421,6 +528,7 @@ export const handlers = [
     });
   }),
 
+  // Connection by ID (parameterized path - must come after static paths)
   http.get("/api/v1/connections/:id", async ({ params }) => {
     await delay(50);
     const connection = mockConnections.find((c) => c.id === params.id);
@@ -703,70 +811,6 @@ export const handlers = [
     return HttpResponse.json({
       is_public: true,
       share_link: "https://example.com/share/abc123",
-    });
-  }),
-
-  // Connection Audit Logs
-  http.get("/api/v1/connections/audit/logs", async () => {
-    await delay(100);
-    return HttpResponse.json({
-      items: [
-        {
-          id: "audit-1",
-          connection_id: "conn-1",
-          action: "created",
-          user_id: "user-123",
-          timestamp: new Date().toISOString(),
-          details: { name: "Production Server" },
-        },
-      ],
-      next_cursor: null,
-      has_more: false,
-    });
-  }),
-
-  // Connection Templates
-  http.get("/api/v1/connections/templates", async () => {
-    await delay(100);
-    return HttpResponse.json({
-      templates: [
-        {
-          id: "tpl-1",
-          name: "OpenAI",
-          description: "Connect to OpenAI API",
-          auth_type: "api_key",
-          config_schema: {
-            type: "object",
-            properties: { api_key: { type: "string" } },
-          },
-        },
-        {
-          id: "tpl-2",
-          name: "Google Cloud",
-          description: "Connect to Google Cloud services",
-          auth_type: "oauth2",
-          config_schema: { type: "object", properties: {} },
-        },
-      ],
-    });
-  }),
-
-  // Bulk Connection Operations
-  http.post("/api/v1/connections/bulk/test", async () => {
-    await delay(200);
-    return HttpResponse.json({
-      results: [
-        { id: "conn-1", success: true, latency_ms: 150 },
-        { id: "conn-2", success: false, error: "Connection refused" },
-      ],
-    });
-  }),
-
-  http.post("/api/v1/connections/bulk/delete", async () => {
-    await delay(100);
-    return HttpResponse.json({
-      deleted: ["conn-1", "conn-2"],
-      failed: [],
     });
   }),
 

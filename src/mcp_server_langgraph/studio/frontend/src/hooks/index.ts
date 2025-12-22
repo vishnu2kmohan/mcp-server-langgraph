@@ -461,3 +461,49 @@ export type {
   UseErrorReportingOptions,
   UseErrorReportingResult,
 } from "./useErrorReporting";
+
+// =============================================================================
+// AI Cache Hook (Architecture: Caching Layer)
+// =============================================================================
+
+export {
+  useAICache,
+  createCacheKey,
+  clearAllAICache,
+  clearAICacheByPrefix,
+  getAICacheStats,
+} from "./useAICache";
+export type {
+  CacheEntry,
+  UseAICacheOptions,
+  UseAICacheResult,
+} from "./useAICache";
+
+// =============================================================================
+// AI Real-Time UX Suggestions (WebSocket + Context Integration)
+// =============================================================================
+
+export { useAIRealTimeUXSuggestions } from "./useAIRealTimeUXSuggestions";
+export type {
+  UseAIRealTimeUXSuggestionsOptions,
+  UseAIRealTimeUXSuggestionsResult,
+} from "./useAIRealTimeUXSuggestions";
+
+// =============================================================================
+// AI Metrics Hook (Architecture: Observability)
+// =============================================================================
+
+export {
+  useAIMetrics,
+  createAIMetricsTracker,
+} from "./useAIMetrics";
+export type {
+  AIMetricsEventType,
+  AIMetricsEvent,
+  AIMetricsSnapshot,
+  FeatureMetrics,
+  UseAIMetricsOptions,
+  UseAIMetricsResult,
+  AIMetricsTracker,
+  CreateAIMetricsTrackerOptions,
+} from "./useAIMetrics";

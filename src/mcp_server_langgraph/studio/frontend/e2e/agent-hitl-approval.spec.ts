@@ -21,6 +21,45 @@ import { test, expect } from './fixtures/auth';
 // Backend integration is enabled by default for E2E tests.
 const backendEnabled = process.env.BACKEND_ENABLED !== 'false';
 
+// Mock AI explanation for AI-Native HITL Enhancement (Plan 10.2)
+const MOCK_AI_EXPLANATION = {
+  why_uncertain: 'The analysis involves external data sources with inconsistent formatting, leading to potential parsing errors.',
+  what_could_go_wrong: 'If the data is misinterpreted, the report could contain inaccurate metrics that may mislead decision-making.',
+  safer_alternatives: [
+    {
+      action: 'Validate data schema before sending',
+      confidence: 0.88,
+      trade_off: 'Additional 30 seconds processing time',
+    },
+    {
+      action: 'Send to staging API first',
+      confidence: 0.92,
+      trade_off: 'Requires manual promotion to production',
+    },
+  ],
+  confidence_factors: [
+    {
+      factor: 'data_format_inconsistency',
+      weight: -0.25,
+      evidence: 'Found 3 different date formats in input',
+    },
+    {
+      factor: 'missing_validation',
+      weight: -0.13,
+      evidence: 'No schema validation on external payload',
+    },
+  ],
+  reasoning_trace: [
+    'Loaded data from external source',
+    'Detected inconsistent date formats',
+    'Attempted type coercion on 15 fields',
+    'Generated report with best-effort parsing',
+  ],
+  model_used: 'gpt-4o-mini',
+  generated_at: new Date().toISOString(),
+  cached: false,
+};
+
 // Mock agent request data for frontend-only testing
 const MOCK_APPROVAL_REQUEST = {
   request_id: 'hitl-req-001',
@@ -40,6 +79,7 @@ const MOCK_APPROVAL_REQUEST = {
     artifacts: ['analysis.json', 'chart.png'],
     duration_ms: 2450,
   },
+  ai_explanation: MOCK_AI_EXPLANATION,
 };
 
 const MOCK_CLARIFICATION_REQUEST = {
@@ -340,6 +380,181 @@ test.describe('Agent HITL Approval Flow', () => {
           const hasExplanation = await explanation.first().isVisible({ timeout: 3000 }).catch(() => false);
           console.log(`Trigger explanation visible: ${hasExplanation}`);
         }
+      }
+    });
+  });
+
+  test.describe('AI Explanation Display (Plan 10.2 AI-Native Enhancement)', () => {
+    /**
+     * Tests for AI-generated explanations in HITL approval dialogs.
+     * These tests validate the AI-Native HITL Enhancement from Plan section 10.2.
+     */
+
+    test('should show AI explanation section in approval dialog', async ({ alicePage }) => {
+      await expect(alicePage.locator('body')).toBeVisible();
+
+      const reviewButton = alicePage.locator(
+        'button:has-text("Review"), [data-testid="review-approval-button"]'
+      );
+
+      // In mock mode with ai_explanation, section should be visible
+      if (!backendEnabled) {
+        await expect(reviewButton.first()).toBeVisible({ timeout: 10000 });
+        await reviewButton.first().click();
+
+        // AI explanation section uses <details> element
+        const aiExplanationSection = alicePage.locator(
+          '[data-testid="ai-explanation-section"], ' +
+          'details:has(summary:has-text("uncertain"))'
+        );
+
+        await expect(aiExplanationSection.first()).toBeVisible({ timeout: 5000 });
+      } else {
+        const hasReviewButton = await reviewButton.first().isVisible({ timeout: 5000 }).catch(() => false);
+        if (hasReviewButton) {
+          await reviewButton.first().click();
+          const aiSection = alicePage.locator('[data-testid="ai-explanation-section"]');
+          const hasAI = await aiSection.first().isVisible({ timeout: 3000 }).catch(() => false);
+          console.log(`AI explanation section visible: ${hasAI}`);
+        }
+      }
+    });
+
+    test('should expand AI explanation when clicked', async ({ alicePage }) => {
+      await expect(alicePage.locator('body')).toBeVisible();
+
+      const reviewButton = alicePage.locator(
+        'button:has-text("Review"), [data-testid="review-approval-button"]'
+      );
+
+      if (!backendEnabled) {
+        await expect(reviewButton.first()).toBeVisible({ timeout: 10000 });
+        await reviewButton.first().click();
+
+        // Click summary to expand details
+        const summary = alicePage.locator(
+          '[data-testid="ai-explanation-section"] summary, ' +
+          'summary:has-text("uncertain")'
+        );
+
+        await expect(summary.first()).toBeVisible({ timeout: 5000 });
+        await summary.first().click();
+
+        // Verify content is visible after expand
+        const explanationContent = alicePage.locator(
+          'text=/external data sources|parsing errors/i'
+        );
+
+        await expect(explanationContent.first()).toBeVisible({ timeout: 3000 });
+      }
+    });
+
+    test('should display "what could go wrong" section', async ({ alicePage }) => {
+      await expect(alicePage.locator('body')).toBeVisible();
+
+      const reviewButton = alicePage.locator(
+        'button:has-text("Review"), [data-testid="review-approval-button"]'
+      );
+
+      if (!backendEnabled) {
+        await expect(reviewButton.first()).toBeVisible({ timeout: 10000 });
+        await reviewButton.first().click();
+
+        // Expand AI explanation
+        const summary = alicePage.locator('[data-testid="ai-explanation-section"] summary');
+        await summary.first().click();
+
+        // Verify "what could go wrong" content
+        const riskContent = alicePage.locator(
+          'text=/what could go wrong/i, ' +
+          'text=/inaccurate metrics|mislead/i'
+        );
+
+        await expect(riskContent.first()).toBeVisible({ timeout: 3000 });
+      }
+    });
+
+    test('should display safer alternatives list', async ({ alicePage }) => {
+      await expect(alicePage.locator('body')).toBeVisible();
+
+      const reviewButton = alicePage.locator(
+        'button:has-text("Review"), [data-testid="review-approval-button"]'
+      );
+
+      if (!backendEnabled) {
+        await expect(reviewButton.first()).toBeVisible({ timeout: 10000 });
+        await reviewButton.first().click();
+
+        // Expand AI explanation
+        const summary = alicePage.locator('[data-testid="ai-explanation-section"] summary');
+        await summary.first().click();
+
+        // Verify safer alternatives are displayed with confidence percentages
+        const alternatives = alicePage.locator(
+          'text=/safer alternative/i, ' +
+          'text=/Validate data schema|staging API/i'
+        );
+
+        await expect(alternatives.first()).toBeVisible({ timeout: 3000 });
+
+        // Verify confidence percentages are shown
+        const confidencePercent = alicePage.locator('text=/88%|92%/');
+        await expect(confidencePercent.first()).toBeVisible();
+      }
+    });
+
+    test('should display confidence factors with weights', async ({ alicePage }) => {
+      await expect(alicePage.locator('body')).toBeVisible();
+
+      const reviewButton = alicePage.locator(
+        'button:has-text("Review"), [data-testid="review-approval-button"]'
+      );
+
+      if (!backendEnabled) {
+        await expect(reviewButton.first()).toBeVisible({ timeout: 10000 });
+        await reviewButton.first().click();
+
+        // Expand AI explanation
+        const summary = alicePage.locator('[data-testid="ai-explanation-section"] summary');
+        await summary.first().click();
+
+        // Verify confidence factors are displayed
+        const factors = alicePage.locator(
+          'text=/confidence factors/i, ' +
+          'text=/date formats|validation/i'
+        );
+
+        await expect(factors.first()).toBeVisible({ timeout: 3000 });
+
+        // Verify negative weights are shown (e.g., -25%)
+        const negativeWeight = alicePage.locator('text=/-25%|-13%/');
+        await expect(negativeWeight.first()).toBeVisible();
+      }
+    });
+
+    test('AI explanation section should be accessible', async ({ alicePage }) => {
+      await expect(alicePage.locator('body')).toBeVisible();
+
+      const reviewButton = alicePage.locator(
+        'button:has-text("Review"), [data-testid="review-approval-button"]'
+      );
+
+      if (!backendEnabled) {
+        await expect(reviewButton.first()).toBeVisible({ timeout: 10000 });
+        await reviewButton.first().click();
+
+        // Verify details/summary has proper structure for a11y
+        const details = alicePage.locator('[data-testid="ai-explanation-section"]');
+        await expect(details.first()).toBeVisible({ timeout: 5000 });
+
+        // Should be keyboard accessible - focus and press Enter
+        const summary = alicePage.locator('[data-testid="ai-explanation-section"] summary');
+        await summary.first().focus();
+        await alicePage.keyboard.press('Enter');
+
+        // Content should expand
+        const content = alicePage.locator('text=/external data sources/i');
+        await expect(content.first()).toBeVisible({ timeout: 3000 });
       }
     });
   });
@@ -734,7 +949,7 @@ test.describe('Agent HITL Approval Flow', () => {
 
     test('complete HITL flow: low confidence → approval request → user decision → agent resume', async ({
       alicePage,
-      request,
+      request: _request,
     }) => {
       // Step 1: Navigate to chat page and establish WebSocket connection
       await expect(alicePage.locator('body')).toBeVisible();

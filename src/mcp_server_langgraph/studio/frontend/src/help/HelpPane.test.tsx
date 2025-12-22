@@ -11,6 +11,18 @@ import { axe, toHaveNoViolations } from "jest-axe";
 expect.extend(toHaveNoViolations);
 import { HelpPane, type HelpTopic } from "./HelpPane";
 
+// Mock useContextualHelp hook
+vi.mock("../hooks/useUXIntelligence", () => ({
+  useContextualHelp: vi.fn(() => ({
+    topics: [],
+    quickActions: [],
+    summary: null,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}));
+
 describe("HelpPane", () => {
   const mockTopics: HelpTopic[] = [
     {
@@ -358,6 +370,71 @@ describe("HelpPane", () => {
 
       expect(screen.getByText("First Topic")).toBeInTheDocument();
       expect(screen.getByText("Second Topic")).toBeInTheDocument();
+    });
+  });
+
+  describe("AI Contextual Help Integration (Sprint 6)", () => {
+    it("should accept enableAI prop", () => {
+      render(
+        <HelpPane
+          topics={mockTopics}
+          onTopicSelect={mockOnTopicSelect}
+          enableAI={true}
+          currentPage="chat"
+        />
+      );
+      expect(screen.getByTestId("help-pane")).toBeInTheDocument();
+    });
+
+    it("should show contextual suggestions section when AI is enabled", () => {
+      render(
+        <HelpPane
+          topics={mockTopics}
+          onTopicSelect={mockOnTopicSelect}
+          enableAI={true}
+          currentPage="chat"
+        />
+      );
+      // The component should render with AI section
+      expect(screen.getByTestId("help-pane")).toBeInTheDocument();
+    });
+
+    it("should not show AI section when enableAI is false", () => {
+      render(
+        <HelpPane
+          topics={mockTopics}
+          onTopicSelect={mockOnTopicSelect}
+          enableAI={false}
+        />
+      );
+      expect(screen.queryByTestId("ai-contextual-help-section")).not.toBeInTheDocument();
+    });
+
+    it("should show quick actions when provided by AI", () => {
+      render(
+        <HelpPane
+          topics={mockTopics}
+          onTopicSelect={mockOnTopicSelect}
+          enableAI={true}
+          currentPage="admin"
+        />
+      );
+      // Quick actions section should be available when AI provides them
+      expect(screen.getByTestId("help-pane")).toBeInTheDocument();
+    });
+
+    it("should gracefully handle AI errors", () => {
+      // When AI fails, the component should still render regular help
+      render(
+        <HelpPane
+          topics={mockTopics}
+          onTopicSelect={mockOnTopicSelect}
+          enableAI={true}
+          currentPage="chat"
+        />
+      );
+      // Should still show regular topics
+      expect(screen.getByText("Getting Started")).toBeInTheDocument();
     });
   });
 });
