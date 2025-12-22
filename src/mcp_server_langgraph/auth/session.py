@@ -959,3 +959,114 @@ def set_session_store(session_store: SessionStore) -> None:
     """
     global _session_store
     _session_store = session_store
+
+
+# =============================================================================
+# Encrypted Session Helpers (ADR-0072 - HIPAA Compliance)
+# =============================================================================
+
+
+def get_feature_flags() -> Any:
+    """Get feature flags (lazy import to avoid circular deps)."""
+    from mcp_server_langgraph.core.feature_flags import feature_flags
+
+    return feature_flags
+
+
+def validate_encryption_key(key: str) -> bool:
+    """Validate encryption key is 64 hex characters (32 bytes for AES-256).
+
+    Args:
+        key: Hex-encoded encryption key
+
+    Returns:
+        True if key is valid, False otherwise
+    """
+    if not key or len(key) != 64:
+        return False
+    try:
+        # Check if valid hex
+        bytes.fromhex(key)
+        return True
+    except ValueError:
+        return False
+
+
+def get_encryption_key_from_env() -> bytes | None:
+    """Get encryption key from SESSION_ENCRYPTION_KEY environment variable.
+
+    Returns:
+        32-byte key as bytes, or None if not configured or invalid
+    """
+    import os
+
+    key_hex = os.environ.get("SESSION_ENCRYPTION_KEY")
+    if not key_hex:
+        return None
+
+    if not validate_encryption_key(key_hex):
+        logger.warning("SESSION_ENCRYPTION_KEY is invalid (must be 64 hex chars for AES-256)")
+        return None
+
+    return bytes.fromhex(key_hex)
+
+
+def check_encryption_config() -> dict[str, Any]:
+    """Check if encrypted sessions are enabled and properly configured.
+
+    Returns:
+        Dict with keys:
+            - enabled: Whether feature flag is enabled
+            - configured: Whether encryption key is properly configured
+            - warning: Optional warning message if misconfigured
+    """
+    import os
+
+    flags = get_feature_flags()
+    enabled = getattr(flags, "enable_encrypted_sessions", False)
+
+    result: dict[str, Any] = {"enabled": enabled}
+
+    if enabled:
+        key = os.environ.get("SESSION_ENCRYPTION_KEY")
+        if key and validate_encryption_key(key):
+            result["configured"] = True
+        else:
+            result["configured"] = False
+            result["warning"] = (
+                "Encrypted sessions enabled but SESSION_ENCRYPTION_KEY not configured. "
+                "Set SESSION_ENCRYPTION_KEY to 64 hex characters (32 bytes for AES-256)."
+            )
+    else:
+        result["configured"] = False
+
+    return result
+
+
+def get_session_store_for_flags() -> SessionStore:
+    """Get session store based on feature flags.
+
+    Returns EncryptedSessionStore if enable_encrypted_sessions flag is True
+    and SESSION_ENCRYPTION_KEY is properly configured, otherwise returns
+    InMemorySessionStore.
+
+    Returns:
+        SessionStore instance
+    """
+
+    flags = get_feature_flags()
+    enabled = getattr(flags, "enable_encrypted_sessions", False)
+
+    if enabled:
+        encryption_key = get_encryption_key_from_env()
+        if encryption_key:
+            from mcp_server_langgraph.auth.encrypted_session_store import (
+                EncryptedSessionStore,
+            )
+
+            logger.info("Creating EncryptedSessionStore with feature flag")
+            return EncryptedSessionStore(encryption_key=encryption_key, backend="memory")
+        else:
+            logger.warning("Encrypted sessions enabled but key not configured, falling back to InMemorySessionStore")
+
+    return InMemorySessionStore()
