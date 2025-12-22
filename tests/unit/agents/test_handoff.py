@@ -14,6 +14,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="handoff")
 class TestHandoffClass:
     """Test suite for Handoff class."""

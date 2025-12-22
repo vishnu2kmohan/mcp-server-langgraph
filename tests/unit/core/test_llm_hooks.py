@@ -19,6 +19,9 @@ import pytest
 MCP_PROTOCOL_VERSION = "2025-11-25"
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="llm_hooks")
 class TestLLMHookEvents:
     """Test suite for LLM-level hook event types."""

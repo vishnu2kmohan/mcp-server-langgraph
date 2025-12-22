@@ -11,6 +11,9 @@ from typing import Any
 import pytest
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="output_guardrails")
 class TestGuardrailResult:
     """Test suite for GuardrailResult dataclass."""

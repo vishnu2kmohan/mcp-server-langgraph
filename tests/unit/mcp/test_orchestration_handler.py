@@ -23,6 +23,9 @@ if TYPE_CHECKING:
     pass
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="orchestration_handler")
 class TestOrchestrationToolHandlerModule:
     """Test module structure and exports."""

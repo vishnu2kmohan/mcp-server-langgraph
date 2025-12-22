@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
@@ -316,10 +316,10 @@ class AutoUpdateScheduler:
                     skill_name=skill_name,
                     version="0.0.0",
                     marketplace="unknown",
-                    installed_at=datetime.utcnow(),
+                    installed_at=datetime.now(UTC),
                 ),
             ).marketplace,
-            installed_at=datetime.utcnow(),
+            installed_at=datetime.now(UTC),
         )
 
     async def _on_update_found(self, skill_name: str, current_version: str, new_version: str) -> None:
@@ -407,5 +407,5 @@ class AutoUpdateScheduler:
             skill_name=skill_name,
             version=version,
             marketplace=marketplace,
-            installed_at=datetime.utcnow(),
+            installed_at=datetime.now(UTC),
         )

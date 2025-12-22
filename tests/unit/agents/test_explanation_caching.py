@@ -21,6 +21,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="explanation_caching")
 class TestExplanationCacheKeyGeneration:
     """Tests for cache key generation."""

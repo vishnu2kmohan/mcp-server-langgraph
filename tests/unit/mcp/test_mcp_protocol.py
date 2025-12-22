@@ -17,6 +17,9 @@ import pytest
 MCP_PROTOCOL_VERSION = "2025-11-25"
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="mcp_protocol")
 class TestMCPProtocolMessages:
     """Test suite for MCP JSON-RPC 2.0 message formatting."""

@@ -26,6 +26,9 @@ if TYPE_CHECKING:
     pass
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.unit
 @pytest.mark.mcp
 @pytest.mark.xdist_group(name="tool_description_model")

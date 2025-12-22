@@ -19,6 +19,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="test_rotating_thresholds")
 class TestRotatingThresholdModels:
     """Tests for rotating threshold model definitions."""

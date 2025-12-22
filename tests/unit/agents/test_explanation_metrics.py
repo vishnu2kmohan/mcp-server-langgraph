@@ -19,6 +19,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="explanation_metrics")
 class TestExplanationMetrics:
     """Tests for explanation generation metrics."""

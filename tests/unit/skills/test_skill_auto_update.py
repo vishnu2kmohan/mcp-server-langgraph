@@ -7,7 +7,7 @@ TDD tests for automatic skill synchronization with marketplaces.
 from __future__ import annotations
 
 import gc
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -110,7 +110,7 @@ class TestSkillVersionTracking:
             skill_name="web-research",
             version="1.0.0",
             marketplace="anthropic",
-            installed_at=datetime.utcnow(),
+            installed_at=datetime.now(UTC),
         )
 
         assert version.skill_name == "web-research"

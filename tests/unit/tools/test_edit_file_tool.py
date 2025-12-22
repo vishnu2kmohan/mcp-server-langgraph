@@ -12,6 +12,9 @@ from unittest.mock import patch
 import pytest
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="edit_file_tool")
 class TestEditFileTool:
     """Test suite for edit_file tool."""

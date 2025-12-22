@@ -14,6 +14,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="write_file_tool")
 class TestWriteFileTool:
     """Test suite for write_file tool."""

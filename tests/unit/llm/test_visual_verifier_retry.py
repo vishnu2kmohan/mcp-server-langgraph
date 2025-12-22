@@ -27,6 +27,9 @@ if TYPE_CHECKING:
 SCREENSHOT_TOOLS_PATCH = "mcp_server_langgraph.tools.screenshot_tools.capture_screenshot"
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="visual_verifier_retry")
 class TestVisualVerificationRetry:
     """Tests for retry logic in visual verification."""

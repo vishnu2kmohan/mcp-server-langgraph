@@ -32,6 +32,9 @@ if TYPE_CHECKING:
     pass
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.unit
 @pytest.mark.core
 @pytest.mark.xdist_group(name="lost_in_middle_flags")

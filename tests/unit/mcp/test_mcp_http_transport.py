@@ -18,6 +18,9 @@ import pytest
 MCP_PROTOCOL_VERSION = "2025-11-25"
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="mcp_http_transport")
 class TestMCPHTTPTransportConnect:
     """Test suite for HTTP transport connection."""

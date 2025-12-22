@@ -19,6 +19,9 @@ import pytest
 MCP_PROTOCOL_VERSION = "2025-11-25"
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="mcp_stdio_transport")
 class TestMCPSTDIOTransportConnect:
     """Test suite for STDIO transport connection."""

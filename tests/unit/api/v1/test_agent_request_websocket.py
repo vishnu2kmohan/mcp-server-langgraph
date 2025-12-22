@@ -26,6 +26,9 @@ if TYPE_CHECKING:
     pass
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="agent_request_websocket")
 class TestAgentRequestWebSocketExists:

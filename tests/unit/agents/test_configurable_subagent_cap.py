@@ -20,6 +20,9 @@ from unittest.mock import patch
 import pytest
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator

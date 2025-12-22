@@ -14,6 +14,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="llm_factory_hooks")
 class TestHookDispatcherConvenienceMethods:
     """Test suite for HookDispatcher convenience methods for LLM hooks."""

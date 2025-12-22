@@ -11,6 +11,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.xdist_group(name="web_fetch_tool")
 class TestWebFetchTool:
     """Test suite for web_fetch tool."""

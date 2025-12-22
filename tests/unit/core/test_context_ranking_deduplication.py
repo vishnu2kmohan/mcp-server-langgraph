@@ -34,6 +34,9 @@ if TYPE_CHECKING:
 # =============================================================================
 
 
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.unit
 @pytest.mark.core
 @pytest.mark.xdist_group(name="context_ranker_class")
