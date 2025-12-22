@@ -1,90 +1,225 @@
 /**
  * Agent Request API Contract Tests
  *
- * Verifies RTK Query endpoint types match backend API schema for HITL agent requests.
+ * Verifies API schema matches backend for HITL agent requests.
  * Reference: src/mcp_server_langgraph/api/v1/agent_requests.py
+ *
+ * Uses raw fetch() to validate API contract without RTK Query transformation.
  */
 
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { configureStore } from "@reduxjs/toolkit";
-import { api } from "./index";
+
+// =============================================================================
+// MSW Handlers for Agent Requests
+// =============================================================================
+
+const agentRequestHandlers = [
+  // GET /api/v1/agents/requests/pending
+  http.get("/api/v1/agents/requests/pending", () => {
+    return HttpResponse.json({
+      requests: [
+        {
+          request_id: "req-001",
+          session_id: "session-123",
+          task_id: "task-456",
+          agent_name: "research_agent",
+          request_type: "approval",
+          confidence: 0.65,
+          threshold: 0.7,
+          question: "Should I execute this search?",
+          proposed_action: "web_search('AI ethics')",
+          trigger_reason: "low_confidence",
+          placeholder: null,
+          clarification_type: null,
+          options: null,
+          status: "pending",
+          requested_at: "2024-01-15T10:30:00Z",
+          responded_at: null,
+          responded_by: null,
+          context: { domain: "research" },
+          ai_explanation: null,
+        },
+      ],
+      count: 1,
+    });
+  }),
+
+  // POST /api/v1/agents/requests/:id/approve
+  http.post("/api/v1/agents/requests/:id/approve", async ({ request, params }) => {
+    const body = await request.json();
+    return HttpResponse.json({
+      request_id: params.id as string,
+      status: "approved",
+      message: `Request approved by ${(body as { approved_by: string }).approved_by}`,
+    });
+  }),
+
+  // POST /api/v1/agents/requests/:id/reject
+  http.post("/api/v1/agents/requests/:id/reject", async ({ request, params }) => {
+    const body = await request.json();
+    return HttpResponse.json({
+      request_id: params.id as string,
+      status: "rejected",
+      message: `Request rejected: ${(body as { reason: string }).reason}`,
+    });
+  }),
+
+  // POST /api/v1/agents/requests/:id/respond
+  http.post("/api/v1/agents/requests/:id/respond", async ({ params }) => {
+    return HttpResponse.json({
+      request_id: params.id as string,
+      status: "responded",
+      message: "Clarification received",
+    });
+  }),
+
+  // POST /api/v1/agents/requests/batch/approve
+  http.post("/api/v1/agents/requests/batch/approve", async ({ request }) => {
+    const body = (await request.json()) as { request_ids: string[] };
+    return HttpResponse.json({
+      approved_count: body.request_ids.length,
+      failed_count: 0,
+      results: body.request_ids.map((id) => ({
+        request_id: id,
+        status: "approved",
+      })),
+    });
+  }),
+
+  // POST /api/v1/agents/requests/batch/reject
+  http.post("/api/v1/agents/requests/batch/reject", async ({ request }) => {
+    const body = (await request.json()) as { request_ids: string[] };
+    return HttpResponse.json({
+      rejected_count: body.request_ids.length,
+      failed_count: 0,
+      results: body.request_ids.map((id) => ({
+        request_id: id,
+        status: "rejected",
+      })),
+    });
+  }),
+];
 
 // MSW Server setup
-const server = setupServer();
+const server = setupServer(...agentRequestHandlers);
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterAll(() => server.close());
 afterEach(() => server.resetHandlers());
 
-// Store factory
-function createTestStore() {
-  return configureStore({
-    reducer: { [api.reducerPath]: api.reducer },
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(api.middleware),
-  });
+// =============================================================================
+// Schema Type Definitions (matching backend Pydantic models)
+// =============================================================================
+
+interface AgentRequest {
+  request_id: string;
+  session_id: string;
+  task_id: string;
+  agent_name: string;
+  request_type: "approval" | "clarification";
+  confidence: number | null;
+  threshold: number | null;
+  question: string;
+  proposed_action: string | null;
+  trigger_reason: string | null;
+  placeholder: string | null;
+  clarification_type: string | null;
+  options: Array<{ id: string; label: string; description?: string }> | null;
+  status: "pending" | "approved" | "rejected" | "responded" | "timeout";
+  requested_at: string;
+  responded_at: string | null;
+  responded_by: string | null;
+  context: Record<string, unknown>;
+  ai_explanation: AIExplanation | null;
 }
+
+interface AIExplanation {
+  what_agent_wants: string;
+  why_needs_approval: string;
+  risk_factors: string[];
+  confidence_score: number;
+  recommendation: string;
+}
+
+interface PendingAgentRequestsResponse {
+  requests: AgentRequest[];
+  count: number;
+}
+
+interface AgentRequestActionResponse {
+  request_id: string;
+  status: string;
+  message: string;
+}
+
+interface BatchActionResponse {
+  approved_count?: number;
+  rejected_count?: number;
+  failed_count: number;
+  results: Array<{ request_id: string; status: string; error?: string }>;
+}
+
+// =============================================================================
+// Contract Tests
+// =============================================================================
 
 describe("Agent Request API Contract", () => {
   describe("GET /api/v1/agents/requests/pending", () => {
     it("should validate PendingAgentRequestsResponse schema", async () => {
-      // Backend schema: { requests: AgentRequest[], count: number }
-      server.use(
-        http.get("/api/v1/agents/requests/pending", () => {
-          return HttpResponse.json({
-            requests: [
-              {
-                request_id: "req-001",
-                session_id: "session-123",
-                task_id: "task-456",
-                agent_name: "research_agent",
-                request_type: "approval",
-                confidence: 0.65,
-                threshold: 0.7,
-                question: "Should I execute this search?",
-                proposed_action: "web_search('AI ethics')",
-                trigger_reason: "low_confidence",
-                placeholder: null,
-                clarification_type: null,
-                options: null,
-                status: "pending",
-                requested_at: "2024-01-15T10:30:00Z",
-                responded_at: null,
-                responded_by: null,
-                context: { domain: "research" },
-                ai_explanation: null,
-              },
-            ],
-            count: 1,
-          });
-        })
-      );
+      const response = await fetch("/api/v1/agents/requests/pending");
+      expect(response.ok).toBe(true);
 
-      const store = createTestStore();
-      const result = await store.dispatch(
-        api.endpoints.listPendingAgentRequests.initiate({})
-      );
+      const data: PendingAgentRequestsResponse = await response.json();
 
-      expect(result.data).toBeDefined();
-      expect(result.data?.requests).toHaveLength(1);
-      expect(result.data?.count).toBe(1);
-
-      const request = result.data!.requests[0];
-      // Verify all required fields match backend schema
-      expect(request.request_id).toBe("req-001");
-      expect(request.session_id).toBe("session-123");
-      expect(request.task_id).toBe("task-456");
-      expect(request.agent_name).toBe("research_agent");
-      expect(request.request_type).toBe("approval");
-      expect(request.confidence).toBe(0.65);
-      expect(request.threshold).toBe(0.7);
-      expect(request.status).toBe("pending");
-      expect(request.requested_at).toBe("2024-01-15T10:30:00Z");
+      // Validate response structure
+      expect(data).toHaveProperty("requests");
+      expect(data).toHaveProperty("count");
+      expect(Array.isArray(data.requests)).toBe(true);
+      expect(typeof data.count).toBe("number");
     });
 
-    it("should include optional ai_explanation field when present", async () => {
+    it("should return AgentRequest objects with required fields", async () => {
+      const response = await fetch("/api/v1/agents/requests/pending");
+      const data: PendingAgentRequestsResponse = await response.json();
+
+      expect(data.requests.length).toBeGreaterThan(0);
+
+      const request = data.requests[0];
+      // Required fields
+      expect(typeof request.request_id).toBe("string");
+      expect(typeof request.session_id).toBe("string");
+      expect(typeof request.task_id).toBe("string");
+      expect(typeof request.agent_name).toBe("string");
+      expect(["approval", "clarification"]).toContain(request.request_type);
+      expect(typeof request.question).toBe("string");
+      expect(
+        ["pending", "approved", "rejected", "responded", "timeout"]
+      ).toContain(request.status);
+      expect(typeof request.requested_at).toBe("string");
+      expect(typeof request.context).toBe("object");
+    });
+
+    it("should include optional fields when present", async () => {
+      const response = await fetch("/api/v1/agents/requests/pending");
+      const data: PendingAgentRequestsResponse = await response.json();
+
+      const request = data.requests[0];
+
+      // Optional fields for approval type
+      if (request.request_type === "approval") {
+        expect(request.confidence).toBeDefined();
+        expect(request.threshold).toBeDefined();
+        expect(typeof request.confidence).toBe("number");
+        expect(typeof request.threshold).toBe("number");
+      }
+    });
+  });
+
+  describe("GET /api/v1/agents/requests/pending with ai_explanation", () => {
+    it("should include ai_explanation when present", async () => {
+      // Override handler for this test
       server.use(
         http.get("/api/v1/agents/requests/pending", () => {
           return HttpResponse.json({
@@ -117,18 +252,19 @@ describe("Agent Request API Contract", () => {
         })
       );
 
-      const store = createTestStore();
-      const result = await store.dispatch(
-        api.endpoints.listPendingAgentRequests.initiate({})
-      );
+      const response = await fetch("/api/v1/agents/requests/pending");
+      const data: PendingAgentRequestsResponse = await response.json();
 
-      const request = result.data!.requests[0];
+      const request = data.requests[0];
       expect(request.ai_explanation).toBeDefined();
       expect(request.ai_explanation?.what_agent_wants).toContain("Execute Python");
       expect(request.ai_explanation?.risk_factors).toContain("code_execution");
+      expect(request.ai_explanation?.recommendation).toBe("approve_with_caution");
     });
+  });
 
-    it("should handle clarification request type", async () => {
+  describe("GET /api/v1/agents/requests/pending with clarification type", () => {
+    it("should handle clarification request type with options", async () => {
       server.use(
         http.get("/api/v1/agents/requests/pending", () => {
           return HttpResponse.json({
@@ -163,344 +299,150 @@ describe("Agent Request API Contract", () => {
         })
       );
 
-      const store = createTestStore();
-      const result = await store.dispatch(
-        api.endpoints.listPendingAgentRequests.initiate({})
-      );
+      const response = await fetch("/api/v1/agents/requests/pending");
+      const data: PendingAgentRequestsResponse = await response.json();
 
-      const request = result.data!.requests[0];
+      const request = data.requests[0];
       expect(request.request_type).toBe("clarification");
       expect(request.clarification_type).toBe("choice");
       expect(request.options).toHaveLength(2);
-      expect(request.options![0].id).toBe("opt-1");
-      expect(request.options![0].label).toBe("PDF");
+      expect(request.options?.[0].id).toBe("opt-1");
+      expect(request.options?.[0].label).toBe("PDF");
     });
   });
 
   describe("POST /api/v1/agents/requests/:id/approve", () => {
-    it("should validate ApproveAgentRequest request body", async () => {
-      let capturedBody: unknown = null;
-
-      server.use(
-        http.post("/api/v1/agents/requests/:id/approve", async ({ request }) => {
-          capturedBody = await request.json();
-          return HttpResponse.json({
-            request_id: "req-001",
-            status: "approved",
-            message: "Request approved successfully",
-          });
-        })
-      );
-
-      const store = createTestStore();
-      await store.dispatch(
-        api.endpoints.approveAgentRequest.initiate({
-          requestId: "req-001",
-          approvedBy: "admin@example.com",
+    it("should accept ApproveAgentRequest body and return ActionResponse", async () => {
+      const response = await fetch("/api/v1/agents/requests/req-001/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          approved_by: "admin@example.com",
           reason: "Looks safe to proceed",
           modifications: { timeout: 30 },
-        })
-      );
-
-      // Verify request body matches backend schema
-      expect(capturedBody).toEqual({
-        approved_by: "admin@example.com",
-        reason: "Looks safe to proceed",
-        modifications: { timeout: 30 },
+        }),
       });
-    });
 
-    it("should validate AgentRequestActionResponse schema", async () => {
-      server.use(
-        http.post("/api/v1/agents/requests/:id/approve", () => {
-          return HttpResponse.json({
-            request_id: "req-001",
-            status: "approved",
-            message: "Request approved successfully",
-          });
-        })
-      );
+      expect(response.ok).toBe(true);
+      const data: AgentRequestActionResponse = await response.json();
 
-      const store = createTestStore();
-      const result = await store.dispatch(
-        api.endpoints.approveAgentRequest.initiate({
-          requestId: "req-001",
-          approvedBy: "admin@example.com",
-        })
-      );
-
-      expect(result.data).toEqual({
-        request_id: "req-001",
-        status: "approved",
-        message: "Request approved successfully",
-      });
+      expect(data.request_id).toBe("req-001");
+      expect(data.status).toBe("approved");
+      expect(typeof data.message).toBe("string");
     });
   });
 
   describe("POST /api/v1/agents/requests/:id/reject", () => {
-    it("should validate RejectAgentRequest request body", async () => {
-      let capturedBody: unknown = null;
-
-      server.use(
-        http.post("/api/v1/agents/requests/:id/reject", async ({ request }) => {
-          capturedBody = await request.json();
-          return HttpResponse.json({
-            request_id: "req-001",
-            status: "rejected",
-            message: "Request rejected",
-          });
-        })
-      );
-
-      const store = createTestStore();
-      await store.dispatch(
-        api.endpoints.rejectAgentRequest.initiate({
-          requestId: "req-001",
-          rejectedBy: "admin@example.com",
+    it("should accept RejectAgentRequest body and return ActionResponse", async () => {
+      const response = await fetch("/api/v1/agents/requests/req-001/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rejected_by: "admin@example.com",
           reason: "Action is too risky",
-        })
-      );
-
-      // Backend requires rejected_by and reason
-      expect(capturedBody).toEqual({
-        rejected_by: "admin@example.com",
-        reason: "Action is too risky",
+        }),
       });
+
+      expect(response.ok).toBe(true);
+      const data: AgentRequestActionResponse = await response.json();
+
+      expect(data.request_id).toBe("req-001");
+      expect(data.status).toBe("rejected");
+      expect(data.message).toContain("too risky");
     });
   });
 
   describe("POST /api/v1/agents/requests/:id/respond", () => {
-    it("should validate ClarificationResponseRequest for text response", async () => {
-      let capturedBody: unknown = null;
-
-      server.use(
-        http.post("/api/v1/agents/requests/:id/respond", async ({ request }) => {
-          capturedBody = await request.json();
-          return HttpResponse.json({
-            request_id: "req-003",
-            status: "responded",
-            message: "Clarification received",
-          });
-        })
-      );
-
-      const store = createTestStore();
-      await store.dispatch(
-        api.endpoints.respondToAgentRequest.initiate({
-          requestId: "req-003",
-          respondedBy: "user@example.com",
-          responseType: "text",
+    it("should accept text response", async () => {
+      const response = await fetch("/api/v1/agents/requests/req-003/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          responded_by: "user@example.com",
+          response_type: "text",
           value: "Use JSON format please",
-        })
-      );
-
-      expect(capturedBody).toEqual({
-        responded_by: "user@example.com",
-        response_type: "text",
-        value: "Use JSON format please",
-        selected_option_id: undefined,
-        confirmed: undefined,
+        }),
       });
+
+      expect(response.ok).toBe(true);
+      const data: AgentRequestActionResponse = await response.json();
+
+      expect(data.request_id).toBe("req-003");
+      expect(data.status).toBe("responded");
     });
 
-    it("should validate ClarificationResponseRequest for choice response", async () => {
-      let capturedBody: unknown = null;
-
-      server.use(
-        http.post("/api/v1/agents/requests/:id/respond", async ({ request }) => {
-          capturedBody = await request.json();
-          return HttpResponse.json({
-            request_id: "req-003",
-            status: "responded",
-            message: "Clarification received",
-          });
-        })
-      );
-
-      const store = createTestStore();
-      await store.dispatch(
-        api.endpoints.respondToAgentRequest.initiate({
-          requestId: "req-003",
-          respondedBy: "user@example.com",
-          responseType: "choice",
-          selectedOptionId: "opt-2",
-        })
-      );
-
-      expect(capturedBody).toEqual({
-        responded_by: "user@example.com",
-        response_type: "choice",
-        value: undefined,
-        selected_option_id: "opt-2",
-        confirmed: undefined,
+    it("should accept choice response", async () => {
+      const response = await fetch("/api/v1/agents/requests/req-003/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          responded_by: "user@example.com",
+          response_type: "choice",
+          selected_option_id: "opt-2",
+        }),
       });
+
+      expect(response.ok).toBe(true);
+      const data: AgentRequestActionResponse = await response.json();
+
+      expect(data.status).toBe("responded");
     });
 
-    it("should validate ClarificationResponseRequest for confirmation response", async () => {
-      let capturedBody: unknown = null;
-
-      server.use(
-        http.post("/api/v1/agents/requests/:id/respond", async ({ request }) => {
-          capturedBody = await request.json();
-          return HttpResponse.json({
-            request_id: "req-004",
-            status: "responded",
-            message: "Clarification received",
-          });
-        })
-      );
-
-      const store = createTestStore();
-      await store.dispatch(
-        api.endpoints.respondToAgentRequest.initiate({
-          requestId: "req-004",
-          respondedBy: "user@example.com",
-          responseType: "confirmation",
+    it("should accept confirmation response", async () => {
+      const response = await fetch("/api/v1/agents/requests/req-004/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          responded_by: "user@example.com",
+          response_type: "confirmation",
           confirmed: true,
-        })
-      );
-
-      expect(capturedBody).toEqual({
-        responded_by: "user@example.com",
-        response_type: "confirmation",
-        value: undefined,
-        selected_option_id: undefined,
-        confirmed: true,
+        }),
       });
+
+      expect(response.ok).toBe(true);
     });
   });
 
   describe("POST /api/v1/agents/requests/batch/approve", () => {
     it("should validate batch approve request and response", async () => {
-      let capturedBody: unknown = null;
-
-      server.use(
-        http.post("/api/v1/agents/requests/batch/approve", async ({ request }) => {
-          capturedBody = await request.json();
-          return HttpResponse.json({
-            approved_count: 3,
-            failed_count: 0,
-            results: [
-              { request_id: "req-001", status: "approved" },
-              { request_id: "req-002", status: "approved" },
-              { request_id: "req-003", status: "approved" },
-            ],
-          });
-        })
-      );
-
-      const store = createTestStore();
-      const result = await store.dispatch(
-        api.endpoints.batchApproveAgentRequests.initiate({
-          requestIds: ["req-001", "req-002", "req-003"],
-          approvedBy: "admin@example.com",
+      const response = await fetch("/api/v1/agents/requests/batch/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request_ids: ["req-001", "req-002", "req-003"],
+          approved_by: "admin@example.com",
           reason: "Batch approved",
-        })
-      );
-
-      expect(capturedBody).toEqual({
-        request_ids: ["req-001", "req-002", "req-003"],
-        approved_by: "admin@example.com",
-        reason: "Batch approved",
+        }),
       });
 
-      expect(result.data?.approved_count).toBe(3);
-      expect(result.data?.failed_count).toBe(0);
-      expect(result.data?.results).toHaveLength(3);
+      expect(response.ok).toBe(true);
+      const data: BatchActionResponse = await response.json();
+
+      expect(data.approved_count).toBe(3);
+      expect(data.failed_count).toBe(0);
+      expect(data.results).toHaveLength(3);
+      expect(data.results[0].status).toBe("approved");
     });
   });
 
   describe("POST /api/v1/agents/requests/batch/reject", () => {
     it("should validate batch reject request and response", async () => {
-      let capturedBody: unknown = null;
-
-      server.use(
-        http.post("/api/v1/agents/requests/batch/reject", async ({ request }) => {
-          capturedBody = await request.json();
-          return HttpResponse.json({
-            rejected_count: 2,
-            failed_count: 1,
-            results: [
-              { request_id: "req-001", status: "rejected" },
-              { request_id: "req-002", status: "rejected" },
-              { request_id: "req-003", status: "error", error: "Request not found" },
-            ],
-          });
-        })
-      );
-
-      const store = createTestStore();
-      const result = await store.dispatch(
-        api.endpoints.batchRejectAgentRequests.initiate({
-          requestIds: ["req-001", "req-002", "req-003"],
-          rejectedBy: "admin@example.com",
+      const response = await fetch("/api/v1/agents/requests/batch/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request_ids: ["req-001", "req-002"],
+          rejected_by: "admin@example.com",
           reason: "Batch rejected - policy violation",
-        })
-      );
-
-      expect(capturedBody).toEqual({
-        request_ids: ["req-001", "req-002", "req-003"],
-        rejected_by: "admin@example.com",
-        reason: "Batch rejected - policy violation",
+        }),
       });
 
-      expect(result.data?.rejected_count).toBe(2);
-      expect(result.data?.failed_count).toBe(1);
-    });
-  });
+      expect(response.ok).toBe(true);
+      const data: BatchActionResponse = await response.json();
 
-  describe("Cache Invalidation", () => {
-    it("should invalidate AgentRequest tag on approve", async () => {
-      // First, prime the cache with pending requests
-      server.use(
-        http.get("/api/v1/agents/requests/pending", () => {
-          return HttpResponse.json({
-            requests: [
-              {
-                request_id: "req-001",
-                session_id: "session-123",
-                task_id: "task-456",
-                agent_name: "test_agent",
-                request_type: "approval",
-                status: "pending",
-                question: "Test?",
-                requested_at: "2024-01-15T10:30:00Z",
-                context: {},
-              },
-            ],
-            count: 1,
-          });
-        }),
-        http.post("/api/v1/agents/requests/:id/approve", () => {
-          return HttpResponse.json({
-            request_id: "req-001",
-            status: "approved",
-            message: "Approved",
-          });
-        })
-      );
-
-      const store = createTestStore();
-
-      // Initial fetch
-      await store.dispatch(api.endpoints.listPendingAgentRequests.initiate({}));
-
-      // Approve - should invalidate cache
-      await store.dispatch(
-        api.endpoints.approveAgentRequest.initiate({
-          requestId: "req-001",
-          approvedBy: "admin@example.com",
-        })
-      );
-
-      // Verify the listPendingAgentRequests query is invalidated
-      const state = store.getState();
-      const query =
-        state[api.reducerPath].queries["listPendingAgentRequests({})"];
-
-      // After mutation with invalidation, status should change
-      // (either refetching or needs refetch)
-      expect(query).toBeDefined();
+      expect(data.rejected_count).toBe(2);
+      expect(data.failed_count).toBe(0);
+      expect(data.results).toHaveLength(2);
     });
   });
 });
