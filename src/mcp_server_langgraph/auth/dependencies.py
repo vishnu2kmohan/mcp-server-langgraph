@@ -160,6 +160,37 @@ def require_auth_middleware_from_request(request: "Request") -> "AuthMiddleware"
 
 
 # ============================================================================
+# WebSocket Auth Middleware Access
+# ============================================================================
+
+
+if FASTAPI_AVAILABLE:
+    from fastapi import WebSocket as FastAPIWebSocket
+
+    def get_auth_middleware_from_websocket(websocket: "FastAPIWebSocket") -> "AuthMiddleware | None":
+        """
+        Get AuthMiddleware from WebSocket app state (DI pattern).
+
+        This is the WebSocket equivalent of get_auth_middleware_from_request.
+        WebSocket connections share the same app.state as regular HTTP requests.
+
+        Args:
+            websocket: FastAPI WebSocket object
+
+        Returns:
+            AuthMiddleware if configured and initialized, None otherwise
+
+        Example:
+            @router.websocket("/ws")
+            async def websocket_endpoint(websocket: WebSocket):
+                auth = get_auth_middleware_from_websocket(websocket)
+                if auth:
+                    user = await auth.verify_token(token)
+        """
+        return getattr(websocket.app.state, "auth_middleware", None)
+
+
+# ============================================================================
 # FastAPI Dependencies (only available if FastAPI is installed)
 # ============================================================================
 
@@ -335,5 +366,7 @@ if FASTAPI_AVAILABLE:
             "get_current_user",
             "get_current_user_with_auth",
             "require_auth_dependency",
+            # WebSocket auth middleware access
+            "get_auth_middleware_from_websocket",
         ]
     )

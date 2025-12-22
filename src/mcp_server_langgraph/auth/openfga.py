@@ -1234,6 +1234,54 @@ async def seed_sample_data(client: OpenFGAClient, tuples_path: str | Path | None
     logger.info("Sample OpenFGA data seeded", extra={"tuple_count": len(sample_tuples)})
 
 
+# ============================================================================
+# Global OpenFGA Client Instance Management
+# ============================================================================
+
+# Global OpenFGA client instance (set by application)
+_global_openfga_client: OpenFGAClient | None = None
+
+
+def set_global_openfga_client(client: OpenFGAClient) -> None:
+    """
+    Set global OpenFGA client instance.
+
+    This should be called during application startup.
+
+    Args:
+        client: OpenFGAClient instance configured with store_id, model_id, etc.
+    """
+    global _global_openfga_client
+    _global_openfga_client = client
+    logger.info(
+        "Global OpenFGA client set",
+        extra={"store_id": client.store_id, "api_url": client.api_url},
+    )
+
+
+async def get_openfga_client() -> OpenFGAClient | None:
+    """
+    Get global OpenFGA client instance.
+
+    This is used by WebSocket authorization middleware and other components
+    that need access to the OpenFGA client without DI.
+
+    Returns:
+        OpenFGAClient if configured, None otherwise.
+    """
+    return _global_openfga_client
+
+
+def clear_global_openfga_client() -> None:
+    """
+    Clear global OpenFGA client instance.
+
+    Useful for testing to reset state between tests.
+    """
+    global _global_openfga_client
+    _global_openfga_client = None
+
+
 async def check_permission(
     user_id: str,
     relation: str,

@@ -109,9 +109,7 @@ class HeartMetricsWebSocketHandler(WebSocketBase):
 
     async def _handle_get_snapshot(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle get_snapshot message - returns current metrics."""
-        time_range = (
-            message.payload.get("time_range", self._time_range) if message.payload else self._time_range
-        )
+        time_range = message.payload.get("time_range", self._time_range) if message.payload else self._time_range
         self._time_range = time_range
 
         snapshot = await self._get_metrics_snapshot(time_range)

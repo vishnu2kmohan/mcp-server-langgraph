@@ -232,9 +232,7 @@ async def cost_tracking_websocket(websocket: WebSocket) -> None:
 
 
 @ws_router.websocket("/workflows/{workflow_id}")
-async def workflow_execution_websocket(
-    websocket: WebSocket, workflow_id: str
-) -> None:
+async def workflow_execution_websocket(websocket: WebSocket, workflow_id: str) -> None:
     """
     WebSocket endpoint for real-time workflow execution updates.
 

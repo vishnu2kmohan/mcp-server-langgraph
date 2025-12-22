@@ -425,3 +425,229 @@ class TestSampleTuplesValidation:
             result = await authz.authorize_connection("bob")
 
         assert result is False
+
+
+@pytest.mark.xdist_group(name="websocket_authz")
+class TestGetOpenFGAClient:
+    """Tests for the get_openfga_client helper function."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_get_openfga_client_returns_client_when_configured(self) -> None:
+        """GIVEN OpenFGA is configured WHEN getting client THEN returns client."""
+        from mcp_server_langgraph.websocket import authz
+
+        mock_client = AsyncMock()
+        with patch(
+            "mcp_server_langgraph.auth.openfga.get_openfga_client",
+            return_value=mock_client,
+        ):
+            result = await authz.get_openfga_client()
+
+        assert result == mock_client
+
+    @pytest.mark.asyncio
+    async def test_get_openfga_client_returns_none_on_import_error(self) -> None:
+        """GIVEN import fails WHEN getting client THEN returns None."""
+        from mcp_server_langgraph.websocket import authz
+
+        with patch(
+            "mcp_server_langgraph.auth.openfga.get_openfga_client",
+            side_effect=ImportError("Module not found"),
+        ):
+            result = await authz.get_openfga_client()
+
+        assert result is None
+
+
+@pytest.mark.xdist_group(name="websocket_authz")
+class TestSubscriptionFailScenarios:
+    """Tests for authorize_subscription fail scenarios."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_authorize_subscription_fail_closed_when_openfga_unavailable(self) -> None:
+        """GIVEN OpenFGA unavailable WHEN fail_closed=True THEN denies access."""
+        from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
+
+        authz = WebSocketAuthorizationMiddleware(
+            resource_type="workflow",
+            resource_id=None,
+            required_relation="executor",
+            fail_closed=True,
+        )
+
+        with patch(
+            "mcp_server_langgraph.websocket.authz.get_openfga_client",
+            return_value=None,
+        ):
+            result = await authz.authorize_subscription("alice", "workflow1")
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_authorize_subscription_fail_open_when_openfga_unavailable(self) -> None:
+        """GIVEN OpenFGA unavailable WHEN fail_closed=False THEN allows access."""
+        from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
+
+        authz = WebSocketAuthorizationMiddleware(
+            resource_type="workflow",
+            resource_id=None,
+            required_relation="executor",
+            fail_closed=False,
+        )
+
+        with patch(
+            "mcp_server_langgraph.websocket.authz.get_openfga_client",
+            return_value=None,
+        ):
+            result = await authz.authorize_subscription("alice", "workflow1")
+
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_authorize_subscription_fail_closed_on_error(self) -> None:
+        """GIVEN OpenFGA error WHEN fail_closed=True THEN denies access."""
+        from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
+
+        mock_client = AsyncMock()
+        mock_client.check_permission = AsyncMock(side_effect=Exception("Connection failed"))
+
+        authz = WebSocketAuthorizationMiddleware(
+            resource_type="workflow",
+            resource_id=None,
+            required_relation="executor",
+            fail_closed=True,
+        )
+
+        with patch(
+            "mcp_server_langgraph.websocket.authz.get_openfga_client",
+            return_value=mock_client,
+        ):
+            result = await authz.authorize_subscription("alice", "workflow1")
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_authorize_subscription_fail_open_on_error(self) -> None:
+        """GIVEN OpenFGA error WHEN fail_closed=False THEN allows access."""
+        from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
+
+        mock_client = AsyncMock()
+        mock_client.check_permission = AsyncMock(side_effect=Exception("Connection failed"))
+
+        authz = WebSocketAuthorizationMiddleware(
+            resource_type="workflow",
+            resource_id=None,
+            required_relation="executor",
+            fail_closed=False,
+        )
+
+        with patch(
+            "mcp_server_langgraph.websocket.authz.get_openfga_client",
+            return_value=mock_client,
+        ):
+            result = await authz.authorize_subscription("alice", "workflow1")
+
+        assert result is True
+
+
+@pytest.mark.xdist_group(name="websocket_authz")
+class TestActionFailScenarios:
+    """Tests for authorize_action fail scenarios."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_authorize_action_fail_closed_when_openfga_unavailable(self) -> None:
+        """GIVEN OpenFGA unavailable WHEN fail_closed=True THEN denies access."""
+        from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
+
+        authz = WebSocketAuthorizationMiddleware(
+            resource_type="workflow",
+            resource_id=None,
+            required_relation="executor",
+            fail_closed=True,
+        )
+
+        with patch(
+            "mcp_server_langgraph.websocket.authz.get_openfga_client",
+            return_value=None,
+        ):
+            result = await authz.authorize_action("alice", "workflow1")
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_authorize_action_fail_open_when_openfga_unavailable(self) -> None:
+        """GIVEN OpenFGA unavailable WHEN fail_closed=False THEN allows access."""
+        from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
+
+        authz = WebSocketAuthorizationMiddleware(
+            resource_type="workflow",
+            resource_id=None,
+            required_relation="executor",
+            fail_closed=False,
+        )
+
+        with patch(
+            "mcp_server_langgraph.websocket.authz.get_openfga_client",
+            return_value=None,
+        ):
+            result = await authz.authorize_action("alice", "workflow1")
+
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_authorize_action_fail_closed_on_error(self) -> None:
+        """GIVEN OpenFGA error WHEN fail_closed=True THEN denies access."""
+        from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
+
+        mock_client = AsyncMock()
+        mock_client.check_permission = AsyncMock(side_effect=Exception("Connection failed"))
+
+        authz = WebSocketAuthorizationMiddleware(
+            resource_type="workflow",
+            resource_id=None,
+            required_relation="executor",
+            fail_closed=True,
+        )
+
+        with patch(
+            "mcp_server_langgraph.websocket.authz.get_openfga_client",
+            return_value=mock_client,
+        ):
+            result = await authz.authorize_action("alice", "workflow1")
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_authorize_action_fail_open_on_error(self) -> None:
+        """GIVEN OpenFGA error WHEN fail_closed=False THEN allows access."""
+        from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
+
+        mock_client = AsyncMock()
+        mock_client.check_permission = AsyncMock(side_effect=Exception("Connection failed"))
+
+        authz = WebSocketAuthorizationMiddleware(
+            resource_type="workflow",
+            resource_id=None,
+            required_relation="executor",
+            fail_closed=False,
+        )
+
+        with patch(
+            "mcp_server_langgraph.websocket.authz.get_openfga_client",
+            return_value=mock_client,
+        ):
+            result = await authz.authorize_action("alice", "workflow1")
+
+        assert result is True
