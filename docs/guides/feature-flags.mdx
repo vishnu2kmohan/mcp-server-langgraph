@@ -1,0 +1,225 @@
+---
+title: "Feature Flags Guide"
+description: "Configure feature flags for production deployments"
+---
+
+# Feature Flags Guide
+
+This guide covers configuring feature flags for MCP Server LangGraph deployments, including Anthropic Engineering Best Practices features.
+
+## Overview
+
+Feature flags allow you to enable/disable features without code changes. All flags use the `FF_` prefix and can be set via environment variables.
+
+## Quick Reference
+
+### Production-Ready Features (Enabled by Default)
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `FF_ENABLE_TOOL_EXAMPLES` | `true` | 72%→90% accuracy improvement |
+| `FF_ENABLE_THINK_TOOL` | `true` | 54% improvement in complex reasoning |
+| `FF_ENABLE_SKILLS_SYSTEM` | `true` | SKILL.md-based agent capabilities |
+| `FF_ENABLE_SKILLS_MARKETPLACE` | `true` | Anthropic skills integration |
+| `FF_ENABLE_PII_TOKENIZATION` | `true` | GDPR/HIPAA compliance |
+| `FF_ENABLE_MULTI_AGENT_ORCHESTRATION` | `true` | Parallel task execution |
+
+### Experimental Features (Disabled by Default)
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `FF_ENABLE_DEFER_LOADING` | `false` | Token efficiency for large tool libraries |
+| `FF_ENABLE_PROGRAMMATIC_TOOLS` | `false` | Sandbox-to-MCP tool calling |
+| `FF_ENABLE_LOOP_AGENT` | `false` | Google ADK-style iterative execution |
+| `FF_ENABLE_SESSION_FORK` | `false` | Conversation branching |
+| `FF_ENABLE_ENCRYPTED_SESSIONS` | `false` | At-rest session encryption |
+
+## Anthropic Best Practices Features
+
+These features implement recommendations from Anthropic's engineering blog posts.
+
+### Tool Examples (ADR-0072)
+
+Adds `input_examples` to tool definitions for improved accuracy.
+
+```bash
+FF_ENABLE_TOOL_EXAMPLES=true  # Default
+```
+
+**Impact**: 72% → 90% accuracy improvement on complex parameters.
+
+### Think Tool
+
+Provides structured reasoning space during tool chains.
+
+```bash
+FF_ENABLE_THINK_TOOL=true  # Default
+```
+
+**Impact**: 54% relative improvement in complex policy scenarios.
+
+### Skills System
+
+Enables SKILL.md-based agent capabilities with YAML frontmatter.
+
+```bash
+FF_ENABLE_SKILLS_SYSTEM=true  # Default
+FF_ENABLE_SKILLS_MARKETPLACE=true  # Default
+```
+
+**Features**:
+- SKILL.md with YAML frontmatter
+- Progressive skill discovery
+- Sandboxed execution
+- Marketplace integration (https://github.com/anthropics/skills)
+
+### PII Tokenization
+
+**REQUIRED for GDPR/HIPAA compliance.**
+
+```bash
+FF_ENABLE_PII_TOKENIZATION=true  # Default - KEEP ENABLED
+```
+
+**Detects and tokenizes**:
+- Email addresses
+- Phone numbers
+- SSN/National IDs
+- Credit card numbers
+- Names (via NER)
+- Physical addresses
+- IP addresses
+- Dates of birth
+
+<Warning>
+Only disable `FF_ENABLE_PII_TOKENIZATION` in non-compliant internal testing environments. Healthcare and EU deployments MUST keep this enabled.
+</Warning>
+
+### Multi-Agent Orchestration
+
+Enables orchestrator-worker pattern for parallel task execution.
+
+```bash
+FF_ENABLE_MULTI_AGENT_ORCHESTRATION=true  # Default
+FF_MAX_SUBAGENTS=10  # 1-50, default 10
+```
+
+**Features**:
+- Parallel subagent execution
+- Three-tier model selection (simple/complicated/complex)
+- Cross-vendor verification (Gemini primary, Claude judge)
+- Artifact-based synthesis
+
+## Deployment Configurations
+
+### Production (Full Features)
+
+```bash
+# .env.production
+FF_ENABLE_TOOL_EXAMPLES=true
+FF_ENABLE_THINK_TOOL=true
+FF_ENABLE_SKILLS_SYSTEM=true
+FF_ENABLE_SKILLS_MARKETPLACE=true
+FF_ENABLE_PII_TOKENIZATION=true
+FF_ENABLE_MULTI_AGENT_ORCHESTRATION=true
+FF_MAX_SUBAGENTS=10
+```
+
+### Healthcare/HIPAA Deployment
+
+```bash
+# .env.hipaa
+FF_ENABLE_PII_TOKENIZATION=true  # REQUIRED
+FF_ENABLE_ENCRYPTED_SESSIONS=true  # REQUIRED
+FF_ENABLE_MULTI_AGENT_ORCHESTRATION=false  # Optional - reduces attack surface
+```
+
+### EU/GDPR Deployment
+
+```bash
+# .env.gdpr
+FF_ENABLE_PII_TOKENIZATION=true  # REQUIRED
+FF_ENABLE_SKILLS_SYSTEM=true
+FF_ENABLE_SKILLS_MARKETPLACE=false  # Disable external marketplace for data sovereignty
+```
+
+### Development (All Features)
+
+```bash
+# .env.development
+FF_ENABLE_TOOL_EXAMPLES=true
+FF_ENABLE_THINK_TOOL=true
+FF_ENABLE_SKILLS_SYSTEM=true
+FF_ENABLE_SKILLS_MARKETPLACE=true
+FF_ENABLE_PII_TOKENIZATION=true
+FF_ENABLE_MULTI_AGENT_ORCHESTRATION=true
+FF_ENABLE_DEFER_LOADING=true
+FF_ENABLE_PROGRAMMATIC_TOOLS=true
+FF_ENABLE_LOOP_AGENT=true
+FF_ENABLE_SESSION_FORK=true
+FF_MAX_SUBAGENTS=50
+```
+
+### Minimal (Legacy Compatibility)
+
+```bash
+# .env.minimal
+FF_ENABLE_TOOL_EXAMPLES=false
+FF_ENABLE_THINK_TOOL=false
+FF_ENABLE_SKILLS_SYSTEM=false
+FF_ENABLE_SKILLS_MARKETPLACE=false
+FF_ENABLE_PII_TOKENIZATION=false
+FF_ENABLE_MULTI_AGENT_ORCHESTRATION=false
+```
+
+## Kubernetes Configuration
+
+### ConfigMap
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-feature-flags
+data:
+  FF_ENABLE_TOOL_EXAMPLES: "true"
+  FF_ENABLE_THINK_TOOL: "true"
+  FF_ENABLE_SKILLS_SYSTEM: "true"
+  FF_ENABLE_SKILLS_MARKETPLACE: "true"
+  FF_ENABLE_PII_TOKENIZATION: "true"
+  FF_ENABLE_MULTI_AGENT_ORCHESTRATION: "true"
+  FF_MAX_SUBAGENTS: "10"
+```
+
+### Helm Values
+
+```yaml
+# values.yaml
+featureFlags:
+  enableToolExamples: true
+  enableThinkTool: true
+  enableSkillsSystem: true
+  enableSkillsMarketplace: true
+  enablePiiTokenization: true
+  enableMultiAgentOrchestration: true
+  maxSubagents: 10
+```
+
+## Monitoring
+
+Feature flag usage is tracked in Prometheus metrics:
+
+```promql
+# Feature flag enabled count
+mcp_feature_flag_enabled{flag="skills_system"} 1
+
+# Feature flag check latency
+histogram_quantile(0.95, mcp_feature_flag_check_duration_seconds_bucket)
+```
+
+## Related Documentation
+
+- [ADR-0072: Anthropic Best Practices](/architecture/adr-0072-anthropic-best-practices)
+- [ADR-0078: Multi-Agent Orchestrator Patterns](/architecture/adr-0078-multi-agent-orchestrator-patterns)
+- [Environment Configuration](/guides/environment-config)
+- [Multi-Agent Orchestrators](/guides/multi-agent-orchestrators)

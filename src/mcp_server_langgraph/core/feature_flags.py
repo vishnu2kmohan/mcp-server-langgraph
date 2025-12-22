@@ -550,28 +550,40 @@ class FeatureFlags(BaseSettings):
     )
 
     enable_skills_system: bool = Field(
-        default=False,
-        description="Enable SKILL.md-based skills system for agent capabilities (experimental)",
+        default=True,
+        description="Enable SKILL.md-based skills system for agent capabilities. "
+        "Provides structured skill definitions with YAML frontmatter, sandboxed execution, "
+        "and progressive discovery. Set FF_ENABLE_SKILLS_SYSTEM=false to disable.",
     )
 
     enable_skills_marketplace: bool = Field(
-        default=False,
-        description="Enable skills marketplace integration with Anthropic skills repo (experimental)",
+        default=True,
+        description="Enable skills marketplace integration with Anthropic skills repo. "
+        "Fetches skills from https://github.com/anthropics/skills and custom marketplaces. "
+        "Set FF_ENABLE_SKILLS_MARKETPLACE=false to disable.",
     )
 
     enable_pii_tokenization: bool = Field(
-        default=False,
-        description="Enable PII tokenization layer for compliance (GDPR/HIPAA, experimental)",
+        default=True,
+        description="Enable PII tokenization layer for GDPR/HIPAA compliance. "
+        "Automatically detects and tokenizes PII (email, phone, SSN, credit card, names, addresses) "
+        "before LLM exposure. REQUIRED for healthcare and EU deployments. "
+        "Set FF_ENABLE_PII_TOKENIZATION=false only for non-compliant environments.",
     )
 
     enable_programmatic_tools: bool = Field(
         default=False,
-        description="Enable programmatic tool calling from sandbox code (experimental)",
+        description="Enable programmatic tool calling from sandbox code (experimental). "
+        "Allows sandboxed Python code to invoke MCP tools via call_tool() API. "
+        "Set FF_ENABLE_PROGRAMMATIC_TOOLS=true to enable.",
     )
 
     enable_multi_agent_orchestration: bool = Field(
-        default=False,
-        description="Enable orchestrator-worker pattern for parallel task execution (experimental)",
+        default=True,
+        description="Enable orchestrator-worker pattern for parallel task execution. "
+        "Supports up to max_subagents parallel workers with artifact-based synthesis. "
+        "Includes three-tier model selection and cross-vendor verification. "
+        "Set FF_ENABLE_MULTI_AGENT_ORCHESTRATION=false to disable.",
     )
 
     max_subagents: int = Field(

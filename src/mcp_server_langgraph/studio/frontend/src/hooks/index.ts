@@ -392,6 +392,22 @@ export type {
   TokenPredictionResult,
 } from "./useTraceIntelligence";
 
+// HITL Intelligence (Sprint 6)
+export {
+  useRiskAssessment,
+  useDecisionHistory,
+} from "./useHITLIntelligence";
+export type {
+  RiskFactor,
+  RiskLevel,
+  RiskRecommendation,
+  RiskAssessmentOptions,
+  RiskAssessmentResult,
+  SimilarDecision,
+  DecisionHistoryOptions,
+  DecisionHistoryResult,
+} from "./useHITLIntelligence";
+
 // HITL dialogs state management (extracted from HybridShellLayout)
 export { useHITLDialogs } from "./useHITLDialogs";
 export type {

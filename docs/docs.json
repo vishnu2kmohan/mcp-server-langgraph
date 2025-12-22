@@ -330,12 +330,13 @@
         "tab": "Guides",
         "groups": [
           {
-            "group": "Quick Start",
+            "group": "Agent Development",
             "pages": [
               "guides/presets",
               "guides/agent-architecture",
               "guides/agent-hitl-approval",
-              "guides/multi-agent-orchestrators"
+              "guides/multi-agent-orchestrators",
+              "guides/sdk-hooks"
             ]
           },
           {
@@ -394,11 +395,12 @@
             ]
           },
           {
-            "group": "Secrets Management",
+            "group": "Configuration",
             "pages": [
+              "guides/feature-flags",
+              "guides/environment-config",
               "guides/infisical-setup",
-              "guides/secret-rotation",
-              "guides/environment-config"
+              "guides/secret-rotation"
             ]
           },
           {

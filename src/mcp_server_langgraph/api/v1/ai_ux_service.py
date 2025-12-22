@@ -3129,6 +3129,165 @@ Compare with last period and generate actionable insights."""
         }
 
     # =========================================================================
+    # HITL Intelligence Methods (Sprint 6)
+    # =========================================================================
+
+    async def assess_risk(
+        self,
+        request_id: str,
+        action_type: str,
+        parameters: dict[str, Any],
+        user_id: str = "",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Assess risk of pending HITL action.
+
+        Generates AI-powered risk score and recommendations for approval decisions.
+
+        Args:
+            request_id: The HITL request ID
+            action_type: Type of action (e.g., file_delete, database_modify)
+            parameters: Action parameters to assess
+            user_id: User identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            Risk assessment with score, factors, and recommendation
+        """
+        # Placeholder implementation - will be enhanced with LLM calls
+        # Calculate risk based on action type and parameters
+        risk_factors = []
+        mitigations = []
+        risk_score = 0.0
+
+        # Add risk factors based on action type
+        if action_type in {"file_delete", "rm", "remove"}:
+            risk_factors.append({
+                "factor": "file_deletion",
+                "weight": 0.4,
+                "description": "Operation deletes files or data",
+            })
+            mitigations.append("Create backup before deletion")
+            risk_score += 0.4
+
+        if action_type in {"database_modify", "db_update", "sql_execute"}:
+            risk_factors.append({
+                "factor": "database_modification",
+                "weight": 0.5,
+                "description": "Operation modifies database",
+            })
+            mitigations.append("Test query on staging first")
+            risk_score += 0.5
+
+        # Check for production environment indicators
+        path = str(parameters.get("path", ""))
+        if "prod" in path.lower() or "production" in path.lower():
+            risk_factors.append({
+                "factor": "production_environment",
+                "weight": 0.3,
+                "description": "Targets production environment",
+            })
+            mitigations.append("Verify this is intended for production")
+            risk_score += 0.3
+
+        # Normalize risk score to 0-1 range
+        risk_score = min(risk_score, 1.0)
+
+        # Determine risk level
+        if risk_score >= 0.8:
+            risk_level = "critical"
+            recommendation = "reject"
+        elif risk_score >= 0.5:
+            risk_level = "high"
+            recommendation = "require_review"
+        elif risk_score >= 0.3:
+            risk_level = "medium"
+            recommendation = "approve_with_caution"
+        else:
+            risk_level = "low"
+            recommendation = "approve"
+
+        return {
+            "risk_score": round(risk_score, 2),
+            "risk_level": risk_level,
+            "risk_factors": risk_factors,
+            "mitigations": mitigations,
+            "recommendation": recommendation,
+            "explanation": f"This action has {risk_level} risk based on {len(risk_factors)} identified factors.",
+        }
+
+    async def get_decision_history(
+        self,
+        action_type: str,
+        persona: str | None = None,
+        time_range_days: int | None = None,
+        user_id: str = "",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Get similar past decisions for reference.
+
+        Shows how users decided similar requests in the past.
+
+        Args:
+            action_type: Type of action to find similar decisions for
+            persona: Optional persona filter
+            time_range_days: Optional time range in days
+            user_id: User identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            Decision history with similar decisions and statistics
+        """
+        # Placeholder implementation - will be enhanced with actual audit log queries
+        # In production, this would query the audit log for similar decisions
+        similar_decisions = [
+            {
+                "request_id": f"req-{action_type}-001",
+                "action_type": action_type,
+                "decision": "approved",
+                "decided_by": "admin",
+                "decided_at": "2024-01-15T10:30:00Z",
+                "reasoning": "Required for system maintenance",
+            },
+            {
+                "request_id": f"req-{action_type}-002",
+                "action_type": action_type,
+                "decision": "rejected",
+                "decided_by": "security-admin",
+                "decided_at": "2024-01-10T14:20:00Z",
+                "reasoning": "Scope too broad for automated approval",
+            },
+        ]
+
+        # Filter by persona if provided
+        if persona:
+            similar_decisions = [
+                d for d in similar_decisions
+                if d.get("decided_by", "").lower() == persona.lower()
+            ]
+
+        # Calculate statistics
+        approved_count = sum(1 for d in similar_decisions if d["decision"] == "approved")
+        total_count = len(similar_decisions) if similar_decisions else 1
+        approval_rate = approved_count / total_count
+
+        # Suggest action based on approval rate
+        if approval_rate >= 0.7:
+            suggested_action = "approve"
+        elif approval_rate <= 0.3:
+            suggested_action = "reject"
+        else:
+            suggested_action = "review"
+
+        return {
+            "similar_decisions": similar_decisions,
+            "approval_rate": round(approval_rate, 2),
+            "total_similar": total_count,
+            "average_decision_time_ms": 15000,  # Placeholder
+            "suggested_action": suggested_action,
+        }
+
+    # =========================================================================
     # Utility Methods
     # =========================================================================
 

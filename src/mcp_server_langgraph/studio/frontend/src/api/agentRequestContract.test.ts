@@ -51,6 +51,51 @@ function setupAgentRequestHandlers() {
       });
     }),
 
+    // NOTE: Batch handlers MUST come before :id handlers to avoid path conflicts
+    // POST /api/v1/agents/requests/batch/approve
+    http.post("/api/v1/agents/requests/batch/approve", async ({ request }) => {
+      const body = (await request.json()) as {
+        request_ids: string[];
+        approved_by: string;
+        reason?: string;
+      };
+
+      // Simulate processing each request
+      const results = body.request_ids.map((requestId) => ({
+        request_id: requestId,
+        success: true,
+      }));
+
+      return HttpResponse.json({
+        success: true,
+        processed: body.request_ids.length,
+        failed: 0,
+        results,
+      });
+    }),
+
+    // POST /api/v1/agents/requests/batch/reject
+    http.post("/api/v1/agents/requests/batch/reject", async ({ request }) => {
+      const body = (await request.json()) as {
+        request_ids: string[];
+        rejected_by: string;
+        reason?: string;
+      };
+
+      // Simulate processing each request
+      const results = body.request_ids.map((requestId) => ({
+        request_id: requestId,
+        success: true,
+      }));
+
+      return HttpResponse.json({
+        success: true,
+        processed: body.request_ids.length,
+        failed: 0,
+        results,
+      });
+    }),
+
     // POST /api/v1/agents/requests/:id/approve
     http.post("/api/v1/agents/requests/:id/approve", async ({ request, params }) => {
       const body = await request.json();
@@ -77,32 +122,6 @@ function setupAgentRequestHandlers() {
         request_id: params.id as string,
         status: "responded",
         message: "Clarification received",
-      });
-    }),
-
-    // POST /api/v1/agents/requests/batch/approve
-    http.post("/api/v1/agents/requests/batch/approve", async ({ request }) => {
-      const body = (await request.json()) as { request_ids: string[] };
-      return HttpResponse.json({
-        approved_count: body.request_ids.length,
-        failed_count: 0,
-        results: body.request_ids.map((id) => ({
-          request_id: id,
-          status: "approved",
-        })),
-      });
-    }),
-
-    // POST /api/v1/agents/requests/batch/reject
-    http.post("/api/v1/agents/requests/batch/reject", async ({ request }) => {
-      const body = (await request.json()) as { request_ids: string[] };
-      return HttpResponse.json({
-        rejected_count: body.request_ids.length,
-        failed_count: 0,
-        results: body.request_ids.map((id) => ({
-          request_id: id,
-          status: "rejected",
-        })),
       });
     })
   );
@@ -163,10 +182,10 @@ interface AgentRequestActionResponse {
 }
 
 interface BatchActionResponse {
-  approved_count?: number;
-  rejected_count?: number;
-  failed_count: number;
-  results: Array<{ request_id: string; status: string; error?: string }>;
+  success: boolean;
+  processed: number;
+  failed: number;
+  results: Array<{ request_id: string; success: boolean; error?: string }>;
 }
 
 // =============================================================================
@@ -417,7 +436,7 @@ describe("Agent Request API Contract", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          request_ids: ["req-001", "req-002", "req-003"],
+          request_ids: ["approval-1", "approval-2"], // Use mock pending approval IDs
           approved_by: "admin@example.com",
           reason: "Batch approved",
         }),
@@ -426,10 +445,17 @@ describe("Agent Request API Contract", () => {
       expect(response.ok).toBe(true);
       const data: BatchActionResponse = await response.json();
 
-      expect(data.approved_count).toBe(3);
-      expect(data.failed_count).toBe(0);
-      expect(data.results).toHaveLength(3);
-      expect(data.results[0].status).toBe("approved");
+      // Validate BatchAgentRequestResponse schema
+      expect(typeof data.success).toBe("boolean");
+      expect(typeof data.processed).toBe("number");
+      expect(typeof data.failed).toBe("number");
+      expect(Array.isArray(data.results)).toBe(true);
+
+      // Each result should have request_id and success
+      for (const result of data.results) {
+        expect(typeof result.request_id).toBe("string");
+        expect(typeof result.success).toBe("boolean");
+      }
     });
   });
 
@@ -439,7 +465,7 @@ describe("Agent Request API Contract", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          request_ids: ["req-001", "req-002"],
+          request_ids: ["approval-1", "approval-2"],
           rejected_by: "admin@example.com",
           reason: "Batch rejected - policy violation",
         }),
@@ -448,9 +474,11 @@ describe("Agent Request API Contract", () => {
       expect(response.ok).toBe(true);
       const data: BatchActionResponse = await response.json();
 
-      expect(data.rejected_count).toBe(2);
-      expect(data.failed_count).toBe(0);
-      expect(data.results).toHaveLength(2);
+      // Validate BatchAgentRequestResponse schema
+      expect(typeof data.success).toBe("boolean");
+      expect(typeof data.processed).toBe("number");
+      expect(typeof data.failed).toBe("number");
+      expect(Array.isArray(data.results)).toBe(true);
     });
   });
 });

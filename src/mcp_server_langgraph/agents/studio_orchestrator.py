@@ -733,18 +733,55 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
     async def _handle_hitl_task(self, task: StudioTask) -> StudioResult:
         """Handle HITL Intelligence tasks.
 
+        Task types:
+        - risk_assess: AI-generated risk score for pending actions
+        - decision_history: Show how user decided similar requests before
+
         Args:
             task: The HITL task to execute
 
         Returns:
             StudioResult from the HITL task
         """
-        # Placeholder - to be implemented with LLM calls
-        return StudioResult(
-            task_type=task.task_type,
-            success=True,
-            result={"status": "placeholder", "message": "HITL task placeholder"},
-        )
+        try:
+            if task.task_type == "risk_assess":
+                result = await self._ai_ux_service.assess_risk(
+                    request_id=task.data.get("request_id", ""),
+                    action_type=task.data.get("action_type", ""),
+                    parameters=task.data.get("parameters", {}),
+                    user_id=task.user_id,
+                )
+                return StudioResult(
+                    task_type=task.task_type,
+                    success=True,
+                    result=result,
+                )
+            elif task.task_type == "decision_history":
+                result = await self._ai_ux_service.get_decision_history(
+                    action_type=task.data.get("action_type", ""),
+                    persona=task.data.get("persona"),
+                    time_range_days=task.data.get("time_range_days"),
+                    user_id=task.user_id,
+                )
+                return StudioResult(
+                    task_type=task.task_type,
+                    success=True,
+                    result=result,
+                )
+            else:
+                return StudioResult(
+                    task_type=task.task_type,
+                    success=False,
+                    error=f"Unknown HITL task type: {task.task_type}",
+                )
+
+        except Exception as e:
+            logger.exception(f"Error in HITL task {task.task_type}: {e}")
+            return StudioResult(
+                task_type=task.task_type,
+                success=False,
+                error=str(e),
+            )
 
     async def _handle_command_task(self, task: StudioTask) -> StudioResult:
         """Handle Command Intelligence tasks.

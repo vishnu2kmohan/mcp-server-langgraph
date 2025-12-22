@@ -890,6 +890,7 @@ markers = [
     "agents: Multi-agent orchestration tests (orchestrator, coordinator, subagent)",
     "orchestrator: Orchestrator-specific tests (model registry, task routing, cost tracking)",
     "ai_explanations: AI Explanation generation tests (orchestrated explanation for HITL dialogs)",
+    "sessions: Session management tests (fork, encryption, lifecycle, state persistence)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)
