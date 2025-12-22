@@ -52,6 +52,34 @@ export {
   type UseAlertWebSocketReturn,
 } from "./useAlertWebSocket";
 
+// ADR-0068 New WebSocket Hooks (Phase 4 Standardization)
+export {
+  useConnectionsRealtimeWebSocket,
+  type UseConnectionsRealtimeWebSocketOptions,
+  type UseConnectionsRealtimeWebSocketReturn,
+  type Connection,
+  type HealthCheckResult,
+} from "./useConnectionsRealtimeWebSocket";
+
+export {
+  useHeartMetricsWebSocket,
+  type UseHeartMetricsWebSocketOptions,
+  type UseHeartMetricsWebSocketReturn,
+  type HeartMetricsSnapshot,
+  type DimensionMetrics,
+  type ThresholdAlert,
+} from "./useHeartMetricsWebSocket";
+
+export {
+  useCostTrackingWebSocket,
+  type UseCostTrackingWebSocketOptions,
+  type UseCostTrackingWebSocketReturn,
+  type CostEvent,
+  type SessionCost,
+  type UserBudget,
+  type BudgetWarning,
+} from "./useCostTrackingWebSocket";
+
 // =============================================================================
 // Alert Hooks (ADR-0026 - Comprehensive Client Resilience Patterns)
 // =============================================================================
