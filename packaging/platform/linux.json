@@ -1,0 +1,67 @@
+{
+  "$schema": "https://claude.ai/schemas/mcpb-platform-v1.json",
+  "platform": "linux",
+  "display_name": "Linux",
+  "min_version": "5.4",
+  "architecture": ["x64", "arm64"],
+  "command": {
+    "suffix": "",
+    "shell": "/bin/bash",
+    "shell_args": ["-c"]
+  },
+  "paths": {
+    "separator": "/",
+    "install_dir": "~/.local/share/claude/extensions/mcp-server-langgraph",
+    "config_dir": "~/.config/claude",
+    "data_dir": "~/.local/share/claude/data",
+    "log_dir": "~/.local/share/claude/logs",
+    "venv_python": "server/venv/bin/python",
+    "venv_activate": "server/venv/bin/activate"
+  },
+  "secrets": {
+    "type": "secret-service",
+    "description": "D-Bus Secret Service API (GNOME Keyring, KDE Wallet)",
+    "collection": "claude-mcp-server-langgraph",
+    "fallback": {
+      "type": "encrypted-file",
+      "path": "~/.config/claude/credentials.enc",
+      "encryption": "AES-256-GCM"
+    }
+  },
+  "environment": {
+    "PYTHONUNBUFFERED": "1",
+    "LANG": "en_US.UTF-8"
+  },
+  "installation": {
+    "create_venv_command": "python3 -m venv server/venv",
+    "install_deps_command": "server/venv/bin/pip install -r server/requirements.txt",
+    "post_install_script": "scripts/post-install.sh"
+  },
+  "packaging_formats": [
+    {
+      "type": "appimage",
+      "description": "Portable AppImage format",
+      "output": "MCP-Server-LangGraph-x86_64.AppImage"
+    },
+    {
+      "type": "flatpak",
+      "description": "Flatpak sandboxed package",
+      "app_id": "ai.emergence.mcp-server-langgraph"
+    },
+    {
+      "type": "deb",
+      "description": "Debian/Ubuntu package",
+      "dependencies": ["python3", "python3-venv"]
+    },
+    {
+      "type": "rpm",
+      "description": "Red Hat/Fedora package",
+      "dependencies": ["python3", "python3-venv"]
+    }
+  ],
+  "systemd": {
+    "unit_file": "mcp-server-langgraph.service",
+    "user_service": true,
+    "restart_policy": "on-failure"
+  }
+}

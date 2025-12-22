@@ -1,0 +1,50 @@
+{
+  "$schema": "https://claude.ai/schemas/mcpb-platform-v1.json",
+  "platform": "macos",
+  "display_name": "macOS",
+  "min_version": "12.0",
+  "architecture": ["x64", "arm64"],
+  "command": {
+    "suffix": "",
+    "shell": "/bin/zsh",
+    "shell_args": ["-c"]
+  },
+  "paths": {
+    "separator": "/",
+    "install_dir": "~/Library/Application Support/Claude/extensions/mcp-server-langgraph",
+    "config_dir": "~/Library/Application Support/Claude/config",
+    "data_dir": "~/Library/Application Support/Claude/data",
+    "log_dir": "~/Library/Logs/Claude",
+    "venv_python": "server/venv/bin/python",
+    "venv_activate": "server/venv/bin/activate"
+  },
+  "secrets": {
+    "type": "keychain",
+    "description": "macOS Keychain for secure credential storage",
+    "service_name": "com.anthropic.claude.mcp-server-langgraph",
+    "access_group": "com.anthropic.claude"
+  },
+  "environment": {
+    "PYTHONUNBUFFERED": "1",
+    "LANG": "en_US.UTF-8"
+  },
+  "installation": {
+    "create_venv_command": "python3 -m venv server/venv",
+    "install_deps_command": "server/venv/bin/pip install -r server/requirements.txt",
+    "post_install_script": "scripts/post-install.sh"
+  },
+  "signing": {
+    "required": true,
+    "identity": "Developer ID Application",
+    "entitlements": "entitlements.plist",
+    "notarization": {
+      "team_id": "",
+      "apple_id": "",
+      "enabled": true
+    }
+  },
+  "gatekeeper": {
+    "quarantine_attribute": true,
+    "check_on_launch": true
+  }
+}

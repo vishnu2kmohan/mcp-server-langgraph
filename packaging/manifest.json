@@ -1,0 +1,200 @@
+{
+  "$schema": "https://claude.ai/schemas/mcpb-manifest-v1.json",
+  "name": "mcp-server-langgraph",
+  "version": "1.0.0",
+  "description": "LangGraph-based MCP server with advanced agent capabilities, PII protection, and multi-provider LLM support",
+  "author": "Emergence AI",
+  "license": "MIT",
+  "homepage": "https://github.com/emergence-ai/mcp-server-langgraph",
+  "repository": "https://github.com/emergence-ai/mcp-server-langgraph",
+  "server": {
+    "type": "python",
+    "entry": "server/main.py"
+  },
+  "mcp_config": {
+    "command": "${__dirname}/server/venv/bin/python",
+    "args": ["${__dirname}/server/main.py"],
+    "env": {}
+  },
+  "platform_overrides": {
+    "windows": {
+      "command": "${__dirname}\\server\\venv\\Scripts\\python.exe"
+    },
+    "macos": {
+      "command": "${__dirname}/server/venv/bin/python"
+    },
+    "linux": {
+      "command": "${__dirname}/server/venv/bin/python"
+    }
+  },
+  "user_config": [
+    {
+      "name": "llm_provider",
+      "type": "enum",
+      "description": "Primary LLM provider for agent execution",
+      "required": true,
+      "values": ["anthropic", "openai", "google", "azure"],
+      "default": "anthropic"
+    },
+    {
+      "name": "api_key",
+      "type": "string",
+      "description": "API key for the selected LLM provider",
+      "required": true,
+      "secret": true
+    },
+    {
+      "name": "enable_pii_tokenization",
+      "type": "boolean",
+      "description": "Enable automatic PII detection and tokenization for compliance",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "enable_skills",
+      "type": "boolean",
+      "description": "Enable the skills system for agent capabilities",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "database_url",
+      "type": "string",
+      "description": "PostgreSQL connection URL for session persistence",
+      "required": false,
+      "secret": true
+    },
+    {
+      "name": "redis_url",
+      "type": "string",
+      "description": "Redis connection URL for caching and checkpoints",
+      "required": false,
+      "secret": true
+    }
+  ],
+  "tools": [
+    {
+      "name": "think",
+      "description": "Structured reasoning space for complex problem-solving without external effects",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "thought": {
+            "type": "string",
+            "description": "The reasoning or analysis to record"
+          }
+        },
+        "required": ["thought"]
+      }
+    },
+    {
+      "name": "search_tools",
+      "description": "Progressive tool discovery with configurable detail levels",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query for tools"
+          },
+          "detail_level": {
+            "type": "string",
+            "enum": ["minimal", "standard", "full"],
+            "description": "Level of detail in tool descriptions"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "execute_skill",
+      "description": "Execute an installed skill workflow",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "skill_name": {
+            "type": "string",
+            "description": "Name of the skill to execute"
+          },
+          "script": {
+            "type": "string",
+            "description": "Optional script within the skill to run"
+          },
+          "args": {
+            "type": "object",
+            "description": "Arguments to pass to the skill"
+          }
+        },
+        "required": ["skill_name"]
+      }
+    },
+    {
+      "name": "tokenize_pii",
+      "description": "Tokenize PII in text for safe LLM processing",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Text potentially containing PII"
+          }
+        },
+        "required": ["text"]
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "name": "research",
+      "description": "Multi-source research workflow with synthesis",
+      "arguments": [
+        {
+          "name": "topic",
+          "description": "Research topic or question",
+          "required": true
+        },
+        {
+          "name": "depth",
+          "description": "Research depth (quick, standard, comprehensive)",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "code_review",
+      "description": "Comprehensive code review with security and quality analysis",
+      "arguments": [
+        {
+          "name": "file_path",
+          "description": "Path to file or directory to review",
+          "required": true
+        },
+        {
+          "name": "focus",
+          "description": "Review focus (security, performance, style, all)",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "compliance_audit",
+      "description": "Run compliance audit for specified framework",
+      "arguments": [
+        {
+          "name": "framework",
+          "description": "Compliance framework (gdpr, hipaa, soc2, fedramp)",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "langgraph": ">=1.0.4",
+    "langchain": ">=0.3.0",
+    "litellm": ">=1.50.0",
+    "pydantic": ">=2.0.0",
+    "fastapi": ">=0.115.0",
+    "httpx": ">=0.27.0"
+  },
+  "min_claude_version": "1.0.0"
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://claude.ai/schemas/mcpb-platform-v1.json",
+  "platform": "windows",
+  "display_name": "Windows",
+  "min_version": "10",
+  "architecture": ["x64", "arm64"],
+  "command": {
+    "suffix": ".exe",
+    "shell": "powershell.exe",
+    "shell_args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
+  },
+  "paths": {
+    "separator": "\\",
+    "install_dir": "%APPDATA%\\Claude\\extensions\\mcp-server-langgraph",
+    "config_dir": "%APPDATA%\\Claude\\config",
+    "data_dir": "%LOCALAPPDATA%\\Claude\\data",
+    "log_dir": "%LOCALAPPDATA%\\Claude\\logs",
+    "venv_python": "server\\venv\\Scripts\\python.exe",
+    "venv_activate": "server\\venv\\Scripts\\Activate.ps1"
+  },
+  "secrets": {
+    "type": "dpapi",
+    "description": "Windows Data Protection API for secure credential storage",
+    "store_path": "%APPDATA%\\Claude\\credentials",
+    "encryption": "AES-256-GCM"
+  },
+  "environment": {
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONUTF8": "1"
+  },
+  "installation": {
+    "create_venv_command": "python -m venv server\\venv",
+    "install_deps_command": "server\\venv\\Scripts\\pip.exe install -r server\\requirements.txt",
+    "post_install_script": "scripts\\post-install.ps1"
+  },
+  "signing": {
+    "required": false,
+    "certificate_store": "CurrentUser\\My",
+    "timestamp_server": "http://timestamp.digicert.com"
+  }
+}
