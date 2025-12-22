@@ -5,8 +5,13 @@ Defines CPU, memory, timeout, and network constraints for sandboxed execution.
 Immutable configuration with validation and preset profiles.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.execution.domain_proxy import DomainProxyConfig
 
 
 class ResourceLimitError(Exception):
@@ -45,6 +50,7 @@ class ResourceLimits:
     max_processes: int = 1
     network_mode: NetworkMode = "none"
     allowed_domains: tuple[str, ...] = field(default_factory=tuple)
+    proxy_config: DomainProxyConfig | None = None
 
     def __post_init__(self) -> None:
         """Validate resource limits after initialization"""
