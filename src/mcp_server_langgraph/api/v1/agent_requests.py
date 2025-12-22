@@ -336,8 +336,8 @@ class ThresholdCalculator:
         approved_count = sum(1 for h in history if h.decision == "approved")
         approval_rate = approved_count / sample_size
 
-        # Calculate average confidence of requests
-        avg_confidence = sum(h.confidence for h in history) / sample_size
+        # Calculate average confidence of requests (for future threshold refinement)
+        _avg_confidence = sum(h.confidence for h in history) / sample_size
 
         # Determine recommendation
         if approval_rate >= 0.8:
@@ -355,7 +355,7 @@ class ThresholdCalculator:
                 self.max_threshold,
                 self.base_threshold + adjustment,
             )
-            reason = f"High rejection rate ({1-approval_rate:.0%}) suggests threshold should be raised"
+            reason = f"High rejection rate ({1 - approval_rate:.0%}) suggests threshold should be raised"
         else:
             # Moderate approval rate - keep threshold
             new_threshold = self.base_threshold
@@ -605,10 +605,7 @@ class AgentRequestQueue:
         Returns:
             List of pending requests.
         """
-        pending = [
-            r for r in self._requests.values()
-            if r.status == AgentRequestStatus.PENDING
-        ]
+        pending = [r for r in self._requests.values() if r.status == AgentRequestStatus.PENDING]
 
         if session_id:
             pending = [r for r in pending if r.session_id == session_id]
@@ -1332,7 +1329,7 @@ async def batch_approve_requests(
     batch_request: BatchApproveRequest,
     current_user: CurrentUser,
     audit_service: AuditService,
-    queue: AgentRequestQueueDepends = None,
+    queue: AgentRequestQueueDepends,
 ) -> BatchApprovalResponse:
     """
     Approve multiple agent requests in a single operation.
@@ -1342,11 +1339,7 @@ async def batch_approve_requests(
     """
     require_reviewer_role(current_user)
 
-    # Use the global queue if not provided (for dependency injection compatibility)
-    if queue is None:
-        queue = get_agent_request_queue()
-
-    approved_by = current_user.get("username", current_user.get("sub", "unknown"))
+    approved_by: str = str(current_user.get("username") or current_user.get("sub") or "unknown")
 
     results = queue.batch_approve(
         request_ids=batch_request.request_ids,
@@ -1365,7 +1358,7 @@ async def batch_approve_requests(
                     event_type=AuditEventType.AGENT_REQUEST_APPROVED,
                     request_id=result.request_id,
                     session_id=original_request.session_id,
-                    user_id=current_user.get("user_id", "unknown"),
+                    user_id=str(current_user.get("user_id") or "unknown"),
                     username=approved_by,
                     action=f"Batch approved agent request for {original_request.agent_name}",
                     details={
@@ -1397,7 +1390,7 @@ async def batch_reject_requests(
     batch_request: BatchRejectRequest,
     current_user: CurrentUser,
     audit_service: AuditService,
-    queue: AgentRequestQueueDepends = None,
+    queue: AgentRequestQueueDepends,
 ) -> BatchApprovalResponse:
     """
     Reject multiple agent requests in a single operation.
@@ -1407,11 +1400,7 @@ async def batch_reject_requests(
     """
     require_reviewer_role(current_user)
 
-    # Use the global queue if not provided
-    if queue is None:
-        queue = get_agent_request_queue()
-
-    rejected_by = current_user.get("username", current_user.get("sub", "unknown"))
+    rejected_by: str = str(current_user.get("username") or current_user.get("sub") or "unknown")
 
     results = queue.batch_reject(
         request_ids=batch_request.request_ids,
@@ -1429,7 +1418,7 @@ async def batch_reject_requests(
                     event_type=AuditEventType.AGENT_REQUEST_REJECTED,
                     request_id=result.request_id,
                     session_id=original_request.session_id,
-                    user_id=current_user.get("user_id", "unknown"),
+                    user_id=str(current_user.get("user_id") or "unknown"),
                     username=rejected_by,
                     action=f"Batch rejected agent request for {original_request.agent_name}",
                     details={
@@ -1507,7 +1496,7 @@ async def get_threshold_recommendation(
     Analyzes the user's approval history to suggest an optimal
     confidence threshold that balances automation with oversight.
     """
-    user_id = current_user.get("user_id", current_user.get("sub", "unknown"))
+    user_id: str = str(current_user.get("user_id") or current_user.get("sub") or "unknown")
 
     # Get user's current settings or defaults
     settings = get_user_threshold_settings(user_id)
@@ -1543,7 +1532,7 @@ async def get_user_threshold_settings_endpoint(
     Returns current threshold configuration including base threshold,
     adjusted threshold, and adjustment bounds.
     """
-    user_id = current_user.get("user_id", current_user.get("sub", "unknown"))
+    user_id: str = str(current_user.get("user_id") or current_user.get("sub") or "unknown")
 
     settings = get_user_threshold_settings(user_id)
     if settings is None:
@@ -1603,7 +1592,7 @@ async def update_user_threshold_settings_endpoint(
     Allows customization of threshold behavior including base value,
     auto-adjustment, and bounds.
     """
-    user_id = current_user.get("user_id", current_user.get("sub", "unknown"))
+    user_id: str = str(current_user.get("user_id") or current_user.get("sub") or "unknown")
 
     # Get existing settings or create defaults
     settings = get_user_threshold_settings(user_id)

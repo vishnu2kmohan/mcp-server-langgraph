@@ -195,13 +195,8 @@ class FeatureFlags(BaseSettings):
 
     # UI Features (Unified Studio/BFF)
     # =========================================================================
-    # Canvas Hybrid Shell Feature Flags (Phased Rollout)
+    # Canvas Feature Flags (HybridShell is now default at /studio)
     # =========================================================================
-    canvas_hybrid_shell: bool = Field(
-        default=False,
-        description="Phase 1: Enable HybridShellLayout at /studio/v2 for new canvas-based UI",
-    )
-
     canvas_editable: bool = Field(
         default=False,
         description="Phase 2: Enable editable artifacts in Canvas panel",
@@ -747,6 +742,44 @@ class FeatureFlags(BaseSettings):
         description="Enable unified Studio AI orchestration for HybridShell AI capabilities (gradual rollout)",
     )
 
+    # -------------------------------------------------------------------------
+    # Granular Intelligence Flags (require enable_studio_ai master flag)
+    # -------------------------------------------------------------------------
+    enable_session_intelligence: bool = Field(
+        default=False,
+        description="Enable session intelligence: summarize, group, similarity analysis",
+    )
+
+    enable_conversation_intelligence: bool = Field(
+        default=False,
+        description="Enable conversation intelligence: intent detection, context optimization, goal tracking",
+    )
+
+    enable_canvas_intelligence: bool = Field(
+        default=False,
+        description="Enable canvas intelligence: artifact type suggestions, code analysis, diff explanation",
+    )
+
+    enable_diagram_intelligence: bool = Field(
+        default=False,
+        description="Enable diagram intelligence: analyze diagrams, convert to code",
+    )
+
+    enable_trace_intelligence: bool = Field(
+        default=False,
+        description="Enable trace intelligence: summarize agent traces, detect anomalies",
+    )
+
+    enable_hitl_ai: bool = Field(
+        default=False,
+        description="Enable HITL AI: risk assessment, decision history for agent approvals",
+    )
+
+    enable_genui: bool = Field(
+        default=False,
+        description="Enable generative UI: dynamic component rendering based on AI suggestions",
+    )
+
     # =========================================================================
     # AI UX Features (Phase 6 AI-Native Integration)
     # =========================================================================
@@ -818,6 +851,33 @@ class FeatureFlags(BaseSettings):
         description="TTL for Redis-cached AI UX responses (60s-1h)",
     )
 
+    # =========================================================================
+    # Frontend Redis L2 Cache (useTieredCache hook)
+    # =========================================================================
+    enable_frontend_redis_l2_cache: bool = Field(
+        default=False,
+        description="Enable Redis L2 caching for frontend useTieredCache hook (cross-tab sharing)",
+    )
+
+    frontend_redis_l2_cache_ttl_seconds: int = Field(
+        default=300,
+        ge=60,
+        le=3600,
+        description="TTL for frontend Redis L2 cache entries (60s-1h)",
+    )
+
+    enable_frontend_redis_l2_rate_limiting: bool = Field(
+        default=True,
+        description="Enable rate limiting for frontend Redis L2 cache API (prevents cache flooding)",
+    )
+
+    frontend_redis_l2_rate_limit_per_minute: int = Field(
+        default=60,
+        ge=1,
+        le=1000,
+        description="Maximum frontend cache API requests per minute per user (1-1000)",
+    )
+
     enable_batch_composite_analysis: bool = Field(
         default=True,
         description="Enable batch composite analysis (runs persona, disclosure, error analyses in parallel)",
@@ -868,6 +928,48 @@ class FeatureFlags(BaseSettings):
     enable_agent_hitl_websocket: bool = Field(
         default=True,
         description="Enable WebSocket for real-time HITL approval requests and updates",
+    )
+
+    # =========================================================================
+    # WebSocket Infrastructure Features (ADR-0068 WebSocket Standardization)
+    # =========================================================================
+    enable_websocket_new_base: bool = Field(
+        default=True,
+        description="Enable new WebSocketBase infrastructure with standardized lifecycle, auth, and metrics. "
+        "When False, uses legacy WebSocket handlers.",
+    )
+
+    enable_websocket_server_heartbeat: bool = Field(
+        default=True,
+        description="Enable server-initiated heartbeat for WebSocket connections. "
+        "Sends heartbeat every 30s and detects dead connections after 2 missed intervals.",
+    )
+
+    enable_websocket_enhanced_metrics: bool = Field(
+        default=True,
+        description="Enable enhanced WebSocket metrics collection (connection counts, message rates, latency). "
+        "Integrates with OpenTelemetry for observability.",
+    )
+
+    websocket_heartbeat_interval_seconds: int = Field(
+        default=30,
+        ge=10,
+        le=120,
+        description="Interval between server heartbeat messages in seconds (10-120)",
+    )
+
+    websocket_idle_timeout_seconds: int = Field(
+        default=1800,
+        ge=60,
+        le=7200,
+        description="Idle timeout for WebSocket connections in seconds (60-7200, default 30 min)",
+    )
+
+    websocket_rate_limit_per_minute: int = Field(
+        default=600,
+        ge=60,
+        le=6000,
+        description="Default rate limit for WebSocket messages per minute (60-6000)",
     )
 
     model_config = SettingsConfigDict(
@@ -987,8 +1089,7 @@ class FeatureFlags(BaseSettings):
         is_admin = role.lower() == "admin"
 
         return {
-            # Canvas/Studio v2 UI (phased rollout)
-            "canvas_hybrid_shell": self.canvas_hybrid_shell,
+            # Canvas feature flags (HybridShell is now default at /studio)
             "canvas_editable": self.canvas_editable,
             "canvas_agents": self.canvas_agents,
             "canvas_ai_palette": self.canvas_ai_palette,
@@ -1033,6 +1134,21 @@ class FeatureFlags(BaseSettings):
             "batch_composite_analysis": self.enable_batch_composite_analysis,
             # HITL Features
             "agent_hitl": self.enable_agent_hitl,
+            # Granular Intelligence Flags (HybridShell AI)
+            "studio_ai": self.enable_studio_ai,
+            "session_intelligence": self.enable_session_intelligence,
+            "conversation_intelligence": self.enable_conversation_intelligence,
+            "canvas_intelligence": self.enable_canvas_intelligence,
+            "diagram_intelligence": self.enable_diagram_intelligence,
+            "trace_intelligence": self.enable_trace_intelligence,
+            "hitl_ai": self.enable_hitl_ai,
+            "genui": self.enable_genui,
+            # Frontend Redis L2 Cache
+            "frontend_redis_l2_cache": self.enable_frontend_redis_l2_cache,
+            # WebSocket Infrastructure Features
+            "websocket_new_base": self.enable_websocket_new_base,
+            "websocket_server_heartbeat": self.enable_websocket_server_heartbeat,
+            "websocket_enhanced_metrics": self.enable_websocket_enhanced_metrics,
         }
 
 

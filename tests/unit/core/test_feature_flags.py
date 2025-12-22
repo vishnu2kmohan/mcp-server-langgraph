@@ -496,57 +496,6 @@ class TestUIFeaturesForRole:
 
 
 @pytest.mark.xdist_group(name="feature_flags")
-class TestCanvasHybridShellFeatureFlags:
-    """Test canvas hybrid shell feature flags for /studio/v2 UI."""
-
-    def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers."""
-        gc.collect()
-
-    @pytest.mark.unit
-    def test_canvas_hybrid_shell_disabled_by_default(self):
-        """Test that canvas hybrid shell is disabled by default (gradual rollout)."""
-        from mcp_server_langgraph.core.feature_flags import FeatureFlags
-
-        flags = FeatureFlags()
-        assert flags.canvas_hybrid_shell is False
-
-    @pytest.mark.unit
-    def test_canvas_hybrid_shell_can_be_enabled(self):
-        """Test that canvas hybrid shell can be enabled via constructor."""
-        from mcp_server_langgraph.core.feature_flags import FeatureFlags
-
-        flags = FeatureFlags(canvas_hybrid_shell=True)
-        assert flags.canvas_hybrid_shell is True
-
-    @pytest.mark.unit
-    def test_canvas_hybrid_shell_included_in_ui_features(self):
-        """Test that canvas_hybrid_shell is exposed in get_ui_features_for_role."""
-        from mcp_server_langgraph.core.feature_flags import FeatureFlags
-
-        flags = FeatureFlags(canvas_hybrid_shell=True)
-        features = flags.get_ui_features_for_role("admin")
-
-        assert "canvas_hybrid_shell" in features
-        assert features["canvas_hybrid_shell"] is True
-
-    @pytest.mark.unit
-    def test_canvas_hybrid_shell_available_for_all_roles(self):
-        """Test that canvas_hybrid_shell is available regardless of role."""
-        from mcp_server_langgraph.core.feature_flags import FeatureFlags
-
-        flags = FeatureFlags(canvas_hybrid_shell=True)
-
-        admin_features = flags.get_ui_features_for_role("admin")
-        user_features = flags.get_ui_features_for_role("user")
-        viewer_features = flags.get_ui_features_for_role("viewer")
-
-        assert admin_features["canvas_hybrid_shell"] is True
-        assert user_features["canvas_hybrid_shell"] is True
-        assert viewer_features["canvas_hybrid_shell"] is True
-
-
-@pytest.mark.xdist_group(name="feature_flags")
 class TestUXEnhancementFeatureFlags:
     """Test UX enhancement feature flags (Priority 1-3 from competitive analysis)."""
 
@@ -813,28 +762,53 @@ class TestFeatureGatedDecorator:
         from mcp_server_langgraph.core.feature_flags import feature_gated
 
         @feature_gated("enable_streaming_responses", "Streaming Responses")
-        def test_func():
+        def decorated_function():
             return "success"
 
         # enable_streaming_responses is True by default
-        result = test_func()
+        result = decorated_function()
         assert result == "success"
 
     @pytest.mark.unit
-    def test_feature_gated_blocks_disabled_feature(self):
+    def test_feature_gated_blocks_disabled_feature(self, monkeypatch):
         """Test that decorator raises FeatureDisabledError when feature is disabled."""
+        import sys
+
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
-        from mcp_server_langgraph.core.feature_flags import feature_gated
 
-        @feature_gated("enable_skills_system", "Skills System")
-        def test_func():
-            return "success"
+        # Set environment variables to disable the feature and test mode bypass
+        # The environment variables are read by Pydantic-settings when creating FeatureFlags
+        monkeypatch.setenv("FF_ENABLE_SKILLS_SYSTEM", "false")
+        monkeypatch.setenv("FF_TEST_MODE", "false")
 
-        # enable_skills_system is False by default
-        with pytest.raises(FeatureDisabledError) as exc_info:
-            test_func()
+        # Create a fresh FeatureFlags instance that reads from the patched environment
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags, feature_gated
 
-        assert "Skills System" in str(exc_info.value)
+        test_flags = FeatureFlags()
+
+        # Verify the flag is actually disabled
+        assert test_flags.enable_skills_system is False
+
+        # Get the actual module object from sys.modules to patch the singleton
+        ff_module = sys.modules["mcp_server_langgraph.core.feature_flags"]
+
+        original_flags = ff_module.feature_flags
+        ff_module.feature_flags = test_flags
+
+        try:
+            # Define a decorated function that uses require_feature on our test instance
+            @feature_gated("enable_skills_system", "Skills System")
+            def decorated_function():
+                return "success"
+
+            # With the flag disabled, calling the function should raise FeatureDisabledError
+            with pytest.raises(FeatureDisabledError) as exc_info:
+                decorated_function()
+
+            assert "Skills System" in str(exc_info.value)
+        finally:
+            # Restore the original singleton
+            ff_module.feature_flags = original_flags
 
     @pytest.mark.unit
     def test_feature_gated_preserves_function_signature(self):
@@ -948,7 +922,9 @@ class TestFeatureFlagsTestMode:
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
+        # Disable test mode and the feature we're testing
         monkeypatch.setenv("FF_TEST_MODE", "false")
+        monkeypatch.setenv("FF_ENABLE_SKILLS_SYSTEM", "false")
         flags = FeatureFlags()
 
         with pytest.raises(FeatureDisabledError):
@@ -960,7 +936,9 @@ class TestFeatureFlagsTestMode:
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
+        # Remove test mode and disable the feature we're testing
         monkeypatch.delenv("FF_TEST_MODE", raising=False)
+        monkeypatch.setenv("FF_ENABLE_SKILLS_SYSTEM", "false")
         flags = FeatureFlags()
 
         with pytest.raises(FeatureDisabledError):
@@ -1162,3 +1140,316 @@ class TestHITLFeatureFlags:
         assert admin_features["agent_hitl"] is True
         assert user_features["agent_hitl"] is True
         assert viewer_features["agent_hitl"] is True
+
+
+@pytest.mark.xdist_group(name="feature_flags_redis_l2")
+class TestFrontendRedisL2CacheFeatureFlags:
+    """Test frontend Redis L2 cache feature flags for tiered caching."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_enable_frontend_redis_l2_cache_default_false(self):
+        """Test that frontend Redis L2 cache is disabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_frontend_redis_l2_cache is False
+
+    @pytest.mark.unit
+    def test_enable_frontend_redis_l2_cache_can_be_enabled(self):
+        """Test that frontend Redis L2 cache can be enabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_frontend_redis_l2_cache=True)
+        assert flags.enable_frontend_redis_l2_cache is True
+
+    @pytest.mark.unit
+    def test_frontend_redis_l2_cache_ttl_default(self):
+        """Test default TTL for frontend Redis L2 cache."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.frontend_redis_l2_cache_ttl_seconds == 300  # 5 minutes
+
+    @pytest.mark.unit
+    def test_frontend_redis_l2_cache_ttl_configurable(self):
+        """Test that TTL for frontend Redis L2 cache is configurable."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(frontend_redis_l2_cache_ttl_seconds=600)
+        assert flags.frontend_redis_l2_cache_ttl_seconds == 600
+
+    @pytest.mark.unit
+    def test_frontend_redis_l2_cache_ttl_validation(self):
+        """Test TTL validation bounds (60s-3600s)."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        # Valid range
+        flags_min = FeatureFlags(frontend_redis_l2_cache_ttl_seconds=60)
+        assert flags_min.frontend_redis_l2_cache_ttl_seconds == 60
+
+        flags_max = FeatureFlags(frontend_redis_l2_cache_ttl_seconds=3600)
+        assert flags_max.frontend_redis_l2_cache_ttl_seconds == 3600
+
+    @pytest.mark.unit
+    def test_enable_frontend_redis_l2_cache_rate_limiting_default(self):
+        """Test that rate limiting for frontend Redis L2 cache is enabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_frontend_redis_l2_rate_limiting is True
+
+    @pytest.mark.unit
+    def test_frontend_redis_l2_rate_limit_configurable(self):
+        """Test that rate limit for frontend Redis L2 cache is configurable."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(frontend_redis_l2_rate_limit_per_minute=120)
+        assert flags.frontend_redis_l2_rate_limit_per_minute == 120
+
+    @pytest.mark.unit
+    def test_get_ui_features_includes_frontend_redis_l2_cache(self):
+        """Test that UI features include frontend Redis L2 cache flag."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        features = flags.get_ui_features_for_role("admin")
+
+        assert "frontend_redis_l2_cache" in features
+
+    @pytest.mark.unit
+    def test_frontend_redis_l2_cache_available_for_all_roles(self):
+        """Test that frontend Redis L2 cache is available to all roles when enabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_frontend_redis_l2_cache=True)
+
+        admin_features = flags.get_ui_features_for_role("admin")
+        user_features = flags.get_ui_features_for_role("user")
+
+        assert admin_features["frontend_redis_l2_cache"] is True
+        assert user_features["frontend_redis_l2_cache"] is True
+
+
+@pytest.mark.xdist_group(name="feature_flags_intelligence")
+class TestGranularIntelligenceFeatureFlags:
+    """Test granular intelligence feature flags for HybridShell AI capabilities.
+
+    These flags provide fine-grained control over AI intelligence features:
+    - Session Intelligence (summarize, group, similarity)
+    - Conversation Intelligence (intent, context, goal)
+    - Canvas Intelligence (artifact, code, diff)
+    - Diagram Intelligence (analyze, to-code)
+    - Trace Intelligence (summarize, anomaly)
+    - HITL AI (risk assessment, decision history)
+    - Generative UI (dynamic component rendering)
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_enable_session_intelligence_default_false(self):
+        """Test that session intelligence is disabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_session_intelligence is False
+
+    @pytest.mark.unit
+    def test_enable_session_intelligence_can_be_enabled(self):
+        """Test that session intelligence can be enabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_session_intelligence=True)
+        assert flags.enable_session_intelligence is True
+
+    @pytest.mark.unit
+    def test_enable_conversation_intelligence_default_false(self):
+        """Test that conversation intelligence is disabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_conversation_intelligence is False
+
+    @pytest.mark.unit
+    def test_enable_conversation_intelligence_can_be_enabled(self):
+        """Test that conversation intelligence can be enabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_conversation_intelligence=True)
+        assert flags.enable_conversation_intelligence is True
+
+    @pytest.mark.unit
+    def test_enable_canvas_intelligence_default_false(self):
+        """Test that canvas intelligence is disabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_canvas_intelligence is False
+
+    @pytest.mark.unit
+    def test_enable_canvas_intelligence_can_be_enabled(self):
+        """Test that canvas intelligence can be enabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_canvas_intelligence=True)
+        assert flags.enable_canvas_intelligence is True
+
+    @pytest.mark.unit
+    def test_enable_diagram_intelligence_default_false(self):
+        """Test that diagram intelligence is disabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_diagram_intelligence is False
+
+    @pytest.mark.unit
+    def test_enable_diagram_intelligence_can_be_enabled(self):
+        """Test that diagram intelligence can be enabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_diagram_intelligence=True)
+        assert flags.enable_diagram_intelligence is True
+
+    @pytest.mark.unit
+    def test_enable_trace_intelligence_default_false(self):
+        """Test that trace intelligence is disabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_trace_intelligence is False
+
+    @pytest.mark.unit
+    def test_enable_trace_intelligence_can_be_enabled(self):
+        """Test that trace intelligence can be enabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_trace_intelligence=True)
+        assert flags.enable_trace_intelligence is True
+
+    @pytest.mark.unit
+    def test_enable_hitl_ai_default_false(self):
+        """Test that HITL AI is disabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_hitl_ai is False
+
+    @pytest.mark.unit
+    def test_enable_hitl_ai_can_be_enabled(self):
+        """Test that HITL AI can be enabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_hitl_ai=True)
+        assert flags.enable_hitl_ai is True
+
+    @pytest.mark.unit
+    def test_enable_genui_default_false(self):
+        """Test that generative UI is disabled by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_genui is False
+
+    @pytest.mark.unit
+    def test_enable_genui_can_be_enabled(self):
+        """Test that generative UI can be enabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_genui=True)
+        assert flags.enable_genui is True
+
+    @pytest.mark.unit
+    def test_granular_flags_require_studio_ai_master_flag(self):
+        """Test that granular flags only take effect when enable_studio_ai is True."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        # Granular flags enabled but master disabled - should report not ready
+        flags = FeatureFlags(
+            enable_studio_ai=False,
+            enable_session_intelligence=True,
+            enable_canvas_intelligence=True,
+        )
+        # Granular flags still have their values
+        assert flags.enable_session_intelligence is True
+        assert flags.enable_canvas_intelligence is True
+        # But master flag is off
+        assert flags.enable_studio_ai is False
+
+    @pytest.mark.unit
+    def test_all_granular_flags_enabled_together(self):
+        """Test enabling all granular intelligence flags together."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(
+            enable_studio_ai=True,
+            enable_session_intelligence=True,
+            enable_conversation_intelligence=True,
+            enable_canvas_intelligence=True,
+            enable_diagram_intelligence=True,
+            enable_trace_intelligence=True,
+            enable_hitl_ai=True,
+            enable_genui=True,
+        )
+        assert flags.enable_studio_ai is True
+        assert flags.enable_session_intelligence is True
+        assert flags.enable_conversation_intelligence is True
+        assert flags.enable_canvas_intelligence is True
+        assert flags.enable_diagram_intelligence is True
+        assert flags.enable_trace_intelligence is True
+        assert flags.enable_hitl_ai is True
+        assert flags.enable_genui is True
+
+    @pytest.mark.unit
+    def test_get_ui_features_includes_intelligence_flags(self):
+        """Test that UI features include intelligence flags."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        features = flags.get_ui_features_for_role("admin")
+
+        # Verify intelligence flags are included in UI features
+        assert "session_intelligence" in features
+        assert "conversation_intelligence" in features
+        assert "canvas_intelligence" in features
+        assert "diagram_intelligence" in features
+        assert "trace_intelligence" in features
+        assert "hitl_ai" in features
+        assert "genui" in features
+
+    @pytest.mark.unit
+    def test_intelligence_flags_in_ui_features_default_false(self):
+        """Test that intelligence flags in UI features are False by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        features = flags.get_ui_features_for_role("admin")
+
+        assert features["session_intelligence"] is False
+        assert features["conversation_intelligence"] is False
+        assert features["canvas_intelligence"] is False
+        assert features["diagram_intelligence"] is False
+        assert features["trace_intelligence"] is False
+        assert features["hitl_ai"] is False
+        assert features["genui"] is False
+
+    @pytest.mark.unit
+    def test_intelligence_flags_in_ui_features_when_enabled(self):
+        """Test that intelligence flags appear in UI features when enabled."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(
+            enable_session_intelligence=True,
+            enable_canvas_intelligence=True,
+        )
+        features = flags.get_ui_features_for_role("admin")
+
+        assert features["session_intelligence"] is True
+        assert features["canvas_intelligence"] is True
+        # Others still False
+        assert features["conversation_intelligence"] is False
