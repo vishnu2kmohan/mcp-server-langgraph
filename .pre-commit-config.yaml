@@ -123,6 +123,20 @@ repos:
     types: [python]
     stages:
     - pre-push
+  - id: check-type-checking-cast
+    name: Validate TYPE_CHECKING cast() usage
+    description: 'Detects unsafe cast() calls using types only imported under TYPE_CHECKING.
+
+      Problem: cast(SomeType, val) fails at runtime when SomeType is only
+      imported under TYPE_CHECKING (NameError).
+      Fix: Use string forward references: cast("SomeType", val)
+
+      '
+    entry: uv run --frozen python -u scripts/validation/check_type_checking_cast.py
+    language: system
+    types: [python]
+    stages:
+    - pre-push
   - id: uv-lock-check
     name: Validate uv.lock synchronized with pyproject.toml
     entry: bash -c 'uv lock --check || (echo "ERROR - uv.lock out of sync. Run uv lock"; exit 1)'
