@@ -7,107 +7,115 @@
  * Uses raw fetch() to validate API contract without RTK Query transformation.
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { http, HttpResponse } from "msw";
-import { setupServer } from "msw/node";
+import { server } from "../mocks/server";
 
 // =============================================================================
-// MSW Handlers for Agent Requests
+// MSW Handler Factory for Agent Requests
 // =============================================================================
 
-const agentRequestHandlers = [
-  // GET /api/v1/agents/requests/pending
-  http.get("/api/v1/agents/requests/pending", () => {
-    return HttpResponse.json({
-      requests: [
-        {
-          request_id: "req-001",
-          session_id: "session-123",
-          task_id: "task-456",
-          agent_name: "research_agent",
-          request_type: "approval",
-          confidence: 0.65,
-          threshold: 0.7,
-          question: "Should I execute this search?",
-          proposed_action: "web_search('AI ethics')",
-          trigger_reason: "low_confidence",
-          placeholder: null,
-          clarification_type: null,
-          options: null,
-          status: "pending",
-          requested_at: "2024-01-15T10:30:00Z",
-          responded_at: null,
-          responded_by: null,
-          context: { domain: "research" },
-          ai_explanation: null,
-        },
-      ],
-      count: 1,
-    });
-  }),
+/**
+ * Create default handlers for agent request endpoints.
+ * Uses server.use() to add handlers to the global MSW server.
+ */
+function setupAgentRequestHandlers() {
+  server.use(
+    // GET /api/v1/agents/requests/pending
+    http.get("/api/v1/agents/requests/pending", () => {
+      return HttpResponse.json({
+        requests: [
+          {
+            request_id: "req-001",
+            session_id: "session-123",
+            task_id: "task-456",
+            agent_name: "research_agent",
+            request_type: "approval",
+            confidence: 0.65,
+            threshold: 0.7,
+            question: "Should I execute this search?",
+            proposed_action: "web_search('AI ethics')",
+            trigger_reason: "low_confidence",
+            placeholder: null,
+            clarification_type: null,
+            options: null,
+            status: "pending",
+            requested_at: "2024-01-15T10:30:00Z",
+            responded_at: null,
+            responded_by: null,
+            context: { domain: "research" },
+            ai_explanation: null,
+          },
+        ],
+        count: 1,
+      });
+    }),
 
-  // POST /api/v1/agents/requests/:id/approve
-  http.post("/api/v1/agents/requests/:id/approve", async ({ request, params }) => {
-    const body = await request.json();
-    return HttpResponse.json({
-      request_id: params.id as string,
-      status: "approved",
-      message: `Request approved by ${(body as { approved_by: string }).approved_by}`,
-    });
-  }),
-
-  // POST /api/v1/agents/requests/:id/reject
-  http.post("/api/v1/agents/requests/:id/reject", async ({ request, params }) => {
-    const body = await request.json();
-    return HttpResponse.json({
-      request_id: params.id as string,
-      status: "rejected",
-      message: `Request rejected: ${(body as { reason: string }).reason}`,
-    });
-  }),
-
-  // POST /api/v1/agents/requests/:id/respond
-  http.post("/api/v1/agents/requests/:id/respond", async ({ params }) => {
-    return HttpResponse.json({
-      request_id: params.id as string,
-      status: "responded",
-      message: "Clarification received",
-    });
-  }),
-
-  // POST /api/v1/agents/requests/batch/approve
-  http.post("/api/v1/agents/requests/batch/approve", async ({ request }) => {
-    const body = (await request.json()) as { request_ids: string[] };
-    return HttpResponse.json({
-      approved_count: body.request_ids.length,
-      failed_count: 0,
-      results: body.request_ids.map((id) => ({
-        request_id: id,
+    // POST /api/v1/agents/requests/:id/approve
+    http.post("/api/v1/agents/requests/:id/approve", async ({ request, params }) => {
+      const body = await request.json();
+      return HttpResponse.json({
+        request_id: params.id as string,
         status: "approved",
-      })),
-    });
-  }),
+        message: `Request approved by ${(body as { approved_by: string }).approved_by}`,
+      });
+    }),
 
-  // POST /api/v1/agents/requests/batch/reject
-  http.post("/api/v1/agents/requests/batch/reject", async ({ request }) => {
-    const body = (await request.json()) as { request_ids: string[] };
-    return HttpResponse.json({
-      rejected_count: body.request_ids.length,
-      failed_count: 0,
-      results: body.request_ids.map((id) => ({
-        request_id: id,
+    // POST /api/v1/agents/requests/:id/reject
+    http.post("/api/v1/agents/requests/:id/reject", async ({ request, params }) => {
+      const body = await request.json();
+      return HttpResponse.json({
+        request_id: params.id as string,
         status: "rejected",
-      })),
-    });
-  }),
-];
+        message: `Request rejected: ${(body as { reason: string }).reason}`,
+      });
+    }),
 
-// MSW Server setup
-const server = setupServer(...agentRequestHandlers);
+    // POST /api/v1/agents/requests/:id/respond
+    http.post("/api/v1/agents/requests/:id/respond", async ({ params }) => {
+      return HttpResponse.json({
+        request_id: params.id as string,
+        status: "responded",
+        message: "Clarification received",
+      });
+    }),
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterAll(() => server.close());
-afterEach(() => server.resetHandlers());
+    // POST /api/v1/agents/requests/batch/approve
+    http.post("/api/v1/agents/requests/batch/approve", async ({ request }) => {
+      const body = (await request.json()) as { request_ids: string[] };
+      return HttpResponse.json({
+        approved_count: body.request_ids.length,
+        failed_count: 0,
+        results: body.request_ids.map((id) => ({
+          request_id: id,
+          status: "approved",
+        })),
+      });
+    }),
+
+    // POST /api/v1/agents/requests/batch/reject
+    http.post("/api/v1/agents/requests/batch/reject", async ({ request }) => {
+      const body = (await request.json()) as { request_ids: string[] };
+      return HttpResponse.json({
+        rejected_count: body.request_ids.length,
+        failed_count: 0,
+        results: body.request_ids.map((id) => ({
+          request_id: id,
+          status: "rejected",
+        })),
+      });
+    })
+  );
+}
+
+// Set up handlers before each test, reset after
+beforeEach(() => {
+  setupAgentRequestHandlers();
+});
+
+afterEach(() => {
+  server.resetHandlers();
+});
 
 // =============================================================================
 // Schema Type Definitions (matching backend Pydantic models)
