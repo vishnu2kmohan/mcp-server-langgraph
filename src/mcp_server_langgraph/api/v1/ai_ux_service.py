@@ -84,6 +84,25 @@ try:
         labelnames=["method"],
     )
 
+    # L1/L2 cache hit counters (tiered caching)
+    ai_ux_l1_cache_hits_total = Counter(
+        name="ai_ux_l1_cache_hits_total",
+        documentation="Total L1 (in-memory) cache hits in AI UX service",
+        labelnames=["method"],
+    )
+
+    ai_ux_l2_cache_hits_total = Counter(
+        name="ai_ux_l2_cache_hits_total",
+        documentation="Total L2 (Redis) cache hits in AI UX service",
+        labelnames=["method"],
+    )
+
+    ai_ux_cache_miss_total = Counter(
+        name="ai_ux_cache_miss_total",
+        documentation="Total cache misses (L1 and L2) in AI UX service",
+        labelnames=["method"],
+    )
+
     # WebSocket connections gauge
     ai_ux_websocket_connections = Gauge(
         name="ai_ux_websocket_connections",
@@ -157,6 +176,9 @@ except ImportError:
     ai_ux_llm_fallbacks_total = _MockCounter()  # type: ignore[assignment]
     ai_ux_llm_latency_seconds = _MockHistogram()  # type: ignore[assignment]
     ai_ux_cache_hits_total = _MockCounter()  # type: ignore[assignment]
+    ai_ux_l1_cache_hits_total = _MockCounter()  # type: ignore[assignment]
+    ai_ux_l2_cache_hits_total = _MockCounter()  # type: ignore[assignment]
+    ai_ux_cache_miss_total = _MockCounter()  # type: ignore[assignment]
     ai_ux_websocket_connections = _MockGauge()  # type: ignore[assignment]
     ai_ux_rate_limit_exceeded_total = _MockCounter()  # type: ignore[assignment]
     PROMETHEUS_AVAILABLE = False
@@ -2354,6 +2376,241 @@ Compare with last period and generate actionable insights."""
             logger.warning(f"Redis cache set failed: {e}")
 
     # =========================================================================
+    # Tiered Cache Methods (L1 TTLCache + L2 Redis)
+    # =========================================================================
+
+    def generate_cache_key(self, method: str, **kwargs: Any) -> str:
+        """
+        Generate a deterministic cache key from method and parameters.
+
+        User-specific analyses include user_id in the key.
+        User-independent analyses (e.g., error_analysis) use only the content.
+
+        Args:
+            method: The analysis method name
+            **kwargs: Parameters to include in the key
+
+        Returns:
+            A deterministic cache key string
+        """
+        # User-specific methods that should include user_id in cache key
+        user_specific_methods = {
+            "persona_analysis",
+            "disclosure_analysis",
+            "nudge_recommendation",
+            "onboarding_personalization",
+        }
+
+        # Build key components
+        key_parts = [method]
+
+        # Include user_id only for user-specific methods
+        if method in user_specific_methods and "user_id" in kwargs:
+            key_parts.append(f"user:{kwargs['user_id']}")
+
+        # Sort and add other parameters (excluding user_id if already added)
+        for k, v in sorted(kwargs.items()):
+            if k == "user_id" and method in user_specific_methods:
+                continue  # Already added
+            if v is not None:
+                # Convert complex types to string
+                if isinstance(v, (dict, list)):
+                    v = hashlib.md5(json.dumps(v, sort_keys=True).encode()).hexdigest()[:8]
+                key_parts.append(f"{k}:{v}")
+
+        return ":".join(key_parts)
+
+    async def get_tiered_cached_response(
+        self,
+        cache_key: str,
+        method: str = "unknown",
+        stale_threshold_seconds: int | None = None,
+    ) -> Any | None:
+        """
+        Get cached response using L1/L2 tiered lookup.
+
+        Lookup flow:
+        1. Check L1 (in-memory TTLCache) - if hit, return immediately
+        2. If L1 miss, check L2 (Redis) - if hit, populate L1 and return
+        3. If L2 miss, return None
+
+        Args:
+            cache_key: The cache key to look up
+            method: Method name for metrics labeling
+            stale_threshold_seconds: Optional threshold for stale-while-revalidate
+
+        Returns:
+            Cached response if found, None otherwise
+        """
+        # L1 lookup (in-memory TTLCache)
+        l1_result = self._response_cache.get(cache_key)
+        if l1_result is not None:
+            ai_ux_l1_cache_hits_total.labels(method=method).inc()
+            logger.debug(f"L1 cache hit for {method}: {cache_key}")
+            return l1_result
+
+        # L2 lookup (Redis) if available
+        if self.redis_cache is not None:
+            try:
+                cached = await self.redis_cache.get(f"ai_ux:{cache_key}")
+                if cached:
+                    # Decode and parse JSON
+                    if isinstance(cached, bytes):
+                        cached = cached.decode("utf-8")
+                    data = json.loads(cached)
+
+                    # Populate L1 cache
+                    self._response_cache[cache_key] = data
+
+                    ai_ux_l2_cache_hits_total.labels(method=method).inc()
+                    logger.debug(f"L2 cache hit for {method}: {cache_key}")
+
+                    # Stale-while-revalidate check
+                    if stale_threshold_seconds is not None:
+                        try:
+                            ttl = await self.redis_cache.ttl(f"ai_ux:{cache_key}")
+                            if ttl is not None and ttl < stale_threshold_seconds:
+                                logger.debug(
+                                    f"Cache entry near expiry (TTL: {ttl}s), "
+                                    f"threshold: {stale_threshold_seconds}s"
+                                )
+                                # Note: Actual background revalidation would be
+                                # triggered by the caller
+                        except Exception as e:
+                            logger.debug(f"TTL check failed: {e}")
+
+                    return data
+            except json.JSONDecodeError as e:
+                logger.warning(f"L2 cache JSON decode error for {cache_key}: {e}")
+            except Exception as e:
+                logger.warning(f"L2 cache lookup failed for {cache_key}: {e}")
+
+        ai_ux_cache_miss_total.labels(method=method).inc()
+        return None
+
+    async def set_tiered_cached_response(
+        self,
+        cache_key: str,
+        response: Any,
+        method: str = "unknown",
+        ttl: int | None = None,
+    ) -> None:
+        """
+        Store response in both L1 and L2 caches.
+
+        Args:
+            cache_key: The cache key
+            response: The response to cache
+            method: Method name for logging
+            ttl: Time-to-live in seconds for L2 (defaults to settings value)
+        """
+        # L1 store (in-memory TTLCache)
+        self._response_cache[cache_key] = response
+        logger.debug(f"L1 cache set for {method}: {cache_key}")
+
+        # L2 store (Redis) if available
+        if self.redis_cache is not None:
+            try:
+                ttl_seconds = ttl or getattr(
+                    self.settings, "ai_ux_redis_cache_ttl_seconds", 300
+                )
+                await self.redis_cache.setex(
+                    f"ai_ux:{cache_key}",
+                    ttl_seconds,
+                    json.dumps(response),
+                )
+                logger.debug(f"L2 cache set for {method}: {cache_key} (TTL: {ttl_seconds}s)")
+            except Exception as e:
+                logger.warning(f"L2 cache set failed for {cache_key}: {e}")
+
+    async def invalidate_user_cache(self, user_id: str) -> int:
+        """
+        Invalidate all cache entries for a specific user.
+
+        Clears entries from both L1 and L2 caches.
+
+        Args:
+            user_id: The user ID to invalidate cache for
+
+        Returns:
+            Number of entries deleted
+        """
+        deleted_count = 0
+
+        # L1 invalidation (in-memory)
+        keys_to_delete = [
+            k for k in list(self._response_cache.keys())
+            if f"user-{user_id}" in str(k) or f":{user_id}:" in str(k)
+            or str(k).startswith(f"{user_id}:")
+        ]
+        for key in keys_to_delete:
+            del self._response_cache[key]
+            deleted_count += 1
+
+        # L2 invalidation (Redis) if available
+        if self.redis_cache is not None:
+            try:
+                cursor = 0
+                pattern = f"ai_ux:*user:{user_id}*"
+                while True:
+                    cursor, keys = await self.redis_cache.scan(
+                        cursor, match=pattern, count=100
+                    )
+                    if keys:
+                        await self.redis_cache.delete(*keys)
+                        deleted_count += len(keys)
+                    if cursor == 0:
+                        break
+            except Exception as e:
+                logger.warning(f"L2 cache invalidation failed for user {user_id}: {e}")
+
+        logger.info(f"Invalidated {deleted_count} cache entries for user {user_id}")
+        return deleted_count
+
+    async def invalidate_method_cache(self, method: str) -> int:
+        """
+        Invalidate all cache entries for a specific method.
+
+        Clears entries from both L1 and L2 caches.
+
+        Args:
+            method: The method name to invalidate cache for
+
+        Returns:
+            Number of entries deleted
+        """
+        deleted_count = 0
+
+        # L1 invalidation (in-memory)
+        keys_to_delete = [
+            k for k in list(self._response_cache.keys())
+            if str(k).startswith(f"{method}:")
+        ]
+        for key in keys_to_delete:
+            del self._response_cache[key]
+            deleted_count += 1
+
+        # L2 invalidation (Redis) if available
+        if self.redis_cache is not None:
+            try:
+                cursor = 0
+                pattern = f"ai_ux:{method}:*"
+                while True:
+                    cursor, keys = await self.redis_cache.scan(
+                        cursor, match=pattern, count=100
+                    )
+                    if keys:
+                        await self.redis_cache.delete(*keys)
+                        deleted_count += len(keys)
+                    if cursor == 0:
+                        break
+            except Exception as e:
+                logger.warning(f"L2 cache invalidation failed for method {method}: {e}")
+
+        logger.info(f"Invalidated {deleted_count} cache entries for method {method}")
+        return deleted_count
+
+    # =========================================================================
     # WebSocket Methods
     # =========================================================================
 
@@ -3285,6 +3542,356 @@ Compare with last period and generate actionable insights."""
             "total_similar": total_count,
             "average_decision_time_ms": 15000,  # Placeholder
             "suggested_action": suggested_action,
+        }
+
+    # =========================================================================
+    # UX Intelligence Methods (Sprint 6)
+    # =========================================================================
+
+    async def predict_navigation(
+        self,
+        user_id: str,
+        current_page: str,
+        recent_pages: list[str],
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Predict and reorder navigation items based on user behavior.
+
+        Uses AI to predict which navigation items the user is likely to access
+        next based on their current context and recent browsing patterns.
+
+        Args:
+            user_id: User identifier
+            current_page: The current page the user is on
+            recent_pages: List of recently visited pages
+            **kwargs: Additional parameters
+
+        Returns:
+            Navigation prediction with predicted items, context, and confidence
+        """
+        # Analyze navigation patterns and predict next likely destinations
+        # In production, this would use actual usage analytics data
+
+        # Default predictions based on common patterns
+        page_predictions = {
+            "admin": [
+                {"id": "agents", "score": 0.85, "reason": "Common admin workflow"},
+                {"id": "audit", "score": 0.75, "reason": "Frequently accessed after admin tasks"},
+                {"id": "compliance", "score": 0.60, "reason": "Related to admin duties"},
+            ],
+            "chat": [
+                {"id": "agents", "score": 0.90, "reason": "Most common next action"},
+                {"id": "observability", "score": 0.70, "reason": "Debug chat issues"},
+                {"id": "flows", "score": 0.55, "reason": "Workflow creation from chat"},
+            ],
+            "observability": [
+                {"id": "traces", "score": 0.85, "reason": "Deep dive into traces"},
+                {"id": "chat", "score": 0.65, "reason": "Return to chat after debugging"},
+                {"id": "costs", "score": 0.50, "reason": "Cost analysis after trace review"},
+            ],
+        }
+
+        predicted_items = page_predictions.get(
+            current_page,
+            [
+                {"id": "chat", "score": 0.80, "reason": "Default starting point"},
+                {"id": "help", "score": 0.60, "reason": "New context exploration"},
+            ],
+        )
+
+        # Boost scores for recently visited pages
+        for item in predicted_items:
+            if item["id"] in recent_pages[-3:]:
+                item["score"] = min(1.0, item["score"] + 0.1)
+                item["reason"] = "Recently accessed"
+
+        # Determine context based on current page
+        context_mapping = {
+            "admin": "administrative_tasks",
+            "chat": "conversation_mode",
+            "observability": "debugging_session",
+            "agents": "agent_management",
+            "compliance": "compliance_review",
+        }
+        current_context = context_mapping.get(current_page, "general_exploration")
+
+        # Calculate overall confidence
+        confidence = max((item["score"] for item in predicted_items), default=0.5)
+
+        return {
+            "predicted_items": predicted_items,
+            "current_context": current_context,
+            "confidence": round(confidence, 2),
+        }
+
+    async def get_contextual_help(
+        self,
+        user_id: str,
+        current_page: str,
+        active_feature: str,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Get context-aware help content based on user's current context.
+
+        Provides relevant help topics, quick actions, and suggested reading
+        based on where the user is in the application and what they're doing.
+
+        Args:
+            user_id: User identifier
+            current_page: The current page the user is on
+            active_feature: The feature currently being used
+            **kwargs: Additional parameters
+
+        Returns:
+            Contextual help with topics, actions, and suggested reading
+        """
+        # Map pages/features to relevant help content
+        help_content = {
+            "admin": {
+                "agent-approvals": {
+                    "help_topics": [
+                        {
+                            "id": "agent-approval-workflow",
+                            "title": "How Agent Approvals Work",
+                            "summary": "Understand the HITL approval workflow for agent actions",
+                            "relevance": 0.95,
+                        },
+                        {
+                            "id": "risk-assessment",
+                            "title": "Understanding Risk Scores",
+                            "summary": "Learn how risk is calculated for agent requests",
+                            "relevance": 0.85,
+                        },
+                        {
+                            "id": "batch-approvals",
+                            "title": "Batch Approval Guide",
+                            "summary": "Efficiently handle multiple approval requests",
+                            "relevance": 0.70,
+                        },
+                    ],
+                    "quick_actions": [
+                        {"label": "View pending approvals", "action": "navigate:/admin"},
+                        {"label": "Check audit log", "action": "navigate:/audit"},
+                        {"label": "Configure thresholds", "action": "modal:threshold-settings"},
+                    ],
+                    "suggested_reading": [
+                        "docs/hitl-workflow.md",
+                        "docs/risk-assessment.md",
+                        "docs/admin-guide.md",
+                    ],
+                },
+            },
+            "chat": {
+                "": {
+                    "help_topics": [
+                        {
+                            "id": "chat-basics",
+                            "title": "Chat Fundamentals",
+                            "summary": "Learn to interact effectively with the AI assistant",
+                            "relevance": 0.90,
+                        },
+                        {
+                            "id": "prompt-engineering",
+                            "title": "Prompt Engineering Tips",
+                            "summary": "Write better prompts for better results",
+                            "relevance": 0.75,
+                        },
+                    ],
+                    "quick_actions": [
+                        {"label": "Start new chat", "action": "action:new-chat"},
+                        {"label": "View history", "action": "panel:session-history"},
+                    ],
+                    "suggested_reading": [
+                        "docs/chat-guide.md",
+                        "docs/prompting-guide.md",
+                    ],
+                },
+            },
+            "observability": {
+                "": {
+                    "help_topics": [
+                        {
+                            "id": "trace-analysis",
+                            "title": "Trace Analysis Guide",
+                            "summary": "Understand and debug agent execution traces",
+                            "relevance": 0.92,
+                        },
+                        {
+                            "id": "metrics-dashboard",
+                            "title": "Metrics Dashboard Overview",
+                            "summary": "Navigate the metrics and monitoring dashboards",
+                            "relevance": 0.80,
+                        },
+                    ],
+                    "quick_actions": [
+                        {"label": "View recent traces", "action": "navigate:/traces"},
+                        {"label": "Check metrics", "action": "navigate:/metrics"},
+                    ],
+                    "suggested_reading": [
+                        "docs/observability-guide.md",
+                        "docs/debugging-agents.md",
+                    ],
+                },
+            },
+        }
+
+        # Get help for current page and feature
+        page_help = help_content.get(current_page, {})
+        feature_help = page_help.get(active_feature, page_help.get("", {}))
+
+        if not feature_help:
+            # Default help content
+            feature_help = {
+                "help_topics": [
+                    {
+                        "id": "getting-started",
+                        "title": "Getting Started",
+                        "summary": "Learn the basics of using this application",
+                        "relevance": 0.80,
+                    },
+                ],
+                "quick_actions": [
+                    {"label": "Open help center", "action": "navigate:/help"},
+                ],
+                "suggested_reading": ["docs/getting-started.md"],
+            }
+
+        return {
+            "help_topics": feature_help.get("help_topics", []),
+            "quick_actions": feature_help.get("quick_actions", []),
+            "suggested_reading": feature_help.get("suggested_reading", []),
+        }
+
+    async def get_learning_path(
+        self,
+        user_id: str,
+        persona: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Get personalized learning recommendations based on usage.
+
+        Provides a learning path tailored to the user's current skill level,
+        completed items, and persona-specific learning goals.
+
+        Args:
+            user_id: User identifier
+            persona: Optional persona for persona-specific recommendations
+            **kwargs: Additional parameters
+
+        Returns:
+            Learning path with progress, next steps, and recommendations
+        """
+        # In production, this would query user activity and progress data
+        # For now, provide reasonable defaults based on persona
+
+        persona_paths = {
+            "alice-builder": {
+                "current_level": "intermediate",
+                "progress_percentage": 65,
+                "next_steps": [
+                    {
+                        "id": "custom-agents",
+                        "title": "Configure custom agents",
+                        "description": "Learn to create and configure your own agents",
+                        "estimated_time_min": 15,
+                        "priority": "high",
+                    },
+                    {
+                        "id": "mcp-connections",
+                        "title": "Set up MCP connections",
+                        "description": "Connect external tools via MCP protocol",
+                        "estimated_time_min": 20,
+                        "priority": "medium",
+                    },
+                    {
+                        "id": "workflow-templates",
+                        "title": "Use workflow templates",
+                        "description": "Leverage pre-built workflow templates",
+                        "estimated_time_min": 10,
+                        "priority": "low",
+                    },
+                ],
+                "completed_items": ["basic-chat", "first-agent", "session-management"],
+                "recommended_features": ["batch-approvals", "agent-monitoring", "custom-prompts"],
+            },
+            "alice-analyst": {
+                "current_level": "intermediate",
+                "progress_percentage": 55,
+                "next_steps": [
+                    {
+                        "id": "trace-analysis",
+                        "title": "Master trace analysis",
+                        "description": "Deep dive into agent execution traces",
+                        "estimated_time_min": 25,
+                        "priority": "high",
+                    },
+                    {
+                        "id": "cost-optimization",
+                        "title": "Optimize costs",
+                        "description": "Reduce token usage and costs",
+                        "estimated_time_min": 15,
+                        "priority": "high",
+                    },
+                ],
+                "completed_items": ["basic-chat", "dashboard-navigation", "metrics-basics"],
+                "recommended_features": ["cost-reports", "trace-export", "anomaly-alerts"],
+            },
+            "admin": {
+                "current_level": "advanced",
+                "progress_percentage": 80,
+                "next_steps": [
+                    {
+                        "id": "advanced-rbac",
+                        "title": "Advanced RBAC configuration",
+                        "description": "Fine-grained permission management",
+                        "estimated_time_min": 30,
+                        "priority": "medium",
+                    },
+                    {
+                        "id": "compliance-setup",
+                        "title": "Compliance configuration",
+                        "description": "Set up compliance monitoring and reporting",
+                        "estimated_time_min": 45,
+                        "priority": "low",
+                    },
+                ],
+                "completed_items": ["user-management", "agent-approvals", "audit-logs", "basic-compliance"],
+                "recommended_features": ["sso-integration", "audit-export", "compliance-reports"],
+            },
+        }
+
+        # Default learning path for unknown personas
+        default_path = {
+            "current_level": "beginner",
+            "progress_percentage": 20,
+            "next_steps": [
+                {
+                    "id": "getting-started",
+                    "title": "Complete getting started guide",
+                    "description": "Learn the basics of the application",
+                    "estimated_time_min": 10,
+                    "priority": "high",
+                },
+                {
+                    "id": "first-chat",
+                    "title": "Start your first chat",
+                    "description": "Have your first conversation with the AI",
+                    "estimated_time_min": 5,
+                    "priority": "high",
+                },
+            ],
+            "completed_items": ["account-setup"],
+            "recommended_features": ["chat", "help", "settings"],
+        }
+
+        path = persona_paths.get(persona or "", default_path)
+
+        return {
+            "current_level": path["current_level"],
+            "progress_percentage": path["progress_percentage"],
+            "next_steps": path["next_steps"],
+            "completed_items": path["completed_items"],
+            "recommended_features": path["recommended_features"],
         }
 
     # =========================================================================

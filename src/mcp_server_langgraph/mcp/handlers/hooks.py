@@ -7,12 +7,21 @@ Exposes hook management capabilities via MCP tool protocol:
 - hooks/register - Register a webhook (admin only)
 - hooks/unregister - Unregister a webhook (admin only)
 
+Rate Limiting:
+- Per-user rate limit: 10 registrations per minute
+- Per-user rate limit: 20 unregistrations per minute
+- Rate limits are configurable via environment variables
+
 Reference: https://modelcontextprotocol.io/specification/2025-11-25/server/tools
 """
 
 from __future__ import annotations
 
 import json
+import logging
+import os
+import threading
+import time
 from typing import TYPE_CHECKING, Any
 
 from mcp.types import TextContent
@@ -22,6 +31,109 @@ from mcp_server_langgraph.core.hook_registry import HookEvent, HookMatcher
 if TYPE_CHECKING:
     from mcp_server_langgraph.auth.middleware import AuthMiddleware
     from mcp_server_langgraph.core.hook_registry import HookRegistry
+
+logger = logging.getLogger(__name__)
+
+# =============================================================================
+# Rate Limiting Configuration
+# =============================================================================
+
+# Default rate limits (per minute)
+HOOK_REGISTER_RATE_LIMIT = int(os.getenv("HOOK_REGISTER_RATE_LIMIT_RPM", "10"))
+HOOK_UNREGISTER_RATE_LIMIT = int(os.getenv("HOOK_UNREGISTER_RATE_LIMIT_RPM", "20"))
+
+
+class SimpleRateLimiter:
+    """Simple per-user rate limiter using sliding window.
+
+    Uses a sliding window counter approach for simplicity.
+    Thread-safe for concurrent access.
+
+    Attributes:
+        max_requests: Maximum requests allowed in window
+        window_seconds: Time window in seconds (default: 60)
+    """
+
+    def __init__(self, max_requests: int, window_seconds: float = 60.0) -> None:
+        """Initialize rate limiter.
+
+        Args:
+            max_requests: Maximum requests per window
+            window_seconds: Window duration in seconds
+        """
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self._user_windows: dict[str, list[float]] = {}
+        self._lock = threading.Lock()
+
+    def check_rate_limit(self, user_id: str) -> tuple[bool, int]:
+        """Check if user is within rate limit.
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            Tuple of (allowed, remaining_requests)
+        """
+        now = time.monotonic()
+        window_start = now - self.window_seconds
+
+        with self._lock:
+            # Get or create user's request timestamps
+            timestamps = self._user_windows.get(user_id, [])
+
+            # Remove expired timestamps
+            timestamps = [ts for ts in timestamps if ts > window_start]
+
+            # Check if within limit
+            remaining = self.max_requests - len(timestamps)
+            allowed = remaining > 0
+
+            if allowed:
+                # Record this request
+                timestamps.append(now)
+                self._user_windows[user_id] = timestamps
+
+            return allowed, max(0, remaining - 1) if allowed else 0
+
+    def reset(self, user_id: str | None = None) -> None:
+        """Reset rate limit for user or all users.
+
+        Args:
+            user_id: Specific user to reset, or None for all users
+        """
+        with self._lock:
+            if user_id is None:
+                self._user_windows.clear()
+            elif user_id in self._user_windows:
+                del self._user_windows[user_id]
+
+
+# Global rate limiters (singleton per handler type)
+_register_rate_limiter: SimpleRateLimiter | None = None
+_unregister_rate_limiter: SimpleRateLimiter | None = None
+
+
+def get_register_rate_limiter() -> SimpleRateLimiter:
+    """Get the global register rate limiter."""
+    global _register_rate_limiter
+    if _register_rate_limiter is None:
+        _register_rate_limiter = SimpleRateLimiter(
+            max_requests=HOOK_REGISTER_RATE_LIMIT,
+            window_seconds=60.0,
+        )
+    return _register_rate_limiter
+
+
+def get_unregister_rate_limiter() -> SimpleRateLimiter:
+    """Get the global unregister rate limiter."""
+    global _unregister_rate_limiter
+    if _unregister_rate_limiter is None:
+        _unregister_rate_limiter = SimpleRateLimiter(
+            max_requests=HOOK_UNREGISTER_RATE_LIMIT,
+            window_seconds=60.0,
+        )
+    return _unregister_rate_limiter
 
 
 # =============================================================================
@@ -200,6 +312,21 @@ class HooksToolHandler:
         if not authorized:
             return [TextContent(type="text", text="Unauthorized: admin role required")]
 
+        # Check rate limit for registrations
+        rate_limiter = get_register_rate_limiter()
+        allowed, remaining = rate_limiter.check_rate_limit(user_id)
+        if not allowed:
+            logger.warning(
+                "Hook registration rate limit exceeded",
+                extra={"user_id": user_id, "limit": HOOK_REGISTER_RATE_LIMIT},
+            )
+            return [
+                TextContent(
+                    type="text",
+                    text=f"Rate limit exceeded: maximum {HOOK_REGISTER_RATE_LIMIT} registrations per minute",
+                )
+            ]
+
         event_name = arguments.get("event")
         webhook_url = arguments.get("webhook_url")
         matcher_pattern = arguments.get("matcher")
@@ -217,17 +344,19 @@ class HooksToolHandler:
                 TextContent(type="text", text=f"Error: Unknown event '{event_name}'")
             ]
 
-        # Create a webhook callback (placeholder - actual implementation would make HTTP calls)
-        async def webhook_callback(
-            input_data: dict[str, Any],
-            tool_use_id: str | None,
-            context: Any,
-        ) -> Any:
-            """Webhook callback that would POST to the webhook URL."""
-            # In production, this would use httpx to POST to webhook_url
-            from mcp_server_langgraph.core.hooks import HookResult
+        # Create webhook callback using the webhook client
+        from mcp_server_langgraph.mcp.webhook_client import create_webhook_callback
 
-            return HookResult(behavior="allow")
+        # Get optional secret from arguments (for HMAC signing)
+        webhook_secret = arguments.get("secret")
+        webhook_timeout = arguments.get("timeout", 10.0)
+
+        webhook_callback = create_webhook_callback(
+            webhook_url=webhook_url,
+            event_name=event_name,
+            secret=webhook_secret,
+            timeout=webhook_timeout,
+        )
 
         # Register with hook registry
         self.registry.register(
@@ -265,6 +394,21 @@ class HooksToolHandler:
         )
         if not authorized:
             return [TextContent(type="text", text="Unauthorized: admin role required")]
+
+        # Check rate limit for unregistrations
+        rate_limiter = get_unregister_rate_limiter()
+        allowed, remaining = rate_limiter.check_rate_limit(user_id)
+        if not allowed:
+            logger.warning(
+                "Hook unregistration rate limit exceeded",
+                extra={"user_id": user_id, "limit": HOOK_UNREGISTER_RATE_LIMIT},
+            )
+            return [
+                TextContent(
+                    type="text",
+                    text=f"Rate limit exceeded: maximum {HOOK_UNREGISTER_RATE_LIMIT} unregistrations per minute",
+                )
+            ]
 
         event_name = arguments.get("event")
         if not event_name:
@@ -312,6 +456,15 @@ class HooksToolHandler:
                     "matcher": {
                         "type": "string",
                         "description": "Optional matcher pattern for register",
+                    },
+                    "secret": {
+                        "type": "string",
+                        "description": "Optional shared secret for HMAC-SHA256 webhook signing",
+                    },
+                    "timeout": {
+                        "type": "number",
+                        "description": "Webhook request timeout in seconds (default: 10.0)",
+                        "default": 10.0,
                     },
                 },
                 "required": ["operation"],

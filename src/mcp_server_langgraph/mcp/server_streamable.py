@@ -960,7 +960,10 @@ class MCPAgentStreamableServer:
             if feature_flags.enable_hooks_mcp_extension:
                 from mcp_server_langgraph.mcp.handlers.hooks import create_hooks_tool_handler
 
-                hooks_handler = create_hooks_tool_handler()
+                hooks_handler = create_hooks_tool_handler(
+                    auth=self.auth,
+                    agent_graph=self.agent_graph,
+                )
                 tool_def = hooks_handler.get_tool_definition()
                 tools.append(
                     Tool(
@@ -1126,9 +1129,9 @@ class MCPAgentStreamableServer:
                 elif name == "capture_screenshot":
                     return await self._handle_capture_screenshot(arguments, span, user_id)
                 elif name == "hooks":
-                    return await self._handle_hooks(arguments, span)
+                    return await self._handle_hooks(arguments, span, user_id)
                 elif name == "orchestration":
-                    return await self._handle_orchestration(arguments, span)
+                    return await self._handle_orchestration(arguments, span, user_id)
                 else:
                     msg = f"Unknown tool: {name}"
                     raise ValueError(msg)
@@ -1672,12 +1675,14 @@ class MCPAgentStreamableServer:
         self,
         arguments: dict[str, Any],
         span: Any,
+        user_id: str,
     ) -> list[TextContent]:
         """Handle hooks tool for listing registered hooks and available events.
 
         Args:
-            arguments: Tool arguments with 'operation' (list|events) and optional 'event' filter
+            arguments: Tool arguments with 'operation' (list|events|register|unregister)
             span: Tracing span for observability
+            user_id: Authenticated user ID for authorization checks
 
         Returns:
             JSON-formatted list of hooks or events
@@ -1685,15 +1690,17 @@ class MCPAgentStreamableServer:
         with tracer.start_as_current_span("tools.hooks"):
             from mcp_server_langgraph.mcp.handlers.hooks import create_hooks_tool_handler
 
-            operation = arguments.get("operation", "list")
-            handler = create_hooks_tool_handler()
-            result = await handler.handle_operation(operation, arguments)
-            return [TextContent(type="text", text=json.dumps(result))]
+            handler = create_hooks_tool_handler(
+                auth=self.auth,
+                agent_graph=self.agent_graph,
+            )
+            return await handler.handle(arguments, span, user_id)
 
     async def _handle_orchestration(
         self,
         arguments: dict[str, Any],
         span: Any,
+        user_id: str,
     ) -> list[TextContent]:
         """Handle orchestration tool for multi-agent task decomposition and execution.
 
@@ -1701,6 +1708,7 @@ class MCPAgentStreamableServer:
             arguments: Tool arguments with 'operation' (decompose|execute|status|cancel)
                       and task-specific parameters
             span: Tracing span for observability
+            user_id: Authenticated user ID (reserved for future authorization)
 
         Returns:
             JSON-formatted orchestration result
