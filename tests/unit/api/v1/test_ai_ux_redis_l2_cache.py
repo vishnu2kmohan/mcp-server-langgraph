@@ -439,7 +439,7 @@ class TestCacheMetrics:
 
     @pytest.mark.asyncio
     async def test_l2_cache_hit_increments_metric(
-        self, mock_llm_factory, mock_settings, mock_redis_client
+        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
     ):
         """L2 cache hit increments l2_hit metric."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -449,23 +449,18 @@ class TestCacheMetrics:
             return_value=json.dumps(cached_data).encode()
         )
 
-        with patch(
-            "mcp_server_langgraph.api.v1.ai_ux_service.get_cache"
-        ) as mock_get_cache:
-            mock_cache = MagicMock()
-            mock_cache.redis = mock_redis_client
-            mock_get_cache.return_value = mock_cache
+        service = AIUXService(
+            llm_factory=mock_llm_factory,
+            settings=mock_settings_no_redis,
+        )
+        # Manually inject Redis cache for testing
+        service.redis_cache = mock_redis_client
 
-            service = AIUXService(
-                llm_factory=mock_llm_factory,
-                settings=mock_settings,
-            )
+        cache_key = "metrics_l2_test_key"
+        await service.get_tiered_cached_response(cache_key)
 
-            cache_key = "metrics_l2_test_key"
-            await service.get_tiered_cached_response(cache_key)
-
-            # Redis should be called (L2 hit)
-            mock_redis_client.get.assert_called_once()
+        # Redis should be called (L2 hit)
+        mock_redis_client.get.assert_called_once()
 
 
 # =============================================================================
@@ -483,7 +478,7 @@ class TestCacheInvalidation:
 
     @pytest.mark.asyncio
     async def test_invalidate_by_user(
-        self, mock_llm_factory, mock_settings, mock_redis_client
+        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
     ):
         """Can invalidate all cache entries for a specific user."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -493,34 +488,29 @@ class TestCacheInvalidation:
         )
         mock_redis_client.delete = AsyncMock(return_value=2)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.ai_ux_service.get_cache"
-        ) as mock_get_cache:
-            mock_cache = MagicMock()
-            mock_cache.redis = mock_redis_client
-            mock_get_cache.return_value = mock_cache
+        service = AIUXService(
+            llm_factory=mock_llm_factory,
+            settings=mock_settings_no_redis,
+        )
+        # Manually inject Redis cache for testing
+        service.redis_cache = mock_redis_client
 
-            service = AIUXService(
-                llm_factory=mock_llm_factory,
-                settings=mock_settings,
-            )
+        # Pre-populate L1 cache with user-specific entries
+        service._response_cache["user-123:persona"] = {"data": "test1"}
+        service._response_cache["user-123:disclosure"] = {"data": "test2"}
+        service._response_cache["user-456:persona"] = {"data": "other"}
 
-            # Pre-populate L1 cache with user-specific entries
-            service._response_cache["user-123:persona"] = {"data": "test1"}
-            service._response_cache["user-123:disclosure"] = {"data": "test2"}
-            service._response_cache["user-456:persona"] = {"data": "other"}
+        deleted_count = await service.invalidate_user_cache("user-123")
 
-            deleted_count = await service.invalidate_user_cache("user-123")
-
-            # User-specific entries should be removed from L1
-            assert "user-123:persona" not in service._response_cache
-            assert "user-123:disclosure" not in service._response_cache
-            # Other user entries should remain
-            assert "user-456:persona" in service._response_cache
+        # User-specific entries should be removed from L1
+        assert "user-123:persona" not in service._response_cache
+        assert "user-123:disclosure" not in service._response_cache
+        # Other user entries should remain
+        assert "user-456:persona" in service._response_cache
 
     @pytest.mark.asyncio
     async def test_invalidate_by_method(
-        self, mock_llm_factory, mock_settings, mock_redis_client
+        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
     ):
         """Can invalidate all cache entries for a specific method."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -530,22 +520,17 @@ class TestCacheInvalidation:
         )
         mock_redis_client.delete = AsyncMock(return_value=2)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.ai_ux_service.get_cache"
-        ) as mock_get_cache:
-            mock_cache = MagicMock()
-            mock_cache.redis = mock_redis_client
-            mock_get_cache.return_value = mock_cache
+        service = AIUXService(
+            llm_factory=mock_llm_factory,
+            settings=mock_settings_no_redis,
+        )
+        # Manually inject Redis cache for testing
+        service.redis_cache = mock_redis_client
 
-            service = AIUXService(
-                llm_factory=mock_llm_factory,
-                settings=mock_settings,
-            )
+        deleted_count = await service.invalidate_method_cache("persona_analysis")
 
-            deleted_count = await service.invalidate_method_cache("persona_analysis")
-
-            # Scan should be called with correct pattern
-            mock_redis_client.scan.assert_called()
+        # Scan should be called with correct pattern
+        mock_redis_client.scan.assert_called()
 
 
 # =============================================================================
@@ -563,34 +548,29 @@ class TestCacheErrorHandling:
 
     @pytest.mark.asyncio
     async def test_redis_connection_error_falls_back_to_l1(
-        self, mock_llm_factory, mock_settings, mock_redis_client
+        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
     ):
         """Redis connection error falls back to L1 cache only."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         mock_redis_client.get = AsyncMock(side_effect=ConnectionError("Redis down"))
 
-        with patch(
-            "mcp_server_langgraph.api.v1.ai_ux_service.get_cache"
-        ) as mock_get_cache:
-            mock_cache = MagicMock()
-            mock_cache.redis = mock_redis_client
-            mock_get_cache.return_value = mock_cache
+        service = AIUXService(
+            llm_factory=mock_llm_factory,
+            settings=mock_settings_no_redis,
+        )
+        # Manually inject Redis cache for testing
+        service.redis_cache = mock_redis_client
 
-            service = AIUXService(
-                llm_factory=mock_llm_factory,
-                settings=mock_settings,
-            )
+        cache_key = "error_test_key"
+        result = await service.get_tiered_cached_response(cache_key)
 
-            cache_key = "error_test_key"
-            result = await service.get_tiered_cached_response(cache_key)
-
-            # Should gracefully return None (cache miss) without raising
-            assert result is None
+        # Should gracefully return None (cache miss) without raising
+        assert result is None
 
     @pytest.mark.asyncio
     async def test_redis_timeout_is_handled_gracefully(
-        self, mock_llm_factory, mock_settings, mock_redis_client
+        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
     ):
         """Redis timeout is handled gracefully."""
         import asyncio
@@ -600,47 +580,37 @@ class TestCacheErrorHandling:
             side_effect=asyncio.TimeoutError("Redis timeout")
         )
 
-        with patch(
-            "mcp_server_langgraph.api.v1.ai_ux_service.get_cache"
-        ) as mock_get_cache:
-            mock_cache = MagicMock()
-            mock_cache.redis = mock_redis_client
-            mock_get_cache.return_value = mock_cache
+        service = AIUXService(
+            llm_factory=mock_llm_factory,
+            settings=mock_settings_no_redis,
+        )
+        # Manually inject Redis cache for testing
+        service.redis_cache = mock_redis_client
 
-            service = AIUXService(
-                llm_factory=mock_llm_factory,
-                settings=mock_settings,
-            )
+        cache_key = "timeout_test_key"
+        result = await service.get_tiered_cached_response(cache_key)
 
-            cache_key = "timeout_test_key"
-            result = await service.get_tiered_cached_response(cache_key)
-
-            # Should gracefully return None without raising
-            assert result is None
+        # Should gracefully return None without raising
+        assert result is None
 
     @pytest.mark.asyncio
     async def test_json_decode_error_is_handled(
-        self, mock_llm_factory, mock_settings, mock_redis_client
+        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
     ):
         """Corrupted JSON in Redis is handled gracefully."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         mock_redis_client.get = AsyncMock(return_value=b"not valid json{")
 
-        with patch(
-            "mcp_server_langgraph.api.v1.ai_ux_service.get_cache"
-        ) as mock_get_cache:
-            mock_cache = MagicMock()
-            mock_cache.redis = mock_redis_client
-            mock_get_cache.return_value = mock_cache
+        service = AIUXService(
+            llm_factory=mock_llm_factory,
+            settings=mock_settings_no_redis,
+        )
+        # Manually inject Redis cache for testing
+        service.redis_cache = mock_redis_client
 
-            service = AIUXService(
-                llm_factory=mock_llm_factory,
-                settings=mock_settings,
-            )
+        cache_key = "json_error_test_key"
+        result = await service.get_tiered_cached_response(cache_key)
 
-            cache_key = "json_error_test_key"
-            result = await service.get_tiered_cached_response(cache_key)
-
-            # Should gracefully return None for corrupted data
-            assert result is None
+        # Should gracefully return None for corrupted data
+        assert result is None

@@ -101,6 +101,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - E2E tests: `test_ai_explanation_e2e.py` (9 integration tests)
     - Frontend tests: `AgentApprovalDialog.test.tsx` (50 tests including AI explanation section)
 
+- **MCP Hooks Extension (Plan Section 10.5)** - Expose hooks system via MCP tool protocol:
+  - **HooksToolHandler** (`src/mcp_server_langgraph/mcp/handlers/hooks.py`):
+    - `hooks/list` - List registered hooks with optional event filter
+    - `hooks/events` - List all 10 available hook events with descriptions
+    - `hooks/register` - Register webhook for events (admin only)
+    - `hooks/unregister` - Unregister webhooks by event (admin only)
+  - **Webhook Client** (`src/mcp_server_langgraph/mcp/webhook_client.py`):
+    - HTTP webhook delivery using shared HttpClientManager
+    - HMAC-SHA256 request signing for security
+    - Retry logic with exponential backoff (max 3 retries)
+    - OpenTelemetry tracing for webhook delivery
+    - `create_webhook_callback()` factory for hook registration
+  - **Rate Limiting**:
+    - Per-user sliding window rate limiter
+    - 10 registrations per minute (configurable via `HOOK_REGISTER_RATE_LIMIT_RPM`)
+    - 20 unregistrations per minute (configurable via `HOOK_UNREGISTER_RATE_LIMIT_RPM`)
+  - **Tests**:
+    - Integration tests: `test_mcp_hooks_extension.py` (11 tests)
+    - Unit tests: `test_hooks_handler.py` (9 tests), `test_webhook_client.py` (12 tests)
+    - Rate limiter tests: `test_hooks_rate_limiter.py` (11 tests)
+
+- **MCP Orchestration Resources (Plan Section 10.4)** - Expose multi-agent orchestration via MCP:
+  - **Orchestrator Resource Templates** (`src/mcp_server_langgraph/mcp/resources_orchestrator.py`):
+    - `orchestrator://tasks/{task_id}` - Task decomposition and status
+    - `orchestrator://artifacts/{task_id}/{artifact_name}` - Subagent artifacts
+    - `orchestrator://subagents/{task_id}` - Subagent status list
+  - **OrchestrationToolHandler** (`src/mcp_server_langgraph/mcp/handlers/orchestration.py`):
+    - `decompose` - Decompose task into subtasks
+    - `execute` - Execute decomposed task with optional HITL threshold
+    - `status` - Check orchestration status
+    - `cancel` - Cancel running orchestration
+  - **OrchestratorResourceProvider**:
+    - In-memory task and artifact storage
+    - URI parsing for orchestrator scheme
+  - **Tests**:
+    - Integration tests: `test_mcp_orchestration_roundtrip.py` (16 tests)
+
+- **MCP HITL Roundtrip (Plan Section 10.3)** - Tighten Elicitation ↔ HITL mapping:
+  - **Enhanced Elicitation Schema** (`src/mcp_server_langgraph/mcp/elicitation.py`):
+    - SEP-1330 enum schema support with `enumNames` and `default`
+    - `approval_with_explanation_to_elicitation()` - Include AI explanations in elicitation
+    - Alternatives as enum options for selection in elicitation forms
+  - **Full Lifecycle Support**:
+    - ApprovalRequired → Elicitation → ElicitationResponse → ApprovalResponse
+    - SEP-1036 URL mode for OAuth credential collection
+    - JSON-RPC 2.0 format conversion methods
+  - **Tests**:
+    - Integration tests: `test_mcp_hitl_roundtrip.py` (19 tests)
+
 - **Unified Studio Frontend** - Consolidated Builder and Playground into single React application:
   - **Docker Multi-Stage Build**: Added `frontend-builder` stage (Node.js 22) for React/Vite build
   - **FastAPI SPAStaticFiles**: Unified frontend served from `/studio` via SPAStaticFiles (no nginx required)
