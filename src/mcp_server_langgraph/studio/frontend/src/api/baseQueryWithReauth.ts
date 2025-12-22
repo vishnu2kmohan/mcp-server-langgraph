@@ -36,9 +36,25 @@ import {
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
 
+// Determine base URL - use absolute URL in test environment for Node.js fetch compatibility
+const getBaseUrl = (): string => {
+  // In test environments, Node.js fetch requires absolute URLs
+  // Check for vitest or jest test environment
+  if (
+    typeof process !== "undefined" &&
+    (process.env.VITEST === "true" ||
+      process.env.NODE_ENV === "test" ||
+      process.env.JEST_WORKER_ID !== undefined)
+  ) {
+    return "http://localhost:3000/api/v1";
+  }
+  // In browser, relative URLs work fine
+  return "/api/v1";
+};
+
 // Base query configuration
 const baseQuery = fetchBaseQuery({
-  baseUrl: "/api/v1",
+  baseUrl: getBaseUrl(),
   // Include credentials (cookies) for forward-auth (Keycloak SSO)
   credentials: "include",
   prepareHeaders: (headers) => {

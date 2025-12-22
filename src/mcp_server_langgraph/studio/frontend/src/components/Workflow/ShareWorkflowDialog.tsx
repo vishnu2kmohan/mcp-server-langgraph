@@ -85,6 +85,7 @@ export function ShareWorkflowDialog({
       const timer = setTimeout(() => setOperationError(null), 5000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [operationError]);
 
   const validateEmail = (email: string): boolean => {
@@ -257,7 +258,7 @@ export function ShareWorkflowDialog({
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
                         <span className="text-blue-600 dark:text-blue-400 text-sm font-medium">
-                          {share.email[0].toUpperCase()}
+                          {(share.email[0] ?? "?").toUpperCase()}
                         </span>
                       </div>
                       <div>

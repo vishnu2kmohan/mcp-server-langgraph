@@ -118,9 +118,11 @@ export function useUrlContentFetch(
     URL_PATTERN.lastIndex = 0;
 
     while ((match = URL_PATTERN.exec(input)) !== null) {
+      const url = match[1];
+      if (!url) continue;
       matches.push({
         raw: match[0].trim(),
-        url: match[1],
+        url,
       });
     }
 

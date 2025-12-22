@@ -14,6 +14,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import uiReducer, {
   toggleSidebar,
   setSidebarOpen,
+  toggleSidebarCollapsed,
+  setSidebarCollapsed,
   setTheme,
   setLoading,
   setActiveView,
@@ -21,6 +23,9 @@ import uiReducer, {
   removeNotification,
   clearNotifications,
   getInitialTheme,
+  selectSidebarCollapsed,
+  selectTheme,
+  selectSidebarOpen,
 } from "./uiSlice";
 
 // Mock crypto.randomUUID
@@ -81,6 +86,46 @@ describe("uiSlice", () => {
     });
   });
 
+  describe("toggleSidebarCollapsed", () => {
+    it("should toggle collapsed from false to true", () => {
+      const state = { ...initialState, sidebarCollapsed: false };
+      const result = uiReducer(state, toggleSidebarCollapsed());
+      expect(result.sidebarCollapsed).toBe(true);
+    });
+
+    it("should toggle collapsed from true to false", () => {
+      const state = { ...initialState, sidebarCollapsed: true };
+      const result = uiReducer(state, toggleSidebarCollapsed());
+      expect(result.sidebarCollapsed).toBe(false);
+    });
+
+    it("should persist to localStorage", () => {
+      const state = { ...initialState, sidebarCollapsed: false };
+      uiReducer(state, toggleSidebarCollapsed());
+      expect(localStorage.getItem("studio-sidebar-collapsed")).toBe("true");
+    });
+  });
+
+  describe("setSidebarCollapsed", () => {
+    it("should set collapsed to true", () => {
+      const state = { ...initialState, sidebarCollapsed: false };
+      const result = uiReducer(state, setSidebarCollapsed(true));
+      expect(result.sidebarCollapsed).toBe(true);
+    });
+
+    it("should set collapsed to false", () => {
+      const state = { ...initialState, sidebarCollapsed: true };
+      const result = uiReducer(state, setSidebarCollapsed(false));
+      expect(result.sidebarCollapsed).toBe(false);
+    });
+
+    it("should persist to localStorage", () => {
+      const state = { ...initialState, sidebarCollapsed: false };
+      uiReducer(state, setSidebarCollapsed(true));
+      expect(localStorage.getItem("studio-sidebar-collapsed")).toBe("true");
+    });
+  });
+
   describe("setTheme", () => {
     it("should set theme to light", () => {
       const result = uiReducer(initialState, setTheme("light"));
@@ -116,6 +161,20 @@ describe("uiSlice", () => {
       // The function reads from localStorage
       const result = getInitialTheme();
       expect(result).toBe("dark");
+    });
+
+    it("should return light theme when stored in localStorage", () => {
+      localStorage.setItem("studio-theme", "light");
+      const result = getInitialTheme();
+      expect(result).toBe("light");
+      localStorage.removeItem("studio-theme");
+    });
+
+    it("should return system theme when stored in localStorage", () => {
+      localStorage.setItem("studio-theme", "system");
+      const result = getInitialTheme();
+      expect(result).toBe("system");
+      localStorage.removeItem("studio-theme");
     });
   });
 
@@ -263,6 +322,31 @@ describe("uiSlice", () => {
     it("should work on empty notifications", () => {
       const result = uiReducer(initialState, clearNotifications());
       expect(result.notifications).toHaveLength(0);
+    });
+  });
+
+  describe("Selectors", () => {
+    const mockState = {
+      ui: {
+        sidebarOpen: true,
+        sidebarCollapsed: true,
+        theme: "light" as const,
+        isLoading: false,
+        activeView: "workflows" as const,
+        notifications: [],
+      },
+    };
+
+    it("selectSidebarCollapsed should return sidebarCollapsed state", () => {
+      expect(selectSidebarCollapsed(mockState)).toBe(true);
+    });
+
+    it("selectTheme should return theme state", () => {
+      expect(selectTheme(mockState)).toBe("light");
+    });
+
+    it("selectSidebarOpen should return sidebarOpen state", () => {
+      expect(selectSidebarOpen(mockState)).toBe(true);
     });
   });
 });

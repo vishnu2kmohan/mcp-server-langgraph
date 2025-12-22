@@ -600,6 +600,328 @@ describe("authSlice", () => {
     });
   });
 
+  describe("setUser reducer", () => {
+    it("should set user from native login response", () => {
+      const store = createTestStore({ isInitializing: true });
+      store.dispatch({
+        type: "auth/setUser",
+        payload: {
+          username: "alice",
+          email: "alice@example.com",
+          roles: ["admin", "developer"],
+          persona: "admin",
+        },
+      });
+
+      const user = selectUser(store.getState());
+      expect(user?.username).toBe("alice");
+      expect(user?.id).toBe("user:alice");
+      expect(user?.email).toBe("alice@example.com");
+      expect(user?.roles).toEqual(["admin", "developer"]);
+      expect(user?.persona).toBe("admin");
+      expect(selectIsInitializing(store.getState())).toBe(false);
+      expect(selectIsLoading(store.getState())).toBe(false);
+    });
+
+    it("should handle missing email in setUser", () => {
+      const store = createTestStore();
+      store.dispatch({
+        type: "auth/setUser",
+        payload: {
+          username: "bob",
+          roles: ["user"],
+          persona: "user",
+        },
+      });
+
+      const user = selectUser(store.getState());
+      expect(user?.email).toBe("");
+    });
+  });
+
+  describe("login async thunk error handling", () => {
+    it("should handle network error (Error instance)", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network failure"));
+
+      const store = createTestStore();
+      await store.dispatch(login({ username: "test", password: "password" }));
+
+      expect(selectAuthError(store.getState())).toBe("Network failure");
+      expect(selectUser(store.getState())).toBeNull();
+      expect(selectIsLoading(store.getState())).toBe(false);
+    });
+
+    it("should handle non-Error rejection with default message", async () => {
+      mockFetch.mockRejectedValueOnce("String error");
+
+      const store = createTestStore();
+      await store.dispatch(login({ username: "test", password: "password" }));
+
+      expect(selectAuthError(store.getState())).toBe("Login failed");
+    });
+
+    it("should handle empty organizations in response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            user: {
+              id: "user-1",
+              username: "test",
+              email: "test@example.com",
+              roles: ["user"],
+            },
+            tokens: mockTokens,
+            // No organizations
+          }),
+      });
+
+      const store = createTestStore();
+      await store.dispatch(login({ username: "test", password: "password" }));
+
+      expect(selectOrganizations(store.getState())).toEqual([]);
+      expect(selectCurrentOrg(store.getState())).toBeNull();
+    });
+  });
+
+  describe("initializeAuth edge cases", () => {
+    it("should logout when refresh token is expired", async () => {
+      const expiredRefreshTokens: AuthTokens = {
+        accessToken: "access-token",
+        refreshToken: "expired-refresh",
+        expiresAt: Date.now() + 3600000,
+        refreshExpiresAt: Date.now() - 1000, // Expired
+      };
+
+      const store = createTestStore({
+        tokens: expiredRefreshTokens,
+        user: mockUser,
+      });
+      await store.dispatch(initializeAuth());
+
+      expect(selectUser(store.getState())).toBeNull();
+      expect(selectTokens(store.getState())).toBeNull();
+    });
+
+    it("should handle API response with keycloak_id instead of user_id", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            keycloak_id: "kc-user-123",
+            username: "keycloak-user",
+            email: "kc@example.com",
+            first_name: "Keycloak",
+            last_name: "User",
+            display_name: "Keycloak User",
+            roles: ["developer"],
+          }),
+      });
+
+      const store = createTestStore({ tokens: mockTokens });
+      await store.dispatch(initializeAuth());
+
+      const user = selectUser(store.getState());
+      expect(user?.id).toBe("kc-user-123");
+      expect(user?.firstName).toBe("Keycloak");
+      expect(user?.lastName).toBe("User");
+      expect(user?.displayName).toBe("Keycloak User");
+    });
+
+    it("should derive persona when not provided in response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            user_id: "user-abc",
+            username: "alice",
+            email: "alice@example.com",
+            roles: ["admin", "developer"],
+            // No persona field - should derive from roles
+          }),
+      });
+
+      const store = createTestStore({ tokens: mockTokens });
+      await store.dispatch(initializeAuth());
+
+      const user = selectUser(store.getState());
+      expect(user?.persona).toBe("admin"); // Derived from roles
+    });
+
+    it("should use persona from response when provided", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            user_id: "user-xyz",
+            username: "bob",
+            email: "bob@example.com",
+            roles: ["user"],
+            persona: "developer", // Explicit override
+          }),
+      });
+
+      const store = createTestStore({ tokens: mockTokens });
+      await store.dispatch(initializeAuth());
+
+      const user = selectUser(store.getState());
+      expect(user?.persona).toBe("developer"); // From response, not derived
+    });
+
+    it("should refresh access token when expired but refresh token is valid", async () => {
+      const expiredAccessTokens: AuthTokens = {
+        accessToken: "expired-access-token",
+        refreshToken: "valid-refresh-token",
+        expiresAt: Date.now() - 1000, // Already expired
+        refreshExpiresAt: Date.now() + 86400000, // Still valid
+      };
+
+      const newTokens: AuthTokens = {
+        accessToken: "new-access-token",
+        refreshToken: "new-refresh-token",
+        expiresAt: Date.now() + 3600000,
+        refreshExpiresAt: Date.now() + 86400000,
+      };
+
+      // First call is for token refresh
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ tokens: newTokens }),
+      });
+
+      // Second call is for /api/v1/me
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            user_id: "user-1",
+            username: "test",
+            email: "test@example.com",
+            roles: ["user"],
+          }),
+      });
+
+      const store = createTestStore({ tokens: expiredAccessTokens });
+      await store.dispatch(initializeAuth());
+
+      // Should have refreshed the token
+      expect(mockFetch).toHaveBeenCalledWith("/api/v1/auth/refresh", expect.any(Object));
+      // Should have called /me with new token
+      expect(mockFetch).toHaveBeenCalledWith("/api/v1/me", {
+        headers: { Authorization: "Bearer new-access-token" },
+        credentials: "include",
+      });
+      // User should be set
+      expect(selectUser(store.getState())).toBeTruthy();
+    });
+  });
+
+  describe("refreshToken edge cases", () => {
+    it("should handle refresh with empty refresh token", async () => {
+      const tokensWithEmptyRefresh: AuthTokens = {
+        accessToken: "access-token",
+        refreshToken: "", // Empty string
+        expiresAt: Date.now() + 3600000,
+        refreshExpiresAt: Date.now() + 86400000,
+      };
+
+      const store = createTestStore({
+        tokens: tokensWithEmptyRefresh,
+        user: mockUser,
+      });
+      await store.dispatch(refreshToken());
+
+      // Should logout due to empty refresh token
+      expect(selectUser(store.getState())).toBeNull();
+    });
+
+    it("should handle network error during refresh", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
+
+      const store = createTestStore({
+        tokens: mockTokens,
+        user: mockUser,
+      });
+      await store.dispatch(refreshToken());
+
+      // Should logout on network error
+      expect(selectUser(store.getState())).toBeNull();
+      expect(selectTokens(store.getState())).toBeNull();
+    });
+  });
+
+  describe("switchOrganization edge cases", () => {
+    it("should handle network error during switch", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network timeout"));
+
+      const org2: Organization = {
+        id: "org-2",
+        name: "Org 2",
+        role: "member",
+        tier: "hybrid",
+      };
+
+      const store = createTestStore({
+        tokens: mockTokens,
+        organizations: [mockOrg, org2],
+        currentOrg: mockOrg,
+      });
+
+      await store.dispatch(switchOrganization("org-2"));
+
+      // Should set error message from Error instance
+      expect(selectAuthError(store.getState())).toBe("Network timeout");
+    });
+
+    it("should handle non-Error rejection during switch", async () => {
+      mockFetch.mockRejectedValueOnce("Unknown error");
+
+      const org2: Organization = {
+        id: "org-2",
+        name: "Org 2",
+        role: "member",
+        tier: "hybrid",
+      };
+
+      const store = createTestStore({
+        tokens: mockTokens,
+        organizations: [mockOrg, org2],
+        currentOrg: mockOrg,
+      });
+
+      await store.dispatch(switchOrganization("org-2"));
+
+      // Should use default error message
+      expect(selectAuthError(store.getState())).toBe("Failed to switch organization");
+    });
+
+    it("should set error when organization not found in list", async () => {
+      const store = createTestStore({
+        tokens: mockTokens,
+        organizations: [mockOrg],
+        currentOrg: mockOrg,
+      });
+
+      await store.dispatch(switchOrganization("non-existent-org"));
+
+      expect(selectAuthError(store.getState())).toBe("Organization not found");
+    });
+  });
+
+  describe("login.rejected default error", () => {
+    it("should use default error message when no detail provided", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({}), // No detail field
+      });
+
+      const store = createTestStore();
+      await store.dispatch(login({ username: "test", password: "password" }));
+
+      expect(selectAuthError(store.getState())).toBe("Login failed");
+    });
+  });
+
   describe("getAccessToken async thunk", () => {
     it("should return null when no tokens exist", async () => {
       const store = createTestStore({ tokens: null });

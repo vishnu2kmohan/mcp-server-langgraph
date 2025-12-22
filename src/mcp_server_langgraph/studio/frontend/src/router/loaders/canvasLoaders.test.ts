@@ -1,135 +1,470 @@
 /**
  * Canvas Loaders Tests
  *
- * Tests for React Router loaders used in HybridShell routes.
- * Phase 2: Contract-First - loaders fetch data before rendering.
+ * TDD tests for React Router loaders that fetch data before rendering.
+ * Tests cover sessionsLoader, chatLoader, and artifactLoader.
  */
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
-import { setupServer } from "msw/node";
-import { http, HttpResponse } from "msw";
-import { canvasHandlers } from "../../mocks/handlers/canvasHandlers";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { LoaderFunctionArgs } from "react-router";
 import {
-  chatLoader,
   sessionsLoader,
+  chatLoader,
   artifactLoader,
-  type ChatLoaderData,
-  type SessionsLoaderData,
-  type ArtifactLoaderData,
+  complianceLoader,
+  filesLoader,
+  canvasLoaders,
 } from "./canvasLoaders";
 
-// Setup MSW server with canvas handlers
-const server = setupServer(...canvasHandlers);
+// Mock storage utility
+vi.mock("../../utils/storage", () => ({
+  getAuthToken: vi.fn(() => "mock-token"),
+}));
 
-beforeAll(() => server.listen({ onUnhandledRequest: "bypass" }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+// =============================================================================
+// Test Setup
+// =============================================================================
 
-// Mock loader function args
-const createLoaderArgs = (
-  params: Record<string, string | undefined> = {},
-  request?: Request,
-) => ({
-  params,
-  request: request ?? new Request("http://localhost:3000/studio/v2/chat"),
-  context: {},
-});
+const mockFetch = vi.fn();
+
+function createLoaderArgs(
+  params: Record<string, string> = {},
+): LoaderFunctionArgs {
+  return {
+    params,
+    request: new Request("http://localhost/test"),
+    context: undefined,
+  };
+}
 
 describe("canvasLoaders", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    global.fetch = mockFetch;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  // ===========================================================================
+  // sessionsLoader
+  // ===========================================================================
+
   describe("sessionsLoader", () => {
-    it("loads a list of sessions", async () => {
-      const data = (await sessionsLoader(
-        createLoaderArgs(),
-      )) as SessionsLoaderData;
+    it("should return list of sessions on success", async () => {
+      const mockApiSessions = [
+        { id: "session-1", name: "Session 1", created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
+        { id: "session-2", name: "Session 2", created_at: "2024-01-02T00:00:00Z", updated_at: "2024-01-02T00:00:00Z" },
+      ];
 
-      expect(data.sessions).toBeDefined();
-      expect(Array.isArray(data.sessions)).toBe(true);
-    });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ items: mockApiSessions }),
+      });
 
-    it("returns an error object on failure", async () => {
-      // Mock a server error
-      server.use(
-        http.get("/api/v1/sessions", () => {
-          return HttpResponse.json(
-            { detail: "Internal error" },
-            { status: 500 },
-          );
+      const result = await sessionsLoader(createLoaderArgs());
+
+      expect(result.sessions).toHaveLength(2);
+      expect(result.sessions[0].id).toBe("session-1");
+      expect(result.sessions[0].name).toBe("Session 1");
+      expect(result.sessions[0].created_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.error).toBeUndefined();
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/sessions?limit=50",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer mock-token",
+          }),
         }),
       );
+    });
 
-      const data = (await sessionsLoader(
-        createLoaderArgs(),
-      )) as SessionsLoaderData;
+    it("should return error when fetch fails", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
 
-      // Should handle error gracefully
-      expect(data.sessions).toBeDefined();
+      const result = await sessionsLoader(createLoaderArgs());
+
+      expect(result.sessions).toEqual([]);
+      expect(result.error).toBe("Failed to load sessions");
+    });
+
+    it("should return error when network fails", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+      const result = await sessionsLoader(createLoaderArgs());
+
+      expect(result.sessions).toEqual([]);
+      expect(result.error).toBe("Failed to load sessions");
     });
   });
+
+  // ===========================================================================
+  // chatLoader
+  // ===========================================================================
 
   describe("chatLoader", () => {
-    it("loads session data when sessionId is provided", async () => {
-      const data = (await chatLoader(
-        createLoaderArgs({ sessionId: "session-1" }),
-      )) as ChatLoaderData;
+    it("should return empty data when no sessionId provided", async () => {
+      const result = await chatLoader(createLoaderArgs());
 
-      expect(data.sessionId).toBe("session-1");
-      expect(data.artifacts).toBeDefined();
-      expect(Array.isArray(data.artifacts)).toBe(true);
+      expect(result.sessionId).toBeNull();
+      expect(result.messages).toEqual([]);
+      expect(result.artifacts).toEqual([]);
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it("returns empty artifacts when no sessionId", async () => {
-      const data = (await chatLoader(createLoaderArgs({}))) as ChatLoaderData;
+    it("should fetch session, messages, and artifacts in parallel", async () => {
+      const mockApiSession = { id: "session-1", name: "Test Session", created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" };
+      const mockMessages = [
+        { id: "msg-1", role: "user", content: "Hello", created_at: "2024-01-01T00:00:00Z" },
+        { id: "msg-2", role: "assistant", content: "Hi!", created_at: "2024-01-01T00:01:00Z" },
+      ];
+      const mockArtifacts = [
+        { id: "artifact-1", type: "code", content: "console.log('hello')" },
+      ];
 
-      expect(data.sessionId).toBeNull();
-      expect(data.artifacts).toEqual([]);
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockApiSession),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ items: mockMessages }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ items: mockArtifacts }),
+        });
+
+      const result = await chatLoader(createLoaderArgs({ sessionId: "session-1" }));
+
+      expect(result.sessionId).toBe("session-1");
+      expect(result.session?.id).toBe("session-1");
+      expect(result.session?.name).toBe("Test Session");
+      expect(result.messages).toHaveLength(2);
+      expect(result.messages[0].id).toBe("msg-1");
+      expect(result.messages[0].content).toBe("Hello");
+      expect(result.artifacts).toEqual(mockArtifacts);
     });
 
-    it("loads artifacts for the session", async () => {
-      const data = (await chatLoader(
-        createLoaderArgs({ sessionId: "session-1" }),
-      )) as ChatLoaderData;
+    it("should transform message timestamps", async () => {
+      const mockApiSession = { id: "s1", name: "Test", created_at: "2024-06-15T10:00:00Z", updated_at: "2024-06-15T10:00:00Z" };
+      const mockMessages = [
+        { id: "msg-1", role: "user", content: "Test", created_at: "2024-06-15T10:30:00Z" },
+      ];
 
-      // Should filter artifacts by session
-      data.artifacts.forEach((artifact) => {
-        expect(artifact.sessionId).toBe("session-1");
-      });
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockApiSession) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: mockMessages }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) });
+
+      const result = await chatLoader(createLoaderArgs({ sessionId: "s1" }));
+
+      expect(result.messages[0].timestamp).toBe(new Date("2024-06-15T10:30:00Z").getTime());
+    });
+
+    it("should return error when session not found", async () => {
+      mockFetch
+        .mockResolvedValueOnce({ ok: false }) // Session not found
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) });
+
+      const result = await chatLoader(createLoaderArgs({ sessionId: "invalid" }));
+
+      expect(result.session).toBeUndefined();
+      expect(result.error).toBe("Session not found");
+    });
+
+    it("should handle partial failures gracefully", async () => {
+      const mockApiSession = { id: "s1", name: "Test", created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" };
+
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockApiSession) })
+        .mockResolvedValueOnce({ ok: false }) // Messages fail
+        .mockResolvedValueOnce({ ok: false }); // Artifacts fail
+
+      const result = await chatLoader(createLoaderArgs({ sessionId: "s1" }));
+
+      expect(result.session?.id).toBe("s1");
+      expect(result.messages).toEqual([]);
+      expect(result.artifacts).toEqual([]);
+      expect(result.error).toBeUndefined();
+    });
+
+    it("should handle session validation failure gracefully", async () => {
+      // Session missing required fields (id, created_at, updated_at) causes validation failure
+      const invalidSession = { name: "No ID Session" };
+
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(invalidSession) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) });
+
+      const result = await chatLoader(createLoaderArgs({ sessionId: "s1" }));
+
+      // Session should be undefined due to validation failure
+      expect(result.session).toBeUndefined();
+      expect(result.messages).toEqual([]);
+    });
+
+    it("should handle message validation failure gracefully", async () => {
+      const mockApiSession = { id: "s1", name: "Test", created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" };
+      // Messages missing required fields
+      const invalidMessages = [
+        { content: "No ID or role" }, // Missing id, role, created_at
+      ];
+
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockApiSession) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: invalidMessages }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) });
+
+      const result = await chatLoader(createLoaderArgs({ sessionId: "s1" }));
+
+      expect(result.session?.id).toBe("s1");
+      // Messages should be empty due to validation failure
+      expect(result.messages).toEqual([]);
     });
   });
 
+  // ===========================================================================
+  // artifactLoader
+  // ===========================================================================
+
   describe("artifactLoader", () => {
-    it("loads a specific artifact by id", async () => {
-      const data = (await artifactLoader(
-        createLoaderArgs({ artifactId: "art-1" }),
-      )) as ArtifactLoaderData;
+    it("should return null when no artifactId provided", async () => {
+      const result = await artifactLoader(createLoaderArgs());
 
-      expect(data.artifact).toBeDefined();
-      expect(data.artifact?.id).toBe("art-1");
+      expect(result.artifact).toBeNull();
+      expect(result.versions).toEqual([]);
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it("loads version history for the artifact", async () => {
-      const data = (await artifactLoader(
-        createLoaderArgs({ artifactId: "art-1" }),
-      )) as ArtifactLoaderData;
+    it("should fetch artifact and versions in parallel", async () => {
+      const mockArtifact = {
+        id: "artifact-1",
+        type: "code",
+        content: 'console.log("test")',
+        version: 3,
+      };
+      const mockVersions = [
+        { version: 1, content: "v1" },
+        { version: 2, content: "v2" },
+        { version: 3, content: 'console.log("test")' },
+      ];
 
-      expect(data.versions).toBeDefined();
-      expect(Array.isArray(data.versions)).toBe(true);
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockArtifact),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockVersions),
+        });
+
+      const result = await artifactLoader(createLoaderArgs({ artifactId: "artifact-1" }));
+
+      expect(result.artifact).toEqual(mockArtifact);
+      expect(result.versions).toEqual(mockVersions);
+      expect(result.error).toBeUndefined();
     });
 
-    it("returns null artifact when not found", async () => {
-      const data = (await artifactLoader(
-        createLoaderArgs({ artifactId: "unknown-id" }),
-      )) as ArtifactLoaderData;
+    it("should return error when artifact not found", async () => {
+      mockFetch
+        .mockResolvedValueOnce({ ok: false })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) });
 
-      expect(data.artifact).toBeNull();
-      expect(data.error).toBeDefined();
+      const result = await artifactLoader(createLoaderArgs({ artifactId: "invalid" }));
+
+      expect(result.artifact).toBeNull();
+      expect(result.error).toBe("Artifact not found");
     });
 
-    it("returns null when no artifactId provided", async () => {
-      const data = (await artifactLoader(
-        createLoaderArgs({}),
-      )) as ArtifactLoaderData;
+    it("should handle version fetch failure gracefully", async () => {
+      const mockArtifact = { id: "a1", type: "code", content: "test" };
 
-      expect(data.artifact).toBeNull();
-      expect(data.versions).toEqual([]);
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockArtifact) })
+        .mockResolvedValueOnce({ ok: false }); // Versions fail
+
+      const result = await artifactLoader(createLoaderArgs({ artifactId: "a1" }));
+
+      expect(result.artifact).toEqual(mockArtifact);
+      expect(result.versions).toEqual([]);
+    });
+  });
+
+  // ===========================================================================
+  // canvasLoaders export
+  // ===========================================================================
+
+  // ===========================================================================
+  // complianceLoader
+  // ===========================================================================
+
+  describe("complianceLoader", () => {
+    it("should fetch compliance summary on success", async () => {
+      const mockSummary = {
+        soc2: { percentage: 94, status: "compliant" },
+        hipaa: { percentage: 100, status: "compliant" },
+        gdpr: { percentage: 87, status: "partial" },
+        fedramp: { percentage: 92, status: "compliant" },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockSummary),
+      });
+
+      const result = await complianceLoader(createLoaderArgs());
+
+      expect(result.summary).toEqual(mockSummary);
+      expect(result.error).toBeUndefined();
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/compliance/reports/summary"),
+        expect.any(Object),
+      );
+    });
+
+    it("should handle failure gracefully", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false });
+
+      const result = await complianceLoader(createLoaderArgs());
+
+      expect(result.summary).toBeNull();
+      expect(result.error).toBe("Failed to load compliance summary");
+    });
+
+    it("should handle network errors", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+      const result = await complianceLoader(createLoaderArgs());
+
+      expect(result.summary).toBeNull();
+      expect(result.error).toBe("Failed to load compliance summary");
+    });
+  });
+
+  describe("canvasLoaders export", () => {
+    it("should export all loaders", () => {
+      expect(canvasLoaders.sessions).toBe(sessionsLoader);
+      expect(canvasLoaders.chat).toBe(chatLoader);
+      expect(canvasLoaders.artifact).toBe(artifactLoader);
+      expect(canvasLoaders.compliance).toBe(complianceLoader);
+      expect(canvasLoaders.files).toBe(filesLoader);
+    });
+  });
+
+  describe("filesLoader", () => {
+    it("should load files successfully", async () => {
+      const mockArtifacts = [
+        {
+          id: "artifact-1",
+          type: "code" as const,
+          content: "console.log('hello');",
+          sessionId: "session-1",
+          version: 1,
+          createdAt: "2025-01-15T10:00:00Z",
+          updatedAt: "2025-01-15T10:00:00Z",
+        },
+      ];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ items: mockArtifacts, total: 1 }),
+      });
+
+      const result = await filesLoader(createLoaderArgs());
+
+      expect(result.artifacts).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.error).toBeUndefined();
+    });
+
+    it("should return empty array on API failure", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ detail: "Server error" }),
+      });
+
+      const result = await filesLoader(createLoaderArgs());
+
+      expect(result.artifacts).toEqual([]);
+      expect(result.total).toBe(0);
+      expect(result.error).toBe("Failed to load files");
+    });
+
+    it("should handle network errors", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+      const result = await filesLoader(createLoaderArgs());
+
+      expect(result.artifacts).toEqual([]);
+      expect(result.total).toBe(0);
+      expect(result.error).toBe("Failed to load files");
+    });
+
+    it("should use items length when total not provided", async () => {
+      const mockArtifacts = [
+        {
+          id: "artifact-1",
+          type: "code" as const,
+          content: "code1",
+          sessionId: "session-1",
+          version: 1,
+          createdAt: "2025-01-15T10:00:00Z",
+          updatedAt: "2025-01-15T10:00:00Z",
+        },
+        {
+          id: "artifact-2",
+          type: "code" as const,
+          content: "code2",
+          sessionId: "session-1",
+          version: 1,
+          createdAt: "2025-01-15T10:00:00Z",
+          updatedAt: "2025-01-15T10:00:00Z",
+        },
+      ];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ items: mockArtifacts }), // no total
+      });
+
+      const result = await filesLoader(createLoaderArgs());
+
+      expect(result.artifacts).toHaveLength(2);
+      expect(result.total).toBe(2); // Uses items.length as fallback
+    });
+  });
+
+  // ===========================================================================
+  // Auth headers
+  // ===========================================================================
+
+  describe("Authentication", () => {
+    it("should include auth token in requests", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ items: [] }),
+      });
+
+      await sessionsLoader(createLoaderArgs());
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer mock-token",
+            "Content-Type": "application/json",
+          }),
+          credentials: "include",
+        }),
+      );
     });
   });
 });

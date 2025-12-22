@@ -11,7 +11,9 @@ import personaReducer, {
   setPermissions,
   setPersonaLoading,
   resetPersona,
+  setSubPersona,
   selectPersona,
+  selectSubPersona,
   selectUsername,
   selectEmail,
   selectPermissions,
@@ -19,8 +21,11 @@ import personaReducer, {
   selectSidebarItems,
   selectDefaultRoute,
   selectCanAccessRoute,
+  selectVisibleModules,
+  selectHasPermission,
   initialState,
   type Persona,
+  type SubPersona,
 } from "./personaSlice";
 
 describe("personaSlice", () => {
@@ -183,22 +188,22 @@ describe("personaSlice", () => {
     });
 
     describe("selectDefaultRoute", () => {
-      it("should return admin default route for admin", () => {
+      it("should return admin default route for admin (v2 chat)", () => {
         const adminState = {
           persona: { ...mockState.persona, persona: "admin" as Persona },
         };
-        expect(selectDefaultRoute(adminState)).toBe("/studio/projects");
+        expect(selectDefaultRoute(adminState)).toBe("/studio/v2/chat");
       });
 
-      it("should return developer default route for developer", () => {
-        expect(selectDefaultRoute(mockState)).toBe("/studio/projects");
+      it("should return developer default route for developer (v2 chat)", () => {
+        expect(selectDefaultRoute(mockState)).toBe("/studio/v2/chat");
       });
 
-      it("should return user default route for user", () => {
+      it("should return user default route for user (v2 chat)", () => {
         const userState = {
           persona: { ...mockState.persona, persona: "user" as Persona },
         };
-        expect(selectDefaultRoute(userState)).toBe("/studio/projects");
+        expect(selectDefaultRoute(userState)).toBe("/studio/v2/chat");
       });
     });
 
@@ -259,6 +264,331 @@ describe("personaSlice", () => {
         };
         const canAccess = selectCanAccessRoute("/studio/agents")(userState);
         expect(canAccess).toBe(false);
+      });
+    });
+
+    describe("selectHasPermission", () => {
+      it("should return true for admin regardless of permission", () => {
+        const adminState = {
+          persona: { ...mockState.persona, persona: "admin" as Persona, permissions: [] },
+        };
+        expect(selectHasPermission("any:permission")(adminState)).toBe(true);
+      });
+
+      it("should return true when user has the permission", () => {
+        const state = {
+          persona: { ...mockState.persona, persona: "developer" as Persona, permissions: ["read:projects", "write:projects"] },
+        };
+        expect(selectHasPermission("read:projects")(state)).toBe(true);
+      });
+
+      it("should return false when user lacks the permission", () => {
+        const state = {
+          persona: { ...mockState.persona, persona: "user" as Persona, permissions: ["read:projects"] },
+        };
+        expect(selectHasPermission("admin:manage")(state)).toBe(false);
+      });
+    });
+  });
+
+  // =============================================================================
+  // Sub-Persona Tests (8 variants)
+  // =============================================================================
+
+  describe("sub-personas", () => {
+    describe("setSubPersona reducer", () => {
+      it("should set admin sub-persona", () => {
+        const actual = personaReducer(
+          initialState,
+          setSubPersona("admin"),
+        );
+        expect(actual.subPersona).toBe("admin");
+        expect(actual.persona).toBe("admin");
+      });
+
+      it("should set security-admin sub-persona", () => {
+        const actual = personaReducer(
+          initialState,
+          setSubPersona("security-admin"),
+        );
+        expect(actual.subPersona).toBe("security-admin");
+        expect(actual.persona).toBe("admin");
+      });
+
+      it("should set auditor sub-persona", () => {
+        const actual = personaReducer(
+          initialState,
+          setSubPersona("auditor"),
+        );
+        expect(actual.subPersona).toBe("auditor");
+        expect(actual.persona).toBe("admin");
+      });
+
+      it("should set alice-builder sub-persona", () => {
+        const actual = personaReducer(
+          initialState,
+          setSubPersona("alice-builder"),
+        );
+        expect(actual.subPersona).toBe("alice-builder");
+        expect(actual.persona).toBe("developer");
+      });
+
+      it("should set alice-analyst sub-persona", () => {
+        const actual = personaReducer(
+          initialState,
+          setSubPersona("alice-analyst"),
+        );
+        expect(actual.subPersona).toBe("alice-analyst");
+        expect(actual.persona).toBe("developer");
+      });
+
+      it("should set alice-devops sub-persona", () => {
+        const actual = personaReducer(
+          initialState,
+          setSubPersona("alice-devops"),
+        );
+        expect(actual.subPersona).toBe("alice-devops");
+        expect(actual.persona).toBe("developer");
+      });
+
+      it("should set compliance-officer sub-persona", () => {
+        const actual = personaReducer(
+          initialState,
+          setSubPersona("compliance-officer"),
+        );
+        expect(actual.subPersona).toBe("compliance-officer");
+        expect(actual.persona).toBe("developer");
+      });
+
+      it("should set bob sub-persona", () => {
+        const actual = personaReducer(initialState, setSubPersona("bob"));
+        expect(actual.subPersona).toBe("bob");
+        expect(actual.persona).toBe("user");
+      });
+    });
+
+    describe("selectSubPersona", () => {
+      it("should return sub-persona from state", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "alice-builder" as SubPersona,
+            persona: "developer" as Persona,
+          },
+        };
+        expect(selectSubPersona(state)).toBe("alice-builder");
+      });
+    });
+
+    describe("selectVisibleModules", () => {
+      it("should return all modules for admin", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "admin" as SubPersona,
+            persona: "admin" as Persona,
+          },
+        };
+        const modules = selectVisibleModules(state);
+        expect(modules).toContain("chat");
+        expect(modules).toContain("admin");
+        expect(modules).toContain("compliance");
+        expect(modules).toContain("audit");
+      });
+
+      it("should return security-focused modules for security-admin", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "security-admin" as SubPersona,
+            persona: "admin" as Persona,
+          },
+        };
+        const modules = selectVisibleModules(state);
+        expect(modules).toContain("compliance");
+        expect(modules).toContain("audit");
+        expect(modules).toContain("admin");
+      });
+
+      it("should return audit modules for auditor", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "auditor" as SubPersona,
+            persona: "admin" as Persona,
+          },
+        };
+        const modules = selectVisibleModules(state);
+        expect(modules).toContain("audit");
+        expect(modules).toContain("compliance");
+        expect(modules).toContain("help");
+        expect(modules).not.toContain("admin");
+      });
+
+      it("should return builder modules for alice-builder", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "alice-builder" as SubPersona,
+            persona: "developer" as Persona,
+          },
+        };
+        const modules = selectVisibleModules(state);
+        expect(modules).toContain("chat");
+        expect(modules).toContain("flows");
+        expect(modules).toContain("mcp");
+        expect(modules).toContain("agents");
+        expect(modules).not.toContain("admin");
+      });
+
+      it("should return analyst modules for alice-analyst", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "alice-analyst" as SubPersona,
+            persona: "developer" as Persona,
+          },
+        };
+        const modules = selectVisibleModules(state);
+        expect(modules).toContain("chat");
+        expect(modules).toContain("traces");
+        expect(modules).toContain("costs");
+        expect(modules).toContain("metrics");
+      });
+
+      it("should return devops modules for alice-devops", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "alice-devops" as SubPersona,
+            persona: "developer" as Persona,
+          },
+        };
+        const modules = selectVisibleModules(state);
+        expect(modules).toContain("chat");
+        expect(modules).toContain("mcp");
+        expect(modules).toContain("connections");
+        expect(modules).toContain("traces");
+      });
+
+      it("should return compliance modules for compliance-officer", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "compliance-officer" as SubPersona,
+            persona: "developer" as Persona,
+          },
+        };
+        const modules = selectVisibleModules(state);
+        expect(modules).toContain("audit");
+        expect(modules).toContain("compliance");
+        expect(modules).not.toContain("admin");
+      });
+
+      it("should return limited modules for bob", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "bob" as SubPersona,
+            persona: "user" as Persona,
+          },
+        };
+        const modules = selectVisibleModules(state);
+        expect(modules).toContain("chat");
+        expect(modules).toContain("projects");
+        expect(modules).toContain("flows");
+        expect(modules).not.toContain("admin");
+        expect(modules).not.toContain("mcp");
+      });
+    });
+
+    describe("selectDefaultRoute with sub-personas", () => {
+      it("should return admin default route for admin sub-persona", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "admin" as SubPersona,
+            persona: "admin" as Persona,
+          },
+        };
+        expect(selectDefaultRoute(state)).toBe("/studio/v2/admin");
+      });
+
+      it("should return compliance route for security-admin", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "security-admin" as SubPersona,
+            persona: "admin" as Persona,
+          },
+        };
+        expect(selectDefaultRoute(state)).toBe("/studio/v2/compliance");
+      });
+
+      it("should return audit route for auditor", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "auditor" as SubPersona,
+            persona: "admin" as Persona,
+          },
+        };
+        expect(selectDefaultRoute(state)).toBe("/studio/v2/audit");
+      });
+
+      it("should return chat route for alice-builder", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "alice-builder" as SubPersona,
+            persona: "developer" as Persona,
+          },
+        };
+        expect(selectDefaultRoute(state)).toBe("/studio/v2/chat");
+      });
+
+      it("should return observability route for alice-analyst", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "alice-analyst" as SubPersona,
+            persona: "developer" as Persona,
+          },
+        };
+        expect(selectDefaultRoute(state)).toBe("/studio/v2/observability");
+      });
+
+      it("should return connections route for alice-devops", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "alice-devops" as SubPersona,
+            persona: "developer" as Persona,
+          },
+        };
+        expect(selectDefaultRoute(state)).toBe("/studio/v2/connections");
+      });
+
+      it("should return compliance route for compliance-officer", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "compliance-officer" as SubPersona,
+            persona: "developer" as Persona,
+          },
+        };
+        expect(selectDefaultRoute(state)).toBe("/studio/v2/compliance");
+      });
+
+      it("should return chat route for bob", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            subPersona: "bob" as SubPersona,
+            persona: "user" as Persona,
+          },
+        };
+        expect(selectDefaultRoute(state)).toBe("/studio/v2/chat");
       });
     });
   });

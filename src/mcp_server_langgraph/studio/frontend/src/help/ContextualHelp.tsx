@@ -11,6 +11,7 @@
  */
 
 import { Lightbulb, X, ExternalLink } from "lucide-react";
+import { cn } from "../utils/cn";
 
 // =============================================================================
 // Types
@@ -28,14 +29,6 @@ export interface ContextualHelpProps {
   onDismiss: (tip: HelpTip) => void;
   onLearnMore: (tip: HelpTip) => void;
   className?: string;
-}
-
-// =============================================================================
-// Utility
-// =============================================================================
-
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
 }
 
 // =============================================================================

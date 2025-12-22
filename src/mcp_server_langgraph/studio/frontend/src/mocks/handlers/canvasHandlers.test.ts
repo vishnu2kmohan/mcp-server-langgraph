@@ -248,6 +248,95 @@ describe("canvasHandlers", () => {
     });
   });
 
+  describe("POST /api/v1/artifacts/search", () => {
+    it("performs semantic search with a query", async () => {
+      const response = await fetch("/api/v1/artifacts/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: "React component", limit: 10 }),
+      });
+
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.results).toBeDefined();
+      expect(Array.isArray(data.results)).toBe(true);
+    });
+
+    it("returns results with artifact_id, score, and title", async () => {
+      const response = await fetch("/api/v1/artifacts/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: "React component", limit: 10 }),
+      });
+
+      const data = await response.json();
+      data.results.forEach(
+        (result: { artifact_id: string; score: number; title: string }) => {
+          expect(result.artifact_id).toBeDefined();
+          expect(typeof result.score).toBe("number");
+        },
+      );
+    });
+
+    it("returns 400 for empty query", async () => {
+      const response = await fetch("/api/v1/artifacts/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: "", limit: 10 }),
+      });
+
+      expect(response.status).toBe(400);
+    });
+
+    it("respects the limit parameter", async () => {
+      const response = await fetch("/api/v1/artifacts/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: "code", limit: 2 }),
+      });
+
+      const data = await response.json();
+      expect(data.results.length).toBeLessThanOrEqual(2);
+    });
+  });
+
+  describe("GET /api/v1/artifacts/:id/similar", () => {
+    it("finds similar artifacts for a given artifact", async () => {
+      const response = await fetch("/api/v1/artifacts/art-1/similar");
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.results).toBeDefined();
+      expect(Array.isArray(data.results)).toBe(true);
+    });
+
+    it("returns results with artifact_id and score", async () => {
+      const response = await fetch("/api/v1/artifacts/art-1/similar");
+
+      const data = await response.json();
+      data.results.forEach(
+        (result: { artifact_id: string; score: number }) => {
+          expect(result.artifact_id).toBeDefined();
+          expect(typeof result.score).toBe("number");
+        },
+      );
+    });
+
+    it("respects the limit query parameter", async () => {
+      const response = await fetch("/api/v1/artifacts/art-1/similar?limit=2");
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.results.length).toBeLessThanOrEqual(2);
+    });
+
+    it("returns 404 for unknown artifact", async () => {
+      const response = await fetch("/api/v1/artifacts/unknown-id/similar");
+      expect(response.status).toBe(404);
+    });
+  });
+
   describe("Mock Data", () => {
     it("has pre-defined mock artifacts", () => {
       expect(mockCanvasArtifacts.length).toBeGreaterThan(0);

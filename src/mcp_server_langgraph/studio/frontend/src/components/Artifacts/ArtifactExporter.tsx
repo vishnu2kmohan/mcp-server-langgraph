@@ -84,7 +84,9 @@ const MERMAID_OPTIONS: ExportOption[] = [
 function arrayToCSV(data: Record<string, unknown>[]): string {
   if (data.length === 0) return "";
 
-  const headers = Object.keys(data[0]);
+  const firstRow = data[0];
+  if (!firstRow) return "";
+  const headers = Object.keys(firstRow);
   const headerRow = headers.join(",");
 
   const rows = data.map((row) =>
@@ -111,7 +113,9 @@ function arrayToCSV(data: Record<string, unknown>[]): string {
 function arrayToExcel(data: Record<string, unknown>[]): string {
   if (data.length === 0) return "";
 
-  const headers = Object.keys(data[0]);
+  const firstRow = data[0];
+  if (!firstRow) return "";
+  const headers = Object.keys(firstRow);
 
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
   xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ';
@@ -154,19 +158,6 @@ function escapeXml(str: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
-}
-
-/**
- * Convert SVG element to data URL
- */
-function _svgToDataUrl(svgElement: SVGElement | string): string {
-  const svgString =
-    typeof svgElement === "string"
-      ? svgElement
-      : new XMLSerializer().serializeToString(svgElement);
-
-  const encoded = encodeURIComponent(svgString);
-  return `data:image/svg+xml,${encoded}`;
 }
 
 // =============================================================================

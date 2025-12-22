@@ -100,6 +100,7 @@ export function StatusBar({ className }: StatusBarProps) {
     const rates =
       COST_PER_1K_TOKENS[currentSession.config.modelProvider] ??
       COST_PER_1K_TOKENS.openai;
+    if (!rates) return 0;
     const inputCost = (tokenStats.prompt / 1000) * rates.input;
     const outputCost = (tokenStats.completion / 1000) * rates.output;
     return inputCost + outputCost;

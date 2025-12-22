@@ -77,6 +77,10 @@ describe("AdminDashboardPage", () => {
       http.get("/api/v1/metrics/heart/aggregate", () => {
         return HttpResponse.json(mockHeartData);
       }),
+      // Add admin users endpoint handler by default
+      http.get("/api/v1/admin/users", () => {
+        return HttpResponse.json({ items: [], total: 0 });
+      }),
     );
   });
 
@@ -570,6 +574,147 @@ describe("AdminDashboardPage", () => {
         },
         { timeout: 3000 },
       );
+    });
+  });
+
+  describe("HEART Metrics Mapping (mapHeartMetrics function)", () => {
+    it("should display all HEART metric labels", async () => {
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByText("Happiness")).toBeInTheDocument();
+        expect(screen.getByText("Engagement")).toBeInTheDocument();
+        expect(screen.getByText("Adoption")).toBeInTheDocument();
+        expect(screen.getByText("Retention")).toBeInTheDocument();
+        expect(screen.getByText("Task Success")).toBeInTheDocument();
+      });
+    });
+
+    it("should display metric values as percentages", async () => {
+      renderWithProvider();
+
+      await waitFor(() => {
+        // Verify that percentage values are displayed for metrics
+        const percentElements = screen.getAllByText(/%/);
+        expect(percentElements.length).toBeGreaterThan(0);
+      });
+    });
+
+    it("should show zero values when HEART data fields are null", async () => {
+      server.use(
+        http.get("/api/v1/metrics/heart/aggregate", () => {
+          return HttpResponse.json({
+            period: "7d",
+            nps_score_avg: null,
+            satisfaction_avg: null,
+            task_success_rate: null,
+            avg_session_duration_ms: null,
+            avg_return_visits: null,
+            new_users_count: 0,
+          });
+        }),
+      );
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        // Multiple 0% values expected when all fields are null
+        const zeroPercentElements = screen.getAllByText("0%");
+        expect(zeroPercentElements.length).toBeGreaterThanOrEqual(5);
+      });
+    });
+
+    it("should handle undefined HEART data gracefully", async () => {
+      server.use(
+        http.get("/api/v1/metrics/heart/aggregate", () => {
+          return HttpResponse.json(null);
+        }),
+      );
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        // All HEART metrics should be 0%
+        const zeroPercentElements = screen.getAllByText("0%");
+        expect(zeroPercentElements.length).toBeGreaterThanOrEqual(5);
+      });
+    });
+  });
+
+  describe("User Management Handlers", () => {
+    it("should render Users tab and switch to it", async () => {
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByRole("tab", { name: /users/i })).toBeInTheDocument();
+      });
+
+      const usersTab = screen.getByRole("tab", { name: /users/i });
+      await act(async () => {
+        fireEvent.click(usersTab);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("User Management")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("System Health Mapping", () => {
+    it("should display status text from API response", async () => {
+      renderWithProvider();
+
+      await waitFor(() => {
+        // Either healthy or degraded should be displayed
+        expect(screen.getByText(/healthy|degraded/)).toBeInTheDocument();
+      });
+    });
+
+    it("should map non-healthy status to degraded", async () => {
+      server.use(
+        http.get("/api/v1/health", () => {
+          return HttpResponse.json({
+            status: "critical",
+            version: "1.0.0",
+            uptime_seconds: 43200,
+          });
+        }),
+      );
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByText("degraded")).toBeInTheDocument();
+      });
+    });
+
+    it("should calculate and display uptime", async () => {
+      renderWithProvider();
+
+      await waitFor(() => {
+        // Check that uptime label is displayed
+        expect(screen.getByText("Uptime")).toBeInTheDocument();
+        // Verify some percentage value is shown
+        expect(screen.getAllByText(/%/).length).toBeGreaterThan(0);
+      });
+    });
+
+    it("should default uptime to 99.9 when uptime_seconds not provided", async () => {
+      server.use(
+        http.get("/api/v1/health", () => {
+          return HttpResponse.json({
+            status: "healthy",
+            version: "1.0.0",
+            // uptime_seconds not provided
+          });
+        }),
+      );
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByText("99.9%")).toBeInTheDocument();
+      });
     });
   });
 });

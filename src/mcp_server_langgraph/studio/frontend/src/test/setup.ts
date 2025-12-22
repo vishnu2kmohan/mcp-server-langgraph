@@ -5,6 +5,7 @@
  * - Testing library matchers
  * - Browser API mocks
  * - MSW server for realistic API mocking
+ * - Memory monitoring for leak detection
  * - Global test utilities
  */
 
@@ -13,9 +14,65 @@ import { afterAll, afterEach, beforeAll, vi, expect } from "vitest";
 import { cleanup } from "@testing-library/react";
 import { server } from "../mocks/server";
 import { toHaveNoViolations } from "jest-axe";
+import { memoryMonitor } from "./memoryMonitor";
+import { clearStorageMocks, clearAllMocks, logIsolationWarningIfDirty } from "./testIsolation";
+import { MemoryTrendReporter } from "./memoryTrendReporter";
+
+// Memory trend reporter for CI integration
+const memoryTrendReporter = new MemoryTrendReporter({
+  commit: process.env.GITHUB_SHA?.slice(0, 8),
+  branch: process.env.GITHUB_REF_NAME,
+  testSuite: "frontend",
+});
 
 // Extend Vitest's expect with jest-axe matchers
 expect.extend(toHaveNoViolations);
+
+// =============================================================================
+// Memory Monitoring (enable with DEBUG=true or VITEST_MEMORY_MONITOR=true)
+// =============================================================================
+// Take a snapshot at test suite start for overall memory tracking
+beforeAll(() => {
+  memoryMonitor.snapshot("suite-start");
+
+  // Also record for CI trend tracking
+  if (typeof process !== "undefined" && process.memoryUsage) {
+    memoryTrendReporter.recordEntry("suite-start", process.memoryUsage());
+  }
+});
+
+// Report memory usage at end if there's significant growth
+afterAll(() => {
+  memoryMonitor.snapshot("suite-end");
+  const result = memoryMonitor.checkThresholds();
+
+  // Log warnings if any thresholds exceeded
+  if (result.warnings.length > 0) {
+    console.warn("[MemoryMonitor] Warnings:", result.warnings);
+  }
+  if (result.errors.length > 0) {
+    console.error("[MemoryMonitor] Errors:", result.errors);
+  }
+
+  // In verbose mode, always print the full report
+  if (process.env.VITEST_MEMORY_VERBOSE === "true") {
+    console.log(memoryMonitor.generateReport());
+  }
+
+  // Record final memory for CI trend tracking and output if in CI
+  if (typeof process !== "undefined" && process.memoryUsage) {
+    memoryTrendReporter.recordEntry("suite-end", process.memoryUsage());
+
+    // Output memory trend data for CI to capture
+    if (process.env.CI === "true" || process.env.VITEST_MEMORY_TREND === "true") {
+      const report = memoryTrendReporter.generateReport();
+      // Output as a special marker that CI can grep for
+      console.log("::memory-trend-start::");
+      console.log(JSON.stringify(report, null, 2));
+      console.log("::memory-trend-end::");
+    }
+  }
+});
 
 // =============================================================================
 // Global Error Handlers to Prevent Worker Crashes
@@ -81,9 +138,29 @@ afterAll(() => {
   server.close();
 });
 
-// Cleanup after each test
+// =============================================================================
+// Test Isolation Cleanup
+// =============================================================================
+// Comprehensive cleanup after each test to prevent state leakage between tests.
+// This is critical for test reliability in parallel execution.
 afterEach(() => {
+  // React Testing Library cleanup (unmounts components)
   cleanup();
+
+  // Clear storage mocks (localStorage, sessionStorage) - prevents data leakage
+  clearStorageMocks();
+
+  // Clear all mock call history - prevents assertion pollution
+  clearAllMocks();
+
+  // Log isolation warnings in CI if state is dirty (helps debug flaky tests)
+  logIsolationWarningIfDirty();
+
+  // Force garbage collection if available (helps prevent OOM in large test suites)
+  // Requires running node with --expose-gc flag
+  if (typeof global.gc === "function") {
+    global.gc();
+  }
 });
 
 // =============================================================================

@@ -59,6 +59,7 @@ export const initialSessionState: SessionState = {
   totalCount: 0,
   isLoadingMore: false,
   cursor: null,
+  hasPendingMutation: false,
 };
 
 // ==============================================================================
@@ -414,7 +415,10 @@ export const sendMessage = createAsyncThunk<
       return rejectWithValue("No active session");
     }
 
-    // Add user message immediately via separate action
+    // Set pending mutation to protect optimistic updates from stale revalidation
+    dispatch(setPendingMutation(true));
+
+    // Add user message immediately via separate action (optimistic update)
     const userMessage: ChatMessage = {
       id: generateMessageId(),
       role: "user",
@@ -445,6 +449,9 @@ export const sendMessage = createAsyncThunk<
       return rejectWithValue(
         error instanceof Error ? error.message : "Failed to send message",
       );
+    } finally {
+      // Clear pending mutation after API call completes (success or failure)
+      dispatch(setPendingMutation(false));
     }
   },
 );
@@ -477,6 +484,7 @@ export const clearMessages = createAsyncThunk<
       const errorData = await response.json();
       throw new Error(errorData.detail || "Failed to clear messages");
     }
+    return undefined;
   } catch (error) {
     return rejectWithValue(
       error instanceof Error ? error.message : "Failed to clear messages",
@@ -528,10 +536,13 @@ export const sessionSlice = createSlice({
           (m) => m.id === messageId,
         );
         if (messageIndex >= 0) {
-          state.currentSession.messages[messageIndex] = {
-            ...state.currentSession.messages[messageIndex],
-            ...updates,
-          };
+          const existingMessage = state.currentSession.messages[messageIndex];
+          if (existingMessage) {
+            state.currentSession.messages[messageIndex] = {
+              ...existingMessage,
+              ...updates,
+            };
+          }
         }
       }
     },
@@ -580,6 +591,14 @@ export const sessionSlice = createSlice({
      * Reset session state
      */
     resetSession: () => initialSessionState,
+
+    /**
+     * Set pending mutation flag
+     * Used to prevent stale loader data from overwriting optimistic updates
+     */
+    setPendingMutation: (state, action: PayloadAction<boolean>) => {
+      state.hasPendingMutation = action.payload;
+    },
   },
   extraReducers: (builder) => {
     // fetchSessions
@@ -702,8 +721,11 @@ export const sessionSlice = createSlice({
           (s) => s.id === sessionId,
         );
         if (sessionIndex >= 0) {
-          state.sessions[sessionIndex].name = name;
-          state.sessions[sessionIndex].updatedAt = updatedAt;
+          const session = state.sessions[sessionIndex];
+          if (session) {
+            session.name = name;
+            session.updatedAt = updatedAt;
+          }
         }
 
         if (state.currentSession?.id === sessionId) {
@@ -755,6 +777,7 @@ export const {
   setSessions,
   setCurrentSession,
   resetSession,
+  setPendingMutation,
 } = sessionSlice.actions;
 
 // ==============================================================================
@@ -790,5 +813,9 @@ export const selectIsLoadingMore = (state: SessionRootState) =>
   state.session.isLoadingMore ?? false;
 export const selectCursor = (state: SessionRootState) =>
   state.session.cursor ?? null;
+
+// Pending mutation selector (for race condition guard)
+export const selectHasPendingMutation = (state: SessionRootState) =>
+  state.session.hasPendingMutation ?? false;
 
 export default sessionSlice.reducer;

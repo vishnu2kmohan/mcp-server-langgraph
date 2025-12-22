@@ -326,5 +326,312 @@ describe("InteractiveMermaidDiagram", () => {
         expect(zoomValue).toBeGreaterThan(100);
       });
     });
+
+    it("should handle single finger pan", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
+      });
+
+      const viewport = screen.getByTestId("mermaid-viewport");
+
+      // Start single touch pan
+      fireEvent.touchStart(viewport, {
+        touches: [{ clientX: 100, clientY: 100, identifier: 0 }],
+      });
+
+      // Move finger
+      fireEvent.touchMove(viewport, {
+        touches: [{ clientX: 150, clientY: 150, identifier: 0 }],
+      });
+
+      fireEvent.touchEnd(viewport);
+
+      // Should have handled the pan (position updated)
+      expect(viewport.style.transform).toBeDefined();
+    });
+  });
+
+  describe("Mouse Interactions", () => {
+    it("should pan with mouse drag", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
+      });
+
+      const viewport = screen.getByTestId("mermaid-viewport");
+
+      // Start drag
+      fireEvent.mouseDown(viewport, { button: 0, clientX: 100, clientY: 100 });
+      fireEvent.mouseMove(viewport, { clientX: 150, clientY: 150 });
+      fireEvent.mouseUp(viewport);
+
+      // Should have panned
+      expect(viewport.style.transform).toContain("translate");
+    });
+
+    it("should stop dragging on mouse leave", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
+      });
+
+      const viewport = screen.getByTestId("mermaid-viewport");
+
+      // Start drag
+      fireEvent.mouseDown(viewport, { button: 0, clientX: 100, clientY: 100 });
+      fireEvent.mouseLeave(viewport);
+
+      // Cursor should reset
+      expect(viewport.classList.contains("cursor-grab")).toBe(true);
+    });
+
+    it("should zoom with ctrl + mouse wheel scroll down", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
+      });
+
+      const viewport = screen.getByTestId("mermaid-viewport");
+
+      // Scroll down (zoom out) with ctrl
+      fireEvent.wheel(viewport, { deltaY: 100, ctrlKey: true });
+
+      await waitFor(() => {
+        expect(screen.getByText("80%")).toBeInTheDocument();
+      });
+    });
+
+    it("should zoom with meta + mouse wheel scroll up", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
+      });
+
+      const viewport = screen.getByTestId("mermaid-viewport");
+
+      // Scroll up (zoom in) with meta
+      fireEvent.wheel(viewport, { deltaY: -100, metaKey: true });
+
+      await waitFor(() => {
+        expect(screen.getByText("125%")).toBeInTheDocument();
+      });
+    });
+
+    it("should not zoom without ctrl/meta key on wheel", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
+      });
+
+      const viewport = screen.getByTestId("mermaid-viewport");
+
+      // Scroll without modifier key
+      fireEvent.wheel(viewport, { deltaY: 100 });
+
+      // Zoom should stay at 100%
+      expect(screen.getByText("100%")).toBeInTheDocument();
+    });
+  });
+
+  describe("Alternative Keyboard Shortcuts", () => {
+    it("should zoom in with = key", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
+      });
+
+      const container = screen.getByTestId("mermaid-container");
+      fireEvent.keyDown(container, { key: "=" });
+
+      await waitFor(() => {
+        expect(screen.getByText("125%")).toBeInTheDocument();
+      });
+    });
+
+    it("should zoom out with _ key", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
+      });
+
+      const container = screen.getByTestId("mermaid-container");
+      fireEvent.keyDown(container, { key: "_" });
+
+      await waitFor(() => {
+        expect(screen.getByText("80%")).toBeInTheDocument();
+      });
+    });
+
+    it("should not exit fullscreen with Escape when not in fullscreen", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
+      });
+
+      const container = screen.getByTestId("mermaid-container");
+      // Should not be fullscreen initially
+      expect(container.classList.contains("fixed")).toBe(false);
+
+      // Press Escape when not in fullscreen
+      fireEvent.keyDown(container, { key: "Escape" });
+
+      // Should still not be fullscreen
+      expect(container.classList.contains("fixed")).toBe(false);
+    });
+  });
+
+  describe("Copy Error Handling", () => {
+    it("should handle clipboard write failure gracefully", async () => {
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: vi.fn().mockRejectedValue(new Error("Clipboard denied")),
+        },
+      });
+
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("Copy source")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByLabelText("Copy source"));
+
+      await waitFor(() => {
+        expect(consoleError).toHaveBeenCalledWith(
+          "Failed to copy:",
+          expect.any(Error),
+        );
+      });
+
+      consoleError.mockRestore();
+    });
+  });
+
+  describe("Error State Variations", () => {
+    it("should display generic error message for non-Error objects", async () => {
+      const mermaid = await import("mermaid");
+      vi.mocked(mermaid.default.render).mockRejectedValueOnce(
+        "string error message",
+      );
+
+      render(<InteractiveMermaidDiagram code="invalid" />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/diagram error/i)).toBeInTheDocument();
+        expect(screen.getByText("Failed to render diagram")).toBeInTheDocument();
+      });
+    });
+
+    it("should show error message from Error object", async () => {
+      const mermaid = await import("mermaid");
+      vi.mocked(mermaid.default.render).mockRejectedValueOnce(
+        new Error("Syntax error at line 1"),
+      );
+
+      render(<InteractiveMermaidDiagram code="bad" />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Syntax error at line 1"),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Zoom Limits", () => {
+    it("should not exceed maximum zoom of 400%", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
+      });
+
+      const zoomInButton = screen.getByLabelText("Zoom in");
+
+      // Click zoom in many times to hit the limit
+      for (let i = 0; i < 10; i++) {
+        fireEvent.click(zoomInButton);
+      }
+
+      // Should be capped at 400%
+      await waitFor(() => {
+        expect(screen.getByText("400%")).toBeInTheDocument();
+      });
+    });
+
+    it("should not go below minimum zoom of 25%", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
+      });
+
+      const zoomOutButton = screen.getByLabelText("Zoom out");
+
+      // Click zoom out many times to hit the limit
+      for (let i = 0; i < 15; i++) {
+        fireEvent.click(zoomOutButton);
+      }
+
+      // Should be capped at 25%
+      await waitFor(() => {
+        expect(screen.getByText("25%")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Fullscreen Toggle", () => {
+    it("should toggle fullscreen mode when button is clicked", async () => {
+      render(<InteractiveMermaidDiagram code={sampleCode} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
+      });
+
+      const container = screen.getByTestId("mermaid-container");
+
+      // Initially not fullscreen
+      expect(container.classList.contains("fixed")).toBe(false);
+
+      // Toggle to fullscreen
+      fireEvent.click(screen.getByLabelText("Toggle fullscreen"));
+
+      await waitFor(() => {
+        expect(container.classList.contains("fixed")).toBe(true);
+      });
+
+      // Toggle back to normal
+      fireEvent.click(screen.getByLabelText("Toggle fullscreen"));
+
+      await waitFor(() => {
+        expect(container.classList.contains("fixed")).toBe(false);
+      });
+    });
+  });
+
+  describe("Custom className", () => {
+    it("should apply custom className to container", async () => {
+      render(
+        <InteractiveMermaidDiagram code={sampleCode} className="custom-class" />,
+      );
+
+      await waitFor(() => {
+        const container = screen.getByTestId("mermaid-container");
+        expect(container.classList.contains("custom-class")).toBe(true);
+      });
+    });
   });
 });

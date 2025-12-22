@@ -10,7 +10,7 @@
  * - Selectors for unread count and filtered lists
  */
 
-import { createSlice, PayloadAction, nanoid } from "@reduxjs/toolkit";
+import { createSlice, createSelector, PayloadAction, nanoid } from "@reduxjs/toolkit";
 
 /**
  * Notification types
@@ -150,13 +150,19 @@ export const selectNotifications = (state: RootState): Notification[] =>
   state.notifications.notifications;
 
 /**
- * Select count of unread notifications
+ * Select only unread notifications (memoized)
+ * Only recomputes when notifications array changes
  */
-export const selectUnreadCount = (state: RootState): number =>
-  state.notifications.notifications.filter((n) => !n.read).length;
+export const selectUnreadNotifications = createSelector(
+  [selectNotifications],
+  (notifications): Notification[] => notifications.filter((n) => !n.read),
+);
 
 /**
- * Select only unread notifications
+ * Select count of unread notifications (memoized)
+ * Derives from unread notifications selector for efficiency
  */
-export const selectUnreadNotifications = (state: RootState): Notification[] =>
-  state.notifications.notifications.filter((n) => !n.read);
+export const selectUnreadCount = createSelector(
+  [selectUnreadNotifications],
+  (unreadNotifications): number => unreadNotifications.length,
+);

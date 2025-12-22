@@ -135,6 +135,12 @@ export function useAuditWebSocket(
   const maxEventsRef = useRef(maxEvents);
   maxEventsRef.current = maxEvents;
 
+  // Ref to store the active filter for restoration on reconnect
+  const activeFilterRef = useRef<AuditFilter | null>(null);
+
+  // Ref for send function to use in handleConnect
+  const sendRef = useRef<(data: unknown) => void>(() => {});
+
   // Handle incoming messages
   const handleMessage = useCallback((data: unknown) => {
     const message = data as FilterUpdatedMessage | AuditEvent;
@@ -142,6 +148,16 @@ export function useAuditWebSocket(
     // Check if it's a filter_updated message
     if ("type" in message && message.type === "filter_updated") {
       setCurrentFilter(message.filter);
+      // Track active filter for restoration on reconnect
+      // Empty filter means no filter (cleared)
+      const hasActiveFilter =
+        message.filter &&
+        Object.keys(message.filter).some(
+          (key) =>
+            Array.isArray(message.filter[key as keyof AuditFilter]) &&
+            (message.filter[key as keyof AuditFilter] as string[]).length > 0
+        );
+      activeFilterRef.current = hasActiveFilter ? message.filter : null;
       callbacksRef.current.onFilterUpdated?.(message.filter);
       return;
     }
@@ -170,9 +186,12 @@ export function useAuditWebSocket(
     callbacksRef.current.onEvent?.(event);
   }, []);
 
-  // Handle connection established
+  // Handle connection established - restore filter
   const handleConnect = useCallback(() => {
-    // Connection established
+    // Restore filter on reconnect
+    if (activeFilterRef.current) {
+      sendRef.current(activeFilterRef.current);
+    }
   }, []);
 
   // Handle disconnection - keep events for resumption
@@ -181,12 +200,20 @@ export function useAuditWebSocket(
   }, []);
 
   // Use the realtime sync hook for WebSocket management
+  // Enable exponential backoff for better reconnection behavior
   const { status, send, disconnect, reconnect } = useRealtimeSync({
     url,
     onMessage: handleMessage,
     onConnect: handleConnect,
     onDisconnect: handleDisconnect,
+    exponentialBackoff: true,
+    reconnectInterval: 1000, // Start with 1 second
+    maxDelayMs: 30000, // Max 30 seconds between attempts
+    maxReconnectAttempts: 10, // Try up to 10 times
   });
+
+  // Keep sendRef in sync for use in handleConnect
+  sendRef.current = send;
 
   // Derived state
   const isConnected = status === "connected";
@@ -194,12 +221,16 @@ export function useAuditWebSocket(
   // Commands
   const setFilter = useCallback(
     (filter: AuditFilter) => {
+      // Track filter immediately for restoration on reconnect
+      activeFilterRef.current = filter;
       send(filter);
     },
     [send],
   );
 
   const clearFilter = useCallback(() => {
+    // Clear the tracked filter
+    activeFilterRef.current = null;
     send({});
   }, [send]);
 

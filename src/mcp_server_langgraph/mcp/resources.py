@@ -153,7 +153,7 @@ class ResourceHandler:
         """Register a provider function for a URI pattern.
 
         Args:
-            uri_pattern: Glob pattern for matching URIs (e.g., "playground://session/*/traces")
+            uri_pattern: Glob pattern for matching URIs (e.g., "studio://session/*/traces")
             provider: Async function that returns ResourceContent for matching URIs
         """
         self._providers[uri_pattern] = provider
@@ -284,42 +284,42 @@ class ResourceHandler:
 
 
 # =============================================================================
-# Playground Resource Factory
+# Studio Resource Factory
 # =============================================================================
 
 
-def create_playground_resource_handler() -> ResourceHandler:
-    """Create a ResourceHandler configured for Playground resources.
+def create_studio_resource_handler() -> ResourceHandler:
+    """Create a ResourceHandler configured for Studio resources.
 
     Returns:
-        ResourceHandler with Playground resource templates registered
+        ResourceHandler with Studio resource templates registered
     """
     handler = ResourceHandler()
 
     # Register session resource templates
     handler.register_template(
-        uri_template="playground://session/{session_id}/traces",
+        uri_template="studio://session/{session_id}/traces",
         name="Session Traces",
         description="OpenTelemetry traces for a specific session",
         mime_type="application/json",
     )
 
     handler.register_template(
-        uri_template="playground://session/{session_id}/logs",
+        uri_template="studio://session/{session_id}/logs",
         name="Session Logs",
         description="Structured logs for a specific session",
         mime_type="application/json",
     )
 
     handler.register_template(
-        uri_template="playground://session/{session_id}/metrics",
+        uri_template="studio://session/{session_id}/metrics",
         name="Session Metrics",
         description="LLM and tool metrics for a specific session",
         mime_type="application/json",
     )
 
     handler.register_template(
-        uri_template="playground://session/{session_id}/alerts",
+        uri_template="studio://session/{session_id}/alerts",
         name="Session Alerts",
         description="Active alerts for a specific session",
         mime_type="application/json",
@@ -329,7 +329,7 @@ def create_playground_resource_handler() -> ResourceHandler:
 
 
 # =============================================================================
-# Resource Providers for Playground
+# Resource Providers for Studio
 # =============================================================================
 
 
@@ -343,7 +343,7 @@ async def traces_provider(uri: str) -> ResourceContent:
         ResourceContent with trace data
     """
     # Extract session_id from URI
-    parts = uri.replace("playground://session/", "").split("/")
+    parts = uri.replace("studio://session/", "").split("/")
     session_id = parts[0] if parts else "unknown"
 
     # In production, this would fetch from the observability backend
@@ -363,7 +363,7 @@ async def logs_provider(uri: str) -> ResourceContent:
     Returns:
         ResourceContent with log data
     """
-    parts = uri.replace("playground://session/", "").split("/")
+    parts = uri.replace("studio://session/", "").split("/")
     session_id = parts[0] if parts else "unknown"
 
     return ResourceContent(
@@ -382,7 +382,7 @@ async def metrics_provider(uri: str) -> ResourceContent:
     Returns:
         ResourceContent with metrics data
     """
-    parts = uri.replace("playground://session/", "").split("/")
+    parts = uri.replace("studio://session/", "").split("/")
     session_id = parts[0] if parts else "unknown"
 
     return ResourceContent(
@@ -401,7 +401,7 @@ async def alerts_provider(uri: str) -> ResourceContent:
     Returns:
         ResourceContent with alert data
     """
-    parts = uri.replace("playground://session/", "").split("/")
+    parts = uri.replace("studio://session/", "").split("/")
     session_id = parts[0] if parts else "unknown"
 
     return ResourceContent(

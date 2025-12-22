@@ -42,7 +42,7 @@ describe('Metrics API Client', () => {
 
       const metrics: HeartMetricsBatch = {
         session_id: 'test-session',
-        app_name: 'builder',
+        app_name: 'studio',
       };
 
       await sendHeartMetrics(metrics);
@@ -62,7 +62,7 @@ describe('Metrics API Client', () => {
 
       const metrics: HeartMetricsBatch = {
         session_id: 'test-session',
-        app_name: 'playground',
+        app_name: 'studio',
         task_success: {
           tasks_started: 10,
           tasks_completed: 8,
@@ -96,7 +96,7 @@ describe('Metrics API Client', () => {
 
       const result = await sendHeartMetrics({
         session_id: 'test',
-        app_name: 'builder',
+        app_name: 'studio',
       });
 
       expect(result).toEqual(receipt);
@@ -110,7 +110,7 @@ describe('Metrics API Client', () => {
       });
 
       await expect(
-        sendHeartMetrics({ session_id: 'test', app_name: 'builder' })
+        sendHeartMetrics({ session_id: 'test', app_name: 'studio' })
       ).rejects.toThrow('Failed to send metrics: 500');
     });
 
@@ -123,7 +123,7 @@ describe('Metrics API Client', () => {
 
       await sendHeartMetrics({
         session_id: 'test',
-        app_name: 'builder',
+        app_name: 'studio',
       });
 
       // Should not call fetch when DNT is enabled
@@ -153,14 +153,14 @@ describe('Metrics API Client', () => {
         { feature_name: 'export', event_type: 'clicked' },
       ];
 
-      await sendEvents('test-session', 'builder', events);
+      await sendEvents('test-session', 'studio', events);
 
       expect(mockFetch).toHaveBeenCalledWith('/api/v1/metrics/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           session_id: 'test-session',
-          app_name: 'builder',
+          app_name: 'studio',
           events,
         }),
       });
@@ -173,7 +173,7 @@ describe('Metrics API Client', () => {
         json: () => Promise.resolve(receipt),
       });
 
-      const result = await sendEvents('test', 'builder', [
+      const result = await sendEvents('test', 'studio', [
         { feature_name: 'a', event_type: 'used' },
         { feature_name: 'b', event_type: 'used' },
         { feature_name: 'c', event_type: 'used' },
@@ -196,7 +196,7 @@ describe('Metrics API Client', () => {
         },
       ];
 
-      await sendEvents('test', 'builder', events);
+      await sendEvents('test', 'studio', events);
 
       const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
       expect(callBody.events[0].metadata).toEqual({ error_code: 500, retried: true });
@@ -237,12 +237,12 @@ describe('Metrics API Client', () => {
     it('includes app filter parameter', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ period: '7d', app_name: 'builder' }),
+        json: () => Promise.resolve({ period: '7d', app_name: 'studio' }),
       });
 
-      await getAggregateMetrics({ app: 'builder' });
+      await getAggregateMetrics({ app: 'studio' });
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/metrics/heart/aggregate?app=builder', {
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/metrics/heart/aggregate?app=studio', {
         method: 'GET',
       });
     });
@@ -250,13 +250,13 @@ describe('Metrics API Client', () => {
     it('includes both period and app parameters', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ period: '30d', app_name: 'playground' }),
+        json: () => Promise.resolve({ period: '30d', app_name: 'studio' }),
       });
 
-      await getAggregateMetrics({ period: '30d', app: 'playground' });
+      await getAggregateMetrics({ period: '30d', app: 'studio' });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/v1/metrics/heart/aggregate?period=30d&app=playground',
+        '/api/v1/metrics/heart/aggregate?period=30d&app=studio',
         { method: 'GET' }
       );
     });
@@ -293,7 +293,7 @@ describe('Metrics API Client', () => {
     it('sends GET request to /api/v1/metrics/dashboard', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ builder: {}, playground: {} }),
+        json: () => Promise.resolve({ studio: {} }),
       });
 
       await getDashboard();
@@ -305,8 +305,7 @@ describe('Metrics API Client', () => {
 
     it('returns dashboard data', async () => {
       const dashboard: DashboardData = {
-        builder: { period: '7d', nps_score_avg: 8.0 },
-        playground: { period: '7d', nps_score_avg: 9.0 },
+        studio: { period: '7d', nps_score_avg: 8.5 },
         total_metrics_count: 100,
         total_events_count: 500,
         generated_at: '2024-01-01T00:00:00Z',
@@ -318,8 +317,7 @@ describe('Metrics API Client', () => {
       });
 
       const result = await getDashboard();
-      expect(result.builder).toBeDefined();
-      expect(result.playground).toBeDefined();
+      expect(result.studio).toBeDefined();
       expect(result.total_metrics_count).toBe(100);
       expect(result.generated_at).toBeDefined();
     });

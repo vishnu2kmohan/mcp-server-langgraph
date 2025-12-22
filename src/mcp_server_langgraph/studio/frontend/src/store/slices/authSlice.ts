@@ -59,6 +59,7 @@ function decodeJwtExp(token: string): number {
     if (parts.length !== 3) return Date.now() + 3600000; // Default 1 hour
 
     const payload = parts[1];
+    if (!payload) return Date.now() + 3600000; // Default 1 hour if no payload
     // Base64url decode
     const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
     const parsed = JSON.parse(decoded);

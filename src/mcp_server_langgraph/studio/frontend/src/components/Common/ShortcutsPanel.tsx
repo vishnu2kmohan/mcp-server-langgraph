@@ -103,10 +103,12 @@ export function ShortcutsPanel({
     const groups: Record<string, ShortcutDefinition[]> = {};
 
     for (const shortcut of filteredShortcuts) {
-      if (!groups[shortcut.category]) {
-        groups[shortcut.category] = [];
+      let categoryGroup = groups[shortcut.category];
+      if (!categoryGroup) {
+        categoryGroup = [];
+        groups[shortcut.category] = categoryGroup;
       }
-      groups[shortcut.category].push(shortcut);
+      categoryGroup.push(shortcut);
     }
 
     // Sort categories alphabetically

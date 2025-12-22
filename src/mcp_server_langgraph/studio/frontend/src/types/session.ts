@@ -165,6 +165,9 @@ export interface SessionState {
 
   /** Current pagination cursor */
   cursor?: string | null;
+
+  /** Whether there are pending mutations (prevents stale loader data from overwriting optimistic updates) */
+  hasPendingMutation?: boolean;
 }
 
 /** Session store actions */

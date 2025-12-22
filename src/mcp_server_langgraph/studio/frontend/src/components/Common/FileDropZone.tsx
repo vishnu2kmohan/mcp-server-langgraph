@@ -96,8 +96,9 @@ export function FileDropZone({
       if (disabled) return;
 
       const files = Array.from(e.dataTransfer.files);
-      if (files.length > 0) {
-        onFilesSelected(multiple ? files : [files[0]]);
+      const firstFile = files[0];
+      if (files.length > 0 && firstFile) {
+        onFilesSelected(multiple ? files : [firstFile]);
       }
     },
     [disabled, multiple, onFilesSelected],

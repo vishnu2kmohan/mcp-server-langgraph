@@ -9,7 +9,7 @@ import hashlib
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 # Lazy-load metrics to handle missing dependency
 
@@ -1106,7 +1106,7 @@ class ChatFollowUpSuggestionAgent:
             cached = cache.get(cache_key)
             if cached is not None:
                 logger.debug("Cache hit for chat follow-up suggestions")
-                return cached
+                return cast(list["ChatFollowUpSuggestion"], cached)
 
         # Try LLM first, fallback to heuristics
         if self.enable_llm:

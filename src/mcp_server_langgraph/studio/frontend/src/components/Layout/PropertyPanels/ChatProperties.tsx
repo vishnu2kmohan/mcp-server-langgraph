@@ -152,6 +152,7 @@ export function ChatProperties({
     const rates =
       COST_PER_1K_TOKENS[session.config.modelProvider] ??
       COST_PER_1K_TOKENS.openai;
+    if (!rates) return 0;
     const inputCost = (tokenStats.prompt / 1000) * rates.input;
     const outputCost = (tokenStats.completion / 1000) * rates.output;
     return inputCost + outputCost;

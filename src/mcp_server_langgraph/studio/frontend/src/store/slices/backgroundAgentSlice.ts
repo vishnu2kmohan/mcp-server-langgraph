@@ -6,13 +6,19 @@
  *
  * WebSocket events from /ws/v1/agents update this slice.
  */
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createSelector, type PayloadAction } from "@reduxjs/toolkit";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type AgentStatus = "queued" | "running" | "completed" | "failed";
+export type AgentStatus =
+  | "queued"
+  | "running"
+  | "completed"
+  | "failed"
+  | "awaiting_approval"
+  | "awaiting_clarification";
 
 export interface BackgroundAgent {
   id: string;
@@ -24,6 +30,19 @@ export interface BackgroundAgent {
   startedAt: number;
   completedAt?: number;
   error?: string;
+  // HITL fields
+  /** Confidence score from agent (0-1) */
+  confidence?: number;
+  /** Threshold that triggered HITL */
+  threshold?: number;
+  /** ID of the approval request */
+  approvalId?: string;
+  /** Reason for requiring approval */
+  approvalReason?: string;
+  /** ID of the clarification request */
+  clarificationRequestId?: string;
+  /** Question being asked for clarification */
+  clarificationQuestion?: string;
 }
 
 export interface BackgroundAgentState {
@@ -142,43 +161,186 @@ const backgroundAgentSlice = createSlice({
     resetAgents() {
       return initialState;
     },
+
+    // =========================================================================
+    // HITL Actions
+    // =========================================================================
+
+    /**
+     * Set agent status to awaiting_approval with HITL context
+     */
+    setAgentAwaitingApproval(
+      state,
+      action: PayloadAction<{
+        id: string;
+        approvalId: string;
+        confidence: number;
+        reason: string;
+      }>,
+    ) {
+      const { id, approvalId, confidence, reason } = action.payload;
+      const agent = state.agents[id];
+      if (agent) {
+        agent.status = "awaiting_approval";
+        agent.approvalId = approvalId;
+        agent.confidence = confidence;
+        agent.approvalReason = reason;
+      }
+    },
+
+    /**
+     * Set agent status to awaiting_clarification with HITL context
+     */
+    setAgentAwaitingClarification(
+      state,
+      action: PayloadAction<{
+        id: string;
+        requestId: string;
+        question: string;
+      }>,
+    ) {
+      const { id, requestId, question } = action.payload;
+      const agent = state.agents[id];
+      if (agent) {
+        agent.status = "awaiting_clarification";
+        agent.clarificationRequestId = requestId;
+        agent.clarificationQuestion = question;
+      }
+    },
+
+    /**
+     * Clear HITL fields and resume agent to running status
+     */
+    clearAgentHitlStatus(state, action: PayloadAction<string>) {
+      const id = action.payload;
+      const agent = state.agents[id];
+      if (agent) {
+        agent.status = "running";
+        agent.approvalId = undefined;
+        agent.approvalReason = undefined;
+        agent.clarificationRequestId = undefined;
+        agent.clarificationQuestion = undefined;
+        // Note: confidence may be preserved for display
+      }
+    },
   },
 });
 
 // =============================================================================
-// Selectors
+// Selectors (Memoized with createSelector)
 // =============================================================================
 
 type StateWithBackgroundAgent = { backgroundAgent: BackgroundAgentState };
 
-export const selectAllAgents = (
-  state: StateWithBackgroundAgent,
-): BackgroundAgent[] =>
-  state.backgroundAgent.agentIds.map((id) => state.backgroundAgent.agents[id]);
+// Base selectors (not memoized - simple property access)
+const selectAgentIds = (state: StateWithBackgroundAgent) =>
+  state.backgroundAgent.agentIds;
 
-export const selectRunningAgents = (
-  state: StateWithBackgroundAgent,
-): BackgroundAgent[] =>
-  selectAllAgents(state).filter(
-    (agent) => agent.status === "running" || agent.status === "queued",
-  );
+const selectAgentsMap = (state: StateWithBackgroundAgent) =>
+  state.backgroundAgent.agents;
 
-export const selectCompletedAgents = (
-  state: StateWithBackgroundAgent,
-): BackgroundAgent[] =>
-  selectAllAgents(state).filter((agent) => agent.status === "completed");
+/**
+ * Select all agents as an array (memoized)
+ * Only recomputes when agentIds or agents map changes
+ */
+export const selectAllAgents = createSelector(
+  [selectAgentIds, selectAgentsMap],
+  (agentIds, agents): BackgroundAgent[] => {
+    const result: BackgroundAgent[] = [];
+    for (const id of agentIds) {
+      const agent = agents[id];
+      if (agent) result.push(agent);
+    }
+    return result;
+  },
+);
 
+/**
+ * Select running and queued agents (memoized)
+ * Only recomputes when selectAllAgents result changes
+ */
+export const selectRunningAgents = createSelector(
+  [selectAllAgents],
+  (agents): BackgroundAgent[] =>
+    agents.filter((agent) => agent.status === "running" || agent.status === "queued"),
+);
+
+/**
+ * Select completed agents (memoized)
+ * Only recomputes when selectAllAgents result changes
+ */
+export const selectCompletedAgents = createSelector(
+  [selectAllAgents],
+  (agents): BackgroundAgent[] =>
+    agents.filter((agent) => agent.status === "completed"),
+);
+
+/**
+ * Select agent by ID (not memoized - simple property access)
+ */
 export const selectAgentById = (
   state: StateWithBackgroundAgent,
   id: string,
 ): BackgroundAgent | undefined => state.backgroundAgent.agents[id];
 
-export const selectAgentCount = (state: StateWithBackgroundAgent): number =>
-  state.backgroundAgent.agentIds.length;
+/**
+ * Select total agent count (memoized)
+ */
+export const selectAgentCount = createSelector(
+  [selectAgentIds],
+  (agentIds): number => agentIds.length,
+);
 
-export const selectRunningAgentCount = (
-  state: StateWithBackgroundAgent,
-): number => selectRunningAgents(state).length;
+/**
+ * Select running agent count (memoized)
+ */
+export const selectRunningAgentCount = createSelector(
+  [selectRunningAgents],
+  (runningAgents): number => runningAgents.length,
+);
+
+// =============================================================================
+// HITL Selectors (Memoized with createSelector)
+// =============================================================================
+
+/**
+ * Select agents awaiting approval (memoized)
+ */
+export const selectAwaitingApprovalAgents = createSelector(
+  [selectAllAgents],
+  (agents): BackgroundAgent[] =>
+    agents.filter((agent) => agent.status === "awaiting_approval"),
+);
+
+/**
+ * Select agents awaiting clarification (memoized)
+ */
+export const selectAwaitingClarificationAgents = createSelector(
+  [selectAllAgents],
+  (agents): BackgroundAgent[] =>
+    agents.filter((agent) => agent.status === "awaiting_clarification"),
+);
+
+/**
+ * Select all agents needing HITL input (approval or clarification) (memoized)
+ */
+export const selectAwaitingHitlAgents = createSelector(
+  [selectAllAgents],
+  (agents): BackgroundAgent[] =>
+    agents.filter(
+      (agent) =>
+        agent.status === "awaiting_approval" ||
+        agent.status === "awaiting_clarification",
+    ),
+);
+
+/**
+ * Select count of agents needing HITL input (memoized)
+ */
+export const selectAwaitingHitlCount = createSelector(
+  [selectAwaitingHitlAgents],
+  (hitlAgents): number => hitlAgents.length,
+);
 
 // =============================================================================
 // Exports
@@ -192,6 +354,10 @@ export const {
   removeAgent,
   clearCompletedAgents,
   resetAgents,
+  // HITL actions
+  setAgentAwaitingApproval,
+  setAgentAwaitingClarification,
+  clearAgentHitlStatus,
 } = backgroundAgentSlice.actions;
 
 export default backgroundAgentSlice.reducer;

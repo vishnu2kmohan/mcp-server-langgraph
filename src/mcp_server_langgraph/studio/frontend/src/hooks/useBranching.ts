@@ -91,10 +91,23 @@ export function useBranching(initialMessages: BranchMessage[]): BranchingState {
   ]);
   const [currentBranchId, setCurrentBranchId] = useState("main");
 
-  // Get current branch
-  const currentBranch = useMemo(() => {
+  // Get current branch (always returns a valid branch)
+  const currentBranch = useMemo((): Branch => {
     const branch = branches.find((b) => b.id === currentBranchId);
-    return branch || branches[0];
+    if (branch) return branch;
+    // Fallback to first branch or create a default main branch
+    const firstBranch = branches[0];
+    if (firstBranch) return firstBranch;
+    // This should never happen as we initialize with a main branch,
+    // but provide a safe fallback for TypeScript
+    return {
+      id: "main",
+      name: "Main",
+      messages: [],
+      parentBranchId: null,
+      branchPointMessageId: null,
+      createdAt: Date.now(),
+    };
   }, [branches, currentBranchId]);
 
   // Create a new branch from a message
@@ -236,8 +249,11 @@ export function useBranching(initialMessages: BranchMessage[]): BranchingState {
       const minLength = Math.min(messages1.length, messages2.length);
 
       for (let i = 0; i < minLength; i++) {
-        if (messages1[i].id === messages2[i].id) {
-          lastCommonId = messages1[i].id;
+        const msg1 = messages1[i];
+        const msg2 = messages2[i];
+        if (!msg1 || !msg2) break;
+        if (msg1.id === msg2.id) {
+          lastCommonId = msg1.id;
         } else {
           break;
         }

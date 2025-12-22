@@ -5,8 +5,8 @@
  * response display and empty state.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { ChatMessages } from "./ChatMessages";
 
@@ -25,6 +25,11 @@ describe("ChatMessages", () => {
       timestamp: Date.now() - 30000,
     },
   ];
+
+  // Cleanup after each test to prevent DOM leakage and state pollution
+  afterEach(() => {
+    cleanup();
+  });
 
   describe("Message Display", () => {
     it("should render all messages", () => {
@@ -299,8 +304,11 @@ describe("ChatMessages", () => {
         },
       ];
       render(<ChatMessages messages={jsCodeMessage} />);
-      // Should show the code block with language label (multi-line code triggers CodeBlock) - async due to lazy loading
-      expect(await screen.findByText("javascript")).toBeInTheDocument();
+      // Should show the code block with language label (multi-line code triggers CodeBlock)
+      // Increased timeout for lazy-loaded CodeBlock during heavy test runs
+      expect(
+        await screen.findByText("javascript", {}, { timeout: 5000 }),
+      ).toBeInTheDocument();
       // Syntax highlighting splits code into tokens, so check the container text
       const codeContainer = document.querySelector("pre");
       expect(codeContainer?.textContent).toContain("const");

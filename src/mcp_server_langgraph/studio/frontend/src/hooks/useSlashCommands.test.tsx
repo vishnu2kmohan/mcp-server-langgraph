@@ -185,5 +185,80 @@ describe("useSlashCommands", () => {
         }),
       );
     });
+
+    it("should call onBuiltInCommand for built-in commands", async () => {
+      const onBuiltInCommand = vi.fn();
+
+      const { result } = renderHook(
+        () => useSlashCommands({ onBuiltInCommand }),
+        {
+          wrapper: createWrapper(),
+        },
+      );
+
+      await waitFor(() => {
+        expect(result.current.commands.length).toBeGreaterThan(0);
+      });
+
+      // Find a built-in command
+      const helpCommand = result.current.commands.find((c) => c.name === "help");
+      expect(helpCommand).toBeDefined();
+
+      // Simulate selecting the command
+      result.current.handleSelect(helpCommand!);
+
+      // Built-in callback should be called
+      expect(onBuiltInCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "help",
+        }),
+      );
+    });
+
+    it("should not crash when selecting non-matching template command", async () => {
+      const onTemplateSelect = vi.fn();
+
+      const { result } = renderHook(
+        () => useSlashCommands({ onTemplateSelect }),
+        {
+          wrapper: createWrapper(),
+        },
+      );
+
+      await waitFor(() => {
+        expect(result.current.commands.length).toBeGreaterThan(0);
+      });
+
+      // Create a fake command that doesn't match any template
+      const fakeCommand = {
+        name: "nonexistent-command",
+        description: "Does not exist",
+        icon: "help" as const,
+      };
+
+      // Should not throw
+      expect(() => result.current.handleSelect(fakeCommand)).not.toThrow();
+      expect(onTemplateSelect).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("error handling", () => {
+    it("should convert error to Error object", async () => {
+      // Mock with error
+      const { useGetWorkflowTemplatesQuery } = await import("../api");
+      vi.mocked(useGetWorkflowTemplatesQuery).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: "Some error",
+        refetch: vi.fn(),
+      });
+
+      const { result } = renderHook(() => useSlashCommands(), {
+        wrapper: createWrapper(),
+      });
+
+      expect(result.current.error).toBeInstanceOf(Error);
+      expect(result.current.error?.message).toBe("Some error");
+    });
   });
 });

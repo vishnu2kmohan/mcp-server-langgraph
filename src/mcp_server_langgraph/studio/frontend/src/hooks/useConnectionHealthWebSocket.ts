@@ -5,7 +5,7 @@
  * Provides connection status updates, subscription management,
  * and health check requests.
  *
- * Based on backend endpoint: /connections/health/ws
+ * Based on backend endpoint: /api/v1/connections/health/ws
  */
 
 import { useState, useCallback, useRef, useMemo } from "react";
@@ -107,7 +107,7 @@ type ServerMessage =
  * Options for useConnectionHealthWebSocket hook
  */
 export interface UseConnectionHealthWebSocketOptions {
-  /** Custom WebSocket URL (defaults to /connections/health/ws) */
+  /** Custom WebSocket URL (defaults to /api/v1/connections/health/ws) */
   url?: string;
   /** Callback when a connection is updated */
   onConnectionUpdate?: (connection: ConnectionHealth) => void;
@@ -165,7 +165,7 @@ export interface UseConnectionHealthWebSocketReturn {
 function getDefaultWebSocketUrl(): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.host;
-  return `${protocol}//${host}/connections/health/ws`;
+  return `${protocol}//${host}/api/v1/connections/health/ws`;
 }
 
 // =============================================================================
@@ -205,6 +205,12 @@ export function useConnectionHealthWebSocket(
     onError,
   };
 
+  // Ref to track subscribed connections for restoration on reconnect
+  const subscribedConnectionsRef = useRef<Set<string>>(new Set());
+
+  // Ref for send function to use in handleConnect
+  const sendRef = useRef<(data: unknown) => void>(() => {});
+
   // Handle incoming messages
   const handleMessage = useCallback((data: unknown) => {
     const message = data as ServerMessage;
@@ -241,12 +247,14 @@ export function useConnectionHealthWebSocket(
         break;
 
       case "subscribed":
+        subscribedConnectionsRef.current.add(message.connection_id);
         setSubscribedConnections((prev) =>
           new Set(prev).add(message.connection_id),
         );
         break;
 
       case "unsubscribed":
+        subscribedConnectionsRef.current.delete(message.connection_id);
         setSubscribedConnections((prev) => {
           const next = new Set(prev);
           next.delete(message.connection_id);
@@ -260,9 +268,14 @@ export function useConnectionHealthWebSocket(
     }
   }, []);
 
-  // Handle connection established
+  // Handle connection established - restore subscriptions
   const handleConnect = useCallback(() => {
     setError(null);
+
+    // Restore subscriptions on reconnect
+    subscribedConnectionsRef.current.forEach((connectionId) => {
+      sendRef.current({ type: "subscribe", connection_id: connectionId });
+    });
   }, []);
 
   // Handle disconnection - keep connections for resumption
@@ -271,12 +284,20 @@ export function useConnectionHealthWebSocket(
   }, []);
 
   // Use the realtime sync hook for WebSocket management
+  // Enable exponential backoff for better reconnection behavior
   const { status, send, disconnect, reconnect } = useRealtimeSync({
     url,
     onMessage: handleMessage,
     onConnect: handleConnect,
     onDisconnect: handleDisconnect,
+    exponentialBackoff: true,
+    reconnectInterval: 1000, // Start with 1 second
+    maxDelayMs: 30000, // Max 30 seconds between attempts
+    maxReconnectAttempts: 10, // Try up to 10 times
   });
+
+  // Keep sendRef in sync for use in handleConnect
+  sendRef.current = send;
 
   // Computed summary
   const summary = useMemo<ConnectionSummary>(() => {

@@ -12,6 +12,7 @@ import {
   meetsWCAGAAA,
   hexToRgb,
   getRelativeLuminance,
+  validateColorContrast,
 } from "./accessibility";
 
 describe("Accessibility Utilities", () => {
@@ -35,6 +36,12 @@ describe("Accessibility Utilities", () => {
 
     it("should handle hex without #", () => {
       expect(hexToRgb("ffffff")).toEqual({ r: 255, g: 255, b: 255 });
+    });
+
+    it("should return default value for invalid hex", () => {
+      expect(hexToRgb("invalid")).toEqual({ r: 0, g: 0, b: 0 });
+      expect(hexToRgb("xyz")).toEqual({ r: 0, g: 0, b: 0 });
+      expect(hexToRgb("")).toEqual({ r: 0, g: 0, b: 0 });
     });
   });
 
@@ -111,6 +118,35 @@ describe("Accessibility Utilities", () => {
     it("should require 4.5:1 for large text", () => {
       // #767676 on white is about 4.5:1
       expect(meetsWCAGAAA("#767676", "#ffffff", true)).toBe(true);
+    });
+  });
+
+  describe("validateColorContrast", () => {
+    it("should return array of color combinations with contrast results", () => {
+      const results = validateColorContrast();
+
+      expect(Array.isArray(results)).toBe(true);
+      expect(results.length).toBeGreaterThan(0);
+
+      // Each result should have the expected shape
+      results.forEach((result) => {
+        expect(result).toHaveProperty("foreground");
+        expect(result).toHaveProperty("background");
+        expect(result).toHaveProperty("ratio");
+        expect(result).toHaveProperty("passes");
+        expect(typeof result.ratio).toBe("number");
+        expect(typeof result.passes).toBe("boolean");
+      });
+    });
+
+    it("should check standard color palette combinations", () => {
+      const results = validateColorContrast();
+
+      // Should include dark and light backgrounds
+      const hasDarkBg = results.some((r) => r.background.includes("1f"));
+      const hasLightBg = results.some((r) => r.background.includes("fff"));
+
+      expect(hasDarkBg || hasLightBg).toBe(true);
     });
   });
 });

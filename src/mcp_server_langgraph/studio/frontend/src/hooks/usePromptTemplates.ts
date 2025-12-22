@@ -326,8 +326,9 @@ export function usePromptTemplates(): PromptTemplatesState {
     let match;
 
     while ((match = regex.exec(content)) !== null) {
-      if (!variables.includes(match[1])) {
-        variables.push(match[1]);
+      const varName = match[1];
+      if (varName && !variables.includes(varName)) {
+        variables.push(varName);
       }
     }
 

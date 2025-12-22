@@ -12,6 +12,8 @@
  * - DELETE /api/v1/artifacts/:id - Delete an artifact
  * - GET /api/v1/artifacts/:id/versions - Get version history
  * - POST /api/v1/artifacts/:id/fork - Fork an artifact
+ * - POST /api/v1/artifacts/search - Semantic search
+ * - GET /api/v1/artifacts/:id/similar - Find similar artifacts
  */
 
 import { http, HttpResponse, delay } from "msw";
@@ -185,7 +187,52 @@ const mockArtifactVersions: Record<string, ArtifactVersion[]> = {
 // MSW Request Handlers
 // =============================================================================
 
+/**
+ * Semantic search result type
+ */
+interface SemanticSearchResult {
+  artifact_id: string;
+  score: number;
+  title: string | null;
+}
+
 export const canvasHandlers = [
+  /**
+   * POST /api/v1/artifacts/search - Semantic search across artifacts
+   * MUST be defined before GET /api/v1/artifacts/:id to avoid path conflicts
+   */
+  http.post("/api/v1/artifacts/search", async ({ request }) => {
+    await delay(50);
+    const body = (await request.json()) as { query: string; limit?: number };
+    const { query, limit = 10 } = body;
+
+    // Validate query is not empty
+    if (!query || query.trim() === "") {
+      return HttpResponse.json(
+        { detail: "Query parameter is required" },
+        { status: 400 },
+      );
+    }
+
+    // Simple mock search: filter artifacts by content/title matching query
+    const matchingArtifacts = mockCanvasArtifacts.filter(
+      (a) =>
+        a.content.toLowerCase().includes(query.toLowerCase()) ||
+        (a.title && a.title.toLowerCase().includes(query.toLowerCase())),
+    );
+
+    // Create search results with mock scores
+    const results: SemanticSearchResult[] = matchingArtifacts
+      .slice(0, limit)
+      .map((a, index) => ({
+        artifact_id: a.id,
+        score: 0.95 - index * 0.1, // Decreasing scores for mock
+        title: a.title || null,
+      }));
+
+    return HttpResponse.json({ results });
+  }),
+
   /**
    * GET /api/v1/artifacts - List artifacts for a session
    */
@@ -340,6 +387,41 @@ export const canvasHandlers = [
     };
 
     return HttpResponse.json(response, { status: 201 });
+  }),
+
+  /**
+   * GET /api/v1/artifacts/:id/similar - Find similar artifacts
+   */
+  http.get("/api/v1/artifacts/:id/similar", async ({ params, request }) => {
+    await delay(50);
+    const artifactId = params.id as string;
+    const artifact = mockCanvasArtifacts.find((a) => a.id === artifactId);
+
+    if (!artifact) {
+      return HttpResponse.json(
+        { detail: "Artifact not found" },
+        { status: 404 },
+      );
+    }
+
+    const url = new URL(request.url);
+    const limit = parseInt(url.searchParams.get("limit") ?? "5", 10);
+
+    // Find similar artifacts (same content type, different ID)
+    const similarArtifacts = mockCanvasArtifacts.filter(
+      (a) => a.id !== artifactId && a.contentType === artifact.contentType,
+    );
+
+    // Create similarity results with mock scores
+    const results: SemanticSearchResult[] = similarArtifacts
+      .slice(0, limit)
+      .map((a, index) => ({
+        artifact_id: a.id,
+        score: 0.85 - index * 0.1, // Decreasing scores for mock
+        title: a.title || null,
+      }));
+
+    return HttpResponse.json({ results });
   }),
 ];
 

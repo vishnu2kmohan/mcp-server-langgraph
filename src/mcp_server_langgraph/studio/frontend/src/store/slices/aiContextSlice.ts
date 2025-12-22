@@ -4,7 +4,7 @@
  * State management for AI context and inline suggestions.
  * Tracks current context for AI features and manages suggestions.
  */
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createSelector, type PayloadAction } from "@reduxjs/toolkit";
 
 // =============================================================================
 // Types
@@ -128,10 +128,15 @@ export const selectAIContext = (state: StateWithAIContext): AIContext | null =>
 export const selectAILoading = (state: StateWithAIContext): boolean =>
   state.aiContext.isLoading;
 
-export const selectHighConfidenceSuggestions = (
-  state: StateWithAIContext,
-): AISuggestion[] =>
-  state.aiContext.suggestions.filter((s) => s.confidence >= 0.7);
+/**
+ * Select high confidence suggestions (memoized)
+ * Only recomputes when suggestions array changes
+ */
+export const selectHighConfidenceSuggestions = createSelector(
+  [selectSuggestions],
+  (suggestions): AISuggestion[] =>
+    suggestions.filter((s) => s.confidence >= 0.7),
+);
 
 // =============================================================================
 // Exports

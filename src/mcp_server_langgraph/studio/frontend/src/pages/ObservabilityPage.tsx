@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router";
+import { useSearchParams, useLocation, useNavigate } from "react-router";
 import {
   Activity,
   FileText,
@@ -53,8 +53,23 @@ import {
 
 type ObservabilityTab = "traces" | "logs" | "metrics" | "alerts";
 
+// Valid tab values
+const VALID_TABS = ["traces", "logs", "metrics", "alerts"] as const;
+
+// Extract tab from URL path
+function getTabFromPath(pathname: string): ObservabilityTab {
+  const segments = pathname.split("/").filter(Boolean);
+  const lastSegment = segments[segments.length - 1];
+  if (VALID_TABS.includes(lastSegment as ObservabilityTab)) {
+    return lastSegment as ObservabilityTab;
+  }
+  return "traces"; // default
+}
+
 export function ObservabilityPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   // Redux state for persistent filters
@@ -71,8 +86,10 @@ export function ObservabilityPage() {
   const [cursor, setCursor] = useState<string | undefined>(undefined);
 
   // Dispatch helpers (wrap actions for cleaner code)
-  const setActiveTab = (tab: ObservabilityTab) =>
-    dispatch(setActiveTabAction(tab));
+  const setActiveTab = useCallback(
+    (tab: ObservabilityTab) => dispatch(setActiveTabAction(tab)),
+    [dispatch],
+  );
   const setStatusFilter = (value: string) =>
     dispatch(setStatusFilterAction(value));
   const setSessionIdFilter = (value: string) =>
@@ -100,6 +117,26 @@ export function ObservabilityPage() {
       setSearchParams(newParams, { replace: true });
     }
   }, [searchParams, selectedTraceId, setSearchParams, setSelectedTraceId]);
+
+  // Sync active tab with URL path
+  useEffect(() => {
+    const tabFromUrl = getTabFromPath(location.pathname);
+    if (tabFromUrl !== activeTab) {
+      dispatch(setActiveTabAction(tabFromUrl));
+    }
+  }, [location.pathname, activeTab, dispatch]);
+
+  // Update URL when tab changes (via user click)
+  const handleTabChange = useCallback(
+    (tab: ObservabilityTab) => {
+      setActiveTab(tab);
+      // Construct the new path based on current path structure
+      const basePath = location.pathname.replace(/\/(traces|logs|metrics|alerts)$/, "");
+      const newPath = tab === "traces" ? basePath : `${basePath}/${tab}`;
+      navigate(newPath, { replace: true });
+    },
+    [navigate, location.pathname, setActiveTab],
+  );
 
   // Alerts filter state (local - not persisted)
   const [alertStateFilter, setAlertStateFilter] = useState<string>("");
@@ -343,7 +380,7 @@ export function ObservabilityPage() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                 activeTab === tab.id
                   ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"

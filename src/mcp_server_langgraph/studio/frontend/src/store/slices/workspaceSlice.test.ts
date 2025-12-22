@@ -22,6 +22,7 @@ import workspaceReducer, {
   setLeftSidebarCollapsed,
   setRightSidebarWidth,
   setRightSidebarCollapsed,
+  setRightSidebarPinned,
   setBottomPanelHeight,
   setBottomPanelCollapsed,
   setActiveActivityId,
@@ -47,6 +48,7 @@ import workspaceReducer, {
   selectLeftSidebarCollapsed,
   selectRightSidebarWidth,
   selectRightSidebarCollapsed,
+  selectRightSidebarPinned,
   selectBottomPanelHeight,
   selectBottomPanelCollapsed,
   selectActiveActivityId,
@@ -64,6 +66,7 @@ import workspaceReducer, {
   type TabState,
   WORKSPACE_STORAGE_KEY,
   DEFAULT_WORKSPACE_STATE,
+  workspacePersistenceMiddleware,
 } from "./workspaceSlice";
 
 describe("workspaceSlice", () => {
@@ -1172,6 +1175,678 @@ describe("workspaceSlice", () => {
       const state1 = workspaceReducer(undefined, { type: "unknown" });
       const state2 = workspaceReducer(state1, setFocusMode(true));
       expect(state2.lastUpdated).toBeGreaterThan(0);
+    });
+  });
+
+  describe("workspacePersistenceMiddleware", () => {
+    it("should save to storage on workspace actions", () => {
+      const mockStore = {
+        getState: () => ({
+          workspace: { leftSidebarWidth: 300 },
+        }),
+      };
+      const mockNext = vi.fn((action) => action);
+
+      const middleware = workspacePersistenceMiddleware(mockStore)(mockNext);
+
+      // Dispatch a workspace action
+      const action = { type: "workspace/setLeftSidebarWidth", payload: 300 };
+      middleware(action);
+
+      expect(mockNext).toHaveBeenCalledWith(action);
+    });
+
+    it("should not save for non-workspace actions", () => {
+      const mockStore = {
+        getState: () => ({
+          workspace: { leftSidebarWidth: 300 },
+        }),
+      };
+      const mockNext = vi.fn((action) => action);
+
+      const middleware = workspacePersistenceMiddleware(mockStore)(mockNext);
+
+      // Dispatch a non-workspace action
+      const action = { type: "auth/login" };
+      middleware(action);
+
+      expect(mockNext).toHaveBeenCalledWith(action);
+    });
+
+    it("should handle action.type being undefined", () => {
+      const mockStore = {
+        getState: () => ({
+          workspace: { leftSidebarWidth: 300 },
+        }),
+      };
+      const mockNext = vi.fn((action) => action);
+
+      const middleware = workspacePersistenceMiddleware(mockStore)(mockNext);
+
+      // Dispatch action without type
+      const action = {};
+      middleware(action);
+
+      expect(mockNext).toHaveBeenCalledWith(action);
+    });
+
+    it("should handle missing workspace in state", () => {
+      const mockStore = {
+        getState: () => ({
+          // No workspace in state
+        }),
+      };
+      const mockNext = vi.fn((action) => action);
+
+      const middleware = workspacePersistenceMiddleware(mockStore)(mockNext);
+
+      // Dispatch a workspace action
+      const action = { type: "workspace/setLeftSidebarWidth", payload: 300 };
+      middleware(action);
+
+      expect(mockNext).toHaveBeenCalledWith(action);
+    });
+  });
+
+  describe("setRightSidebarPinned action", () => {
+    it("should set right sidebar pinned to true", () => {
+      const state = workspaceReducer(undefined, setRightSidebarPinned(true));
+      expect(state.rightSidebarPinned).toBe(true);
+    });
+
+    it("should set right sidebar pinned to false", () => {
+      let state = workspaceReducer(undefined, setRightSidebarPinned(true));
+      state = workspaceReducer(state, setRightSidebarPinned(false));
+      expect(state.rightSidebarPinned).toBe(false);
+    });
+
+    it("should update lastUpdated timestamp", () => {
+      const state = workspaceReducer(undefined, setRightSidebarPinned(true));
+      expect(state.lastUpdated).toBeGreaterThan(0);
+    });
+  });
+
+  describe("selectRightSidebarPinned selector", () => {
+    it("should return rightSidebarPinned from state", () => {
+      const state = workspaceReducer(undefined, setRightSidebarPinned(true));
+      const rootState = { workspace: state } as { workspace: WorkspaceState };
+      expect(selectRightSidebarPinned(rootState)).toBe(true);
+    });
+
+    it("should return false as default", () => {
+      const state = workspaceReducer(undefined, { type: "unknown" });
+      const rootState = { workspace: state } as { workspace: WorkspaceState };
+      expect(selectRightSidebarPinned(rootState)).toBe(false);
+    });
+  });
+
+  describe("noUncheckedIndexedAccess edge cases", () => {
+    /**
+     * These tests ensure safe indexed access patterns are used throughout.
+     * Addresses TypeScript strict mode noUncheckedIndexedAccess flag.
+     */
+
+    describe("reorderTabs with invalid indices", () => {
+      it("should handle reorder when fromIndex is out of bounds", () => {
+        let state = workspaceReducer(
+          undefined,
+          addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+        );
+        state = workspaceReducer(
+          state,
+          addTab({ id: "tab-2", type: "workflow", title: "Workflow 1" }),
+        );
+
+        // Try to reorder from invalid index
+        const stateBefore = state;
+        state = workspaceReducer(
+          state,
+          reorderTabs({ fromIndex: 10, toIndex: 0 }),
+        );
+
+        // State should remain unchanged
+        expect(state.tabs).toEqual(stateBefore.tabs);
+      });
+
+      it("should handle reorder when toIndex is out of bounds", () => {
+        let state = workspaceReducer(
+          undefined,
+          addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+        );
+        state = workspaceReducer(
+          state,
+          addTab({ id: "tab-2", type: "workflow", title: "Workflow 1" }),
+        );
+
+        const stateBefore = state;
+        state = workspaceReducer(
+          state,
+          reorderTabs({ fromIndex: 0, toIndex: 10 }),
+        );
+
+        expect(state.tabs).toEqual(stateBefore.tabs);
+      });
+
+      it("should handle reorder with negative indices", () => {
+        let state = workspaceReducer(
+          undefined,
+          addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+        );
+
+        const stateBefore = state;
+        state = workspaceReducer(
+          state,
+          reorderTabs({ fromIndex: -1, toIndex: 0 }),
+        );
+
+        expect(state.tabs).toEqual(stateBefore.tabs);
+      });
+
+      it("should handle reorder on empty tabs array", () => {
+        const state = workspaceReducer(undefined, { type: "unknown" });
+        const stateAfter = workspaceReducer(
+          state,
+          reorderTabs({ fromIndex: 0, toIndex: 1 }),
+        );
+
+        expect(stateAfter.tabs).toEqual([]);
+      });
+    });
+
+    describe("dock layout path traversal", () => {
+      it("should handle getLayoutAtPath with empty path on nested layout", () => {
+        const nestedLayout: DockLayout = {
+          type: "horizontal-split",
+          children: [
+            { type: "tab-group", tabIds: ["tab-1"] },
+            { type: "tab-group", tabIds: ["tab-2"] },
+          ],
+          sizes: [50, 50],
+        };
+
+        let state = workspaceReducer(
+          undefined,
+          addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+        );
+        state = workspaceReducer(
+          state,
+          addTab({ id: "tab-2", type: "workflow", title: "Workflow 1" }),
+        );
+        state = workspaceReducer(state, setDockLayout(nestedLayout));
+
+        // Update sizes at root (empty path)
+        state = workspaceReducer(
+          state,
+          updateSplitSizes({ path: [], sizes: [30, 70] }),
+        );
+
+        expect(state.dockLayout.sizes).toEqual([30, 70]);
+      });
+
+      it("should handle updateSplitSizes on tab-group layout (no-op)", () => {
+        let state = workspaceReducer(
+          undefined,
+          addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+        );
+
+        // Try to update sizes on a tab-group (should be no-op)
+        state = workspaceReducer(
+          state,
+          updateSplitSizes({ path: [], sizes: [50, 50] }),
+        );
+
+        // Layout should remain tab-group
+        expect(state.dockLayout.type).toBe("tab-group");
+      });
+
+      it("should handle updateSplitSizes with invalid nested path", () => {
+        const splitLayout: DockLayout = {
+          type: "horizontal-split",
+          children: [
+            { type: "tab-group", tabIds: ["tab-1"] },
+            { type: "tab-group", tabIds: ["tab-2"] },
+          ],
+          sizes: [50, 50],
+        };
+
+        let state = workspaceReducer(undefined, setDockLayout(splitLayout));
+
+        // Try to update at path [5] which doesn't exist
+        state = workspaceReducer(
+          state,
+          updateSplitSizes({ path: [5], sizes: [30, 70] }),
+        );
+
+        // Original sizes should be preserved
+        expect(state.dockLayout.sizes).toEqual([50, 50]);
+      });
+    });
+
+    describe("updateTabTitle", () => {
+      it("should update an existing tab title", () => {
+        let state = workspaceReducer(
+          undefined,
+          addTab({ id: "tab-1", type: "chat", title: "Original Title" }),
+        );
+        state = workspaceReducer(state, {
+          type: "workspace/updateTabTitle",
+          payload: { tabId: "tab-1", title: "New Title" },
+        });
+        expect(state.tabs[0].title).toBe("New Title");
+      });
+
+      it("should not crash when tab does not exist", () => {
+        let state = workspaceReducer(
+          undefined,
+          addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+        );
+        state = workspaceReducer(state, {
+          type: "workspace/updateTabTitle",
+          payload: { tabId: "non-existent", title: "New Title" },
+        });
+        // Should not crash, original tab unchanged
+        expect(state.tabs[0].title).toBe("Chat 1");
+      });
+    });
+
+    describe("removeTab edge cases", () => {
+      it("should handle removing non-existent tab", () => {
+        let state = workspaceReducer(
+          undefined,
+          addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+        );
+        const tabsBefore = state.tabs;
+        state = workspaceReducer(state, removeTab("non-existent"));
+        // Tabs should be unchanged
+        expect(state.tabs).toEqual(tabsBefore);
+      });
+
+      it("should fall back to previous tab when removing active tab at end", () => {
+        let state = workspaceReducer(
+          undefined,
+          addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+        );
+        state = workspaceReducer(
+          state,
+          addTab({ id: "tab-2", type: "workflow", title: "Workflow 1" }),
+        );
+        state = workspaceReducer(
+          state,
+          addTab({ id: "tab-3", type: "cost", title: "Cost" }),
+        );
+        state = workspaceReducer(state, setActiveTabId("tab-3"));
+
+        // Remove the last tab (active)
+        state = workspaceReducer(state, removeTab("tab-3"));
+
+        // Should fall back to previous tab (clamped to last available)
+        expect(state.activeTabId).toBe("tab-2");
+      });
+    });
+
+    describe("removeTabsByEntityId with empty state", () => {
+      it("should handle removing when tabs array is empty", () => {
+        const state = workspaceReducer(undefined, { type: "unknown" });
+        const stateAfter = workspaceReducer(
+          state,
+          removeTabsByEntityId("some-entity"),
+        );
+
+        expect(stateAfter.tabs).toEqual([]);
+        expect(stateAfter.activeTabId).toBeNull();
+      });
+
+      it("should set activeTabId to first remaining tab when active removed", () => {
+        let state = workspaceReducer(
+          undefined,
+          addTab({
+            id: "tab-1",
+            type: "chat",
+            title: "Chat 1",
+            entityId: "entity-1",
+          }),
+        );
+        state = workspaceReducer(
+          state,
+          addTab({
+            id: "tab-2",
+            type: "workflow",
+            title: "Workflow 1",
+            entityId: "entity-2",
+          }),
+        );
+        state = workspaceReducer(
+          state,
+          addTab({
+            id: "tab-3",
+            type: "cost",
+            title: "Cost",
+            entityId: "entity-3",
+          }),
+        );
+        state = workspaceReducer(state, setActiveTabId("tab-1"));
+
+        // Remove entity-1 tab (the active one)
+        state = workspaceReducer(state, removeTabsByEntityId("entity-1"));
+
+        // Should fall back to first remaining tab
+        expect(state.activeTabId).toBe("tab-2");
+      });
+
+      it("should set activeTabId to null when all tabs removed", () => {
+        let state = workspaceReducer(
+          undefined,
+          addTab({
+            id: "tab-1",
+            type: "chat",
+            title: "Chat 1",
+            entityId: "entity-1",
+          }),
+        );
+        state = workspaceReducer(state, setActiveTabId("tab-1"));
+
+        state = workspaceReducer(state, removeTabsByEntityId("entity-1"));
+
+        expect(state.activeTabId).toBeNull();
+        expect(state.tabs).toEqual([]);
+      });
+    });
+
+    describe("splitTab with edge cases", () => {
+      it("should handle single tab split correctly", () => {
+        let state = workspaceReducer(
+          undefined,
+          addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+        );
+
+        // Split the only tab
+        state = workspaceReducer(
+          state,
+          splitTab({
+            tabId: "tab-1",
+            direction: "horizontal",
+            position: "after",
+          }),
+        );
+
+        // Should create split with empty existing group and new group with tab
+        expect(state.dockLayout.type).toBe("horizontal-split");
+        expect(state.dockLayout.children).toHaveLength(2);
+      });
+
+      it("should handle nested layout tab not found", () => {
+        const nestedLayout: DockLayout = {
+          type: "horizontal-split",
+          children: [
+            {
+              type: "vertical-split",
+              children: [
+                { type: "tab-group", tabIds: ["tab-1"] },
+                { type: "tab-group", tabIds: ["tab-2"] },
+              ],
+              sizes: [50, 50],
+            },
+            { type: "tab-group", tabIds: ["tab-3"] },
+          ],
+          sizes: [70, 30],
+        };
+
+        let state = workspaceReducer(
+          undefined,
+          addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+        );
+        state = workspaceReducer(
+          state,
+          addTab({ id: "tab-2", type: "workflow", title: "Workflow 1" }),
+        );
+        state = workspaceReducer(
+          state,
+          addTab({ id: "tab-3", type: "cost", title: "Cost" }),
+        );
+        state = workspaceReducer(state, setDockLayout(nestedLayout));
+
+        // Layout should be set correctly
+        expect(state.dockLayout.type).toBe("horizontal-split");
+
+        // Now add tab-4 to tabs but NOT to layout, then try to split it
+        state = workspaceReducer(
+          state,
+          addTab({ id: "tab-4", type: "chat", title: "Chat 4" }),
+        );
+        // tab-4 is in tabs but we manually set a layout without it
+
+        // This should handle the case gracefully
+        const stateAfter = workspaceReducer(
+          state,
+          splitTab({
+            tabId: "tab-4",
+            direction: "vertical",
+            position: "after",
+          }),
+        );
+
+        // Should have added the tab correctly
+        expect(stateAfter.dockLayout).toBeDefined();
+      });
+    });
+  });
+
+  describe("moveTabToGroup edge cases", () => {
+    it("should do nothing when tab does not exist", () => {
+      const splitLayout: DockLayout = {
+        type: "horizontal-split",
+        children: [
+          { type: "tab-group", tabIds: ["tab-1"] },
+          { type: "tab-group", tabIds: ["tab-2"] },
+        ],
+        sizes: [50, 50],
+      };
+
+      let state = workspaceReducer(
+        undefined,
+        addTab({
+          id: "tab-1",
+          type: "chat",
+          title: "Chat 1",
+        }),
+      );
+      state = workspaceReducer(
+        state,
+        addTab({
+          id: "tab-2",
+          type: "workflow",
+          title: "Workflow 1",
+        }),
+      );
+      state = workspaceReducer(state, setDockLayout(splitLayout));
+
+      // Try to move a non-existent tab
+      const stateAfter = workspaceReducer(
+        state,
+        moveTabToGroup({
+          tabId: "non-existent-tab",
+          targetPath: [1],
+        }),
+      );
+
+      // Layout should remain unchanged
+      expect(stateAfter.dockLayout).toEqual(state.dockLayout);
+    });
+
+    it("should recalculate sizes when children are filtered", () => {
+      // Create a complex nested layout
+      const nestedLayout: DockLayout = {
+        type: "horizontal-split",
+        children: [
+          {
+            type: "vertical-split",
+            children: [
+              { type: "tab-group", tabIds: ["tab-1"] },
+              { type: "tab-group", tabIds: ["tab-2"] },
+            ],
+            sizes: [60, 40],
+          },
+          { type: "tab-group", tabIds: ["tab-3"] },
+        ],
+        sizes: [70, 30],
+      };
+
+      let state = workspaceReducer(
+        undefined,
+        addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+      );
+      state = workspaceReducer(
+        state,
+        addTab({ id: "tab-2", type: "workflow", title: "Workflow 1" }),
+      );
+      state = workspaceReducer(
+        state,
+        addTab({ id: "tab-3", type: "cost", title: "Cost" }),
+      );
+      state = workspaceReducer(state, setDockLayout(nestedLayout));
+
+      // Move tab-1 to the last group, leaving first nested group empty
+      state = workspaceReducer(
+        state,
+        moveTabToGroup({
+          tabId: "tab-1",
+          targetPath: [1],
+        }),
+      );
+
+      // The structure should have collapsed
+      // Either a simpler structure or recalculated sizes
+      expect(state.dockLayout).toBeDefined();
+      expect(state.activeTabId).toBe("tab-1");
+    });
+
+    it("should handle moving tab within same group", () => {
+      const splitLayout: DockLayout = {
+        type: "horizontal-split",
+        children: [
+          { type: "tab-group", tabIds: ["tab-1", "tab-2"] },
+          { type: "tab-group", tabIds: ["tab-3"] },
+        ],
+        sizes: [50, 50],
+      };
+
+      let state = workspaceReducer(
+        undefined,
+        addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+      );
+      state = workspaceReducer(
+        state,
+        addTab({ id: "tab-2", type: "workflow", title: "Workflow 1" }),
+      );
+      state = workspaceReducer(
+        state,
+        addTab({ id: "tab-3", type: "cost", title: "Cost" }),
+      );
+      state = workspaceReducer(state, setDockLayout(splitLayout));
+
+      // Move tab-1 to same group (first group, path [0])
+      state = workspaceReducer(
+        state,
+        moveTabToGroup({
+          tabId: "tab-1",
+          targetPath: [0],
+        }),
+      );
+
+      // Tab should still be in the first group
+      expect(state.dockLayout.children?.[0].tabIds).toContain("tab-1");
+      expect(state.activeTabId).toBe("tab-1");
+    });
+
+    it("should collapse to empty tab-group when all children become empty", () => {
+      // Create a layout where moving the only tab from a child will empty all children
+      const splitLayout: DockLayout = {
+        type: "horizontal-split",
+        children: [
+          {
+            type: "vertical-split",
+            children: [
+              { type: "tab-group", tabIds: ["tab-1"] },
+              { type: "tab-group", tabIds: [] }, // Already empty
+            ],
+            sizes: [50, 50],
+          },
+          { type: "tab-group", tabIds: ["tab-2"] },
+        ],
+        sizes: [60, 40],
+      };
+
+      let state = workspaceReducer(
+        undefined,
+        addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+      );
+      state = workspaceReducer(
+        state,
+        addTab({ id: "tab-2", type: "workflow", title: "Workflow 1" }),
+      );
+      state = workspaceReducer(state, setDockLayout(splitLayout));
+
+      // Move tab-1 to the second group, emptying the vertical-split entirely
+      state = workspaceReducer(
+        state,
+        moveTabToGroup({
+          tabId: "tab-1",
+          targetPath: [1],
+        }),
+      );
+
+      // Structure should have collapsed - the empty vertical split should be removed
+      expect(state.dockLayout).toBeDefined();
+      // The second group should now have both tabs
+      expect(state.activeTabId).toBe("tab-1");
+    });
+
+    it("should handle deeply nested structure collapse", () => {
+      // Create a deeply nested layout
+      const deepLayout: DockLayout = {
+        type: "horizontal-split",
+        children: [
+          {
+            type: "vertical-split",
+            children: [
+              {
+                type: "horizontal-split",
+                children: [
+                  { type: "tab-group", tabIds: ["tab-1"] },
+                  { type: "tab-group", tabIds: [] },
+                ],
+                sizes: [50, 50],
+              },
+              { type: "tab-group", tabIds: [] },
+            ],
+            sizes: [50, 50],
+          },
+          { type: "tab-group", tabIds: ["tab-2"] },
+        ],
+        sizes: [50, 50],
+      };
+
+      let state = workspaceReducer(
+        undefined,
+        addTab({ id: "tab-1", type: "chat", title: "Chat 1" }),
+      );
+      state = workspaceReducer(
+        state,
+        addTab({ id: "tab-2", type: "workflow", title: "Workflow 1" }),
+      );
+      state = workspaceReducer(state, setDockLayout(deepLayout));
+
+      // Move tab-1 out, collapsing multiple levels
+      state = workspaceReducer(
+        state,
+        moveTabToGroup({
+          tabId: "tab-1",
+          targetPath: [1],
+        }),
+      );
+
+      expect(state.dockLayout).toBeDefined();
+      expect(state.activeTabId).toBe("tab-1");
     });
   });
 });

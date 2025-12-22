@@ -82,7 +82,7 @@ export function GuidedTour({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isActive, handleNext, handlePrevious, handleSkip]);
 
-  if (!isActive || steps.length === 0) {
+  if (!isActive || steps.length === 0 || !currentStep) {
     return null;
   }
 

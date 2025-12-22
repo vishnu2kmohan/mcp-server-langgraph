@@ -1,591 +1,139 @@
 /**
- * HybridShellLayout - Phase 1 Implementation
+ * HybridShellLayout - Hybrid Canvas Implementation
  *
  * New app shell for the Hybrid Canvas paradigm (Gemini/ChatGPT Canvas style).
  * Uses react-resizable-panels for flexible panel sizing.
  *
  * Layout:
  * +----------------------------------------------------------------+
- * | Activity  |  Session   |  Conversation  |    Canvas Panel      |
- * |   Bar     |    Nav     |     Panel      |                      |
+ * |                     TopBar (persona-aware)                      |
+ * +----------------------------------------------------------------+
+ * | Activity  |  Session   |  Conversation  |    Canvas Workspace  |
+ * |   Bar     |    Nav     |     Panel      |    (full features)   |
  * |  (56px)   | (resizable)|  (resizable)   |    (resizable)       |
  * +----------------------------------------------------------------+
- * |                      Status Bar                                 |
+ * |   StatusBar: Model | Tokens | Connection | Agent | User         |
  * +----------------------------------------------------------------+
  */
-import { useCallback, useMemo } from "react";
-import {
-  Outlet,
-  useNavigate,
-  useRouteLoaderData,
-  useParams,
-} from "react-router";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import type { SessionsLoaderData, ChatLoaderData } from "../router/loaders";
-import type { Session } from "../types";
-import type { CanvasArtifact } from "../types/artifacts";
-import {
-  MessageSquare,
-  GitBranch,
-  Cpu,
-  Activity,
-  Settings,
-  Shield,
-  Plus,
-  Search,
-  FileCode2,
-  Command,
-} from "lucide-react";
+import { useCallback, useMemo, useEffect, useState, Suspense } from "react";
+import { useLocation } from "react-router";
+import { Panel, PanelGroup } from "react-resizable-panels";
+import { ConnectedConversationPanel } from "../conversation/ConnectedConversationPanel";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
-  selectActiveNavItem,
   selectCanvasCollapsed,
   selectSessionNavCollapsed,
-  selectSelectedArtifactId,
-  setActiveNavItem,
   setPanelSizes,
-  setSelectedArtifactId,
+  toggleCanvas,
+  toggleSessionNav,
   type CanvasPanelSizes,
 } from "../store/slices/canvasSlice";
-import { selectSidebarItems } from "../store/slices/personaSlice";
+import { selectCurrentSession, createSession } from "../store/slices/sessionSlice";
+import { selectUsername } from "../store/slices/personaSlice";
+import {
+  selectAllAgents,
+  updateAgentStatus,
+} from "../store/slices/backgroundAgentSlice";
+import { usePersonaRouting } from "../hooks/usePersonaRouting";
+import { useConnectionHealthWebSocket } from "../hooks/useConnectionHealthWebSocket";
+import { useNudges } from "../hooks/useNudges";
+import { useAIPersonaAnalysis } from "../hooks/useAIPersonaAnalysis";
+import { useCrossInsightsPanel } from "../hooks/useCrossInsightsPanel";
+import { useHITLDialogs } from "../hooks/useHITLDialogs";
+import { useFeatureFlag } from "../contexts/FeatureFlagContext";
+import type { ConnectionStatus } from "./StatusBar";
+import { NudgeTooltip } from "../components/Nudge";
+import { CrossInsightsPanel } from "../components/Analytics/CrossInsightsPanel";
+import { AgentApprovalDialog } from "../components/Admin/AgentApprovalDialog";
+import { ClarificationDialog } from "../components/Admin/ClarificationDialog";
+// Use consolidated HITL types from types/hitl.ts
+import {
+  type ApprovalRequiredPayload,
+  type ClarificationRequiredPayload,
+  type AgentApprovalRequest,
+  type AgentClarificationRequest,
+  type ClarificationUIResponse,
+  type ClarificationAPIResponse,
+  convertUIResponseToAPIResponse,
+  convertApprovalPayloadToRequest,
+  convertClarificationPayloadToRequest,
+} from "../types/hitl";
+
+// Import lazy-loaded AI components (Phase 4) - code-split for reduced bundle size
+import {
+  LazyAICommandPalette,
+  LazyBackgroundAgentPanel,
+  LazyAgentTaskQueue,
+  type Command,
+  type AIInterpretation,
+} from "../ai/lazy";
+
+// Import extracted components (de-duplicated from inline versions)
+import { ActivityBar } from "./ActivityBar";
+import { SessionNav } from "./SessionNav";
+import { StatusBar } from "./StatusBar";
+import { TopBar } from "./TopBar";
+import { ResizeHandle } from "./ResizeHandle";
+import { ConnectedCanvasPanel } from "../canvas/ConnectedCanvasPanel";
+import { TelemetryViewer } from "../devtools";
+import { devLogger } from "../utils/devLogger";
+import { getAuthToken } from "../utils/storage";
+
+const logger = devLogger.withPrefix("[HybridShell]");
 
 // =============================================================================
-// Utility
+// Command Palette Commands
 // =============================================================================
 
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
-
-// =============================================================================
-// ActivityBar Component
-// =============================================================================
-
-interface NavItem {
-  id: string;
-  icon: React.ReactNode;
-  label: string;
-  path?: string;
-}
-
-const NAV_ITEMS: NavItem[] = [
+const PALETTE_COMMANDS: Command[] = [
   {
-    id: "chat",
-    icon: <MessageSquare size={20} />,
-    label: "Chat",
-    path: "/studio/v2/chat",
+    id: "new-chat",
+    name: "New Chat",
+    description: "Start a new conversation",
+    shortcut: "⌘N",
+    category: "chat",
   },
-  { id: "workflows", icon: <GitBranch size={20} />, label: "Workflows" },
-  { id: "agents", icon: <Cpu size={20} />, label: "Agents" },
-  { id: "observability", icon: <Activity size={20} />, label: "Observability" },
-  { id: "admin", icon: <Shield size={20} />, label: "Admin" },
+  {
+    id: "toggle-canvas",
+    name: "Toggle Canvas",
+    description: "Show or hide the canvas panel",
+    shortcut: "⌘/",
+    category: "layout",
+  },
+  {
+    id: "toggle-sidebar",
+    name: "Toggle Sidebar",
+    description: "Show or hide the session sidebar",
+    shortcut: "⌘B",
+    category: "layout",
+  },
+  {
+    id: "open-settings",
+    name: "Open Settings",
+    description: "Open application settings",
+    shortcut: "⌘,",
+    category: "navigation",
+  },
+  {
+    id: "open-help",
+    name: "Help",
+    description: "Open help documentation",
+    shortcut: "?",
+    category: "navigation",
+  },
+  {
+    id: "open-observability",
+    name: "Observability",
+    description: "Open observability dashboard",
+    category: "navigation",
+  },
+  {
+    id: "open-compliance",
+    name: "Compliance Dashboard",
+    description: "Open compliance monitoring",
+    category: "navigation",
+  },
 ];
-
-const BOTTOM_ITEMS: NavItem[] = [
-  { id: "settings", icon: <Settings size={20} />, label: "Settings" },
-];
-
-function ActivityBar() {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const activeNavItem = useAppSelector(selectActiveNavItem);
-
-  // RBAC: Get allowed sidebar items from persona slice (deny-by-default)
-  const allowedItems = useAppSelector(selectSidebarItems);
-
-  // Filter navigation items based on persona permissions
-  const visibleNavItems = useMemo(
-    () => NAV_ITEMS.filter((item) => allowedItems.includes(item.id)),
-    [allowedItems],
-  );
-
-  // Filter bottom items based on persona permissions
-  const visibleBottomItems = useMemo(
-    () => BOTTOM_ITEMS.filter((item) => allowedItems.includes(item.id)),
-    [allowedItems],
-  );
-
-  const handleNavClick = useCallback(
-    (item: NavItem) => {
-      dispatch(setActiveNavItem(item.id));
-      if (item.path) {
-        navigate(item.path);
-      }
-    },
-    [dispatch, navigate],
-  );
-
-  return (
-    <div
-      data-testid="activity-bar"
-      className={cn(
-        "flex flex-col items-center w-14 py-2",
-        "bg-gray-100 dark:bg-gray-900",
-        "border-r border-gray-200 dark:border-gray-700",
-      )}
-    >
-      {/* Main navigation icons - RBAC filtered */}
-      <div className="flex flex-col gap-1">
-        {visibleNavItems.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            aria-label={item.label}
-            title={item.label}
-            onClick={() => handleNavClick(item)}
-            className={cn(
-              "p-2 rounded-lg transition-all",
-              "focus:outline-none focus:ring-2 focus:ring-primary-500",
-              activeNavItem === item.id &&
-                "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-              activeNavItem !== item.id &&
-                "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
-            )}
-          >
-            {item.icon}
-          </button>
-        ))}
-      </div>
-
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Bottom icons - RBAC filtered */}
-      <div className="flex flex-col gap-1">
-        <button
-          type="button"
-          aria-label="Command Palette"
-          title="Command Palette (⌘K)"
-          className={cn(
-            "p-2 rounded-lg transition-all",
-            "text-gray-500 dark:text-gray-400",
-            "hover:bg-gray-200 dark:hover:bg-gray-700",
-          )}
-        >
-          <Command size={20} />
-        </button>
-        {visibleBottomItems.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            aria-label={item.label}
-            title={item.label}
-            onClick={() => handleNavClick(item)}
-            className={cn(
-              "p-2 rounded-lg transition-all",
-              "text-gray-500 dark:text-gray-400",
-              "hover:bg-gray-200 dark:hover:bg-gray-700",
-            )}
-          >
-            {item.icon}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// SessionNav Component
-// =============================================================================
-
-interface GroupedSessions {
-  today: Session[];
-  yesterday: Session[];
-  older: Session[];
-}
-
-function groupSessionsByDate(sessions: Session[]): GroupedSessions {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-
-  const groups: GroupedSessions = { today: [], yesterday: [], older: [] };
-
-  for (const session of sessions) {
-    const sessionDate = new Date(session.created_at);
-    const sessionDay = new Date(
-      sessionDate.getFullYear(),
-      sessionDate.getMonth(),
-      sessionDate.getDate(),
-    );
-
-    if (sessionDay.getTime() === today.getTime()) {
-      groups.today.push(session);
-    } else if (sessionDay.getTime() === yesterday.getTime()) {
-      groups.yesterday.push(session);
-    } else {
-      groups.older.push(session);
-    }
-  }
-
-  return groups;
-}
-
-function SessionNav() {
-  const navigate = useNavigate();
-  const { sessionId: currentSessionId } = useParams();
-
-  // Get sessions from route loader data
-  const loaderData = useRouteLoaderData("studio-v2") as
-    | SessionsLoaderData
-    | undefined;
-
-  // Memoize sessions to prevent unnecessary re-renders
-  const sessions = useMemo(
-    () => loaderData?.sessions ?? [],
-    [loaderData?.sessions],
-  );
-
-  // Group sessions by date
-  const groupedSessions = useMemo(
-    () => groupSessionsByDate(sessions),
-    [sessions],
-  );
-
-  const handleSessionClick = useCallback(
-    (session: Session) => {
-      navigate(`/studio/v2/chat/${session.id}`);
-    },
-    [navigate],
-  );
-
-  const handleNewChat = useCallback(() => {
-    navigate("/studio/v2/chat");
-  }, [navigate]);
-
-  const renderSessionItem = (session: Session) => (
-    <button
-      key={session.id}
-      type="button"
-      onClick={() => handleSessionClick(session)}
-      className={cn(
-        "w-full text-left px-3 py-2 rounded-lg text-sm truncate",
-        "transition-colors",
-        session.id === currentSessionId
-          ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700",
-      )}
-    >
-      {session.name || `Session ${session.id.slice(0, 8)}`}
-    </button>
-  );
-
-  return (
-    <div
-      data-testid="session-nav"
-      className={cn(
-        "flex flex-col h-full",
-        "bg-gray-50 dark:bg-gray-800",
-        "border-r border-gray-200 dark:border-gray-700",
-      )}
-    >
-      {/* Header with New Chat button */}
-      <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-        <button
-          type="button"
-          onClick={handleNewChat}
-          className={cn(
-            "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg",
-            "bg-primary-500 hover:bg-primary-600",
-            "text-white font-medium text-sm",
-            "transition-colors",
-          )}
-        >
-          <Plus size={16} />
-          <span>New Chat</span>
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="p-2">
-        <div className="relative">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-          />
-          <input
-            type="text"
-            placeholder="Search sessions..."
-            className={cn(
-              "w-full pl-9 pr-3 py-2 rounded-lg text-sm",
-              "bg-white dark:bg-gray-900",
-              "border border-gray-200 dark:border-gray-700",
-              "focus:outline-none focus:ring-2 focus:ring-primary-500",
-              "placeholder-gray-400",
-            )}
-          />
-        </div>
-      </div>
-
-      {/* Session list */}
-      <div className="flex-1 overflow-y-auto p-2">
-        {sessions.length === 0 ? (
-          <div className="text-sm text-gray-500 dark:text-gray-400 italic text-center mt-4">
-            No sessions yet
-          </div>
-        ) : (
-          <>
-            {groupedSessions.today.length > 0 && (
-              <div className="mb-3">
-                <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
-                  Today
-                </div>
-                <div className="space-y-1">
-                  {groupedSessions.today.map(renderSessionItem)}
-                </div>
-              </div>
-            )}
-            {groupedSessions.yesterday.length > 0 && (
-              <div className="mb-3">
-                <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
-                  Yesterday
-                </div>
-                <div className="space-y-1">
-                  {groupedSessions.yesterday.map(renderSessionItem)}
-                </div>
-              </div>
-            )}
-            {groupedSessions.older.length > 0 && (
-              <div className="mb-3">
-                <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
-                  Older
-                </div>
-                <div className="space-y-1">
-                  {groupedSessions.older.map(renderSessionItem)}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// ConversationPanel Component
-// =============================================================================
-
-function ConversationPanel() {
-  return (
-    <div
-      data-testid="conversation-panel"
-      className={cn("flex flex-col h-full", "bg-white dark:bg-gray-900")}
-    >
-      {/* Message area */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="flex items-center justify-center h-full text-gray-400">
-          <div className="text-center">
-            <MessageSquare size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="text-sm">Start a conversation</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Input area placeholder */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <div
-          className={cn(
-            "flex items-center gap-2 px-4 py-3 rounded-lg",
-            "bg-gray-50 dark:bg-gray-800",
-            "border border-gray-200 dark:border-gray-700",
-          )}
-        >
-          <input
-            type="text"
-            placeholder="Type a message..."
-            className={cn(
-              "flex-1 bg-transparent",
-              "focus:outline-none",
-              "text-gray-900 dark:text-gray-100",
-              "placeholder-gray-400",
-            )}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// CanvasPanel Component
-// =============================================================================
-
-/** Get icon for artifact content type */
-function getArtifactIcon(contentType: CanvasArtifact["contentType"]) {
-  switch (contentType) {
-    case "code":
-      return <FileCode2 size={16} />;
-    case "markdown":
-      return <FileCode2 size={16} />;
-    case "json":
-      return <FileCode2 size={16} />;
-    default:
-      return <FileCode2 size={16} />;
-  }
-}
-
-function CanvasPanel() {
-  const dispatch = useAppDispatch();
-  const selectedArtifactId = useAppSelector(selectSelectedArtifactId);
-
-  // Get artifacts from the chat loader
-  const loaderData = useRouteLoaderData("chat-session") as
-    | ChatLoaderData
-    | undefined;
-  const artifacts = useMemo(
-    () => loaderData?.artifacts ?? [],
-    [loaderData?.artifacts],
-  );
-
-  // Find the selected artifact
-  const selectedArtifact = useMemo(
-    () => artifacts.find((a) => a.id === selectedArtifactId),
-    [artifacts, selectedArtifactId],
-  );
-
-  const handleArtifactSelect = useCallback(
-    (artifact: CanvasArtifact) => {
-      dispatch(setSelectedArtifactId(artifact.id));
-    },
-    [dispatch],
-  );
-
-  return (
-    <div
-      data-testid="canvas-panel"
-      className={cn(
-        "flex flex-col h-full",
-        "bg-gray-50 dark:bg-gray-800",
-        "border-l border-gray-200 dark:border-gray-700",
-      )}
-    >
-      {/* Canvas header with artifact tabs */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-          Canvas
-        </span>
-        {artifacts.length > 0 && (
-          <span className="text-xs text-gray-400">
-            {artifacts.length} artifact{artifacts.length !== 1 ? "s" : ""}
-          </span>
-        )}
-      </div>
-
-      {/* Artifact tabs */}
-      {artifacts.length > 0 && (
-        <div className="flex gap-1 p-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
-          {artifacts.map((artifact) => (
-            <button
-              key={artifact.id}
-              type="button"
-              onClick={() => handleArtifactSelect(artifact)}
-              className={cn(
-                "flex items-center gap-1 px-2 py-1 rounded text-xs whitespace-nowrap",
-                "transition-colors",
-                artifact.id === selectedArtifactId
-                  ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700",
-              )}
-            >
-              {getArtifactIcon(artifact.contentType)}
-              <span className="max-w-24 truncate">
-                {artifact.title || `Artifact ${artifact.id.slice(0, 6)}`}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Canvas content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {selectedArtifact ? (
-          <div className="h-full">
-            {/* Artifact header */}
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {selectedArtifact.title || "Untitled"}
-              </h3>
-              <span className="text-xs text-gray-400">
-                v{selectedArtifact.version} &bull;{" "}
-                {selectedArtifact.contentType}
-              </span>
-            </div>
-            {/* Artifact content */}
-            <pre
-              className={cn(
-                "p-4 rounded-lg text-sm overflow-auto",
-                "bg-gray-100 dark:bg-gray-900",
-                "text-gray-800 dark:text-gray-200",
-                "font-mono",
-              )}
-            >
-              {selectedArtifact.content}
-            </pre>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            <div className="text-center">
-              <FileCode2 size={48} className="mx-auto mb-4 opacity-50" />
-              <p className="text-sm">No artifact selected</p>
-              <p className="text-xs mt-1 text-gray-500">
-                {artifacts.length > 0
-                  ? "Select an artifact from the tabs above"
-                  : "Artifacts will appear here when generated"}
-              </p>
-            </div>
-          </div>
-        )}
-        {/* Outlet for nested routes (artifact detail, etc.) */}
-        <Outlet />
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// StatusBar Component
-// =============================================================================
-
-function CanvasStatusBar() {
-  return (
-    <div
-      data-testid="canvas-status-bar"
-      className={cn(
-        "flex items-center justify-between px-4 py-1",
-        "bg-gray-100 dark:bg-gray-900",
-        "border-t border-gray-200 dark:border-gray-700",
-        "text-xs text-gray-500 dark:text-gray-400",
-      )}
-    >
-      <div className="flex items-center gap-4">
-        <span>Ready</span>
-      </div>
-      <div className="flex items-center gap-4">
-        <span className="hidden sm:inline">⌘K Command Palette</span>
-        <span className="hidden sm:inline">⌘/ Toggle Canvas</span>
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// ResizeHandle Component
-// =============================================================================
-
-function ResizeHandle({ className }: { className?: string }) {
-  return (
-    <PanelResizeHandle
-      className={cn(
-        "w-1 hover:w-2 transition-all",
-        "bg-transparent hover:bg-primary-500/30",
-        "cursor-col-resize",
-        className,
-      )}
-    />
-  );
-}
 
 // =============================================================================
 // HybridShellLayout Component
@@ -596,19 +144,343 @@ export function HybridShellLayout() {
   const sessionNavCollapsed = useAppSelector(selectSessionNavCollapsed);
   const canvasCollapsed = useAppSelector(selectCanvasCollapsed);
 
+  // AI component state
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showAgentPanel, setShowAgentPanel] = useState(false);
+
+  // Background agents from Redux
+  const backgroundAgents = useAppSelector(selectAllAgents);
+
+  // Feature flags for AI components (Phase 4)
+  const aiCommandPaletteEnabled = useFeatureFlag("canvas_ai_palette");
+  const aiSuggestionsEnabled = useFeatureFlag("ai_suggestions");
+  const nudgesEnabled = useFeatureFlag("nudges");
+
+  // HITL dialog state management (extracted to hook for reusability)
+  // Handles: approval/clarification dialogs, loading states, dismissed tracking,
+  // WebSocket integration, auto-show on pending requests, API handlers
+  const {
+    enabled: agentHitlEnabled,
+    showApprovalDialog,
+    showClarificationDialog,
+    activeApproval,
+    activeClarification,
+    isApproving,
+    isRejecting,
+    isClarificationSubmitting,
+    pendingApprovals,
+    openApprovalDialog,
+    closeApprovalDialog,
+    closeClarificationDialog,
+    handleApprove,
+    handleReject,
+    handleClarificationRespond,
+  } = useHITLDialogs();
+
+  // Get current route for page context
+  const location = useLocation();
+
+  // AI-powered nudges (Phase 1.3 + 6.3)
+  const { activeNudge, dismiss, trackAcceptance } = useNudges({
+    enableAI: nudgesEnabled,
+    pageContext: location.pathname,
+    maxPerSession: 3,
+  });
+
+  // AI-powered persona behavior analysis (Phase 6.7)
+  const personaAnalysisEnabled = useFeatureFlag("persona_analysis");
+  const {
+    isPersonaMismatch,
+    detectedPersona,
+    recommendation,
+    behaviorSignals,
+    confidence: personaConfidence,
+  } = useAIPersonaAnalysis({
+    enabled: personaAnalysisEnabled,
+  });
+
+  // Track whether the persona mismatch banner has been dismissed
+  const [personaBannerDismissed, setPersonaBannerDismissed] = useState(false);
+
+  // CrossInsightsPanel state management (extracted to hook for reusability)
+  // Handles: dismissed state, localStorage persistence, keyboard shortcut (Cmd+I), batch analysis
+  const {
+    dismissed: crossInsightsDismissed,
+    setDismissed: setCrossInsightsDismissed,
+    crossInsights,
+    confidence: batchConfidence,
+    isLoading: isBatchLoading,
+    personaResult: batchPersonaResult,
+    disclosureResult: batchDisclosureResult,
+    batchAnalysisEnabled,
+  } = useCrossInsightsPanel();
+
+  // Persona-based routing: handles default route redirects and access validation
+  // This integrates PersonaRouter logic into the HybridShell
+  usePersonaRouting();
+
+  // Get real-time connection health status
+  const { status: wsStatus } = useConnectionHealthWebSocket();
+
+  // Map WebSocket status to StatusBar connection status
+  const connectionStatus: ConnectionStatus = useMemo(() => {
+    switch (wsStatus) {
+      case "connected":
+        return "connected";
+      case "connecting":
+      case "reconnecting":
+        return "connecting";
+      case "disconnected":
+        return "disconnected";
+      case "error":
+        return "error";
+      default:
+        return "disconnected";
+    }
+  }, [wsStatus]);
+
+  // Get user info from Redux
+  const username = useAppSelector(selectUsername);
+
+  // Get current session for model info
+  const currentSession = useAppSelector(selectCurrentSession);
+  const modelName = currentSession?.config?.modelName;
+
+  // Log cross-insights for debugging (dev mode only)
+  useEffect(() => {
+    if (crossInsights.length > 0 && !isBatchLoading) {
+      logger.debug("Batch composite analysis cross-insights:", crossInsights);
+    }
+  }, [crossInsights, isBatchLoading]);
+
+  // Compute token count from messages using backend-provided usage data
+  // Falls back to character-based approximation if no usage data available
+  const tokenCount = useMemo(() => {
+    if (!currentSession?.messages?.length) return 0;
+
+    // Sum up actual token usage from backend if available
+    let totalFromUsage = 0;
+    let hasUsageData = false;
+
+    for (const msg of currentSession.messages) {
+      if (msg.usage?.totalTokens) {
+        totalFromUsage += msg.usage.totalTokens;
+        hasUsageData = true;
+      }
+      // Also include thinking tokens if available (extended thinking)
+      if (msg.thinkingTokens) {
+        totalFromUsage += msg.thinkingTokens;
+        hasUsageData = true;
+      }
+    }
+
+    // If we have backend data, use it
+    if (hasUsageData) {
+      return totalFromUsage;
+    }
+
+    // Fallback: Approximate tokens from character count (~4 chars per token)
+    const totalChars = currentSession.messages.reduce(
+      (sum, msg) => sum + (msg.content?.length ?? 0),
+      0,
+    );
+    return Math.round(totalChars / 4);
+  }, [currentSession?.messages]);
+
   // Handle panel resize
   const handlePanelResize = useCallback(
     (sizes: number[]) => {
       if (sizes.length === 3) {
-        const newSizes: CanvasPanelSizes = {
-          sessionNav: sizes[0],
-          conversation: sizes[1],
-          canvas: sizes[2],
-        };
-        dispatch(setPanelSizes(newSizes));
+        const sessionNavSize = sizes[0];
+        const conversationSize = sizes[1];
+        const canvasSize = sizes[2];
+        if (sessionNavSize !== undefined && conversationSize !== undefined && canvasSize !== undefined) {
+          const newSizes: CanvasPanelSizes = {
+            sessionNav: sessionNavSize,
+            conversation: conversationSize,
+            canvas: canvasSize,
+          };
+          dispatch(setPanelSizes(newSizes));
+        }
       }
     },
     [dispatch],
+  );
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
+      // Check for Cmd+/ (Mac) or Ctrl+/ (Windows/Linux) to toggle canvas
+      if ((e.metaKey || e.ctrlKey) && e.key === "/") {
+        e.preventDefault();
+        dispatch(toggleCanvas());
+        return;
+      }
+
+      // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux) to open command palette
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setShowCommandPalette(true);
+        return;
+      }
+
+      // Note: Cmd+I / Ctrl+I for insights panel is handled by useCrossInsightsPanel hook
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [dispatch]);
+
+  // Handler for command palette execution
+  const handleCommandExecute = useCallback(
+    (commandOrInterpretation: Command | AIInterpretation) => {
+      // Check if it's a Command or AIInterpretation
+      if ("id" in commandOrInterpretation) {
+        const command = commandOrInterpretation;
+        logger.debug("Command executed:", command.id);
+
+        switch (command.id) {
+          case "new-chat":
+            dispatch(createSession({ name: "New Chat" }));
+            break;
+          case "toggle-canvas":
+            dispatch(toggleCanvas());
+            break;
+          case "toggle-sidebar":
+            dispatch(toggleSessionNav());
+            break;
+          case "open-settings":
+            // Navigation handled by router
+            window.location.href = "/studio/v2/settings";
+            break;
+          case "open-help":
+            window.location.href = "/studio/v2/help";
+            break;
+          case "open-observability":
+            window.location.href = "/studio/v2/observability";
+            break;
+          case "open-compliance":
+            window.location.href = "/studio/v2/compliance";
+            break;
+          default:
+            logger.warn("Unknown command:", command.id);
+        }
+      } else {
+        // AIInterpretation - handle natural language commands
+        const interpretation = commandOrInterpretation;
+        logger.debug("AI interpretation executed:", interpretation.action, interpretation.params);
+
+        // Handle AI interpretations based on action type
+        switch (interpretation.action) {
+          case "navigate":
+            // Navigate to specified path
+            if (typeof interpretation.params.path === "string") {
+              window.location.href = interpretation.params.path;
+            }
+            break;
+          case "toggle-panel":
+            // Toggle specified panel
+            if (interpretation.params.panel === "canvas") {
+              dispatch(toggleCanvas());
+            } else if (interpretation.params.panel === "sidebar") {
+              dispatch(toggleSessionNav());
+            }
+            break;
+          case "new-chat":
+            dispatch(createSession({ name: "New Chat" }));
+            break;
+          case "search":
+            // Log search intent - could trigger search UI
+            logger.debug("Search requested:", interpretation.params.query);
+            break;
+          default:
+            logger.warn("Unhandled AI interpretation:", interpretation.action);
+        }
+      }
+    },
+    [dispatch],
+  );
+
+  // Handler for agent cancel
+  const handleAgentCancel = useCallback(
+    (agentId: string) => {
+      logger.debug("Cancelling agent:", agentId);
+      dispatch(updateAgentStatus({ id: agentId, status: "failed", error: "Cancelled by user" }));
+    },
+    [dispatch],
+  );
+
+  // Handler for agent retry
+  const handleAgentRetry = useCallback(
+    (agentId: string) => {
+      logger.debug("Retrying agent:", agentId);
+      dispatch(updateAgentStatus({ id: agentId, status: "queued" }));
+    },
+    [dispatch],
+  );
+
+  // Handler for user menu click (dropdown is managed by TopBar component)
+  const handleUserMenuClick = useCallback(() => {
+    logger.debug("User menu clicked");
+  }, []);
+
+  // Handler for agent queue toggle
+  const handleAgentQueueToggle = useCallback(() => {
+    setShowAgentPanel((prev) => !prev);
+  }, []);
+
+  // Handler for pending approvals click - opens first pending approval dialog
+  const handlePendingApprovalsClick = useCallback(() => {
+    logger.debug("Pending approvals clicked, count:", pendingApprovals.length);
+    if (pendingApprovals.length > 0) {
+      const firstApproval = pendingApprovals[0];
+      if (firstApproval) {
+        openApprovalDialog(firstApproval);
+      }
+    }
+  }, [pendingApprovals, openApprovalDialog]);
+
+  // Handler for AI natural language interpretation (Phase 4)
+  const handleAIInterpret = useCallback(
+    async (query: string): Promise<AIInterpretation> => {
+      logger.debug("AI interpretation requested:", query);
+
+      try {
+        const token = getAuthToken();
+        const response = await fetch("/api/v1/ai/interpret-command", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          credentials: "include",
+          body: JSON.stringify({ query }),
+        });
+
+        if (response.ok) {
+          const interpretation: AIInterpretation = await response.json();
+          logger.debug("AI interpretation result:", interpretation);
+          return interpretation;
+        }
+
+        // Fallback on API error - return a search action
+        logger.warn("AI interpretation API error:", response.status);
+        return {
+          action: "search",
+          params: { query },
+          confidence: 0.5,
+        };
+      } catch (error) {
+        logger.error("AI interpretation failed:", error);
+        // Fallback on network error - return a search action
+        return {
+          action: "search",
+          params: { query },
+          confidence: 0.3,
+        };
+      }
+    },
+    [],
   );
 
   return (
@@ -616,6 +488,13 @@ export function HybridShellLayout() {
       data-testid="hybrid-shell"
       className="hybrid-shell flex flex-col h-screen bg-white dark:bg-gray-900"
     >
+      {/* TopBar - persona-aware header */}
+      <TopBar
+        onUserMenuClick={handleUserMenuClick}
+        pendingApprovals={agentHitlEnabled ? pendingApprovals.length : undefined}
+        onPendingApprovalsClick={agentHitlEnabled ? handlePendingApprovalsClick : undefined}
+      />
+
       {/* Main content area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Activity Bar - fixed width */}
@@ -650,7 +529,7 @@ export function HybridShellLayout() {
             defaultSize={canvasCollapsed ? 80 : 40}
             minSize={30}
           >
-            <ConversationPanel />
+            <ConnectedConversationPanel />
           </Panel>
 
           {/* Canvas Panel */}
@@ -664,15 +543,204 @@ export function HybridShellLayout() {
                 minSize={25}
                 maxSize={60}
               >
-                <CanvasPanel />
+                <ConnectedCanvasPanel />
               </Panel>
             </>
           )}
         </PanelGroup>
       </div>
 
-      {/* Status Bar */}
-      <CanvasStatusBar />
+      {/* StatusBar - connection status, model, tokens, user */}
+      <StatusBar
+        connectionStatus={connectionStatus}
+        modelName={modelName ?? undefined}
+        tokenCount={tokenCount > 0 ? tokenCount : undefined}
+        userName={username ?? undefined}
+        agentCount={backgroundAgents.length}
+        onAgentQueueToggle={handleAgentQueueToggle}
+        agentQueueOpen={showAgentPanel}
+        pendingApprovals={agentHitlEnabled ? pendingApprovals.length : undefined}
+        onPendingApprovalsClick={agentHitlEnabled ? handlePendingApprovalsClick : undefined}
+      />
+
+      {/* Dev mode telemetry viewer (fixed position overlay) */}
+      <TelemetryViewer />
+
+      {/* AI Nudges (Phase 1.3 + 6.3) - contextual hints and feature discovery */}
+      {nudgesEnabled && activeNudge && (
+        <div className="fixed bottom-20 left-16 z-50 max-w-xs">
+          <NudgeTooltip
+            nudge={activeNudge}
+            onDismiss={() => dismiss(activeNudge.id)}
+            onAccept={() => trackAcceptance(activeNudge.id)}
+          />
+        </div>
+      )}
+
+      {/* AI Persona Mismatch Banner (Phase 6.7) */}
+      {personaAnalysisEnabled &&
+        isPersonaMismatch &&
+        !personaBannerDismissed &&
+        personaConfidence >= 0.75 && (
+          <div
+            className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 max-w-lg"
+            role="alert"
+            data-testid="persona-mismatch-banner"
+          >
+            <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg shadow-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="w-5 h-5 text-purple-600 dark:text-purple-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-purple-800 dark:text-purple-200">
+                    We noticed you&apos;re using advanced features
+                  </h4>
+                  <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+                    Your usage pattern suggests you might benefit from{" "}
+                    <strong>{detectedPersona?.replace(/-/g, " ")}</strong>{" "}
+                    capabilities.
+                  </p>
+                  {recommendation && (
+                    <p className="text-sm text-purple-600 dark:text-purple-400 mt-2">
+                      {recommendation}
+                    </p>
+                  )}
+                  {behaviorSignals.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {behaviorSignals.slice(0, 3).map((signal, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-800/50 text-purple-700 dark:text-purple-300 rounded"
+                        >
+                          {signal}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setPersonaBannerDismissed(true)}
+                  className="flex-shrink-0 p-1 text-purple-400 hover:text-purple-600 dark:hover:text-purple-200"
+                  aria-label="Dismiss persona suggestion"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* AI Cross-Insights Panel (Phase 6+) - shows batch composite analysis results */}
+      {/* Positioned bottom-left to avoid overlap with agent panel (bottom-right) */}
+      {batchAnalysisEnabled &&
+        !crossInsightsDismissed &&
+        !isBatchLoading &&
+        (crossInsights.length > 0 || batchPersonaResult || batchDisclosureResult) && (
+          <div
+            className="fixed bottom-16 left-16 z-40 w-80"
+            data-testid="cross-insights-panel-container"
+          >
+            <CrossInsightsPanel
+              crossInsights={crossInsights}
+              personaResult={batchPersonaResult}
+              disclosureResult={batchDisclosureResult}
+              confidence={batchConfidence}
+              isLoading={isBatchLoading}
+              onDismiss={() => setCrossInsightsDismissed(true)}
+              defaultCollapsed={true}
+            />
+          </div>
+        )}
+
+      {/* AI Command Palette (Cmd+K) - gated by canvas_ai_palette feature flag */}
+      {/* Lazy-loaded to reduce initial bundle size */}
+      {aiCommandPaletteEnabled && (
+        <Suspense fallback={null}>
+          <LazyAICommandPalette
+            commands={PALETTE_COMMANDS}
+            isOpen={showCommandPalette}
+            onClose={() => setShowCommandPalette(false)}
+            onExecute={handleCommandExecute}
+            onAIInterpret={handleAIInterpret}
+            groupByCategory
+          />
+        </Suspense>
+      )}
+
+      {/* Background Agent Panel (floating, bottom-right) - gated by ai_suggestions feature flag */}
+      {/* Lazy-loaded to reduce initial bundle size */}
+      {aiSuggestionsEnabled && backgroundAgents.length > 0 && (
+        <div className="fixed bottom-16 right-4 z-40 w-80">
+          <Suspense fallback={null}>
+            <LazyBackgroundAgentPanel
+              agents={backgroundAgents}
+              onCancel={handleAgentCancel}
+              onRetry={handleAgentRetry}
+            />
+          </Suspense>
+        </div>
+      )}
+
+      {/* Agent Task Queue (side panel, toggled via showAgentPanel) - gated by ai_suggestions feature flag */}
+      {/* Lazy-loaded to reduce initial bundle size */}
+      {aiSuggestionsEnabled && showAgentPanel && (
+        <div className="fixed top-14 right-0 bottom-8 w-80 z-30 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg">
+          <Suspense fallback={null}>
+            <LazyAgentTaskQueue onCancel={handleAgentCancel} />
+          </Suspense>
+        </div>
+      )}
+
+      {/* HITL Agent Approval Dialog (Phase 4 HITL) - gated by agent_hitl feature flag */}
+      {agentHitlEnabled && showApprovalDialog && activeApproval && (
+        <div data-testid="agent-approval-dialog">
+          <AgentApprovalDialog
+            request={convertApprovalPayloadToRequest(activeApproval)}
+            isOpen={showApprovalDialog}
+            onClose={closeApprovalDialog}
+            onApprove={(data) =>
+              handleApprove(data.request_id, data.reason)
+            }
+            onReject={(data) => handleReject(data.request_id, data.reason)}
+            isApproving={isApproving}
+            isRejecting={isRejecting}
+            currentUser={username ?? undefined}
+          />
+        </div>
+      )}
+
+      {/* HITL Clarification Dialog (Phase 4 HITL) - gated by agent_hitl feature flag */}
+      {agentHitlEnabled && showClarificationDialog && activeClarification && (
+        <div data-testid="clarification-dialog">
+          <ClarificationDialog
+            request={convertClarificationPayloadToRequest(activeClarification)}
+            isOpen={showClarificationDialog}
+            onClose={closeClarificationDialog}
+            onRespond={(response) =>
+              handleClarificationRespond(convertUIResponseToAPIResponse(response))
+            }
+            isSubmitting={isClarificationSubmitting}
+            currentUser={username ?? undefined}
+          />
+        </div>
+      )}
     </div>
   );
 }
+
+// Helper functions for HITL type conversions are now imported from types/hitl.ts

@@ -150,9 +150,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         ) as BufferSource,
       });
 
-      // Send subscription to backend
+      // Send subscription to backend (uses authenticated endpoint)
       const token = getAuthToken();
-      const response = await fetch("/api/v1/notifications/subscribe", {
+      const response = await fetch("/api/v1/notifications/push/subscribe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -187,10 +187,10 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       // Unsubscribe from push manager
       await subscription.unsubscribe();
 
-      // Notify backend
+      // Notify backend (uses authenticated DELETE endpoint)
       const token = getAuthToken();
-      await fetch("/api/v1/notifications/unsubscribe", {
-        method: "POST",
+      await fetch("/api/v1/notifications/push/unsubscribe", {
+        method: "DELETE",
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),

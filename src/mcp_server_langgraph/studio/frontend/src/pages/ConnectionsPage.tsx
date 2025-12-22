@@ -272,7 +272,7 @@ export function ConnectionsPage() {
     if (selectedIds.size === 1) {
       // Single selection - show confirmation
       const [id] = Array.from(selectedIds);
-      setDeleteConfirmId(id);
+      if (id) setDeleteConfirmId(id);
     }
     // For multiple selections, bulk actions bar handles it
   }, [selectedIds]);

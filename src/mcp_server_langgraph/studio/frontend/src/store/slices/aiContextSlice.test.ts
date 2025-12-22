@@ -11,8 +11,12 @@ import aiContextReducer, {
   dismissSuggestion,
   clearSuggestions,
   setAIContext,
+  setAILoading,
+  resetAIContext,
   selectSuggestions,
   selectAIContext,
+  selectAILoading,
+  selectHighConfidenceSuggestions,
   type AISuggestion,
   type AIContextState,
 } from "./aiContextSlice";
@@ -159,6 +163,65 @@ describe("aiContextSlice", () => {
     it("selectAIContext returns context", () => {
       const context = selectAIContext(stateWithSuggestions);
       expect(context?.sessionId).toBe("session-1");
+    });
+
+    it("selectAILoading returns loading state", () => {
+      const isLoading = selectAILoading(stateWithSuggestions);
+      expect(isLoading).toBe(false);
+    });
+
+    it("selectHighConfidenceSuggestions filters by confidence >= 0.7", () => {
+      const lowConfidenceSuggestion: AISuggestion = {
+        id: "sug-2",
+        type: "completion",
+        content: "low confidence",
+        position: { line: 5, column: 0 },
+        confidence: 0.5,
+      };
+      const stateWithMixedConfidence = {
+        aiContext: {
+          suggestions: [mockSuggestion, lowConfidenceSuggestion], // 0.85 and 0.5
+          context: null,
+          isLoading: false,
+        },
+      };
+
+      const highConfidence = selectHighConfidenceSuggestions(stateWithMixedConfidence);
+      expect(highConfidence).toHaveLength(1);
+      expect(highConfidence[0].id).toBe("sug-1");
+      expect(highConfidence[0].confidence).toBe(0.85);
+    });
+  });
+
+  describe("setAILoading", () => {
+    it("sets loading state to true", () => {
+      const state = aiContextReducer(initialState, setAILoading(true));
+      expect(state.isLoading).toBe(true);
+    });
+
+    it("sets loading state to false", () => {
+      const loadingState = { ...initialState, isLoading: true };
+      const state = aiContextReducer(loadingState, setAILoading(false));
+      expect(state.isLoading).toBe(false);
+    });
+  });
+
+  describe("resetAIContext", () => {
+    it("resets to initial state", () => {
+      const modifiedState: AIContextState = {
+        suggestions: [mockSuggestion],
+        context: {
+          sessionId: "session-1",
+          artifactId: "artifact-1",
+          cursorPosition: { line: 10, column: 5 },
+        },
+        isLoading: true,
+      };
+      const state = aiContextReducer(modifiedState, resetAIContext());
+
+      expect(state.suggestions).toHaveLength(0);
+      expect(state.context).toBeNull();
+      expect(state.isLoading).toBe(false);
     });
   });
 });

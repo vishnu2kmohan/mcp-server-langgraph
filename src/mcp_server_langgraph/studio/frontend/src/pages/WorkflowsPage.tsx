@@ -45,7 +45,7 @@ import { useWorkflowExecution } from "../hooks/useWorkflowExecution";
 import {
   useGetWorkflowSuggestionsMutation,
   useListWorkflowExecutionsQuery,
-} from "../api";
+} from "../hooks/useWorkflowAPI";
 import type { AISuggestion } from "../types/api";
 import {
   Save,
@@ -75,6 +75,16 @@ export function WorkflowsPage() {
   const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+  // Execution history pagination state
+  const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(
+    null,
+  );
+  const [executionsCursor, setExecutionsCursor] = useState<
+    string | undefined
+  >();
+  const [accumulatedExecutions, setAccumulatedExecutions] = useState<
+    WorkflowExecution[]
+  >([]);
   const [searchParams] = useSearchParams();
   const workflowIdFromUrl = searchParams.get("id");
   const suggestionsFromUrl = searchParams.get("suggestions") === "true";
@@ -99,11 +109,60 @@ export function WorkflowsPage() {
   const canExecute = useAppSelector(selectCanExecute);
 
   // Execution history query - only fetch when panel is visible and workflow has ID
-  const { data: executionsData, isLoading: isLoadingExecutions } =
+  const { data: executionsData, isLoading: isLoadingExecutions, isFetching } =
     useListWorkflowExecutionsQuery(
-      { workflow_id: metadata?.id ?? "", limit: 20 },
+      {
+        workflow_id: metadata?.id ?? "",
+        limit: 20,
+        cursor: executionsCursor,
+      },
       { skip: !metadata?.id || !showHistoryPanel },
     );
+
+  // Accumulate executions when new data arrives (for pagination)
+  useEffect(() => {
+    if (executionsData?.items) {
+      if (!executionsCursor) {
+        // First page - replace all
+        setAccumulatedExecutions(executionsData.items);
+      } else {
+        // Subsequent pages - append (avoid duplicates)
+        setAccumulatedExecutions((prev) => {
+          const existingIds = new Set(prev.map((e) => e.id));
+          const newItems = executionsData.items.filter(
+            (item) => !existingIds.has(item.id),
+          );
+          return [...prev, ...newItems];
+        });
+      }
+    }
+  }, [executionsData?.items, executionsCursor]);
+
+  // Reset accumulated executions when workflow changes or panel closes
+  useEffect(() => {
+    if (!showHistoryPanel || !metadata?.id) {
+      setAccumulatedExecutions([]);
+      setExecutionsCursor(undefined);
+      setSelectedExecutionId(null);
+    }
+  }, [showHistoryPanel, metadata?.id]);
+
+  // Handle execution selection
+  const handleSelectExecution = useCallback(
+    (execution: WorkflowExecution) => {
+      setSelectedExecutionId(execution.id);
+      // Show execution panel with the selected execution's output/logs
+      setShowExecutionPanel(true);
+    },
+    [],
+  );
+
+  // Handle load more (pagination)
+  const handleLoadMoreExecutions = useCallback(() => {
+    if (executionsData?.next_cursor && !isFetching) {
+      setExecutionsCursor(executionsData.next_cursor);
+    }
+  }, [executionsData?.next_cursor, isFetching]);
 
   // Real-time WebSocket updates for workflow execution
   // Only connect when we have a workflow and the execution panel is visible
@@ -150,10 +209,54 @@ export function WorkflowsPage() {
   }, [nodes, edges]);
 
   // Handle applying a suggestion
-  const handleApplySuggestion = useCallback((suggestion: AISuggestion) => {
-    console.log("Applying suggestion:", suggestion);
-    setSuggestions((prev) => prev.filter((s) => s !== suggestion));
-  }, []);
+  const handleApplySuggestion = useCallback(
+    (suggestion: AISuggestion) => {
+      const meta = suggestion.metadata;
+
+      // Handle different suggestion types
+      switch (suggestion.type) {
+        case "add_node": {
+          // Extract node type and position from metadata
+          const nodeType = (meta.nodeType as WorkflowNodeType) ?? "custom";
+          const position = (meta.position as { x: number; y: number }) ?? {
+            x: 250 + nodes.length * 50,
+            y: 250,
+          };
+          const label = meta.label as string | undefined;
+          dispatch(addNode(nodeType, position, label));
+          break;
+        }
+        case "connect_nodes": {
+          // Extract source and target from metadata
+          const sourceId = meta.sourceId as string | undefined;
+          const targetId = meta.targetId as string | undefined;
+          if (sourceId && targetId) {
+            dispatch({
+              type: "workflow/addEdge",
+              payload: {
+                edgeId: `edge-${Date.now()}`,
+                sourceId,
+                targetId,
+              },
+            });
+          }
+          break;
+        }
+        case "update_config": {
+          // For config updates, we'd need to select the node first
+          // This is informational - user can apply manually
+          break;
+        }
+        default:
+          // Unknown suggestion type - just dismiss
+          break;
+      }
+
+      // Remove the applied suggestion from the list
+      setSuggestions((prev) => prev.filter((s) => s !== suggestion));
+    },
+    [dispatch, nodes.length],
+  );
 
   // Handle dismissing a suggestion
   const handleDismissSuggestion = useCallback((suggestion: AISuggestion) => {
@@ -504,15 +607,12 @@ export function WorkflowsPage() {
         {/* Execution History Panel - Right Side */}
         {showHistoryPanel && metadata?.id && (
           <ExecutionHistoryPanel
-            executions={executionsData?.items ?? []}
-            isLoading={isLoadingExecutions}
-            onSelectExecution={(execution: WorkflowExecution) => {
-              console.log("Selected execution:", execution.id);
-            }}
-            onLoadMore={() => {
-              // TODO: Implement pagination with cursor
-            }}
+            executions={accumulatedExecutions}
+            isLoading={isLoadingExecutions || isFetching}
+            onSelectExecution={handleSelectExecution}
+            onLoadMore={handleLoadMoreExecutions}
             hasMore={!!executionsData?.next_cursor}
+            selectedExecutionId={selectedExecutionId ?? undefined}
           />
         )}
       </div>

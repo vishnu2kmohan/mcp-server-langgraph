@@ -19,3 +19,11 @@ export {
   type ShortcutCategory,
   type KeyboardShortcutsProps,
 } from "./KeyboardShortcuts";
+
+export {
+  ComplianceGuides,
+  type ComplianceFramework,
+  type Guide,
+  type GuideStep,
+  type ComplianceGuidesProps,
+} from "./ComplianceGuides";

@@ -18,6 +18,7 @@ import {
   Loader2,
   Users,
 } from "lucide-react";
+import { cn } from "../utils/cn";
 
 // =============================================================================
 // Types
@@ -47,10 +48,6 @@ export interface GDPRPanelProps {
 // =============================================================================
 // Utility
 // =============================================================================
-
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
 
 function getStatusIcon(status: ControlStatus) {
   switch (status) {

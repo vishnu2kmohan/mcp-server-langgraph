@@ -34,6 +34,7 @@ from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
 from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
 from mcp_server_langgraph.core.agent import AgentState, cleanup_checkpointer, create_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
+from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.core.dependencies import get_openfga_client
 from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
 from mcp_server_langgraph.core.security import sanitize_for_logging
@@ -43,8 +44,11 @@ from mcp_server_langgraph.mcp.elicitation import (
     ElicitationSchema,
 )
 from mcp_server_langgraph.mcp.resources import (
-    create_playground_resource_handler,
+    create_studio_resource_handler,
 )
+from mcp_server_langgraph.mcp.handlers.skills import SkillsToolHandler
+from mcp_server_langgraph.mcp.handlers.agents import AgentsToolHandler
+from mcp_server_langgraph.sdk.hooks import DEFAULT_SECURITY_HOOKS
 from mcp_server_langgraph.mcp.sampling import (
     ModelPreferences,
     SamplingHandler,
@@ -469,7 +473,20 @@ class MCPAgentStreamableServer:
         self.elicitation_handler = ElicitationHandler()
         self.sampling_handler = SamplingHandler()
         self.sampling_rate_limiter = SamplingRateLimiter(max_requests_per_minute=10)
-        self.resource_handler = create_playground_resource_handler()
+        self.resource_handler = create_studio_resource_handler()
+
+        # Initialize Skills and Agents handlers (ADR-0072)
+        self.skills_handler = SkillsToolHandler(
+            auth=self.auth,
+            agent_graph=self.agent_graph,
+        )
+        self.agents_handler = AgentsToolHandler(
+            auth=self.auth,
+            agent_graph=self.agent_graph,
+        )
+
+        # Initialize security hook registry (SDK integration)
+        self._security_hook_registry = DEFAULT_SECURITY_HOOKS
 
         self._setup_handlers()
 
@@ -784,6 +801,191 @@ class MCPAgentStreamableServer:
                     )
                 )
 
+            # Add think tool if enabled (ADR-0072: 54% improvement in complex scenarios)
+            if feature_flags.enable_think_tool:
+                tools.append(
+                    Tool(
+                        name="think",
+                        description=(
+                            "Structured reasoning space for complex decision-making. "
+                            "Use to pause and reason during multi-tool chains, verify policy compliance, "
+                            "or analyze tool outputs before proceeding. No external effects - just records "
+                            "the thought for reasoning trace. 54% improvement in complex policy scenarios."
+                        ),
+                        inputSchema={
+                            "type": "object",
+                            "properties": {
+                                "thought": {
+                                    "type": "string",
+                                    "description": "Your reasoning or analysis",
+                                },
+                            },
+                            "required": ["thought"],
+                        },
+                    )
+                )
+
+            # Add skills tool if enabled (ADR-0072: Skills System)
+            if feature_flags.enable_skills_system:
+                tools.append(
+                    Tool(
+                        name="skills",
+                        description=(
+                            "Access and execute agent skills. Operations: list, get, search, execute. "
+                            "Skills provide specialized capabilities like web-research, code-review, "
+                            "deployment automation, and compliance audits. Progressive disclosure - "
+                            "use 'list' for summaries, 'get' for full details."
+                        ),
+                        inputSchema={
+                            "type": "object",
+                            "properties": {
+                                "operation": {
+                                    "type": "string",
+                                    "enum": ["list", "get", "search", "execute"],
+                                    "description": "Operation to perform",
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "description": "Skill name (for get/execute)",
+                                },
+                                "query": {
+                                    "type": "string",
+                                    "description": "Search query (for search)",
+                                },
+                                "category": {
+                                    "type": "string",
+                                    "description": "Filter by category (for list)",
+                                },
+                                "args": {
+                                    "type": "object",
+                                    "description": "Arguments for skill execution",
+                                },
+                            },
+                        },
+                    )
+                )
+
+            # Add agents tool if enabled (ADR-0072: Multi-Agent Orchestration)
+            if feature_flags.enable_multi_agent_orchestration:
+                tools.append(
+                    Tool(
+                        name="agents",
+                        description=(
+                            "Multi-agent orchestration for complex tasks. Operations: decompose, "
+                            "orchestrate, status, cancel, select_model. Enables orchestrator-worker "
+                            "pattern with parallel subagents. Scales effort to task complexity. "
+                            "Cross-vendor verification with 15x token budget."
+                        ),
+                        inputSchema={
+                            "type": "object",
+                            "properties": {
+                                "operation": {
+                                    "type": "string",
+                                    "enum": ["decompose", "orchestrate", "status", "cancel", "select_model"],
+                                    "description": "Operation to perform",
+                                },
+                                "task": {
+                                    "type": "string",
+                                    "description": "Task to decompose/orchestrate",
+                                },
+                                "orchestration_id": {
+                                    "type": "string",
+                                    "description": "Orchestration ID (for status/cancel)",
+                                },
+                                "complexity": {
+                                    "type": "string",
+                                    "enum": ["simple", "complicated", "complex"],
+                                    "description": "Task complexity (for select_model)",
+                                },
+                                "strategy": {
+                                    "type": "string",
+                                    "enum": ["parallel", "sequential"],
+                                    "description": "Execution strategy (for orchestrate)",
+                                },
+                            },
+                        },
+                    )
+                )
+
+            # Add screenshot tool if visual verification is enabled (ADR-0072)
+            if getattr(self.settings, "enable_visual_verification", False):
+                tools.append(
+                    Tool(
+                        name="capture_screenshot",
+                        description=(
+                            "Capture a screenshot of a web page for visual verification. "
+                            "Uses Playwright to render the page and capture a PNG image. "
+                            "Returns base64-encoded image data for LLM analysis. "
+                            "Supports custom viewport size and full-page capture. "
+                            "Response time: 2-10 seconds depending on page complexity."
+                        ),
+                        inputSchema={
+                            "type": "object",
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "description": "URL of the web page to capture",
+                                },
+                                "viewport_width": {
+                                    "type": "integer",
+                                    "description": "Viewport width in pixels (default: 1280)",
+                                    "default": 1280,
+                                },
+                                "viewport_height": {
+                                    "type": "integer",
+                                    "description": "Viewport height in pixels (default: 720)",
+                                    "default": 720,
+                                },
+                                "full_page": {
+                                    "type": "boolean",
+                                    "description": "Capture full scrollable page (default: false)",
+                                    "default": False,
+                                },
+                                "wait_for_selector": {
+                                    "type": "string",
+                                    "description": "CSS selector to wait for before capture (optional)",
+                                },
+                                "timeout_ms": {
+                                    "type": "integer",
+                                    "description": "Navigation timeout in milliseconds (default: 30000)",
+                                    "default": 30000,
+                                },
+                            },
+                            "required": ["url"],
+                        },
+                    )
+                )
+
+            # Add hooks tool if enabled (Plan Section 10.5)
+            if feature_flags.enable_hooks_mcp_extension:
+                from mcp_server_langgraph.mcp.handlers.hooks import create_hooks_tool_handler
+
+                hooks_handler = create_hooks_tool_handler()
+                tool_def = hooks_handler.get_tool_definition()
+                tools.append(
+                    Tool(
+                        name=tool_def["name"],
+                        description=tool_def["description"],
+                        inputSchema=tool_def["inputSchema"],
+                    )
+                )
+
+            # Add orchestration tool if enabled (Plan Section 10.4)
+            if feature_flags.enable_orchestration_mcp_tools:
+                from mcp_server_langgraph.mcp.handlers.orchestration import (
+                    create_orchestration_tool_handler,
+                )
+
+                orchestration_handler = create_orchestration_tool_handler()
+                tool_def = orchestration_handler.get_tool_definition()
+                tools.append(
+                    Tool(
+                        name=tool_def["name"],
+                        description=tool_def["description"],
+                        inputSchema=tool_def["inputSchema"],
+                    )
+                )
+
             return tools
 
         # Store reference to handler for public API
@@ -876,6 +1078,34 @@ class MCPAgentStreamableServer:
 
                 logger.info("Authorization granted", extra={"user_id": user_id, "resource": resource})
 
+                # Execute pre-tool-use security hooks (SDK integration, ADR-0072)
+                hook_input = {
+                    "tool_name": name,
+                    "tool_input": arguments,
+                }
+                hook_context = {"user_id": user_id}
+                tool_use_id = f"{name}-{id(arguments)}"
+
+                hook_result = await self._security_hook_registry.execute_hooks(
+                    event_type="PreToolUse",
+                    tool_name=name,
+                    input_data=hook_input,
+                    tool_use_id=tool_use_id,
+                    context=hook_context,
+                )
+
+                if not hook_result.allowed:
+                    logger.warning(
+                        "Tool execution blocked by security hook",
+                        extra={"tool": name, "reason": hook_result.reason},
+                    )
+                    msg = f"Tool execution denied: {hook_result.reason}"
+                    raise PermissionError(msg)
+
+                # Apply any modifications from hooks (e.g., PII tokenization)
+                if hook_result.modified_input:
+                    arguments = hook_result.modified_input.get("tool_input", arguments)
+
                 # Route to appropriate handler (with backward compatibility)
                 if name == "agent_chat" or name == "chat":  # Support old name for compatibility
                     return await self._handle_chat(arguments, span, user_id)
@@ -887,6 +1117,18 @@ class MCPAgentStreamableServer:
                     return await self._handle_search_tools(arguments, span)
                 elif name == "execute_python":
                     return await self._handle_execute_python(arguments, span, user_id)
+                elif name == "think":
+                    return await self._handle_think(arguments, span, user_id)
+                elif name == "skills":
+                    return await self.skills_handler.handle(arguments, span, user_id)
+                elif name == "agents":
+                    return await self.agents_handler.handle(arguments, span, user_id)
+                elif name == "capture_screenshot":
+                    return await self._handle_capture_screenshot(arguments, span, user_id)
+                elif name == "hooks":
+                    return await self._handle_hooks(arguments, span)
+                elif name == "orchestration":
+                    return await self._handle_orchestration(arguments, span)
                 else:
                     msg = f"Unknown tool: {name}"
                     raise ValueError(msg)
@@ -983,6 +1225,7 @@ class MCPAgentStreamableServer:
                 "next_action": "",
                 "user_id": user_id,
                 "request_id": str(span.get_span_context().trace_id) if span.get_span_context() else None,
+                "session_id": None,
                 "routing_confidence": None,
                 "reasoning": None,
                 "compaction_applied": None,
@@ -1271,6 +1514,36 @@ class MCPAgentStreamableServer:
 
             return [TextContent(type="text", text=result)]
 
+    async def _handle_think(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
+        """
+        Handle think tool - structured reasoning space without external effects.
+
+        Implements Anthropic best practice for mid-response reasoning (ADR-0072).
+        The think tool provides a space for the model to pause and reason during
+        complex tool chains, verify policy compliance, or analyze tool outputs
+        before proceeding.
+
+        This is a no-op tool - it just records the thought for reasoning purposes
+        without triggering any external actions.
+
+        Impact: 54% relative improvement in complex policy scenarios.
+        """
+        with tracer.start_as_current_span("tools.think"):
+            thought = arguments.get("thought", "")
+            thought_preview = thought[:100] if thought else ""
+
+            logger.info(
+                "Think tool invoked",
+                extra={"user_id": user_id, "thought_preview": thought_preview},
+            )
+
+            span.set_attribute("think.thought_length", len(thought))
+            span.set_attribute("think.user_id", user_id)
+
+            # No-op - just acknowledge the thought was recorded
+            # The thought content itself serves as reasoning documentation
+            return [TextContent(type="text", text=f"Recorded thought: {thought_preview}...")]
+
     async def _handle_execute_python(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
         """
         Handle execute_python invocation for secure code execution.
@@ -1307,6 +1580,140 @@ class MCPAgentStreamableServer:
             metrics.code_executions.add(1, {"user_id": user_id, "success": "success" in result.lower()})
 
             return [TextContent(type="text", text=result)]
+
+    async def _handle_capture_screenshot(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
+        """
+        Handle capture_screenshot tool for visual verification.
+
+        Captures a screenshot of a web page using Playwright.
+        Returns base64-encoded PNG image data for LLM visual analysis.
+
+        Part of ADR-0072: Visual verification integration.
+        """
+        with tracer.start_as_current_span("tools.capture_screenshot"):
+            import time
+
+            url = arguments.get("url", "")
+            viewport_width = arguments.get("viewport_width", 1280)
+            viewport_height = arguments.get("viewport_height", 720)
+            full_page = arguments.get("full_page", False)
+            wait_for_selector = arguments.get("wait_for_selector")
+            timeout_ms = arguments.get("timeout_ms", 30000)
+
+            logger.info(
+                "Capturing screenshot",
+                extra={
+                    "user_id": user_id,
+                    "url": url,
+                    "viewport": f"{viewport_width}x{viewport_height}",
+                    "full_page": full_page,
+                },
+            )
+
+            span.set_attribute("screenshot.url", url)
+            span.set_attribute("screenshot.viewport_width", viewport_width)
+            span.set_attribute("screenshot.viewport_height", viewport_height)
+            span.set_attribute("screenshot.full_page", full_page)
+
+            try:
+                from mcp_server_langgraph.tools.screenshot_tools import capture_screenshot
+
+                start_time = time.time()
+                result = await capture_screenshot.ainvoke(
+                    {
+                        "url": url,
+                        "viewport_width": viewport_width,
+                        "viewport_height": viewport_height,
+                        "full_page": full_page,
+                        "wait_for_selector": wait_for_selector,
+                        "timeout_ms": timeout_ms,
+                    }
+                )
+                execution_time = time.time() - start_time
+
+                span.set_attribute("screenshot.execution_time", execution_time)
+
+                if "error" in result:
+                    span.set_attribute("screenshot.success", False)
+                    return [TextContent(type="text", text=f"Screenshot capture failed: {result['error']}")]
+
+                span.set_attribute("screenshot.success", True)
+                span.set_attribute("screenshot.size_bytes", len(result.get("image_data", "")))
+
+                # Return structured result
+                import json
+
+                response = {
+                    "url": result.get("url", url),
+                    "title": result.get("title", ""),
+                    "viewport": f"{viewport_width}x{viewport_height}",
+                    "full_page": full_page,
+                    "mime_type": result.get("mime_type", "image/png"),
+                    "image_data": result.get("image_data", ""),
+                    "execution_time_ms": int(execution_time * 1000),
+                }
+                return [TextContent(type="text", text=json.dumps(response))]
+
+            except ImportError:
+                logger.warning("Playwright not installed for screenshot capture")
+                return [
+                    TextContent(
+                        type="text",
+                        text="Screenshot capture unavailable: playwright not installed. "
+                        "Install with: uv add playwright && playwright install chromium",
+                    )
+                ]
+            except Exception as e:
+                logger.error(f"Screenshot capture error: {e}", exc_info=True)
+                span.record_exception(e)
+                return [TextContent(type="text", text=f"Screenshot capture error: {e!s}")]
+
+    async def _handle_hooks(
+        self,
+        arguments: dict[str, Any],
+        span: Any,
+    ) -> list[TextContent]:
+        """Handle hooks tool for listing registered hooks and available events.
+
+        Args:
+            arguments: Tool arguments with 'operation' (list|events) and optional 'event' filter
+            span: Tracing span for observability
+
+        Returns:
+            JSON-formatted list of hooks or events
+        """
+        with tracer.start_as_current_span("tools.hooks"):
+            from mcp_server_langgraph.mcp.handlers.hooks import create_hooks_tool_handler
+
+            operation = arguments.get("operation", "list")
+            handler = create_hooks_tool_handler()
+            result = await handler.handle_operation(operation, arguments)
+            return [TextContent(type="text", text=json.dumps(result))]
+
+    async def _handle_orchestration(
+        self,
+        arguments: dict[str, Any],
+        span: Any,
+    ) -> list[TextContent]:
+        """Handle orchestration tool for multi-agent task decomposition and execution.
+
+        Args:
+            arguments: Tool arguments with 'operation' (decompose|execute|status|cancel)
+                      and task-specific parameters
+            span: Tracing span for observability
+
+        Returns:
+            JSON-formatted orchestration result
+        """
+        with tracer.start_as_current_span("tools.orchestration"):
+            from mcp_server_langgraph.mcp.handlers.orchestration import (
+                create_orchestration_tool_handler,
+            )
+
+            operation = arguments.get("operation", "status")
+            handler = create_orchestration_tool_handler()
+            result = await handler.handle_operation(operation, arguments)
+            return [TextContent(type="text", text=json.dumps(result))]
 
 
 # ============================================================================

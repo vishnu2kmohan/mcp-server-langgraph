@@ -33,10 +33,14 @@ export function hexToRgb(hex: string): RGB {
     return { r: 0, g: 0, b: 0 };
   }
 
+  const rHex = result[1];
+  const gHex = result[2];
+  const bHex = result[3];
+
   return {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16),
+    r: rHex ? parseInt(rHex, 16) : 0,
+    g: gHex ? parseInt(gHex, 16) : 0,
+    b: bHex ? parseInt(bHex, 16) : 0,
   };
 }
 
@@ -46,12 +50,16 @@ export function hexToRgb(hex: string): RGB {
  * https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
  */
 export function getRelativeLuminance(r: number, g: number, b: number): number {
-  const [rs, gs, bs] = [r, g, b].map((c) => {
+  const convertChannel = (c: number): number => {
     const sRGB = c / 255;
     return sRGB <= 0.03928
       ? sRGB / 12.92
       : Math.pow((sRGB + 0.055) / 1.055, 2.4);
-  });
+  };
+
+  const rs = convertChannel(r);
+  const gs = convertChannel(g);
+  const bs = convertChannel(b);
 
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }

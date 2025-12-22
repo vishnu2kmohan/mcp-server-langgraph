@@ -21,3 +21,4 @@ export { ProjectDetailPage } from "./ProjectDetailPage";
 export { AgentsPage } from "./AgentsPage";
 export { VectorsPage } from "./VectorsPage";
 export { CostPage } from "./CostPage";
+export { AnalyticsDashboardPage } from "./AnalyticsDashboardPage";

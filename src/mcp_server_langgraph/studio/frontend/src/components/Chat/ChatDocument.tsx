@@ -423,7 +423,8 @@ Type \`/\` to see available commands.`,
   const lastAssistantContent = useMemo(() => {
     const assistantMessages = messages.filter((m) => m.role === "assistant");
     if (assistantMessages.length === 0) return "";
-    return assistantMessages[assistantMessages.length - 1].content;
+    const lastMessage = assistantMessages[assistantMessages.length - 1];
+    return lastMessage?.content ?? "";
   }, [messages]);
 
   // Follow-up suggestions hook (only active when not streaming/sending)
@@ -639,20 +640,20 @@ Type \`/\` to see available commands.`,
 
       // For assistant messages, find the preceding user message
       const message = messages[messageIndex];
-      if (message.role !== "assistant") return;
+      if (!message || message.role !== "assistant") return;
 
       // Find the user message that prompted this response
       let userMessageIndex = messageIndex - 1;
-      while (
-        userMessageIndex >= 0 &&
-        messages[userMessageIndex].role !== "user"
-      ) {
+      while (userMessageIndex >= 0) {
+        const msgAtIndex = messages[userMessageIndex];
+        if (msgAtIndex?.role === "user") break;
         userMessageIndex--;
       }
 
       if (userMessageIndex < 0) return;
 
       const userMessage = messages[userMessageIndex];
+      if (!userMessage) return;
 
       setIsRegenerating(true);
       try {

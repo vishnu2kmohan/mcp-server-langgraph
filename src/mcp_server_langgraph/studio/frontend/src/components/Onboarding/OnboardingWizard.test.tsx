@@ -7,11 +7,27 @@
  * Step 2: Persona selection (admin/developer/user)
  * Step 3: Template selection
  * Step 4: Quick tour of interface
+ *
+ * Phase 6.5: AI-Powered Onboarding Personalization integration
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { OnboardingWizard, OnboardingWizardProps } from "./OnboardingWizard";
+
+// Mock useAIOnboarding hook to avoid Redux dependency in tests
+vi.mock("../../hooks/useAIOnboarding", () => ({
+  useAIOnboarding: () => ({
+    isLoading: false,
+    error: null,
+    detectedIntent: null,
+    confidence: 0,
+    recommendedPath: [],
+    skipSteps: [],
+    personaPrediction: null,
+    refresh: vi.fn(),
+  }),
+}));
 
 const mockTemplates = [
   {

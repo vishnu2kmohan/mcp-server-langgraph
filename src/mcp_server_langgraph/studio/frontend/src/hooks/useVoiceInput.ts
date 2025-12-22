@@ -175,8 +175,12 @@ export function useVoiceInput(
       let interimTranscript = "";
 
       for (let i = speechEvent.resultIndex; i < results.length; i++) {
-        const result = results[i][0];
-        if (results[i][0].isFinal) {
+        const resultRow = results[i];
+        if (!resultRow) continue;
+        const result = resultRow[0];
+        if (!result) continue;
+
+        if (result.isFinal) {
           finalTranscript += result.transcript;
         } else {
           interimTranscript += result.transcript;

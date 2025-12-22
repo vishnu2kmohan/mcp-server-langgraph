@@ -6,9 +6,15 @@
  * Step 2: Persona selection (admin/developer/user)
  * Step 3: Template selection
  * Step 4: Quick tour of interface
+ *
+ * Phase 6.5: AI-Powered Onboarding Personalization
+ * - Uses useAIOnboarding to detect user intent
+ * - Pre-selects persona based on AI prediction
+ * - Highlights recommended templates
+ * - Offers skip suggestions for advanced users
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Sparkles,
   ArrowRight,
@@ -24,7 +30,9 @@ import {
   Command,
   MessageSquare,
   GitBranch,
+  Zap,
 } from "lucide-react";
+import { useAIOnboarding } from "../../hooks/useAIOnboarding";
 
 export interface WorkflowTemplate {
   id: string;
@@ -124,8 +132,71 @@ export function OnboardingWizard({
   const [selectedTemplate, setSelectedTemplate] =
     useState<WorkflowTemplate | null>(null);
   const [scratchSelected, setScratchSelected] = useState(false);
+  const [hasAppliedAISuggestions, setHasAppliedAISuggestions] = useState(false);
 
   const totalSteps = 4;
+
+  // Phase 6.5: AI-Powered Onboarding Personalization
+  const {
+    detectedIntent,
+    confidence,
+    recommendedPath,
+    skipSteps,
+    personaPrediction,
+    isLoading: aiLoading,
+  } = useAIOnboarding({ enabled: isOpen });
+
+  // Map AI persona predictions to our Persona type
+  const mapPersonaPrediction = useCallback(
+    (prediction: string | null): Persona | null => {
+      if (!prediction) return null;
+      if (prediction.includes("admin") || prediction === "security-admin") return "admin";
+      if (
+        prediction.includes("alice") ||
+        prediction.includes("developer") ||
+        prediction.includes("builder") ||
+        prediction.includes("analyst") ||
+        prediction.includes("devops")
+      )
+        return "developer";
+      if (prediction === "bob" || prediction.includes("user")) return "user";
+      return null;
+    },
+    []
+  );
+
+  // Get recommended template from AI path
+  const aiRecommendedTemplateId = useMemo(() => {
+    const templateStep = recommendedPath.find(
+      (step) => step.step === "template_selection" && step.template
+    );
+    return templateStep?.template || null;
+  }, [recommendedPath]);
+
+  // Apply AI suggestions on first load (only once)
+  useEffect(() => {
+    if (!hasAppliedAISuggestions && !aiLoading && confidence >= 0.7) {
+      const mappedPersona = mapPersonaPrediction(personaPrediction);
+      if (mappedPersona && !selectedPersona) {
+        setSelectedPersona(mappedPersona);
+      }
+      setHasAppliedAISuggestions(true);
+    }
+  }, [
+    hasAppliedAISuggestions,
+    aiLoading,
+    confidence,
+    personaPrediction,
+    mapPersonaPrediction,
+    selectedPersona,
+  ]);
+
+  // Check if current step should be skipped
+  const shouldSkipCurrentStep = useMemo(() => {
+    if (skipSteps.length === 0 || confidence < 0.8) return false;
+    const stepNames = ["welcome", "persona_selection", "template_selection", "tour"];
+    return skipSteps.includes(stepNames[currentStep - 1] || "");
+  }, [skipSteps, currentStep, confidence]);
 
   const handleNext = useCallback(() => {
     if (currentStep < totalSteps) {
@@ -261,38 +332,90 @@ export function OnboardingWizard({
               <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
                 We&apos;ll customize your experience based on your role
               </p>
+
+              {/* AI Suggestion Banner (Phase 6.5) */}
+              {detectedIntent && confidence >= 0.7 && (
+                <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                  <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                    <Zap className="w-4 h-4" />
+                    <span className="text-sm font-medium">
+                      AI detected: {detectedIntent.replace(/_/g, " ")}
+                    </span>
+                    <span className="text-xs text-purple-500 dark:text-purple-400">
+                      ({Math.round(confidence * 100)}% confidence)
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-3">
-                {personaOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => handlePersonaSelect(option.id)}
-                    aria-pressed={selectedPersona === option.id}
-                    className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-all ${
-                      selectedPersona === option.id
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                    }`}
-                  >
-                    <div
-                      className={`p-3 rounded-lg ${
+                {personaOptions.map((option) => {
+                  const isAIRecommended =
+                    mapPersonaPrediction(personaPrediction) === option.id &&
+                    confidence >= 0.7;
+
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => handlePersonaSelect(option.id)}
+                      aria-pressed={selectedPersona === option.id}
+                      className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-all ${
                         selectedPersona === option.id
-                          ? "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
-                          : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                          : isAIRecommended
+                            ? "border-purple-300 dark:border-purple-700 bg-purple-50/50 dark:bg-purple-900/10"
+                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                       }`}
                     >
-                      {option.icon}
-                    </div>
-                    <div className="text-left">
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                        {option.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {option.description}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+                      <div
+                        className={`p-3 rounded-lg ${
+                          selectedPersona === option.id
+                            ? "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
+                            : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                        }`}
+                      >
+                        {option.icon}
+                      </div>
+                      <div className="text-left flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                            {option.title}
+                          </h3>
+                          {isAIRecommended && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/40 rounded-full">
+                              <Zap className="w-3 h-3" />
+                              Recommended
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {option.description}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
+
+              {/* Skip Step Suggestion (Phase 6.5) */}
+              {shouldSkipCurrentStep && (
+                <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                      <Zap className="w-4 h-4" />
+                      <span className="text-sm">
+                        AI suggests skipping this step based on your experience
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleNext}
+                      className="text-sm font-medium text-green-600 dark:text-green-400 hover:underline"
+                    >
+                      Skip →
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -309,6 +432,18 @@ export function OnboardingWizard({
                 Or start from scratch with a blank workflow
               </p>
 
+              {/* AI Template Recommendation (Phase 6.5) */}
+              {aiRecommendedTemplateId && confidence >= 0.7 && (
+                <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                  <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                    <Zap className="w-4 h-4" />
+                    <span className="text-sm font-medium">
+                      AI recommends: {aiRecommendedTemplateId.replace(/-/g, " ")}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {templates.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <FileCode className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -316,36 +451,51 @@ export function OnboardingWizard({
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3 mb-4">
-                  {templates.map((template) => (
-                    <button
-                      key={template.id}
-                      onClick={() => handleTemplateSelect(template)}
-                      aria-pressed={selectedTemplate?.id === template.id}
-                      className={`flex items-start gap-4 p-4 text-left rounded-lg border-2 transition-all ${
-                        selectedTemplate?.id === template.id
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
-                      }`}
-                    >
-                      <div
-                        className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                  {templates.map((template) => {
+                    const isAIRecommended =
+                      aiRecommendedTemplateId === template.id && confidence >= 0.7;
+
+                    return (
+                      <button
+                        key={template.id}
+                        onClick={() => handleTemplateSelect(template)}
+                        aria-pressed={selectedTemplate?.id === template.id}
+                        className={`flex items-start gap-4 p-4 text-left rounded-lg border-2 transition-all ${
                           selectedTemplate?.id === template.id
-                            ? "bg-blue-100 text-blue-600 dark:bg-blue-900/40"
-                            : "bg-gray-100 text-gray-600 dark:bg-gray-700"
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                            : isAIRecommended
+                              ? "border-purple-300 dark:border-purple-700 bg-purple-50/50 dark:bg-purple-900/10"
+                              : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
                         }`}
                       >
-                        {getCategoryIcon(template.category)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                          {template.name}
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {template.description}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+                        <div
+                          className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                            selectedTemplate?.id === template.id
+                              ? "bg-blue-100 text-blue-600 dark:bg-blue-900/40"
+                              : "bg-gray-100 text-gray-600 dark:bg-gray-700"
+                          }`}
+                        >
+                          {getCategoryIcon(template.category)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                              {template.name}
+                            </h3>
+                            {isAIRecommended && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/40 rounded-full">
+                                <Zap className="w-3 h-3" />
+                                AI Pick
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {template.description}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 

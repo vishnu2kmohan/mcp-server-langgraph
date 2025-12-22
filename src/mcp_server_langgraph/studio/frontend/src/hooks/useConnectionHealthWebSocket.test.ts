@@ -364,6 +364,88 @@ describe("useConnectionHealthWebSocket", () => {
     });
   });
 
+  describe("exponential backoff configuration", () => {
+    it("should configure useRealtimeSync with exponential backoff", async () => {
+      renderHook(() => useConnectionHealthWebSocket());
+
+      const { useRealtimeSync } = await import("./useRealtimeSync");
+      expect(useRealtimeSync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          exponentialBackoff: true,
+          reconnectInterval: 1000,
+          maxDelayMs: 30000,
+          maxReconnectAttempts: 10,
+        }),
+      );
+    });
+  });
+
+  describe("subscription restoration", () => {
+    it("should restore subscriptions on reconnect", () => {
+      const { result } = renderHook(() => useConnectionHealthWebSocket());
+
+      // Subscribe to connections via server acknowledgment
+      act(() => {
+        mockOnMessage?.({ type: "subscribed", connection_id: "conn-1" });
+        mockOnMessage?.({ type: "subscribed", connection_id: "conn-2" });
+      });
+
+      expect(result.current.subscribedConnections.size).toBe(2);
+
+      // Clear mock calls
+      mockSend.mockClear();
+
+      // Simulate reconnection
+      act(() => {
+        mockOnConnect?.();
+      });
+
+      // Should have re-subscribed to both connections
+      expect(mockSend).toHaveBeenCalledWith({
+        type: "subscribe",
+        connection_id: "conn-1",
+      });
+      expect(mockSend).toHaveBeenCalledWith({
+        type: "subscribe",
+        connection_id: "conn-2",
+      });
+    });
+
+    it("should only restore active subscriptions after reconnect", () => {
+      const { result } = renderHook(() => useConnectionHealthWebSocket());
+
+      // Subscribe via server acknowledgment
+      act(() => {
+        mockOnMessage?.({ type: "subscribed", connection_id: "conn-1" });
+        mockOnMessage?.({ type: "subscribed", connection_id: "conn-2" });
+      });
+
+      // Unsubscribe from conn-1 via server acknowledgment
+      act(() => {
+        mockOnMessage?.({ type: "unsubscribed", connection_id: "conn-1" });
+      });
+
+      expect(result.current.subscribedConnections.size).toBe(1);
+
+      // Clear mock calls
+      mockSend.mockClear();
+
+      // Simulate reconnection
+      act(() => {
+        mockOnConnect?.();
+      });
+
+      // Should only re-subscribe to conn-2
+      expect(mockSend).toHaveBeenCalledWith({
+        type: "subscribe",
+        connection_id: "conn-2",
+      });
+      expect(mockSend).not.toHaveBeenCalledWith(
+        expect.objectContaining({ connection_id: "conn-1" }),
+      );
+    });
+  });
+
   describe("connection lifecycle", () => {
     it("should clear error on connect", () => {
       const { result } = renderHook(() => useConnectionHealthWebSocket());

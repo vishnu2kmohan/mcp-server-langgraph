@@ -2,11 +2,40 @@
  * Persona Slice
  *
  * Manages user persona and role-based access control state.
+ * Supports 8 sub-persona variants for fine-grained RBAC.
  */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+  PERSONA_VISIBLE_MODULES,
+  PERSONA_DEFAULT_VIEW,
+  type ModuleId,
+} from "../../persona/PersonaVariants";
 
 export type Persona = "admin" | "developer" | "user";
+
+// 8 sub-persona variants
+export type SubPersona =
+  | "admin"
+  | "security-admin"
+  | "auditor"
+  | "alice-builder"
+  | "alice-analyst"
+  | "alice-devops"
+  | "compliance-officer"
+  | "bob";
+
+// Maps sub-persona to base persona
+const SUB_PERSONA_TO_BASE: Record<SubPersona, Persona> = {
+  admin: "admin",
+  "security-admin": "admin",
+  auditor: "admin",
+  "alice-builder": "developer",
+  "alice-analyst": "developer",
+  "alice-devops": "developer",
+  "compliance-officer": "developer",
+  bob: "user",
+};
 
 interface PersonaConfig {
   defaultRoute: string;
@@ -16,7 +45,8 @@ interface PersonaConfig {
 
 const PERSONA_CONFIGS: Record<Persona, PersonaConfig> = {
   admin: {
-    defaultRoute: "/studio/projects",
+    // Default to v2 chat-first experience
+    defaultRoute: "/studio/v2/chat",
     sidebarItems: [
       "projects",
       "chat",
@@ -25,15 +55,20 @@ const PERSONA_CONFIGS: Record<Persona, PersonaConfig> = {
       "agents",
       "vectors",
       "observability",
+      "files",
+      "traces",
       "cost",
       "settings",
       "admin",
       "audit-logs",
+      "help",
     ],
+    // Admin has access to all routes (legacy and v2)
     allowedRoutePatterns: ["/admin/", "/studio/"],
   },
   developer: {
-    defaultRoute: "/studio/projects",
+    // Default to v2 chat-first experience
+    defaultRoute: "/studio/v2/chat",
     sidebarItems: [
       "projects",
       "chat",
@@ -42,29 +77,42 @@ const PERSONA_CONFIGS: Record<Persona, PersonaConfig> = {
       "agents",
       "vectors",
       "observability",
+      "files",
+      "traces",
       "cost",
       "settings",
+      "help",
     ],
+    // Developer has access to all studio routes (legacy and v2)
     allowedRoutePatterns: ["/studio/"],
   },
   user: {
-    defaultRoute: "/studio/projects",
+    // Default to v2 chat-first experience
+    defaultRoute: "/studio/v2/chat",
     // Expanded access for standard users (AI-native UX improvement)
     // Improves Adoption (HEART) by giving Bob access to:
     // - workflows: Unified view of owned workflows + shared workflows (read-only)
     // - cost: Basic cost tracking for transparency
-    sidebarItems: ["projects", "chat", "workflows", "cost"],
+    sidebarItems: ["projects", "chat", "workflows", "cost", "help"],
+    // User has limited access (both legacy and v2 routes)
     allowedRoutePatterns: [
+      // Legacy routes
       "/studio/projects",
       "/studio/chat",
       "/studio/workflows",
       "/studio/cost",
+      // HybridShell v2 routes
+      "/studio/v2/projects",
+      "/studio/v2/chat",
+      "/studio/v2/workflows",
+      "/studio/v2/cost",
     ],
   },
 };
 
 interface PersonaState {
   persona: Persona;
+  subPersona: SubPersona | null;
   username: string | null;
   email: string | null;
   permissions: string[];
@@ -73,6 +121,7 @@ interface PersonaState {
 
 export const initialState: PersonaState = {
   persona: "user",
+  subPersona: null,
   username: null,
   email: null,
   permissions: [],
@@ -100,6 +149,11 @@ export const personaSlice = createSlice({
   reducers: {
     setPersona: (state, action: PayloadAction<Persona>) => {
       state.persona = action.payload;
+    },
+    setSubPersona: (state, action: PayloadAction<SubPersona>) => {
+      state.subPersona = action.payload;
+      // Derive base persona from sub-persona
+      state.persona = SUB_PERSONA_TO_BASE[action.payload];
     },
     setUserInfo: (
       state,
@@ -129,6 +183,7 @@ export const personaSlice = createSlice({
 
 export const {
   setPersona,
+  setSubPersona,
   setUserInfo,
   setPermissions,
   setPersonaLoading,
@@ -139,6 +194,8 @@ export const {
 type PersonaRootState = { persona: PersonaState };
 
 export const selectPersona = (state: PersonaRootState) => state.persona.persona;
+export const selectSubPersona = (state: PersonaRootState) =>
+  state.persona.subPersona;
 export const selectUsername = (state: PersonaRootState) =>
   state.persona.username;
 export const selectEmail = (state: PersonaRootState) => state.persona.email;
@@ -153,8 +210,23 @@ export const selectSidebarItems = (state: PersonaRootState) => {
 };
 
 export const selectDefaultRoute = (state: PersonaRootState) => {
-  const persona = state.persona.persona;
+  const { persona, subPersona } = state.persona;
+  // Use sub-persona config if available
+  if (subPersona && PERSONA_DEFAULT_VIEW[subPersona]) {
+    return PERSONA_DEFAULT_VIEW[subPersona];
+  }
   return PERSONA_CONFIGS[persona].defaultRoute;
+};
+
+export const selectVisibleModules = (state: PersonaRootState): ModuleId[] => {
+  const { subPersona, persona } = state.persona;
+  // Use sub-persona modules if available
+  if (subPersona && PERSONA_VISIBLE_MODULES[subPersona]) {
+    return PERSONA_VISIBLE_MODULES[subPersona];
+  }
+  // Fallback to base persona sidebar items (converted to ModuleIds)
+  const sidebarItems = PERSONA_CONFIGS[persona].sidebarItems;
+  return sidebarItems as ModuleId[];
 };
 
 export const selectCanAccessRoute =

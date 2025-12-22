@@ -12,6 +12,9 @@ import complianceReducer, {
   resetCompliance,
   selectFrameworkStatus,
   selectOverallScore,
+  selectAllFrameworks,
+  selectComplianceLoading,
+  selectLastRefresh,
   type FrameworkStatus,
   type ComplianceState,
 } from "./complianceSlice";
@@ -110,6 +113,34 @@ describe("complianceSlice", () => {
       expect(state.frameworks.SOC2.score).toBe(94);
       expect(state.frameworks.HIPAA.score).toBe(100);
     });
+
+    it("skips undefined statuses in partial update", () => {
+      // Test the branch where status is undefined/falsy
+      const statuses: Partial<Record<"SOC2" | "HIPAA" | "GDPR" | "FEDRAMP", FrameworkStatus | undefined>> = {
+        SOC2: mockSOC2Status,
+        HIPAA: undefined, // This should be skipped
+      };
+      const state = complianceReducer(
+        initialState,
+        setAllFrameworkStatuses(statuses as Parameters<typeof setAllFrameworkStatuses>[0]),
+      );
+      expect(state.frameworks.SOC2.score).toBe(94);
+      // HIPAA should remain unchanged (original loading state)
+      expect(state.frameworks.HIPAA.status).toBe("loading");
+      expect(state.frameworks.HIPAA.score).toBe(0);
+    });
+
+    it("sets lastRefresh timestamp after update", () => {
+      const statuses = {
+        SOC2: mockSOC2Status,
+      };
+      const state = complianceReducer(
+        initialState,
+        setAllFrameworkStatuses(statuses),
+      );
+      expect(state.lastRefresh).not.toBeNull();
+      expect(new Date(state.lastRefresh!).getTime()).toBeLessThanOrEqual(Date.now());
+    });
   });
 
   describe("setFrameworkError", () => {
@@ -161,6 +192,47 @@ describe("complianceSlice", () => {
     it("selectOverallScore returns score", () => {
       const score = selectOverallScore(stateWithCompliance);
       expect(score).toBe(93);
+    });
+
+    it("selectAllFrameworks returns array of all frameworks", () => {
+      const frameworks = selectAllFrameworks(stateWithCompliance);
+      expect(Array.isArray(frameworks)).toBe(true);
+      expect(frameworks).toHaveLength(4);
+      expect(frameworks.map((f) => f.framework)).toEqual(
+        expect.arrayContaining(["SOC2", "HIPAA", "GDPR", "FEDRAMP"]),
+      );
+    });
+
+    it("selectComplianceLoading returns loading state", () => {
+      const isLoading = selectComplianceLoading(stateWithCompliance);
+      expect(isLoading).toBe(false);
+    });
+
+    it("selectComplianceLoading returns true when loading", () => {
+      const loadingState = {
+        compliance: {
+          ...stateWithCompliance.compliance,
+          isLoading: true,
+        },
+      };
+      const isLoading = selectComplianceLoading(loadingState);
+      expect(isLoading).toBe(true);
+    });
+
+    it("selectLastRefresh returns last refresh timestamp", () => {
+      const lastRefresh = selectLastRefresh(stateWithCompliance);
+      expect(lastRefresh).toBe("2025-12-19T00:00:00Z");
+    });
+
+    it("selectLastRefresh returns null when never refreshed", () => {
+      const neverRefreshed = {
+        compliance: {
+          ...stateWithCompliance.compliance,
+          lastRefresh: null,
+        },
+      };
+      const lastRefresh = selectLastRefresh(neverRefreshed);
+      expect(lastRefresh).toBeNull();
     });
   });
 });

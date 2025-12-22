@@ -237,7 +237,10 @@ export const animation = {
  * Helper: Get color value by path (e.g., "primary.500")
  */
 export function getColorValue(path: string): string | undefined {
-  const [group, shade] = path.split(".");
+  const parts = path.split(".");
+  const group = parts[0];
+  const shade = parts[1];
+  if (!group || !shade) return undefined;
   const colorGroup = colors[group as keyof typeof colors];
 
   if (!colorGroup || typeof colorGroup !== "object") {

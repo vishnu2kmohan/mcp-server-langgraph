@@ -59,6 +59,15 @@ describe("getRouteForTab", () => {
       "/studio/chat?session=session%20with%20spaces",
     );
   });
+
+  it("should return fallback route for unknown tab type", () => {
+    const tab = {
+      id: "tab-1",
+      type: "unknown-type" as TabState["type"],
+      title: "Unknown",
+    };
+    expect(getRouteForTab(tab)).toBe("/studio");
+  });
 });
 
 describe("tabMatchesRoute", () => {
@@ -100,5 +109,15 @@ describe("tabMatchesRoute", () => {
     const tab: TabState = { id: "tab-1", type: "workflow", title: "Workflows" };
     const searchParams = new URLSearchParams();
     expect(tabMatchesRoute(tab, "/studio/workflows", searchParams)).toBe(true);
+  });
+
+  it("should not match unknown tab type", () => {
+    const tab = {
+      id: "tab-1",
+      type: "unknown-type" as TabState["type"],
+      title: "Unknown",
+    };
+    const searchParams = new URLSearchParams();
+    expect(tabMatchesRoute(tab, "/studio/unknown", searchParams)).toBe(false);
   });
 });

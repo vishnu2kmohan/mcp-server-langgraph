@@ -113,11 +113,13 @@ export function ReasoningEffortSelector({
       if (event.key === "ArrowRight" || event.key === "ArrowDown") {
         event.preventDefault();
         const nextIndex = Math.min(currentIndex + 1, EFFORT_LEVELS.length - 1);
-        onChange(EFFORT_LEVELS[nextIndex].value);
+        const nextLevel = EFFORT_LEVELS[nextIndex];
+        if (nextLevel) onChange(nextLevel.value);
       } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
         event.preventDefault();
         const prevIndex = Math.max(currentIndex - 1, 0);
-        onChange(EFFORT_LEVELS[prevIndex].value);
+        const prevLevel = EFFORT_LEVELS[prevIndex];
+        if (prevLevel) onChange(prevLevel.value);
       }
     },
     [isDisabled, onChange],

@@ -339,6 +339,90 @@ describe("useAuditWebSocket", () => {
     });
   });
 
+  describe("filter restoration on reconnect", () => {
+    it("should restore filter when connection is re-established", () => {
+      const { result } = renderHook(() => useAuditWebSocket());
+
+      const filter: AuditFilter = {
+        categories: ["security", "authentication"],
+        regulations: ["HIPAA", "SOC2"],
+      };
+
+      // Set a filter (this sends it initially)
+      act(() => {
+        result.current.setFilter(filter);
+      });
+
+      expect(mockSend).toHaveBeenCalledWith(filter);
+      mockSend.mockClear();
+
+      // Simulate receiving filter_updated confirmation from server
+      act(() => {
+        mockOnMessage?.({ type: "filter_updated", filter });
+      });
+
+      // Simulate reconnection
+      act(() => {
+        _mockOnConnect?.();
+      });
+
+      // Filter should be re-sent on reconnect
+      expect(mockSend).toHaveBeenCalledWith(filter);
+    });
+
+    it("should not send filter on reconnect if no filter was set", () => {
+      renderHook(() => useAuditWebSocket());
+
+      mockSend.mockClear();
+
+      // Simulate reconnection with no filter set
+      act(() => {
+        _mockOnConnect?.();
+      });
+
+      // No filter should be sent
+      expect(mockSend).not.toHaveBeenCalled();
+    });
+
+    it("should not restore filter after clearFilter was called", () => {
+      const { result } = renderHook(() => useAuditWebSocket());
+
+      const filter: AuditFilter = {
+        categories: ["security"],
+      };
+
+      // Set a filter
+      act(() => {
+        result.current.setFilter(filter);
+      });
+
+      // Confirm filter was received
+      act(() => {
+        mockOnMessage?.({ type: "filter_updated", filter });
+      });
+
+      // Clear the filter
+      act(() => {
+        result.current.clearFilter();
+      });
+
+      // Simulate receiving cleared filter confirmation
+      act(() => {
+        mockOnMessage?.({ type: "filter_updated", filter: {} });
+      });
+
+      mockSend.mockClear();
+
+      // Simulate reconnection
+      act(() => {
+        _mockOnConnect?.();
+      });
+
+      // No filter should be sent (it was cleared)
+      expect(mockSend).not.toHaveBeenCalled();
+    });
+  });
+
   describe("pausing", () => {
     it("should track paused state", () => {
       const { result } = renderHook(() => useAuditWebSocket());

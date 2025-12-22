@@ -15,6 +15,10 @@ import helpReducer, {
   resetDismissedTips,
   selectHelpPaneOpen,
   selectVisibleTips,
+  selectHelpSearchQuery,
+  selectSelectedTopicId,
+  selectDismissedTipIds,
+  resetHelp,
   type ContextualTip,
   type HelpState,
 } from "./helpSlice";
@@ -156,6 +160,36 @@ describe("helpSlice", () => {
 
     it("selectVisibleTips returns tips array", () => {
       expect(selectVisibleTips(stateWithHelp)).toHaveLength(1);
+    });
+
+    it("selectHelpSearchQuery returns search query", () => {
+      expect(selectHelpSearchQuery(stateWithHelp)).toBe("test");
+    });
+
+    it("selectSelectedTopicId returns selected topic id", () => {
+      expect(selectSelectedTopicId(stateWithHelp)).toBe("topic-1");
+    });
+
+    it("selectDismissedTipIds returns dismissed tip ids", () => {
+      expect(selectDismissedTipIds(stateWithHelp)).toEqual(["tip-1"]);
+    });
+  });
+
+  describe("resetHelp", () => {
+    it("resets to initial state", () => {
+      const modifiedState: HelpState = {
+        isOpen: true,
+        searchQuery: "test",
+        selectedTopicId: "topic-1",
+        dismissedTipIds: ["tip-1", "tip-2"],
+        visibleTips: [mockTip],
+      };
+      const state = helpReducer(modifiedState, resetHelp());
+      expect(state.isOpen).toBe(false);
+      expect(state.searchQuery).toBe("");
+      expect(state.selectedTopicId).toBeNull();
+      expect(state.dismissedTipIds).toHaveLength(0);
+      expect(state.visibleTips).toHaveLength(0);
     });
   });
 });

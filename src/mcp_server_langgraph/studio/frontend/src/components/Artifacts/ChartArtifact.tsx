@@ -167,7 +167,10 @@ function LineChartRenderer({
             r="1.5"
             fill="#3B82F6"
             className="cursor-pointer hover:r-2"
-            onClick={() => onDataPointClick?.(data[index])}
+            onClick={() => {
+              const dataPoint = data[index];
+              if (dataPoint) onDataPointClick?.(dataPoint);
+            }}
             data-testid="chart-point"
           >
             <title>{`${point.label}: ${formatValue(point.value)}`}</title>
@@ -297,44 +300,6 @@ export function ChartArtifact({
     { type: "line", icon: <LineChart size={14} />, label: "Line" },
     { type: "pie", icon: <PieChart size={14} />, label: "Pie" },
   ];
-
-  /**
-   * Export chart data as CSV file
-   */
-  const exportAsCsv = useCallback(() => {
-    // Build CSV content
-    const headers = ["Label", "Value"];
-    const rows = data.map((point) => [point.label, point.value.toString()]);
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.join(",")),
-    ].join("\n");
-
-    // Generate filename from title
-    const filename = title
-      ? `${title.replace(/\s+/g, "_").toLowerCase()}.csv`
-      : "chart_data.csv";
-
-    // Create and trigger download
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [data, title]);
-
-  const _handleDownload = useCallback(() => {
-    if (onDownload) {
-      onDownload();
-    } else {
-      // Default: export as CSV
-      exportAsCsv();
-    }
-  }, [onDownload, exportAsCsv]);
 
   // Handle export from ArtifactExporter
   const handleExport = useCallback(

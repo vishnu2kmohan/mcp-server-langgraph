@@ -355,6 +355,15 @@ describe("artifactSlice", () => {
         const artifacts = selectArtifactsByType("mermaid")(store.getState());
         expect(artifacts).toEqual([]);
       });
+
+      it("should use cached selector on subsequent calls with same type", () => {
+        // Store not needed for this test - we're testing selector caching
+        // First call creates the selector
+        const firstCall = selectArtifactsByType("code");
+        // Second call should return the same cached selector
+        const secondCall = selectArtifactsByType("code");
+        expect(firstCall).toBe(secondCall);
+      });
     });
 
     describe("selectSelectedArtifact", () => {
@@ -377,6 +386,23 @@ describe("artifactSlice", () => {
 
       it("should return null if no selection", () => {
         const store = createTestStore();
+        const selected = selectSelectedArtifact(store.getState());
+        expect(selected).toBeNull();
+      });
+
+      it("should return null if selectedId does not match any artifact", () => {
+        const artifact: CodeArtifact = {
+          id: "code-1",
+          type: "code",
+          data: "test",
+          config: { language: "javascript" },
+        };
+
+        const store = createTestStore({
+          artifacts: [artifact],
+          selectedArtifactId: "nonexistent-id",
+        });
+
         const selected = selectSelectedArtifact(store.getState());
         expect(selected).toBeNull();
       });

@@ -14,13 +14,17 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { SettingsPanel } from "./SettingsPanel";
 import { PreferencesProvider } from "../../contexts/PreferencesContext";
 import { STORAGE_KEYS } from "../../utils/storage";
+import { fullCleanup } from "../../test/testIsolation";
+
+// Helper to flush pending promises (prevents act() warnings)
+const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 expect.extend(toHaveNoViolations);
 
@@ -38,8 +42,12 @@ describe("SettingsPanel", () => {
     localStorage.clear();
   });
 
-  afterEach(() => {
-    localStorage.clear();
+  afterEach(async () => {
+    // Flush pending promises to prevent state leakage
+    await flushPromises();
+    // Comprehensive cleanup for test isolation
+    cleanup();
+    fullCleanup();
   });
 
   // ===========================================================================
@@ -477,6 +485,306 @@ describe("SettingsPanel", () => {
       // Tab navigation should work
       await user.tab();
       expect(document.activeElement).toBeTruthy();
+    });
+  });
+
+  // ===========================================================================
+  // HITL Agent Approval Tab Tests
+  // ===========================================================================
+
+  describe("HITL Agent Approval tab", () => {
+    it("should render Agent Approval tab in tab list", async () => {
+      renderWithProvider(<SettingsPanel />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("tab", { name: /agent approval/i }),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should switch to Agent Approval tab when clicked", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("tab", { name: /agent approval/i }),
+        ).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      expect(
+        screen.getByRole("tab", { name: /agent approval/i }),
+      ).toHaveAttribute("aria-selected", "true");
+    });
+
+    it("should render HITL enabled toggle", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should toggle HITL enabled when clicked", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+      });
+
+      const toggle = screen.getByLabelText(/enable agent approval/i);
+      const initialState = toggle.getAttribute("aria-checked");
+
+      await user.click(toggle);
+
+      await waitFor(() => {
+        expect(toggle.getAttribute("aria-checked")).toBe(
+          initialState === "true" ? "false" : "true",
+        );
+      });
+    });
+
+    it("should render confidence threshold slider", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/confidence threshold/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should display current confidence threshold value", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        // Default threshold is 70%
+        expect(screen.getByText(/70%/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should render auto-approve threshold slider", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/auto-approve threshold/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should display current auto-approve threshold value", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        // Default auto-approve threshold is 90%
+        expect(screen.getByText(/90%/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should render push notifications toggle", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/push notifications/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should render sound alerts toggle", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/sound alerts/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should disable settings when HITL is disabled", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+      });
+
+      // Turn off HITL
+      const hitlToggle = screen.getByLabelText(/enable agent approval/i);
+      if (hitlToggle.getAttribute("aria-checked") === "true") {
+        await user.click(hitlToggle);
+      }
+
+      await waitFor(() => {
+        expect(hitlToggle.getAttribute("aria-checked")).toBe("false");
+      });
+
+      // Verify other controls are disabled
+      const confidenceSlider = screen.getByLabelText(/confidence threshold/i);
+      expect(confidenceSlider).toBeDisabled();
+
+      const autoApproveSlider = screen.getByLabelText(/auto-approve threshold/i);
+      expect(autoApproveSlider).toBeDisabled();
+
+      const pushToggle = screen.getByLabelText(/push notifications/i);
+      expect(pushToggle).toBeDisabled();
+
+      const soundToggle = screen.getByLabelText(/sound alerts/i);
+      expect(soundToggle).toBeDisabled();
+    });
+
+    it("should enable settings when HITL is enabled", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+      });
+
+      // Ensure HITL is on
+      const hitlToggle = screen.getByLabelText(/enable agent approval/i);
+      if (hitlToggle.getAttribute("aria-checked") === "false") {
+        await user.click(hitlToggle);
+      }
+
+      await waitFor(() => {
+        expect(hitlToggle.getAttribute("aria-checked")).toBe("true");
+      });
+
+      // Verify other controls are enabled
+      const confidenceSlider = screen.getByLabelText(/confidence threshold/i);
+      expect(confidenceSlider).not.toBeDisabled();
+
+      const autoApproveSlider = screen.getByLabelText(/auto-approve threshold/i);
+      expect(autoApproveSlider).not.toBeDisabled();
+
+      const pushToggle = screen.getByLabelText(/push notifications/i);
+      expect(pushToggle).not.toBeDisabled();
+
+      const soundToggle = screen.getByLabelText(/sound alerts/i);
+      expect(soundToggle).not.toBeDisabled();
+    });
+
+    it("should persist HITL settings to localStorage", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+      });
+
+      // Toggle HITL off
+      const hitlToggle = screen.getByLabelText(/enable agent approval/i);
+      if (hitlToggle.getAttribute("aria-checked") === "true") {
+        await user.click(hitlToggle);
+      }
+
+      // Wait for debounced save
+      await waitFor(
+        () => {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          expect(stored).toBeTruthy();
+          const parsed = JSON.parse(stored!);
+          expect(parsed.hitl).toBeDefined();
+          expect(parsed.hitl.enabled).toBe(false);
+        },
+        { timeout: 2000 },
+      );
+    });
+
+    it("should have no accessibility violations for HITL tab", async () => {
+      const user = userEvent.setup();
+      const { container } = renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+      });
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    // Threshold Recommendation Tests
+    it("should render threshold recommendation section", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/threshold recommendation/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should show loading state when fetching recommendation", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        // Should show fetch recommendation button
+        expect(
+          screen.getByRole("button", { name: /get recommendation/i })
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should have apply recommendation button", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        // Apply button should be present but disabled until recommendation is fetched
+        const applyButton = screen.getByRole("button", {
+          name: /apply recommendation/i,
+        });
+        expect(applyButton).toBeInTheDocument();
+        expect(applyButton).toBeDisabled();
+      });
+    });
+
+    it("should show auto-adjust toggle", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<SettingsPanel />);
+
+      await user.click(screen.getByRole("tab", { name: /agent approval/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText(/auto-adjust thresholds/i)
+        ).toBeInTheDocument();
+      });
     });
   });
 

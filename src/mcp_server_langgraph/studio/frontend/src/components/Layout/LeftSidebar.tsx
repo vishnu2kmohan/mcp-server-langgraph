@@ -286,6 +286,7 @@ export function LeftSidebar({
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
     }
+    return undefined;
   }, [isUserMenuOpen]);
 
   // Refs for scrolling to groups

@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
+import { cn } from "../utils/cn";
 
 // =============================================================================
 // Types
@@ -52,10 +53,6 @@ export interface ComplianceDashboardProps {
 // =============================================================================
 // Utility
 // =============================================================================
-
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
 
 function getStatusIcon(status: ComplianceStatus) {
   switch (status) {
@@ -129,9 +126,9 @@ function FrameworkCard({ name, icon, summary }: FrameworkCardProps) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {icon}
-          <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
             {name}
-          </h4>
+          </h3>
         </div>
         {getStatusIcon(summary.status)}
       </div>

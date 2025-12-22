@@ -136,10 +136,12 @@ export function useCommandPalette(commands: Command[]): CommandPaletteState {
     const grouped: Record<string, Command[]> = {};
 
     commands.forEach((cmd) => {
-      if (!grouped[cmd.category]) {
-        grouped[cmd.category] = [];
+      let categoryGroup = grouped[cmd.category];
+      if (!categoryGroup) {
+        categoryGroup = [];
+        grouped[cmd.category] = categoryGroup;
       }
-      grouped[cmd.category].push(cmd);
+      categoryGroup.push(cmd);
     });
 
     return grouped;

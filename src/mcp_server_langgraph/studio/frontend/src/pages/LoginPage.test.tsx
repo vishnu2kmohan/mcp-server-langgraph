@@ -395,4 +395,162 @@ describe("LoginPage", () => {
       ).toBeInTheDocument();
     });
   });
+
+  describe("Provider Icons - All Switch Cases", () => {
+    it("should render Microsoft icon", () => {
+      mockedUseGetIdentityProvidersQuery.mockReturnValue({
+        data: {
+          identity_providers: [
+            {
+              alias: "microsoft",
+              display_name: "Microsoft",
+              provider_type: "social" as const,
+              provider_id: "microsoft",
+              icon: "microsoft",
+              login_url: "/auth/microsoft",
+            },
+          ],
+          has_social_login: true,
+          has_enterprise_sso: false,
+        },
+        isLoading: false,
+        error: undefined,
+      });
+
+      renderWithProviders(<LoginPage />);
+
+      const button = screen.getByRole("link", { name: /microsoft/i });
+      expect(button.querySelector("svg")).toBeInTheDocument();
+    });
+
+    it("should render Facebook icon", () => {
+      mockedUseGetIdentityProvidersQuery.mockReturnValue({
+        data: {
+          identity_providers: [
+            {
+              alias: "facebook",
+              display_name: "Facebook",
+              provider_type: "social" as const,
+              provider_id: "facebook",
+              icon: "facebook",
+              login_url: "/auth/facebook",
+            },
+          ],
+          has_social_login: true,
+          has_enterprise_sso: false,
+        },
+        isLoading: false,
+        error: undefined,
+      });
+
+      renderWithProviders(<LoginPage />);
+
+      const button = screen.getByRole("link", { name: /facebook/i });
+      expect(button.querySelector("svg")).toBeInTheDocument();
+    });
+
+    it("should render LinkedIn icon", () => {
+      mockedUseGetIdentityProvidersQuery.mockReturnValue({
+        data: {
+          identity_providers: [
+            {
+              alias: "linkedin",
+              display_name: "LinkedIn",
+              provider_type: "social" as const,
+              provider_id: "linkedin",
+              icon: "linkedin",
+              login_url: "/auth/linkedin",
+            },
+          ],
+          has_social_login: true,
+          has_enterprise_sso: false,
+        },
+        isLoading: false,
+        error: undefined,
+      });
+
+      renderWithProviders(<LoginPage />);
+
+      const button = screen.getByRole("link", { name: /linkedin/i });
+      expect(button.querySelector("svg")).toBeInTheDocument();
+    });
+
+    it("should render Apple icon", () => {
+      mockedUseGetIdentityProvidersQuery.mockReturnValue({
+        data: {
+          identity_providers: [
+            {
+              alias: "apple",
+              display_name: "Apple",
+              provider_type: "social" as const,
+              provider_id: "apple",
+              icon: "apple",
+              login_url: "/auth/apple",
+            },
+          ],
+          has_social_login: true,
+          has_enterprise_sso: false,
+        },
+        isLoading: false,
+        error: undefined,
+      });
+
+      renderWithProviders(<LoginPage />);
+
+      const button = screen.getByRole("link", { name: /apple/i });
+      expect(button.querySelector("svg")).toBeInTheDocument();
+    });
+
+    it("should render Shield icon for SAML providers", () => {
+      mockedUseGetIdentityProvidersQuery.mockReturnValue({
+        data: {
+          identity_providers: [
+            {
+              alias: "saml-idp",
+              display_name: "SAML Provider",
+              provider_type: "enterprise" as const,
+              provider_id: "saml",
+              icon: "shield",
+              login_url: "/auth/saml",
+            },
+          ],
+          has_social_login: false,
+          has_enterprise_sso: true,
+        },
+        isLoading: false,
+        error: undefined,
+      });
+
+      renderWithProviders(<LoginPage />);
+
+      const button = screen.getByRole("link", { name: /saml provider/i });
+      expect(button.querySelector("svg")).toBeInTheDocument();
+    });
+
+    it("should render default ExternalLink icon for unknown provider icons", () => {
+      mockedUseGetIdentityProvidersQuery.mockReturnValue({
+        data: {
+          identity_providers: [
+            {
+              alias: "custom-idp",
+              display_name: "Custom Provider",
+              provider_type: "enterprise" as const,
+              provider_id: "custom",
+              icon: "unknown-icon-type",
+              login_url: "/auth/custom",
+            },
+          ],
+          has_social_login: false,
+          has_enterprise_sso: true,
+        },
+        isLoading: false,
+        error: undefined,
+      });
+
+      renderWithProviders(<LoginPage />);
+
+      const button = screen.getByRole("link", { name: /custom provider/i });
+      expect(button.querySelector("svg")).toBeInTheDocument();
+    });
+  });
 });

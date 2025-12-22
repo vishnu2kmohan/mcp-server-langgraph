@@ -5,7 +5,7 @@
  * resources, prompts, and server connections.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, Suspense } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   removeServer,
@@ -32,6 +32,11 @@ import {
   X,
   Plus,
   AlertCircle,
+  Play,
+  Eye,
+  TestTube,
+  UserCheck,
+  Loader2,
 } from "lucide-react";
 import type {
   MCPTool,
@@ -40,7 +45,14 @@ import type {
   ServerEntry,
 } from "../types/mcp";
 import type { MCPConnectionCreate } from "../types/connection";
-import { AddConnectionDialog } from "../components/MCP";
+import {
+  AddConnectionDialog,
+  LazyToolInvocationDialog,
+  LazyResourceViewer,
+  LazyPromptTester,
+  LazyElicitationDialog,
+} from "../components/MCP";
+import { useMCPKeyboardShortcuts } from "../hooks";
 
 type MCPTab = "tools" | "resources" | "prompts" | "servers";
 
@@ -50,6 +62,29 @@ export function MCPPage() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+
+  // MCP Action Dialog States
+  const [isToolInvocationOpen, setIsToolInvocationOpen] = useState(false);
+  const [isResourceViewerOpen, setIsResourceViewerOpen] = useState(false);
+  const [isPromptTesterOpen, setIsPromptTesterOpen] = useState(false);
+  const [isElicitationOpen, setIsElicitationOpen] = useState(false);
+
+  // Close whichever MCP dialog is currently open
+  const handleCloseActiveDialog = useCallback(() => {
+    if (isToolInvocationOpen) setIsToolInvocationOpen(false);
+    else if (isResourceViewerOpen) setIsResourceViewerOpen(false);
+    else if (isPromptTesterOpen) setIsPromptTesterOpen(false);
+    else if (isElicitationOpen) setIsElicitationOpen(false);
+    else if (isAddDialogOpen) setIsAddDialogOpen(false);
+  }, [isToolInvocationOpen, isResourceViewerOpen, isPromptTesterOpen, isElicitationOpen, isAddDialogOpen]);
+
+  // Wire up keyboard shortcuts for MCP dialogs
+  useMCPKeyboardShortcuts({
+    onOpenToolDialog: useCallback(() => setIsToolInvocationOpen(true), []),
+    onOpenResourceViewer: useCallback(() => setIsResourceViewerOpen(true), []),
+    onOpenPromptTester: useCallback(() => setIsPromptTesterOpen(true), []),
+    onCloseActiveDialog: handleCloseActiveDialog,
+  });
 
   const dispatch = useAppDispatch();
   const serverList = useAppSelector(selectServerList);
@@ -174,6 +209,43 @@ export function MCPPage() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            {/* MCP Action Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsToolInvocationOpen(true)}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                aria-label="Invoke Tool"
+              >
+                <Play size={16} />
+                <span className="hidden sm:inline">Invoke Tool</span>
+              </button>
+              <button
+                onClick={() => setIsResourceViewerOpen(true)}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                aria-label="View Resources"
+              >
+                <Eye size={16} />
+                <span className="hidden sm:inline">View Resources</span>
+              </button>
+              <button
+                onClick={() => setIsPromptTesterOpen(true)}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                aria-label="Test Prompt"
+              >
+                <TestTube size={16} />
+                <span className="hidden sm:inline">Test Prompt</span>
+              </button>
+              <button
+                onClick={() => setIsElicitationOpen(true)}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                aria-label="Request Input"
+              >
+                <UserCheck size={16} />
+                <span className="hidden sm:inline">Request Input</span>
+              </button>
+            </div>
+
+            {/* Connection Status */}
             <div className="flex items-center gap-2">
               <div
                 className={`w-2 h-2 rounded-full ${
@@ -466,6 +538,43 @@ export function MCPPage() {
         onSubmit={handleCreateConnection}
         isLoading={isCreating}
       />
+
+      {/* MCP Action Dialogs - Lazy loaded for bundle optimization */}
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex items-center gap-3">
+              <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+              <span className="text-gray-700 dark:text-gray-300">Loading...</span>
+            </div>
+          </div>
+        }
+      >
+        {isToolInvocationOpen && (
+          <LazyToolInvocationDialog
+            open={isToolInvocationOpen}
+            onClose={() => setIsToolInvocationOpen(false)}
+          />
+        )}
+        {isResourceViewerOpen && (
+          <LazyResourceViewer
+            open={isResourceViewerOpen}
+            onClose={() => setIsResourceViewerOpen(false)}
+          />
+        )}
+        {isPromptTesterOpen && (
+          <LazyPromptTester
+            open={isPromptTesterOpen}
+            onClose={() => setIsPromptTesterOpen(false)}
+          />
+        )}
+        {isElicitationOpen && (
+          <LazyElicitationDialog
+            open={isElicitationOpen}
+            onClose={() => setIsElicitationOpen(false)}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

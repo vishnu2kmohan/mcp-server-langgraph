@@ -111,6 +111,7 @@ export function ConfirmationDialog({
 
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
+      if (!firstElement || !lastElement) return;
 
       if (e.shiftKey && document.activeElement === firstElement) {
         e.preventDefault();

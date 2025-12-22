@@ -373,6 +373,7 @@ export function useMCPWebSocket(
   }, []);
 
   // Use the underlying realtimeSync hook
+  // Enable exponential backoff for better reconnection behavior
   const {
     status: realtimeStatus,
     send,
@@ -380,8 +381,10 @@ export function useMCPWebSocket(
     reconnect,
   } = useRealtimeSync({
     url: wsUrl,
-    reconnectInterval: 5000,
-    maxReconnectAttempts: 10,
+    exponentialBackoff: true,
+    reconnectInterval: 1000, // Start with 1 second
+    maxDelayMs: 30000, // Max 30 seconds between attempts
+    maxReconnectAttempts: 10, // Try up to 10 times
     onMessage: handleMessage,
     onError: (err) => setError(err.message),
     onConnect: () => setError(null),

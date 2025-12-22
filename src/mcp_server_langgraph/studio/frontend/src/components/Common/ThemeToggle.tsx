@@ -80,6 +80,7 @@ export function ThemeToggle({
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
     }
+    return undefined;
   }, [isDropdownOpen]);
 
   // Handle theme cycle
@@ -90,7 +91,8 @@ export function ThemeToggle({
       // Cycle to next theme
       const currentIndex = THEME_CYCLE.indexOf(theme);
       const nextIndex = (currentIndex + 1) % THEME_CYCLE.length;
-      onThemeChange?.(THEME_CYCLE[nextIndex]);
+      const nextTheme = THEME_CYCLE[nextIndex];
+      if (nextTheme) onThemeChange?.(nextTheme);
     }
   }, [variant, theme, onThemeChange, isDropdownOpen]);
 

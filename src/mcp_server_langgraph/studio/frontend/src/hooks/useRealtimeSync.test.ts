@@ -1,457 +1,589 @@
 /**
  * useRealtimeSync Hook Tests
  *
- * TDD tests for real-time data synchronization using WebSocket.
- * Features:
- * - WebSocket connection management
- * - Automatic reconnection
+ * Tests for WebSocket real-time sync hook including:
+ * - Connection establishment
+ * - Reconnection logic
  * - Message handling
- * - Connection status tracking
+ * - Error states
+ * - Manual disconnect/reconnect
  */
-
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useRealtimeSync } from "./useRealtimeSync";
 
-// Mock WebSocket class
+// Mock WebSocket
 class MockWebSocket {
-  static instances: MockWebSocket[] = [];
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
 
   url: string;
-  readyState: number = 0; // CONNECTING
+  readyState: number = MockWebSocket.CONNECTING;
   onopen: (() => void) | null = null;
-  onclose: ((event: { code: number; reason: string }) => void) | null = null;
+  onclose: ((event: { code: number }) => void) | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
-  onerror: ((event: Event) => void) | null = null;
+  onerror: ((event: unknown) => void) | null = null;
 
   constructor(url: string) {
     this.url = url;
     MockWebSocket.instances.push(this);
-    // Simulate connection delay
-    setTimeout(() => {
-      if (this.readyState === 0) {
-        this.readyState = 1; // OPEN
-        this.onopen?.();
-      }
-    }, 10);
   }
 
   send = vi.fn();
   close = vi.fn(() => {
-    this.readyState = 3; // CLOSED
-    this.onclose?.({ code: 1000, reason: "Normal closure" });
+    this.readyState = MockWebSocket.CLOSED;
   });
 
-  // Helper to simulate receiving a message
+  simulateOpen() {
+    this.readyState = MockWebSocket.OPEN;
+    this.onopen?.();
+  }
+
   simulateMessage(data: unknown) {
     this.onmessage?.({ data: JSON.stringify(data) });
   }
 
-  // Helper to simulate an error
-  simulateError(error: Error) {
-    this.onerror?.(error as unknown as Event);
+  simulateRawMessage(data: string) {
+    this.onmessage?.({ data });
   }
 
-  // Helper to simulate closing
-  simulateClose(code: number, reason: string) {
-    this.readyState = 3;
-    this.onclose?.({ code, reason });
+  simulateClose(code = 1006) {
+    this.readyState = MockWebSocket.CLOSED;
+    this.onclose?.({ code });
   }
 
-  static clearInstances() {
+  simulateError(event: unknown) {
+    this.onerror?.(event);
+  }
+
+  static instances: MockWebSocket[] = [];
+  static reset() {
     MockWebSocket.instances = [];
   }
-
-  static readonly CONNECTING = 0;
-  static readonly OPEN = 1;
-  static readonly CLOSING = 2;
-  static readonly CLOSED = 3;
+  static getLastInstance(): MockWebSocket | undefined {
+    return MockWebSocket.instances[MockWebSocket.instances.length - 1];
+  }
 }
 
 describe("useRealtimeSync", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    MockWebSocket.clearInstances();
     vi.useFakeTimers();
-    // Stub global WebSocket with our mock
+    MockWebSocket.reset();
     vi.stubGlobal("WebSocket", MockWebSocket);
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
-  describe("Connection", () => {
-    it("should start with connecting status", () => {
+  describe("Connection Establishment", () => {
+    it("should start in connecting state when url is provided", () => {
       const { result } = renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080" }),
+        useRealtimeSync({ url: "ws://test.com" }),
       );
       expect(result.current.status).toBe("connecting");
     });
 
-    it("should connect to WebSocket when mounted", () => {
-      renderHook(() => useRealtimeSync({ url: "ws://localhost:8080" }));
-
-      expect(MockWebSocket.instances.length).toBe(1);
-      expect(MockWebSocket.instances[0].url).toBe("ws://localhost:8080");
-    });
-
-    it("should update status to connected when WebSocket opens", () => {
-      const { result } = renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080" }),
-      );
-
-      // Trigger the open event
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      expect(result.current.status).toBe("connected");
-    });
-
-    it("should update status to disconnected when WebSocket closes", () => {
-      const { result } = renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080" }),
-      );
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      expect(result.current.status).toBe("connected");
-
-      act(() => {
-        MockWebSocket.instances[0].simulateClose(1000, "Normal");
-      });
-
+    it("should start in disconnected state when url is empty", () => {
+      const { result } = renderHook(() => useRealtimeSync({ url: "" }));
       expect(result.current.status).toBe("disconnected");
     });
 
-    it("should close WebSocket on unmount", () => {
-      const { unmount } = renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080" }),
-      );
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      unmount();
-
-      expect(MockWebSocket.instances[0].close).toHaveBeenCalled();
-    });
-  });
-
-  describe("Messages", () => {
-    it("should receive and process messages", () => {
-      const onMessage = vi.fn();
-      renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080", onMessage }),
-      );
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      act(() => {
-        MockWebSocket.instances[0].simulateMessage({
-          type: "update",
-          data: "test",
-        });
-      });
-
-      expect(onMessage).toHaveBeenCalledWith({ type: "update", data: "test" });
-    });
-
-    it("should send messages when connected", () => {
+    it("should transition to connected when WebSocket opens", async () => {
+      const onConnect = vi.fn();
       const { result } = renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080" }),
+        useRealtimeSync({ url: "ws://test.com", onConnect }),
       );
 
+      const ws = MockWebSocket.getLastInstance();
       act(() => {
-        vi.advanceTimersByTime(20);
+        ws?.simulateOpen();
       });
 
       expect(result.current.status).toBe("connected");
-
-      act(() => {
-        result.current.send({ type: "ping" });
-      });
-
-      expect(MockWebSocket.instances[0].send).toHaveBeenCalledWith(
-        JSON.stringify({ type: "ping" }),
-      );
+      expect(onConnect).toHaveBeenCalled();
     });
 
-    it("should queue messages when not connected", () => {
+    it("should reset reconnect attempts on successful connection", async () => {
       const { result } = renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080" }),
+        useRealtimeSync({ url: "ws://test.com" }),
       );
 
-      // Try to send before connected
+      const ws = MockWebSocket.getLastInstance();
       act(() => {
-        result.current.send({ type: "ping" });
+        ws?.simulateOpen();
       });
 
-      // Should not have sent yet
-      expect(MockWebSocket.instances[0].send).not.toHaveBeenCalled();
-
-      // Connect
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      // Message should be flushed after connection
-      expect(MockWebSocket.instances[0].send).toHaveBeenCalledWith(
-        JSON.stringify({ type: "ping" }),
-      );
-    });
-
-    it("should track last message time", () => {
-      const { result } = renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080" }),
-      );
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      const initialTime = result.current.lastMessageTime;
-
-      act(() => {
-        MockWebSocket.instances[0].simulateMessage({ type: "test" });
-      });
-
-      expect(result.current.lastMessageTime).not.toBe(initialTime);
-    });
-  });
-
-  describe("Reconnection", () => {
-    it("should attempt to reconnect on abnormal close", () => {
-      const { result } = renderHook(() =>
-        useRealtimeSync({
-          url: "ws://localhost:8080",
-          reconnectInterval: 1000,
-          maxReconnectAttempts: 3,
-        }),
-      );
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      // Simulate abnormal close
-      act(() => {
-        MockWebSocket.instances[0].simulateClose(1006, "Abnormal");
-      });
-
-      expect(result.current.status).toBe("reconnecting");
-
-      // Advance time to trigger reconnect
-      act(() => {
-        vi.advanceTimersByTime(1100);
-      });
-
-      // Should have created a new WebSocket
-      expect(MockWebSocket.instances.length).toBe(2);
-    });
-
-    it("should not reconnect on normal close (code 1000)", () => {
-      const { result } = renderHook(() =>
-        useRealtimeSync({
-          url: "ws://localhost:8080",
-          reconnectInterval: 1000,
-        }),
-      );
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      // Simulate normal close
-      act(() => {
-        MockWebSocket.instances[0].simulateClose(1000, "Normal");
-      });
-
-      expect(result.current.status).toBe("disconnected");
-
-      // Advance time
-      act(() => {
-        vi.advanceTimersByTime(2000);
-      });
-
-      // Should NOT have created a new WebSocket
-      expect(MockWebSocket.instances.length).toBe(1);
-    });
-
-    it("should stop reconnecting after max attempts", () => {
-      const onError = vi.fn();
-      const { result } = renderHook(() =>
-        useRealtimeSync({
-          url: "ws://localhost:8080",
-          reconnectInterval: 100,
-          maxReconnectAttempts: 2,
-          onError,
-        }),
-      );
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      // First disconnect (abnormal close)
-      act(() => {
-        MockWebSocket.instances[0].simulateClose(1006, "Error");
-      });
-
-      expect(result.current.reconnectAttempts).toBe(1);
-
-      // First reconnect attempt - advance just enough for reconnect timeout, not for socket to open
-      act(() => {
-        vi.advanceTimersByTime(100);
-      });
-
-      // Instance 1 created, immediately close it before it can open
-      act(() => {
-        MockWebSocket.instances[1].simulateClose(1006, "Error");
-      });
-
-      expect(result.current.reconnectAttempts).toBe(2);
-
-      // Second reconnect attempt
-      act(() => {
-        vi.advanceTimersByTime(100);
-      });
-
-      // Instance 2 created, close it - should not trigger another reconnect
-      act(() => {
-        MockWebSocket.instances[2].simulateClose(1006, "Error");
-      });
-
-      // No more reconnects should be attempted
-      act(() => {
-        vi.advanceTimersByTime(200);
-      });
-
-      // Should only have 3 instances (initial + 2 reconnects)
-      expect(MockWebSocket.instances.length).toBe(3);
-      expect(result.current.reconnectAttempts).toBe(2);
-      expect(result.current.status).toBe("disconnected");
-    });
-
-    it("should reset reconnect counter on successful connection", () => {
-      const { result } = renderHook(() =>
-        useRealtimeSync({
-          url: "ws://localhost:8080",
-          reconnectInterval: 100,
-          maxReconnectAttempts: 3,
-        }),
-      );
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      // First disconnect
-      act(() => {
-        MockWebSocket.instances[0].simulateClose(1006, "Error");
-      });
-
-      expect(result.current.reconnectAttempts).toBe(1);
-
-      // Reconnect timeout + connection
-      act(() => {
-        vi.advanceTimersByTime(150);
-      });
-
-      // Connect the new socket
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      expect(result.current.status).toBe("connected");
       expect(result.current.reconnectAttempts).toBe(0);
     });
   });
 
-  describe("Error Handling", () => {
-    it("should call onError when WebSocket errors", () => {
-      const onError = vi.fn();
-      renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080", onError }),
-      );
+  describe("Message Handling", () => {
+    it("should call onMessage with parsed JSON data", async () => {
+      const onMessage = vi.fn();
+      renderHook(() => useRealtimeSync({ url: "ws://test.com", onMessage }));
 
+      const ws = MockWebSocket.getLastInstance();
       act(() => {
-        vi.advanceTimersByTime(20);
+        ws?.simulateOpen();
       });
 
       act(() => {
-        MockWebSocket.instances[0].simulateError(
-          new Error("Connection failed"),
-        );
+        ws?.simulateMessage({ type: "test", data: 123 });
       });
 
-      expect(onError).toHaveBeenCalled();
+      expect(onMessage).toHaveBeenCalledWith({ type: "test", data: 123 });
     });
 
-    it("should update status to error on WebSocket error", () => {
+    it("should handle non-JSON messages", async () => {
+      const onMessage = vi.fn();
+      renderHook(() => useRealtimeSync({ url: "ws://test.com", onMessage }));
+
+      const ws = MockWebSocket.getLastInstance();
+      act(() => {
+        ws?.simulateOpen();
+      });
+
+      act(() => {
+        ws?.simulateRawMessage("plain text message");
+      });
+
+      expect(onMessage).toHaveBeenCalledWith("plain text message");
+    });
+
+    it("should update lastMessageTime on message receipt", async () => {
       const { result } = renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080" }),
+        useRealtimeSync({ url: "ws://test.com" }),
       );
 
+      expect(result.current.lastMessageTime).toBeNull();
+
+      const ws = MockWebSocket.getLastInstance();
       act(() => {
-        vi.advanceTimersByTime(20);
+        ws?.simulateOpen();
       });
 
+      vi.setSystemTime(new Date("2024-01-01T12:00:00Z"));
+
       act(() => {
-        MockWebSocket.instances[0].simulateError(
-          new Error("Connection failed"),
-        );
+        ws?.simulateMessage({ type: "test" });
       });
 
-      expect(result.current.status).toBe("error");
+      expect(result.current.lastMessageTime).toBe(Date.now());
     });
   });
 
-  describe("Manual Control", () => {
-    it("should allow manual disconnect", () => {
+  describe("Error Handling", () => {
+    it("should set status to error on WebSocket error", async () => {
+      const onError = vi.fn();
       const { result } = renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080" }),
+        useRealtimeSync({ url: "ws://test.com", onError }),
       );
 
+      const ws = MockWebSocket.getLastInstance();
       act(() => {
-        vi.advanceTimersByTime(20);
+        ws?.simulateError(new Error("Connection failed"));
+      });
+
+      expect(result.current.status).toBe("error");
+      expect(onError).toHaveBeenCalled();
+    });
+  });
+
+  describe("Reconnection Logic", () => {
+    it("should attempt reconnection on abnormal close", async () => {
+      const { result } = renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+          reconnectInterval: 1000,
+          maxReconnectAttempts: 3,
+        }),
+      );
+
+      const ws = MockWebSocket.getLastInstance();
+      act(() => {
+        ws?.simulateOpen();
+      });
+
+      act(() => {
+        ws?.simulateClose(1006);
+      });
+
+      expect(result.current.status).toBe("reconnecting");
+      expect(result.current.reconnectAttempts).toBe(1);
+    });
+
+    it("should not reconnect on normal close (code 1000)", async () => {
+      const onDisconnect = vi.fn();
+      const { result } = renderHook(() =>
+        useRealtimeSync({ url: "ws://test.com", onDisconnect }),
+      );
+
+      const ws = MockWebSocket.getLastInstance();
+      act(() => {
+        ws?.simulateOpen();
+      });
+
+      act(() => {
+        ws?.simulateClose(1000);
+      });
+
+      expect(result.current.status).toBe("disconnected");
+      expect(onDisconnect).toHaveBeenCalled();
+    });
+
+    it("should stop reconnecting after max attempts", async () => {
+      const onDisconnect = vi.fn();
+      const { result } = renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+          reconnectInterval: 100,
+          maxReconnectAttempts: 2,
+          onDisconnect,
+        }),
+      );
+
+      let ws = MockWebSocket.getLastInstance();
+      act(() => {
+        ws?.simulateOpen();
+      });
+
+      act(() => {
+        ws?.simulateClose(1006);
+      });
+      expect(result.current.reconnectAttempts).toBe(1);
+
+      act(() => {
+        vi.advanceTimersByTime(100);
+      });
+
+      ws = MockWebSocket.getLastInstance();
+      act(() => {
+        ws?.simulateClose(1006);
+      });
+      expect(result.current.reconnectAttempts).toBe(2);
+
+      act(() => {
+        vi.advanceTimersByTime(100);
+      });
+
+      ws = MockWebSocket.getLastInstance();
+      act(() => {
+        ws?.simulateClose(1006);
+      });
+
+      expect(result.current.status).toBe("disconnected");
+      expect(onDisconnect).toHaveBeenCalled();
+    });
+
+    it("should create new connection after reconnect interval", async () => {
+      renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+          reconnectInterval: 1000,
+          maxReconnectAttempts: 3,
+        }),
+      );
+
+      const initialWs = MockWebSocket.getLastInstance();
+      act(() => {
+        initialWs?.simulateOpen();
+      });
+
+      const instanceCountBefore = MockWebSocket.instances.length;
+
+      act(() => {
+        initialWs?.simulateClose(1006);
+      });
+
+      expect(MockWebSocket.instances.length).toBe(instanceCountBefore);
+
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+
+      expect(MockWebSocket.instances.length).toBe(instanceCountBefore + 1);
+    });
+
+    it("should use exponential backoff for reconnect delays", async () => {
+      // With exponentialBackoff enabled, delays should increase:
+      // Attempt 1: baseDelay * 2^0 = 1000ms
+      // Attempt 2: baseDelay * 2^1 = 2000ms
+      // Attempt 3: baseDelay * 2^2 = 4000ms
+      renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+          reconnectInterval: 1000,
+          maxReconnectAttempts: 4,
+          exponentialBackoff: true,
+        }),
+      );
+
+      const initialWs = MockWebSocket.getLastInstance();
+      act(() => {
+        initialWs?.simulateOpen();
+      });
+
+      // First close - should wait ~1000ms for first reconnect
+      act(() => {
+        initialWs?.simulateClose(1006);
+      });
+
+      const countAfterFirstClose = MockWebSocket.instances.length;
+
+      // After 999ms - should NOT have reconnected yet
+      act(() => {
+        vi.advanceTimersByTime(999);
+      });
+      expect(MockWebSocket.instances.length).toBe(countAfterFirstClose);
+
+      // After total 1000ms - should have reconnected
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(MockWebSocket.instances.length).toBe(countAfterFirstClose + 1);
+
+      // Second close - should wait ~2000ms
+      const ws2 = MockWebSocket.getLastInstance();
+      act(() => {
+        ws2?.simulateClose(1006);
+      });
+
+      const countAfterSecondClose = MockWebSocket.instances.length;
+
+      // After 1999ms - should NOT have reconnected yet
+      act(() => {
+        vi.advanceTimersByTime(1999);
+      });
+      expect(MockWebSocket.instances.length).toBe(countAfterSecondClose);
+
+      // After total 2000ms - should have reconnected
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(MockWebSocket.instances.length).toBe(countAfterSecondClose + 1);
+    });
+
+    it("should cap exponential backoff at maxDelayMs", async () => {
+      // With maxDelayMs of 2000, delays should cap:
+      // Attempt 3: would be baseDelay * 2^2 = 4000ms, but capped to 2000ms
+      renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+          reconnectInterval: 1000,
+          maxReconnectAttempts: 5,
+          exponentialBackoff: true,
+          maxDelayMs: 2000,
+        }),
+      );
+
+      const initialWs = MockWebSocket.getLastInstance();
+      act(() => {
+        initialWs?.simulateOpen();
+      });
+
+      // Trigger closes to reach attempt 3
+      for (let i = 0; i < 2; i++) {
+        const ws = MockWebSocket.getLastInstance();
+        act(() => {
+          ws?.simulateClose(1006);
+        });
+        act(() => {
+          vi.advanceTimersByTime(10000); // Long enough for any backoff
+        });
+      }
+
+      // Third close - should use capped delay of 2000ms (not 4000ms)
+      const ws3 = MockWebSocket.getLastInstance();
+      act(() => {
+        ws3?.simulateClose(1006);
+      });
+
+      const countAfterThirdClose = MockWebSocket.instances.length;
+
+      // After 2000ms - should have reconnected (capped)
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(MockWebSocket.instances.length).toBe(countAfterThirdClose + 1);
+    });
+  });
+
+  describe("Manual Disconnect", () => {
+    it("should close connection on manual disconnect", async () => {
+      const { result } = renderHook(() =>
+        useRealtimeSync({ url: "ws://test.com" }),
+      );
+
+      const ws = MockWebSocket.getLastInstance();
+      act(() => {
+        ws?.simulateOpen();
       });
 
       act(() => {
         result.current.disconnect();
       });
 
-      expect(MockWebSocket.instances[0].close).toHaveBeenCalled();
+      expect(ws?.close).toHaveBeenCalled();
     });
 
-    it("should allow manual reconnect", () => {
+    it("should not attempt reconnection after manual disconnect", async () => {
       const { result } = renderHook(() =>
-        useRealtimeSync({ url: "ws://localhost:8080" }),
+        useRealtimeSync({
+          url: "ws://test.com",
+          reconnectInterval: 100,
+          maxReconnectAttempts: 3,
+        }),
       );
 
+      const ws = MockWebSocket.getLastInstance();
       act(() => {
-        vi.advanceTimersByTime(20);
+        ws?.simulateOpen();
       });
 
       act(() => {
-        MockWebSocket.instances[0].simulateClose(1000, "Normal");
+        result.current.disconnect();
       });
 
-      expect(result.current.status).toBe("disconnected");
+      const instanceCount = MockWebSocket.instances.length;
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+
+      expect(MockWebSocket.instances.length).toBe(instanceCount);
+    });
+  });
+
+  describe("Manual Reconnect", () => {
+    it("should reset attempt count and create new connection", async () => {
+      const { result } = renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+          maxReconnectAttempts: 1,
+        }),
+      );
+
+      const ws = MockWebSocket.getLastInstance();
+      act(() => {
+        ws?.simulateOpen();
+      });
+
+      act(() => {
+        ws?.simulateClose(1006);
+      });
+
+      const instanceCountBefore = MockWebSocket.instances.length;
 
       act(() => {
         result.current.reconnect();
       });
 
-      expect(MockWebSocket.instances.length).toBe(2);
+      expect(result.current.reconnectAttempts).toBe(0);
+      expect(MockWebSocket.instances.length).toBe(instanceCountBefore + 1);
+    });
+  });
+
+  describe("Send Messages", () => {
+    it("should send JSON stringified message when connected", async () => {
+      const { result } = renderHook(() =>
+        useRealtimeSync({ url: "ws://test.com" }),
+      );
+
+      const ws = MockWebSocket.getLastInstance();
+      act(() => {
+        ws?.simulateOpen();
+      });
+
+      act(() => {
+        result.current.send({ type: "test", data: 123 });
+      });
+
+      expect(ws?.send).toHaveBeenCalledWith(
+        JSON.stringify({ type: "test", data: 123 }),
+      );
+    });
+
+    it("should queue messages when not connected", async () => {
+      const { result } = renderHook(() =>
+        useRealtimeSync({ url: "ws://test.com" }),
+      );
+
+      const ws = MockWebSocket.getLastInstance();
+
+      act(() => {
+        result.current.send({ type: "queued" });
+      });
+
+      expect(ws?.send).not.toHaveBeenCalled();
+    });
+
+    it("should flush queued messages when connection opens", async () => {
+      const { result } = renderHook(() =>
+        useRealtimeSync({ url: "ws://test.com" }),
+      );
+
+      const ws = MockWebSocket.getLastInstance();
+
+      act(() => {
+        result.current.send({ type: "msg1" });
+        result.current.send({ type: "msg2" });
+      });
+
+      act(() => {
+        ws?.simulateOpen();
+      });
+
+      expect(ws?.send).toHaveBeenCalledTimes(2);
+      expect(ws?.send).toHaveBeenCalledWith(JSON.stringify({ type: "msg1" }));
+      expect(ws?.send).toHaveBeenCalledWith(JSON.stringify({ type: "msg2" }));
+    });
+  });
+
+  describe("Cleanup", () => {
+    it("should close WebSocket on unmount", async () => {
+      const { unmount } = renderHook(() =>
+        useRealtimeSync({ url: "ws://test.com" }),
+      );
+
+      const ws = MockWebSocket.getLastInstance();
+      act(() => {
+        ws?.simulateOpen();
+      });
+
+      unmount();
+
+      expect(ws?.close).toHaveBeenCalled();
+    });
+
+    it("should clear reconnect timeout on unmount", async () => {
+      const { unmount } = renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+          reconnectInterval: 1000,
+        }),
+      );
+
+      const ws = MockWebSocket.getLastInstance();
+      act(() => {
+        ws?.simulateOpen();
+      });
+
+      act(() => {
+        ws?.simulateClose(1006);
+      });
+
+      const instanceCount = MockWebSocket.instances.length;
+      unmount();
+
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+
+      expect(MockWebSocket.instances.length).toBe(instanceCount);
     });
   });
 });

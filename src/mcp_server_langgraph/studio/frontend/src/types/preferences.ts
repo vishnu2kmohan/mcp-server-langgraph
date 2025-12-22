@@ -220,6 +220,44 @@ export const DEFAULT_PRIVACY_PREFERENCES: PrivacyPreferences = {
 };
 
 // ==============================================================================
+// HITL (Human-in-the-Loop) Preferences Types
+// ==============================================================================
+
+/** Task-specific HITL override */
+export interface HITLTaskOverride {
+  /** Whether HITL is enabled for this task type */
+  enabled: boolean;
+  /** Custom confidence threshold for this task type */
+  threshold: number;
+}
+
+/** HITL preferences for agent approval workflows */
+export interface HITLPreferences {
+  /** Whether HITL is enabled globally */
+  enabled: boolean;
+  /** Confidence threshold below which approval is required (0-1) */
+  confidenceThreshold: number;
+  /** Confidence threshold above which auto-approval is allowed (0-1) */
+  autoApproveThreshold: number;
+  /** Whether to send push notifications for approval requests */
+  pushNotificationsEnabled: boolean;
+  /** Whether to play sound for approval requests */
+  soundEnabled: boolean;
+  /** Per-task-type overrides for HITL settings */
+  taskOverrides: Record<string, HITLTaskOverride>;
+}
+
+/** Default HITL preferences */
+export const DEFAULT_HITL_PREFERENCES: HITLPreferences = {
+  enabled: true,
+  confidenceThreshold: 0.7,
+  autoApproveThreshold: 0.9,
+  pushNotificationsEnabled: true,
+  soundEnabled: false,
+  taskOverrides: {},
+};
+
+// ==============================================================================
 // Combined User Preferences
 // ==============================================================================
 
@@ -237,6 +275,8 @@ export interface UserPreferences {
   session: SessionPreferences;
   /** Privacy preferences */
   privacy: PrivacyPreferences;
+  /** HITL (Human-in-the-Loop) preferences */
+  hitl: HITLPreferences;
   /** Preference version for migrations */
   version: number;
   /** Last updated timestamp */
@@ -251,6 +291,7 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   keyboardShortcuts: {},
   session: DEFAULT_SESSION_PREFERENCES,
   privacy: DEFAULT_PRIVACY_PREFERENCES,
+  hitl: DEFAULT_HITL_PREFERENCES,
   version: 1,
   updatedAt: Date.now(),
 };
@@ -295,6 +336,8 @@ export interface PreferencesActions {
   updateSessionPreferences: (updates: Partial<SessionPreferences>) => void;
   /** Update privacy preferences */
   updatePrivacyPreferences: (updates: Partial<PrivacyPreferences>) => void;
+  /** Update HITL preferences */
+  updateHITLPreferences: (updates: Partial<HITLPreferences>) => void;
   /** Pin a session */
   pinSession: (sessionId: string) => void;
   /** Unpin a session */

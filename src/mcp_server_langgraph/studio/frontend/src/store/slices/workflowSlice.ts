@@ -157,6 +157,7 @@ export const saveWorkflow = createAsyncThunk<
       const errorData = await response.json();
       throw new Error(errorData.detail || "Failed to save workflow");
     }
+    return undefined;
   } catch (error) {
     return rejectWithValue(
       error instanceof Error ? error.message : "Failed to save workflow",
@@ -205,6 +206,7 @@ export const executeWorkflow = createAsyncThunk<
           message: "Workflow execution completed successfully",
         }),
       );
+      return undefined;
     } catch (error) {
       dispatch(
         addExecutionLog({

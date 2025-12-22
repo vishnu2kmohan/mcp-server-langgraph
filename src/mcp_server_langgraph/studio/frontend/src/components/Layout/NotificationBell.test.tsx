@@ -431,4 +431,354 @@ describe("NotificationBell", () => {
       });
     });
   });
+
+  describe("Time Formatting", () => {
+    it('should show "Just now" for notifications less than a minute old', async () => {
+      const recentNotification = {
+        id: "recent",
+        type: "info" as const,
+        title: "Recent",
+        message: "Just happened",
+        read: false,
+        createdAt: new Date().toISOString(),
+      };
+      renderWithProviders([recentNotification]);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/just now/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should show minutes ago for notifications less than an hour old', async () => {
+      const minutesAgo = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
+      const notification = {
+        id: "mins",
+        type: "info" as const,
+        title: "Minutes Ago",
+        message: "Test",
+        read: false,
+        createdAt: minutesAgo.toISOString(),
+      };
+      renderWithProviders([notification]);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/5m ago/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should show hours ago for notifications less than a day old', async () => {
+      const hoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000); // 3 hours ago
+      const notification = {
+        id: "hours",
+        type: "info" as const,
+        title: "Hours Ago",
+        message: "Test",
+        read: false,
+        createdAt: hoursAgo.toISOString(),
+      };
+      renderWithProviders([notification]);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/3h ago/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should show days ago for notifications less than a week old', async () => {
+      const daysAgo = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000); // 4 days ago
+      const notification = {
+        id: "days",
+        type: "info" as const,
+        title: "Days Ago",
+        message: "Test",
+        read: false,
+        createdAt: daysAgo.toISOString(),
+      };
+      renderWithProviders([notification]);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/4d ago/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should show formatted date for notifications older than a week', async () => {
+      const weeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000); // 14 days ago
+      const notification = {
+        id: "old",
+        type: "info" as const,
+        title: "Old Notification",
+        message: "Test",
+        read: false,
+        createdAt: weeksAgo.toISOString(),
+      };
+      renderWithProviders([notification]);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        // Should show formatted date like "12/7/2025" or similar
+        expect(screen.queryByText(/ago/i)).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Keyboard Navigation", () => {
+    it("should mark notification as read on Enter key press", async () => {
+      const { store } = renderWithProviders(sampleNotifications);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("New Message")).toBeInTheDocument();
+      });
+
+      const notificationItem = screen
+        .getByText("New Message")
+        .closest('[role="menuitem"]');
+      if (notificationItem) {
+        fireEvent.keyDown(notificationItem, { key: "Enter" });
+      }
+
+      const state = store.getState();
+      const notification = state.notifications.notifications.find(
+        (n) => n.id === "n1",
+      );
+      expect(notification?.read).toBe(true);
+    });
+
+    it("should mark notification as read on Space key press", async () => {
+      const { store } = renderWithProviders(sampleNotifications);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("New Message")).toBeInTheDocument();
+      });
+
+      const notificationItem = screen
+        .getByText("New Message")
+        .closest('[role="menuitem"]');
+      if (notificationItem) {
+        fireEvent.keyDown(notificationItem, { key: " " });
+      }
+
+      const state = store.getState();
+      const notification = state.notifications.notifications.find(
+        (n) => n.id === "n1",
+      );
+      expect(notification?.read).toBe(true);
+    });
+
+    it("should not mark as read on other key presses", async () => {
+      const { store } = renderWithProviders(sampleNotifications);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("New Message")).toBeInTheDocument();
+      });
+
+      const notificationItem = screen
+        .getByText("New Message")
+        .closest('[role="menuitem"]');
+      if (notificationItem) {
+        fireEvent.keyDown(notificationItem, { key: "Tab" });
+      }
+
+      const state = store.getState();
+      const notification = state.notifications.notifications.find(
+        (n) => n.id === "n1",
+      );
+      expect(notification?.read).toBe(false);
+    });
+  });
+
+  describe("Already Read Notifications", () => {
+    it("should not dispatch markAsRead when clicking already-read notification", async () => {
+      const allRead = sampleNotifications.map((n) => ({ ...n, read: true }));
+      const { store } = renderWithProviders(allRead);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("New Message")).toBeInTheDocument();
+      });
+
+      // Get initial state
+      const initialState = store.getState();
+
+      const notificationItem = screen
+        .getByText("New Message")
+        .closest('[role="menuitem"]');
+      if (notificationItem) {
+        fireEvent.click(notificationItem);
+      }
+
+      // State should be unchanged
+      const newState = store.getState();
+      expect(newState.notifications).toEqual(initialState.notifications);
+    });
+  });
+
+  describe("Action Callbacks", () => {
+    it("should call onClick callback when action has onClick", async () => {
+      const onClickMock = vi.fn();
+      const notificationWithCallback = {
+        id: "cb1",
+        type: "info" as const,
+        title: "Callback Test",
+        message: "Test message",
+        read: false,
+        createdAt: new Date().toISOString(),
+        action: {
+          label: "Do Action",
+          onClick: onClickMock,
+        },
+      };
+      renderWithProviders([notificationWithCallback]);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: "Do Action" }),
+        ).toBeInTheDocument();
+      });
+
+      const actionButton = screen.getByRole("button", { name: "Do Action" });
+      fireEvent.click(actionButton);
+
+      expect(onClickMock).toHaveBeenCalled();
+    });
+
+    it("should call both navigate and onClick when action has both", async () => {
+      const onClickMock = vi.fn();
+      const notificationWithBoth = {
+        id: "both1",
+        type: "info" as const,
+        title: "Both Test",
+        message: "Test message",
+        read: false,
+        createdAt: new Date().toISOString(),
+        action: {
+          label: "Do Both",
+          href: "/studio/test",
+          onClick: onClickMock,
+        },
+      };
+      renderWithProviders([notificationWithBoth]);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: "Do Both" }),
+        ).toBeInTheDocument();
+      });
+
+      const actionButton = screen.getByRole("button", { name: "Do Both" });
+      fireEvent.click(actionButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/test");
+      expect(onClickMock).toHaveBeenCalled();
+    });
+  });
+
+  describe("Click Outside Behavior", () => {
+    it("should not close when clicking inside the panel", async () => {
+      renderWithProviders(sampleNotifications);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole("menu")).toBeInTheDocument();
+      });
+
+      // Click inside the panel (on the header)
+      const header = screen.getByText("Notifications");
+      fireEvent.mouseDown(header);
+
+      // Panel should still be open
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+    });
+
+    it("should not close when clicking on the bell button while open", async () => {
+      renderWithProviders(sampleNotifications);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole("menu")).toBeInTheDocument();
+      });
+
+      // Mousedown on the bell button
+      fireEvent.mouseDown(bellButton);
+
+      // The handleClickOutside should not close because click is on buttonRef
+      // Panel may still be open
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+    });
+  });
+
+  describe("Toggle Behavior", () => {
+    it("should toggle panel closed when clicking bell while open", async () => {
+      renderWithProviders(sampleNotifications);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole("menu")).toBeInTheDocument();
+      });
+
+      // Click bell again to close
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("ARIA Attributes", () => {
+    it("should have proper aria-expanded state", async () => {
+      renderWithProviders(sampleNotifications);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      expect(bellButton).toHaveAttribute("aria-expanded", "false");
+
+      fireEvent.click(bellButton);
+
+      await waitFor(() => {
+        expect(bellButton).toHaveAttribute("aria-expanded", "true");
+      });
+    });
+
+    it("should have aria-haspopup attribute", () => {
+      renderWithProviders(sampleNotifications);
+
+      const bellButton = screen.getByRole("button", { name: /notifications/i });
+      expect(bellButton).toHaveAttribute("aria-haspopup", "true");
+    });
+  });
 });

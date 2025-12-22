@@ -76,7 +76,8 @@ function extractCodeBlocksFromContent(content: string): string[] {
   const blocks: string[] = [];
   let match;
   while ((match = codeBlockRegex.exec(content)) !== null) {
-    blocks.push(match[1].trim());
+    const code = match[1];
+    if (code) blocks.push(code.trim());
   }
   return blocks;
 }

@@ -213,9 +213,11 @@ export function InteractiveMermaidDiagram({
 
   // Calculate distance between two touch points
   const getTouchDistance = useCallback((touches: React.TouchList) => {
-    if (touches.length < 2) return 0;
-    const dx = touches[1].clientX - touches[0].clientX;
-    const dy = touches[1].clientY - touches[0].clientY;
+    const touch0 = touches[0];
+    const touch1 = touches[1];
+    if (touches.length < 2 || !touch0 || !touch1) return 0;
+    const dx = touch1.clientX - touch0.clientX;
+    const dy = touch1.clientY - touch0.clientY;
     return Math.sqrt(dx * dx + dy * dy);
   }, []);
 
@@ -231,10 +233,12 @@ export function InteractiveMermaidDiagram({
         });
       } else if (e.touches.length === 1) {
         // Single finger - start pan
+        const touch0 = e.touches[0];
+        if (!touch0) return;
         setIsDragging(true);
         setDragStart({
-          x: e.touches[0].clientX - position.x,
-          y: e.touches[0].clientY - position.y,
+          x: touch0.clientX - position.x,
+          y: touch0.clientY - position.y,
         });
       }
     },
@@ -255,9 +259,11 @@ export function InteractiveMermaidDiagram({
         setZoom(newZoom);
       } else if (e.touches.length === 1 && isDragging) {
         // Pan
+        const touch0 = e.touches[0];
+        if (!touch0) return;
         setPosition({
-          x: e.touches[0].clientX - dragStart.x,
-          y: e.touches[0].clientY - dragStart.y,
+          x: touch0.clientX - dragStart.x,
+          y: touch0.clientY - dragStart.y,
         });
       }
     },

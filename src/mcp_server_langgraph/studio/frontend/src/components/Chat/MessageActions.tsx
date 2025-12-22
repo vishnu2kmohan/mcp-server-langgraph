@@ -78,7 +78,8 @@ function extractCodeBlocks(content: string): string[] {
   const blocks: string[] = [];
   let match;
   while ((match = codeBlockRegex.exec(content)) !== null) {
-    blocks.push(match[1].trim());
+    const code = match[1];
+    if (code) blocks.push(code.trim());
   }
   return blocks;
 }
@@ -128,6 +129,7 @@ export function MessageActions({
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
     }
+    return undefined;
   }, [isOpen]);
 
   // Handle Escape key to close menu
@@ -143,6 +145,7 @@ export function MessageActions({
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
     }
+    return undefined;
   }, [isOpen]);
 
   // Copy to clipboard

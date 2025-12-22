@@ -86,26 +86,38 @@ describe("useBackgroundSync", () => {
       expect(result.current.isSupported).toBe(true);
     });
 
-    it("should expose queueRequest function", () => {
+    it("should expose queueRequest function", async () => {
       const { result } = renderHook(() =>
         useBackgroundSync({ storage: mockStorage }),
       );
+
+      await waitFor(() => {
+        expect(result.current.isInitialized).toBe(true);
+      });
 
       expect(typeof result.current.queueRequest).toBe("function");
     });
 
-    it("should expose syncNow function", () => {
+    it("should expose syncNow function", async () => {
       const { result } = renderHook(() =>
         useBackgroundSync({ storage: mockStorage }),
       );
+
+      await waitFor(() => {
+        expect(result.current.isInitialized).toBe(true);
+      });
 
       expect(typeof result.current.syncNow).toBe("function");
     });
 
-    it("should expose clearQueue function", () => {
+    it("should expose clearQueue function", async () => {
       const { result } = renderHook(() =>
         useBackgroundSync({ storage: mockStorage }),
       );
+
+      await waitFor(() => {
+        expect(result.current.isInitialized).toBe(true);
+      });
 
       expect(typeof result.current.clearQueue).toBe("function");
     });

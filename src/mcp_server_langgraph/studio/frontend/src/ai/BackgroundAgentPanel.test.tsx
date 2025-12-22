@@ -249,5 +249,167 @@ describe("BackgroundAgentPanel", () => {
       // Header should still be visible
       expect(screen.getByText(/background agents/i)).toBeInTheDocument();
     });
+
+    it("can expand from collapsed state", () => {
+      render(
+        <BackgroundAgentPanel
+          agents={mockAgents}
+          onCancel={mockOnCancel}
+          onRetry={mockOnRetry}
+          defaultCollapsed={true}
+        />,
+      );
+
+      const toggleButton = screen.getByLabelText(/expand/i);
+      fireEvent.click(toggleButton);
+
+      // Agent list should be visible
+      expect(screen.getByText("Code Analyzer")).toBeInTheDocument();
+    });
+  });
+
+  describe("Time formatting", () => {
+    it("displays hours and minutes for elapsed time over an hour", () => {
+      // 1 hour 30 minutes ago
+      const hourAgoAgent: BackgroundAgent = {
+        id: "agent-hour",
+        name: "Long Running Task",
+        task: "Processing large dataset",
+        status: "running",
+        progress: 50,
+        startedAt: Date.now() - 90 * 60 * 1000, // 90 minutes = 1h 30m
+      };
+
+      render(
+        <BackgroundAgentPanel
+          agents={[hourAgoAgent]}
+          onCancel={mockOnCancel}
+          onRetry={mockOnRetry}
+        />,
+      );
+
+      // Should show hours format
+      expect(screen.getByText(/1h 30m/)).toBeInTheDocument();
+    });
+
+    it("displays minutes and seconds for elapsed time under an hour", () => {
+      // 5 minutes ago
+      const minuteAgent: BackgroundAgent = {
+        id: "agent-minute",
+        name: "Medium Task",
+        task: "Processing data",
+        status: "running",
+        progress: 25,
+        startedAt: Date.now() - 5 * 60 * 1000, // 5 minutes
+      };
+
+      render(
+        <BackgroundAgentPanel
+          agents={[minuteAgent]}
+          onCancel={mockOnCancel}
+          onRetry={mockOnRetry}
+        />,
+      );
+
+      // Should show minutes format
+      expect(screen.getByText(/5m 0s/)).toBeInTheDocument();
+    });
+
+    it("displays seconds for elapsed time under a minute", () => {
+      // 10 seconds ago
+      const secondsAgent: BackgroundAgent = {
+        id: "agent-seconds",
+        name: "Quick Task",
+        task: "Short process",
+        status: "running",
+        progress: 10,
+        startedAt: Date.now() - 10 * 1000, // 10 seconds
+      };
+
+      render(
+        <BackgroundAgentPanel
+          agents={[secondsAgent]}
+          onCancel={mockOnCancel}
+          onRetry={mockOnRetry}
+        />,
+      );
+
+      // Should show seconds format (approximately, due to test timing)
+      expect(screen.getByText(/\d+s/)).toBeInTheDocument();
+    });
+  });
+
+  describe("Cancel button for queued agents", () => {
+    it("shows cancel button for queued agent", () => {
+      render(
+        <BackgroundAgentPanel
+          agents={[mockAgents[1]]} // queued agent
+          onCancel={mockOnCancel}
+          onRetry={mockOnRetry}
+        />,
+      );
+
+      const cancelButton = screen.getByLabelText(/cancel/i);
+      expect(cancelButton).toBeInTheDocument();
+    });
+
+    it("calls onCancel when cancel button is clicked for queued agent", () => {
+      render(
+        <BackgroundAgentPanel
+          agents={[mockAgents[1]]} // queued agent
+          onCancel={mockOnCancel}
+          onRetry={mockOnRetry}
+        />,
+      );
+
+      const cancelButton = screen.getByLabelText(/cancel/i);
+      fireEvent.click(cancelButton);
+
+      expect(mockOnCancel).toHaveBeenCalledWith(mockAgents[1].id);
+    });
+  });
+
+  describe("Failed agent without error message", () => {
+    it("does not show error text when agent has no error message", () => {
+      const failedNoError: BackgroundAgent = {
+        id: "agent-failed-no-error",
+        name: "Broken Agent",
+        task: "Some task",
+        status: "failed",
+        progress: 0,
+        startedAt: Date.now() - 10000,
+        // No error field
+      };
+
+      render(
+        <BackgroundAgentPanel
+          agents={[failedNoError]}
+          onCancel={mockOnCancel}
+          onRetry={mockOnRetry}
+        />,
+      );
+
+      // Should show the agent name and failed status
+      expect(screen.getByText("Broken Agent")).toBeInTheDocument();
+      expect(screen.getByText("failed")).toBeInTheDocument();
+      // Should not show error message since no error field
+      expect(screen.queryByText(/connection timeout/i)).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Custom className", () => {
+    it("applies custom className to panel", () => {
+      render(
+        <BackgroundAgentPanel
+          agents={mockAgents}
+          onCancel={mockOnCancel}
+          onRetry={mockOnRetry}
+          className="custom-class"
+        />,
+      );
+
+      const panel = screen.getByTestId("background-agent-panel");
+      expect(panel).toHaveClass("custom-class");
+    });
   });
 });

@@ -30,6 +30,10 @@ import mcpReducer, {
   selectAllResources,
   selectAllPrompts,
   selectIsConnected,
+  selectMCPCapabilities,
+  selectPendingElicitations,
+  selectPendingSamplingRequests,
+  selectServerById,
 } from "./mcpSlice";
 import type { MCPSliceState } from "./mcpSlice";
 import type {
@@ -136,6 +140,35 @@ describe("mcpSlice", () => {
       expect(server.status).toBe("error");
       expect(server.error).toBe("Connection lost");
     });
+
+    it("should set lastConnected when status is connected", () => {
+      const disconnectedServer = { ...mockServer, status: "disconnected" as const };
+      const store = createTestStore({ servers: { "server-1": disconnectedServer } });
+
+      const beforeTime = Date.now();
+      store.dispatch(
+        updateServerStatus({
+          id: "server-1",
+          status: "connected",
+        }),
+      );
+
+      const server = selectServers(store.getState())["server-1"];
+      expect(server.status).toBe("connected");
+      expect(server.lastConnected).toBeGreaterThanOrEqual(beforeTime);
+    });
+
+    it("should not update non-existent server", () => {
+      const store = createTestStore({ servers: {} });
+      store.dispatch(
+        updateServerStatus({
+          id: "non-existent",
+          status: "connected",
+        }),
+      );
+
+      expect(selectServers(store.getState())).toEqual({});
+    });
   });
 
   describe("setServerTools", () => {
@@ -150,6 +183,17 @@ describe("mcpSlice", () => {
       const server = selectServers(store.getState())["server-1"];
       expect(server.tools).toHaveLength(1);
       expect(server.tools[0].name).toBe("test-tool");
+    });
+
+    it("should do nothing when server does not exist", () => {
+      const tools: MCPTool[] = [
+        { name: "test-tool", description: "A test tool", inputSchema: {} },
+      ];
+
+      const store = createTestStore({ servers: {} });
+      store.dispatch(setServerTools({ id: "non-existent", tools }));
+
+      expect(selectServers(store.getState())).toEqual({});
     });
   });
 
@@ -166,6 +210,17 @@ describe("mcpSlice", () => {
       expect(server.resources).toHaveLength(1);
       expect(server.resources[0].name).toBe("test.txt");
     });
+
+    it("should do nothing when server does not exist", () => {
+      const resources: MCPResource[] = [
+        { uri: "file://test.txt", name: "test.txt" },
+      ];
+
+      const store = createTestStore({ servers: {} });
+      store.dispatch(setServerResources({ id: "non-existent", resources }));
+
+      expect(selectServers(store.getState())).toEqual({});
+    });
   });
 
   describe("setServerPrompts", () => {
@@ -180,6 +235,17 @@ describe("mcpSlice", () => {
       const server = selectServers(store.getState())["server-1"];
       expect(server.prompts).toHaveLength(1);
       expect(server.prompts[0].name).toBe("test-prompt");
+    });
+
+    it("should do nothing when server does not exist", () => {
+      const prompts: MCPPrompt[] = [
+        { name: "test-prompt", description: "A test prompt" },
+      ];
+
+      const store = createTestStore({ servers: {} });
+      store.dispatch(setServerPrompts({ id: "non-existent", prompts }));
+
+      expect(selectServers(store.getState())).toEqual({});
     });
   });
 
@@ -371,6 +437,55 @@ describe("mcpSlice", () => {
         expect(selectIsConnected(store.getState())).toBe(false);
       });
     });
+
+    describe("selectMCPCapabilities", () => {
+      it("should return capabilities", () => {
+        const capabilities = { tools: true, resources: true, prompts: false };
+        const store = createTestStore({ capabilities });
+        expect(selectMCPCapabilities(store.getState())).toEqual(capabilities);
+      });
+    });
+
+    describe("selectPendingElicitations", () => {
+      it("should return pending elicitations", () => {
+        const elicitation = {
+          id: "elicit-1",
+          serverId: "server-1",
+          message: "Choose an option",
+          schema: {},
+          requestId: "req-1",
+        };
+        const store = createTestStore({ pendingElicitations: [elicitation] });
+        expect(selectPendingElicitations(store.getState())).toEqual([elicitation]);
+      });
+    });
+
+    describe("selectPendingSamplingRequests", () => {
+      it("should return pending sampling requests", () => {
+        const sampling = {
+          id: "sample-1",
+          serverId: "server-1",
+          messages: [],
+          requestId: "req-1",
+        };
+        const store = createTestStore({ pendingSamplingRequests: [sampling] });
+        expect(selectPendingSamplingRequests(store.getState())).toEqual([sampling]);
+      });
+    });
+
+    describe("selectServerById", () => {
+      it("should return server by id", () => {
+        const store = createTestStore({
+          servers: { "server-1": mockServer },
+        });
+        expect(selectServerById("server-1")(store.getState())).toEqual(mockServer);
+      });
+
+      it("should return undefined for non-existent server", () => {
+        const store = createTestStore();
+        expect(selectServerById("non-existent")(store.getState())).toBeUndefined();
+      });
+    });
   });
 
   describe("addServer async thunk", () => {
@@ -424,6 +539,124 @@ describe("mcpSlice", () => {
       );
 
       expect(selectPrimaryServerId(store.getState())).toBe("server-1");
+    });
+
+    it("should not change primary when adding second server without primary flag", async () => {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ serverInfo: {} }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ serverInfo: {} }),
+        });
+
+      const store = createTestStore();
+      // Add first server - becomes primary
+      await store.dispatch(
+        addServer({ id: "server-1", url: "http://localhost:3000" }),
+      );
+      expect(selectPrimaryServerId(store.getState())).toBe("server-1");
+
+      // Add second server without primary flag - should NOT change primary
+      await store.dispatch(
+        addServer({ id: "server-2", url: "http://localhost:3001" }),
+      );
+      expect(selectPrimaryServerId(store.getState())).toBe("server-1");
+    });
+
+    it("should include auth token in headers when provided", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ serverInfo: { name: "test" } }),
+      });
+
+      const store = createTestStore();
+      await store.dispatch(
+        addServer({
+          id: "server-1",
+          url: "http://localhost:3000",
+          authToken: "test-auth-token",
+        }),
+      );
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        "http://localhost:3000/mcp/initialize",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer test-auth-token",
+          }),
+        }),
+      );
+    });
+
+    it("should handle non-Error rejection", async () => {
+      mockFetch.mockRejectedValueOnce("String error");
+
+      const store = createTestStore();
+      await store.dispatch(
+        addServer({ id: "server-1", url: "http://localhost:3000" }),
+      );
+
+      const server = selectServers(store.getState())["server-1"];
+      expect(server.status).toBe("error");
+      expect(server.error).toBe("Connection failed");
+    });
+
+    it("should handle network error", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+      const store = createTestStore();
+      await store.dispatch(
+        addServer({ id: "server-1", url: "http://localhost:3000" }),
+      );
+
+      const server = selectServers(store.getState())["server-1"];
+      expect(server.status).toBe("error");
+      expect(server.error).toBe("Network error");
+    });
+
+    it("should handle fulfilled when server was removed before completion", () => {
+      // Directly test reducer with server not in state
+      const state = mcpReducer(
+        { ...initialMCPState, isConnecting: true },
+        {
+          type: addServer.fulfilled.type,
+          payload: {
+            id: "non-existent-server",
+            serverInfo: { name: "Test", version: "1.0" },
+            capabilities: {},
+          },
+        },
+      );
+      // Should not throw, just set isConnecting to false
+      expect(state.isConnecting).toBe(false);
+      expect(state.servers["non-existent-server"]).toBeUndefined();
+    });
+
+    it("should handle rejected with undefined payload", () => {
+      // Directly test reducer with undefined payload
+      const state = mcpReducer(
+        { ...initialMCPState, isConnecting: true },
+        { type: addServer.rejected.type, payload: undefined },
+      );
+      // Should not throw, just set isConnecting to false
+      expect(state.isConnecting).toBe(false);
+    });
+
+    it("should handle rejected when server was removed before completion", () => {
+      // Directly test reducer with server not in state
+      const state = mcpReducer(
+        { ...initialMCPState, isConnecting: true },
+        {
+          type: addServer.rejected.type,
+          payload: { id: "non-existent-server", error: "Connection failed" },
+        },
+      );
+      // Should not throw, just set isConnecting to false
+      expect(state.isConnecting).toBe(false);
+      expect(state.servers["non-existent-server"]).toBeUndefined();
     });
   });
 });

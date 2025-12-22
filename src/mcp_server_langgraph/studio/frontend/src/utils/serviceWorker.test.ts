@@ -60,13 +60,18 @@ describe("serviceWorker", () => {
 
   describe("registerServiceWorker", () => {
     it("should skip registration when service worker is not supported", async () => {
-      Object.defineProperty(navigator, "serviceWorker", {
-        value: undefined,
-        configurable: true,
-      });
+      // Delete the property so "serviceWorker" in navigator returns false
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (navigator as any).serviceWorker;
 
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
       const result = await registerServiceWorker();
+
       expect(result).toBe(false);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[ServiceWorker] Service workers are not supported in this browser",
+      );
+      consoleSpy.mockRestore();
     });
 
     it("should register service worker in production mode", async () => {
@@ -107,8 +112,9 @@ describe("serviceWorker", () => {
 
       await registerServiceWorker();
 
+      // devLogger adds [ServiceWorker] prefix in dev/test mode
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Service worker registered:",
+        "[ServiceWorker] Service worker registered:",
         expect.any(Object),
       );
 
@@ -125,10 +131,9 @@ describe("serviceWorker", () => {
     });
 
     it("should return false when service worker is not supported", async () => {
-      Object.defineProperty(navigator, "serviceWorker", {
-        value: undefined,
-        configurable: true,
-      });
+      // Delete the property so "serviceWorker" in navigator returns false
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (navigator as any).serviceWorker;
 
       const result = await unregisterServiceWorker();
       expect(result).toBe(false);

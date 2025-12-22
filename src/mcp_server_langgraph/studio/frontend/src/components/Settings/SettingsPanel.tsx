@@ -14,7 +14,7 @@
  * Based on UX patterns from Gemini CLI, OpenAI Codex, and Claude Code.
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   X,
   Settings,
@@ -23,6 +23,9 @@ import {
   Keyboard,
   Shield,
   RotateCcw,
+  UserCheck,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import {
@@ -30,6 +33,7 @@ import {
   type ThemeMode,
   type FontSize,
 } from "../../types/preferences";
+import { useThresholdSettings } from "../../hooks/useThresholdSettings";
 
 // ==============================================================================
 // Types
@@ -47,7 +51,8 @@ type SettingsTab =
   | "accessibility"
   | "model"
   | "shortcuts"
-  | "privacy";
+  | "privacy"
+  | "hitl";
 
 interface TabConfig {
   id: SettingsTab;
@@ -69,6 +74,7 @@ const TABS: TabConfig[] = [
   { id: "model", label: "Model Defaults", icon: <Cpu size={16} /> },
   { id: "shortcuts", label: "Shortcuts", icon: <Keyboard size={16} /> },
   { id: "privacy", label: "Privacy", icon: <Shield size={16} /> },
+  { id: "hitl", label: "Agent Approval", icon: <UserCheck size={16} /> },
 ];
 
 const LANGUAGES = [
@@ -96,8 +102,22 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
     updateAccessibilityPreferences,
     updateModelDefaults,
     updatePrivacyPreferences,
+    updateHITLPreferences,
     resetToDefaults,
   } = usePreferences();
+
+  // Threshold settings hook for rotating thresholds
+  const {
+    recommendation,
+    isLoading: thresholdLoading,
+    error: thresholdError,
+    fetchRecommendation,
+    applyRecommendation,
+    updateSettings: updateThresholdSettings,
+  } = useThresholdSettings();
+
+  // State for auto-adjust toggle (local, will be synced to backend)
+  const [autoAdjustEnabled, setAutoAdjustEnabled] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Keyboard navigation for tabs
@@ -128,10 +148,13 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           return;
       }
 
-      setActiveTab(TABS[newIndex].id);
-      // Focus the new tab
-      const tabs = tabListRef.current?.querySelectorAll('[role="tab"]');
-      (tabs?.[newIndex] as HTMLElement)?.focus();
+      const targetTab = TABS[newIndex];
+      if (targetTab) {
+        setActiveTab(targetTab.id);
+        // Focus the new tab
+        const tabs = tabListRef.current?.querySelectorAll('[role="tab"]');
+        (tabs?.[newIndex] as HTMLElement)?.focus();
+      }
     },
     [],
   );
@@ -660,6 +683,292 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
     </div>
   );
 
+  const renderHITLTab = () => (
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium">Agent Approval Settings</h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        Configure when AI agents pause for your approval before taking actions.
+      </p>
+
+      {/* Enable HITL */}
+      <div className="flex items-center justify-between">
+        <div>
+          <label
+            htmlFor="hitl-enabled-toggle"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Enable agent approval
+          </label>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Require approval for low-confidence agent decisions
+          </p>
+        </div>
+        <button
+          id="hitl-enabled-toggle"
+          role="switch"
+          aria-checked={preferences.hitl.enabled}
+          onClick={() =>
+            updateHITLPreferences({
+              enabled: !preferences.hitl.enabled,
+            })
+          }
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+            preferences.hitl.enabled ? "bg-blue-600" : "bg-gray-300"
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              preferences.hitl.enabled ? "translate-x-6" : "translate-x-1"
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Confidence Threshold */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor="confidence-threshold-slider"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Confidence threshold
+          </label>
+          <span className="text-sm text-gray-500">
+            {Math.round(preferences.hitl.confidenceThreshold * 100)}%
+          </span>
+        </div>
+        <input
+          id="confidence-threshold-slider"
+          type="range"
+          min="50"
+          max="90"
+          step="5"
+          value={preferences.hitl.confidenceThreshold * 100}
+          onChange={(e) =>
+            updateHITLPreferences({
+              confidenceThreshold: parseInt(e.target.value, 10) / 100,
+            })
+          }
+          disabled={!preferences.hitl.enabled}
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 disabled:opacity-50"
+        />
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Require approval when agent confidence is below this threshold
+        </p>
+      </div>
+
+      {/* Auto-approve Threshold */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor="auto-approve-threshold-slider"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Auto-approve threshold
+          </label>
+          <span className="text-sm text-gray-500">
+            {Math.round(preferences.hitl.autoApproveThreshold * 100)}%
+          </span>
+        </div>
+        <input
+          id="auto-approve-threshold-slider"
+          type="range"
+          min="85"
+          max="100"
+          step="5"
+          value={preferences.hitl.autoApproveThreshold * 100}
+          onChange={(e) =>
+            updateHITLPreferences({
+              autoApproveThreshold: parseInt(e.target.value, 10) / 100,
+            })
+          }
+          disabled={!preferences.hitl.enabled}
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 disabled:opacity-50"
+        />
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Skip approval when agent confidence exceeds this threshold
+        </p>
+      </div>
+
+      {/* Push Notifications */}
+      <div className="flex items-center justify-between">
+        <div>
+          <label
+            htmlFor="hitl-push-toggle"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Push notifications
+          </label>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Get notified when an agent needs your approval
+          </p>
+        </div>
+        <button
+          id="hitl-push-toggle"
+          role="switch"
+          aria-checked={preferences.hitl.pushNotificationsEnabled}
+          onClick={() =>
+            updateHITLPreferences({
+              pushNotificationsEnabled:
+                !preferences.hitl.pushNotificationsEnabled,
+            })
+          }
+          disabled={!preferences.hitl.enabled}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+            preferences.hitl.pushNotificationsEnabled
+              ? "bg-blue-600"
+              : "bg-gray-300"
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              preferences.hitl.pushNotificationsEnabled
+                ? "translate-x-6"
+                : "translate-x-1"
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Sound */}
+      <div className="flex items-center justify-between">
+        <div>
+          <label
+            htmlFor="hitl-sound-toggle"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Sound alerts
+          </label>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Play a sound when an agent needs approval
+          </p>
+        </div>
+        <button
+          id="hitl-sound-toggle"
+          role="switch"
+          aria-checked={preferences.hitl.soundEnabled}
+          onClick={() =>
+            updateHITLPreferences({
+              soundEnabled: !preferences.hitl.soundEnabled,
+            })
+          }
+          disabled={!preferences.hitl.enabled}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+            preferences.hitl.soundEnabled ? "bg-blue-600" : "bg-gray-300"
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              preferences.hitl.soundEnabled ? "translate-x-6" : "translate-x-1"
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Threshold Recommendation Section */}
+      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <h4 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-2">
+          Threshold Recommendation
+        </h4>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+          Get AI-powered recommendations based on your approval history patterns.
+        </p>
+
+        {/* Auto-adjust toggle */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <label
+              htmlFor="auto-adjust-toggle"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Auto-adjust thresholds
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Automatically adjust thresholds based on approval patterns
+            </p>
+          </div>
+          <button
+            id="auto-adjust-toggle"
+            role="switch"
+            aria-checked={autoAdjustEnabled}
+            onClick={() => {
+              const newValue = !autoAdjustEnabled;
+              setAutoAdjustEnabled(newValue);
+              updateThresholdSettings({ auto_adjust_enabled: newValue });
+            }}
+            disabled={!preferences.hitl.enabled}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+              autoAdjustEnabled ? "bg-blue-600" : "bg-gray-300"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                autoAdjustEnabled ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Recommendation display and actions */}
+        <div className="flex flex-col gap-3">
+          {recommendation && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles size={16} className="text-blue-500" />
+                <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                  Recommended: {Math.round(recommendation.recommended_threshold * 100)}%
+                </span>
+              </div>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                {recommendation.reason}
+              </p>
+              <p className="text-xs text-gray-500">
+                Based on {recommendation.sample_size} approval decisions (confidence: {Math.round(recommendation.confidence_level * 100)}%)
+              </p>
+            </div>
+          )}
+
+          {thresholdError && (
+            <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-700">
+              <p className="text-xs text-red-600 dark:text-red-400">{thresholdError}</p>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              onClick={fetchRecommendation}
+              disabled={!preferences.hitl.enabled || thresholdLoading}
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {thresholdLoading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <RotateCcw size={14} />
+              )}
+              Get Recommendation
+            </button>
+
+            <button
+              onClick={async () => {
+                const result = await applyRecommendation();
+                if (result) {
+                  updateHITLPreferences({
+                    confidenceThreshold: result.adjusted_threshold,
+                  });
+                }
+              }}
+              disabled={!preferences.hitl.enabled || !recommendation || thresholdLoading}
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Sparkles size={14} />
+              Apply Recommendation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "general":
@@ -672,6 +981,8 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
         return renderShortcutsTab();
       case "privacy":
         return renderPrivacyTab();
+      case "hitl":
+        return renderHITLTab();
       default:
         return null;
     }

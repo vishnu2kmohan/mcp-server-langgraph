@@ -11,7 +11,24 @@ from langchain_core.tools import BaseTool
 
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.tools.calculator_tools import add, calculator, divide, multiply, subtract
+from mcp_server_langgraph.tools.computer_use_tools import (
+    fill_form,
+    get_element_info,
+    get_screen_info,
+    go_back,
+    go_forward,
+    keyboard_press,
+    keyboard_type,
+    mouse_click,
+    mouse_drag,
+    mouse_move,
+    navigate,
+    scroll,
+    select_option,
+)
+from mcp_server_langgraph.tools.defer_loading import DEFERRED_TOOLS
 from mcp_server_langgraph.tools.filesystem_tools import list_directory, read_file, search_files
+from mcp_server_langgraph.tools.screenshot_tools import capture_screenshot
 from mcp_server_langgraph.tools.search_tools import search_knowledge_base, web_search
 
 
@@ -60,6 +77,10 @@ def get_all_tools(settings_override: Any | None = None) -> list[BaseTool]:
             # Code execution dependencies not installed - silently skip
             pass
 
+    # Visual verification tools (conditional on configuration)
+    if getattr(effective_settings, "enable_visual_verification", False):
+        tools.append(capture_screenshot)
+
     return tools
 
 
@@ -71,6 +92,7 @@ ALL_TOOLS: list[BaseTool] = get_all_tools()
 CALCULATOR_TOOLS = [calculator, add, subtract, multiply, divide]
 SEARCH_TOOLS = [search_knowledge_base, web_search]
 FILESYSTEM_TOOLS = [read_file, list_directory, search_files]
+VISUAL_VERIFICATION_TOOLS: list[BaseTool] = [capture_screenshot]
 
 
 # Code execution tools group (conditionally loaded based on settings)
@@ -112,6 +134,7 @@ def get_tools(categories: list[str] | None = None, settings_override: Any | None
         "calculator": CALCULATOR_TOOLS,
         "search": SEARCH_TOOLS,
         "filesystem": FILESYSTEM_TOOLS,
+        "visual_verification": VISUAL_VERIFICATION_TOOLS,
     }
 
     for category in categories:
@@ -147,11 +170,29 @@ __all__ = [
     "ALL_TOOLS",
     "CALCULATOR_TOOLS",
     "CODE_EXECUTION_TOOLS",
+    "DEFERRED_TOOLS",
     "FILESYSTEM_TOOLS",
     "SEARCH_TOOLS",
+    "VISUAL_VERIFICATION_TOOLS",
     "add",
     "calculator",
+    "capture_screenshot",
     "divide",
+    # Computer Use tools
+    "fill_form",
+    "get_element_info",
+    "get_screen_info",
+    "go_back",
+    "go_forward",
+    "keyboard_press",
+    "keyboard_type",
+    "mouse_click",
+    "mouse_drag",
+    "mouse_move",
+    "navigate",
+    "scroll",
+    "select_option",
+    # Factory functions
     "get_all_tools",  # Factory function for runtime tool configuration
     "get_tool_by_name",
     "get_tools",

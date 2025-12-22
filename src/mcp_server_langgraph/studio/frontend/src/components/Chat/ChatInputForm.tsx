@@ -194,13 +194,11 @@ export function ChatInputForm({
     const matches: Array<{ raw: string; url: string }> = [];
     let match;
     while ((match = urlPattern.exec(input)) !== null) {
-      matches.push({ raw: match[0].trim(), url: match[1] });
+      const url = match[1];
+      if (url) matches.push({ raw: match[0].trim(), url });
     }
     return matches;
   }, [input, enableUrlFetch]);
-
-  // Check if any URL is currently loading
-  const _hasUrlLoading = urlFetchLoading.length > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -15,9 +15,17 @@
  */
 
 import type { LoaderFunctionArgs } from "react-router";
-import type { Session } from "../../types";
+import type { Session, ChatMessage } from "../../types";
 import type { CanvasArtifact, ArtifactVersion } from "../../types/artifacts";
 import { getAuthToken } from "../../utils/storage";
+import {
+  validateSession,
+  validateMessagesResponse,
+  validateSessionsResponse,
+} from "./validation";
+import { devLogger } from "../../utils/devLogger";
+
+const logger = devLogger.withPrefix("[canvasLoaders]");
 
 // =============================================================================
 // Types
@@ -31,6 +39,7 @@ export interface SessionsLoaderData {
 export interface ChatLoaderData {
   sessionId: string | null;
   session?: Session;
+  messages: ChatMessage[];
   artifacts: CanvasArtifact[];
   error?: string;
 }
@@ -93,7 +102,7 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 export async function sessionsLoader(
   _args: LoaderFunctionArgs,
 ): Promise<SessionsLoaderData> {
-  const result = await fetchJson<{ items: Session[] }>(
+  const result = await fetchJson<unknown>(
     `${API_BASE}/sessions?limit=50`,
   );
 
@@ -104,14 +113,55 @@ export async function sessionsLoader(
     };
   }
 
+  // Validate sessions response
+  const validation = validateSessionsResponse(result);
+  if (!validation.success) {
+    logger.warn("Sessions validation failed", validation.errors);
+    return {
+      sessions: [],
+      error: "Invalid sessions response",
+    };
+  }
+
+  if (validation.warnings) {
+    logger.warn("Sessions validation warnings", validation.warnings);
+  }
+
+  // Use validated API data directly (Session type uses snake_case)
+  // Config is optional and may be a partial object from the API
+  const sessions: Session[] = validation.data.items.map((apiSession) => ({
+    id: apiSession.id,
+    name: apiSession.name || "Untitled",
+    status: (apiSession.status as Session["status"]) || "active",
+    created_at: apiSession.created_at,
+    updated_at: apiSession.updated_at,
+    config: apiSession.config as Session["config"],
+  }));
+
+  return { sessions };
+}
+
+/** API message format (snake_case from backend) */
+interface APIMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  created_at: string;
+}
+
+/** Transform API message to ChatMessage format */
+function toClientMessage(msg: APIMessage): ChatMessage {
   return {
-    sessions: result.items,
+    id: msg.id,
+    role: msg.role,
+    content: msg.content,
+    timestamp: new Date(msg.created_at).getTime(),
   };
 }
 
 /**
  * Load chat data for a session
- * Parallel-fetches session details and artifacts
+ * Parallel-fetches session details, messages, and artifacts
  */
 export async function chatLoader({
   params,
@@ -121,23 +171,63 @@ export async function chatLoader({
   if (!sessionId) {
     return {
       sessionId: null,
+      messages: [],
       artifacts: [],
     };
   }
 
-  // Parallel fetch session and artifacts
-  const [sessionResult, artifactsResult] = await Promise.all([
-    fetchJson<Session>(`${API_BASE}/sessions/${sessionId}`),
+  // Parallel fetch session, messages, and artifacts
+  const [sessionResult, messagesResult, artifactsResult] = await Promise.all([
+    fetchJson<unknown>(`${API_BASE}/sessions/${sessionId}`),
+    fetchJson<{ items: unknown[] }>(
+      `${API_BASE}/sessions/${sessionId}/messages`,
+    ),
     fetchJson<{ items: CanvasArtifact[] }>(
       `${API_BASE}/artifacts?session_id=${sessionId}&limit=100`,
     ),
   ]);
 
+  // Validate session response - keep API format (snake_case)
+  // useSessionSync will transform to client format (camelCase) via apiTransforms
+  let validatedSession: Session | undefined;
+  if (sessionResult) {
+    const sessionValidation = validateSession(sessionResult);
+    if (sessionValidation.success) {
+      // Use validated API data directly (Session type uses snake_case)
+      // Config is optional and may be a partial object from the API
+      validatedSession = {
+        id: sessionValidation.data.id,
+        name: sessionValidation.data.name || "Untitled",
+        status: (sessionValidation.data.status as Session["status"]) || "active",
+        created_at: sessionValidation.data.created_at,
+        updated_at: sessionValidation.data.updated_at,
+        config: sessionValidation.data.config as Session["config"],
+      };
+    } else {
+      logger.warn("Session validation failed", sessionValidation.errors);
+    }
+  }
+
+  // Validate messages response
+  let messages: ChatMessage[] = [];
+  if (messagesResult?.items) {
+    const messagesValidation = validateMessagesResponse(messagesResult);
+    if (messagesValidation.success) {
+      messages = messagesValidation.data.items.map(toClientMessage);
+      if (messagesValidation.warnings) {
+        logger.warn("Message validation warnings", messagesValidation.warnings);
+      }
+    } else {
+      logger.warn("Messages validation failed", messagesValidation.errors);
+    }
+  }
+
   return {
     sessionId,
-    session: sessionResult ?? undefined,
+    session: validatedSession,
+    messages,
     artifacts: artifactsResult?.items ?? [],
-    error: !sessionResult ? "Session not found" : undefined,
+    error: !validatedSession ? "Session not found" : undefined,
   };
 }
 
@@ -172,6 +262,90 @@ export async function artifactLoader({
 }
 
 // =============================================================================
+// Compliance Loader (Persona-specific: admin, compliance-officer)
+// =============================================================================
+
+export interface ComplianceLoaderData {
+  summary: ComplianceSummary | null;
+  error?: string;
+}
+
+interface ComplianceSummary {
+  soc2: FrameworkSummary;
+  hipaa: FrameworkSummary;
+  gdpr: FrameworkSummary;
+  fedramp: FrameworkSummary;
+}
+
+interface FrameworkSummary {
+  percentage: number;
+  status: "compliant" | "partial" | "non-compliant";
+  compliant_count?: number;
+  total_count?: number;
+  pending_actions?: number;
+}
+
+/**
+ * Load compliance summary for compliance dashboard
+ * Used by compliance-officer and admin personas
+ */
+export async function complianceLoader(
+  _args: LoaderFunctionArgs,
+): Promise<ComplianceLoaderData> {
+  const result = await fetchJson<ComplianceSummary>(
+    `${API_BASE}/compliance/reports/summary`,
+  );
+
+  if (!result) {
+    return {
+      summary: null,
+      error: "Failed to load compliance summary",
+    };
+  }
+
+  return {
+    summary: result,
+  };
+}
+
+// =============================================================================
+// Files/Artifacts Loader (for FilesPage)
+// =============================================================================
+
+export interface FilesLoaderData {
+  artifacts: CanvasArtifact[];
+  total: number;
+  error?: string;
+}
+
+/**
+ * Load all artifacts across sessions for the FilesPage
+ * This provides a unified view of all file-like artifacts
+ */
+export async function filesLoader(
+  _args: LoaderFunctionArgs,
+): Promise<FilesLoaderData> {
+  const result = await fetchJson<{
+    items: CanvasArtifact[];
+    total?: number;
+    hasMore?: boolean;
+  }>(`${API_BASE}/artifacts?limit=100`);
+
+  if (!result) {
+    return {
+      artifacts: [],
+      total: 0,
+      error: "Failed to load files",
+    };
+  }
+
+  return {
+    artifacts: result.items ?? [],
+    total: result.total ?? result.items?.length ?? 0,
+  };
+}
+
+// =============================================================================
 // Loader Index Export
 // =============================================================================
 
@@ -179,4 +353,6 @@ export const canvasLoaders = {
   sessions: sessionsLoader,
   chat: chatLoader,
   artifact: artifactLoader,
+  compliance: complianceLoader,
+  files: filesLoader,
 };

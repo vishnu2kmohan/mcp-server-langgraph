@@ -5,6 +5,10 @@
  * for PWA offline support.
  */
 
+import { devLogger } from "./devLogger";
+
+const logger = devLogger.withPrefix("[ServiceWorker]");
+
 /**
  * Register the service worker for offline caching.
  * @returns Promise that resolves to true if registration succeeds, false otherwise
@@ -12,7 +16,7 @@
 export async function registerServiceWorker(): Promise<boolean> {
   // Check if service worker is supported
   if (!("serviceWorker" in navigator)) {
-    console.log("Service workers are not supported in this browser");
+    logger.log("Service workers are not supported in this browser");
     return false;
   }
 
@@ -26,7 +30,7 @@ export async function registerServiceWorker(): Promise<boolean> {
     const registration = await navigator.serviceWorker.register(swPath, {
       scope: basePath,
     });
-    console.log("Service worker registered:", registration);
+    logger.log("Service worker registered:", registration);
     return true;
   } catch (error) {
     console.error("Service worker registration failed:", error);
@@ -48,7 +52,7 @@ export async function unregisterServiceWorker(): Promise<boolean> {
   try {
     const registrations = await navigator.serviceWorker.getRegistrations();
     await Promise.all(registrations.map((reg) => reg.unregister()));
-    console.log("All service workers unregistered");
+    logger.log("All service workers unregistered");
     return true;
   } catch (error) {
     console.error("Service worker unregistration failed:", error);

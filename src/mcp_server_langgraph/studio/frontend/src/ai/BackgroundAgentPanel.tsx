@@ -23,23 +23,18 @@ import {
   X,
   RefreshCw,
   Clock,
+  AlertTriangle,
+  HelpCircle,
 } from "lucide-react";
+import { cn } from "../utils/cn";
+import type { BackgroundAgent, AgentStatus } from "../store/slices/backgroundAgentSlice";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type AgentStatus = "queued" | "running" | "completed" | "failed";
-
-export interface BackgroundAgent {
-  id: string;
-  name: string;
-  task: string;
-  status: AgentStatus;
-  progress: number;
-  startedAt: number;
-  error?: string;
-}
+// Re-export types for backwards compatibility
+export type { AgentStatus, BackgroundAgent };
 
 export interface BackgroundAgentPanelProps {
   agents: BackgroundAgent[];
@@ -52,10 +47,6 @@ export interface BackgroundAgentPanelProps {
 // =============================================================================
 // Utility
 // =============================================================================
-
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
 
 function formatElapsedTime(startedAt: number): string {
   const elapsed = Date.now() - startedAt;
@@ -82,6 +73,10 @@ function StatusIcon({ status }: { status: AgentStatus }) {
       return <CheckCircle size={14} className="text-green-500" />;
     case "failed":
       return <XCircle size={14} className="text-red-500" />;
+    case "awaiting_approval":
+      return <AlertTriangle size={14} className="text-amber-500" />;
+    case "awaiting_clarification":
+      return <HelpCircle size={14} className="text-purple-500" />;
     default:
       return <Circle size={14} className="text-gray-400" />;
   }
@@ -97,6 +92,10 @@ function getStatusColor(status: AgentStatus): string {
       return "text-green-600 dark:text-green-400";
     case "failed":
       return "text-red-600 dark:text-red-400";
+    case "awaiting_approval":
+      return "text-amber-600 dark:text-amber-400";
+    case "awaiting_clarification":
+      return "text-purple-600 dark:text-purple-400";
     default:
       return "text-gray-500 dark:text-gray-400";
   }

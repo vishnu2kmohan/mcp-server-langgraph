@@ -30,6 +30,7 @@ import {
   type ModelDefaultPreferences,
   type SessionPreferences,
   type PrivacyPreferences,
+  type HITLPreferences,
   type ThemeMode,
   type PreferencesState,
   type PreferencesActions,
@@ -140,6 +141,7 @@ const defaultContextValue: PreferencesContextValue = {
   resetKeyboardShortcut: () => {},
   updateSessionPreferences: () => {},
   updatePrivacyPreferences: () => {},
+  updateHITLPreferences: () => {},
   pinSession: () => {},
   unpinSession: () => {},
   addRecentSession: () => {},
@@ -251,6 +253,7 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
               ...parsed.session,
             },
             privacy: { ...DEFAULT_USER_PREFERENCES.privacy, ...parsed.privacy },
+            hitl: { ...DEFAULT_USER_PREFERENCES.hitl, ...parsed.hitl },
           });
         }
       } catch {
@@ -316,6 +319,7 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
       return () => mediaQuery.removeEventListener("change", handler);
     } else {
       applyTheme(theme);
+      return undefined;
     }
     // We only want to re-run when theme changes, not on every general preferences update
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -470,6 +474,22 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
         const updated = {
           ...prev,
           privacy: { ...prev.privacy, ...updates },
+          updatedAt: Date.now(),
+        };
+        saveToStorage(updated);
+        setHasUnsavedChanges(true);
+        return updated;
+      });
+    },
+    [saveToStorage],
+  );
+
+  const updateHITLPreferences = useCallback(
+    (updates: Partial<HITLPreferences>) => {
+      setPreferences((prev) => {
+        const updated = {
+          ...prev,
+          hitl: { ...prev.hitl, ...updates },
           updatedAt: Date.now(),
         };
         saveToStorage(updated);
@@ -647,6 +667,7 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
       resetKeyboardShortcut,
       updateSessionPreferences,
       updatePrivacyPreferences,
+      updateHITLPreferences,
       pinSession,
       unpinSession,
       addRecentSession,
@@ -671,6 +692,7 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
       resetKeyboardShortcut,
       updateSessionPreferences,
       updatePrivacyPreferences,
+      updateHITLPreferences,
       pinSession,
       unpinSession,
       addRecentSession,
@@ -755,6 +777,7 @@ export function useTheme() {
       return () => mediaQuery.removeEventListener("change", handler);
     } else {
       setEffectiveTheme(theme);
+      return undefined;
     }
     // We only want to re-run when theme changes, not on every general preferences update
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -861,6 +884,71 @@ export function useKeyboardShortcut(action: string) {
     scope: defaultShortcut?.scope,
     customizable: defaultShortcut?.customizable ?? true,
     isCustomized: !!customKeys,
+  };
+}
+
+/**
+ * Hook to access HITL (Human-in-the-Loop) preferences with convenience setters.
+ *
+ * @returns HITL preferences values and setter functions
+ *
+ * @example
+ * ```tsx
+ * const { enabled, confidenceThreshold, setConfidenceThreshold } = useHITLPreferences();
+ *
+ * return (
+ *   <Slider
+ *     value={confidenceThreshold * 100}
+ *     onChange={(value) => setConfidenceThreshold(value / 100)}
+ *   />
+ * );
+ * ```
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export function useHITLPreferences() {
+  const { preferences, updateHITLPreferences } = usePreferences();
+
+  const setEnabled = useCallback(
+    (enabled: boolean) => {
+      updateHITLPreferences({ enabled });
+    },
+    [updateHITLPreferences],
+  );
+
+  const setConfidenceThreshold = useCallback(
+    (confidenceThreshold: number) => {
+      updateHITLPreferences({ confidenceThreshold });
+    },
+    [updateHITLPreferences],
+  );
+
+  const setAutoApproveThreshold = useCallback(
+    (autoApproveThreshold: number) => {
+      updateHITLPreferences({ autoApproveThreshold });
+    },
+    [updateHITLPreferences],
+  );
+
+  const togglePushNotifications = useCallback(() => {
+    updateHITLPreferences({
+      pushNotificationsEnabled: !preferences.hitl.pushNotificationsEnabled,
+    });
+  }, [preferences.hitl.pushNotificationsEnabled, updateHITLPreferences]);
+
+  const toggleSound = useCallback(() => {
+    updateHITLPreferences({
+      soundEnabled: !preferences.hitl.soundEnabled,
+    });
+  }, [preferences.hitl.soundEnabled, updateHITLPreferences]);
+
+  return {
+    ...preferences.hitl,
+    setEnabled,
+    setConfidenceThreshold,
+    setAutoApproveThreshold,
+    togglePushNotifications,
+    toggleSound,
+    updateHITLPreferences,
   };
 }
 

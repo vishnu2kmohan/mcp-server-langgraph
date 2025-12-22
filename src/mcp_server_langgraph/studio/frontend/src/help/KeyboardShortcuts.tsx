@@ -11,6 +11,7 @@
  */
 
 import { Keyboard } from "lucide-react";
+import { cn } from "../utils/cn";
 
 // =============================================================================
 // Types
@@ -31,14 +32,6 @@ export interface ShortcutCategory {
 export interface KeyboardShortcutsProps {
   categories: ShortcutCategory[];
   className?: string;
-}
-
-// =============================================================================
-// Utility
-// =============================================================================
-
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
 }
 
 // =============================================================================

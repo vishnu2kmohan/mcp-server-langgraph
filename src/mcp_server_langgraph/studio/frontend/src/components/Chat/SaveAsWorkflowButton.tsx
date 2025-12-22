@@ -33,6 +33,7 @@ export function SaveAsWorkflowButton({
 
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [success]);
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export function SaveAsWorkflowButton({
 
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [error]);
 
   const handleSaveAsWorkflow = async () => {

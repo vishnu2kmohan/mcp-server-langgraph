@@ -38,7 +38,7 @@ export interface RetentionMetrics {
 
 export interface HeartMetricsBatch {
   session_id: string;
-  app_name: 'builder' | 'playground';
+  app_name: 'studio';
   task_success?: TaskMetrics;
   engagement?: EngagementMetrics;
   happiness?: HappinessMetrics;
@@ -82,8 +82,7 @@ export interface AggregateMetrics {
 }
 
 export interface DashboardData {
-  builder: Partial<AggregateMetrics>;
-  playground: Partial<AggregateMetrics>;
+  studio: Partial<AggregateMetrics>;
   total_metrics_count: number;
   total_events_count: number;
   generated_at: string;
@@ -136,7 +135,7 @@ export async function sendHeartMetrics(metrics: HeartMetricsBatch): Promise<Metr
  */
 export async function sendEvents(
   sessionId: string,
-  appName: 'builder' | 'playground',
+  appName: 'studio',
   events: FeatureEvent[]
 ): Promise<EventReceipt> {
   // Respect Do Not Track

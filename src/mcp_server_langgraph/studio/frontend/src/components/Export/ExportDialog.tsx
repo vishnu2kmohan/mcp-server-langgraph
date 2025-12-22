@@ -175,6 +175,7 @@ export function ExportDialog({
       const timer = setTimeout(() => setActionState(null), 2000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [actionState]);
 
   // Handle copy

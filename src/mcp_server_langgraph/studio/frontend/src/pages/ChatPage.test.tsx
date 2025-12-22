@@ -18,10 +18,22 @@ import {
   waitFor,
   act,
 } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, useNavigate } from "react-router";
 import { Provider } from "react-redux";
+
+// Mock useNavigate
+vi.mock("react-router", async () => {
+  const actual = await vi.importActual("react-router");
+  return {
+    ...actual,
+    useNavigate: vi.fn(),
+  };
+});
+
+const mockNavigate = vi.fn();
 import { configureStore } from "@reduxjs/toolkit";
 import { ChatPage } from "./ChatPage";
+import { TelemetryProvider } from "../contexts/TelemetryContext";
 import sessionReducer, {
   initialSessionState,
 } from "../store/slices/sessionSlice";
@@ -85,14 +97,16 @@ const renderWithProviders = async (
   let result: ReturnType<typeof render>;
   await act(async () => {
     result = render(
-      <Provider store={store}>
-        <MemoryRouter
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-          initialEntries={initialEntries}
-        >
-          {component}
-        </MemoryRouter>
-      </Provider>,
+      <TelemetryProvider>
+        <Provider store={store}>
+          <MemoryRouter
+            future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+            initialEntries={initialEntries}
+          >
+            {component}
+          </MemoryRouter>
+        </Provider>
+      </TelemetryProvider>,
     );
   });
   return {
@@ -119,6 +133,9 @@ describe("ChatPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Mock useNavigate
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
 
     // Default MCP connection mock
     mockUseMCPConnection.mockReturnValue({
@@ -1693,6 +1710,748 @@ describe("ChatPage", () => {
       });
 
       expect(screen.queryByText(/pending/i)).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Tier Usage and Upgrade Prompts", () => {
+    const mockSession: Session = {
+      id: "session-1",
+      name: "Test Session",
+      config: {
+        modelProvider: "openai",
+        modelName: "gpt-4",
+        temperature: 0.7,
+        maxTokens: 4096,
+      },
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    it("should display tier usage bar for shared tier", async () => {
+      mockUseTierLimits.mockReturnValue({
+        tier: "shared" as const,
+        maxSessions: 5,
+        maxWorkflows: 3,
+        maxConnectionsPerProject: 2,
+        activeSessions: 3,
+        isApproachingLimit: false,
+        isAtLimit: false,
+        nextTier: "hybrid",
+        isLoading: false,
+      });
+
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      expect(screen.getByText(/Active Sessions/i)).toBeInTheDocument();
+    });
+
+    it("should not display tier usage bar for dedicated tier", async () => {
+      mockUseTierLimits.mockReturnValue({
+        tier: "dedicated" as const,
+        maxSessions: Infinity,
+        maxWorkflows: Infinity,
+        maxConnectionsPerProject: Infinity,
+        activeSessions: 10,
+        isApproachingLimit: false,
+        isAtLimit: false,
+        nextTier: null,
+        isLoading: false,
+      });
+
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // TierUsageBar should not be rendered for dedicated tier
+      expect(screen.queryByText(/Active Sessions/i)).not.toBeInTheDocument();
+    });
+
+    it("should display upgrade prompt when approaching limit", async () => {
+      mockUseTierLimits.mockReturnValue({
+        tier: "shared" as const,
+        maxSessions: 5,
+        maxWorkflows: 3,
+        maxConnectionsPerProject: 2,
+        activeSessions: 4,
+        isApproachingLimit: true,
+        isAtLimit: false,
+        nextTier: "hybrid",
+        isLoading: false,
+      });
+
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      expect(screen.getByText(/unlimited sessions/i)).toBeInTheDocument();
+    });
+
+    it("should display upgrade prompt when at limit", async () => {
+      mockUseTierLimits.mockReturnValue({
+        tier: "shared" as const,
+        maxSessions: 5,
+        maxWorkflows: 3,
+        maxConnectionsPerProject: 2,
+        activeSessions: 5,
+        isApproachingLimit: false,
+        isAtLimit: true,
+        nextTier: "hybrid",
+        isLoading: false,
+      });
+
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      expect(screen.getByText(/unlimited sessions/i)).toBeInTheDocument();
+    });
+
+    it("should not display upgrade prompt when no next tier available", async () => {
+      mockUseTierLimits.mockReturnValue({
+        tier: "dedicated" as const,
+        maxSessions: Infinity,
+        maxWorkflows: Infinity,
+        maxConnectionsPerProject: Infinity,
+        activeSessions: 100,
+        isApproachingLimit: false,
+        isAtLimit: false,
+        nextTier: null,
+        isLoading: false,
+      });
+
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      expect(screen.queryByText(/unlimited sessions/i)).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Session Goal Tracker", () => {
+    const mockSession: Session = {
+      id: "session-1",
+      name: "Test Session",
+      config: {
+        modelProvider: "openai",
+        modelName: "gpt-4",
+        temperature: 0.7,
+        maxTokens: 4096,
+      },
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    it("should display session goal tracker when session exists", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // SessionGoalTracker should be present
+      expect(screen.getByTestId("session-goal-tracker")).toBeInTheDocument();
+    });
+
+    it("should not display session goal tracker when no session", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { isLoadingSessions: true },
+      });
+
+      expect(screen.queryByTestId("session-goal-tracker")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Clear Messages Dialog", () => {
+    const mockSession: Session = {
+      id: "session-1",
+      name: "Test Session",
+      config: {
+        modelProvider: "openai",
+        modelName: "gpt-4",
+        temperature: 0.7,
+        maxTokens: 4096,
+      },
+      messages: [
+        { id: "msg-1", role: "user", content: "Hello", timestamp: Date.now() },
+        { id: "msg-2", role: "assistant", content: "Hi!", timestamp: Date.now() },
+      ],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    it("should open confirmation dialog when Clear button is clicked", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      const clearButton = screen.getByText("Clear");
+      fireEvent.click(clearButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/are you sure you want to clear/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should close dialog when Cancel is clicked", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // Open dialog
+      const clearButton = screen.getByText("Clear");
+      fireEvent.click(clearButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
+      });
+
+      // Click cancel
+      const cancelButton = screen.getByText("Cancel");
+      fireEvent.click(cancelButton);
+
+      await waitFor(() => {
+        expect(screen.queryByText(/are you sure/i)).not.toBeInTheDocument();
+      });
+    });
+
+    it("should clear messages when confirmed", async () => {
+      const { store } = await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // Verify initial messages
+      expect(store.getState().session.currentSession?.messages).toHaveLength(2);
+
+      // Open dialog
+      const clearButton = screen.getByText("Clear");
+      fireEvent.click(clearButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
+      });
+
+      // Click the confirm button in the dialog - find all Clear buttons and take the last one (in the dialog)
+      const clearButtons = screen.getAllByRole("button", { name: /clear/i });
+      const confirmButton = clearButtons[clearButtons.length - 1];
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(store.getState().session.currentSession?.messages).toHaveLength(0);
+      });
+    });
+  });
+
+  describe("Mobile Responsive Layout", () => {
+    const mockSession: Session = {
+      id: "session-1",
+      name: "Test Session",
+      config: {
+        modelProvider: "openai",
+        modelName: "gpt-4",
+        temperature: 0.7,
+        maxTokens: 4096,
+      },
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    it("should render mobile sessions toggle button", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      expect(screen.getByLabelText("Toggle sessions")).toBeInTheDocument();
+    });
+
+    it("should render mobile context toggle button", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      expect(screen.getByLabelText("Toggle context")).toBeInTheDocument();
+    });
+  });
+
+  describe("Context Panel Actions", () => {
+    const mockSession: Session = {
+      id: "session-1",
+      name: "Test Session",
+      config: {
+        modelProvider: "openai",
+        modelName: "gpt-4",
+        temperature: 0.7,
+        maxTokens: 4096,
+      },
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    it("should display Context panel with tools", async () => {
+      mockUseMCPConnection.mockReturnValue({
+        isConnected: true,
+        connectionMode: "websocket",
+        tools: [
+          { name: "calculator", description: "Perform calculations" },
+        ],
+        error: null,
+        connect: mockConnect,
+        disconnect: mockDisconnect,
+        callTool: mockCallTool,
+      });
+
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      expect(screen.getByText("calculator")).toBeInTheDocument();
+    });
+
+    it("should display refresh tools button in context panel", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      expect(screen.getByLabelText("Refresh tools")).toBeInTheDocument();
+    });
+  });
+
+  describe("No Active Session Flow", () => {
+    it("should show create session button in empty state", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { isLoadingSessions: true },
+      });
+
+      // The empty state shows "No Active Session" with a "New Session" button
+      expect(screen.getByText("No Active Session")).toBeInTheDocument();
+      // Multiple "New Session" buttons exist - one in SessionPanel header and one in empty state
+      const newSessionButtons = screen.getAllByRole("button", { name: /new session/i });
+      expect(newSessionButtons.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("should not show chat input when no session", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { isLoadingSessions: true },
+      });
+
+      expect(screen.queryByPlaceholderText("Type your message...")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Navigation Handlers", () => {
+    const mockSession: Session = {
+      id: "session-1",
+      name: "Test Session",
+      config: {
+        modelProvider: "openai",
+        modelName: "gpt-4",
+        temperature: 0.7,
+        maxTokens: 4096,
+      },
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    it("should navigate to cost page when View cost details is clicked", async () => {
+      // Set up streaming with cost data to show the cost details button
+      mockUseStreamingChat.mockReturnValue({
+        isStreaming: false,
+        streamingContent: "",
+        error: null,
+        usage: { promptTokens: 100, completionTokens: 50, totalTokens: 150 },
+        model: "gpt-4",
+        startStream: mockStartStream,
+        stopStream: mockStopStream,
+        clearContent: mockClearContent,
+      });
+
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // Click View cost details link in ContextPanel
+      const viewCostButton = screen.getByText("View cost details →");
+      fireEvent.click(viewCostButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/cost");
+    });
+
+    it("should navigate to observability page when View all traces is clicked", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // Click View all traces link in ContextPanel
+      const viewTracesButton = screen.getByText("View all traces →");
+      fireEvent.click(viewTracesButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/observability");
+    });
+
+    it("should navigate to observability with trace ID when View current trace is clicked", async () => {
+      // Set up streaming chat to return a trace ID
+      mockUseStreamingChat.mockReturnValue({
+        isStreaming: false,
+        streamingContent: "",
+        error: null,
+        usage: null,
+        model: null,
+        startStream: mockStartStream,
+        stopStream: mockStopStream,
+        clearContent: mockClearContent,
+        traceId: "trace-abc123",
+      });
+
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // Click View current trace link in ContextPanel
+      const viewCurrentTraceButton = screen.getByText("View current trace →");
+      fireEvent.click(viewCurrentTraceButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/observability?trace_id=trace-abc123");
+    });
+
+    it("should navigate to billing settings when upgrade is clicked", async () => {
+      mockUseTierLimits.mockReturnValue({
+        tier: "shared" as const,
+        maxSessions: 5,
+        maxWorkflows: 3,
+        maxConnectionsPerProject: 2,
+        activeSessions: 5,
+        isApproachingLimit: false,
+        isAtLimit: true,
+        nextTier: "hybrid",
+        isLoading: false,
+      });
+
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // Find and click upgrade button
+      const upgradeButton = screen.getByRole("button", { name: /upgrade/i });
+      fireEvent.click(upgradeButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/settings?tab=billing");
+    });
+  });
+
+  describe("Refresh Tools Handler", () => {
+    const mockSession: Session = {
+      id: "session-1",
+      name: "Test Session",
+      config: {
+        modelProvider: "openai",
+        modelName: "gpt-4",
+        temperature: 0.7,
+        maxTokens: 4096,
+      },
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    it("should call connect when Refresh tools is clicked", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // Click Refresh tools button in ContextPanel
+      const refreshButton = screen.getByLabelText("Refresh tools");
+      fireEvent.click(refreshButton);
+
+      expect(mockConnect).toHaveBeenCalled();
+    });
+  });
+
+  describe("Goal Tracking Handlers", () => {
+    const mockSession: Session = {
+      id: "session-1",
+      name: "Test Session",
+      config: {
+        modelProvider: "openai",
+        modelName: "gpt-4",
+        temperature: 0.7,
+        maxTokens: 4096,
+      },
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    it("should set goal when Set Goal button is clicked", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // Find the goal input
+      const goalInput = screen.getByLabelText("Session goal input");
+      fireEvent.change(goalInput, { target: { value: "Complete project setup" } });
+
+      // Click Set Goal button
+      const setGoalButton = screen.getByRole("button", { name: /set goal/i });
+      fireEvent.click(setGoalButton);
+
+      // The goal should now be displayed (SessionGoalTracker switches to display mode)
+      await waitFor(() => {
+        expect(screen.getByText("Complete project setup")).toBeInTheDocument();
+      });
+    });
+
+    it("should set goal when Enter is pressed in goal input", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // Find the goal input
+      const goalInput = screen.getByLabelText("Session goal input");
+      fireEvent.change(goalInput, { target: { value: "Complete API integration" } });
+      fireEvent.keyDown(goalInput, { key: "Enter" });
+
+      // The goal should now be displayed
+      await waitFor(() => {
+        expect(screen.getByText("Complete API integration")).toBeInTheDocument();
+      });
+    });
+
+    it("should clear goal when clear button is clicked", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // First set a goal
+      const goalInput = screen.getByLabelText("Session goal input");
+      fireEvent.change(goalInput, { target: { value: "Test goal" } });
+      fireEvent.click(screen.getByRole("button", { name: /set goal/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Test goal")).toBeInTheDocument();
+      });
+
+      // Click the clear button (trash icon)
+      const clearButton = screen.getByLabelText("Clear");
+      fireEvent.click(clearButton);
+
+      // Goal should be cleared - back to input mode
+      await waitFor(() => {
+        expect(screen.getByLabelText("Session goal input")).toBeInTheDocument();
+      });
+    });
+
+    it("should mark goal as achieved when Achieved button is clicked", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // First set a goal
+      const goalInput = screen.getByLabelText("Session goal input");
+      fireEvent.change(goalInput, { target: { value: "Finish implementation" } });
+      fireEvent.click(screen.getByRole("button", { name: /set goal/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Finish implementation")).toBeInTheDocument();
+      });
+
+      // Click Achieved button
+      const achievedButton = screen.getByLabelText("Achieved");
+      fireEvent.click(achievedButton);
+
+      // Goal should be cleared after marking as achieved
+      await waitFor(() => {
+        expect(screen.getByLabelText("Session goal input")).toBeInTheDocument();
+      });
+    });
+
+    it("should mark goal as partially achieved when Partial button is clicked", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // First set a goal
+      const goalInput = screen.getByLabelText("Session goal input");
+      fireEvent.change(goalInput, { target: { value: "Build feature" } });
+      fireEvent.click(screen.getByRole("button", { name: /set goal/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Build feature")).toBeInTheDocument();
+      });
+
+      // Click Partial button (aria-label is "Partially")
+      const partialButton = screen.getByLabelText("Partially");
+      fireEvent.click(partialButton);
+
+      // Goal should be cleared after marking as partially achieved
+      await waitFor(() => {
+        expect(screen.getByLabelText("Session goal input")).toBeInTheDocument();
+      });
+    });
+
+    it("should mark goal as not achieved when Not Achieved button is clicked", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // First set a goal
+      const goalInput = screen.getByLabelText("Session goal input");
+      fireEvent.change(goalInput, { target: { value: "Fix bug" } });
+      fireEvent.click(screen.getByRole("button", { name: /set goal/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Fix bug")).toBeInTheDocument();
+      });
+
+      // Click Not Achieved button (aria-label is "Not Achieved")
+      const notAchievedButton = screen.getByLabelText("Not Achieved");
+      fireEvent.click(notAchievedButton);
+
+      // Goal should be cleared after marking as not achieved
+      await waitFor(() => {
+        expect(screen.getByLabelText("Session goal input")).toBeInTheDocument();
+      });
+    });
+
+    it("should allow editing goal", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: { currentSession: mockSession },
+      });
+
+      // First set a goal
+      const goalInput = screen.getByLabelText("Session goal input");
+      fireEvent.change(goalInput, { target: { value: "Original goal" } });
+      fireEvent.click(screen.getByRole("button", { name: /set goal/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Original goal")).toBeInTheDocument();
+      });
+
+      // Click Edit button (aria-label is "Edit")
+      const editButton = screen.getByLabelText("Edit");
+      fireEvent.click(editButton);
+
+      // Should switch to edit mode (aria-label is "Edit session goal")
+      await waitFor(() => {
+        expect(screen.getByLabelText("Edit session goal")).toBeInTheDocument();
+      });
+
+      // Edit the goal
+      const editInput = screen.getByLabelText("Edit session goal");
+      fireEvent.change(editInput, { target: { value: "Updated goal" } });
+
+      // Save the edit (button text is "Save")
+      const saveButton = screen.getByLabelText("Save");
+      fireEvent.click(saveButton);
+
+      // Should show updated goal
+      await waitFor(() => {
+        expect(screen.getByText("Updated goal")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("SessionPanel Handlers", () => {
+    const multipleSessions: Session[] = [
+      {
+        id: "session-1",
+        name: "First Session",
+        createdAt: Date.now() - 100000,
+        updatedAt: Date.now() - 100000,
+        messages: [],
+        messageCount: 5,
+      },
+      {
+        id: "session-2",
+        name: "Second Session",
+        createdAt: Date.now() - 50000,
+        updatedAt: Date.now() - 50000,
+        messages: [],
+        messageCount: 3,
+      },
+    ];
+
+    it("should update search query when handleSearch is called", async () => {
+      await renderWithProviders(<ChatPage />, {
+        sessionState: {
+          sessions: multipleSessions,
+          currentSession: multipleSessions[0],
+        },
+      });
+
+      // Type in search input
+      const searchInput = screen.getByPlaceholderText("Search sessions...");
+      fireEvent.change(searchInput, { target: { value: "First" } });
+
+      // Should filter immediately in client-side filter
+      await waitFor(() => {
+        expect(screen.getAllByText("First Session")).toHaveLength(2); // In list and header
+        expect(screen.queryByText("Second Session")).not.toBeInTheDocument();
+      });
+    });
+
+    it("should update status filter when handleStatusChange is called", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ items: [], total: 0, next_cursor: null }),
+      });
+      global.fetch = mockFetch;
+
+      await renderWithProviders(<ChatPage />, {
+        sessionState: {
+          sessions: multipleSessions,
+          currentSession: multipleSessions[0],
+        },
+      });
+
+      // Clear initial fetch calls
+      mockFetch.mockClear();
+
+      // Click Archived status filter
+      const archivedButton = screen.getByRole("button", { name: "Archived" });
+      fireEvent.click(archivedButton);
+
+      // API should be called with status param
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalled();
+        const callUrl = mockFetch.mock.calls[mockFetch.mock.calls.length - 1][0];
+        expect(callUrl).toContain("status=archived");
+      });
+    });
+
+    it("should fetch more sessions when handleLoadMore is called", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({
+          items: [{ id: "session-3", name: "Third Session", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 }],
+          total: 3,
+          next_cursor: null,
+        }),
+      });
+      global.fetch = mockFetch;
+
+      await renderWithProviders(<ChatPage />, {
+        sessionState: {
+          sessions: multipleSessions,
+          currentSession: multipleSessions[0],
+          hasMore: true,
+          cursor: "cursor-abc",
+        },
+      });
+
+      // Clear initial fetch calls
+      mockFetch.mockClear();
+
+      // Click Load More button
+      fireEvent.click(screen.getByText("Load More"));
+
+      // fetchMoreSessions should be dispatched
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalled();
+      });
     });
   });
 });

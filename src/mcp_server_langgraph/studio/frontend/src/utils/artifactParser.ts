@@ -134,6 +134,7 @@ export function extractCodeBlocks(content: string): CodeBlock[] {
   let match: RegExpExecArray | null;
   while ((match = codeBlockRegex.exec(content)) !== null) {
     const [fullMatch, language, meta, code] = match;
+    if (!code) continue;
     blocks.push({
       language: language || "",
       code: code.trimEnd(), // Only trim trailing whitespace to preserve indentation

@@ -27,10 +27,16 @@ export type ConnectionStatus =
 export interface UseRealtimeSyncOptions {
   /** WebSocket URL to connect to */
   url: string;
-  /** Interval between reconnection attempts (ms) */
+  /** Base interval between reconnection attempts (ms) */
   reconnectInterval?: number;
   /** Maximum number of reconnection attempts */
   maxReconnectAttempts?: number;
+  /** Enable exponential backoff for reconnection delays (default: false) */
+  exponentialBackoff?: boolean;
+  /** Maximum delay for exponential backoff (ms, default: 30000) */
+  maxDelayMs?: number;
+  /** Backoff multiplier (default: 2) */
+  backoffMultiplier?: number;
   /** Callback when a message is received */
   onMessage?: (data: unknown) => void;
   /** Callback when an error occurs */
@@ -62,6 +68,37 @@ export interface UseRealtimeSyncReturn {
 /**
  * Real-time sync hook using WebSocket
  */
+/**
+ * Calculate reconnection delay with optional exponential backoff.
+ *
+ * @param attempt - Current attempt number (0-based)
+ * @param baseDelay - Base delay in milliseconds
+ * @param options - Backoff options
+ * @returns Delay in milliseconds
+ */
+function calculateReconnectDelay(
+  attempt: number,
+  baseDelay: number,
+  options: {
+    exponentialBackoff?: boolean;
+    maxDelayMs?: number;
+    backoffMultiplier?: number;
+  }
+): number {
+  if (!options.exponentialBackoff) {
+    return baseDelay;
+  }
+
+  const multiplier = options.backoffMultiplier ?? 2;
+  const maxDelay = options.maxDelayMs ?? 30000;
+
+  // Exponential: baseDelay * multiplier^attempt
+  const exponentialDelay = baseDelay * Math.pow(multiplier, attempt);
+
+  // Cap at maximum
+  return Math.min(exponentialDelay, maxDelay);
+}
+
 export function useRealtimeSync(
   options: UseRealtimeSyncOptions,
 ): UseRealtimeSyncReturn {
@@ -69,6 +106,9 @@ export function useRealtimeSync(
     url,
     reconnectInterval = 1000,
     maxReconnectAttempts = 5,
+    exponentialBackoff = false,
+    maxDelayMs = 30000,
+    backoffMultiplier = 2,
     onMessage,
     onError,
     onConnect,
@@ -178,15 +218,22 @@ export function useRealtimeSync(
         setReconnectAttempts(nextAttempts);
         reconnectAttemptsRef.current = nextAttempts;
 
+        // Calculate delay with optional exponential backoff
+        const delay = calculateReconnectDelay(currentAttempts, reconnectInterval, {
+          exponentialBackoff,
+          maxDelayMs,
+          backoffMultiplier,
+        });
+
         reconnectTimeoutRef.current = setTimeout(() => {
           createConnection();
-        }, reconnectInterval);
+        }, delay);
       } else {
         setStatus("disconnected");
         callbacksRef.current.onDisconnect?.();
       }
     };
-  }, [url, reconnectInterval, maxReconnectAttempts, flushMessageQueue]);
+  }, [url, reconnectInterval, maxReconnectAttempts, exponentialBackoff, maxDelayMs, backoffMultiplier, flushMessageQueue]);
 
   /**
    * Send a message through the WebSocket

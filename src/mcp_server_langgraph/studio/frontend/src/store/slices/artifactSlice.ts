@@ -5,7 +5,7 @@
  * displayed in chat messages and other UI components.
  */
 
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createSelector, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
 import type { Artifact, ArtifactType } from "../../types/artifacts";
 
@@ -96,13 +96,37 @@ export const selectSelectedArtifactId = (state: RootState) =>
   state.artifact.selectedArtifactId;
 export const selectArtifactById = (id: string) => (state: RootState) =>
   state.artifact.artifacts.find((a) => a.id === id);
-export const selectArtifactsByType =
-  (type: ArtifactType) => (state: RootState) =>
-    state.artifact.artifacts.filter((a) => a.type === type);
-export const selectSelectedArtifact = (state: RootState) => {
-  const id = state.artifact.selectedArtifactId;
-  return id ? state.artifact.artifacts.find((a) => a.id === id) : null;
+/**
+ * Factory for selecting artifacts by type (memoized)
+ * Caches selector instances per type to prevent redundant filtering
+ */
+const selectArtifactsByTypeCache = new Map<
+  ArtifactType,
+  ReturnType<typeof createSelector<[typeof selectArtifacts], Artifact[]>>
+>();
+
+export const selectArtifactsByType = (type: ArtifactType) => {
+  if (!selectArtifactsByTypeCache.has(type)) {
+    selectArtifactsByTypeCache.set(
+      type,
+      createSelector([selectArtifacts], (artifacts): Artifact[] =>
+        artifacts.filter((a) => a.type === type),
+      ),
+    );
+  }
+  return selectArtifactsByTypeCache.get(type)!;
 };
+/**
+ * Select the currently selected artifact (memoized)
+ * Only recomputes when artifacts array or selectedArtifactId changes
+ */
+export const selectSelectedArtifact = createSelector(
+  [selectArtifacts, selectSelectedArtifactId],
+  (artifacts, selectedId): Artifact | null => {
+    if (!selectedId) return null;
+    return artifacts.find((a) => a.id === selectedId) ?? null;
+  },
+);
 
 // ============================================================================
 // Export

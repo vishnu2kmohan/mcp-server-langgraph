@@ -126,8 +126,10 @@ export function PanelTabs({
 
       if (newIndex !== currentIndex) {
         const targetTab = tabs[newIndex];
-        const targetElement = tabRefs.current.get(targetTab.id);
-        targetElement?.focus();
+        if (targetTab) {
+          const targetElement = tabRefs.current.get(targetTab.id);
+          targetElement?.focus();
+        }
       }
     },
     [tabs],

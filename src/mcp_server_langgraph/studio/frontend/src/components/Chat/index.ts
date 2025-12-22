@@ -75,3 +75,13 @@ export type { ExportButtonProps } from "./ExportButton";
 
 export { ChatHeader } from "./ChatHeader";
 export type { ChatHeaderProps, ConnectionMode } from "./ChatHeader";
+
+// =============================================================================
+// Agent Execution Trace Components
+// =============================================================================
+
+export { AgentExecutionTracePanel } from "./AgentExecutionTracePanel";
+export type { AgentExecutionTracePanelProps } from "./AgentExecutionTracePanel";
+
+export { AgentTraceToggleButton } from "./AgentTraceToggleButton";
+export type { AgentTraceToggleButtonProps } from "./AgentTraceToggleButton";

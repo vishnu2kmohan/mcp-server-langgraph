@@ -6,6 +6,9 @@
  */
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { axe, toHaveNoViolations } from "jest-axe";
+
+expect.extend(toHaveNoViolations);
 import {
   ComplianceDashboard,
   type ComplianceSummary,
@@ -124,6 +127,22 @@ describe("ComplianceDashboard", () => {
     it("shows empty state when no summary data", () => {
       render(<ComplianceDashboard summary={null} />);
       expect(screen.getByText(/no compliance data/i)).toBeInTheDocument();
+    });
+  });
+
+  describe("Accessibility (WCAG 2.1 AA)", () => {
+    it("should have no accessibility violations with data", async () => {
+      const { container } = render(
+        <ComplianceDashboard summary={mockSummary} />,
+      );
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it("should have no accessibility violations in empty state", async () => {
+      const { container } = render(<ComplianceDashboard summary={null} />);
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
     });
   });
 });

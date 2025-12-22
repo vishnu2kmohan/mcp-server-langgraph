@@ -4951,7 +4951,7 @@ export interface components {
        * @description Source application
        * @enum {string}
        */
-      app_name: "builder" | "playground";
+      app_name: "studio";
       /**
        * Events
        * @description List of events
@@ -5202,7 +5202,7 @@ export interface components {
        * @description Source application
        * @enum {string}
        */
-      app_name: "builder" | "playground";
+      app_name: "studio";
       engagement?: components["schemas"]["EngagementMetrics"] | null;
       happiness?: components["schemas"]["HappinessMetrics"] | null;
       retention?: components["schemas"]["RetentionMetrics"] | null;

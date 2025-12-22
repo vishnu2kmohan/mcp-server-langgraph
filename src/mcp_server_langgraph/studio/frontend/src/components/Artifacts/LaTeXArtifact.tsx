@@ -108,8 +108,11 @@ export function LaTeXArtifact({
   // Calculate distance between two touch points
   const getTouchDistance = useCallback((touches: React.TouchList) => {
     if (touches.length < 2) return 0;
-    const dx = touches[1].clientX - touches[0].clientX;
-    const dy = touches[1].clientY - touches[0].clientY;
+    const touch0 = touches[0];
+    const touch1 = touches[1];
+    if (!touch0 || !touch1) return 0;
+    const dx = touch1.clientX - touch0.clientX;
+    const dy = touch1.clientY - touch0.clientY;
     return Math.sqrt(dx * dx + dy * dy);
   }, []);
 

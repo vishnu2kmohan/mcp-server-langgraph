@@ -4,6 +4,7 @@
  * Provides common test wrappers and utilities for component testing.
  * Uses React Router v7 with its default behavior.
  * Includes Redux Provider for RTK Query testing.
+ * Includes TelemetryProvider for hooks that require telemetry context.
  */
 
 import { type ReactNode } from "react";
@@ -22,6 +23,13 @@ import authReducer from "./store/slices/authSlice";
 import notificationReducer from "./store/slices/notificationSlice";
 import observabilityReducer from "./store/slices/observabilitySlice";
 import workspaceReducer from "./store/slices/workspaceSlice";
+import canvasReducer from "./store/slices/canvasSlice";
+import backgroundAgentReducer from "./store/slices/backgroundAgentSlice";
+import aiContextReducer from "./store/slices/aiContextSlice";
+import complianceReducer from "./store/slices/complianceSlice";
+import helpReducer from "./store/slices/helpSlice";
+import alertReducer from "./store/slices/alertSlice";
+import { TelemetryProvider } from "./contexts/TelemetryContext";
 
 /**
  * Props for TestRouter component.
@@ -106,6 +114,12 @@ export function createTestStore() {
       notifications: notificationReducer,
       observability: observabilityReducer,
       workspace: workspaceReducer,
+      canvas: canvasReducer,
+      backgroundAgent: backgroundAgentReducer,
+      aiContext: aiContextReducer,
+      compliance: complianceReducer,
+      help: helpReducer,
+      alerts: alertReducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(api.middleware),
@@ -123,7 +137,8 @@ interface TestProviderProps {
 /**
  * TestProvider - A combined Provider wrapper for tests.
  *
- * Wraps children in both Redux Provider and Router for RTK Query testing.
+ * Wraps children in Redux Provider, Router, and TelemetryProvider for comprehensive testing.
+ * This ensures hooks like useSessionTelemetry work correctly in tests.
  *
  * @example
  * ```tsx
@@ -152,8 +167,10 @@ export function TestProvider({
   );
 
   return (
-    <Provider store={store}>
-      <RouterProvider router={router} />
-    </Provider>
+    <TelemetryProvider>
+      <Provider store={store}>
+        <RouterProvider router={router} />
+      </Provider>
+    </TelemetryProvider>
   );
 }

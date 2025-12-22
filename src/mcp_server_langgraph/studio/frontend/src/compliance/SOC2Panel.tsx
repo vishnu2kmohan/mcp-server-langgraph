@@ -17,6 +17,7 @@ import {
   XCircle,
   Loader2,
 } from "lucide-react";
+import { cn } from "../utils/cn";
 
 // =============================================================================
 // Types
@@ -45,10 +46,6 @@ export interface SOC2PanelProps {
 // =============================================================================
 // Utility
 // =============================================================================
-
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
 
 function getStatusIcon(status: ControlStatus) {
   switch (status) {

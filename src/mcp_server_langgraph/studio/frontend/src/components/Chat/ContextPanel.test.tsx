@@ -92,6 +92,25 @@ describe("ContextPanel", () => {
       render(<ContextPanel {...defaultProps} activities={[]} />);
       expect(screen.getByText(/no activity yet/i)).toBeInTheDocument();
     });
+
+    it("should format timestamps as hours ago", () => {
+      const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+      const activities = [
+        { timestamp: twoHoursAgo, action: "hours test", details: "test" },
+      ];
+      render(<ContextPanel {...defaultProps} activities={activities} />);
+      expect(screen.getByText(/2h ago/)).toBeInTheDocument();
+    });
+
+    it("should format timestamps as date when older than 24 hours", () => {
+      const twoDaysAgo = Date.now() - 2 * 24 * 60 * 60 * 1000;
+      const activities = [
+        { timestamp: twoDaysAgo, action: "days test", details: "test" },
+      ];
+      render(<ContextPanel {...defaultProps} activities={activities} />);
+      // Should show formatted date, not "xh ago"
+      expect(screen.queryByText(/h ago/)).not.toBeInTheDocument();
+    });
   });
 
   describe("Session Cost Section", () => {

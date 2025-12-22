@@ -12,6 +12,7 @@
 
 import { useState, useMemo } from "react";
 import { HelpCircle, Search, X, Loader2, BookOpen } from "lucide-react";
+import { cn } from "../utils/cn";
 
 // =============================================================================
 // Types
@@ -35,10 +36,6 @@ export interface HelpPaneProps {
 // =============================================================================
 // Utility
 // =============================================================================
-
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
 
 function getCategoryColor(category: string): string {
   switch (category) {

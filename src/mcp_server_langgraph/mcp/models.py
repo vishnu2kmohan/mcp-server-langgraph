@@ -5,7 +5,7 @@ Pydantic models for tool input validation.
 Follows Anthropic best practices for tool schemas.
 """
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -48,6 +48,16 @@ class ChatInput(BaseModel):
             "Response verbosity level. "
             "'concise' returns ~500 tokens (faster, less context). "
             "'detailed' returns ~2000 tokens (comprehensive, more context)."
+        ),
+    )
+
+    # Structured output validation (Claude Agent SDK pattern)
+    output_format: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Optional JSON Schema for structured output validation. "
+            "When provided, the agent response will be validated against this schema. "
+            "Format: {'type': 'json_schema', 'schema': {...JSON Schema...}}"
         ),
     )
 

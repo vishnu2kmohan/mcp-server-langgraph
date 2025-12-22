@@ -4,7 +4,7 @@
  * State management for compliance dashboard status.
  * Tracks SOC-2, HIPAA, GDPR, and FedRAMP compliance states.
  */
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createSelector, type PayloadAction } from "@reduxjs/toolkit";
 
 // =============================================================================
 // Types
@@ -147,9 +147,18 @@ export const selectFrameworkStatus = (
   framework: ComplianceFramework,
 ): FrameworkStatus => state.compliance.frameworks[framework];
 
-export const selectAllFrameworks = (
-  state: StateWithCompliance,
-): FrameworkStatus[] => Object.values(state.compliance.frameworks);
+// Base selector for frameworks object
+const selectFrameworksMap = (state: StateWithCompliance) =>
+  state.compliance.frameworks;
+
+/**
+ * Select all frameworks as array (memoized)
+ * Only recomputes when frameworks map changes
+ */
+export const selectAllFrameworks = createSelector(
+  [selectFrameworksMap],
+  (frameworks): FrameworkStatus[] => Object.values(frameworks),
+);
 
 export const selectOverallScore = (state: StateWithCompliance): number =>
   state.compliance.overallScore;

@@ -52,6 +52,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
       lastCallTime = now;
       return fn.apply(this, args);
     }
+    return undefined as ReturnType<T>;
   } as T;
 }
 
@@ -214,7 +215,7 @@ export function preloadResource(
   const link = document.createElement("link");
   link.rel = "preload";
   link.href = href;
-  link.as = as;
+  link.setAttribute("as", as);
 
   if (as === "font") {
     link.crossOrigin = "anonymous";

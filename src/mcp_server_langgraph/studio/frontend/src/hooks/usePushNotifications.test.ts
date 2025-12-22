@@ -115,14 +115,24 @@ describe("usePushNotifications", () => {
       expect(result.current.subscription).toBeNull();
     });
 
-    it("should expose subscribe function", () => {
+    it("should expose subscribe function", async () => {
       const { result } = renderHook(() => usePushNotifications());
+
+      // Wait for async initialization to complete
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
 
       expect(typeof result.current.subscribe).toBe("function");
     });
 
-    it("should expose unsubscribe function", () => {
+    it("should expose unsubscribe function", async () => {
       const { result } = renderHook(() => usePushNotifications());
+
+      // Wait for async initialization to complete
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
 
       expect(typeof result.current.unsubscribe).toBe("function");
     });
@@ -212,7 +222,7 @@ describe("usePushNotifications", () => {
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "/api/v1/notifications/subscribe",
+        "/api/v1/notifications/push/subscribe",
         expect.objectContaining({
           method: "POST",
           headers: expect.objectContaining({
@@ -269,6 +279,80 @@ describe("usePushNotifications", () => {
 
       consoleSpy.mockRestore();
     });
+
+    it("should handle non-Error exception in subscribe", async () => {
+      // Throw a non-Error value
+      mockPushManager.subscribe.mockRejectedValue("string error");
+
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const { result } = renderHook(() => usePushNotifications());
+
+      await act(async () => {
+        await result.current.subscribe();
+      });
+
+      expect(result.current.error).toBeDefined();
+      expect(result.current.error?.message).toBe("string error");
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should handle backend API failure on subscribe", async () => {
+      // Mock API returning error
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const { result } = renderHook(() => usePushNotifications());
+
+      await act(async () => {
+        await result.current.subscribe();
+      });
+
+      expect(result.current.error).toBeDefined();
+      expect(result.current.error?.message).toBe(
+        "Failed to register subscription with server",
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should set error when not supported", async () => {
+      // Remove PushManager to simulate unsupported
+      const originalPushManagerDesc = Object.getOwnPropertyDescriptor(
+        window,
+        "PushManager",
+      );
+      delete (window as { PushManager?: unknown }).PushManager;
+
+      const { result } = renderHook(() => usePushNotifications());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.subscribe();
+      });
+
+      expect(result.current.error).toBeDefined();
+      expect(result.current.error?.message).toBe(
+        "Push notifications are not supported",
+      );
+
+      // Restore
+      if (originalPushManagerDesc) {
+        Object.defineProperty(window, "PushManager", originalPushManagerDesc);
+      }
+    });
   });
 
   describe("Unsubscribe Flow", () => {
@@ -323,9 +407,12 @@ describe("usePushNotifications", () => {
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "/api/v1/notifications/unsubscribe",
+        "/api/v1/notifications/push/unsubscribe",
         expect.objectContaining({
-          method: "POST",
+          method: "DELETE",
+          headers: expect.objectContaining({
+            "Content-Type": "application/json",
+          }),
         }),
       );
     });
@@ -357,6 +444,98 @@ describe("usePushNotifications", () => {
 
       expect(result.current.subscription).toBeNull();
     });
+
+    it("should handle unsubscribe error with Error object", async () => {
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const { result } = renderHook(() => usePushNotifications());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // First subscribe
+      await act(async () => {
+        await result.current.subscribe();
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSubscribed).toBe(true);
+      });
+
+      // Make unsubscribe fail
+      const mockSub = result.current.subscription as PushSubscription & {
+        unsubscribe: ReturnType<typeof vi.fn>;
+      };
+      mockSub.unsubscribe = vi
+        .fn()
+        .mockRejectedValue(new Error("Unsubscribe failed"));
+
+      await act(async () => {
+        await result.current.unsubscribe();
+      });
+
+      expect(result.current.error).toBeDefined();
+      expect(result.current.error?.message).toBe("Unsubscribe failed");
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should handle unsubscribe error with non-Error exception", async () => {
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const { result } = renderHook(() => usePushNotifications());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // First subscribe
+      await act(async () => {
+        await result.current.subscribe();
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSubscribed).toBe(true);
+      });
+
+      // Make unsubscribe fail with non-Error
+      const mockSub = result.current.subscription as PushSubscription & {
+        unsubscribe: ReturnType<typeof vi.fn>;
+      };
+      mockSub.unsubscribe = vi.fn().mockRejectedValue("string unsubscribe error");
+
+      await act(async () => {
+        await result.current.unsubscribe();
+      });
+
+      expect(result.current.error).toBeDefined();
+      expect(result.current.error?.message).toBe("string unsubscribe error");
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should do nothing when unsubscribing without subscription", async () => {
+      const { result } = renderHook(() => usePushNotifications());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.subscription).toBeNull();
+
+      // Unsubscribe should be a no-op
+      await act(async () => {
+        await result.current.unsubscribe();
+      });
+
+      // No error should occur
+      expect(result.current.error).toBeNull();
+    });
   });
 
   describe("Existing Subscription Detection", () => {
@@ -381,6 +560,48 @@ describe("usePushNotifications", () => {
       });
 
       expect(result.current.subscription).not.toBeNull();
+    });
+
+    it("should handle error when checking subscription on mount", async () => {
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      // Make getSubscription reject with an Error
+      mockPushManager.getSubscription.mockRejectedValue(
+        new Error("Failed to get subscription"),
+      );
+
+      const { result } = renderHook(() => usePushNotifications());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.error).toBeDefined();
+      expect(result.current.error?.message).toBe("Failed to get subscription");
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should handle non-Error exception in checkSubscription", async () => {
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      // Make getSubscription reject with a non-Error value
+      mockPushManager.getSubscription.mockRejectedValue("string error on mount");
+
+      const { result } = renderHook(() => usePushNotifications());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.error).toBeDefined();
+      expect(result.current.error?.message).toBe("string error on mount");
+
+      consoleSpy.mockRestore();
     });
   });
 });

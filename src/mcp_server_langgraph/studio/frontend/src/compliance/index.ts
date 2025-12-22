@@ -33,5 +33,20 @@ export {
   type ComplianceDashboardProps,
 } from "./ComplianceDashboard";
 
+export {
+  AuditExporter,
+  type AuditLog,
+  type AuditFilter,
+  type ExportFormat,
+  type ExportRequest,
+  type ExportResult,
+  type AuditExporterProps,
+} from "./AuditExporter";
+
+export {
+  ConnectedComplianceDashboard,
+  type ConnectedComplianceDashboardProps,
+} from "./ConnectedComplianceDashboard";
+
 // Re-export shared type (defined in multiple modules)
 export type { ControlStatus } from "./SOC2Panel";

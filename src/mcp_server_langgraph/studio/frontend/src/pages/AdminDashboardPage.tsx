@@ -122,7 +122,7 @@ export function AdminDashboardPage() {
   const handleInvite = (email: string, roles: string[]) => {
     // Create user with email as username (simplified)
     createUser({
-      username: email.split("@")[0],
+      username: email.split("@")[0] ?? email,
       email,
       password: "temporary", // In real app, this would trigger email invite
       roles,

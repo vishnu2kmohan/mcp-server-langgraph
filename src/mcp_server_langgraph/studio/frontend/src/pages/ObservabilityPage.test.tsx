@@ -11,8 +11,12 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
 import { ObservabilityPage } from "./ObservabilityPage";
 import { TestProvider } from "../test-utils";
+import observabilityReducer from "../store/slices/observabilitySlice";
 
 // Mock the RTK Query hooks
 const mockRefetchTraces = vi.fn();
@@ -849,6 +853,1454 @@ describe("ObservabilityPage", () => {
       await waitFor(() => {
         expect(screen.getByText("No alerts found")).toBeInTheDocument();
       });
+    });
+  });
+
+  describe("URL Tab Sync", () => {
+    // Helper to render with specific initial route
+    const renderWithRoute = (initialPath: string) => {
+      const store = configureStore({
+        reducer: {
+          observability: observabilityReducer,
+        },
+      });
+
+      return render(
+        <Provider store={store}>
+          <MemoryRouter initialEntries={[initialPath]}>
+            <Routes>
+              <Route path="/observability" element={<ObservabilityPage />} />
+              <Route
+                path="/observability/traces"
+                element={<ObservabilityPage />}
+              />
+              <Route path="/observability/logs" element={<ObservabilityPage />} />
+              <Route
+                path="/observability/metrics"
+                element={<ObservabilityPage />}
+              />
+              <Route
+                path="/observability/alerts"
+                element={<ObservabilityPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </Provider>,
+      );
+    };
+
+    it("should show traces tab when URL path is /observability/traces", async () => {
+      renderWithRoute("/observability/traces");
+
+      await waitFor(() => {
+        // Traces tab should be active - traces content should be visible
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+    });
+
+    it("should show logs tab when URL path is /observability/logs", async () => {
+      renderWithRoute("/observability/logs");
+
+      await waitFor(() => {
+        // Logs tab should be active - logs content should be visible
+        expect(screen.getByText("Processing request")).toBeInTheDocument();
+      });
+    });
+
+    it("should show metrics tab when URL path is /observability/metrics", async () => {
+      renderWithRoute("/observability/metrics");
+
+      await waitFor(() => {
+        // Metrics tab should be active - metrics content should be visible
+        expect(screen.getByText("Total Requests")).toBeInTheDocument();
+      });
+    });
+
+    it("should show alerts tab when URL path is /observability/alerts", async () => {
+      renderWithRoute("/observability/alerts");
+
+      await waitFor(() => {
+        // Alerts tab should be active - alerts content should be visible
+        expect(screen.getByText("High Memory Usage")).toBeInTheDocument();
+      });
+    });
+
+    it("should default to traces tab when URL path is /observability", async () => {
+      renderWithRoute("/observability");
+
+      await waitFor(() => {
+        // Default to traces tab
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Time Range Filter Edge Cases", () => {
+    it("should have default time range option selected", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      // Default is "1h" from Redux observabilitySlice initial state
+      expect(timeRangeSelect).toHaveValue("1h");
+    });
+
+    it("should support changing to 15m time range", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      fireEvent.change(timeRangeSelect, { target: { value: "15m" } });
+
+      await waitFor(() => {
+        expect(mockUseListTracesQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ start_time: expect.any(String) }),
+        );
+      });
+    });
+
+    it("should support changing to 1h time range", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      fireEvent.change(timeRangeSelect, { target: { value: "1h" } });
+
+      await waitFor(() => {
+        expect(mockUseListTracesQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ start_time: expect.any(String) }),
+        );
+      });
+    });
+
+    it("should support changing to 24h time range", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      fireEvent.change(timeRangeSelect, { target: { value: "24h" } });
+
+      await waitFor(() => {
+        expect(mockUseListTracesQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ start_time: expect.any(String) }),
+        );
+      });
+    });
+
+    it("should support changing to 7d time range", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      fireEvent.change(timeRangeSelect, { target: { value: "7d" } });
+
+      await waitFor(() => {
+        expect(mockUseListTracesQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ start_time: expect.any(String) }),
+        );
+      });
+    });
+
+    it("should support changing to all time range", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      fireEvent.change(timeRangeSelect, { target: { value: "all" } });
+
+      await waitFor(() => {
+        expect(mockUseListTracesQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ start_time: undefined }),
+        );
+      });
+    });
+  });
+
+  describe("Log Level Display Edge Cases", () => {
+    it("should display warn level with yellow styling", async () => {
+      const logsWithWarn = [
+        {
+          id: "log-warn",
+          level: "warn",
+          message: "Warning message",
+          timestamp: new Date().toISOString(),
+          service: "test",
+        },
+      ];
+
+      mockUseListLogsQuery.mockReturnValue({
+        data: { items: logsWithWarn, total: 1, limit: 50 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchLogs,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Logs"));
+
+      await waitFor(() => {
+        const warnBadge = screen.getByText("warn");
+        expect(warnBadge).toBeInTheDocument();
+        expect(warnBadge).toHaveClass("bg-yellow-100");
+      });
+    });
+
+    it("should display debug level with gray styling", async () => {
+      const logsWithDebug = [
+        {
+          id: "log-debug",
+          level: "debug",
+          message: "Debug message",
+          timestamp: new Date().toISOString(),
+          service: "test",
+        },
+      ];
+
+      mockUseListLogsQuery.mockReturnValue({
+        data: { items: logsWithDebug, total: 1, limit: 50 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchLogs,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Logs"));
+
+      await waitFor(() => {
+        const debugBadge = screen.getByText("debug");
+        expect(debugBadge).toBeInTheDocument();
+        expect(debugBadge).toHaveClass("bg-gray-100");
+      });
+    });
+
+    it("should display log without service field", async () => {
+      const logsWithoutService = [
+        {
+          id: "log-no-service",
+          level: "info",
+          message: "Message without service",
+          timestamp: new Date().toISOString(),
+          service: undefined,
+        },
+      ];
+
+      mockUseListLogsQuery.mockReturnValue({
+        data: { items: logsWithoutService, total: 1, limit: 50 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchLogs,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Logs"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Message without service")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Trace Status Display Edge Cases", () => {
+    it("should display error status with red styling", async () => {
+      const tracesWithError = [
+        {
+          trace_id: "error-trace",
+          span_id: "s1",
+          name: "failed/operation",
+          start_time: new Date().toISOString(),
+          end_time: new Date(Date.now() + 1000).toISOString(),
+          status: "error",
+          attributes: {},
+        },
+      ];
+
+      mockUseListTracesQuery.mockReturnValue({
+        data: { items: tracesWithError, total: 1, limit: 50 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchTraces,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        const errorBadge = screen.getByText("error");
+        expect(errorBadge).toBeInTheDocument();
+        expect(errorBadge).toHaveClass("bg-red-100");
+      });
+    });
+
+    it("should display running status with blue styling", async () => {
+      const tracesWithRunning = [
+        {
+          trace_id: "running-trace",
+          span_id: "s1",
+          name: "in-progress/operation",
+          start_time: new Date().toISOString(),
+          end_time: new Date(Date.now() + 1000).toISOString(),
+          status: "running",
+          attributes: {},
+        },
+      ];
+
+      mockUseListTracesQuery.mockReturnValue({
+        data: { items: tracesWithRunning, total: 1, limit: 50 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchTraces,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        const runningBadge = screen.getByText("running");
+        expect(runningBadge).toBeInTheDocument();
+        expect(runningBadge).toHaveClass("bg-blue-100");
+      });
+    });
+
+    it("should have running status filter button", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      expect(
+        screen.getByRole("button", { name: /^running$/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should call hook with running status when selected", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /^running$/i }));
+
+      await waitFor(() => {
+        expect(mockUseListTracesQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ status: "running" }),
+        );
+      });
+    });
+  });
+
+  describe("Alert Severity Edge Cases", () => {
+    it("should display error severity alert with orange styling", async () => {
+      const alertsWithErrorSeverity = [
+        {
+          alert_id: "alert-error",
+          name: "Error Severity Alert",
+          severity: "error",
+          state: "firing",
+          message: "Error level alert",
+          labels: { service: "test" },
+          annotations: {},
+          started_at: new Date().toISOString(),
+          ended_at: null,
+          generator_url: null,
+        },
+      ];
+
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: alertsWithErrorSeverity, total: 1 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        // The error severity badge (not the state)
+        const severityBadges = screen.getAllByText("error");
+        const severityBadge = severityBadges.find(el => el.classList.contains("bg-orange-100"));
+        expect(severityBadge).toBeInTheDocument();
+      });
+    });
+
+    it("should display info severity alert with blue styling", async () => {
+      const alertsWithInfoSeverity = [
+        {
+          alert_id: "alert-info",
+          name: "Info Severity Alert",
+          severity: "info",
+          state: "pending",
+          message: "Info level alert",
+          labels: { service: "test" },
+          annotations: {},
+          started_at: new Date().toISOString(),
+          ended_at: null,
+          generator_url: null,
+        },
+      ];
+
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: alertsWithInfoSeverity, total: 1 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        const infoBadge = screen.getByText("info");
+        expect(infoBadge).toBeInTheDocument();
+        expect(infoBadge).toHaveClass("bg-blue-100");
+      });
+    });
+  });
+
+  describe("Alert State Edge Cases", () => {
+    it("should display pending state alert with yellow styling", async () => {
+      const alertsWithPendingState = [
+        {
+          alert_id: "alert-pending",
+          name: "Pending State Alert",
+          severity: "warning",
+          state: "pending",
+          message: "Pending alert",
+          labels: { service: "test" },
+          annotations: {},
+          started_at: new Date().toISOString(),
+          ended_at: null,
+          generator_url: null,
+        },
+      ];
+
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: alertsWithPendingState, total: 1 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        // State badge (not the filter button)
+        const stateBadges = screen.getAllByText("pending");
+        const stateBadge = stateBadges.find(el => el.classList.contains("rounded-full"));
+        expect(stateBadge).toBeInTheDocument();
+        expect(stateBadge).toHaveClass("bg-yellow-100");
+      });
+    });
+
+    it("should display resolved state alert with green styling", async () => {
+      const alertsWithResolvedState = [
+        {
+          alert_id: "alert-resolved",
+          name: "Resolved State Alert",
+          severity: "info",
+          state: "resolved",
+          message: "Resolved alert",
+          labels: { service: "test" },
+          annotations: {},
+          started_at: new Date().toISOString(),
+          ended_at: new Date().toISOString(),
+          generator_url: null,
+        },
+      ];
+
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: alertsWithResolvedState, total: 1 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        // State badge (not the filter button)
+        const stateBadges = screen.getAllByText("resolved");
+        const stateBadge = stateBadges.find(el => el.classList.contains("rounded-full"));
+        expect(stateBadge).toBeInTheDocument();
+        expect(stateBadge).toHaveClass("bg-green-100");
+      });
+    });
+
+    it("should display silenced state alert with gray styling", async () => {
+      const alertsWithSilencedState = [
+        {
+          alert_id: "alert-silenced",
+          name: "Silenced State Alert",
+          severity: "warning",
+          state: "silenced",
+          message: "Silenced alert",
+          labels: { service: "test" },
+          annotations: {},
+          started_at: new Date().toISOString(),
+          ended_at: null,
+          generator_url: null,
+        },
+      ];
+
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: alertsWithSilencedState, total: 1 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        const silencedBadge = screen.getByText("silenced");
+        expect(silencedBadge).toBeInTheDocument();
+        expect(silencedBadge).toHaveClass("bg-gray-100");
+      });
+    });
+  });
+
+  describe("Alert Message Fallback Edge Cases", () => {
+    it("should display annotation summary when message is empty", async () => {
+      const alertsWithSummary = [
+        {
+          alert_id: "alert-summary",
+          name: "Alert With Summary",
+          severity: "warning",
+          state: "firing",
+          message: "",
+          labels: { service: "test" },
+          annotations: { summary: "This is the summary annotation" },
+          started_at: new Date().toISOString(),
+          ended_at: null,
+          generator_url: null,
+        },
+      ];
+
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: alertsWithSummary, total: 1 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("This is the summary annotation")).toBeInTheDocument();
+      });
+    });
+
+    it("should display 'No description' when message and annotations are empty", async () => {
+      const alertsWithNoDescription = [
+        {
+          alert_id: "alert-no-desc",
+          name: "Alert With No Description",
+          severity: "warning",
+          state: "firing",
+          message: "",
+          labels: { service: "test" },
+          annotations: {},
+          started_at: new Date().toISOString(),
+          ended_at: null,
+          generator_url: null,
+        },
+      ];
+
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: alertsWithNoDescription, total: 1 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("No description")).toBeInTheDocument();
+      });
+    });
+
+    it("should display alert without started_at date", async () => {
+      const alertsWithoutStartedAt = [
+        {
+          alert_id: "alert-no-start",
+          name: "Alert Without Start Time",
+          severity: "warning",
+          state: "pending",
+          message: "Alert message",
+          labels: { service: "test" },
+          annotations: {},
+          started_at: null,
+          ended_at: null,
+          generator_url: null,
+        },
+      ];
+
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: alertsWithoutStartedAt, total: 1 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Alert Without Start Time")).toBeInTheDocument();
+        // Should NOT show "Started" text when started_at is null
+        expect(screen.queryByText(/Started/)).not.toBeInTheDocument();
+      });
+    });
+
+    it("should display external link when generator_url is present", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("High Memory Usage")).toBeInTheDocument();
+      });
+
+      // First alert has generator_url
+      const externalLinks = screen.getAllByTitle("View in Grafana");
+      expect(externalLinks.length).toBeGreaterThan(0);
+      expect(externalLinks[0]).toHaveAttribute("href", "http://grafana/alerting/1");
+    });
+
+    it("should not display external link when generator_url is null", async () => {
+      const alertsWithoutGeneratorUrl = [
+        {
+          alert_id: "alert-no-url",
+          name: "Alert Without Generator URL",
+          severity: "warning",
+          state: "firing",
+          message: "Alert message",
+          labels: {},
+          annotations: {},
+          started_at: new Date().toISOString(),
+          ended_at: null,
+          generator_url: null,
+        },
+      ];
+
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: alertsWithoutGeneratorUrl, total: 1 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Alert Without Generator URL")).toBeInTheDocument();
+      });
+
+      expect(screen.queryByTitle("View in Grafana")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Loading States for Different Tabs", () => {
+    it("should show loading skeleton for logs tab", async () => {
+      mockUseListLogsQuery.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: null,
+        refetch: mockRefetchLogs,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Logs"));
+
+      await waitFor(() => {
+        expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+      });
+    });
+
+    it("should show loading skeleton for metrics tab", async () => {
+      mockUseGetMetricsQuery.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: null,
+        refetch: mockRefetchMetrics,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Metrics"));
+
+      await waitFor(() => {
+        expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+      });
+    });
+
+    it("should show loading skeleton for alerts tab", async () => {
+      mockUseListAlertsQuery.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Error States for Different Tabs", () => {
+    it("should show error for logs tab", async () => {
+      mockUseListLogsQuery.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: { status: 500 },
+        refetch: mockRefetchLogs,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Logs"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to load/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should show error for metrics tab", async () => {
+      mockUseGetMetricsQuery.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: { status: 500 },
+        refetch: mockRefetchMetrics,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Metrics"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to load/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should show error for alerts tab", async () => {
+      mockUseListAlertsQuery.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: { status: 500 },
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to load/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Refresh Button for Different Tabs", () => {
+    it("should call refetchTraces when refresh is clicked on traces tab", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Refresh"));
+
+      expect(mockRefetchTraces).toHaveBeenCalled();
+    });
+
+    it("should call refetchLogs when refresh is clicked on logs tab", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Logs"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Processing request")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Refresh"));
+
+      expect(mockRefetchLogs).toHaveBeenCalled();
+    });
+
+    it("should call refetchMetrics when refresh is clicked on metrics tab", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Metrics"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Total Requests")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Refresh"));
+
+      expect(mockRefetchMetrics).toHaveBeenCalled();
+    });
+
+    it("should call refetchAlerts when refresh is clicked on alerts tab", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("High Memory Usage")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Refresh"));
+
+      expect(mockRefetchAlerts).toHaveBeenCalled();
+    });
+  });
+
+  describe("Entity ID Filters", () => {
+    it("should have user ID filter input", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      expect(screen.getByPlaceholderText(/user id/i)).toBeInTheDocument();
+    });
+
+    it("should have workflow ID filter input", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      expect(screen.getByPlaceholderText(/workflow id/i)).toBeInTheDocument();
+    });
+
+    it("should have project ID filter input", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      expect(screen.getByPlaceholderText(/project id/i)).toBeInTheDocument();
+    });
+
+    it("should call hook with user_id filter when entered", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      const userIdInput = screen.getByPlaceholderText(/user id/i);
+      fireEvent.change(userIdInput, { target: { value: "user-123" } });
+
+      await waitFor(() => {
+        expect(mockUseListTracesQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ user_id: "user-123" }),
+        );
+      });
+    });
+
+    it("should call hook with workflow_id filter when entered", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      const workflowIdInput = screen.getByPlaceholderText(/workflow id/i);
+      fireEvent.change(workflowIdInput, { target: { value: "workflow-456" } });
+
+      await waitFor(() => {
+        expect(mockUseListTracesQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ workflow_id: "workflow-456" }),
+        );
+      });
+    });
+
+    it("should call hook with project_id filter when entered", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      const projectIdInput = screen.getByPlaceholderText(/project id/i);
+      fireEvent.change(projectIdInput, { target: { value: "project-789" } });
+
+      await waitFor(() => {
+        expect(mockUseListTracesQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ project_id: "project-789" }),
+        );
+      });
+    });
+  });
+
+  describe("Trace Selection and Detail View", () => {
+    it("should select trace when clicked", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on the trace card
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // The trace should be selected (highlighted)
+      await waitFor(() => {
+        const traceCard = screen.getByText("chat/completion").closest("[class*='cursor-pointer']");
+        expect(traceCard).toHaveClass("border-blue-500");
+      });
+    });
+
+    it("should show TraceViewer when trace is selected with data", async () => {
+      // Mock the trace detail query to return data
+      mockUseGetTraceQuery.mockReturnValue({
+        data: {
+          trace_id: "1",
+          spans: [
+            {
+              span_id: "span-1",
+              name: "Main Span",
+              start_time: new Date().toISOString(),
+              duration_ms: 100,
+              status: "ok",
+              depth: 0,
+              attributes: {},
+              events: [],
+              error_message: null,
+              parent_span_id: null,
+            },
+          ],
+          start_time: new Date().toISOString(),
+          end_time: new Date(Date.now() + 1000).toISOString(),
+          duration_ms: 1000,
+          service_name: "test-service",
+        },
+        isLoading: false,
+        error: null,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on the trace card
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show trace details panel
+      await waitFor(() => {
+        expect(screen.getByText("Trace Details")).toBeInTheDocument();
+      });
+    });
+
+    it("should close TraceViewer when close button is clicked", async () => {
+      mockUseGetTraceQuery.mockReturnValue({
+        data: {
+          trace_id: "1",
+          spans: [],
+          start_time: new Date().toISOString(),
+          end_time: new Date(Date.now() + 1000).toISOString(),
+          duration_ms: 1000,
+          service_name: "test-service",
+        },
+        isLoading: false,
+        error: null,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on the trace card
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Trace Details")).toBeInTheDocument();
+      });
+
+      // Click close button
+      fireEvent.click(screen.getByText("Close"));
+
+      await waitFor(() => {
+        expect(screen.queryByText("Trace Details")).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Alert Filters Edge Cases", () => {
+    it("should have severity filter dropdown", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("High Memory Usage")).toBeInTheDocument();
+      });
+
+      expect(screen.getByRole("combobox")).toBeInTheDocument();
+    });
+
+    it("should call alerts hook with state filter when selected", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("High Memory Usage")).toBeInTheDocument();
+      });
+
+      // Click the Firing filter button
+      fireEvent.click(screen.getByRole("button", { name: /^Firing$/i }));
+
+      await waitFor(() => {
+        expect(mockUseListAlertsQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ state: "firing" }),
+          expect.anything(),
+        );
+      });
+    });
+
+    it("should call alerts hook with severity filter when selected", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("High Memory Usage")).toBeInTheDocument();
+      });
+
+      // Change the severity dropdown
+      const severitySelect = screen.getByRole("combobox");
+      fireEvent.change(severitySelect, { target: { value: "critical" } });
+
+      await waitFor(() => {
+        expect(mockUseListAlertsQuery).toHaveBeenCalledWith(
+          expect.objectContaining({ severity: "critical" }),
+          expect.anything(),
+        );
+      });
+    });
+
+    it("should show alert count", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("2 alerts")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Empty Metrics State", () => {
+    it("should show empty state when no metrics data available", async () => {
+      mockUseGetMetricsQuery.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchMetrics,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Metrics"));
+
+      await waitFor(() => {
+        expect(screen.getByText("No metrics data available")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Load More Button States", () => {
+    it("should show loading state on Load More button when fetching", async () => {
+      mockUseListTracesQuery.mockReturnValue({
+        data: {
+          items: mockTraces,
+          total: 100,
+          limit: 50,
+          next_cursor: "next-page-cursor",
+        },
+        isLoading: false,
+        isFetching: true,
+        error: null,
+        refetch: mockRefetchTraces,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Loading...")).toBeInTheDocument();
+      });
+    });
+
+    it("should disable Load More button when fetching", async () => {
+      mockUseListTracesQuery.mockReturnValue({
+        data: {
+          items: mockTraces,
+          total: 100,
+          limit: 50,
+          next_cursor: "next-page-cursor",
+        },
+        isLoading: false,
+        isFetching: true,
+        error: null,
+        refetch: mockRefetchTraces,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        const loadMoreButton = screen.getByRole("button", { name: /loading/i });
+        expect(loadMoreButton).toBeDisabled();
+      });
+    });
+  });
+
+  describe("Alert Labels Display", () => {
+    it("should not display alertname and severity in labels", async () => {
+      const alertsWithFilteredLabels = [
+        {
+          alert_id: "alert-labels",
+          name: "Alert With Labels",
+          severity: "warning",
+          state: "firing",
+          message: "Alert message",
+          labels: {
+            alertname: "TestAlert",
+            severity: "warning",
+            service: "test-service",
+            environment: "production",
+          },
+          annotations: {},
+          started_at: new Date().toISOString(),
+          ended_at: null,
+          generator_url: null,
+        },
+      ];
+
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: alertsWithFilteredLabels, total: 1 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Alert With Labels")).toBeInTheDocument();
+      });
+
+      // Should display service and environment
+      expect(screen.getByText("service=test-service")).toBeInTheDocument();
+      expect(screen.getByText("environment=production")).toBeInTheDocument();
+      // Should NOT display alertname and severity in labels
+      expect(screen.queryByText("alertname=TestAlert")).not.toBeInTheDocument();
+      expect(screen.queryByText("severity=warning")).not.toBeInTheDocument();
+    });
+
+    it("should limit labels to 5 displayed", async () => {
+      const alertsWithManyLabels = [
+        {
+          alert_id: "alert-many-labels",
+          name: "Alert With Many Labels",
+          severity: "warning",
+          state: "firing",
+          message: "Alert message",
+          labels: {
+            label1: "value1",
+            label2: "value2",
+            label3: "value3",
+            label4: "value4",
+            label5: "value5",
+            label6: "value6",
+            label7: "value7",
+          },
+          annotations: {},
+          started_at: new Date().toISOString(),
+          ended_at: null,
+          generator_url: null,
+        },
+      ];
+
+      mockUseListAlertsQuery.mockReturnValue({
+        data: { items: alertsWithManyLabels, total: 1 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchAlerts,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Alert With Many Labels")).toBeInTheDocument();
+      });
+
+      // Should only display 5 labels
+      expect(screen.getByText("label1=value1")).toBeInTheDocument();
+      expect(screen.getByText("label5=value5")).toBeInTheDocument();
+      expect(screen.queryByText("label6=value6")).not.toBeInTheDocument();
+      expect(screen.queryByText("label7=value7")).not.toBeInTheDocument();
     });
   });
 });

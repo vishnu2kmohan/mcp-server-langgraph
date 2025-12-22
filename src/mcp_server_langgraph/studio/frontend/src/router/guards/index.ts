@@ -11,3 +11,7 @@ export {
   HybridShellGuard,
   type HybridShellGuardProps,
 } from "./HybridShellGuard";
+export {
+  PermissionGuard,
+  type PermissionGuardProps,
+} from "./PermissionGuard";

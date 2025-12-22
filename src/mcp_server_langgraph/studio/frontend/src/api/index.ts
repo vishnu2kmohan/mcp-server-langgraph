@@ -111,7 +111,49 @@ import type {
   // Session Export
   SessionExportRequest,
   ExportFormat,
+  // Infrastructure Alerts & Remediations
+  AIRecommendation,
+  RemediationRequest,
+  RemediationListParams,
+  ApproveRemediationRequest,
+  RejectRemediationRequest,
+  // Agent HITL Requests
+  PendingAgentRequestsResponse,
+  AgentRequestActionResponse,
+  ApproveAgentRequestParams,
+  RejectAgentRequestParams,
+  RespondAgentRequestParams,
+  BatchApproveAgentRequestParams,
+  BatchRejectAgentRequestParams,
+  BatchAgentRequestResponse,
+  ListPendingAgentRequestsParams,
+  // MCP Protocol Types
+  McpResourceListResponse,
+  McpResourceContentResponse,
+  McpReadResourceRequest,
+  McpToolListResponse,
+  McpInvokeToolRequest,
+  McpToolInvocationResponse,
+  McpSamplingRequest,
+  McpSamplingResponse,
+  McpElicitationRequest,
+  McpElicitationResponse,
+  McpPromptListResponse,
+  McpGetPromptRequest,
+  McpGetPromptResponse,
+  McpTaskListResponse,
+  McpTask,
 } from "../types/api";
+import type {
+  CanvasArtifact,
+  ArtifactVersion,
+  CreateArtifactRequest,
+  CreateArtifactResponse,
+  UpdateArtifactRequest,
+  UpdateArtifactResponse,
+  ForkArtifactResponse,
+  ListArtifactsResponse,
+} from "../types/artifacts";
 import type {
   MCPConnection,
   MCPConnectionCreate,
@@ -216,7 +258,7 @@ function periodToDateRange(period: string): {
   end_date: string;
 } {
   const now = new Date();
-  const end_date = now.toISOString().split("T")[0];
+  const end_date = now.toISOString().split("T")[0] ?? "";
 
   let daysBack = 30; // default
   if (period === "day") {
@@ -231,7 +273,7 @@ function periodToDateRange(period: string): {
 
   const startDate = new Date(now);
   startDate.setDate(startDate.getDate() - daysBack);
-  const start_date = startDate.toISOString().split("T")[0];
+  const start_date = startDate.toISOString().split("T")[0] ?? "";
 
   return { start_date, end_date };
 }
@@ -264,12 +306,19 @@ export const api = createApi({
     "ConnectionTemplate",
     "ConnectionAudit",
     "UserPreferences",
+    "InfraAlert",
+    "Remediation",
+    "Artifact",
+    "AgentRequest",
+    "AIUx",
+    "Mcp",
   ],
   endpoints: (builder) => ({
     // Feature Flags
     getFeatureFlags: builder.query<FeatureFlags, void>({
       query: () => "/features",
       providesTags: ["FeatureFlags"],
+      keepUnusedDataFor: 600, // 10 minutes - feature flags rarely change
     }),
 
     // Workflows
@@ -963,6 +1012,7 @@ export const api = createApi({
       transformResponse: (response: { collections: VectorCollection[] }) =>
         response.collections,
       providesTags: ["Vector"],
+      keepUnusedDataFor: 300, // 5 minutes - collection metadata is stable
     }),
 
     createVectorCollection: builder.mutation<
@@ -1029,6 +1079,7 @@ export const api = createApi({
     getAgentConfig: builder.query<AgentConfig, void>({
       query: () => "/agents/config",
       providesTags: ["Agent"],
+      keepUnusedDataFor: 300, // 5 minutes - agent config rarely changes
     }),
 
     // Audit Logs (Admin)
@@ -1151,6 +1202,7 @@ export const api = createApi({
     // Health
     getHealth: builder.query<HealthStatus, void>({
       query: () => "/health",
+      keepUnusedDataFor: 30, // 30 seconds - health status can change
     }),
 
     // HEART Metrics
@@ -1179,6 +1231,7 @@ export const api = createApi({
       void
     >({
       query: () => "/studio/templates",
+      keepUnusedDataFor: 1800, // 30 minutes - workflow templates are stable
     }),
 
     // AI Suggestions (legacy - deprecated, use getAISuggestions instead)
@@ -1351,6 +1404,7 @@ export const api = createApi({
       void
     >({
       query: () => "/identity-providers",
+      keepUnusedDataFor: 3600, // 1 hour - identity providers are very stable
     }),
 
     // Feedback Submission (NPS/CSAT)
@@ -1384,6 +1438,7 @@ export const api = createApi({
     getNotificationPreferences: builder.query<NotificationPreferences, void>({
       query: () => "/notifications/preferences",
       providesTags: ["NotificationPreferences"],
+      keepUnusedDataFor: 120, // 2 minutes - user preferences
     }),
 
     updateNotificationPreferences: builder.mutation<
@@ -1571,6 +1626,7 @@ export const api = createApi({
         params,
       }),
       providesTags: ["ComplianceReport"],
+      keepUnusedDataFor: 600, // 10 minutes - compliance reports are stable
     }),
 
     getHipaaReport: builder.query<
@@ -1582,6 +1638,7 @@ export const api = createApi({
         params,
       }),
       providesTags: ["ComplianceReport"],
+      keepUnusedDataFor: 600, // 10 minutes - compliance reports are stable
     }),
 
     getSoc2Report: builder.query<
@@ -1593,6 +1650,7 @@ export const api = createApi({
         params,
       }),
       providesTags: ["ComplianceReport"],
+      keepUnusedDataFor: 600, // 10 minutes - compliance reports are stable
     }),
 
     getFedrampReport: builder.query<
@@ -1604,6 +1662,7 @@ export const api = createApi({
         params,
       }),
       providesTags: ["ComplianceReport"],
+      keepUnusedDataFor: 600, // 10 minutes - compliance reports are stable
     }),
 
     getEuAiActReport: builder.query<
@@ -1615,6 +1674,7 @@ export const api = createApi({
         params,
       }),
       providesTags: ["ComplianceReport"],
+      keepUnusedDataFor: 600, // 10 minutes - compliance reports are stable
     }),
 
     getComplianceSummary: builder.query<
@@ -1626,6 +1686,7 @@ export const api = createApi({
         params,
       }),
       providesTags: ["ComplianceReport"],
+      keepUnusedDataFor: 300, // 5 minutes - summary may be viewed more often
     }),
 
     // =========================================================================
@@ -1644,6 +1705,7 @@ export const api = createApi({
     >({
       query: () => "/connection-templates/categories",
       providesTags: ["ConnectionTemplate"],
+      keepUnusedDataFor: 3600, // 1 hour - template categories are very stable
     }),
 
     listConnectionTemplates: builder.query<
@@ -1675,6 +1737,7 @@ export const api = createApi({
         params: filterParams(params || {}),
       }),
       providesTags: ["ConnectionTemplate"],
+      keepUnusedDataFor: 1800, // 30 minutes - templates rarely change
     }),
 
     getConnectionTemplate: builder.query<
@@ -1703,6 +1766,7 @@ export const api = createApi({
       providesTags: (_result, _error, templateId) => [
         { type: "ConnectionTemplate", id: templateId },
       ],
+      keepUnusedDataFor: 1800, // 30 minutes - templates rarely change
     }),
 
     applyConnectionTemplate: builder.mutation<
@@ -1932,6 +1996,7 @@ export const api = createApi({
     getUserPreferences: builder.query<UserPreferences, void>({
       query: () => "/preferences",
       providesTags: ["UserPreferences"],
+      keepUnusedDataFor: 120, // 2 minutes - user preferences
     }),
 
     /**
@@ -1985,6 +2050,865 @@ export const api = createApi({
           throw new Error("Export failed");
         },
       }),
+    }),
+
+    // =========================================================================
+    // Infrastructure Alerts & Remediations (Admin Dashboard)
+    // =========================================================================
+
+    /**
+     * Get AI-generated recommendation for an alert
+     */
+    getAlertRecommendation: builder.query<AIRecommendation, string>({
+      query: (alertId) => `/alerts/${alertId}/recommendation`,
+      providesTags: (_result, _error, alertId) => [
+        { type: "InfraAlert", id: `RECOMMENDATION-${alertId}` },
+      ],
+    }),
+
+    /**
+     * Regenerate AI recommendation for an alert
+     */
+    regenerateAlertRecommendation: builder.mutation<AIRecommendation, string>({
+      query: (alertId) => ({
+        url: `/alerts/${alertId}/recommendation/regenerate`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, alertId) => [
+        { type: "InfraAlert", id: `RECOMMENDATION-${alertId}` },
+      ],
+    }),
+
+    /**
+     * List pending remediation requests
+     */
+    listPendingRemediations: builder.query<
+      PaginatedResponse<RemediationRequest>,
+      RemediationListParams
+    >({
+      query: (params) => ({
+        url: "/remediations/pending",
+        params: filterParams({
+          status: params.status,
+          alert_id: params.alert_id,
+          severity: params.severity,
+          limit: params.limit ?? 50,
+          cursor: params.cursor,
+        }),
+      }),
+      providesTags: (result) =>
+        result?.items
+          ? [
+              ...result.items.map(({ remediation_id }) => ({
+                type: "Remediation" as const,
+                id: remediation_id,
+              })),
+              { type: "Remediation", id: "PENDING" },
+            ]
+          : [{ type: "Remediation", id: "PENDING" }],
+    }),
+
+    /**
+     * List remediation history (approved/rejected/completed/failed)
+     */
+    listRemediationHistory: builder.query<
+      PaginatedResponse<RemediationRequest>,
+      RemediationListParams
+    >({
+      query: (params) => ({
+        url: "/remediations/history",
+        params: filterParams({
+          status: params.status,
+          alert_id: params.alert_id,
+          severity: params.severity,
+          limit: params.limit ?? 50,
+          cursor: params.cursor,
+        }),
+      }),
+      providesTags: (result) =>
+        result?.items
+          ? [
+              ...result.items.map(({ remediation_id }) => ({
+                type: "Remediation" as const,
+                id: remediation_id,
+              })),
+              { type: "Remediation", id: "HISTORY" },
+            ]
+          : [{ type: "Remediation", id: "HISTORY" }],
+    }),
+
+    /**
+     * Approve a remediation request
+     */
+    approveRemediation: builder.mutation<
+      RemediationRequest,
+      ApproveRemediationRequest
+    >({
+      query: ({ remediation_id, ...body }) => ({
+        url: `/remediations/${remediation_id}/approve`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { remediation_id }) => [
+        { type: "Remediation", id: remediation_id },
+        { type: "Remediation", id: "PENDING" },
+        { type: "Remediation", id: "HISTORY" },
+      ],
+    }),
+
+    /**
+     * Reject a remediation request
+     */
+    rejectRemediation: builder.mutation<
+      RemediationRequest,
+      RejectRemediationRequest
+    >({
+      query: ({ remediation_id, ...body }) => ({
+        url: `/remediations/${remediation_id}/reject`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { remediation_id }) => [
+        { type: "Remediation", id: remediation_id },
+        { type: "Remediation", id: "PENDING" },
+        { type: "Remediation", id: "HISTORY" },
+      ],
+    }),
+
+    // =========================================================================
+    // Artifacts (Hybrid Canvas Multi-Layer Storage)
+    // =========================================================================
+
+    /**
+     * List artifacts for a session with cursor-based pagination
+     */
+    listArtifacts: builder.query<
+      ListArtifactsResponse,
+      { session_id?: string; cursor?: string; limit?: number }
+    >({
+      query: (params) => ({
+        url: "/artifacts",
+        params: filterParams({
+          session_id: params.session_id,
+          cursor: params.cursor,
+          limit: params.limit ?? 20,
+        }),
+      }),
+      providesTags: (result) =>
+        result?.items
+          ? [
+              ...result.items.map(({ id }) => ({
+                type: "Artifact" as const,
+                id,
+              })),
+              { type: "Artifact", id: "LIST" },
+            ]
+          : [{ type: "Artifact", id: "LIST" }],
+    }),
+
+    /**
+     * Get a single artifact by ID
+     */
+    getArtifact: builder.query<CanvasArtifact, string>({
+      query: (id) => `/artifacts/${id}`,
+      providesTags: (_result, _error, id) => [{ type: "Artifact", id }],
+    }),
+
+    /**
+     * Create a new artifact
+     */
+    createArtifact: builder.mutation<CreateArtifactResponse, CreateArtifactRequest>({
+      query: (body) => ({
+        url: "/artifacts",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [{ type: "Artifact", id: "LIST" }],
+    }),
+
+    /**
+     * Update an artifact (creates new version)
+     */
+    updateArtifact: builder.mutation<
+      UpdateArtifactResponse,
+      { id: string } & UpdateArtifactRequest
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/artifacts/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Artifact", id },
+        { type: "Artifact", id: "LIST" },
+      ],
+    }),
+
+    /**
+     * Delete an artifact
+     */
+    deleteArtifact: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/artifacts/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "Artifact", id },
+        { type: "Artifact", id: "LIST" },
+      ],
+    }),
+
+    /**
+     * Get version history for an artifact
+     */
+    getArtifactVersions: builder.query<ArtifactVersion[], string>({
+      query: (id) => `/artifacts/${id}/versions`,
+      providesTags: (_result, _error, id) => [
+        { type: "Artifact", id: `VERSIONS-${id}` },
+      ],
+    }),
+
+    /**
+     * Fork an artifact (create copy with parent reference)
+     */
+    forkArtifact: builder.mutation<
+      ForkArtifactResponse,
+      { id: string; newTitle?: string }
+    >({
+      query: ({ id, newTitle }) => ({
+        url: `/artifacts/${id}/fork`,
+        method: "POST",
+        body: { new_title: newTitle },
+      }),
+      invalidatesTags: [{ type: "Artifact", id: "LIST" }],
+    }),
+
+    /**
+     * Semantic search across artifacts using vector embeddings
+     */
+    semanticSearchArtifacts: builder.mutation<
+      { results: Array<{ artifact_id: string; score: number; title: string | null }> },
+      { query: string; limit?: number; session_id?: string }
+    >({
+      query: (body) => ({
+        url: "/artifacts/search",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    /**
+     * Find similar artifacts to a given artifact
+     */
+    findSimilarArtifacts: builder.query<
+      { results: Array<{ artifact_id: string; score: number; title: string | null }> },
+      { id: string; limit?: number }
+    >({
+      query: ({ id, limit }) => ({
+        url: `/artifacts/${id}/similar`,
+        params: limit ? { limit } : undefined,
+      }),
+      providesTags: (_result, _error, { id }) => [
+        { type: "Artifact", id: `SIMILAR-${id}` },
+      ],
+    }),
+
+    // =========================================================================
+    // Agent HITL Requests
+    // =========================================================================
+
+    /**
+     * List pending agent HITL requests (approvals and clarifications)
+     */
+    listPendingAgentRequests: builder.query<
+      PendingAgentRequestsResponse,
+      ListPendingAgentRequestsParams | void
+    >({
+      query: (params) => ({
+        url: "/agents/requests/pending",
+        params: params ? filterParams(params as Record<string, unknown>) : undefined,
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.approvals.map(({ request_id }) => ({
+                type: "AgentRequest" as const,
+                id: request_id,
+              })),
+              ...result.clarifications.map(({ request_id }) => ({
+                type: "AgentRequest" as const,
+                id: request_id,
+              })),
+              { type: "AgentRequest", id: "LIST" },
+            ]
+          : [{ type: "AgentRequest", id: "LIST" }],
+    }),
+
+    /**
+     * Approve an agent request
+     */
+    approveAgentRequest: builder.mutation<
+      AgentRequestActionResponse,
+      ApproveAgentRequestParams
+    >({
+      query: ({ requestId, ...body }) => ({
+        url: `/agents/requests/${requestId}/approve`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { requestId }) => [
+        { type: "AgentRequest", id: requestId },
+        { type: "AgentRequest", id: "LIST" },
+      ],
+    }),
+
+    /**
+     * Reject an agent request
+     */
+    rejectAgentRequest: builder.mutation<
+      AgentRequestActionResponse,
+      RejectAgentRequestParams
+    >({
+      query: ({ requestId, ...body }) => ({
+        url: `/agents/requests/${requestId}/reject`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { requestId }) => [
+        { type: "AgentRequest", id: requestId },
+        { type: "AgentRequest", id: "LIST" },
+      ],
+    }),
+
+    /**
+     * Respond to an agent clarification request
+     */
+    respondToAgentRequest: builder.mutation<
+      AgentRequestActionResponse,
+      RespondAgentRequestParams
+    >({
+      query: (body) => ({
+        url: `/agents/requests/${body.request_id}/respond`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { request_id }) => [
+        { type: "AgentRequest", id: request_id },
+        { type: "AgentRequest", id: "LIST" },
+      ],
+    }),
+
+    /**
+     * Batch approve multiple agent requests (admin only)
+     */
+    batchApproveAgentRequests: builder.mutation<
+      BatchAgentRequestResponse,
+      BatchApproveAgentRequestParams
+    >({
+      query: (body) => ({
+        url: "/agents/requests/batch/approve",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { request_ids }) => [
+        ...request_ids.map((id) => ({ type: "AgentRequest" as const, id })),
+        { type: "AgentRequest", id: "LIST" },
+      ],
+    }),
+
+    /**
+     * Batch reject multiple agent requests (admin only)
+     */
+    batchRejectAgentRequests: builder.mutation<
+      BatchAgentRequestResponse,
+      BatchRejectAgentRequestParams
+    >({
+      query: (body) => ({
+        url: "/agents/requests/batch/reject",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { request_ids }) => [
+        ...request_ids.map((id) => ({ type: "AgentRequest" as const, id })),
+        { type: "AgentRequest", id: "LIST" },
+      ],
+    }),
+
+    // =========================================================================
+    // AI UX Endpoints (Progressive Disclosure, Nudges, Error Recovery, etc.)
+    // =========================================================================
+
+    /**
+     * Analyze progressive disclosure level for UI complexity
+     */
+    analyzeDisclosure: builder.mutation<
+      {
+        current_level: string;
+        recommended_level: string;
+        confidence: number;
+        unlock_features: string[];
+        personalized_message: string;
+        reasoning?: string;
+      },
+      {
+        current_level: string;
+        persona?: string;
+        context?: Record<string, unknown>;
+        user_behavior?: {
+          feature_usage: Record<string, number>;
+          session_count: number;
+          avg_session_duration?: number;
+        };
+      }
+    >({
+      query: (body) => ({
+        url: "/ai/disclosure/analyze",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    /**
+     * Get AI-generated suggestions for empty state screens
+     */
+    getEmptyStateSuggestions: builder.mutation<
+      {
+        suggestions: Array<{
+          title: string;
+          description: string;
+          action_type: "navigate" | "create" | "learn" | "import";
+          action_target: string;
+          icon?: string;
+          priority: number;
+        }>;
+        context_hint?: string;
+      },
+      {
+        context: string;
+        persona?: string;
+        previous_actions?: string[];
+        available_actions?: string[];
+      }
+    >({
+      query: (body) => ({
+        url: "/ai/empty-state/suggestions",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    /**
+     * Get AI-generated nudge recommendations
+     */
+    getNudgeRecommendation: builder.mutation<
+      {
+        nudge_type: string;
+        message: string;
+        confidence: number;
+        action_cta?: string;
+        action_target?: string;
+        dismiss_duration_ms?: number;
+      },
+      {
+        context: string;
+        user_actions?: string[];
+        current_feature?: string;
+        persona?: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/ai/nudges/recommend",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    /**
+     * Analyze error for recovery suggestions
+     */
+    analyzeError: builder.mutation<
+      {
+        error_type: string;
+        recovery_steps: Array<{
+          step_number: number;
+          title: string;
+          description: string;
+          action_type: "automatic" | "manual" | "contact_support";
+          action_target?: string;
+        }>;
+        auto_recoverable: boolean;
+        suggested_action?: string;
+        confidence: number;
+      },
+      {
+        error_code: string;
+        error_message: string;
+        context?: Record<string, unknown>;
+        stack_trace?: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/ai/errors/analyze",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    /**
+     * Personalize onboarding experience
+     */
+    personalizeOnboarding: builder.mutation<
+      {
+        recommended_steps: string[];
+        skip_steps: string[];
+        estimated_duration_minutes: number;
+        personalization_applied: boolean;
+        reasoning?: string;
+      },
+      {
+        detected_persona?: string;
+        experience_level?: "beginner" | "intermediate" | "expert";
+        goals?: string[];
+        previous_tool_experience?: string[];
+      }
+    >({
+      query: (body) => ({
+        url: "/ai/onboarding/personalize",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    /**
+     * Get AI-generated insights from HEART metrics
+     */
+    getMetricsInsights: builder.query<
+      {
+        happiness_score: number;
+        insights: Array<{
+          category: "happiness" | "engagement" | "adoption" | "retention" | "task_success";
+          title: string;
+          description: string;
+          trend: "improving" | "stable" | "declining";
+          priority: "high" | "medium" | "low";
+          suggested_action?: string;
+        }>;
+        overall_health: "excellent" | "good" | "needs_attention" | "critical";
+        recommendations: string[];
+      },
+      { session_id?: string; period?: string }
+    >({
+      query: (params) => ({
+        url: "/ai/metrics/insights",
+        params: filterParams(params || {}),
+      }),
+      providesTags: ["AIUx"],
+    }),
+
+    /**
+     * Analyze user behavior for persona detection/validation
+     */
+    analyzePersona: builder.mutation<
+      {
+        detected_persona: string;
+        confidence: number;
+        alternative_personas: Array<{
+          persona: string;
+          confidence: number;
+        }>;
+        behavior_indicators: Record<string, unknown>;
+        recommendation?: string;
+      },
+      {
+        behavior_data: Record<string, unknown>;
+        current_persona?: string;
+        session_id?: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/ai/persona/analyze",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    /**
+     * Composite analysis combining multiple AI UX insights
+     */
+    analyzeComposite: builder.mutation<
+      {
+        analysis_id: string;
+        timestamp: string;
+        disclosure?: {
+          recommended_level: string;
+          confidence: number;
+        };
+        nudge?: {
+          nudge_type: string;
+          message: string;
+          confidence: number;
+        };
+        persona?: {
+          detected_persona: string;
+          confidence: number;
+        };
+        errors?: Array<{
+          error_type: string;
+          auto_recoverable: boolean;
+        }>;
+        overall_confidence: number;
+      },
+      {
+        include_disclosure?: boolean;
+        include_nudges?: boolean;
+        include_persona?: boolean;
+        include_errors?: boolean;
+        context?: Record<string, unknown>;
+        session_id?: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/ai/composite/analyze",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    /**
+     * Batch composite analysis for multiple contexts
+     */
+    batchCompositeAnalysis: builder.mutation<
+      {
+        results: Array<{
+          analysis_id: string;
+          timestamp: string;
+          disclosure?: {
+            recommended_level: string;
+            confidence: number;
+          };
+          nudge?: {
+            nudge_type: string;
+            message: string;
+            confidence: number;
+          };
+          persona?: {
+            detected_persona: string;
+            confidence: number;
+          };
+          errors?: Array<{
+            error_type: string;
+            auto_recoverable: boolean;
+          }>;
+          overall_confidence: number;
+        }>;
+        processed: number;
+        failed: number;
+      },
+      {
+        requests: Array<{
+          include_disclosure?: boolean;
+          include_nudges?: boolean;
+          include_persona?: boolean;
+          include_errors?: boolean;
+          context?: Record<string, unknown>;
+          session_id?: string;
+        }>;
+      }
+    >({
+      query: (body) => ({
+        url: "/ai/composite/batch",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // =========================================================================
+    // Studio AI Endpoints (HybridShell AI Enhancement)
+    // =========================================================================
+
+    /**
+     * Unified Studio AI analysis endpoint
+     *
+     * Executes multiple AI analysis tasks in parallel via StudioOrchestrator.
+     * Supports all 8 task categories: UX, SESSION, CONVERSATION, CANVAS,
+     * DIAGRAM, TRACE, HITL, COMMAND.
+     *
+     * Reference: HybridShell AI Enhancement Analysis Plan
+     */
+    studioAnalyze: builder.mutation<
+      {
+        user_id: string;
+        session_id: string;
+        analyses: Record<string, unknown>;
+        cross_insights: string[];
+        failed_analyses: string[];
+        total_cost: string;
+      },
+      {
+        user_id: string;
+        session_id: string;
+        persona?: string;
+        tasks: Array<{
+          category: string;
+          type: string;
+          data?: Record<string, unknown>;
+        }>;
+        context?: Record<string, unknown>;
+      }
+    >({
+      query: (body) => ({
+        url: "/studio/analyze",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // =========================================================================
+    // MCP Protocol Endpoints (2025-11-25)
+    // =========================================================================
+
+    /**
+     * List available MCP resources
+     *
+     * Cache: 5 minutes - resources are relatively static
+     */
+    listMcpResources: builder.query<McpResourceListResponse, void>({
+      query: () => "/mcp/resources",
+      providesTags: [{ type: "Mcp", id: "RESOURCES" }],
+      keepUnusedDataFor: 300, // 5 minutes
+    }),
+
+    /**
+     * Read MCP resource content by URI
+     */
+    readMcpResource: builder.mutation<
+      McpResourceContentResponse,
+      McpReadResourceRequest
+    >({
+      query: ({ uri }) => ({
+        url: "/mcp/resources/content",
+        method: "GET",
+        params: { uri },
+      }),
+    }),
+
+    /**
+     * List available MCP tools
+     *
+     * Cache: 5 minutes - tools are relatively static
+     */
+    listMcpTools: builder.query<McpToolListResponse, void>({
+      query: () => "/mcp/tools",
+      providesTags: [{ type: "Mcp", id: "TOOLS" }],
+      keepUnusedDataFor: 300, // 5 minutes
+    }),
+
+    /**
+     * Invoke an MCP tool
+     *
+     * Invalidates TASKS tag since tool invocations may create new background tasks.
+     */
+    invokeMcpTool: builder.mutation<
+      McpToolInvocationResponse,
+      McpInvokeToolRequest
+    >({
+      query: (body) => ({
+        url: "/mcp/tools/call",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [{ type: "Mcp", id: "TASKS" }],
+    }),
+
+    /**
+     * Request LLM completion via MCP sampling
+     *
+     * May create background tasks for long-running completions.
+     */
+    requestMcpSampling: builder.mutation<McpSamplingResponse, McpSamplingRequest>(
+      {
+        query: (body) => ({
+          url: "/mcp/sampling",
+          method: "POST",
+          body,
+        }),
+        invalidatesTags: [{ type: "Mcp", id: "TASKS" }],
+      }
+    ),
+
+    /**
+     * Request user input via MCP elicitation
+     *
+     * May create background tasks for pending user input.
+     */
+    requestMcpElicitation: builder.mutation<
+      McpElicitationResponse,
+      McpElicitationRequest
+    >({
+      query: (body) => ({
+        url: "/mcp/elicitation",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [{ type: "Mcp", id: "TASKS" }],
+    }),
+
+    /**
+     * List available MCP prompts
+     *
+     * Cache: 5 minutes - prompts are relatively static
+     */
+    listMcpPrompts: builder.query<McpPromptListResponse, void>({
+      query: () => "/mcp/prompts",
+      providesTags: [{ type: "Mcp", id: "PROMPTS" }],
+      keepUnusedDataFor: 300, // 5 minutes
+    }),
+
+    /**
+     * Get MCP prompt with arguments
+     */
+    getMcpPrompt: builder.mutation<McpGetPromptResponse, McpGetPromptRequest>({
+      query: (body) => ({
+        url: "/mcp/prompts/get",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    /**
+     * List active MCP tasks
+     *
+     * Cache: 30 seconds - tasks change frequently
+     */
+    listMcpTasks: builder.query<McpTaskListResponse, void>({
+      query: () => "/mcp/tasks",
+      providesTags: [{ type: "Mcp", id: "TASKS" }],
+      keepUnusedDataFor: 30, // 30 seconds - tasks update frequently
+    }),
+
+    /**
+     * Get MCP task by ID
+     *
+     * Cache: 30 seconds - task status changes frequently
+     */
+    getMcpTask: builder.query<McpTask, string>({
+      query: (taskId) => `/mcp/tasks/${taskId}`,
+      providesTags: (_result, _error, taskId) => [{ type: "Mcp", id: taskId }],
+      keepUnusedDataFor: 30, // 30 seconds - tasks update frequently
+    }),
+
+    /**
+     * Cancel an MCP task
+     */
+    cancelMcpTask: builder.mutation<McpTask, string>({
+      query: (taskId) => ({
+        url: `/mcp/tasks/${taskId}/cancel`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, taskId) => [
+        { type: "Mcp", id: taskId },
+        { type: "Mcp", id: "TASKS" },
+      ],
     }),
   }),
 });
@@ -2146,4 +3070,52 @@ export const {
   useResetUserPreferencesMutation,
   // Session Export
   useExportSessionMutation,
+  // Infrastructure Alerts & Remediations
+  useGetAlertRecommendationQuery,
+  useRegenerateAlertRecommendationMutation,
+  useListPendingRemediationsQuery,
+  useListRemediationHistoryQuery,
+  useApproveRemediationMutation,
+  useRejectRemediationMutation,
+  // Artifacts (Hybrid Canvas)
+  useListArtifactsQuery,
+  useGetArtifactQuery,
+  useCreateArtifactMutation,
+  useUpdateArtifactMutation,
+  useDeleteArtifactMutation,
+  useGetArtifactVersionsQuery,
+  useForkArtifactMutation,
+  useSemanticSearchArtifactsMutation,
+  useFindSimilarArtifactsQuery,
+  // Agent HITL Requests
+  useListPendingAgentRequestsQuery,
+  useApproveAgentRequestMutation,
+  useRejectAgentRequestMutation,
+  useRespondToAgentRequestMutation,
+  useBatchApproveAgentRequestsMutation,
+  useBatchRejectAgentRequestsMutation,
+  // AI UX Endpoints
+  useAnalyzeDisclosureMutation,
+  useGetEmptyStateSuggestionsMutation,
+  useGetNudgeRecommendationMutation,
+  useAnalyzeErrorMutation,
+  usePersonalizeOnboardingMutation,
+  useGetMetricsInsightsQuery,
+  useAnalyzePersonaMutation,
+  useAnalyzeCompositeMutation,
+  useBatchCompositeAnalysisMutation,
+  // Studio AI Endpoints (HybridShell)
+  useStudioAnalyzeMutation,
+  // MCP Protocol Endpoints
+  useListMcpResourcesQuery,
+  useReadMcpResourceMutation,
+  useListMcpToolsQuery,
+  useInvokeMcpToolMutation,
+  useRequestMcpSamplingMutation,
+  useRequestMcpElicitationMutation,
+  useListMcpPromptsQuery,
+  useGetMcpPromptMutation,
+  useListMcpTasksQuery,
+  useGetMcpTaskQuery,
+  useCancelMcpTaskMutation,
 } = api;

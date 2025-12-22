@@ -111,7 +111,7 @@ export interface WorkspaceState {
 // Constants
 // =============================================================================
 
-export const WORKSPACE_STORAGE_KEY = "studio-agent-workspace";
+export const WORKSPACE_STORAGE_KEY = "agent-studio-workspace";
 
 // Panel constraints
 const LEFT_SIDEBAR_MIN_WIDTH = 200;
@@ -175,9 +175,13 @@ function findTabInLayout(
   }
 
   // Search children
-  for (let i = 0; i < (layout.children?.length ?? 0); i++) {
-    const result = findTabInLayout(layout.children![i], tabId, [...path, i]);
-    if (result) return result;
+  const children = layout.children ?? [];
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i];
+    if (child) {
+      const result = findTabInLayout(child, tabId, [...path, i]);
+      if (result) return result;
+    }
   }
   return null;
 }
@@ -194,9 +198,13 @@ function getLayoutAtPath(
   if (layout.type === "tab-group") return null;
 
   const [head, ...rest] = path;
-  if (!layout.children || head >= layout.children.length) return null;
+  if (head === undefined || !layout.children || head >= layout.children.length)
+    return null;
 
-  return getLayoutAtPath(layout.children[head], rest);
+  const child = layout.children[head];
+  if (!child) return null;
+
+  return getLayoutAtPath(child, rest);
 }
 
 /**
@@ -212,7 +220,13 @@ function setLayoutAtPath(
   if (layout.type === "tab-group") return layout;
 
   const [head, ...rest] = path;
-  if (!layout.children || head >= layout.children.length) return layout;
+  if (
+    head === undefined ||
+    !layout.children ||
+    head >= layout.children.length
+  ) {
+    return layout;
+  }
 
   return {
     ...layout,
@@ -245,7 +259,10 @@ function removeTabFromLayout(layout: DockLayout, tabId: string): DockLayout {
 
   // If only one child left, collapse the split
   if (newChildren.length === 1) {
-    return newChildren[0];
+    const singleChild = newChildren[0];
+    if (singleChild) return singleChild;
+    // Fallback to empty tab-group if somehow undefined
+    return { type: "tab-group", tabIds: [] };
   }
 
   // If no children left, return empty tab group
@@ -457,7 +474,8 @@ export const workspaceSlice = createSlice({
         state.activeTabId &&
         tabsToRemove.some((t) => t.id === state.activeTabId)
       ) {
-        state.activeTabId = state.tabs.length > 0 ? state.tabs[0].id : null;
+        const firstTab = state.tabs[0];
+        state.activeTabId = firstTab?.id ?? null;
       }
 
       state.lastUpdated = Date.now();
@@ -478,12 +496,15 @@ export const workspaceSlice = createSlice({
       }
 
       const [removed] = state.tabs.splice(fromIndex, 1);
+      if (!removed) return; // Safety check for noUncheckedIndexedAccess
       state.tabs.splice(toIndex, 0, removed);
 
       // Also update dock layout order
       if (state.dockLayout.type === "tab-group" && state.dockLayout.tabIds) {
         const [removedId] = state.dockLayout.tabIds.splice(fromIndex, 1);
-        state.dockLayout.tabIds.splice(toIndex, 0, removedId);
+        if (removedId !== undefined) {
+          state.dockLayout.tabIds.splice(toIndex, 0, removedId);
+        }
       }
 
       state.lastUpdated = Date.now();
@@ -663,7 +684,6 @@ export const workspaceSlice = createSlice({
 
       // Then remove from original location (which will also collapse empty groups)
       // We need to do this by reconstructing without the tab from all other locations
-      const _targetGroup = getLayoutAtPath(state.dockLayout, targetPath);
 
       // Remove from all other locations
       const removeFromOtherLocations = (
@@ -697,7 +717,10 @@ export const workspaceSlice = createSlice({
 
         // Collapse if only one child
         if (filteredChildren.length === 1) {
-          return filteredChildren[0];
+          const singleChild = filteredChildren[0];
+          if (singleChild) return singleChild;
+          // Fallback to empty tab-group if somehow undefined
+          return { type: "tab-group", tabIds: [] };
         }
 
         if (filteredChildren.length === 0) {

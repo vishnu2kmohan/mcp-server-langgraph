@@ -19,9 +19,12 @@ import projectReducer, {
   resetProject,
   selectProjects,
   selectCurrentProject,
+  selectCurrentProjectDetail,
   selectIsLoadingProjects,
+  selectIsLoadingProjectDetail,
   selectProjectError,
   selectProjectById,
+  selectProjectTotal,
 } from "./projectSlice";
 import type { Project, ProjectDetail, ProjectState } from "./projectSlice";
 
@@ -211,6 +214,46 @@ describe("projectSlice", () => {
           "Failed to load projects",
         );
       });
+
+      it("should use fallback error message when payload is undefined", () => {
+        // Directly test reducer with undefined payload
+        const state = projectReducer(
+          { ...initialProjectState, isLoading: true },
+          { type: fetchProjects.rejected.type, payload: undefined },
+        );
+        expect(state.error).toBe("Failed to load projects");
+        expect(state.isLoading).toBe(false);
+      });
+
+      it("should use fallback error message when non-Error is thrown", async () => {
+        // Simulate a non-Error exception (e.g., string thrown)
+        mockFetch.mockRejectedValueOnce("Network failure");
+
+        const store = createTestStore();
+        await store.dispatch(fetchProjects());
+
+        expect(selectProjectError(store.getState())).toBe(
+          "Failed to load projects",
+        );
+      });
+
+      it("should fallback to defaults when response fields are missing", async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              // Response with missing fields
+            }),
+        });
+
+        const store = createTestStore();
+        await store.dispatch(fetchProjects());
+
+        const state = store.getState();
+        // Should use defaults when fields are missing
+        expect(selectProjects(state)).toEqual([]); // items || []
+        expect(selectProjectTotal(state)).toBe(0); // total || 0
+      });
     });
 
     describe("loadProject", () => {
@@ -243,6 +286,30 @@ describe("projectSlice", () => {
           "Failed to load project",
         );
         expect(selectCurrentProject(store.getState())).toBeNull();
+      });
+
+      it("should use fallback error message when payload is undefined", () => {
+        // Directly test reducer with undefined payload
+        const state = projectReducer(
+          { ...initialProjectState, isLoadingDetail: true, currentProject: mockProject },
+          { type: loadProject.rejected.type, payload: undefined },
+        );
+        expect(state.error).toBe("Failed to load project");
+        expect(state.isLoadingDetail).toBe(false);
+        expect(state.currentProject).toBeNull();
+        expect(state.currentProjectDetail).toBeNull();
+      });
+
+      it("should use fallback error message when non-Error is thrown", async () => {
+        // Simulate a non-Error exception (e.g., string thrown)
+        mockFetch.mockRejectedValueOnce("Network failure");
+
+        const store = createTestStore();
+        await store.dispatch(loadProject("proj-1"));
+
+        expect(selectProjectError(store.getState())).toBe(
+          "Failed to load project",
+        );
       });
     });
 
@@ -282,6 +349,44 @@ describe("projectSlice", () => {
 
         expect(selectProjectError(store.getState())).toBe("Failed to create");
       });
+
+      it("should handle API error response on creation", async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 400,
+          json: () => Promise.resolve({ detail: "Invalid project name" }),
+        });
+
+        const store = createTestStore();
+        await store.dispatch(createProject({ name: "Test" }));
+
+        expect(selectProjectError(store.getState())).toBe(
+          "Failed to create project",
+        );
+        expect(selectProjects(store.getState())).toHaveLength(0);
+      });
+
+      it("should use fallback error message when payload is undefined", () => {
+        // Directly test reducer with undefined payload
+        const state = projectReducer(
+          { ...initialProjectState, isLoading: true },
+          { type: createProject.rejected.type, payload: undefined },
+        );
+        expect(state.error).toBe("Failed to create project");
+        expect(state.isLoading).toBe(false);
+      });
+
+      it("should use fallback error message when non-Error is thrown", async () => {
+        // Simulate a non-Error exception (e.g., string thrown)
+        mockFetch.mockRejectedValueOnce("Network failure");
+
+        const store = createTestStore();
+        await store.dispatch(createProject({ name: "Test" }));
+
+        expect(selectProjectError(store.getState())).toBe(
+          "Failed to create project",
+        );
+      });
     });
 
     describe("deleteProject", () => {
@@ -317,6 +422,30 @@ describe("projectSlice", () => {
         expect(selectCurrentProject(store.getState())).toBeNull();
       });
 
+      it("should not clear currentProject if deleted project is different", async () => {
+        const otherProject: Project = {
+          ...mockProject,
+          id: "proj-2",
+          name: "Other Project",
+        };
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+
+        const store = createTestStore({
+          projects: [mockProject, otherProject],
+          currentProject: otherProject,
+          total: 2,
+        });
+        await store.dispatch(deleteProject("proj-1"));
+
+        // currentProject should remain unchanged since it's a different project
+        expect(selectCurrentProject(store.getState())?.id).toBe("proj-2");
+        expect(selectProjects(store.getState())).toHaveLength(1);
+        expect(selectProjects(store.getState())[0].id).toBe("proj-2");
+      });
+
       it("should set error on delete failure", async () => {
         mockFetch.mockRejectedValueOnce(new Error("Delete failed"));
 
@@ -343,6 +472,32 @@ describe("projectSlice", () => {
           "Failed to delete project",
         );
         // Project should still exist after failed delete
+        expect(selectProjects(store.getState())).toHaveLength(1);
+      });
+
+      it("should use fallback error message when payload is undefined", () => {
+        // Directly test reducer with undefined payload
+        const state = projectReducer(
+          { ...initialProjectState, isLoading: true, projects: [mockProject], total: 1 },
+          { type: deleteProject.rejected.type, payload: undefined },
+        );
+        expect(state.error).toBe("Failed to delete project");
+        expect(state.isLoading).toBe(false);
+        // Projects should remain unchanged
+        expect(state.projects).toHaveLength(1);
+      });
+
+      it("should use fallback error message when non-Error is thrown", async () => {
+        // Simulate a non-Error exception (e.g., string thrown)
+        mockFetch.mockRejectedValueOnce("Network failure");
+
+        const store = createTestStore({ projects: [mockProject], total: 1 });
+        await store.dispatch(deleteProject("proj-1"));
+
+        expect(selectProjectError(store.getState())).toBe(
+          "Failed to delete project",
+        );
+        // Project should still exist
         expect(selectProjects(store.getState())).toHaveLength(1);
       });
     });
@@ -414,6 +569,99 @@ describe("projectSlice", () => {
         // Project should retain original name
         expect(selectProjects(store.getState())[0].name).toBe("Test Project");
       });
+
+      it("should use fallback error message when payload is undefined", () => {
+        // Directly test reducer with undefined payload
+        const state = projectReducer(
+          { ...initialProjectState, isLoading: true, projects: [mockProject] },
+          { type: updateProject.rejected.type, payload: undefined },
+        );
+        expect(state.error).toBe("Failed to update project");
+        expect(state.isLoading).toBe(false);
+        // Projects should remain unchanged
+        expect(state.projects[0].name).toBe("Test Project");
+      });
+
+      it("should use fallback error message when non-Error is thrown", async () => {
+        // Simulate a non-Error exception (e.g., string thrown)
+        mockFetch.mockRejectedValueOnce("Network failure");
+
+        const store = createTestStore({ projects: [mockProject] });
+        await store.dispatch(
+          updateProject({ projectId: "proj-1", name: "Updated Name" }),
+        );
+
+        expect(selectProjectError(store.getState())).toBe(
+          "Failed to update project",
+        );
+        // Project should retain original name
+        expect(selectProjects(store.getState())[0].name).toBe("Test Project");
+      });
+
+      it("should not update projects array if project not found", async () => {
+        const updatedProject = { ...mockProject, id: "nonexistent", name: "Updated Name" };
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(updatedProject),
+        });
+
+        const store = createTestStore({ projects: [mockProject] });
+        await store.dispatch(
+          updateProject({ projectId: "nonexistent", name: "Updated Name" }),
+        );
+
+        // Original project should be unchanged
+        const projects = selectProjects(store.getState());
+        expect(projects.length).toBe(1);
+        expect(projects[0].name).toBe("Test Project");
+      });
+
+      it("should not update currentProject when currentProject is null", async () => {
+        const updatedProject = { ...mockProject, name: "Updated Name" };
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(updatedProject),
+        });
+
+        const store = createTestStore({
+          projects: [mockProject],
+          currentProject: null,
+        });
+        await store.dispatch(
+          updateProject({ projectId: "proj-1", name: "Updated Name" }),
+        );
+
+        // currentProject should remain null
+        expect(selectCurrentProject(store.getState())).toBeNull();
+        // But projects array should be updated
+        expect(selectProjects(store.getState())[0].name).toBe("Updated Name");
+      });
+
+      it("should not update currentProject when it has different id", async () => {
+        const otherProject: Project = {
+          ...mockProject,
+          id: "proj-2",
+          name: "Other Project",
+        };
+        const updatedProject = { ...mockProject, name: "Updated Name" };
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(updatedProject),
+        });
+
+        const store = createTestStore({
+          projects: [mockProject],
+          currentProject: otherProject,
+        });
+        await store.dispatch(
+          updateProject({ projectId: "proj-1", name: "Updated Name" }),
+        );
+
+        // currentProject should remain unchanged (different id)
+        expect(selectCurrentProject(store.getState())?.name).toBe("Other Project");
+        // But projects array should be updated
+        expect(selectProjects(store.getState())[0].name).toBe("Updated Name");
+      });
     });
   });
 
@@ -429,6 +677,43 @@ describe("projectSlice", () => {
         const store = createTestStore({ projects: [mockProject] });
         const selector = selectProjectById("nonexistent");
         expect(selector(store.getState())).toBeUndefined();
+      });
+    });
+
+    describe("selectCurrentProjectDetail", () => {
+      it("should return null when no detail loaded", () => {
+        const store = createTestStore();
+        expect(selectCurrentProjectDetail(store.getState())).toBeNull();
+      });
+
+      it("should return project detail when loaded", () => {
+        const detail: ProjectDetail = {
+          ...mockProject,
+          workflows: [],
+          sessions: [],
+          connections: [],
+        };
+        const store = createTestStore({ currentProjectDetail: detail });
+        expect(selectCurrentProjectDetail(store.getState())?.id).toBe("proj-1");
+      });
+    });
+
+    describe("selectIsLoadingProjectDetail", () => {
+      it("should return false when not loading", () => {
+        const store = createTestStore({ isLoadingDetail: false });
+        expect(selectIsLoadingProjectDetail(store.getState())).toBe(false);
+      });
+
+      it("should return true when loading", () => {
+        const store = createTestStore({ isLoadingDetail: true });
+        expect(selectIsLoadingProjectDetail(store.getState())).toBe(true);
+      });
+    });
+
+    describe("selectProjectTotal", () => {
+      it("should return total count", () => {
+        const store = createTestStore({ total: 10 });
+        expect(selectProjectTotal(store.getState())).toBe(10);
       });
     });
   });

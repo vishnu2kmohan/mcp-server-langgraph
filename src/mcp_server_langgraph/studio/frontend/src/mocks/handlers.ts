@@ -10,13 +10,30 @@
  * - Easy customization per test via override handlers
  */
 
-import { http, HttpResponse, delay } from "msw";
+import { http, HttpResponse, delay, ws } from "msw";
 import type {
   CostSummary,
   ModelCostData,
   CostHistoryPoint,
   HealthStatus,
 } from "../types/api";
+import { mcpHandlers } from "./handlers/mcpHandlers";
+
+// =============================================================================
+// WebSocket Links
+// =============================================================================
+
+/**
+ * WebSocket link for connection health monitoring.
+ * Used by useConnectionHealthWebSocket hook.
+ */
+export const connectionHealthWs = ws.link("ws://*/api/v1/connections/health/ws");
+
+/**
+ * WebSocket link for MCP task progress monitoring.
+ * Used by useMCPTaskWebSocket hook.
+ */
+export const mcpTasksWs = ws.link("ws://*/api/v1/mcp/tasks/ws");
 import type {
   MCPConnectionSummary,
   ConnectionStatus,
@@ -25,6 +42,12 @@ import type {
 } from "../types/connection";
 import type { WorkflowSummary, Session, FeatureFlags } from "../types";
 import { canvasHandlers } from "./handlers/canvasHandlers";
+import { complianceHandlers } from "./handlers/complianceHandlers";
+import { aiHandlers } from "./handlers/aiHandlers";
+import { aiSuggestionsHandlers } from "./handlers/aiSuggestionsHandlers";
+import { nodeConfigHandlers } from "./handlers/nodeConfigHandlers";
+import { heartHandlers } from "./handlers/heartHandlers";
+import { agentRequestHandlers } from "./handlers/agentRequestHandlers";
 
 // =============================================================================
 // Mock Data Factories
@@ -152,14 +175,58 @@ export const mockHealthStatus: HealthStatus = {
 };
 
 export const mockFeatureFlags: FeatureFlags = {
-  enable_workflows_feature: true,
-  enable_sessions_feature: true,
-  enable_cost_dashboard: true,
-  enable_cost_dashboard_users: true,
-  enable_observability_ui: true,
-  enable_code_export: true,
-  enable_ai_suggestions: true,
-  enable_mcp_websocket: true,
+  // ==========================================================================
+  // API Response Format: Uses SHORT NAMES (not backend field names)
+  // Matches: src/mcp_server_langgraph/core/feature_flags.py - get_ui_features_for_role()
+  // ==========================================================================
+
+  // Canvas Hybrid Shell Feature Flags (Phase 0+)
+  canvas_hybrid_shell: true, // Phase 1: Hybrid Canvas shell at /studio/v2
+  canvas_editable: true, // Phase 2: Editable artifacts in Canvas panel
+  canvas_agents: true, // Phase 4: Background agent panel
+  canvas_ai_palette: true, // Phase 4: AI fallback in command palette
+  canvas_compliance: true, // Phase 5: Compliance dashboards
+  canvas_help: true, // Phase 6: In-app help pane
+
+  // Core Features (SHORT NAMES - matches API response)
+  workflows: true,
+  sessions: true,
+  cost_dashboard: true,
+  observability: true,
+  code_export: true,
+  ai_suggestions: true,
+  llm_suggestions: true,
+  notification_preferences: true,
+  mcp_websocket: true,
+  interactive_artifacts: true,
+  url_content_fetch: true,
+  slash_commands: true,
+  style_presets: true,
+
+  // UX Enhancement Features
+  user_preferences_sync: true,
+  session_export: true,
+  project_context: true,
+  onboarding_wizard: true,
+  guided_tour: true,
+  sus_survey: true,
+  command_palette: true,
+  keyboard_shortcuts: true,
+  theme_customization: true,
+  confirmation_dialogs: true,
+
+  // AI UX Features (Phase 6 AI-Native Integration)
+  ai_disclosure: true,
+  ai_empty_states: true,
+  ai_nudges: true,
+  ai_error_recovery: true,
+  ai_onboarding: true,
+  ai_metrics_insights: true,
+  ai_persona_analysis: true,
+  batch_composite_analysis: true,
+
+  // HITL Features (Confidence-Based Agent Approval)
+  agent_hitl: true,
 };
 
 // =============================================================================
@@ -260,6 +327,64 @@ export const handlers = [
       name: body.name || "New Session",
     });
     return HttpResponse.json(newSession, { status: 201 });
+  }),
+
+  // Get individual session
+  http.get("/api/v1/sessions/:sessionId", async ({ params }) => {
+    await delay(50);
+    const session = mockSessions.find((s) => s.id === params.sessionId);
+    if (!session) {
+      return HttpResponse.json(
+        { detail: "Session not found" },
+        { status: 404 },
+      );
+    }
+    return HttpResponse.json(session);
+  }),
+
+  // Get session messages
+  http.get("/api/v1/sessions/:sessionId/messages", async ({ params }) => {
+    await delay(100);
+    const session = mockSessions.find((s) => s.id === params.sessionId);
+    if (!session) {
+      return HttpResponse.json(
+        { detail: "Session not found" },
+        { status: 404 },
+      );
+    }
+    // Return mock messages for the session
+    return HttpResponse.json({
+      items: [
+        {
+          id: `msg-1-${params.sessionId}`,
+          role: "user",
+          content: "Hello, can you help me with a coding task?",
+          created_at: new Date(Date.now() - 300000).toISOString(),
+        },
+        {
+          id: `msg-2-${params.sessionId}`,
+          role: "assistant",
+          content:
+            "Of course! I'd be happy to help. What would you like to work on?",
+          created_at: new Date(Date.now() - 240000).toISOString(),
+        },
+        {
+          id: `msg-3-${params.sessionId}`,
+          role: "user",
+          content:
+            "I need to create a React component for a dashboard.",
+          created_at: new Date(Date.now() - 180000).toISOString(),
+        },
+        {
+          id: `msg-4-${params.sessionId}`,
+          role: "assistant",
+          content:
+            "Great! Let me create a dashboard component for you. Here's a starting point...",
+          created_at: new Date(Date.now() - 120000).toISOString(),
+        },
+      ],
+      has_more: false,
+    });
   }),
 
   // Bootstrap workflow from session
@@ -655,17 +780,8 @@ export const handlers = [
     });
   }),
 
-  // MCP tools endpoint (for REST fallback in useMCPConnection hook)
-  http.get("/api/v1/mcp/tools", async () => {
-    await delay(50);
-    return HttpResponse.json({
-      tools: [
-        { name: "web_search", description: "Search the web for information" },
-        { name: "code_executor", description: "Execute code snippets safely" },
-        { name: "file_reader", description: "Read contents of files" },
-      ],
-    });
-  }),
+  // MCP handlers (resources, tools, prompts, sampling, elicitation, tasks)
+  ...mcpHandlers,
 
   // Observability WebSocket status (for useTraceWebSocket hook)
   http.get("/api/v1/observability/ws/status", async () => {
@@ -716,6 +832,56 @@ export const handlers = [
 
   // Canvas Handlers (Phase 2)
   ...canvasHandlers,
+
+  // Compliance Handlers (Phase 5)
+  ...complianceHandlers,
+
+  // AI Handlers (Phase 4)
+  ...aiHandlers,
+
+  // Node Config Handlers (Phase 4)
+  ...nodeConfigHandlers,
+
+  // HEART Metrics Handlers (Phase 3.2)
+  ...heartHandlers,
+
+  // AI Suggestions Handlers (HTTP fallback for WebSocket)
+  ...aiSuggestionsHandlers,
+
+  // Agent Request Handlers (HITL)
+  ...agentRequestHandlers,
+
+  // ==========================================================================
+  // WebSocket Handlers
+  // ==========================================================================
+
+  // Connection health WebSocket - accepts connections and sends health updates
+  connectionHealthWs.addEventListener("connection", ({ client }) => {
+    // Send initial health status
+    client.send(
+      JSON.stringify({
+        type: "health_update",
+        connections: mockConnections.map((c) => ({
+          id: c.id,
+          status: c.status,
+          latency_ms: Math.floor(Math.random() * 100) + 10,
+        })),
+        timestamp: new Date().toISOString(),
+      }),
+    );
+  }),
+
+  // MCP tasks WebSocket - accepts connections and sends task progress
+  mcpTasksWs.addEventListener("connection", ({ client }) => {
+    // Send initial task status
+    client.send(
+      JSON.stringify({
+        type: "task_status",
+        active_tasks: [],
+        timestamp: new Date().toISOString(),
+      }),
+    );
+  }),
 ];
 
 // =============================================================================

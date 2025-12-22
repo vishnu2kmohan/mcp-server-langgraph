@@ -120,12 +120,12 @@ describe("useMCPWebSocket", () => {
       expect(mockReconnect).toHaveBeenCalled();
     });
 
-    it("should clear state on disconnect", () => {
+    it("should clear state on disconnect", async () => {
       mockStatus = "connected";
       const { result } = renderHook(() => useMCPWebSocket());
 
       // Simulate disconnect
-      act(() => {
+      await act(async () => {
         mockOnDisconnect?.();
       });
 
@@ -146,9 +146,11 @@ describe("useMCPWebSocket", () => {
       mockStatus = "disconnected";
       const { result } = renderHook(() => useMCPWebSocket());
 
-      await expect(result.current.initialize()).rejects.toThrow(
-        "Not connected to MCP server",
-      );
+      await act(async () => {
+        await expect(result.current.initialize()).rejects.toThrow(
+          "Not connected to MCP server",
+        );
+      });
     });
 
     it("should send initialize request with correct format when connected", async () => {

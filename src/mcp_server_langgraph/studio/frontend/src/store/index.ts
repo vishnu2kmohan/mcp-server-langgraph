@@ -32,6 +32,9 @@ import backgroundAgentReducer from "./slices/backgroundAgentSlice";
 import aiContextReducer from "./slices/aiContextSlice";
 import complianceReducer from "./slices/complianceSlice";
 import helpReducer from "./slices/helpSlice";
+import alertReducer, { initializeSoundFromStorage } from "./slices/alertSlice";
+import disclosureReducer from "./slices/disclosureSlice";
+import nudgeReducer from "./slices/nudgeSlice";
 
 // =============================================================================
 // Listener Middleware for Cross-Slice Side Effects
@@ -85,6 +88,12 @@ export const store = configureStore({
     compliance: complianceReducer,
     // Help pane state (Phase 7)
     help: helpReducer,
+    // Alert management state (Phase 7 - Admin dashboard)
+    alerts: alertReducer,
+    // Progressive disclosure state (Phase 7 - UX enhancement)
+    disclosure: disclosureReducer,
+    // Nudge state (Phase 7 - Contextual hints and feature discovery)
+    nudge: nudgeReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -96,6 +105,9 @@ export const store = configureStore({
 
 // Enable refetchOnFocus and refetchOnReconnect
 setupListeners(store.dispatch);
+
+// Initialize alert sound preference from localStorage
+store.dispatch(initializeSoundFromStorage());
 
 // Infer types from store
 export type RootState = ReturnType<typeof store.getState>;

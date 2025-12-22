@@ -5,7 +5,7 @@
  * Provides real-time task status updates, subscription management,
  * and task list synchronization.
  *
- * Based on backend endpoint: /mcp/tasks/ws
+ * Based on backend endpoint: /api/v1/mcp/tasks/ws
  */
 
 import { useState, useCallback, useRef } from "react";
@@ -72,7 +72,7 @@ type ServerMessage =
  * Options for useMCPTaskWebSocket hook
  */
 export interface UseMCPTaskWebSocketOptions {
-  /** Custom WebSocket URL (defaults to /mcp/tasks/ws) */
+  /** Custom WebSocket URL (defaults to /api/v1/mcp/tasks/ws) */
   url?: string;
   /** Callback when a task is updated */
   onTaskUpdate?: (task: MCPTask) => void;
@@ -120,7 +120,7 @@ export interface UseMCPTaskWebSocketReturn {
 function getDefaultWebSocketUrl(): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.host;
-  return `${protocol}//${host}/mcp/tasks/ws`;
+  return `${protocol}//${host}/api/v1/mcp/tasks/ws`;
 }
 
 // =============================================================================
@@ -144,9 +144,15 @@ export function useMCPTaskWebSocket(
   );
   const [error, setError] = useState<string | null>(null);
 
-  // Refs for callbacks to avoid stale closures
+  // Refs for callbacks and state to avoid stale closures
   const callbacksRef = useRef({ onTaskUpdate, onTasksLoaded, onError });
   callbacksRef.current = { onTaskUpdate, onTasksLoaded, onError };
+
+  // Ref to track subscribed tasks for restoration on reconnect
+  const subscribedTasksRef = useRef<Set<string>>(new Set());
+
+  // Ref for send function to use in handleConnect
+  const sendRef = useRef<(data: unknown) => void>(() => {});
 
   // Handle incoming messages
   const handleMessage = useCallback((data: unknown) => {
@@ -187,9 +193,14 @@ export function useMCPTaskWebSocket(
     }
   }, []);
 
-  // Handle connection established
+  // Handle connection established - restore subscriptions
   const handleConnect = useCallback(() => {
     setError(null);
+
+    // Restore subscriptions on reconnect
+    subscribedTasksRef.current.forEach((taskId) => {
+      sendRef.current({ type: "subscribe", task_id: taskId });
+    });
   }, []);
 
   // Handle disconnection - keep tasks for resumption
@@ -198,12 +209,20 @@ export function useMCPTaskWebSocket(
   }, []);
 
   // Use the realtime sync hook for WebSocket management
+  // Enable exponential backoff for better reconnection behavior
   const { status, send, disconnect, reconnect } = useRealtimeSync({
     url,
     onMessage: handleMessage,
     onConnect: handleConnect,
     onDisconnect: handleDisconnect,
+    exponentialBackoff: true,
+    reconnectInterval: 1000, // Start with 1 second
+    maxDelayMs: 30000, // Max 30 seconds between attempts
+    maxReconnectAttempts: 10, // Try up to 10 times
   });
+
+  // Keep sendRef in sync for use in handleConnect
+  sendRef.current = send;
 
   // Commands
   const sendPing = useCallback(() => {
@@ -217,6 +236,7 @@ export function useMCPTaskWebSocket(
   const subscribe = useCallback(
     (taskId: string) => {
       send({ type: "subscribe", task_id: taskId });
+      subscribedTasksRef.current.add(taskId);
       setSubscribedTasks((prev) => new Set(prev).add(taskId));
     },
     [send],
@@ -225,6 +245,7 @@ export function useMCPTaskWebSocket(
   const unsubscribe = useCallback(
     (taskId: string) => {
       send({ type: "unsubscribe", task_id: taskId });
+      subscribedTasksRef.current.delete(taskId);
       setSubscribedTasks((prev) => {
         const next = new Set(prev);
         next.delete(taskId);

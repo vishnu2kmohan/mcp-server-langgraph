@@ -18,6 +18,7 @@ import {
   Loader2,
   Eye,
 } from "lucide-react";
+import { cn } from "../utils/cn";
 
 // =============================================================================
 // Types
@@ -48,10 +49,6 @@ export interface HIPAAPanelProps {
 // =============================================================================
 // Utility
 // =============================================================================
-
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
 
 function getStatusIcon(status: ControlStatus) {
   switch (status) {

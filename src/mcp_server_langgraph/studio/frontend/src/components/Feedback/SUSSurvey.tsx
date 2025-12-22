@@ -51,12 +51,14 @@ export interface SUSSurveyProps {
 function calculateSUSScore(responses: number[]): number {
   let total = 0;
   for (let i = 0; i < responses.length; i++) {
+    const response = responses[i];
+    if (response === undefined) continue;
     if (i % 2 === 0) {
       // Odd questions (0-indexed: 0, 2, 4...) - positive
-      total += responses[i] - 1;
+      total += response - 1;
     } else {
       // Even questions (0-indexed: 1, 3, 5...) - negative
-      total += 5 - responses[i];
+      total += 5 - response;
     }
   }
   return total * 2.5;

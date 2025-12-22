@@ -19,6 +19,7 @@ import {
   Loader2,
   FileWarning,
 } from "lucide-react";
+import { cn } from "../utils/cn";
 
 // =============================================================================
 // Types
@@ -58,10 +59,6 @@ export interface FedRAMPPanelProps {
 // =============================================================================
 // Utility
 // =============================================================================
-
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
 
 function getStatusIcon(status: ControlStatus) {
   switch (status) {

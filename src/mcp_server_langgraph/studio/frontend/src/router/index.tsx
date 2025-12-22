@@ -3,8 +3,14 @@ import { App } from "../App";
 import { AuthGuard } from "./guards/AuthGuard";
 import { PersonaGuard } from "./guards/PersonaGuard";
 import { HybridShellGuard } from "./guards/HybridShellGuard";
+import { PermissionGuard } from "./guards/PermissionGuard";
 import { HybridShellLayout } from "../layout";
-import { chatLoader, sessionsLoader } from "./loaders";
+import {
+  chatLoader,
+  sessionsLoader,
+  complianceLoader,
+  filesLoader,
+} from "./loaders";
 
 /**
  * Studio Router Configuration
@@ -284,6 +290,7 @@ export const router = createBrowserRouter(
               children: [
                 {
                   index: true,
+                  id: "chat-index",
                   loader: chatLoader,
                   lazy: async () => {
                     // Placeholder - will use ChatPage until CanvasChat is ready
@@ -292,6 +299,7 @@ export const router = createBrowserRouter(
                   },
                 },
                 {
+                  id: "chat-session",
                   path: ":sessionId",
                   loader: chatLoader,
                   lazy: async () => {
@@ -300,6 +308,212 @@ export const router = createBrowserRouter(
                   },
                 },
               ],
+            },
+            // Workflows - redirect to legacy until v2 page is ready
+            {
+              path: "workflows",
+              element: <Navigate to="/studio/workflows" replace />,
+            },
+            // Agents - redirect to legacy until v2 page is ready
+            {
+              path: "agents",
+              element: <Navigate to="/studio/connections/agents" replace />,
+            },
+            // Observability - admin/developer only (with tab deep-links)
+            {
+              path: "observability",
+              element: (
+                <PersonaGuard allowedPersonas={["admin", "developer"]}>
+                  <Outlet />
+                </PersonaGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+                // Tab deep-links
+                {
+                  path: "traces",
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+                {
+                  path: "logs",
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+                {
+                  path: "metrics",
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+                {
+                  path: "alerts",
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+              ],
+            },
+            // Traces - standalone route (redirects to observability/traces)
+            {
+              path: "traces",
+              element: <Navigate to="/studio/v2/observability/traces" replace />,
+            },
+            // Files - file browser with artifacts loader
+            {
+              id: "files",
+              path: "files",
+              loader: filesLoader,
+              lazy: async () => {
+                const { FilesPage } = await import("../pages/FilesPage");
+                return { Component: FilesPage };
+              },
+            },
+            // Compliance - requires compliance:read permission (admin/compliance-officer)
+            // Uses ConnectedComplianceDashboard which includes all framework panels
+            {
+              path: "compliance",
+              element: (
+                <PermissionGuard
+                  requiredPermissions={["compliance:read"]}
+                  fallbackPath="/studio/v2/chat"
+                >
+                  <Outlet />
+                </PermissionGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  id: "compliance-dashboard",
+                  loader: complianceLoader,
+                  lazy: async () => {
+                    const { ConnectedComplianceDashboard } =
+                      await import("../compliance/ConnectedComplianceDashboard");
+                    return { Component: ConnectedComplianceDashboard };
+                  },
+                },
+              ],
+            },
+            // Audit - requires audit:read permission (admin/auditor/compliance-officer)
+            // Dedicated audit route for personas with audit access
+            {
+              path: "audit",
+              element: (
+                <PermissionGuard
+                  requiredPermissions={["audit:read"]}
+                  fallbackPath="/studio/v2/chat"
+                >
+                  <Outlet />
+                </PermissionGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { AuditLogPage } =
+                      await import("../pages/AuditLogPage");
+                    return { Component: AuditLogPage };
+                  },
+                },
+              ],
+            },
+            // Admin - requires admin:access permission (fine-grained RBAC)
+            {
+              path: "admin",
+              element: (
+                <PermissionGuard
+                  requiredPermissions={["admin:access"]}
+                  fallbackPath="/studio/v2/chat"
+                >
+                  <Outlet />
+                </PermissionGuard>
+              ),
+              children: [
+                { index: true, element: <Navigate to="dashboard" replace /> },
+                {
+                  path: "dashboard",
+                  lazy: async () => {
+                    const { AdminDashboardPage } =
+                      await import("../pages/AdminDashboardPage");
+                    return { Component: AdminDashboardPage };
+                  },
+                },
+                {
+                  path: "audit-logs",
+                  lazy: async () => {
+                    const { AuditLogPage } =
+                      await import("../pages/AuditLogPage");
+                    return { Component: AuditLogPage };
+                  },
+                },
+              ],
+            },
+            // Analytics - HEART metrics dashboard (admin only)
+            {
+              path: "analytics",
+              element: (
+                <PermissionGuard
+                  requiredPermissions={["admin:access"]}
+                  fallbackPath="/studio/v2/chat"
+                >
+                  <Outlet />
+                </PermissionGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { AnalyticsDashboardPage } =
+                      await import("../pages/AnalyticsDashboardPage");
+                    return { Component: AnalyticsDashboardPage };
+                  },
+                },
+              ],
+            },
+            // Settings - all users
+            {
+              path: "settings",
+              element: <Navigate to="/studio/settings" replace />,
+            },
+            // MCP - redirect to legacy until v2 page is ready
+            {
+              path: "mcp",
+              element: <Navigate to="/studio/mcp" replace />,
+            },
+            // Cost - redirect to legacy until v2 page is ready
+            {
+              path: "cost",
+              element: <Navigate to="/studio/cost" replace />,
+            },
+            // Connections - redirect to legacy until v2 page is ready
+            {
+              path: "connections",
+              element: <Navigate to="/studio/connections" replace />,
+            },
+            // Help - full help center
+            {
+              path: "help",
+              lazy: async () => {
+                const { HelpPage } = await import("../pages/HelpPage");
+                return { Component: HelpPage };
+              },
             },
           ],
         },

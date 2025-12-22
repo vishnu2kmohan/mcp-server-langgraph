@@ -399,4 +399,484 @@ describe("MainDock", () => {
       expect(screen.getByTestId("dock-tab-bar")).toBeInTheDocument();
     });
   });
+
+  describe("tab rename functionality", () => {
+    it("should enter edit mode on double-click", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Chat 1" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: {
+          tabs,
+          activeTabId: "tab-1",
+        },
+      });
+
+      // Double-click on the tab
+      const tab = screen.getByRole("tab");
+      fireEvent.doubleClick(tab);
+
+      // Should show the rename input
+      expect(screen.getByTestId("tab-rename-input-tab-1")).toBeInTheDocument();
+    });
+
+    it("should populate input with current tab title on edit", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "My Chat Tab" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: {
+          tabs,
+          activeTabId: "tab-1",
+        },
+      });
+
+      const tab = screen.getByRole("tab");
+      fireEvent.doubleClick(tab);
+
+      const input = screen.getByTestId(
+        "tab-rename-input-tab-1",
+      ) as HTMLInputElement;
+      expect(input.value).toBe("My Chat Tab");
+    });
+
+    it("should save new title on Enter key", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Original Title" },
+      ];
+      const store = createTestStore({
+        tabs,
+        activeTabId: "tab-1",
+      });
+      renderWithProviders(<MainDock />, { store });
+
+      // Enter edit mode
+      const tab = screen.getByRole("tab");
+      fireEvent.doubleClick(tab);
+
+      // Change the input value
+      const input = screen.getByTestId("tab-rename-input-tab-1");
+      fireEvent.change(input, { target: { value: "New Title" } });
+
+      // Press Enter to save
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      // Should update the tab title in store
+      expect(store.getState().workspace.tabs[0].title).toBe("New Title");
+    });
+
+    it("should cancel rename on Escape key", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Original Title" },
+      ];
+      const store = createTestStore({
+        tabs,
+        activeTabId: "tab-1",
+      });
+      renderWithProviders(<MainDock />, { store });
+
+      // Enter edit mode
+      const tab = screen.getByRole("tab");
+      fireEvent.doubleClick(tab);
+
+      // Change the input value
+      const input = screen.getByTestId("tab-rename-input-tab-1");
+      fireEvent.change(input, { target: { value: "New Title" } });
+
+      // Press Escape to cancel
+      fireEvent.keyDown(input, { key: "Escape" });
+
+      // Should keep original title
+      expect(store.getState().workspace.tabs[0].title).toBe("Original Title");
+      // Should exit edit mode
+      expect(
+        screen.queryByTestId("tab-rename-input-tab-1"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should save on save button click", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Original Title" },
+      ];
+      const store = createTestStore({
+        tabs,
+        activeTabId: "tab-1",
+      });
+      renderWithProviders(<MainDock />, { store });
+
+      // Enter edit mode
+      const tab = screen.getByRole("tab");
+      fireEvent.doubleClick(tab);
+
+      // Change the input value
+      const input = screen.getByTestId("tab-rename-input-tab-1");
+      fireEvent.change(input, { target: { value: "Button Saved Title" } });
+
+      // Click save button
+      const saveButton = screen.getByLabelText("Save tab name");
+      fireEvent.click(saveButton);
+
+      // Should update the tab title in store
+      expect(store.getState().workspace.tabs[0].title).toBe(
+        "Button Saved Title",
+      );
+    });
+
+    it("should cancel on cancel button click", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Original Title" },
+      ];
+      const store = createTestStore({
+        tabs,
+        activeTabId: "tab-1",
+      });
+      renderWithProviders(<MainDock />, { store });
+
+      // Enter edit mode
+      const tab = screen.getByRole("tab");
+      fireEvent.doubleClick(tab);
+
+      // Change the input value
+      const input = screen.getByTestId("tab-rename-input-tab-1");
+      fireEvent.change(input, { target: { value: "Changed Title" } });
+
+      // Click cancel button
+      const cancelButton = screen.getByLabelText("Cancel rename");
+      fireEvent.click(cancelButton);
+
+      // Should keep original title
+      expect(store.getState().workspace.tabs[0].title).toBe("Original Title");
+      // Should exit edit mode
+      expect(
+        screen.queryByTestId("tab-rename-input-tab-1"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should save on blur", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Original Title" },
+      ];
+      const store = createTestStore({
+        tabs,
+        activeTabId: "tab-1",
+      });
+      renderWithProviders(<MainDock />, { store });
+
+      // Enter edit mode
+      const tab = screen.getByRole("tab");
+      fireEvent.doubleClick(tab);
+
+      // Change the input value
+      const input = screen.getByTestId("tab-rename-input-tab-1");
+      fireEvent.change(input, { target: { value: "Blur Saved Title" } });
+
+      // Blur the input (clicking outside)
+      fireEvent.blur(input);
+
+      // Should update the tab title in store
+      expect(store.getState().workspace.tabs[0].title).toBe("Blur Saved Title");
+    });
+
+    it("should not update title if empty after trim", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Original Title" },
+      ];
+      const store = createTestStore({
+        tabs,
+        activeTabId: "tab-1",
+      });
+      renderWithProviders(<MainDock />, { store });
+
+      // Enter edit mode
+      const tab = screen.getByRole("tab");
+      fireEvent.doubleClick(tab);
+
+      // Change to empty/whitespace
+      const input = screen.getByTestId("tab-rename-input-tab-1");
+      fireEvent.change(input, { target: { value: "   " } });
+
+      // Press Enter to save
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      // Should keep original title (empty not allowed)
+      expect(store.getState().workspace.tabs[0].title).toBe("Original Title");
+    });
+
+    it("should not be draggable while editing", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Chat 1" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: {
+          tabs,
+          activeTabId: "tab-1",
+        },
+      });
+
+      // Initially draggable
+      const tab = screen.getByRole("tab");
+      expect(tab).toHaveAttribute("draggable", "true");
+
+      // Enter edit mode
+      fireEvent.doubleClick(tab);
+
+      // Should not be draggable
+      expect(tab).toHaveAttribute("draggable", "false");
+    });
+  });
+
+  describe("keyboard navigation", () => {
+    it("should select tab on Enter key press", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Chat 1" },
+        { id: "tab-2", type: "workflow", title: "Workflow 1" },
+      ];
+      const store = createTestStore({
+        tabs,
+        activeTabId: "tab-1",
+      });
+      renderWithProviders(<MainDock />, { store });
+
+      // Focus on second tab and press Enter
+      const tabElements = screen.getAllByRole("tab");
+      fireEvent.keyDown(tabElements[1], { key: "Enter" });
+
+      // Should activate the second tab
+      expect(store.getState().workspace.activeTabId).toBe("tab-2");
+    });
+
+    it("should select tab on Space key press", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Chat 1" },
+        { id: "tab-2", type: "workflow", title: "Workflow 1" },
+      ];
+      const store = createTestStore({
+        tabs,
+        activeTabId: "tab-1",
+      });
+      renderWithProviders(<MainDock />, { store });
+
+      // Focus on second tab and press Space
+      const tabElements = screen.getAllByRole("tab");
+      fireEvent.keyDown(tabElements[1], { key: " " });
+
+      // Should activate the second tab
+      expect(store.getState().workspace.activeTabId).toBe("tab-2");
+    });
+
+    it("should not select tab via keyboard when editing", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Chat 1" },
+      ];
+      const store = createTestStore({
+        tabs,
+        activeTabId: "tab-1",
+      });
+      renderWithProviders(<MainDock />, { store });
+
+      // Enter edit mode
+      const tab = screen.getByRole("tab");
+      fireEvent.doubleClick(tab);
+
+      // Original activeTabId
+      const originalActiveId = store.getState().workspace.activeTabId;
+
+      // Press Enter on the tab (should not trigger selection, only submit)
+      fireEvent.keyDown(tab, { key: "Enter" });
+
+      // Active tab should remain the same (Enter is handled by input)
+      expect(store.getState().workspace.activeTabId).toBe(originalActiveId);
+    });
+  });
+
+  describe("tab icons", () => {
+    it("should render correct icon for chat tabs", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Chat Tab" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: { tabs, activeTabId: "tab-1" },
+      });
+
+      // Chat tabs have MessageSquare icon - verified by presence of tab with chat content
+      expect(screen.getByText("Chat Tab")).toBeInTheDocument();
+    });
+
+    it("should render correct icon for workflow tabs", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "workflow", title: "Workflow Tab" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: { tabs, activeTabId: "tab-1" },
+      });
+
+      expect(screen.getByText("Workflow Tab")).toBeInTheDocument();
+    });
+
+    it("should render correct icon for project tabs", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "project", title: "Project Tab" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: { tabs, activeTabId: "tab-1" },
+      });
+
+      expect(screen.getByText("Project Tab")).toBeInTheDocument();
+    });
+
+    it("should render correct icon for settings tabs", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "settings", title: "Settings Tab" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: { tabs, activeTabId: "tab-1" },
+      });
+
+      expect(screen.getByText("Settings Tab")).toBeInTheDocument();
+    });
+
+    it("should render correct icon for observability tabs", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "observability", title: "Observability Tab" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: { tabs, activeTabId: "tab-1" },
+      });
+
+      expect(screen.getByText("Observability Tab")).toBeInTheDocument();
+    });
+
+    it("should render correct icon for cost tabs", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "cost", title: "Cost Tab" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: { tabs, activeTabId: "tab-1" },
+      });
+
+      expect(screen.getByText("Cost Tab")).toBeInTheDocument();
+    });
+  });
+
+  describe("drag and drop edge cases", () => {
+    it("should handle dragLeave correctly", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Chat 1" },
+        { id: "tab-2", type: "workflow", title: "Workflow 1" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: {
+          tabs,
+          activeTabId: "tab-1",
+        },
+      });
+
+      const tabElements = screen.getAllByRole("tab");
+
+      // Simulate drag over then leave
+      fireEvent.dragOver(tabElements[1], {
+        dataTransfer: { dropEffect: "move" },
+        preventDefault: vi.fn(),
+      });
+      fireEvent.dragLeave(tabElements[1]);
+
+      // Tab should still be there
+      expect(tabElements[1]).toBeInTheDocument();
+    });
+
+    it("should handle dragEnd to reset state", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Chat 1" },
+        { id: "tab-2", type: "workflow", title: "Workflow 1" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: {
+          tabs,
+          activeTabId: "tab-1",
+        },
+      });
+
+      const tabElements = screen.getAllByRole("tab");
+
+      // Start drag
+      fireEvent.dragStart(tabElements[0], {
+        dataTransfer: { setData: vi.fn(), effectAllowed: "move" },
+      });
+
+      // End drag without dropping
+      fireEvent.dragEnd(tabElements[0]);
+
+      // Tabs should still be in original order
+      expect(screen.getByText("Chat 1")).toBeInTheDocument();
+      expect(screen.getByText("Workflow 1")).toBeInTheDocument();
+    });
+
+    it("should not reorder if drop on same position", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Chat 1" },
+        { id: "tab-2", type: "workflow", title: "Workflow 1" },
+      ];
+      const store = createTestStore({
+        tabs,
+        activeTabId: "tab-1",
+      });
+      renderWithProviders(<MainDock />, { store });
+
+      const tabElements = screen.getAllByRole("tab");
+
+      // Drag tab-1 and drop on same position
+      fireEvent.dragStart(tabElements[0], {
+        dataTransfer: { setData: vi.fn(), effectAllowed: "move" },
+      });
+      fireEvent.drop(tabElements[0], {
+        dataTransfer: { getData: () => "0" },
+      });
+
+      // Order should be unchanged
+      const orderedTabs = store.getState().workspace.tabs;
+      expect(orderedTabs[0].id).toBe("tab-1");
+      expect(orderedTabs[1].id).toBe("tab-2");
+    });
+
+    it("should handle invalid drag data gracefully", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "Chat 1" },
+        { id: "tab-2", type: "workflow", title: "Workflow 1" },
+      ];
+      const store = createTestStore({
+        tabs,
+        activeTabId: "tab-1",
+      });
+      renderWithProviders(<MainDock />, { store });
+
+      const tabElements = screen.getAllByRole("tab");
+
+      // Drop with invalid data
+      fireEvent.drop(tabElements[1], {
+        dataTransfer: { getData: () => "invalid" },
+      });
+
+      // Order should be unchanged (NaN check)
+      const orderedTabs = store.getState().workspace.tabs;
+      expect(orderedTabs[0].id).toBe("tab-1");
+      expect(orderedTabs[1].id).toBe("tab-2");
+    });
+  });
+
+  describe("content without renderContent", () => {
+    it("should show default content when no renderContent provided", () => {
+      const tabs: TabState[] = [
+        { id: "tab-1", type: "chat", title: "My Tab" },
+      ];
+      renderWithProviders(<MainDock />, {
+        workspaceOverrides: {
+          tabs,
+          activeTabId: "tab-1",
+        },
+      });
+
+      // Should show default message with tab title
+      expect(screen.getByText(/content for: my tab/i)).toBeInTheDocument();
+    });
+  });
 });

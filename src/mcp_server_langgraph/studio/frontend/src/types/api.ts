@@ -145,23 +145,69 @@ export interface ApiError {
 // =============================================================================
 // Feature Flags
 // =============================================================================
+// API Response Format: The backend API returns short names (e.g., "workflows")
+// not backend field names (e.g., "enable_workflows_feature").
+// See: src/mcp_server_langgraph/core/feature_flags.py - get_ui_features_for_role()
+// =============================================================================
 
 export interface FeatureFlags {
-  enable_workflows_feature?: boolean;
-  enable_sessions_feature?: boolean;
-  enable_cost_dashboard?: boolean;
-  enable_cost_dashboard_users?: boolean;
-  enable_observability_ui?: boolean;
-  enable_code_export?: boolean;
-  enable_ai_suggestions?: boolean;
-  enable_mcp_websocket?: boolean;
+  // ==========================================================================
+  // Core Features (API response uses SHORT NAMES)
+  // ==========================================================================
+  /** Enable workflows feature */
+  workflows?: boolean;
+  /** Enable sessions feature */
+  sessions?: boolean;
+  /** Enable cost dashboard (admins always, users if cost_dashboard_users enabled) */
+  cost_dashboard?: boolean;
+  /** Enable observability UI */
+  observability?: boolean;
+  /** Enable code export feature */
+  code_export?: boolean;
+  /** Enable AI suggestions */
+  ai_suggestions?: boolean;
+  /** Enable LLM suggestions */
+  llm_suggestions?: boolean;
+  /** Enable notification preferences */
+  notification_preferences?: boolean;
+  /** Enable MCP WebSocket connections */
+  mcp_websocket?: boolean;
   /** Enable interactive artifact rendering in chat messages (Sandpack for JSX/TSX/MDX) */
-  enable_interactive_artifacts?: boolean;
+  interactive_artifacts?: boolean;
+  /** Enable URL content fetching */
+  url_content_fetch?: boolean;
+  /** Enable slash commands */
+  slash_commands?: boolean;
+  /** Enable style presets */
+  style_presets?: boolean;
+
+  // ==========================================================================
+  // UX Enhancement Features (API response uses SHORT NAMES)
+  // ==========================================================================
+  /** Enable user preferences sync */
+  user_preferences_sync?: boolean;
+  /** Enable session export */
+  session_export?: boolean;
+  /** Enable project context */
+  project_context?: boolean;
+  /** Enable onboarding wizard */
+  onboarding_wizard?: boolean;
+  /** Enable guided tour */
+  guided_tour?: boolean;
+  /** Enable SUS survey */
+  sus_survey?: boolean;
+  /** Enable command palette */
+  command_palette?: boolean;
+  /** Enable keyboard shortcuts */
+  keyboard_shortcuts?: boolean;
+  /** Enable theme customization */
+  theme_customization?: boolean;
+  /** Enable confirmation dialogs */
+  confirmation_dialogs?: boolean;
 
   // ==========================================================================
   // Canvas Hybrid Shell Feature Flags (Phase 0+)
   // ==========================================================================
-
   /** Enable Hybrid Canvas shell at /studio/v2 (Phase 1) */
   canvas_hybrid_shell?: boolean;
   /** Enable editable artifacts in Canvas panel (Phase 2) */
@@ -175,6 +221,7 @@ export interface FeatureFlags {
   /** Enable in-app help pane (Phase 6) */
   canvas_help?: boolean;
 
+  // Allow dynamic flag access
   [key: string]: boolean | undefined;
 }
 
@@ -1195,4 +1242,520 @@ export type ExportFormat = "markdown" | "json" | "html";
 export interface SessionExportRequest {
   format: ExportFormat;
   include_metadata?: boolean;
+}
+
+// =============================================================================
+// Infrastructure Alerts & Remediations (Admin Dashboard)
+// =============================================================================
+
+/**
+ * Risk level for remediation steps
+ */
+export type RiskLevel = "low" | "medium" | "high";
+
+/**
+ * Remediation status
+ */
+export type RemediationStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "executing"
+  | "completed"
+  | "failed";
+
+/**
+ * A single remediation step recommended by AI
+ */
+export interface RemediationStep {
+  step_number: number;
+  action: string;
+  description: string;
+  command: string | null;
+  requires_approval: boolean;
+  risk_level: RiskLevel;
+}
+
+/**
+ * Risk assessment for a recommendation
+ */
+export interface RiskAssessment {
+  overall_risk: RiskLevel;
+  impact_analysis: string;
+  rollback_plan: string;
+}
+
+/**
+ * AI-generated recommendation for an alert
+ */
+export interface AIRecommendation {
+  recommendation_id: string;
+  alert_id: string;
+  root_cause_analysis: string;
+  remediation_steps: RemediationStep[];
+  risk_assessment: RiskAssessment;
+  runbook_reference: string | null;
+  generated_at: string;
+  model_used: string;
+}
+
+/**
+ * A remediation request pending approval
+ */
+export interface RemediationRequest {
+  remediation_id: string;
+  alert_id: string;
+  alert_name: string;
+  severity: "critical" | "warning";
+  step_number: number;
+  action: string;
+  description: string;
+  command: string | null;
+  risk_level: RiskLevel;
+  status: RemediationStatus;
+  requested_at: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  reason: string | null;
+  recommendation_id: string;
+}
+
+/**
+ * Remediation list query parameters
+ */
+export interface RemediationListParams {
+  status?: RemediationStatus;
+  alert_id?: string;
+  severity?: "critical" | "warning";
+  limit?: number;
+  cursor?: string;
+}
+
+/**
+ * Request to approve a remediation
+ */
+export interface ApproveRemediationRequest {
+  remediation_id: string;
+  approved_by: string;
+  reason?: string;
+}
+
+/**
+ * Request to reject a remediation
+ */
+export interface RejectRemediationRequest {
+  remediation_id: string;
+  rejected_by: string;
+  reason: RejectionReason;
+  reason_detail?: string;
+}
+
+/**
+ * Structured rejection reason for AI model learning
+ */
+export type RejectionReason =
+  | "too_risky"
+  | "incorrect_diagnosis"
+  | "wrong_command"
+  | "incomplete_steps"
+  | "not_relevant"
+  | "prefer_manual"
+  | "other";
+
+/**
+ * Request to reject a remediation with structured reason (for AI learning)
+ */
+export interface RejectRemediationWithReasonRequest {
+  remediation_id: string;
+  rejected_by: string;
+  reason: RejectionReason;
+  reason_detail?: string;
+}
+
+/**
+ * Alert severity for grouping (subset of full severity)
+ */
+export type GroupAlertSeverity = "critical" | "warning";
+
+/**
+ * Alert state for grouping
+ */
+export type GroupAlertState = "firing" | "resolved";
+
+/**
+ * A group of related alerts aggregated by service + alert name.
+ * Used for reducing noise in the Admin Dashboard.
+ */
+export interface AlertGroup {
+  /** Composite key: "service:alertname" */
+  groupKey: string;
+  /** Service name from alert labels (may be undefined) */
+  service?: string;
+  /** Alert name (alertname label) */
+  alertName: string;
+  /** Highest severity in the group */
+  severity: GroupAlertSeverity;
+  /** "firing" if any alert is firing, else "resolved" */
+  state: GroupAlertState;
+  /** Number of alerts in this group */
+  count: number;
+  /** Most recent alert for display */
+  mostRecentAlert: ObservabilityAlert;
+  /** All alerts in this group */
+  alerts: ObservabilityAlert[];
+  /** Earliest start time */
+  firstFiredAt: string;
+  /** Most recent update time */
+  lastUpdatedAt: string;
+}
+
+// =============================================================================
+// Agent HITL Request Types
+// =============================================================================
+
+/**
+ * Agent request status from backend
+ */
+export type AgentRequestStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "expired"
+  | "responded";
+
+/**
+ * Agent request type discriminator
+ */
+export type AgentRequestType = "approval" | "clarification";
+
+/**
+ * Response for listing pending agent requests
+ */
+export interface PendingAgentRequestsResponse {
+  approvals: Array<{
+    request_id: string;
+    session_id: string;
+    task_id: string;
+    agent_name: string;
+    confidence: number;
+    threshold: number;
+    proposed_action: string;
+    trigger_reason: string;
+    context: Record<string, unknown>;
+    requested_at: string;
+  }>;
+  clarifications: Array<{
+    request_id: string;
+    session_id: string;
+    task_id: string;
+    agent_name: string;
+    clarification_type: "text" | "choice" | "confirmation";
+    question: string;
+    options: Array<{
+      id: string;
+      label: string;
+      description?: string;
+      is_recommended?: boolean;
+    }>;
+    placeholder: string | null;
+    required: boolean;
+    context: Record<string, unknown>;
+    requested_at: string;
+  }>;
+  total_count: number;
+}
+
+/**
+ * Response for single request action (approve/reject/respond)
+ */
+export interface AgentRequestActionResponse {
+  success: boolean;
+  request_id: string;
+  status: AgentRequestStatus;
+  message?: string;
+}
+
+/**
+ * Parameters for approve request mutation
+ */
+export interface ApproveAgentRequestParams {
+  requestId: string;
+  approved_by: string;
+  reason?: string;
+  modifications?: Record<string, unknown>;
+}
+
+/**
+ * Parameters for reject request mutation
+ */
+export interface RejectAgentRequestParams {
+  requestId: string;
+  rejected_by: string;
+  reason?: string;
+}
+
+/**
+ * Parameters for respond to clarification mutation
+ */
+export interface RespondAgentRequestParams {
+  request_id: string;
+  response_type: "choice" | "text" | "confirm";
+  selected_option?: string;
+  text_response?: string;
+  confirmed?: boolean;
+}
+
+/**
+ * Parameters for batch operations
+ */
+export interface BatchApproveAgentRequestParams {
+  request_ids: string[];
+  approved_by: string;
+  reason?: string;
+}
+
+export interface BatchRejectAgentRequestParams {
+  request_ids: string[];
+  rejected_by: string;
+  reason?: string;
+}
+
+/**
+ * Response for batch operations
+ */
+export interface BatchAgentRequestResponse {
+  success: boolean;
+  processed: number;
+  failed: number;
+  results: Array<{
+    request_id: string;
+    success: boolean;
+    error?: string;
+  }>;
+}
+
+/**
+ * Parameters for listing pending requests
+ */
+export interface ListPendingAgentRequestsParams {
+  session_id?: string;
+  status?: AgentRequestStatus;
+  request_type?: AgentRequestType;
+}
+
+// =============================================================================
+// MCP Protocol Types (2025-11-25)
+// =============================================================================
+
+/**
+ * MCP Resource
+ */
+export interface McpResource {
+  uri: string;
+  name: string;
+  title?: string | null;
+  description?: string | null;
+  mime_type?: string | null;
+}
+
+/**
+ * Response for listing MCP resources
+ */
+export interface McpResourceListResponse {
+  resources: McpResource[];
+}
+
+/**
+ * MCP Resource content item
+ */
+export interface McpResourceContentItem {
+  uri: string;
+  mime_type?: string | null;
+  text?: string | null;
+  blob?: string | null;
+}
+
+/**
+ * Response for reading MCP resource content
+ */
+export interface McpResourceContentResponse {
+  contents: McpResourceContentItem[];
+}
+
+/**
+ * Request for reading MCP resource
+ */
+export interface McpReadResourceRequest {
+  uri: string;
+}
+
+/**
+ * MCP Tool definition
+ */
+export interface McpTool {
+  name: string;
+  description: string;
+  inputSchema?: Record<string, unknown>;
+}
+
+/**
+ * Response for listing MCP tools
+ */
+export interface McpToolListResponse {
+  tools: McpTool[];
+}
+
+/**
+ * Request for invoking MCP tool
+ */
+export interface McpInvokeToolRequest {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
+/**
+ * Response for MCP tool invocation
+ */
+export interface McpToolInvocationResponse {
+  content: Array<{
+    type: string;
+    text?: string;
+    data?: string;
+    mimeType?: string;
+  }>;
+  isError: boolean;
+}
+
+/**
+ * Request for MCP sampling (LLM completion)
+ */
+export interface McpSamplingRequest {
+  messages: Array<{
+    role: string;
+    content: {
+      type: string;
+      text?: string;
+      data?: string;
+      mimeType?: string;
+    };
+  }>;
+  max_tokens?: number;
+  system_prompt?: string | null;
+  model_hints?: string[] | null;
+  intelligence_priority?: number;
+  speed_priority?: number;
+  cost_priority?: number;
+}
+
+/**
+ * Response for MCP sampling
+ */
+export interface McpSamplingResponse {
+  role: string;
+  content: {
+    type: string;
+    text?: string;
+    data?: string;
+    mimeType?: string;
+  };
+  model?: string | null;
+  stop_reason?: string | null;
+}
+
+/**
+ * Request for MCP elicitation (user input)
+ */
+export interface McpElicitationRequest {
+  message: string;
+  schema?: Record<string, unknown> | null;
+}
+
+/**
+ * Response for MCP elicitation
+ */
+export interface McpElicitationResponse {
+  action: "accept" | "decline" | "cancel";
+  content?: Record<string, unknown> | null;
+}
+
+/**
+ * MCP Prompt argument
+ */
+export interface McpPromptArgument {
+  name: string;
+  description?: string;
+  required?: boolean;
+}
+
+/**
+ * MCP Prompt definition
+ */
+export interface McpPrompt {
+  name: string;
+  description?: string;
+  arguments?: McpPromptArgument[];
+}
+
+/**
+ * Response for listing MCP prompts
+ */
+export interface McpPromptListResponse {
+  prompts: McpPrompt[];
+}
+
+/**
+ * Request for getting MCP prompt
+ */
+export interface McpGetPromptRequest {
+  name: string;
+  arguments?: Record<string, string>;
+}
+
+/**
+ * Response for getting MCP prompt
+ */
+export interface McpGetPromptResponse {
+  messages: Array<{
+    role: string;
+    content: {
+      type: string;
+      text?: string;
+      resource?: {
+        uri: string;
+        text?: string;
+        blob?: string;
+        mimeType?: string;
+      };
+    };
+  }>;
+}
+
+/**
+ * MCP Task status
+ */
+export type McpTaskStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+/**
+ * MCP Task
+ */
+export interface McpTask {
+  task_id: string;
+  status: McpTaskStatus;
+  created_at: string;
+  last_updated_at: string;
+  ttl?: number | null;
+  poll_interval?: number | null;
+  status_message?: string | null;
+}
+
+/**
+ * Response for listing MCP tasks
+ */
+export interface McpTaskListResponse {
+  tasks: McpTask[];
 }

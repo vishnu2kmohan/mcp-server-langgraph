@@ -1,0 +1,281 @@
+/**
+ * ConversationPanel - Phase 2
+ *
+ * Orchestrator component that combines MessageList, ChatInput,
+ * FollowUpSuggestions, and SlashCommandMenu into a cohesive chat experience.
+ *
+ * Features:
+ * - Message display with auto-scroll
+ * - Rich input with slash command support
+ * - AI-generated follow-up suggestions
+ * - Session header with actions
+ * - Telemetry callbacks for analytics
+ */
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Pencil, Trash2 } from "lucide-react";
+import { MessageList } from "./MessageList";
+import { ChatInput } from "./ChatInput";
+import { FollowUpSuggestions, type Suggestion } from "./FollowUpSuggestions";
+import { SlashCommandMenu, type SlashCommand } from "./SlashCommandMenu";
+import type { ChatMessage } from "./MessageBubble";
+import { cn } from "../utils/cn";
+
+// =============================================================================
+// Types
+// =============================================================================
+
+export interface ConversationPanelProps {
+  /** Messages to display */
+  messages: ChatMessage[];
+  /** Callback when user sends a message */
+  onSendMessage: (message: string) => void;
+  /** AI-generated follow-up suggestions */
+  suggestions?: Suggestion[];
+  /** Slash commands available */
+  slashCommands?: SlashCommand[];
+  /** Callback when slash command selected */
+  onSlashCommand?: (command: SlashCommand) => void;
+  /** Session title for header */
+  sessionTitle?: string;
+  /** Callback for renaming session */
+  onRename?: () => void;
+  /** Callback for deleting session */
+  onDelete?: () => void;
+  /** Loading state */
+  isLoading?: boolean;
+  /** Streaming state (AI is typing) */
+  isStreaming?: boolean;
+  /** User has scrolled up from bottom */
+  isScrolledUp?: boolean;
+  /** Callback when scroll-to-bottom clicked */
+  onScrollToBottom?: () => void;
+  /** Auto-focus input on mount */
+  autoFocus?: boolean;
+  /** Telemetry: called when message sent */
+  onMessageSent?: (data: { messageLength: number; timestamp: number }) => void;
+  /** Telemetry: called when suggestion used */
+  onSuggestionUsed?: (data: {
+    suggestionId: string;
+    suggestionType: string;
+  }) => void;
+  /** Called when input value changes (for AI intent detection) */
+  onInputChange?: (value: string) => void;
+  /** Additional class name */
+  className?: string;
+}
+
+// =============================================================================
+// Session Header
+// =============================================================================
+
+interface SessionHeaderProps {
+  title: string;
+  onRename?: () => void;
+  onDelete?: () => void;
+}
+
+function SessionHeader({ title, onRename, onDelete }: SessionHeaderProps) {
+  return (
+    <div
+      data-testid="session-header"
+      className={cn(
+        "flex items-center justify-between px-4 py-2",
+        "border-b border-gray-200 dark:border-gray-700",
+      )}
+    >
+      <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+        {title}
+      </h2>
+      <div className="flex items-center gap-1">
+        {onRename && (
+          <button
+            data-testid="session-rename-button"
+            type="button"
+            onClick={onRename}
+            className={cn(
+              "p-1.5 rounded-md",
+              "text-gray-500 dark:text-gray-400",
+              "hover:bg-gray-100 dark:hover:bg-gray-700",
+              "transition-colors",
+            )}
+            aria-label="Rename session"
+          >
+            <Pencil size={14} />
+          </button>
+        )}
+        {onDelete && (
+          <button
+            data-testid="session-delete-button"
+            type="button"
+            onClick={onDelete}
+            className={cn(
+              "p-1.5 rounded-md",
+              "text-gray-500 dark:text-gray-400",
+              "hover:bg-red-100 dark:hover:bg-red-900/30",
+              "hover:text-red-600 dark:hover:text-red-400",
+              "transition-colors",
+            )}
+            aria-label="Delete session"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Component
+// =============================================================================
+
+export function ConversationPanel({
+  messages,
+  onSendMessage,
+  suggestions = [],
+  slashCommands = [],
+  onSlashCommand,
+  sessionTitle,
+  onRename,
+  onDelete,
+  isLoading = false,
+  isStreaming = false,
+  isScrolledUp = false,
+  onScrollToBottom,
+  autoFocus = false,
+  onMessageSent,
+  onSuggestionUsed,
+  onInputChange,
+  className,
+}: ConversationPanelProps) {
+  const [showSlashMenu, setShowSlashMenu] = useState(false);
+  const [slashFilter, setSlashFilter] = useState("");
+  const [_inputValue, setInputValue] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Focus input on mount if autoFocus
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [autoFocus]);
+
+  // Filter slash commands based on input
+  const filteredCommands = slashCommands.filter((cmd) =>
+    cmd.name.toLowerCase().includes(slashFilter.toLowerCase()),
+  );
+
+  // Handle sending a message
+  const handleSendMessage = useCallback(
+    (message: string) => {
+      onSendMessage(message);
+      setInputValue("");
+
+      // Telemetry callback
+      onMessageSent?.({
+        messageLength: message.length,
+        timestamp: Date.now(),
+      });
+    },
+    [onSendMessage, onMessageSent],
+  );
+
+  // Handle slash command detection (only for slash commands starting with "/")
+  const handleSlashCommand = useCallback((input: string) => {
+    if (input.startsWith("/")) {
+      setShowSlashMenu(true);
+      setSlashFilter(input.slice(1)); // Remove leading /
+    } else {
+      setShowSlashMenu(false);
+      setSlashFilter("");
+    }
+  }, []);
+
+  // Handle slash command selection
+  const handleSelectSlashCommand = useCallback(
+    (command: SlashCommand) => {
+      setShowSlashMenu(false);
+      setSlashFilter("");
+      setInputValue("");
+      onSlashCommand?.(command);
+    },
+    [onSlashCommand],
+  );
+
+  // Handle suggestion selection
+  const handleSelectSuggestion = useCallback(
+    (suggestion: Suggestion) => {
+      handleSendMessage(suggestion.text);
+
+      // Telemetry callback
+      onSuggestionUsed?.({
+        suggestionId: suggestion.id,
+        suggestionType: suggestion.type,
+      });
+    },
+    [handleSendMessage, onSuggestionUsed],
+  );
+
+  // Show suggestions only when not loading and has suggestions
+  const showSuggestions = !isLoading && suggestions.length > 0;
+
+  return (
+    <div
+      data-testid="conversation-panel"
+      className={cn("flex flex-col h-full bg-white dark:bg-gray-900", className)}
+    >
+      {/* Session Header */}
+      {sessionTitle && (
+        <SessionHeader
+          title={sessionTitle}
+          onRename={onRename}
+          onDelete={onDelete}
+        />
+      )}
+
+      {/* Message List */}
+      <MessageList
+        messages={messages}
+        isLoading={isLoading}
+        isStreaming={isStreaming}
+        isScrolledUp={isScrolledUp}
+        onScrollToBottom={onScrollToBottom}
+        className="flex-1"
+      />
+
+      {/* Follow-up Suggestions */}
+      {showSuggestions && (
+        <FollowUpSuggestions
+          suggestions={suggestions}
+          onSelect={handleSelectSuggestion}
+          className="px-4 py-2 border-t border-gray-200 dark:border-gray-700"
+        />
+      )}
+
+      {/* Slash Command Menu */}
+      {showSlashMenu && filteredCommands.length > 0 && (
+        <SlashCommandMenu
+          commands={filteredCommands}
+          isOpen={showSlashMenu}
+          query={slashFilter}
+          onSelect={handleSelectSlashCommand}
+          onClose={() => setShowSlashMenu(false)}
+          className="mx-4 mb-2"
+        />
+      )}
+
+      {/* Chat Input */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <ChatInput
+          onSend={handleSendMessage}
+          onSlashCommand={handleSlashCommand}
+          onInputChange={onInputChange}
+          disabled={isLoading}
+          isLoading={isLoading}
+          autoFocus={autoFocus}
+          ariaLabel="Type your message"
+        />
+      </div>
+    </div>
+  );
+}

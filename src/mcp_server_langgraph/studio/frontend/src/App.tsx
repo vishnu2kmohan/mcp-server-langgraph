@@ -68,6 +68,8 @@ import { setUserInfo, setPersonaLoading } from "./store/slices/personaSlice";
 import { initializeAuth } from "./store/slices/authSlice";
 import { loadWorkspaceFromStorage } from "./store/slices/workspaceSlice";
 import { useNotificationWebSocket } from "./hooks/useNotificationWebSocket";
+import { useAlertWebSocket } from "./hooks/useAlertWebSocket";
+import { useAlertSoundIntegration } from "./hooks/useAlertSoundIntegration";
 import { usePWAUpdate } from "./hooks/usePWAUpdate";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { useTheme } from "./hooks/useTheme";
@@ -78,6 +80,7 @@ import {
   useGetWorkflowTemplatesQuery,
   useCreateSessionMutation,
   useCreateProjectMutation,
+  useSubmitFeedbackMutation,
 } from "./api";
 import { useFeatureFlags } from "./contexts/FeatureFlagContext";
 import { addTab, setActiveTabId } from "./store/slices/workspaceSlice";
@@ -164,9 +167,19 @@ const DEFAULT_TEMPLATES: WorkflowTemplate[] = [
 export function App() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Check if this is a legacy studio route (uses AppShell)
+  // /studio/v2/* routes use HybridShellLayout and should render via Outlet
+  const isLegacyStudioRoute =
+    (location.pathname.startsWith("/studio") &&
+      !location.pathname.startsWith("/studio/v2")) ||
+    location.pathname.startsWith("/admin");
+
+  // Broader check for any studio/admin route (for features like notifications)
   const isStudioRoute =
     location.pathname.startsWith("/studio") ||
     location.pathname.startsWith("/admin");
+
   const dispatch = useAppDispatch();
 
   // Initialize authentication on app startup
@@ -183,6 +196,15 @@ export function App() {
 
   // Connect to notification WebSocket for studio/admin routes
   useNotificationWebSocket({ enabled: isStudioRoute });
+
+  // Check if on admin route (for alert WebSocket - ADR-0026)
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
+  // Connect to alert WebSocket for admin routes (real-time infrastructure alerts)
+  useAlertWebSocket({ enabled: isAdminRoute });
+
+  // Play sound for critical alerts (integrates with alertSlice)
+  useAlertSoundIntegration();
 
   // Apply theme to document (defaults to dark, respects user preference)
   useTheme();
@@ -294,7 +316,7 @@ export function App() {
     if (surveyDismissed) {
       const daysSinceDismiss =
         (Date.now() - surveyDismissed) / (1000 * 60 * 60 * 24);
-      if (daysSinceDismiss < 7) return;
+      if (daysSinceDismiss < 7) return undefined;
     }
 
     // Track session count
@@ -321,15 +343,11 @@ export function App() {
       }, 5000); // 5 second delay
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isStudioRoute]);
 
-  // Handle SUS survey submission
-  const handleSUSSubmit = useCallback((result: SUSSurveyResult) => {
-    storage.set(STORAGE_KEYS.SUS_COMPLETED, true);
-    setShowSUSSurvey(false);
-    // TODO: Send result to backend analytics endpoint
-    console.log("SUS Survey submitted:", result);
-  }, []);
+  // Handle SUS survey submission - placeholder, actual handler is defined after mutation is initialized
+  // This is just to satisfy React hooks order, actual implementation is handleSUSSubmitFn below
 
   // Handle SUS survey dismissal
   const handleSUSDismiss = useCallback(() => {
@@ -374,6 +392,35 @@ export function App() {
   // Mutations for creating new resources
   const [createSession] = useCreateSessionMutation();
   const [createProject] = useCreateProjectMutation();
+  const [submitFeedback] = useSubmitFeedbackMutation();
+
+  // Handle SUS survey submission - submits to backend analytics
+  const handleSUSSubmit = useCallback(
+    async (result: SUSSurveyResult) => {
+      storage.set(STORAGE_KEYS.SUS_COMPLETED, true);
+      setShowSUSSurvey(false);
+
+      // Submit SUS score to backend via the feedback endpoint
+      // Map SUS score (0-100) to NPS scale (0-10) for consistency with backend metrics
+      // Add detailed SUS data in the comment for analytics purposes
+      try {
+        await submitFeedback({
+          nps_score: Math.round(result.score / 10), // Convert 0-100 to 0-10
+          comment: JSON.stringify({
+            type: "sus_survey",
+            sus_score: result.score,
+            responses: result.responses,
+            timestamp: result.timestamp,
+          }),
+        }).unwrap();
+      } catch (error) {
+        // Silently fail - survey completion is already tracked locally
+        // and we don't want to interrupt user experience
+        console.error("Failed to submit SUS survey:", error);
+      }
+    },
+    [submitFeedback],
+  );
 
   // Handler for creating a new chat session
   const handleNewChat = useCallback(async () => {
@@ -444,9 +491,10 @@ export function App() {
       if (token) {
         try {
           const parts = token.split(".");
-          if (parts.length === 3) {
+          const payloadPart = parts[1];
+          if (parts.length === 3 && payloadPart) {
             const payload = JSON.parse(
-              atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+              atob(payloadPart.replace(/-/g, "+").replace(/_/g, "/")),
             );
 
             // Extract roles
@@ -489,7 +537,9 @@ export function App() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <OfflineBanner />
-      {isStudioRoute ? (
+      {isLegacyStudioRoute ? (
+        // Legacy studio routes: /studio/* (except /studio/v2/*) and /admin/*
+        // Uses AppShell with LeftSidebar, RightSidebar, MainDock
         <>
           <AppShell
             leftSidebar={
@@ -509,6 +559,8 @@ export function App() {
           <CommandPalette />
         </>
       ) : (
+        // Non-legacy routes: /studio/v2/*, /login, /auth/callback, etc.
+        // These render their own layout via the router (e.g., HybridShellLayout)
         <Outlet />
       )}
       <Toaster

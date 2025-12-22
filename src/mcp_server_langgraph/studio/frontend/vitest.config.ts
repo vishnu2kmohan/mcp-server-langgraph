@@ -14,9 +14,24 @@ import os from "os";
 // 3. Environment overrides for CI/containers
 //
 // Environment variables (in priority order):
-//   VITEST_MAX_FORKS=N     - Explicit worker count
-//   VITEST_MAX_WORKERS=N   - Alias for max workers
-//   CI=true                - Use conservative settings for CI
+//   VITEST_MAX_FORKS=N          - Explicit worker count
+//   VITEST_MAX_WORKERS=N        - Alias for max workers
+//   CI=true                     - Use conservative settings for CI
+//
+// Memory Monitoring:
+//   VITEST_MEMORY_MONITOR=true  - Enable memory snapshot tracking
+//   VITEST_MEMORY_VERBOSE=true  - Print full memory report after tests
+//   DEBUG=true                  - Also enables memory monitoring
+//
+// Memory Threshold Customization (all values in MB):
+//   VITEST_MEMORY_WARNING_MB=512  - Heap usage warning threshold (default: 512)
+//   VITEST_MEMORY_ERROR_MB=1024   - Heap usage error threshold (default: 1024)
+//   VITEST_MEMORY_DELTA_MB=50     - Delta warning threshold (default: 50)
+//
+// Default thresholds (configured in src/test/memoryMonitor.ts):
+//   - Warning at 512MB heap usage
+//   - Error at 1GB heap usage
+//   - Delta warning at 50MB growth between snapshots
 // =============================================================================
 
 function getOptimalWorkerCount(): number {
@@ -50,14 +65,16 @@ function getOptimalWorkerCount(): number {
     process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
   const ciLimit = isCI ? Math.min(4, cpuCount) : Infinity;
 
-  // Take the minimum of all limits, with a floor of 1 and ceiling of 16
+  // Take the minimum of all limits, with a floor of 1 and ceiling of 8
+  // Reduced from 16 to 8 to prevent heap OOM (8GB max heap / ~500MB per worker = ~16 max)
+  // Using half that for safety margin since workers share heap with main process
   const optimal = Math.max(
     1,
     Math.min(
       cpuBasedLimit,
       memoryBasedLimit,
       ciLimit,
-      16, // Never use more than 16 workers regardless of resources
+      8, // Never use more than 8 workers regardless of resources (OOM prevention)
     ),
   );
 
@@ -102,6 +119,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+    environmentOptions: {
+      jsdom: {
+        // Set base URL for jsdom to allow RTK Query's relative URL resolution
+        url: "http://localhost:3000",
+      },
+    },
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
 
@@ -112,16 +135,19 @@ export default defineConfig({
     // Vitest 4 removed tinypool, eliminating the orphan process issue.
     pool: "forks",
 
+    // Vitest 4+ moved poolOptions to top-level. Use isolate for better test isolation.
+    isolate: true, // Each test file gets its own environment (better isolation)
+
     // Limit parallel workers based on available resources
     // This is the key setting that controls resource usage!
     maxWorkers,
     minWorkers: 1, // Start with 1 worker, scale up as needed
 
-    // Limit concurrent tests within a single file
-    maxConcurrency: 10,
+    // Limit concurrent tests within a single file to reduce memory pressure
+    maxConcurrency: 5,
 
     // Teardown timeout - give workers time to clean up gracefully
-    teardownTimeout: 5000,
+    teardownTimeout: 10000, // Increased from 5s to 10s for GC time
 
     // Retry flaky tests once
     retry: 1,

@@ -11,6 +11,7 @@
  */
 
 import { Sparkles, Check, X, Loader2, Wand2, Bug } from "lucide-react";
+import { cn } from "../utils/cn";
 
 // =============================================================================
 // Types
@@ -33,14 +34,6 @@ export interface InlineSuggestionsProps {
   onDismiss: (suggestion: Suggestion) => void;
   isLoading?: boolean;
   className?: string;
-}
-
-// =============================================================================
-// Utility
-// =============================================================================
-
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
 }
 
 // =============================================================================

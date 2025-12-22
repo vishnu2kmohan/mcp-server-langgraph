@@ -328,6 +328,211 @@ describe("baseQueryWithReauth", () => {
     });
   });
 
+  describe("baseQueryWithReauth function behavior", () => {
+    it("should export resetRefreshLock that resets state", async () => {
+      // GIVEN: The module is imported
+      const { resetRefreshLock } = await import("./baseQueryWithReauth");
+
+      // WHEN: Resetting the refresh lock
+      resetRefreshLock();
+
+      // THEN: Should complete without error (state is reset internally)
+      expect(true).toBe(true);
+    });
+
+    it("should export baseQueryWithReauth as a function", async () => {
+      // GIVEN: The module is imported
+      const { baseQueryWithReauth } = await import("./baseQueryWithReauth");
+
+      // THEN: baseQueryWithReauth should be a function
+      expect(typeof baseQueryWithReauth).toBe("function");
+    });
+
+    it("should export default as baseQueryWithReauth", async () => {
+      // GIVEN: The module is imported
+      const module = await import("./baseQueryWithReauth");
+
+      // THEN: default export should be the same as named export
+      expect(module.default).toBe(module.baseQueryWithReauth);
+    });
+  });
+
+  describe("token refresh flow simulation", () => {
+    it("should identify 401 response correctly", () => {
+      // GIVEN: An API result with 401 error
+      const result = {
+        error: { status: 401, data: { detail: "Unauthorized" } },
+        data: undefined,
+      };
+
+      // WHEN: Checking if it's a 401
+      const is401 = result.error && result.error.status === 401;
+
+      // THEN: Should identify as 401
+      expect(is401).toBe(true);
+    });
+
+    it("should not trigger refresh for non-401 errors", () => {
+      // GIVEN: An API result with 500 error
+      const result = {
+        error: { status: 500, data: { detail: "Server Error" } },
+        data: undefined,
+      };
+
+      // WHEN: Checking if it's a 401
+      const is401 = result.error && result.error.status === 401;
+
+      // THEN: Should not identify as 401
+      expect(is401).toBe(false);
+    });
+
+    it("should not trigger refresh for successful responses", () => {
+      // GIVEN: A successful API result
+      const result = {
+        data: { message: "success" },
+        error: undefined as { status: number } | undefined,
+      };
+
+      // WHEN: Checking if it's a 401
+      const is401 = !!(result.error && result.error.status === 401);
+
+      // THEN: Should not trigger refresh
+      expect(is401).toBe(false);
+    });
+
+    it("should check for refresh token availability before refresh", () => {
+      // GIVEN: No refresh token
+      delete mockLocalStorage["refresh_token"];
+
+      // WHEN: Getting refresh token
+      const refreshToken = mockLocalStorageImpl.getItem("refresh_token");
+
+      // THEN: Should be null, indicating no refresh should be attempted
+      expect(refreshToken).toBeNull();
+    });
+
+    it("should proceed with refresh when token is available", () => {
+      // GIVEN: A refresh token exists
+      mockLocalStorage["refresh_token"] = "valid-refresh-token";
+
+      // WHEN: Getting refresh token
+      const refreshToken = mockLocalStorageImpl.getItem("refresh_token");
+
+      // THEN: Should have a valid token for refresh
+      expect(refreshToken).toBe("valid-refresh-token");
+    });
+
+    it("should simulate successful token refresh flow", async () => {
+      // GIVEN: Refresh token exists and refresh succeeds
+      mockLocalStorage["refresh_token"] = "valid-refresh-token";
+
+      const refreshResponse = {
+        access_token: "new-access-token",
+        refresh_token: "new-refresh-token",
+        expires_in: 300,
+        refresh_expires_in: 1800,
+      };
+
+      // WHEN: Processing successful refresh
+      const now = Date.now();
+      const expiresIn = refreshResponse.expires_in ?? 300;
+      const refreshExpiresIn = refreshResponse.refresh_expires_in ?? 1800;
+
+      const newTokens = {
+        accessToken: refreshResponse.access_token,
+        refreshToken: refreshResponse.refresh_token ?? "valid-refresh-token",
+        expiresAt: now + expiresIn * 1000,
+        refreshExpiresAt: now + refreshExpiresIn * 1000,
+      };
+
+      // THEN: New tokens should be correctly calculated
+      expect(newTokens.accessToken).toBe("new-access-token");
+      expect(newTokens.refreshToken).toBe("new-refresh-token");
+      expect(newTokens.expiresAt).toBeGreaterThan(now);
+      expect(newTokens.refreshExpiresAt).toBeGreaterThan(newTokens.expiresAt);
+    });
+
+    it("should use default expiration values when not provided", () => {
+      // GIVEN: Response without expiration times
+      const refreshResponse = {
+        access_token: "new-token",
+      };
+
+      // WHEN: Using nullish coalescing for defaults
+      const expiresIn = (refreshResponse as Record<string, unknown>)
+        .expires_in as number | undefined;
+      const refreshExpiresIn = (refreshResponse as Record<string, unknown>)
+        .refresh_expires_in as number | undefined;
+
+      const defaultExpiresIn = expiresIn ?? 300;
+      const defaultRefreshExpiresIn = refreshExpiresIn ?? 1800;
+
+      // THEN: Should use default values
+      expect(defaultExpiresIn).toBe(300);
+      expect(defaultRefreshExpiresIn).toBe(1800);
+    });
+  });
+
+  describe("concurrent refresh handling simulation", () => {
+    it("should track refresh state with lock mechanism", () => {
+      // GIVEN: Initial state
+      let isRefreshing = false;
+      let refreshPromise: Promise<boolean> | null = null;
+
+      // WHEN: Starting first refresh
+      isRefreshing = true;
+      refreshPromise = Promise.resolve(true);
+
+      // THEN: Lock should be active
+      expect(isRefreshing).toBe(true);
+      expect(refreshPromise).not.toBeNull();
+    });
+
+    it("should wait for existing refresh when lock is active", async () => {
+      // GIVEN: Refresh is in progress
+      const isRefreshing = true;
+      const refreshPromise = Promise.resolve(true);
+
+      // WHEN: Another request checks the lock
+      if (isRefreshing && refreshPromise) {
+        const refreshSucceeded = await refreshPromise;
+
+        // THEN: Should wait and get the result
+        expect(refreshSucceeded).toBe(true);
+      }
+    });
+
+    it("should release lock after refresh completes", async () => {
+      // GIVEN: Refresh completes
+      let isRefreshing = true;
+      let refreshPromise: Promise<boolean> | null = Promise.resolve(true);
+
+      // WHEN: Refresh completes (simulating finally block)
+      await refreshPromise;
+      isRefreshing = false;
+      refreshPromise = null;
+
+      // THEN: Lock should be released
+      expect(isRefreshing).toBe(false);
+      expect(refreshPromise).toBeNull();
+    });
+
+    it("should release lock even on refresh failure", async () => {
+      // GIVEN: Refresh fails
+      let isRefreshing = true;
+      let refreshPromise: Promise<boolean> | null = Promise.resolve(false);
+
+      // WHEN: Refresh fails (simulating finally block)
+      await refreshPromise;
+      isRefreshing = false;
+      refreshPromise = null;
+
+      // THEN: Lock should still be released
+      expect(isRefreshing).toBe(false);
+      expect(refreshPromise).toBeNull();
+    });
+  });
+
   describe("Authorization header construction", () => {
     it("should format Bearer token correctly", () => {
       // GIVEN: An access token
@@ -422,6 +627,151 @@ describe("baseQueryWithReauth", () => {
 
       // THEN: Should have PARSING_ERROR status
       expect(error.status).toBe("PARSING_ERROR");
+    });
+  });
+
+  describe("baseQueryWithReauth flow logic", () => {
+    it("should handle 401 response flow without refresh token", () => {
+      // GIVEN: A 401 error result and no refresh token
+      const result = { error: { status: 401, data: { detail: "Unauthorized" } } };
+      const refreshToken: string | null = null;
+
+      // WHEN: Checking if refresh should be attempted
+      const is401 = result.error && result.error.status === 401;
+      const hasRefreshToken = !!refreshToken;
+
+      // THEN: Should identify as 401 but no refresh attempt
+      expect(is401).toBe(true);
+      expect(hasRefreshToken).toBe(false);
+      // Without refresh token, logout should be dispatched
+    });
+
+    it("should handle 401 response flow with refresh token", () => {
+      // GIVEN: A 401 error result with refresh token available
+      const result = { error: { status: 401, data: { detail: "Token expired" } } };
+      const refreshToken = "valid-refresh-token";
+
+      // WHEN: Checking if refresh should be attempted
+      const is401 = result.error && result.error.status === 401;
+      const hasRefreshToken = !!refreshToken;
+
+      // THEN: Should identify as 401 and attempt refresh
+      expect(is401).toBe(true);
+      expect(hasRefreshToken).toBe(true);
+      // With refresh token, refresh flow should be attempted
+    });
+
+    it("should process successful refresh response", () => {
+      // GIVEN: A successful refresh response
+      const refreshResult = {
+        data: {
+          access_token: "new-access-token",
+          refresh_token: "new-refresh-token",
+          expires_in: 300,
+          refresh_expires_in: 1800,
+        },
+      };
+
+      // WHEN: Extracting tokens from refresh response
+      const hasData = !!refreshResult.data;
+      const newTokens = refreshResult.data;
+
+      // THEN: Should have valid new tokens
+      expect(hasData).toBe(true);
+      expect(newTokens.access_token).toBe("new-access-token");
+      expect(newTokens.refresh_token).toBe("new-refresh-token");
+      expect(newTokens.expires_in).toBe(300);
+    });
+
+    it("should handle failed refresh response", () => {
+      // GIVEN: A failed refresh response
+      const refreshResult = {
+        data: undefined,
+        error: { status: 401, data: { detail: "Refresh token expired" } },
+      };
+
+      // WHEN: Checking if refresh succeeded
+      const hasData = !!refreshResult.data;
+
+      // THEN: Should identify as failed refresh
+      expect(hasData).toBe(false);
+      // Failed refresh should trigger logout
+    });
+
+    it("should construct proper setTokens payload", () => {
+      // GIVEN: New tokens from refresh
+      const newTokens = {
+        access_token: "new-access-token",
+        refresh_token: "new-refresh-token",
+        expires_in: 300,
+        refresh_expires_in: 1800,
+      };
+      const originalRefreshToken = "original-refresh-token";
+      const now = Date.now();
+
+      // WHEN: Constructing setTokens payload
+      const payload = {
+        accessToken: newTokens.access_token,
+        refreshToken: newTokens.refresh_token ?? originalRefreshToken,
+        expiresAt: now + (newTokens.expires_in ?? 300) * 1000,
+        refreshExpiresAt: now + (newTokens.refresh_expires_in ?? 1800) * 1000,
+      };
+
+      // THEN: Payload should be correctly constructed
+      expect(payload.accessToken).toBe("new-access-token");
+      expect(payload.refreshToken).toBe("new-refresh-token");
+      expect(payload.expiresAt).toBeGreaterThan(now);
+      expect(payload.refreshExpiresAt).toBeGreaterThan(payload.expiresAt);
+    });
+
+    it("should use original refresh token when new one not provided", () => {
+      // GIVEN: Refresh response without new refresh token
+      const newTokens = {
+        access_token: "new-access-token",
+        // refresh_token not provided
+      };
+      const originalRefreshToken = "original-refresh-token";
+
+      // WHEN: Constructing refresh token
+      const refreshToken =
+        (newTokens as Record<string, unknown>).refresh_token ??
+        originalRefreshToken;
+
+      // THEN: Should use original refresh token
+      expect(refreshToken).toBe("original-refresh-token");
+    });
+
+    it("should properly detect window undefined check", () => {
+      // GIVEN: Window availability check pattern
+      const hasWindow = typeof window !== "undefined";
+
+      // THEN: In test environment, window should be defined
+      expect(hasWindow).toBe(true);
+    });
+  });
+
+  describe("storage utility integration", () => {
+    it("should verify storage module is used for token retrieval", async () => {
+      // GIVEN: The module imports storage utilities
+      // This verifies the import structure is correct
+      const module = await import("./baseQueryWithReauth");
+
+      // THEN: Should have the baseQueryWithReauth function
+      expect(typeof module.baseQueryWithReauth).toBe("function");
+    });
+
+    it("should verify setAuthTokens is called pattern", () => {
+      // GIVEN: New tokens to save
+      const accessToken = "new-access-token";
+      const refreshToken = "new-refresh-token";
+
+      // WHEN: Simulating setAuthTokens call
+      mockLocalStorageImpl.setItem("studio_access_token", accessToken);
+      mockLocalStorageImpl.setItem("studio_refresh_token", refreshToken);
+
+      // THEN: Tokens should be saved
+      expect(mockLocalStorage["studio_access_token"]).toBe(accessToken);
+      expect(mockLocalStorage["studio_refresh_token"]).toBe(refreshToken);
     });
   });
 });

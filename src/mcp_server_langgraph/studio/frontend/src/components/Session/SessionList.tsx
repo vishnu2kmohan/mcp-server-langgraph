@@ -136,6 +136,7 @@ export function SessionList({
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
     }
+    return undefined;
   }, [activeMenuId]);
 
   // ---------------------------------------------------------------------------
@@ -156,27 +157,36 @@ export function SessionList({
             currentIndex + 1,
             filteredSessions.length - 1,
           );
-          if (nextIndex !== currentIndex || currentIndex === -1) {
-            onSelect(filteredSessions[nextIndex === -1 ? 0 : nextIndex].id);
+          const targetIndex = nextIndex === -1 ? 0 : nextIndex;
+          const targetSession = filteredSessions[targetIndex];
+          if (targetSession && (nextIndex !== currentIndex || currentIndex === -1)) {
+            onSelect(targetSession.id);
           }
           break;
         }
         case "ArrowUp": {
           e.preventDefault();
           const prevIndex = Math.max(currentIndex - 1, 0);
-          if (prevIndex !== currentIndex) {
-            onSelect(filteredSessions[prevIndex].id);
+          const prevSession = filteredSessions[prevIndex];
+          if (prevSession && prevIndex !== currentIndex) {
+            onSelect(prevSession.id);
           }
           break;
         }
         case "Home": {
           e.preventDefault();
-          onSelect(filteredSessions[0].id);
+          const firstSession = filteredSessions[0];
+          if (firstSession) {
+            onSelect(firstSession.id);
+          }
           break;
         }
         case "End": {
           e.preventDefault();
-          onSelect(filteredSessions[filteredSessions.length - 1].id);
+          const lastSession = filteredSessions[filteredSessions.length - 1];
+          if (lastSession) {
+            onSelect(lastSession.id);
+          }
           break;
         }
       }
