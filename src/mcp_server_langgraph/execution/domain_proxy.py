@@ -63,6 +63,7 @@ class DomainProxyConfig(BaseModel):
     dns_port: int = Field(default=5353, description="DNS proxy port (if using DNS-based filtering)")
     log_blocked: bool = Field(default=True, description="Log blocked requests")
     log_allowed: bool = Field(default=False, description="Log allowed requests")
+    connection_timeout: float = Field(default=30.0, description="Connection timeout in seconds")
 
 
 # =============================================================================
@@ -228,7 +229,197 @@ class DomainProxyServer:
 
 
 # =============================================================================
-# Metrics
+# HTTP Protocol Parsing
+# =============================================================================
+
+
+def parse_connect_request(request: bytes) -> dict[str, Any] | None:
+    """Parse HTTP CONNECT request.
+
+    Args:
+        request: Raw HTTP request bytes
+
+    Returns:
+        Dict with host and port, or None if invalid
+    """
+    try:
+        lines = request.split(b"\r\n")
+        if not lines:
+            return None
+
+        first_line = lines[0].decode("utf-8", errors="ignore")
+        parts = first_line.split()
+
+        if len(parts) < 3 or parts[0] != "CONNECT":
+            return None
+
+        host_port = parts[1]
+        if ":" in host_port:
+            host, port_str = host_port.rsplit(":", 1)
+            port = int(port_str)
+        else:
+            host = host_port
+            port = 443
+
+        return {"host": host, "port": port}
+    except (ValueError, IndexError):
+        return None
+
+
+def parse_http_request(request: bytes) -> dict[str, Any] | None:
+    """Parse HTTP GET/POST request with absolute URL.
+
+    Args:
+        request: Raw HTTP request bytes
+
+    Returns:
+        Dict with host, method, path, or None if invalid
+    """
+    try:
+        lines = request.split(b"\r\n")
+        if not lines:
+            return None
+
+        first_line = lines[0].decode("utf-8", errors="ignore")
+        parts = first_line.split()
+
+        if len(parts) < 3:
+            return None
+
+        method = parts[0]
+        url = parts[1]
+
+        if url.startswith("http://"):
+            url = url[7:]
+        elif url.startswith("https://"):
+            url = url[8:]
+
+        if "/" in url:
+            host, path = url.split("/", 1)
+            path = "/" + path
+        else:
+            host = url
+            path = "/"
+
+        if ":" in host:
+            host = host.split(":")[0]
+
+        return {"host": host, "method": method, "path": path}
+    except (ValueError, IndexError):
+        return None
+
+
+def create_blocked_response(domain: str) -> bytes:
+    """Create HTTP 403 Forbidden response.
+
+    Args:
+        domain: Blocked domain name
+
+    Returns:
+        HTTP response bytes
+    """
+    body = f"<html><body><h1>403 Forbidden</h1><p>Access to {domain} is blocked.</p></body></html>"
+    response = (
+        f"HTTP/1.1 403 Forbidden\r\n"
+        f"Content-Type: text/html\r\n"
+        f"Content-Length: {len(body)}\r\n"
+        f"Connection: close\r\n"
+        f"\r\n"
+        f"{body}"
+    )
+    return response.encode("utf-8")
+
+
+def create_connect_success_response() -> bytes:
+    """Create HTTP 200 Connection Established response.
+
+    Returns:
+        HTTP response bytes
+    """
+    return b"HTTP/1.1 200 Connection Established\r\n\r\n"
+
+
+# =============================================================================
+# Connection Handler
+# =============================================================================
+
+
+class ProxyConnectionHandler:
+    """Handles individual proxy connections with domain validation."""
+
+    def __init__(self, config: DomainProxyConfig) -> None:
+        """Initialize connection handler.
+
+        Args:
+            config: Proxy configuration
+        """
+        self.config = config
+        self._matcher = DomainMatcher(config.allowed_domains)
+        self.timeout = config.connection_timeout
+
+    async def check_request(self, request: bytes) -> dict[str, Any]:
+        """Check if a request should be allowed.
+
+        Args:
+            request: Raw HTTP request bytes
+
+        Returns:
+            Dict with allowed status and parsed host
+        """
+        connect_info = parse_connect_request(request)
+        if connect_info:
+            host = connect_info["host"]
+            allowed = self._matcher.is_allowed(host)
+            record_proxy_request(domain=host, allowed=allowed)
+            return {"allowed": allowed, "host": host, "port": connect_info["port"]}
+
+        http_info = parse_http_request(request)
+        if http_info:
+            host = http_info["host"]
+            allowed = self._matcher.is_allowed(host)
+            record_proxy_request(domain=host, allowed=allowed)
+            return {"allowed": allowed, "host": host, "method": http_info["method"]}
+
+        return {"allowed": False, "host": "unknown", "error": "Invalid request format"}
+
+
+# =============================================================================
+# Prometheus Metrics
+# =============================================================================
+
+_proxy_metrics: dict[str, Any] | None = None
+
+
+def get_proxy_metrics() -> dict[str, Any]:
+    """Get proxy Prometheus metrics.
+
+    Returns:
+        Dict of metric names to metric objects
+    """
+    global _proxy_metrics
+    if _proxy_metrics is None:
+        _proxy_metrics = {
+            "proxy_requests_total": {
+                "type": "counter",
+                "help": "Total number of proxy requests",
+                "labels": ["domain", "status"],
+            },
+            "proxy_requests_blocked_total": {
+                "type": "counter",
+                "help": "Total number of blocked proxy requests",
+                "labels": ["domain"],
+            },
+            "proxy_request_duration_seconds": {
+                "type": "histogram",
+                "help": "Proxy request duration in seconds",
+                "buckets": [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0],
+            },
+        }
+    return _proxy_metrics
+
+
+# =============================================================================
+# Metrics Recording
 # =============================================================================
 
 
@@ -257,5 +448,11 @@ __all__ = [
     "DomainMatcher",
     "DomainProxyConfig",
     "DomainProxyServer",
+    "ProxyConnectionHandler",
+    "create_blocked_response",
+    "create_connect_success_response",
+    "get_proxy_metrics",
+    "parse_connect_request",
+    "parse_http_request",
     "record_proxy_request",
 ]

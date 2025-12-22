@@ -204,3 +204,171 @@ class TestProxyMetrics:
 
         # Should not raise
         record_proxy_request(domain="evil.com", allowed=False)
+
+
+@pytest.mark.xdist_group(name="proxy_protocol")
+class TestProxyProtocolHandler:
+    """Tests for HTTP CONNECT proxy protocol handling."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_parse_connect_request_valid(self) -> None:
+        """Test parsing valid CONNECT request."""
+        from mcp_server_langgraph.execution.domain_proxy import parse_connect_request
+
+        request = b"CONNECT api.example.com:443 HTTP/1.1\r\nHost: api.example.com:443\r\n\r\n"
+        result = parse_connect_request(request)
+
+        assert result is not None
+        assert result["host"] == "api.example.com"
+        assert result["port"] == 443
+
+    def test_parse_connect_request_http_port(self) -> None:
+        """Test parsing CONNECT request with HTTP port."""
+        from mcp_server_langgraph.execution.domain_proxy import parse_connect_request
+
+        request = b"CONNECT example.com:80 HTTP/1.1\r\nHost: example.com:80\r\n\r\n"
+        result = parse_connect_request(request)
+
+        assert result is not None
+        assert result["host"] == "example.com"
+        assert result["port"] == 80
+
+    def test_parse_connect_request_invalid(self) -> None:
+        """Test parsing invalid request returns None."""
+        from mcp_server_langgraph.execution.domain_proxy import parse_connect_request
+
+        request = b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
+        result = parse_connect_request(request)
+
+        assert result is None
+
+    def test_parse_http_request_valid(self) -> None:
+        """Test parsing valid HTTP GET request."""
+        from mcp_server_langgraph.execution.domain_proxy import parse_http_request
+
+        request = b"GET http://api.example.com/path HTTP/1.1\r\nHost: api.example.com\r\n\r\n"
+        result = parse_http_request(request)
+
+        assert result is not None
+        assert result["host"] == "api.example.com"
+        assert result["method"] == "GET"
+        assert result["path"] == "/path"
+
+    def test_create_blocked_response(self) -> None:
+        """Test creating blocked response."""
+        from mcp_server_langgraph.execution.domain_proxy import create_blocked_response
+
+        response = create_blocked_response("evil.com")
+
+        assert b"403 Forbidden" in response
+        assert b"evil.com" in response
+
+    def test_create_connect_success_response(self) -> None:
+        """Test creating CONNECT success response."""
+        from mcp_server_langgraph.execution.domain_proxy import create_connect_success_response
+
+        response = create_connect_success_response()
+
+        assert b"200 Connection Established" in response
+
+
+@pytest.mark.xdist_group(name="proxy_connection")
+class TestProxyConnectionHandler:
+    """Tests for proxy connection handling."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_handle_connect_allowed_domain(self) -> None:
+        """Test handling CONNECT for allowed domain."""
+        from mcp_server_langgraph.execution.domain_proxy import (
+            DomainProxyConfig,
+            ProxyConnectionHandler,
+        )
+
+        config = DomainProxyConfig(allowed_domains=["*.example.com"])
+        handler = ProxyConnectionHandler(config)
+
+        # Mock reader/writer
+        reader = AsyncMock()
+        writer = MagicMock()
+        writer.write = MagicMock()
+        writer.drain = AsyncMock()
+        writer.close = MagicMock()
+        writer.wait_closed = AsyncMock()
+
+        request = b"CONNECT api.example.com:443 HTTP/1.1\r\nHost: api.example.com:443\r\n\r\n"
+        reader.read = AsyncMock(return_value=request)
+
+        # Should allow the connection
+        result = await handler.check_request(request)
+        assert result["allowed"] is True
+        assert result["host"] == "api.example.com"
+
+    @pytest.mark.asyncio
+    async def test_handle_connect_blocked_domain(self) -> None:
+        """Test handling CONNECT for blocked domain."""
+        from mcp_server_langgraph.execution.domain_proxy import (
+            DomainProxyConfig,
+            ProxyConnectionHandler,
+        )
+
+        config = DomainProxyConfig(allowed_domains=["*.allowed.com"])
+        handler = ProxyConnectionHandler(config)
+
+        request = b"CONNECT evil.com:443 HTTP/1.1\r\nHost: evil.com:443\r\n\r\n"
+
+        result = await handler.check_request(request)
+        assert result["allowed"] is False
+        assert result["host"] == "evil.com"
+
+    @pytest.mark.asyncio
+    async def test_handler_timeout_config(self) -> None:
+        """Test connection handler respects timeout config."""
+        from mcp_server_langgraph.execution.domain_proxy import (
+            DomainProxyConfig,
+            ProxyConnectionHandler,
+        )
+
+        config = DomainProxyConfig(
+            allowed_domains=["*.example.com"],
+            connection_timeout=30.0,
+        )
+        handler = ProxyConnectionHandler(config)
+
+        assert handler.timeout == 30.0
+
+
+@pytest.mark.xdist_group(name="proxy_prometheus")
+class TestProxyPrometheusMetrics:
+    """Tests for Prometheus metrics integration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_proxy_requests_counter_exists(self) -> None:
+        """Test proxy requests counter metric exists."""
+        from mcp_server_langgraph.execution.domain_proxy import get_proxy_metrics
+
+        metrics = get_proxy_metrics()
+        assert "proxy_requests_total" in metrics
+
+    def test_proxy_blocked_counter_exists(self) -> None:
+        """Test proxy blocked requests counter exists."""
+        from mcp_server_langgraph.execution.domain_proxy import get_proxy_metrics
+
+        metrics = get_proxy_metrics()
+        assert "proxy_requests_blocked_total" in metrics
+
+    def test_proxy_latency_histogram_exists(self) -> None:
+        """Test proxy latency histogram exists."""
+        from mcp_server_langgraph.execution.domain_proxy import get_proxy_metrics
+
+        metrics = get_proxy_metrics()
+        assert "proxy_request_duration_seconds" in metrics
