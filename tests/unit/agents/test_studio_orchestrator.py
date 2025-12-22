@@ -16,7 +16,7 @@ TDD: Tests written FIRST before implementation.
 import gc
 from decimal import Decimal
 from enum import Enum
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -677,7 +677,7 @@ class TestStudioOrchestratorHandlers:
             user_id="test-user",
         )
 
-        result = await orchestrator._execute_task(task)
+        await orchestrator._execute_task(task)
         mock_service.analyze_persona.assert_called_once()
 
     @pytest.mark.asyncio
@@ -924,3 +924,309 @@ class TestStudioOrchestratorMetrics:
         from mcp_server_langgraph.agents.metrics import record_orchestrator_execution
 
         assert callable(record_orchestrator_execution)
+
+
+# =============================================================================
+# Command Intelligence Tests (TDD - Sprint 2)
+# =============================================================================
+
+
+@pytest.mark.xdist_group(name="studio_orchestrator_command")
+class TestCommandIntelligence:
+    """Test Command Intelligence task handling.
+
+    Tests for command_interpret, inline_suggest, and ai_edit_generate tasks.
+    TDD: Tests written FIRST before implementation.
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_command_interpret_dispatches_to_service(self) -> None:
+        """Test that command_interpret task dispatches to ai_ux_service."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_result = {"interpreted_command": "create_file", "parameters": {"name": "test.py"}}
+        mock_service = MagicMock()
+        mock_service.interpret_command = AsyncMock(return_value=mock_result)
+
+        orchestrator = StudioOrchestrator(ai_ux_service=mock_service)
+
+        task = StudioTask(
+            category=TaskCategory.COMMAND,
+            task_type="command_interpret",
+            user_id="test-user",
+            session_id="test-session",
+            data={"query": "create a new Python file called test.py", "context": {}},
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        mock_service.interpret_command.assert_called_once_with(
+            query="create a new Python file called test.py",
+            context={},
+            user_id="test-user",
+            session_id="test-session",
+        )
+        assert result.success is True
+        assert result.result == mock_result
+
+    @pytest.mark.asyncio
+    async def test_inline_suggest_dispatches_to_service(self) -> None:
+        """Test that inline_suggest task dispatches to ai_ux_service."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_result = {
+            "suggestions": [
+                {"text": "def hello():", "confidence": 0.95},
+                {"text": "def hello_world():", "confidence": 0.8},
+            ]
+        }
+        mock_service = MagicMock()
+        mock_service.generate_inline_suggestions = AsyncMock(return_value=mock_result)
+
+        orchestrator = StudioOrchestrator(ai_ux_service=mock_service)
+
+        task = StudioTask(
+            category=TaskCategory.COMMAND,
+            task_type="inline_suggest",
+            user_id="test-user",
+            session_id="test-session",
+            data={
+                "code": "def ",
+                "cursor_position": 4,
+                "language": "python",
+            },
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        mock_service.generate_inline_suggestions.assert_called_once_with(
+            code="def ",
+            cursor_position=4,
+            language="python",
+            user_id="test-user",
+            session_id="test-session",
+        )
+        assert result.success is True
+        assert result.result == mock_result
+
+    @pytest.mark.asyncio
+    async def test_ai_edit_generate_dispatches_to_service(self) -> None:
+        """Test that ai_edit_generate task dispatches to ai_ux_service."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_result = {
+            "edited_content": "def hello():\n    print('Hello, World!')\n",
+            "diff": {
+                "additions": 1,
+                "deletions": 0,
+            },
+            "explanation": "Added print statement",
+        }
+        mock_service = MagicMock()
+        mock_service.generate_ai_edit = AsyncMock(return_value=mock_result)
+
+        orchestrator = StudioOrchestrator(ai_ux_service=mock_service)
+
+        task = StudioTask(
+            category=TaskCategory.COMMAND,
+            task_type="ai_edit_generate",
+            user_id="test-user",
+            session_id="test-session",
+            data={
+                "content": "def hello():\n    pass\n",
+                "instruction": "Add a print statement that says Hello World",
+                "artifact_type": "code",
+            },
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        mock_service.generate_ai_edit.assert_called_once_with(
+            content="def hello():\n    pass\n",
+            instruction="Add a print statement that says Hello World",
+            artifact_type="code",
+            user_id="test-user",
+            session_id="test-session",
+        )
+        assert result.success is True
+        assert result.result == mock_result
+
+    @pytest.mark.asyncio
+    async def test_command_task_returns_error_when_service_not_configured(self) -> None:
+        """Test that command task returns error when service is not configured."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        orchestrator = StudioOrchestrator(ai_ux_service=None)
+
+        task = StudioTask(
+            category=TaskCategory.COMMAND,
+            task_type="command_interpret",
+            user_id="test-user",
+            session_id="test-session",
+            data={"query": "test"},
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        assert result.success is False
+        assert "not configured" in result.error.lower()
+
+    @pytest.mark.asyncio
+    async def test_unknown_command_task_type_returns_error(self) -> None:
+        """Test that unknown command task type returns error."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_service = MagicMock()
+        orchestrator = StudioOrchestrator(ai_ux_service=mock_service)
+
+        task = StudioTask(
+            category=TaskCategory.COMMAND,
+            task_type="unknown_command_type",
+            user_id="test-user",
+            session_id="test-session",
+            data={},
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        assert result.success is False
+        assert "unknown" in result.error.lower()
+
+    @pytest.mark.asyncio
+    async def test_command_task_handles_service_exception(self) -> None:
+        """Test that command task handles service exceptions gracefully."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_service = MagicMock()
+        mock_service.interpret_command = AsyncMock(side_effect=Exception("Service unavailable"))
+
+        orchestrator = StudioOrchestrator(ai_ux_service=mock_service)
+
+        task = StudioTask(
+            category=TaskCategory.COMMAND,
+            task_type="command_interpret",
+            user_id="test-user",
+            session_id="test-session",
+            data={"query": "test"},
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        assert result.success is False
+        assert "service unavailable" in result.error.lower()
+
+    @pytest.mark.asyncio
+    async def test_command_interpret_with_empty_query(self) -> None:
+        """Test command_interpret handles empty query gracefully."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_result = {"interpreted_command": None, "parameters": {}}
+        mock_service = MagicMock()
+        mock_service.interpret_command = AsyncMock(return_value=mock_result)
+
+        orchestrator = StudioOrchestrator(ai_ux_service=mock_service)
+
+        task = StudioTask(
+            category=TaskCategory.COMMAND,
+            task_type="command_interpret",
+            user_id="test-user",
+            session_id="test-session",
+            data={"query": "", "context": {}},
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        mock_service.interpret_command.assert_called_once()
+        assert result.success is True
+
+    @pytest.mark.asyncio
+    async def test_inline_suggest_with_various_languages(self) -> None:
+        """Test inline_suggest works with various programming languages."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_service = MagicMock()
+        mock_service.generate_inline_suggestions = AsyncMock(return_value={"suggestions": []})
+
+        orchestrator = StudioOrchestrator(ai_ux_service=mock_service)
+
+        for lang in ["python", "typescript", "javascript", "rust", "go"]:
+            task = StudioTask(
+                category=TaskCategory.COMMAND,
+                task_type="inline_suggest",
+                user_id="test-user",
+                session_id="test-session",
+                data={
+                    "code": "func",
+                    "cursor_position": 4,
+                    "language": lang,
+                },
+            )
+
+            result = await orchestrator._execute_task(task)
+            assert result.success is True
+
+    @pytest.mark.asyncio
+    async def test_ai_edit_generate_with_different_artifact_types(self) -> None:
+        """Test ai_edit_generate works with different artifact types."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_service = MagicMock()
+        mock_service.generate_ai_edit = AsyncMock(return_value={"edited_content": "edited", "diff": {}})
+
+        orchestrator = StudioOrchestrator(ai_ux_service=mock_service)
+
+        for artifact_type in ["code", "markdown", "json", "mermaid"]:
+            task = StudioTask(
+                category=TaskCategory.COMMAND,
+                task_type="ai_edit_generate",
+                user_id="test-user",
+                session_id="test-session",
+                data={
+                    "content": "content",
+                    "instruction": "edit it",
+                    "artifact_type": artifact_type,
+                },
+            )
+
+            result = await orchestrator._execute_task(task)
+            assert result.success is True

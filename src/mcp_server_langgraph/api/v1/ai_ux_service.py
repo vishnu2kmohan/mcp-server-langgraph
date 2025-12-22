@@ -26,6 +26,8 @@ from typing import TYPE_CHECKING, Any, cast
 from cachetools import TTLCache
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from mcp_server_langgraph.core.cache_mixin import StaleWhileRevalidateMixin
+
 # Cache TTL in seconds (1 hour for LLM responses)
 CACHE_TTL_SECONDS = 3600
 CACHE_MAX_SIZE = 1000
@@ -39,13 +41,13 @@ CACHE_MAX_SIZE = 1000
 # - complicated: Multi-step reasoning (gemini-2.5-flash, claude-sonnet)
 # - complex: Deep analysis (gemini-pro, claude-opus)
 SERVICE_COMPLEXITY: dict[str, str] = {
-    "error_analysis": "simple",               # Fast pattern matching for errors
-    "empty_state": "simple",                  # Simple context-based suggestions
-    "nudge_recommendation": "simple",         # Timing/trigger logic
-    "disclosure_analysis": "complicated",     # Behavior pattern analysis
-    "persona_analysis": "complicated",        # User pattern detection
+    "error_analysis": "simple",  # Fast pattern matching for errors
+    "empty_state": "simple",  # Simple context-based suggestions
+    "nudge_recommendation": "simple",  # Timing/trigger logic
+    "disclosure_analysis": "complicated",  # Behavior pattern analysis
+    "persona_analysis": "complicated",  # User pattern detection
     "onboarding_personalization": "complicated",  # Intent detection
-    "metrics_insights": "complex",            # Anomaly detection and predictions
+    "metrics_insights": "complex",  # Anomaly detection and predictions
 }
 
 # =============================================================================
@@ -404,10 +406,7 @@ class LLMWithFallback:
         self.model_selector = model_selector
 
         # LLM is enabled only if factory exists AND feature flag is on
-        self.llm_enabled = (
-            llm_factory is not None
-            and getattr(settings, "ff_enable_ai_suggestions", True)
-        )
+        self.llm_enabled = llm_factory is not None and getattr(settings, "ff_enable_ai_suggestions", True)
 
         # Response cache for LLM calls (reduces costs and latency)
         self._response_cache: TTLCache[str, Any] = TTLCache(
@@ -474,9 +473,7 @@ class LLMWithFallback:
             ai_ux_llm_calls_total.labels(method=method_name).inc()
             start_time = time.time()
             result = await llm_fn()
-            ai_ux_llm_latency_seconds.labels(method=method_name).observe(
-                time.time() - start_time
-            )
+            ai_ux_llm_latency_seconds.labels(method=method_name).observe(time.time() - start_time)
 
             # Cache the result if key provided
             if cache_key is not None:
@@ -494,14 +491,26 @@ class LLMWithFallback:
 # =============================================================================
 
 
-class AIUXService:
+class AIUXService(StaleWhileRevalidateMixin):
     """
     LLM-enhanced AI UX service with heuristic fallback.
 
     Provides intelligent, personalized UX features using LLM when available,
     with graceful fallback to rule-based heuristics when LLM is unavailable
     or disabled.
+
+    Inherits from StaleWhileRevalidateMixin for DRY tiered caching:
+    - L1 (in-memory TTLCache via CacheService)
+    - L2 (Redis via CacheService)
+    - Stale-while-revalidate pattern for near-expiry data
+    - Prometheus metrics for cache hits/misses
+    - OpenTelemetry tracing for cache operations
     """
+
+    # TieredCacheMixin configuration
+    cache_prefix: str = "ai_ux"
+    cache_ttl: int = CACHE_TTL_SECONDS  # 3600 seconds (1 hour)
+    stale_threshold_seconds: int = 60  # SWR threshold
 
     def __init__(
         self,
@@ -534,28 +543,31 @@ class AIUXService:
         self._ux_orchestrator = ux_orchestrator
 
         # LLM is enabled only if factory exists AND feature flag is on
-        self.llm_enabled = (
-            llm_factory is not None
-            and getattr(settings, "ff_enable_ai_suggestions", True)
-        )
+        self.llm_enabled = llm_factory is not None and getattr(settings, "ff_enable_ai_suggestions", True)
 
-        # Response cache for LLM calls (reduces costs and latency)
+        # Initialize cache service for StaleWhileRevalidateMixin
+        # This provides L1 (TTLCache) + L2 (Redis) tiered caching via DRY mixin
+        try:
+            from mcp_server_langgraph.core.cache import get_cache
+
+            self._cache_service = get_cache()
+            logger.info("AIUXService initialized with CacheService (L1+L2 tiered cache)")
+        except Exception as e:
+            logger.warning(f"Failed to initialize CacheService for AI UX: {e}")
+            self._cache_service = None
+
+        # Legacy: Keep _response_cache for backward compatibility with existing code
+        # TODO: Remove after full migration to mixin methods
         self._response_cache: TTLCache[str, Any] = TTLCache(
             maxsize=CACHE_MAX_SIZE,
             ttl=CACHE_TTL_SECONDS,
         )
 
-        # Redis cache for distributed LLM response caching (optional)
+        # Legacy: Redis cache reference for backward compatibility
+        # The mixin now handles Redis access via CacheService
         self.redis_cache: Any | None = None
-        if getattr(settings, "enable_ai_ux_redis_cache", False):
-            try:
-                from mcp_server_langgraph.core.cache import get_cache
-
-                cache_service = get_cache()
-                self.redis_cache = cache_service.redis
-                logger.info("AIUXService initialized with Redis cache")
-            except Exception as e:
-                logger.warning(f"Failed to initialize Redis cache for AI UX: {e}")
+        if self._cache_service is not None:
+            self.redis_cache = getattr(self._cache_service, "redis", None)
 
         # WebSocket connections tracking
         self._websocket_connections: dict[str, Any] = {}
@@ -958,8 +970,8 @@ class AIUXService:
         if user_context:
             user_prompt += f"""
 User context:
-- Persona: {user_context.persona or 'unknown'}
-- Recent actions: {', '.join(user_context.recent_actions) if user_context.recent_actions else 'none'}
+- Persona: {user_context.persona or "unknown"}
+- Recent actions: {", ".join(user_context.recent_actions) if user_context.recent_actions else "none"}
 """
 
         messages = [
@@ -1170,7 +1182,7 @@ User context:
         """Get empty state suggestions using LLM."""
         user_prompt = f"""Page context: {request.context}
 User persona: {request.persona}
-Session history: {request.history if request.history else 'none'}
+Session history: {request.history if request.history else "none"}
 
 Generate 2-3 personalized suggestions to help this user get started."""
 
@@ -1227,7 +1239,7 @@ Generate 2-3 personalized suggestions to help this user get started."""
                 EmptyStateSuggestion(
                     text="Start a new conversation",
                     action=SuggestionAction.NAVIGATE,
-                    target="/studio/v2/chat",
+                    target="/studio/chat",
                     confidence=0.95,
                     category="primary",
                 ),
@@ -1261,7 +1273,7 @@ Generate 2-3 personalized suggestions to help this user get started."""
                 EmptyStateSuggestion(
                     text="Explore the workflow builder",
                     action=SuggestionAction.NAVIGATE,
-                    target="/studio/v2/workflows/builder",
+                    target="/studio/workflows/builder",
                     confidence=0.88,
                     category="featured",
                 ),
@@ -1342,8 +1354,8 @@ Generate 2-3 personalized suggestions to help this user get started."""
         user_prompt = f"""User analysis:
 - User ID: {request.user_id}
 - Assigned persona: {request.assigned_persona}
-- Recent actions: {', '.join(request.recent_actions) if request.recent_actions else 'none'}
-- Feature usage: {json.dumps(request.feature_usage) if request.feature_usage else '{}'}
+- Recent actions: {", ".join(request.recent_actions) if request.recent_actions else "none"}
+- Feature usage: {json.dumps(request.feature_usage) if request.feature_usage else "{}"}
 
 Analyze if the user's behavior matches their assigned persona."""
 
@@ -1392,10 +1404,7 @@ Analyze if the user's behavior matches their assigned persona."""
         # Check for developer patterns
         developer_features = ["workflow_builder", "traces", "mcp", "agents"]
         developer_usage = sum(usage.get(f, 0) for f in developer_features)
-        developer_actions = sum(
-            1 for a in actions
-            if any(kw in a.lower() for kw in ["workflow", "node", "trace", "test"])
-        )
+        developer_actions = sum(1 for a in actions if any(kw in a.lower() for kw in ["workflow", "node", "trace", "test"]))
 
         if developer_usage > 20 or developer_actions > 5:
             behavior_signals.append("Frequent use of advanced features")
@@ -1497,7 +1506,7 @@ Analyze if the user's behavior matches their assigned persona."""
 
         user_prompt = f"""User disclosure analysis:
 - User ID: {request.user_id}
-- Feature usage: {json.dumps(request.feature_usage) if request.feature_usage else '{}'}
+- Feature usage: {json.dumps(request.feature_usage) if request.feature_usage else "{}"}
 {session_info}
 Analyze the user's expertise level and recommend an appropriate disclosure level."""
 
@@ -1531,9 +1540,7 @@ Analyze the user's expertise level and recommend an appropriate disclosure level
         # Calculate feature usage score
         total_usage = sum(request.feature_usage.values())
         advanced_features = ["workflows", "mcp", "agents", "traces"]
-        advanced_usage = sum(
-            request.feature_usage.get(f, 0) for f in advanced_features
-        )
+        advanced_usage = sum(request.feature_usage.get(f, 0) for f in advanced_features)
 
         # Determine current and recommended levels
         if total_usage < 10:
@@ -1652,10 +1659,7 @@ Analyze the user's expertise level and recommend an appropriate disclosure level
 
         history_info = ""
         if request.nudge_history:
-            history_items = [
-                f"- {h.id}: {h.action} at {h.shown_at}"
-                for h in request.nudge_history[-5:]
-            ]
+            history_items = [f"- {h.id}: {h.action} at {h.shown_at}" for h in request.nudge_history[-5:]]
             history_info = "Recent nudge history:\n" + "\n".join(history_items)
 
         user_prompt = f"""Nudge recommendation request:
@@ -1707,10 +1711,7 @@ Should a nudge be shown? If so, what nudge?"""
         from mcp_server_langgraph.api.v1.ai_ux import Nudge
 
         # Check if user has dismissed too many nudges recently
-        recent_dismissals = sum(
-            1 for h in request.nudge_history[-10:]
-            if h.action == "dismissed"
-        )
+        recent_dismissals = sum(1 for h in request.nudge_history[-10:] if h.action == "dismissed")
         if recent_dismissals >= 5:
             return NudgeRecommendResponse(should_show=False, confidence=0.9)
 
@@ -1790,13 +1791,13 @@ Should a nudge be shown? If so, what nudge?"""
         signup_info = ""
         if request.signup_context:
             signup_info = f"""Signup context:
-- Referrer: {request.signup_context.referrer or 'none'}
-- UTM source: {request.signup_context.utm_source or 'none'}
+- Referrer: {request.signup_context.referrer or "none"}
+- UTM source: {request.signup_context.utm_source or "none"}
 """
 
         user_prompt = f"""Onboarding personalization request:
 - User ID: {request.user_id}
-- Initial actions: {', '.join(request.initial_actions) if request.initial_actions else 'none'}
+- Initial actions: {", ".join(request.initial_actions) if request.initial_actions else "none"}
 {signup_info}
 Determine the user's intent and recommend an onboarding path."""
 
@@ -2019,13 +2020,9 @@ Compare with last period and generate actionable insights."""
             ErrorInfo,
             PersonaAnalyzeRequest,
         )
-        from mcp_server_langgraph.core.feature_flags import feature_flags
 
         # Check if orchestrator is available and enabled
-        if (
-            self._ux_orchestrator is not None
-            and getattr(self._ux_orchestrator, "is_enabled", False)
-        ):
+        if self._ux_orchestrator is not None and getattr(self._ux_orchestrator, "is_enabled", False):
             logger.debug("Using UXOrchestrator for composite analysis")
             result = await self._ux_orchestrator.run_composite_analysis(
                 user_id=request.user_id,
@@ -2349,9 +2346,7 @@ Compare with last period and generate actionable insights."""
 
         return None
 
-    async def set_cached_response(
-        self, cache_key: str, response: Any, ttl: int | None = None
-    ) -> None:
+    async def set_cached_response(self, cache_key: str, response: Any, ttl: int | None = None) -> None:
         """
         Store a response in Redis cache.
 
@@ -2413,9 +2408,9 @@ Compare with last period and generate actionable insights."""
             if k == "user_id" and method in user_specific_methods:
                 continue  # Already added
             if v is not None:
-                # Convert complex types to string
+                # Convert complex types to string for cache key (not for security)
                 if isinstance(v, (dict, list)):
-                    v = hashlib.md5(json.dumps(v, sort_keys=True).encode()).hexdigest()[:8]
+                    v = hashlib.md5(json.dumps(v, sort_keys=True).encode()).hexdigest()[:8]  # noqa: S324
                 key_parts.append(f"{k}:{v}")
 
         return ":".join(key_parts)
@@ -2470,10 +2465,7 @@ Compare with last period and generate actionable insights."""
                         try:
                             ttl = await self.redis_cache.ttl(f"ai_ux:{cache_key}")
                             if ttl is not None and ttl < stale_threshold_seconds:
-                                logger.debug(
-                                    f"Cache entry near expiry (TTL: {ttl}s), "
-                                    f"threshold: {stale_threshold_seconds}s"
-                                )
+                                logger.debug(f"Cache entry near expiry (TTL: {ttl}s), threshold: {stale_threshold_seconds}s")
                                 # Note: Actual background revalidation would be
                                 # triggered by the caller
                         except Exception as e:
@@ -2511,9 +2503,7 @@ Compare with last period and generate actionable insights."""
         # L2 store (Redis) if available
         if self.redis_cache is not None:
             try:
-                ttl_seconds = ttl or getattr(
-                    self.settings, "ai_ux_redis_cache_ttl_seconds", 300
-                )
+                ttl_seconds = ttl or getattr(self.settings, "ai_ux_redis_cache_ttl_seconds", 300)
                 await self.redis_cache.setex(
                     f"ai_ux:{cache_key}",
                     ttl_seconds,
@@ -2527,7 +2517,7 @@ Compare with last period and generate actionable insights."""
         """
         Invalidate all cache entries for a specific user.
 
-        Clears entries from both L1 and L2 caches.
+        Delegates to StaleWhileRevalidateMixin._cache_invalidate_user for DRY caching.
 
         Args:
             user_id: The user ID to invalidate cache for
@@ -2535,43 +2525,15 @@ Compare with last period and generate actionable insights."""
         Returns:
             Number of entries deleted
         """
-        deleted_count = 0
-
-        # L1 invalidation (in-memory)
-        keys_to_delete = [
-            k for k in list(self._response_cache.keys())
-            if f"user-{user_id}" in str(k) or f":{user_id}:" in str(k)
-            or str(k).startswith(f"{user_id}:")
-        ]
-        for key in keys_to_delete:
-            del self._response_cache[key]
-            deleted_count += 1
-
-        # L2 invalidation (Redis) if available
-        if self.redis_cache is not None:
-            try:
-                cursor = 0
-                pattern = f"ai_ux:*user:{user_id}*"
-                while True:
-                    cursor, keys = await self.redis_cache.scan(
-                        cursor, match=pattern, count=100
-                    )
-                    if keys:
-                        await self.redis_cache.delete(*keys)
-                        deleted_count += len(keys)
-                    if cursor == 0:
-                        break
-            except Exception as e:
-                logger.warning(f"L2 cache invalidation failed for user {user_id}: {e}")
-
-        logger.info(f"Invalidated {deleted_count} cache entries for user {user_id}")
-        return deleted_count
+        # Delegate to mixin's _cache_invalidate_user method
+        # This handles both L1 and L2 via CacheService.adelete_pattern
+        return await self._cache_invalidate_user(user_id)
 
     async def invalidate_method_cache(self, method: str) -> int:
         """
         Invalidate all cache entries for a specific method.
 
-        Clears entries from both L1 and L2 caches.
+        Delegates to StaleWhileRevalidateMixin._cache_invalidate_prefix for DRY caching.
 
         Args:
             method: The method name to invalidate cache for
@@ -2579,44 +2541,15 @@ Compare with last period and generate actionable insights."""
         Returns:
             Number of entries deleted
         """
-        deleted_count = 0
-
-        # L1 invalidation (in-memory)
-        keys_to_delete = [
-            k for k in list(self._response_cache.keys())
-            if str(k).startswith(f"{method}:")
-        ]
-        for key in keys_to_delete:
-            del self._response_cache[key]
-            deleted_count += 1
-
-        # L2 invalidation (Redis) if available
-        if self.redis_cache is not None:
-            try:
-                cursor = 0
-                pattern = f"ai_ux:{method}:*"
-                while True:
-                    cursor, keys = await self.redis_cache.scan(
-                        cursor, match=pattern, count=100
-                    )
-                    if keys:
-                        await self.redis_cache.delete(*keys)
-                        deleted_count += len(keys)
-                    if cursor == 0:
-                        break
-            except Exception as e:
-                logger.warning(f"L2 cache invalidation failed for method {method}: {e}")
-
-        logger.info(f"Invalidated {deleted_count} cache entries for method {method}")
-        return deleted_count
+        # Delegate to mixin's _cache_invalidate_prefix method
+        # This handles both L1 and L2 via CacheService.adelete_pattern
+        return await self._cache_invalidate_prefix(method)
 
     # =========================================================================
     # WebSocket Methods
     # =========================================================================
 
-    async def handle_websocket_connection(
-        self, websocket: Any, user_id: str
-    ) -> None:
+    async def handle_websocket_connection(self, websocket: Any, user_id: str) -> None:
         """
         Handle a WebSocket connection for real-time AI suggestions.
 
@@ -2638,19 +2571,19 @@ Compare with last period and generate actionable insights."""
                         user_id=user_id,
                         context=data.get("context", {}),
                     )
-                    await websocket.send_json({
-                        "type": "suggestions",
-                        "data": suggestions,
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "suggestions",
+                            "data": suggestions,
+                        }
+                    )
         except Exception as e:
             logger.debug(f"WebSocket connection closed for user {user_id}: {e}")
         finally:
             self._websocket_connections.pop(user_id, None)
             ai_ux_websocket_connections.labels(user_id=user_id).dec()
 
-    async def broadcast_suggestion(
-        self, user_id: str, suggestion: dict[str, Any]
-    ) -> None:
+    async def broadcast_suggestion(self, user_id: str, suggestion: dict[str, Any]) -> None:
         """
         Broadcast a suggestion to a specific user's WebSocket connection.
 
@@ -2661,16 +2594,16 @@ Compare with last period and generate actionable insights."""
         websocket = self._websocket_connections.get(user_id)
         if websocket:
             try:
-                await websocket.send_json({
-                    "type": "suggestion",
-                    "data": suggestion,
-                })
+                await websocket.send_json(
+                    {
+                        "type": "suggestion",
+                        "data": suggestion,
+                    }
+                )
             except Exception as e:
                 logger.warning(f"Failed to broadcast suggestion to {user_id}: {e}")
 
-    async def _generate_realtime_suggestions(
-        self, user_id: str, context: dict[str, Any]
-    ) -> list[dict[str, Any]]:
+    async def _generate_realtime_suggestions(self, user_id: str, context: dict[str, Any]) -> list[dict[str, Any]]:
         """
         Generate real-time suggestions based on user context.
 
@@ -2700,12 +2633,14 @@ Compare with last period and generate actionable insights."""
         result = await self.recommend_nudge(request)
 
         if result.nudge:
-            return [{
-                "id": result.nudge.id,
-                "type": result.nudge.type,  # Already a string, not an enum
-                "message": result.nudge.message,
-                "priority": result.nudge.priority,  # Already a string, not an enum
-            }]
+            return [
+                {
+                    "id": result.nudge.id,
+                    "type": result.nudge.type,  # Already a string, not an enum
+                    "message": result.nudge.message,
+                    "priority": result.nudge.priority,  # Already a string, not an enum
+                }
+            ]
 
         return []
 
@@ -2735,10 +2670,7 @@ Compare with last period and generate actionable insights."""
         # Persona-Disclosure mismatch detection
         if persona_result and disclosure_result:
             # If persona suggests advanced user but disclosure is beginner
-            if (
-                persona_result.detected_persona != persona_result.assigned_persona
-                and persona_result.confidence > 0.8
-            ):
+            if persona_result.detected_persona != persona_result.assigned_persona and persona_result.confidence > 0.8:
                 if disclosure_result.current_level == DisclosureLevel.BEGINNER:
                     insights.append(
                         f"Persona mismatch detected: User behaves like "
@@ -2752,19 +2684,13 @@ Compare with last period and generate actionable insights."""
                 and "upgrade" in persona_result.recommendation.lower()
                 and disclosure_result.recommended_level != disclosure_result.current_level
             ):
-                insights.append(
-                    "Both persona and disclosure analyses suggest this user is "
-                    "ready for advanced features."
-                )
+                insights.append("Both persona and disclosure analyses suggest this user is ready for advanced features.")
 
         # Error pattern insights
         if error_result and persona_result:
             if error_result.classification.category.value in ["timeout", "quota"]:
                 if persona_result.detected_persona in ["alice-builder", "alice-devops"]:
-                    insights.append(
-                        "Power user experiencing resource limits. "
-                        "Consider suggesting optimization techniques."
-                    )
+                    insights.append("Power user experiencing resource limits. Consider suggesting optimization techniques.")
 
         # Default insight if none generated
         if not insights:
@@ -2956,11 +2882,13 @@ Compare with last period and generate actionable insights."""
         suggestions = []
 
         if usage_percent > 80:
-            suggestions.append({
-                "type": "remove_old_messages",
-                "description": "Remove messages older than 1 hour",
-                "tokens_saved": int(current_tokens * 0.2),
-            })
+            suggestions.append(
+                {
+                    "type": "remove_old_messages",
+                    "description": "Remove messages older than 1 hour",
+                    "tokens_saved": int(current_tokens * 0.2),
+                }
+            )
 
         return {
             "suggestions": suggestions,
@@ -3088,18 +3016,22 @@ Compare with last period and generate actionable insights."""
 
         # Detect potential issues
         if "TODO" in code or "FIXME" in code:
-            issues.append({
-                "type": "todo",
-                "message": "Contains TODO/FIXME comments",
-                "severity": "info",
-            })
+            issues.append(
+                {
+                    "type": "todo",
+                    "message": "Contains TODO/FIXME comments",
+                    "severity": "info",
+                }
+            )
 
         if line_count > 100:
-            suggestions.append({
-                "type": "refactor",
-                "description": "Consider splitting into smaller functions",
-                "priority": "medium",
-            })
+            suggestions.append(
+                {
+                    "type": "refactor",
+                    "description": "Consider splitting into smaller functions",
+                    "priority": "medium",
+                }
+            )
 
         return {
             "complexity": min(complexity, 20),
@@ -3138,17 +3070,21 @@ Compare with last period and generate actionable insights."""
 
         changes = []
         if added:
-            changes.append({
-                "type": "addition",
-                "description": f"Added {len(added)} new lines",
-                "impact": "medium",
-            })
+            changes.append(
+                {
+                    "type": "addition",
+                    "description": f"Added {len(added)} new lines",
+                    "impact": "medium",
+                }
+            )
         if removed:
-            changes.append({
-                "type": "deletion",
-                "description": f"Removed {len(removed)} lines",
-                "impact": "medium",
-            })
+            changes.append(
+                {
+                    "type": "deletion",
+                    "description": f"Removed {len(removed)} lines",
+                    "impact": "medium",
+                }
+            )
 
         summary = "No significant changes detected"
         if changes:
@@ -3209,10 +3145,12 @@ Compare with last period and generate actionable insights."""
         suggestions: list[dict[str, Any]] = []
 
         if node_count > 15:
-            suggestions.append({
-                "type": "simplify",
-                "description": "Consider splitting this into multiple diagrams",
-            })
+            suggestions.append(
+                {
+                    "type": "simplify",
+                    "description": "Consider splitting this into multiple diagrams",
+                }
+            )
 
         return {
             "diagram_type": diagram_type,
@@ -3419,31 +3357,37 @@ Compare with last period and generate actionable insights."""
 
         # Add risk factors based on action type
         if action_type in {"file_delete", "rm", "remove"}:
-            risk_factors.append({
-                "factor": "file_deletion",
-                "weight": 0.4,
-                "description": "Operation deletes files or data",
-            })
+            risk_factors.append(
+                {
+                    "factor": "file_deletion",
+                    "weight": 0.4,
+                    "description": "Operation deletes files or data",
+                }
+            )
             mitigations.append("Create backup before deletion")
             risk_score += 0.4
 
         if action_type in {"database_modify", "db_update", "sql_execute"}:
-            risk_factors.append({
-                "factor": "database_modification",
-                "weight": 0.5,
-                "description": "Operation modifies database",
-            })
+            risk_factors.append(
+                {
+                    "factor": "database_modification",
+                    "weight": 0.5,
+                    "description": "Operation modifies database",
+                }
+            )
             mitigations.append("Test query on staging first")
             risk_score += 0.5
 
         # Check for production environment indicators
         path = str(parameters.get("path", ""))
         if "prod" in path.lower() or "production" in path.lower():
-            risk_factors.append({
-                "factor": "production_environment",
-                "weight": 0.3,
-                "description": "Targets production environment",
-            })
+            risk_factors.append(
+                {
+                    "factor": "production_environment",
+                    "weight": 0.3,
+                    "description": "Targets production environment",
+                }
+            )
             mitigations.append("Verify this is intended for production")
             risk_score += 0.3
 
@@ -3518,10 +3462,7 @@ Compare with last period and generate actionable insights."""
 
         # Filter by persona if provided
         if persona:
-            similar_decisions = [
-                d for d in similar_decisions
-                if d.get("decided_by", "").lower() == persona.lower()
-            ]
+            similar_decisions = [d for d in similar_decisions if d.get("decided_by", "").lower() == persona.lower()]
 
         # Calculate statistics
         approved_count = sum(1 for d in similar_decisions if d["decision"] == "approved")
@@ -3591,7 +3532,7 @@ Compare with last period and generate actionable insights."""
             ],
         }
 
-        predicted_items = page_predictions.get(
+        predicted_items: list[dict[str, Any]] = page_predictions.get(
             current_page,
             [
                 {"id": "chat", "score": 0.80, "reason": "Default starting point"},
@@ -3602,7 +3543,8 @@ Compare with last period and generate actionable insights."""
         # Boost scores for recently visited pages
         for item in predicted_items:
             if item["id"] in recent_pages[-3:]:
-                item["score"] = min(1.0, item["score"] + 0.1)
+                current_score: float = item.get("score", 0.0)
+                item["score"] = min(1.0, current_score + 0.1)
                 item["reason"] = "Recently accessed"
 
         # Determine context based on current page
@@ -3616,7 +3558,8 @@ Compare with last period and generate actionable insights."""
         current_context = context_mapping.get(current_page, "general_exploration")
 
         # Calculate overall confidence
-        confidence = max((item["score"] for item in predicted_items), default=0.5)
+        scores: list[float] = [item.get("score", 0.0) for item in predicted_items]
+        confidence: float = max(scores, default=0.5)
 
         return {
             "predicted_items": predicted_items,
@@ -3892,6 +3835,269 @@ Compare with last period and generate actionable insights."""
             "next_steps": path["next_steps"],
             "completed_items": path["completed_items"],
             "recommended_features": path["recommended_features"],
+        }
+
+    # =========================================================================
+    # Command Intelligence Methods (Sprint 2)
+    # =========================================================================
+
+    async def interpret_command(
+        self,
+        query: str,
+        context: dict[str, Any] | None = None,
+        user_id: str = "",
+        session_id: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """AI interprets natural language commands.
+
+        Parses user intent from natural language to determine action.
+
+        Args:
+            query: Natural language command/query from user
+            context: Current context (page, artifacts, etc.)
+            user_id: User identifier
+            session_id: Optional session identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            Interpreted command with action type and parameters
+        """
+        if not query or not query.strip():
+            return {
+                "interpreted_command": None,
+                "parameters": {},
+                "confidence": 0.0,
+            }
+
+        query_lower = query.lower()
+
+        # Heuristic command interpretation
+        if "create" in query_lower or "new" in query_lower:
+            if "file" in query_lower or "python" in query_lower:
+                return {
+                    "interpreted_command": "create_file",
+                    "parameters": {"type": "python"},
+                    "confidence": 0.85,
+                }
+            if "workflow" in query_lower:
+                return {
+                    "interpreted_command": "create_workflow",
+                    "parameters": {},
+                    "confidence": 0.9,
+                }
+            if "session" in query_lower or "chat" in query_lower:
+                return {
+                    "interpreted_command": "new_session",
+                    "parameters": {},
+                    "confidence": 0.9,
+                }
+
+        if "search" in query_lower or "find" in query_lower:
+            return {
+                "interpreted_command": "search",
+                "parameters": {"query": query},
+                "confidence": 0.8,
+            }
+
+        if "help" in query_lower:
+            return {
+                "interpreted_command": "show_help",
+                "parameters": {},
+                "confidence": 0.95,
+            }
+
+        if "settings" in query_lower or "configure" in query_lower:
+            return {
+                "interpreted_command": "open_settings",
+                "parameters": {},
+                "confidence": 0.85,
+            }
+
+        # Default: treat as chat message
+        return {
+            "interpreted_command": "send_message",
+            "parameters": {"message": query},
+            "confidence": 0.6,
+        }
+
+    async def generate_inline_suggestions(
+        self,
+        code: str,
+        cursor_position: int,
+        language: str = "python",
+        user_id: str = "",
+        session_id: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Generate inline code suggestions.
+
+        Provides context-aware code completions based on cursor position.
+
+        Args:
+            code: Current code content
+            cursor_position: Cursor position in the code
+            language: Programming language
+            user_id: User identifier
+            session_id: Optional session identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            List of code suggestions with confidence scores
+        """
+        suggestions: list[dict[str, Any]] = []
+
+        # Get the line context
+        lines = code.split("\n")
+        current_line = ""
+        char_count = 0
+        for line in lines:
+            if char_count + len(line) + 1 > cursor_position:
+                current_line = line[: cursor_position - char_count] if cursor_position > char_count else ""
+                break
+            char_count += len(line) + 1
+
+        current_line_stripped = current_line.strip()
+
+        # Language-specific heuristic suggestions
+        if language == "python":
+            if current_line_stripped.startswith("def "):
+                suggestions = [
+                    {"text": "def main():", "confidence": 0.8},
+                    {"text": "def __init__(self):", "confidence": 0.75},
+                ]
+            elif current_line_stripped.startswith("class "):
+                suggestions = [
+                    {"text": "class MyClass:", "confidence": 0.8},
+                ]
+            elif current_line_stripped.startswith("import "):
+                suggestions = [
+                    {"text": "import os", "confidence": 0.7},
+                    {"text": "import json", "confidence": 0.65},
+                ]
+            elif current_line_stripped == "":
+                suggestions = [
+                    {"text": "# TODO: ", "confidence": 0.5},
+                ]
+
+        elif language in ["typescript", "javascript"]:
+            if current_line_stripped.startswith("function "):
+                suggestions = [
+                    {"text": "function handleClick() {", "confidence": 0.75},
+                ]
+            elif current_line_stripped.startswith("const "):
+                suggestions = [
+                    {"text": "const [state, setState] = useState()", "confidence": 0.7},
+                ]
+            elif current_line_stripped.startswith("import "):
+                suggestions = [
+                    {"text": "import React from 'react'", "confidence": 0.7},
+                ]
+
+        elif language == "rust":
+            if current_line_stripped.startswith("fn "):
+                suggestions = [
+                    {"text": "fn main() {", "confidence": 0.85},
+                ]
+            elif current_line_stripped.startswith("let "):
+                suggestions = [
+                    {"text": "let mut ", "confidence": 0.7},
+                ]
+
+        elif language == "go":
+            if current_line_stripped.startswith("func "):
+                suggestions = [
+                    {"text": "func main() {", "confidence": 0.85},
+                ]
+
+        return {
+            "suggestions": suggestions,
+            "language": language,
+            "cursor_position": cursor_position,
+        }
+
+    async def generate_ai_edit(
+        self,
+        content: str,
+        instruction: str,
+        artifact_type: str = "code",
+        user_id: str = "",
+        session_id: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Generate AI-powered edits.
+
+        Applies AI-generated modifications based on natural language instruction.
+
+        Args:
+            content: Original content to edit
+            instruction: Natural language instruction for the edit
+            artifact_type: Type of artifact (code, markdown, json, mermaid)
+            user_id: User identifier
+            session_id: Optional session identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            Edited content with diff information
+        """
+        edited_content = content
+        additions = 0
+        deletions = 0
+        explanation = "No changes applied"
+
+        instruction_lower = instruction.lower()
+
+        if artifact_type == "code":
+            if "add" in instruction_lower and "comment" in instruction_lower:
+                # Add a comment at the top
+                edited_content = f"# {instruction}\n{content}"
+                additions = 1
+                explanation = "Added comment at top of file"
+
+            elif "add" in instruction_lower and "print" in instruction_lower:
+                # Add print statement
+                edited_content = content + "\nprint('Hello, World!')\n"
+                additions = 1
+                explanation = "Added print statement"
+
+            elif "remove" in instruction_lower or "delete" in instruction_lower:
+                lines = content.split("\n")
+                edited_lines = [line for line in lines if line.strip()]
+                edited_content = "\n".join(edited_lines)
+                deletions = len(lines) - len(edited_lines)
+                explanation = f"Removed {deletions} empty lines"
+
+        elif artifact_type == "markdown":
+            if "title" in instruction_lower or "heading" in instruction_lower:
+                edited_content = f"# Document\n\n{content}"
+                additions = 2
+                explanation = "Added title heading"
+
+        elif artifact_type == "json":
+            if "format" in instruction_lower or "prettify" in instruction_lower:
+                try:
+                    import json
+
+                    parsed = json.loads(content)
+                    edited_content = json.dumps(parsed, indent=2)
+                    explanation = "Formatted JSON with indentation"
+                except json.JSONDecodeError:
+                    explanation = "Could not parse JSON"
+
+        elif artifact_type == "mermaid":
+            if "style" in instruction_lower:
+                edited_content = content + "\n    style default fill:#f9f,stroke:#333"
+                additions = 1
+                explanation = "Added default styling"
+
+        return {
+            "edited_content": edited_content,
+            "diff": {
+                "additions": additions,
+                "deletions": deletions,
+            },
+            "explanation": explanation,
+            "artifact_type": artifact_type,
         }
 
     # =========================================================================

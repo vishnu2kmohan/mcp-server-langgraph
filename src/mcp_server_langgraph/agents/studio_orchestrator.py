@@ -79,48 +79,50 @@ class TaskCategory(str, Enum):
 
 
 # Supported task types for Studio orchestration
-STUDIO_TASK_TYPES = frozenset({
-    # UX (migrated from UXOrchestrator)
-    "persona_analysis",
-    "disclosure_analysis",
-    "error_analysis",
-    "nudge_recommendation",
-    "onboarding_personalization",
-    "empty_state_suggestions",
-    "metrics_insights",
-    # Session Intelligence
-    "session_summarize",
-    "session_group",
-    "session_similarity",
-    # Conversation Intelligence
-    "intent_detect",
-    "context_optimize",
-    "goal_track",
-    # Canvas Intelligence
-    "artifact_suggest_type",
-    "code_analyze",
-    "diff_explain",
-    # Diagram Intelligence
-    "diagram_analyze",
-    "diagram_to_code",
-    # Trace Intelligence
-    "trace_summarize",
-    "trace_anomaly",
-    # HITL Intelligence
-    "risk_assess",
-    "decision_history",
-    # Command Intelligence
-    "command_interpret",
-    "inline_suggest",
-    "ai_edit_generate",
-    # UX Intelligence (extended)
-    "nav_prediction",
-    "contextual_help",
-    "learning_path",
-    # Cost Intelligence
-    "cost_project",
-    "token_predict",
-})
+STUDIO_TASK_TYPES = frozenset(
+    {
+        # UX (migrated from UXOrchestrator)
+        "persona_analysis",
+        "disclosure_analysis",
+        "error_analysis",
+        "nudge_recommendation",
+        "onboarding_personalization",
+        "empty_state_suggestions",
+        "metrics_insights",
+        # Session Intelligence
+        "session_summarize",
+        "session_group",
+        "session_similarity",
+        # Conversation Intelligence
+        "intent_detect",
+        "context_optimize",
+        "goal_track",
+        # Canvas Intelligence
+        "artifact_suggest_type",
+        "code_analyze",
+        "diff_explain",
+        # Diagram Intelligence
+        "diagram_analyze",
+        "diagram_to_code",
+        # Trace Intelligence
+        "trace_summarize",
+        "trace_anomaly",
+        # HITL Intelligence
+        "risk_assess",
+        "decision_history",
+        # Command Intelligence
+        "command_interpret",
+        "inline_suggest",
+        "ai_edit_generate",
+        # UX Intelligence (extended)
+        "nav_prediction",
+        "contextual_help",
+        "learning_path",
+        # Cost Intelligence
+        "cost_project",
+        "token_predict",
+    }
+)
 
 # Map task types to categories
 TASK_TYPE_TO_CATEGORY: dict[str, TaskCategory] = {
@@ -266,9 +268,7 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
         """Return the feature flag name for this orchestrator."""
         return "enable_studio_ai"
 
-    def _create_failed_result(
-        self, task: StudioTask, error: str
-    ) -> StudioResult:
+    def _create_failed_result(self, task: StudioTask, error: str) -> StudioResult:
         """Create a failed result for a task.
 
         Args:
@@ -764,6 +764,13 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
             StudioResult from the HITL task
         """
         try:
+            if self._ai_ux_service is None:
+                return StudioResult(
+                    task_type=task.task_type,
+                    success=False,
+                    error="AI UX service not configured",
+                )
+
             if task.task_type == "risk_assess":
                 result = await self._ai_ux_service.assess_risk(
                     request_id=task.data.get("request_id", ""),
@@ -806,18 +813,70 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
     async def _handle_command_task(self, task: StudioTask) -> StudioResult:
         """Handle Command Intelligence tasks.
 
+        Supports the following task types:
+        - command_interpret: AI interprets natural language commands
+        - inline_suggest: Generate inline code suggestions
+        - ai_edit_generate: Generate AI-powered edits
+
         Args:
             task: The command task to execute
 
         Returns:
             StudioResult from the command task
         """
-        # Placeholder - to be implemented with LLM calls
-        return StudioResult(
-            task_type=task.task_type,
-            success=True,
-            result={"status": "placeholder", "message": "Command task placeholder"},
-        )
+        if self._ai_ux_service is None:
+            return StudioResult(
+                task_type=task.task_type,
+                success=False,
+                error="AI UX service not configured for command tasks",
+            )
+
+        try:
+            result: dict[str, Any] | None = None
+
+            if task.task_type == "command_interpret":
+                result = await self._ai_ux_service.interpret_command(
+                    query=task.data.get("query", ""),
+                    context=task.data.get("context", {}),
+                    user_id=task.user_id,
+                    session_id=task.session_id,
+                )
+            elif task.task_type == "inline_suggest":
+                result = await self._ai_ux_service.generate_inline_suggestions(
+                    code=task.data.get("code", ""),
+                    cursor_position=task.data.get("cursor_position", 0),
+                    language=task.data.get("language", "python"),
+                    user_id=task.user_id,
+                    session_id=task.session_id,
+                )
+            elif task.task_type == "ai_edit_generate":
+                result = await self._ai_ux_service.generate_ai_edit(
+                    content=task.data.get("content", ""),
+                    instruction=task.data.get("instruction", ""),
+                    artifact_type=task.data.get("artifact_type", "code"),
+                    user_id=task.user_id,
+                    session_id=task.session_id,
+                )
+            else:
+                return StudioResult(
+                    task_type=task.task_type,
+                    success=False,
+                    error=f"Unknown command task type: {task.task_type}",
+                )
+
+            return StudioResult(
+                task_type=task.task_type,
+                success=True,
+                result=result or {},
+            )
+
+        except Exception as e:
+            logger.exception(f"Error in command task {task.task_type}: {e}")
+            return StudioResult(
+                task_type=task.task_type,
+                success=False,
+                error=str(e),
+            )
 
     def synthesize(self, results: list[StudioResult]) -> dict[str, Any]:
         """Synthesize cross-category insights from analysis results.
@@ -853,9 +912,7 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
 
         # Session + Intent insight
         if session_result and intent_result:
-            cross_insights.append(
-                "Session history combined with detected intent for context-aware suggestions"
-            )
+            cross_insights.append("Session history combined with detected intent for context-aware suggestions")
 
         # Persona + Disclosure insight (from UXOrchestrator)
         disclosure_result = results_by_type.get("disclosure_analysis")

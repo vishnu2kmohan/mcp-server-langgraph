@@ -406,6 +406,35 @@ repos:
       Complements TypeScript checking with behavioral validation.
 
       '
+  - id: frontend-test-cleanup-validation
+    name: Frontend Test Cleanup Validation
+    entry: >
+      bash -c 'cd src/mcp_server_langgraph/studio/frontend &&
+      if [ ! -d "node_modules" ]; then
+        echo "Installing frontend dependencies..." && npm ci --silent;
+      fi &&
+      npm run validate:test-cleanup 2>&1 || (echo "" && echo "ERROR - Frontend test cleanup validation failed." && echo "Run: cd src/mcp_server_langgraph/studio/frontend && npm run validate:test-cleanup" && exit 1)'
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/src/.*\.(test|spec)\.(ts|tsx)$
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates frontend test files have proper cleanup patterns.
+
+      Added 2025-12-22 to prevent memory leaks causing OOM in test suite.
+
+      Checks for:
+      - afterEach blocks in all test files
+      - cleanup() calls in React component tests
+      - vi.clearAllMocks() or vi.restoreAllMocks() calls
+      - vi.useRealTimers() when fake timers are used
+
+      Duration: ~1-2s (static analysis, no test execution).
+
+      Prevents test memory leaks that caused 16GB+ OOM crashes.
+
+      '
   - id: run-integration-tests
     name: Run Integration Tests (manual - requires Docker)
     entry: bash -c 'PYTHONUNBUFFERED=1 OTEL_SDK_DISABLED=true uv run --frozen pytest -n auto tests/integration/ -v --tb=short'
