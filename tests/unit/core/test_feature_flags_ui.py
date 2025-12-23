@@ -335,3 +335,214 @@ class TestGetUIFeaturesForRole:
 
         assert "interactive_artifacts" in features
         assert features["interactive_artifacts"] is True
+
+
+@pytest.mark.xdist_group(name="test_feature_flags_ui")
+class TestDevToolsFeatureFlags:
+    """Tests for DevTools feature flags (Chrome DevTools-like debugging panel)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_devtools_panel_default_true(self) -> None:
+        """
+        GIVEN default feature flags
+        WHEN FeatureFlags is instantiated
+        THEN devtools_panel should be True (master toggle enabled by default)
+        """
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert flags.devtools_panel is True
+
+    def test_devtools_ai_insights_default_false(self) -> None:
+        """
+        GIVEN default feature flags
+        WHEN FeatureFlags is instantiated
+        THEN devtools_ai_insights should be False (experimental feature)
+        """
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert flags.devtools_ai_insights is False
+
+    def test_devtools_ai_layout_default_false(self) -> None:
+        """
+        GIVEN default feature flags
+        WHEN FeatureFlags is instantiated
+        THEN devtools_ai_layout should be False (experimental feature)
+        """
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert flags.devtools_ai_layout is False
+
+    def test_devtools_network_tab_default_true(self) -> None:
+        """
+        GIVEN default feature flags
+        WHEN FeatureFlags is instantiated
+        THEN devtools_network_tab should be True
+        """
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert flags.devtools_network_tab is True
+
+
+@pytest.mark.xdist_group(name="test_feature_flags_ui")
+class TestDevToolsFeatureFlagsEnvironmentOverride:
+    """Tests for overriding DevTools feature flags via environment variables."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_devtools_panel_can_be_disabled_via_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """
+        GIVEN FF_DEVTOOLS_PANEL=false in environment
+        WHEN FeatureFlags is instantiated
+        THEN devtools_panel should be False
+        """
+        monkeypatch.setenv("FF_DEVTOOLS_PANEL", "false")
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert flags.devtools_panel is False
+
+    def test_devtools_ai_insights_can_be_enabled_via_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """
+        GIVEN FF_DEVTOOLS_AI_INSIGHTS=true in environment
+        WHEN FeatureFlags is instantiated
+        THEN devtools_ai_insights should be True
+        """
+        monkeypatch.setenv("FF_DEVTOOLS_AI_INSIGHTS", "true")
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert flags.devtools_ai_insights is True
+
+    def test_devtools_ai_layout_can_be_enabled_via_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """
+        GIVEN FF_DEVTOOLS_AI_LAYOUT=true in environment
+        WHEN FeatureFlags is instantiated
+        THEN devtools_ai_layout should be True
+        """
+        monkeypatch.setenv("FF_DEVTOOLS_AI_LAYOUT", "true")
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert flags.devtools_ai_layout is True
+
+    def test_devtools_network_tab_can_be_disabled_via_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """
+        GIVEN FF_DEVTOOLS_NETWORK_TAB=false in environment
+        WHEN FeatureFlags is instantiated
+        THEN devtools_network_tab should be False
+        """
+        monkeypatch.setenv("FF_DEVTOOLS_NETWORK_TAB", "false")
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert flags.devtools_network_tab is False
+
+
+@pytest.mark.xdist_group(name="test_feature_flags_ui")
+class TestDevToolsFeatureFlagsInUIFeatures:
+    """Tests for DevTools feature flags in get_ui_features_for_role."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_devtools_flags_included_in_ui_features_for_admin(self) -> None:
+        """
+        GIVEN default feature flags
+        WHEN get_ui_features_for_role is called with 'admin' role
+        THEN result should include all devtools flags
+        """
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        features = flags.get_ui_features_for_role("admin")
+
+        assert "devtools_panel" in features
+        assert "devtools_ai_insights" in features
+        assert "devtools_ai_layout" in features
+        assert "devtools_network_tab" in features
+
+    def test_devtools_flags_have_correct_default_values_for_admin(self) -> None:
+        """
+        GIVEN default feature flags
+        WHEN get_ui_features_for_role is called with 'admin' role
+        THEN devtools flags should have correct default values
+        """
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        features = flags.get_ui_features_for_role("admin")
+
+        assert features["devtools_panel"] is True
+        assert features["devtools_ai_insights"] is False
+        assert features["devtools_ai_layout"] is False
+        assert features["devtools_network_tab"] is True
+
+    def test_devtools_flags_included_in_ui_features_for_user(self) -> None:
+        """
+        GIVEN default feature flags
+        WHEN get_ui_features_for_role is called with 'user' role
+        THEN result should include devtools flags (available to all roles)
+        """
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        features = flags.get_ui_features_for_role("user")
+
+        assert "devtools_panel" in features
+        assert features["devtools_panel"] is True
+
+    def test_devtools_ai_flags_enabled_via_env_reflected_in_features(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """
+        GIVEN devtools AI flags enabled via environment
+        WHEN get_ui_features_for_role is called
+        THEN features should reflect enabled state
+        """
+        monkeypatch.setenv("FF_DEVTOOLS_AI_INSIGHTS", "true")
+        monkeypatch.setenv("FF_DEVTOOLS_AI_LAYOUT", "true")
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        features = flags.get_ui_features_for_role("admin")
+
+        assert features["devtools_ai_insights"] is True
+        assert features["devtools_ai_layout"] is True
+
+    def test_is_feature_enabled_works_for_devtools_flags(self) -> None:
+        """
+        GIVEN default feature flags
+        WHEN is_feature_enabled is called with devtools flag names
+        THEN it should return correct boolean values
+        """
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert flags.is_feature_enabled("devtools_panel") is True
+        assert flags.is_feature_enabled("devtools_ai_insights") is False
+        assert flags.is_feature_enabled("devtools_ai_layout") is False
+        assert flags.is_feature_enabled("devtools_network_tab") is True

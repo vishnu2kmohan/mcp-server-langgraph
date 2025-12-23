@@ -371,6 +371,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
           return (
             <button
               key={tabId}
+              data-testid={`devtools-tab-${tabId}`}
               role="tab"
               aria-selected={isActive}
               aria-controls={`tabpanel-${tabId}`}
