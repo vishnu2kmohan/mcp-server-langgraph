@@ -270,7 +270,7 @@ async def capture_screenshot(
 
     try:
         # Dynamic import to handle optional dependency
-        from playwright.async_api import async_playwright
+        from playwright.async_api import async_playwright  # type: ignore[import-not-found]
     except ImportError:
         return {
             "error": "Playwright not installed. Install with: pip install playwright && playwright install chromium",

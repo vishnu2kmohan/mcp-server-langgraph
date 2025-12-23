@@ -1212,6 +1212,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           session: {
@@ -1264,6 +1265,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           session: {
@@ -1337,6 +1339,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           session: {
@@ -1400,6 +1403,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           session: {
@@ -1460,6 +1464,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           persona: {
@@ -1499,6 +1504,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           persona: {
@@ -1657,6 +1663,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           backgroundAgent: createAgentState([
@@ -1711,6 +1718,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           backgroundAgent: createAgentState([
@@ -1761,6 +1769,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           backgroundAgent: createAgentState([
@@ -2211,6 +2220,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           backgroundAgent: createAgentState([
@@ -2267,6 +2277,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           backgroundAgent: createAgentState([
@@ -2554,6 +2565,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           session: {
@@ -3336,6 +3348,7 @@ describe("StudioShellLayout", () => {
           auth: authReducer,
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
         },
         preloadedState: {
           backgroundAgent: {

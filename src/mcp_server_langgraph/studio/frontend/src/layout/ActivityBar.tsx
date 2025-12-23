@@ -158,7 +158,7 @@ export function ActivityBar({
 
   // Create a set of predicted item IDs for quick lookup
   const predictedItemIds = useMemo(() => {
-    if (!enableAI || !predictedItems.length) return new Set<string>();
+    if (!enableAI || !predictedItems?.length) return new Set<string>();
     return new Set(predictedItems.map((p) => p.id));
   }, [enableAI, predictedItems]);
 
@@ -167,7 +167,7 @@ export function ActivityBar({
     const filtered = NAV_ITEMS.filter((item) => allowedItems.includes(item.id));
 
     // Optionally reorder based on predictions
-    if (enableAI && reorderByPrediction && predictedItems.length > 0) {
+    if (enableAI && reorderByPrediction && (predictedItems?.length ?? 0) > 0) {
       // Create a score map from predictions
       const scoreMap = new Map(predictedItems.map((p) => [p.id, p.score]));
 

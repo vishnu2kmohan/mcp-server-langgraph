@@ -163,7 +163,7 @@ class EncryptedSessionStore(SessionStore):
             logger.warning(f"Error decrypting metadata: {e}")
             return metadata
 
-    async def create(
+    async def create(  # type: ignore[override]
         self,
         user_id: str,
         username: str,

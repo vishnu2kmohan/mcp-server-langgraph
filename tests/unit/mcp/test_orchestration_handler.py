@@ -297,7 +297,8 @@ class TestDecomposeOperation:
         )
 
         mock_orchestrator = MagicMock()
-        mock_orchestrator.decompose_task = AsyncMock(
+        # decompose_task is a synchronous method, use MagicMock not AsyncMock
+        mock_orchestrator.decompose_task = MagicMock(
             return_value=MagicMock(
                 task_id="task-123",
                 subtasks=[
@@ -326,7 +327,8 @@ class TestDecomposeOperation:
         )
 
         mock_orchestrator = MagicMock()
-        mock_orchestrator.decompose_task = AsyncMock(
+        # decompose_task is a synchronous method, use MagicMock not AsyncMock
+        mock_orchestrator.decompose_task = MagicMock(
             return_value=MagicMock(model_dump=MagicMock(return_value={"task_id": "t1", "subtasks": []}))
         )
 

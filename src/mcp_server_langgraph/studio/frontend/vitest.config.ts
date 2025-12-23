@@ -137,9 +137,9 @@ export default defineConfig({
 
     // Vitest 4: execArgv is a top-level option that applies to all worker processes
     // Per-worker heap limits to prevent OOM in individual workers
-    // Each worker gets 8GB max heap - complex test files with many mocks need more memory
-    // With 2 max workers, max total usage is ~16GB which fits within 32GB system memory
-    execArgv: ["--max-old-space-size=8192"],
+    // Each worker gets 12GB max heap - complex test files with many mocks need more memory
+    // With 2 max workers, max total usage is ~24GB which fits within 32GB system memory
+    execArgv: ["--max-old-space-size=12288"],
 
     // Each test file gets its own environment (better isolation)
     isolate: true,

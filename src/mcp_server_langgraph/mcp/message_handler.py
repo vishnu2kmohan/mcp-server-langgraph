@@ -453,8 +453,10 @@ class AuthenticatedMCPHandler(MCPMessageHandler):
                 )
 
                 if is_streaming_enabled():
+                    # Cast self to Any for StreamingToolCallHandler compatibility
+                    # (message_handler.AuthenticatedMCPHandler implements same interface)
                     streaming_handler = StreamingToolCallHandler(
-                        mcp_handler=self,
+                        mcp_handler=self,  # type: ignore[arg-type]
                         send_notification=self.notification_callback,
                         metrics_collector=streaming_metrics_collector,
                         outbound_rate_limiter=get_outbound_rate_limiter(),

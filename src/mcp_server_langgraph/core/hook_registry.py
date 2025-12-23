@@ -420,6 +420,8 @@ async def temporary_hooks(
 
 __all__ = [
     "HookDispatcher",
+    "HookEvent",
+    "HookMatcher",
     "HookRegistry",
     "get_hook_registry",
     "reset_hook_registry",
