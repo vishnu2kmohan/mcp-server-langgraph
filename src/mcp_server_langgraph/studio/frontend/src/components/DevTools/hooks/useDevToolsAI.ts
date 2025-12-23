@@ -110,6 +110,8 @@ export function useDevToolsAI(options: UseDevToolsAIOptions): UseDevToolsAIRetur
         }
       }
     }
+  // Only depend on specific properties to avoid re-renders when studioAI object reference changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studioAI.results, studioAI.getResult]);
 
   // Handle errors
