@@ -138,12 +138,12 @@ async function setupMocks(page: import('@playwright/test').Page) {
       const query = body.query?.toLowerCase() || '';
 
       let action = 'navigate';
-      let params = { to: '/studio/v2/chat' };
+      let params = { to: '/studio/chat' };
 
       if (query.includes('compliance')) {
-        params = { to: '/studio/v2/compliance' };
+        params = { to: '/studio/compliance' };
       } else if (query.includes('workflow')) {
-        params = { to: '/studio/v2/workflows' };
+        params = { to: '/studio/workflows' };
       }
 
       await route.fulfill({
@@ -162,7 +162,7 @@ async function setupMocks(page: import('@playwright/test').Page) {
 test.describe('Follow-Up Suggestions', () => {
   test('should display follow-up suggestions in conversation panel', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const conversationPanel = alicePage.getByTestId('conversation-panel');
     await expect(conversationPanel).toBeVisible({ timeout: 10000 });
@@ -170,7 +170,7 @@ test.describe('Follow-Up Suggestions', () => {
 
   test('should show suggestion chips with text', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const conversationPanel = alicePage.getByTestId('conversation-panel');
     await expect(conversationPanel).toBeVisible({ timeout: 10000 });
@@ -178,7 +178,7 @@ test.describe('Follow-Up Suggestions', () => {
 
   test('should click suggestion chip to send message', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const conversationPanel = alicePage.getByTestId('conversation-panel');
     await expect(conversationPanel).toBeVisible({ timeout: 10000 });
@@ -188,7 +188,7 @@ test.describe('Follow-Up Suggestions', () => {
 test.describe('AI Command Palette', () => {
   test('should open command palette with Cmd+K', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 

@@ -77,7 +77,7 @@ vi.mock("react-router", async () => {
 // Test navigation
 it("should navigate to session on click", async () => {
   await user.click(screen.getByText("New Chat"));
-  expect(mockNavigate).toHaveBeenCalledWith("/studio/v2/chat/new-session-id");
+  expect(mockNavigate).toHaveBeenCalledWith("/studio/chat/new-session-id");
 });
 ```
 
@@ -103,9 +103,9 @@ vi.mock("react-router", async () => {
 describe("Navigation", () => {
   it("should update URL when selecting artifact", async () => {
     const { container } = render(
-      <MemoryRouter initialEntries={["/studio/v2/chat/session-1"]}>
+      <MemoryRouter initialEntries={["/studio/chat/session-1"]}>
         <Routes>
-          <Route path="/studio/v2/chat/:sessionId" element={<ChatPage />} />
+          <Route path="/studio/chat/:sessionId" element={<ChatPage />} />
         </Routes>
       </MemoryRouter>
     );

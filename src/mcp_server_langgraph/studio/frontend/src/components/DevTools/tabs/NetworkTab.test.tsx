@@ -5,7 +5,7 @@
  * Displays API requests, WebSocket messages, and MCP tool calls.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -341,11 +341,14 @@ describe("NetworkTab", () => {
       const searchInput = screen.getByTestId("network-search");
       await user.type(searchInput, "messages");
 
-      // Only message entry should be visible
-      expect(screen.getByTestId("network-entry-req-2")).toBeInTheDocument();
-      expect(
-        screen.queryByTestId("network-entry-req-1"),
-      ).not.toBeInTheDocument();
+      // Wait for debounced search to take effect (150ms debounce)
+      await waitFor(() => {
+        // Only message entry should be visible
+        expect(screen.getByTestId("network-entry-req-2")).toBeInTheDocument();
+        expect(
+          screen.queryByTestId("network-entry-req-1"),
+        ).not.toBeInTheDocument();
+      });
     });
   });
 

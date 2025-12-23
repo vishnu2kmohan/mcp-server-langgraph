@@ -353,16 +353,6 @@ export const router = createBrowserRouter(
           ],
         },
 
-        // =================================================================
-        // Legacy /studio/v2 redirect (backward compatibility)
-        // =================================================================
-        // /studio/v2/* is deprecated - redirect to /studio/*
-        // The main /studio routes now use StudioShellLayout via StudioShellGuard
-        {
-          path: "studio/v2/*",
-          element: <StudioV2Redirect />,
-        },
-
         // Legacy admin redirect (for backward compatibility)
         {
           path: "admin",

@@ -2517,7 +2517,8 @@ Compare with last period and generate actionable insights."""
         """
         Invalidate all cache entries for a specific user.
 
-        Delegates to StaleWhileRevalidateMixin._cache_invalidate_user for DRY caching.
+        Clears both the legacy _response_cache and delegates to
+        StaleWhileRevalidateMixin._cache_invalidate_user for DRY caching.
 
         Args:
             user_id: The user ID to invalidate cache for
@@ -2525,15 +2526,29 @@ Compare with last period and generate actionable insights."""
         Returns:
             Number of entries deleted
         """
-        # Delegate to mixin's _cache_invalidate_user method
+        deleted_count = 0
+
+        # Clear legacy _response_cache entries for this user
+        keys_to_delete = [
+            key
+            for key in list(self._response_cache.keys())
+            if user_id in str(key)
+        ]
+        for key in keys_to_delete:
+            del self._response_cache[key]
+            deleted_count += 1
+
+        # Also delegate to mixin's _cache_invalidate_user method
         # This handles both L1 and L2 via CacheService.adelete_pattern
-        return await self._cache_invalidate_user(user_id)
+        mixin_deleted = await self._cache_invalidate_user(user_id)
+        return deleted_count + mixin_deleted
 
     async def invalidate_method_cache(self, method: str) -> int:
         """
         Invalidate all cache entries for a specific method.
 
-        Delegates to StaleWhileRevalidateMixin._cache_invalidate_prefix for DRY caching.
+        Clears both the legacy _response_cache and delegates to
+        StaleWhileRevalidateMixin._cache_invalidate_prefix for DRY caching.
 
         Args:
             method: The method name to invalidate cache for
@@ -2541,9 +2556,22 @@ Compare with last period and generate actionable insights."""
         Returns:
             Number of entries deleted
         """
-        # Delegate to mixin's _cache_invalidate_prefix method
+        deleted_count = 0
+
+        # Clear legacy _response_cache entries for this method
+        keys_to_delete = [
+            key
+            for key in list(self._response_cache.keys())
+            if method in str(key)
+        ]
+        for key in keys_to_delete:
+            del self._response_cache[key]
+            deleted_count += 1
+
+        # Also delegate to mixin's _cache_invalidate_prefix method
         # This handles both L1 and L2 via CacheService.adelete_pattern
-        return await self._cache_invalidate_prefix(method)
+        mixin_deleted = await self._cache_invalidate_prefix(method)
+        return deleted_count + mixin_deleted
 
     # =========================================================================
     # WebSocket Methods
