@@ -1,5 +1,5 @@
 /**
- * HybridShellLayout - Hybrid Canvas Implementation
+ * StudioShellLayout - Hybrid Canvas Implementation
  *
  * New app shell for the Hybrid Canvas paradigm (Gemini/ChatGPT Canvas style).
  * Uses react-resizable-panels for flexible panel sizing.
@@ -82,7 +82,7 @@ import {
 } from "../store/slices/devToolsSlice";
 import { getAuthToken } from "../utils/storage";
 
-const logger = devLogger.withPrefix("[HybridShell]");
+const logger = devLogger.withPrefix("[StudioShell]");
 
 // =============================================================================
 // Command Palette Commands
@@ -139,10 +139,10 @@ const PALETTE_COMMANDS: Command[] = [
 ];
 
 // =============================================================================
-// HybridShellLayout Component
+// StudioShellLayout Component
 // =============================================================================
 
-export function HybridShellLayout() {
+export function StudioShellLayout() {
   const dispatch = useAppDispatch();
   const sessionNavCollapsed = useAppSelector(selectSessionNavCollapsed);
   const canvasCollapsed = useAppSelector(selectCanvasCollapsed);
@@ -221,7 +221,7 @@ export function HybridShellLayout() {
   } = useCrossInsightsPanel();
 
   // Persona-based routing: handles default route redirects and access validation
-  // This integrates PersonaRouter logic into the HybridShell
+  // This integrates PersonaRouter logic into the StudioShell
   usePersonaRouting();
 
   // Get real-time connection health status

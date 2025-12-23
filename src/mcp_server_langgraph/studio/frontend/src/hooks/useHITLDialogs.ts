@@ -9,7 +9,7 @@
  * - Auto-show dialogs when pending requests arrive
  * - Handlers for approve, reject, respond, close
  *
- * Extracted from HybridShellLayout to reduce component complexity.
+ * Extracted from StudioShellLayout to reduce component complexity.
  */
 import { useState, useCallback, useEffect } from "react";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";

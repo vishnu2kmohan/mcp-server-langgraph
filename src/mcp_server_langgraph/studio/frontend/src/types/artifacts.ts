@@ -337,7 +337,7 @@ export interface FileUploadResult {
 
 /**
  * Canvas artifact - extends base with session association and versioning
- * Used in HybridShell Canvas Panel for Gemini/ChatGPT-style editing
+ * Used in StudioShell Canvas Panel for Gemini/ChatGPT-style editing
  */
 export interface CanvasArtifact extends BaseArtifact {
   /** Session this artifact belongs to */

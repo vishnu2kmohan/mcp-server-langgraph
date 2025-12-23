@@ -385,7 +385,7 @@ export function App() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <OfflineBanner />
-      {/* All routes render via router - HybridShellLayout for /studio/* */}
+      {/* All routes render via router - StudioShellLayout for /studio/* */}
       <Outlet />
       <Toaster
         position="bottom-right"

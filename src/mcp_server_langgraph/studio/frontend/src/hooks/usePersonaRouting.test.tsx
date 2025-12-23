@@ -1,7 +1,7 @@
 /**
  * usePersonaRouting Hook Tests
  *
- * TDD tests for persona-based routing hook that integrates with HybridShellLayout.
+ * TDD tests for persona-based routing hook that integrates with StudioShellLayout.
  * Handles default route redirects and route access validation.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";

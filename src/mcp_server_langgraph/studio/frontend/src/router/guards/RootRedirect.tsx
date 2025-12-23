@@ -4,7 +4,7 @@
  * Simple redirect component for the root route.
  *
  * Always redirects to /studio - the feature flag check happens in App.tsx
- * which decides whether to render HybridShellLayout or AppShell.
+ * which decides whether to render StudioShellLayout or AppShell.
  *
  * This provides a clean separation:
  * - RootRedirect: Just redirects to /studio

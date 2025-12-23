@@ -958,7 +958,7 @@ describe("App", () => {
   });
 
   describe("Route Type Detection Edge Cases", () => {
-    it("should detect /studio/v2/* as non-legacy route (HybridShell)", async () => {
+    it("should detect /studio/v2/* as non-legacy route (StudioShell)", async () => {
       renderWithStore(
         <MemoryRouter
           initialEntries={["/studio/v2/chat"]}
@@ -975,7 +975,7 @@ describe("App", () => {
         </MemoryRouter>,
       );
 
-      // HybridShell routes render via Outlet, not AppShell
+      // StudioShell routes render via Outlet, not AppShell
       await waitFor(() => {
         expect(screen.getByTestId("hybrid-content")).toBeInTheDocument();
       });
@@ -1320,7 +1320,7 @@ describe("App", () => {
         </MemoryRouter>,
       );
 
-      // HybridShell routes don't use AppShell components
+      // StudioShell routes don't use AppShell components
       await waitFor(() => {
         expect(screen.getByTestId("hybrid-content")).toBeInTheDocument();
       });

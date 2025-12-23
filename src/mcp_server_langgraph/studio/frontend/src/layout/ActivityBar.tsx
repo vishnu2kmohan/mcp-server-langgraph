@@ -2,7 +2,7 @@
  * ActivityBar Component
  *
  * RBAC-aware sidebar navigation with icons.
- * Extracted from HybridShellLayout for maintainability.
+ * Extracted from StudioShellLayout for maintainability.
  *
  * Features:
  * - Persona-filtered navigation items (deny-by-default)

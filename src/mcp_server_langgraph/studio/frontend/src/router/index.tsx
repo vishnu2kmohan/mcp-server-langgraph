@@ -33,11 +33,11 @@ export const router = createBrowserRouter(
       path: "/",
       element: <App />,
       children: [
-        // Root redirect - uses feature flag to choose HybridShell or legacy
+        // Root redirect - uses feature flag to choose StudioShell or legacy
         { index: true, element: <RootRedirect /> },
 
         // Studio routes (lazy-loaded, authentication required)
-        // Uses StudioShellGuard which renders HybridShellLayout
+        // Uses StudioShellGuard which renders StudioShellLayout
         {
           id: "studio",
           path: "studio",
@@ -49,7 +49,7 @@ export const router = createBrowserRouter(
           // Load sessions for SessionNav on shell mount
           loader: sessionsLoader,
           children: [
-            // Default redirect to chat (HybridShell default)
+            // Default redirect to chat (StudioShell default)
             { index: true, element: <Navigate to="chat" replace /> },
             {
               path: "projects",
@@ -358,7 +358,7 @@ export const router = createBrowserRouter(
         // Legacy /studio/v2 redirect (backward compatibility)
         // =================================================================
         // /studio/v2/* is deprecated - redirect to /studio/*
-        // The main /studio routes now use HybridShellLayout via StudioShellGuard
+        // The main /studio routes now use StudioShellLayout via StudioShellGuard
         {
           path: "studio/v2/*",
           element: <StudioV2Redirect />,

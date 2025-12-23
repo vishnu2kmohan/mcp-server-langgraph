@@ -1,7 +1,7 @@
 /**
  * Canvas Loaders - Phase 2
  *
- * React Router loaders for HybridShell routes.
+ * React Router loaders for StudioShell routes.
  * Loaders fetch data BEFORE rendering, preventing waterfall requests.
  *
  * Pattern: fetch-before-render (vs useEffect fetch-on-render)

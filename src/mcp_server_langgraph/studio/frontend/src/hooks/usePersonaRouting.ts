@@ -1,7 +1,7 @@
 /**
  * usePersonaRouting Hook
  *
- * Provides persona-based routing functionality for HybridShellLayout.
+ * Provides persona-based routing functionality for StudioShellLayout.
  * Extracted from PersonaRouter to work with component wrapper pattern.
  *
  * Features:
@@ -32,7 +32,7 @@ export interface PersonaRoutingResult {
 }
 
 /**
- * Hook for persona-based routing in HybridShellLayout.
+ * Hook for persona-based routing in StudioShellLayout.
  *
  * Handles:
  * - Redirect to default route when on index path

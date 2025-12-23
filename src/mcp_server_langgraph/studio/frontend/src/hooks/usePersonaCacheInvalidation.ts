@@ -44,7 +44,7 @@ export interface UsePersonaCacheInvalidationResult {
  *
  * Usage:
  * ```tsx
- * // In App or HybridShellLayout
+ * // In App or StudioShellLayout
  * usePersonaCacheInvalidation();
  * ```
  */

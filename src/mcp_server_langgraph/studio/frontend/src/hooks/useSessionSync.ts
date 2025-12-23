@@ -4,7 +4,7 @@
  * Synchronizes React Router loader data to Redux session state.
  *
  * Purpose:
- * - HybridShell uses React Router loaders (fetch-before-render)
+ * - StudioShell uses React Router loaders (fetch-before-render)
  * - Legacy components (sendMessage) expect currentSession in Redux
  * - This hook bridges the gap by syncing loader data to Redux
  *

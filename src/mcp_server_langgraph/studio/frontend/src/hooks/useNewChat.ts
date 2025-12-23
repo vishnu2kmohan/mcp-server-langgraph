@@ -2,7 +2,7 @@
  * useNewChat Hook
  *
  * Hook for creating a new chat session and navigating to it.
- * Used by HybridShellLayout and other components that need to create new chats.
+ * Used by StudioShellLayout and other components that need to create new chats.
  *
  * Usage:
  * ```tsx

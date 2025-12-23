@@ -2,7 +2,7 @@
  * ResponsiveLayout Component
  *
  * Wrapper component that detects screen breakpoints and provides
- * responsive layout classes for the HybridShell.
+ * responsive layout classes for the StudioShell.
  *
  * Breakpoints:
  * - xl (>= 1440px): Full 4-column layout

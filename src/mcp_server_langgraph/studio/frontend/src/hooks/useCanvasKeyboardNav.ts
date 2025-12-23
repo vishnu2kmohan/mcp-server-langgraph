@@ -1,7 +1,7 @@
 /**
  * useCanvasKeyboardNav Hook
  *
- * Provides keyboard navigation shortcuts for the HybridShell canvas.
+ * Provides keyboard navigation shortcuts for the StudioShell canvas.
  *
  * Shortcuts:
  * - Cmd+1: Focus Activity Bar

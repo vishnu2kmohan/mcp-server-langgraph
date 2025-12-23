@@ -11,7 +11,7 @@
  * - Loading and error states work correctly
  * - Refresh functionality operates properly
  *
- * Reference: HybridShell AI Enhancement Analysis Plan
+ * Reference: StudioShell AI Enhancement Analysis Plan
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";

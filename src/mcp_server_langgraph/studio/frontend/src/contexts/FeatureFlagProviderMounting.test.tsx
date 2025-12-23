@@ -3,7 +3,7 @@
  *
  * TDD test to ensure FeatureFlagProvider is mounted in main.tsx.
  * This is a critical test because:
- * - HybridShellGuard depends on useFeatureFlag("canvas_hybrid_shell")
+ * - StudioShellGuard depends on useFeatureFlag("canvas_hybrid_shell")
  * - Without FeatureFlagProvider, the guard always returns false
  * - This causes /studio/v2/* routes to redirect to legacy /studio/*
  *
@@ -66,8 +66,8 @@ describe("canvas_hybrid_shell feature flag", () => {
     const typesContent = fs.readFileSync(typesPath, "utf-8");
 
     // Check that canvas_hybrid_shell is defined
-    const hasCanvasHybridShell = typesContent.includes("canvas_hybrid_shell");
+    const hasCanvasStudioShell = typesContent.includes("canvas_hybrid_shell");
 
-    expect(hasCanvasHybridShell).toBe(true);
+    expect(hasCanvasStudioShell).toBe(true);
   });
 });

@@ -1,7 +1,7 @@
 /**
  * FeatureFlagToggle Component
  *
- * Dev-mode toggle for switching between HybridShell and AppShell.
+ * Dev-mode toggle for switching between StudioShell and AppShell.
  * Persists state to localStorage for persistence across page reloads.
  *
  * Usage:

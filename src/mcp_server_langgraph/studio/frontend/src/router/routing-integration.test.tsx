@@ -2,7 +2,7 @@
  * Routing Integration Tests
  *
  * Integration tests for the routing system including:
- * - HybridShell route rendering
+ * - StudioShell route rendering
  * - Feature flag gating
  * - RBAC enforcement at routing level
  * - Navigation between routes
@@ -22,8 +22,8 @@ import authReducer from "../store/slices/authSlice";
 // =============================================================================
 
 // Mock components to avoid loading complex page dependencies
-vi.mock("../layout/HybridShellLayout", () => ({
-  HybridShellLayout: ({ children }: { children?: React.ReactNode }) => (
+vi.mock("../layout/StudioShellLayout", () => ({
+  StudioShellLayout: ({ children }: { children?: React.ReactNode }) => (
     <div data-testid="hybrid-shell-layout">
       <div data-testid="activity-bar">Activity Bar</div>
       <div data-testid="session-nav">Session Nav</div>
@@ -98,7 +98,7 @@ const createTestStore = (
     },
   });
 
-// Test routes that match the HybridShell structure
+// Test routes that match the StudioShell structure
 const createTestRoutes = () => [
   {
     path: "/studio/v2",
@@ -160,8 +160,8 @@ describe("Routing Integration", () => {
     vi.clearAllMocks();
   });
 
-  describe("HybridShell Routes", () => {
-    it("should render HybridShell layout at /studio/v2", async () => {
+  describe("StudioShell Routes", () => {
+    it("should render StudioShell layout at /studio/v2", async () => {
       const store = createTestStore();
       const router = createMemoryRouter(createTestRoutes(), {
         initialEntries: ["/studio/v2/chat"],
@@ -371,7 +371,7 @@ describe("Routing Integration", () => {
   });
 
   describe("Feature Flag Gating", () => {
-    it("should render HybridShell when flag enabled", async () => {
+    it("should render StudioShell when flag enabled", async () => {
       const store = createTestStore();
       const router = createMemoryRouter(createTestRoutes(), {
         initialEntries: ["/studio/v2/chat"],

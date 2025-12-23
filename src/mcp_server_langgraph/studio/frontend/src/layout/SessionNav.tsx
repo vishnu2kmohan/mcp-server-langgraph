@@ -2,7 +2,7 @@
  * SessionNav Component
  *
  * Time-travel grouped session navigation sidebar.
- * Extracted from HybridShellLayout for maintainability.
+ * Extracted from StudioShellLayout for maintainability.
  *
  * Features:
  * - Session grouping by date (Today, Yesterday, Older)

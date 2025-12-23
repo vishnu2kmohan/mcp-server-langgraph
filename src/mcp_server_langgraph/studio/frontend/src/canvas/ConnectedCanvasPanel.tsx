@@ -7,7 +7,7 @@
  * - Nested route outlets
  * - API calls for saving artifact content
  *
- * Use this in HybridShellLayout instead of inline CanvasPanel.
+ * Use this in StudioShellLayout instead of inline CanvasPanel.
  */
 import {
   useCallback,

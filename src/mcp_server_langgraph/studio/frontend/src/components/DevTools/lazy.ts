@@ -62,7 +62,7 @@ export const LazyAIInsightsTab = lazy(() =>
 );
 
 // =============================================================================
-// Lazy-loaded Main Panel (for HybridShellLayout)
+// Lazy-loaded Main Panel (for StudioShellLayout)
 // =============================================================================
 
 /**

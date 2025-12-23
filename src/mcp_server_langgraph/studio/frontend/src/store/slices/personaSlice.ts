@@ -101,7 +101,7 @@ const PERSONA_CONFIGS: Record<Persona, PersonaConfig> = {
       "/studio/chat",
       "/studio/workflows",
       "/studio/cost",
-      // HybridShell v2 routes
+      // StudioShell v2 routes
       "/studio/v2/projects",
       "/studio/v2/chat",
       "/studio/v2/workflows",

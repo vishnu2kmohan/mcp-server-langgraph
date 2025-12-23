@@ -328,7 +328,7 @@ export type {
   UseBatchCompositeAnalysisResult,
 } from "./useBatchCompositeAnalysis";
 
-// Studio AI (unified HybridShell AI analysis via StudioOrchestrator)
+// Studio AI (unified StudioShell AI analysis via StudioOrchestrator)
 export { useStudioAI } from "./useStudioAI";
 export type {
   TaskCategory,
@@ -338,7 +338,7 @@ export type {
   UseStudioAIResult,
 } from "./useStudioAI";
 
-// CrossInsightsPanel state management (extracted from HybridShellLayout)
+// CrossInsightsPanel state management (extracted from StudioShellLayout)
 export { useCrossInsightsPanel } from "./useCrossInsightsPanel";
 export type { UseCrossInsightsPanelReturn } from "./useCrossInsightsPanel";
 
@@ -456,7 +456,7 @@ export type {
   LearningPathResult,
 } from "./useUXIntelligence";
 
-// HITL dialogs state management (extracted from HybridShellLayout)
+// HITL dialogs state management (extracted from StudioShellLayout)
 export { useHITLDialogs } from "./useHITLDialogs";
 export type {
   ClarificationResponse,

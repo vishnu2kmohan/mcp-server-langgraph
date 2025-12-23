@@ -1,13 +1,13 @@
 /**
- * HybridShellGuard Tests
+ * StudioShellGuard Tests
  *
  * Phase 7: Integration - Feature Flag Gating
- * Tests for feature flag-based routing to HybridShell.
+ * Tests for feature flag-based routing to StudioShell.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router";
-import { HybridShellGuard } from "./HybridShellGuard";
+import { StudioShellGuard } from "./StudioShellGuard";
 
 // Mock the feature flag hook
 const mockUseFeatureFlags = vi.fn();
@@ -15,14 +15,14 @@ vi.mock("../../contexts/FeatureFlagContext", () => ({
   useFeatureFlags: () => mockUseFeatureFlags(),
 }));
 
-const MockHybridShell = () => (
+const MockStudioShell = () => (
   <div data-testid="hybrid-shell">Hybrid Shell Content</div>
 );
 const MockLegacyStudio = () => (
   <div data-testid="legacy-studio">Legacy Studio</div>
 );
 
-describe("HybridShellGuard", () => {
+describe("StudioShellGuard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -43,9 +43,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
             <Route path="/studio" element={<MockLegacyStudio />} />
@@ -66,9 +66,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
           </Routes>
@@ -97,9 +97,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
             <Route path="/studio" element={<MockLegacyStudio />} />
@@ -129,9 +129,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
           </Routes>
@@ -155,9 +155,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
           </Routes>
@@ -184,9 +184,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
             <Route path="/studio" element={<MockLegacyStudio />} />
@@ -205,9 +205,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
             <Route
@@ -243,9 +243,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2/chat"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
             <Route
@@ -266,9 +266,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2/chat/:sessionId"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
             <Route
@@ -291,9 +291,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2/workflows"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
             <Route
@@ -316,9 +316,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2/compliance"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
             <Route
@@ -351,9 +351,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
             <Route
@@ -376,9 +376,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2/chat"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
             <Route
@@ -401,9 +401,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2/admin/settings/security"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
             <Route
@@ -438,9 +438,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
           </Routes>
@@ -458,9 +458,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
           </Routes>
@@ -491,9 +491,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
           </Routes>
@@ -521,9 +521,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/v2"
               element={
-                <HybridShellGuard>
-                  <MockHybridShell />
-                </HybridShellGuard>
+                <StudioShellGuard>
+                  <MockStudioShell />
+                </StudioShellGuard>
               }
             />
           </Routes>

@@ -1,12 +1,12 @@
 /**
  * Layout Module - Hybrid Canvas Shell Components
  *
- * Phase 1: HybridShellLayout with resizable panels
+ * Phase 1: StudioShellLayout with resizable panels
  * Exports main layout component and sub-components.
  */
 
 // Main shell layout
-export { HybridShellLayout } from "./HybridShellLayout";
+export { StudioShellLayout } from "./StudioShellLayout";
 
 // Activity bar (RBAC-aware navigation)
 export {

@@ -1,11 +1,11 @@
 /**
  * StudioShellGuard
  *
- * Conditionally wraps /studio routes with HybridShellLayout when
+ * Conditionally wraps /studio routes with StudioShellLayout when
  * canvas_hybrid_shell feature flag is enabled.
  *
  * When canvas_hybrid_shell is enabled:
- * - Renders HybridShellLayout (new Canvas-style UI)
+ * - Renders StudioShellLayout (new Canvas-style UI)
  *
  * When canvas_hybrid_shell is disabled:
  * - Renders Outlet directly (App.tsx wraps with AppShell)
@@ -16,7 +16,7 @@
 
 import { Outlet } from "react-router";
 import { useFeatureFlags } from "../../contexts/FeatureFlagContext";
-import { HybridShellLayout } from "../../layout";
+import { StudioShellLayout } from "../../layout";
 
 /**
  * Loading skeleton while feature flags are loading.
@@ -68,15 +68,15 @@ export function StudioShellGuard() {
     return <ShellSkeleton />;
   }
 
-  // On error, default to HybridShell (fail-open) for better UX
-  const isHybridShellEnabled = isError
+  // On error, default to StudioShell (fail-open) for better UX
+  const isStudioShellEnabled = isError
     ? true
     : isEnabled("canvas_hybrid_shell");
 
-  // When hybrid shell is enabled, render HybridShellLayout
-  // HybridShellLayout includes its own Outlet for child routes
-  if (isHybridShellEnabled) {
-    return <HybridShellLayout />;
+  // When hybrid shell is enabled, render StudioShellLayout
+  // StudioShellLayout includes its own Outlet for child routes
+  if (isStudioShellEnabled) {
+    return <StudioShellLayout />;
   }
 
   // When disabled, render Outlet directly

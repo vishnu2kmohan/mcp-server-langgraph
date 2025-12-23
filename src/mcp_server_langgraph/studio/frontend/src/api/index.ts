@@ -2745,7 +2745,7 @@ export const api = createApi({
     }),
 
     // =========================================================================
-    // Studio AI Endpoints (HybridShell AI Enhancement)
+    // Studio AI Endpoints (StudioShell AI Enhancement)
     // =========================================================================
 
     /**
@@ -2755,7 +2755,7 @@ export const api = createApi({
      * Supports all 8 task categories: UX, SESSION, CONVERSATION, CANVAS,
      * DIAGRAM, TRACE, HITL, COMMAND.
      *
-     * Reference: HybridShell AI Enhancement Analysis Plan
+     * Reference: StudioShell AI Enhancement Analysis Plan
      */
     studioAnalyze: builder.mutation<
       {
@@ -3127,7 +3127,7 @@ export const {
   useAnalyzePersonaMutation,
   useAnalyzeCompositeMutation,
   useBatchCompositeAnalysisMutation,
-  // Studio AI Endpoints (HybridShell)
+  // Studio AI Endpoints (StudioShell)
   useStudioAnalyzeMutation,
   // MCP Protocol Endpoints
   useListMcpResourcesQuery,

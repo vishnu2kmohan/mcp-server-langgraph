@@ -8,7 +8,7 @@
  * - Message revalidation (refresh after sending)
  * - Conversation Intelligence (Sprint 3)
  *
- * Use this in HybridShellLayout instead of the standalone ConversationPanel.
+ * Use this in StudioShellLayout instead of the standalone ConversationPanel.
  */
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useRouteLoaderData, useParams } from "react-router";

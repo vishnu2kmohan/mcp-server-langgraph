@@ -11,21 +11,21 @@ import { describe, it, expect } from "vitest";
 
 describe("Hybrid Canvas Module Parity", () => {
   describe("Layout Module (src/layout/)", () => {
-    it("exports HybridShellLayout component", async () => {
+    it("exports StudioShellLayout component", async () => {
       const module = await import("../layout");
-      expect(module.HybridShellLayout).toBeDefined();
+      expect(module.StudioShellLayout).toBeDefined();
     });
 
-    it("HybridShellLayout is a React component", async () => {
+    it("StudioShellLayout is a React component", async () => {
       const module = await import("../layout");
-      expect(typeof module.HybridShellLayout).toBe("function");
+      expect(typeof module.StudioShellLayout).toBe("function");
     });
 
-    it("HybridShellLayout contains all sub-components internally", async () => {
-      // Sub-components (ActivityBar, SessionNav, etc.) are internal to HybridShellLayout
+    it("StudioShellLayout contains all sub-components internally", async () => {
+      // Sub-components (ActivityBar, SessionNav, etc.) are internal to StudioShellLayout
       // The module exports only the main component for clean API
       const module = await import("../layout");
-      expect(Object.keys(module)).toContain("HybridShellLayout");
+      expect(Object.keys(module)).toContain("StudioShellLayout");
     });
   });
 
@@ -119,14 +119,14 @@ describe("Hybrid Canvas Module Parity", () => {
       const module = await import("../router/guards");
       expect(module.AuthGuard).toBeDefined();
       expect(module.PersonaGuard).toBeDefined();
-      expect(module.HybridShellGuard).toBeDefined();
+      expect(module.StudioShellGuard).toBeDefined();
     });
 
     it("guards are React components", async () => {
       const module = await import("../router/guards");
       expect(typeof module.AuthGuard).toBe("function");
       expect(typeof module.PersonaGuard).toBe("function");
-      expect(typeof module.HybridShellGuard).toBe("function");
+      expect(typeof module.StudioShellGuard).toBe("function");
     });
   });
 
@@ -144,13 +144,13 @@ describe("Hybrid Canvas Module Parity", () => {
       );
 
       // Verify no naming conflicts
-      expect(layout.HybridShellLayout).not.toBe(undefined);
+      expect(layout.StudioShellLayout).not.toBe(undefined);
       expect(ai.InlineSuggestions).not.toBe(undefined);
       expect(compliance.ComplianceDashboard).not.toBe(undefined);
       expect(help.HelpPane).not.toBe(undefined);
       expect(loaders.chatLoader).not.toBe(undefined);
       expect(guards.AuthGuard).not.toBe(undefined);
-      expect(guards.HybridShellGuard).not.toBe(undefined);
+      expect(guards.StudioShellGuard).not.toBe(undefined);
     });
   });
 });
@@ -184,7 +184,7 @@ describe("Design System Integration", () => {
 // =============================================================================
 // Phase 7: Feature Parity Tests
 // =============================================================================
-// These tests verify that HybridShell has feature parity with AppShell
+// These tests verify that StudioShell has feature parity with AppShell
 // before the legacy can be removed. They compare:
 // - Navigation items
 // - RBAC controls
@@ -192,9 +192,9 @@ describe("Design System Integration", () => {
 // - Route handling
 // =============================================================================
 
-describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
+describe("Phase 7: StudioShell = AppShell Feature Parity", () => {
   describe("Navigation Parity", () => {
-    it("HybridShell has all main navigation categories", async () => {
+    it("StudioShell has all main navigation categories", async () => {
       // Both shells should support these navigation categories
       const expectedNavCategories = [
         "chat", // Chat/Conversations
@@ -204,9 +204,9 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
         "admin", // Admin settings
       ];
 
-      // HybridShellLayout defines these internally
+      // StudioShellLayout defines these internally
       const layout = await import("../layout");
-      expect(layout.HybridShellLayout).toBeDefined();
+      expect(layout.StudioShellLayout).toBeDefined();
 
       // Nav items are defined in the component, so we verify through store
       const canvasSlice = await import("../store/slices/canvasSlice");
@@ -223,20 +223,20 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
       });
     });
 
-    it("HybridShell supports persona-based navigation filtering", async () => {
+    it("StudioShell supports persona-based navigation filtering", async () => {
       // Both shells should filter navigation based on persona
       const personaSlice = await import("../store/slices/personaSlice");
       expect(personaSlice.selectPersona).toBeDefined();
 
-      // HybridShellGuard handles persona-based access
+      // StudioShellGuard handles persona-based access
       const guards = await import("../router/guards");
       expect(guards.PersonaGuard).toBeDefined();
-      expect(guards.HybridShellGuard).toBeDefined();
+      expect(guards.StudioShellGuard).toBeDefined();
     });
   });
 
   describe("Session Management Parity", () => {
-    it("HybridShell uses the same session slice as AppShell", async () => {
+    it("StudioShell uses the same session slice as AppShell", async () => {
       // Both shells should use the same sessionSlice
       const sessionSlice = await import("../store/slices/sessionSlice");
 
@@ -251,7 +251,7 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
       expect(sessionSlice.selectCurrentSession).toBeDefined();
     });
 
-    it("HybridShell supports session creation and deletion", async () => {
+    it("StudioShell supports session creation and deletion", async () => {
       const sessionSlice = await import("../store/slices/sessionSlice");
 
       // Session CRUD operations (async thunks)
@@ -260,7 +260,7 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
       expect(sessionSlice.renameSession).toBeDefined();
     });
 
-    it("HybridShell loader fetches sessions like AppShell", async () => {
+    it("StudioShell loader fetches sessions like AppShell", async () => {
       const loaders = await import("../router/loaders");
 
       // Chat loader fetches session data
@@ -274,7 +274,7 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
   });
 
   describe("RBAC Parity", () => {
-    it("HybridShell uses same persona context as AppShell", async () => {
+    it("StudioShell uses same persona context as AppShell", async () => {
       const personaSlice = await import("../store/slices/personaSlice");
 
       // Persona selector (used by both shells for RBAC)
@@ -284,7 +284,7 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
       expect(personaSlice.setPersona).toBeDefined();
     });
 
-    it("HybridShell guards routes like AppShell", async () => {
+    it("StudioShell guards routes like AppShell", async () => {
       const guards = await import("../router/guards");
 
       // AuthGuard protects both shells
@@ -293,13 +293,13 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
       // PersonaGuard handles role-based access
       expect(guards.PersonaGuard).toBeDefined();
 
-      // HybridShellGuard is the new feature flag gate
-      expect(guards.HybridShellGuard).toBeDefined();
+      // StudioShellGuard is the new feature flag gate
+      expect(guards.StudioShellGuard).toBeDefined();
     });
   });
 
   describe("Canvas/Artifact Parity", () => {
-    it("HybridShell has canvas for artifact display", async () => {
+    it("StudioShell has canvas for artifact display", async () => {
       const canvas = await import("../canvas");
 
       // Canvas workspace for artifacts
@@ -308,7 +308,7 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
       expect(canvas.CanvasTabs).toBeDefined();
     });
 
-    it("HybridShell uses same artifact slice as AppShell", async () => {
+    it("StudioShell uses same artifact slice as AppShell", async () => {
       const artifactSlice = await import("../store/slices/artifactSlice");
 
       // Artifact operations (used by both shells)
@@ -320,11 +320,11 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
   });
 
   describe("UI Component Parity", () => {
-    it("HybridShell has StatusBar like AppShell", async () => {
-      // StatusBar is internal to HybridShellLayout
+    it("StudioShell has StatusBar like AppShell", async () => {
+      // StatusBar is internal to StudioShellLayout
       // Verify through the layout module
       const layout = await import("../layout");
-      expect(layout.HybridShellLayout).toBeDefined();
+      expect(layout.StudioShellLayout).toBeDefined();
 
       // StatusBar data comes from these slices
       const authSlice = await import("../store/slices/authSlice");
@@ -333,7 +333,7 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
       expect(authSlice.selectUser).toBeDefined();
     });
 
-    it("HybridShell has help system like AppShell", async () => {
+    it("StudioShell has help system like AppShell", async () => {
       const help = await import("../help");
 
       // Help components
@@ -342,7 +342,7 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
       expect(help.KeyboardShortcuts).toBeDefined();
     });
 
-    it("HybridShell has compliance dashboards (new in Phase 5)", async () => {
+    it("StudioShell has compliance dashboards (new in Phase 5)", async () => {
       const compliance = await import("../compliance");
 
       // Compliance dashboards (new feature, extends AppShell)
@@ -358,7 +358,7 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
   });
 
   describe("API Integration Parity", () => {
-    it("HybridShell uses same API hooks as AppShell", async () => {
+    it("StudioShell uses same API hooks as AppShell", async () => {
       const api = await import("../api");
 
       // Session APIs (used by both shells)
@@ -372,22 +372,22 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
       expect(api.useGetSessionMessagesQuery).toBeDefined();
     });
 
-    it("HybridShell has AI suggestion APIs", async () => {
+    it("StudioShell has AI suggestion APIs", async () => {
       const api = await import("../api");
 
-      // AI suggestion APIs are mutations (used by both, enhanced in HybridShell)
+      // AI suggestion APIs are mutations (used by both, enhanced in StudioShell)
       expect(api.useGetAISuggestionsMutation).toBeDefined();
       expect(api.useGetChatFollowUpSuggestionsMutation).toBeDefined();
     });
   });
 
   describe("Feature Flag Gating", () => {
-    it("HybridShell is feature-flagged for safe rollout", async () => {
+    it("StudioShell is feature-flagged for safe rollout", async () => {
       const guards = await import("../router/guards");
       const featureFlags = await import("../contexts/FeatureFlagContext");
 
-      // HybridShellGuard checks the feature flag
-      expect(guards.HybridShellGuard).toBeDefined();
+      // StudioShellGuard checks the feature flag
+      expect(guards.StudioShellGuard).toBeDefined();
 
       // Feature flag hook for checking
       expect(featureFlags.useFeatureFlag).toBeDefined();

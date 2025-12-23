@@ -1,11 +1,11 @@
 /**
- * HybridShellGuard
+ * StudioShellGuard
  *
  * Phase 7: Integration - Feature Flag Gating
  * Guards access to the Hybrid Canvas shell based on feature flag.
  *
  * When `canvas_hybrid_shell` is enabled:
- * - Renders children (HybridShellLayout)
+ * - Renders children (StudioShellLayout)
  *
  * When `canvas_hybrid_shell` is disabled:
  * - Redirects to legacy /studio routes
@@ -16,15 +16,15 @@ import { Navigate, useLocation } from "react-router";
 import { useFeatureFlags } from "../../contexts/FeatureFlagContext";
 import type { ReactNode } from "react";
 
-export interface HybridShellGuardProps {
+export interface StudioShellGuardProps {
   children: ReactNode;
 }
 
 /**
- * Loading skeleton for HybridShell
+ * Loading skeleton for StudioShell
  * Shows a minimal app shell skeleton while feature flags are loading.
  */
-function HybridShellSkeleton() {
+function StudioShellSkeleton() {
   return (
     <div
       data-testid="hybrid-shell-loading"
@@ -82,7 +82,7 @@ function mapToLegacyPath(pathname: string, search: string): string {
   return `${legacyPath}${search}`;
 }
 
-export function HybridShellGuard({ children }: HybridShellGuardProps) {
+export function StudioShellGuard({ children }: StudioShellGuardProps) {
   const { isLoading, isError, isEnabled } = useFeatureFlags();
   const { pathname, search } = useLocation();
 
@@ -90,18 +90,18 @@ export function HybridShellGuard({ children }: HybridShellGuardProps) {
   // This prevents premature redirect while flags are being fetched
   if (isLoading) {
     // Show skeleton while loading - better UX than blank screen
-    return <HybridShellSkeleton />;
+    return <StudioShellSkeleton />;
   }
 
   // On error, default to enabling hybrid shell (fail-open)
   // This allows users to access v2 even if feature flag API fails
   // Alternative: fail-closed by redirecting to legacy
-  const isHybridShellEnabled = isError
+  const isStudioShellEnabled = isError
     ? true
     : isEnabled("canvas_hybrid_shell");
 
   // If feature flag is enabled, render children (Hybrid Shell)
-  if (isHybridShellEnabled) {
+  if (isStudioShellEnabled) {
     return <>{children}</>;
   }
 

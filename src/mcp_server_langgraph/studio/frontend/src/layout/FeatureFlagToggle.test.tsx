@@ -2,7 +2,7 @@
  * FeatureFlagToggle Tests
  *
  * Tests for the dev-mode feature flag toggle component.
- * Allows switching between HybridShell and AppShell.
+ * Allows switching between StudioShell and AppShell.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";

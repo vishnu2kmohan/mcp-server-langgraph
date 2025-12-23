@@ -43,7 +43,7 @@
  * });
  * ```
  *
- * Reference: HybridShell AI Enhancement Analysis Plan
+ * Reference: StudioShell AI Enhancement Analysis Plan
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";

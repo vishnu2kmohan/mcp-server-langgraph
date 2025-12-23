@@ -7,7 +7,7 @@
  * - Integration with batch composite analysis
  * - Feature flag awareness
  *
- * Extracted from HybridShellLayout to reduce component complexity.
+ * Extracted from StudioShellLayout to reduce component complexity.
  */
 import { useState, useEffect, useCallback } from "react";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";

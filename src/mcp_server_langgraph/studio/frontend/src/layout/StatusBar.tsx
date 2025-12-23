@@ -3,7 +3,7 @@
  *
  * Bottom status bar showing application state, connection status,
  * agent status, model info, token count, and keyboard shortcuts.
- * Extracted from HybridShellLayout for maintainability.
+ * Extracted from StudioShellLayout for maintainability.
  *
  * Features:
  * - Status display (Ready, Loading, etc.)

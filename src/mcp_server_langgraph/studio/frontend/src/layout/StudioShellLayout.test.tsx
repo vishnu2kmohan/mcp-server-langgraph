@@ -1,5 +1,5 @@
 /**
- * HybridShellLayout Tests
+ * StudioShellLayout Tests
  *
  * Phase 1: Full layout tests with resizable panels
  * Tests verify the layout renders with all panels and resizable functionality.
@@ -13,7 +13,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
-import { HybridShellLayout } from "./HybridShellLayout";
+import { StudioShellLayout } from "./StudioShellLayout";
 import canvasReducer from "../store/slices/canvasSlice";
 import personaReducer, {
   setUserInfo,
@@ -248,7 +248,7 @@ const createTestStore = (
     },
     preloadedState: {
       ...preloadedState,
-      // Always provide a default authenticated user for HybridShell tests
+      // Always provide a default authenticated user for StudioShell tests
       auth: {
         ...initialAuthState,
         user: defaultTestUser,
@@ -303,7 +303,7 @@ const renderWithProviders = (
       <TelemetryProvider>
         <Provider store={store}>
           <MemoryRouter initialEntries={initialEntries}>
-            <HybridShellLayout />
+            <StudioShellLayout />
           </MemoryRouter>
         </Provider>
       </TelemetryProvider>,
@@ -332,7 +332,7 @@ const dispatchKeyboardEvent = async (
   });
 };
 
-describe("HybridShellLayout", () => {
+describe("StudioShellLayout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
@@ -863,7 +863,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -903,7 +903,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -943,7 +943,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1060,7 +1060,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1133,7 +1133,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1196,7 +1196,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1254,7 +1254,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1297,7 +1297,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1336,7 +1336,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1497,7 +1497,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1551,7 +1551,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1602,7 +1602,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1651,7 +1651,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1686,7 +1686,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1731,7 +1731,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -1779,7 +1779,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -2049,7 +2049,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -2111,7 +2111,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -2221,7 +2221,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -2266,7 +2266,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -2413,7 +2413,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
@@ -3191,7 +3191,7 @@ describe("HybridShellLayout", () => {
         <TelemetryProvider>
           <Provider store={store}>
             <MemoryRouter initialEntries={["/"]}>
-              <HybridShellLayout />
+              <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,

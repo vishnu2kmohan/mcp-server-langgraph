@@ -2,7 +2,7 @@
  * ResizeHandle Component
  *
  * Panel resize handle for react-resizable-panels.
- * Used between resizable panels in the HybridShell layout.
+ * Used between resizable panels in the StudioShell layout.
  *
  * Features:
  * - Subtle visual indicator
