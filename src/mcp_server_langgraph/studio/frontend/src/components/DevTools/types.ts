@@ -261,7 +261,12 @@ export interface AIInsightsTabProps {
 export type TraceSpanStatus = "ok" | "error" | "unset";
 
 /** OTEL span kind */
-export type SpanKind = "internal" | "server" | "client" | "producer" | "consumer";
+export type SpanKind =
+  | "internal"
+  | "server"
+  | "client"
+  | "producer"
+  | "consumer";
 
 /** Alert state */
 export type AlertState = "firing" | "pending" | "resolved" | "silenced";
@@ -270,7 +275,13 @@ export type AlertState = "firing" | "pending" | "resolved" | "silenced";
 export type AlertSeverity = "critical" | "warning" | "info";
 
 /** Log level for OTEL logs */
-export type OTELLogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
+export type OTELLogLevel =
+  | "trace"
+  | "debug"
+  | "info"
+  | "warn"
+  | "error"
+  | "fatal";
 
 /** Props for TracesTab */
 export interface TracesTabProps {

@@ -216,10 +216,10 @@ test.describe('Push Notifications', () => {
       await page.goto('/studio');
       await page.waitForLoadState('networkidle');
 
-      // Check if permission banner or modal exists
+      // Check if permission banner or modal exists (no specific component testid yet)
       const permissionPrompt = page.locator(
-        '[data-testid="notification-permission-banner"], ' +
-        '[data-testid="notification-prompt"], ' +
+        '[role="alertdialog"], ' +
+        '[role="dialog"]:has-text("notification"), ' +
         'text=Enable notifications'
       );
 
@@ -235,10 +235,10 @@ test.describe('Push Notifications', () => {
       await page.goto('/studio/settings');
       await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible();
 
-      // Look for subscriptions list
+      // Look for subscriptions list (no specific component testid yet)
       const subscriptionsList = page.locator(
-        '[data-testid="subscriptions-list"], ' +
-        '[data-testid*="subscription-item"], ' +
+        '[role="list"]:has-text("subscription"), ' +
+        '[class*="subscription"], ' +
         '.subscription-item'
       );
 
@@ -275,11 +275,10 @@ test.describe('Push Notifications', () => {
       await adminPage.getByRole('tab', { name: /alerts/i }).click();
       await expect(adminPage.getByTestId('alerts-container')).toBeVisible();
 
-      // Look for sound toggle
+      // Look for sound toggle (component uses sound-toggle testid)
       const soundToggle = adminPage.locator(
         '[data-testid="sound-toggle"], ' +
-        'button[aria-label*="sound"], ' +
-        '[data-testid*="alert-sound"]'
+        'button[aria-label*="sound"]'
       );
 
       const isVisible = await soundToggle.first().isVisible().catch(() => false);

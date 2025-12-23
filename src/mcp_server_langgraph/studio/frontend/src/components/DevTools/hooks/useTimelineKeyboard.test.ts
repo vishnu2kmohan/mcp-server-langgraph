@@ -5,7 +5,6 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import React from "react";
 
 import { useTimelineKeyboard } from "./useTimelineKeyboard";
 
@@ -61,9 +60,7 @@ describe("useTimelineKeyboard", () => {
   describe("playback shortcuts", () => {
     it("should call onPlayPause when Space is pressed", () => {
       const onPlayPause = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onPlayPause }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onPlayPause }));
 
       act(() => {
         fireKeyEvent(" ");
@@ -74,9 +71,7 @@ describe("useTimelineKeyboard", () => {
 
     it("should call onStepForward when ArrowRight is pressed", () => {
       const onStepForward = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onStepForward }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onStepForward }));
 
       act(() => {
         fireKeyEvent("ArrowRight");
@@ -87,9 +82,7 @@ describe("useTimelineKeyboard", () => {
 
     it("should call onStepBackward when ArrowLeft is pressed", () => {
       const onStepBackward = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onStepBackward }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onStepBackward }));
 
       act(() => {
         fireKeyEvent("ArrowLeft");
@@ -102,9 +95,7 @@ describe("useTimelineKeyboard", () => {
   describe("navigation shortcuts", () => {
     it("should call onJumpToStart when Home is pressed", () => {
       const onJumpToStart = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onJumpToStart }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onJumpToStart }));
 
       act(() => {
         fireKeyEvent("Home");
@@ -115,9 +106,7 @@ describe("useTimelineKeyboard", () => {
 
     it("should call onJumpToEnd when End is pressed", () => {
       const onJumpToEnd = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onJumpToEnd }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onJumpToEnd }));
 
       act(() => {
         fireKeyEvent("End");
@@ -130,9 +119,7 @@ describe("useTimelineKeyboard", () => {
   describe("bookmark shortcuts", () => {
     it("should call onAddBookmark when B is pressed", () => {
       const onAddBookmark = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onAddBookmark }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onAddBookmark }));
 
       act(() => {
         fireKeyEvent("b");
@@ -143,9 +130,7 @@ describe("useTimelineKeyboard", () => {
 
     it("should call onNextBookmark when Shift+ArrowRight is pressed", () => {
       const onNextBookmark = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onNextBookmark }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onNextBookmark }));
 
       act(() => {
         fireKeyEvent("ArrowRight", { shiftKey: true });
@@ -156,9 +141,7 @@ describe("useTimelineKeyboard", () => {
 
     it("should call onPrevBookmark when Shift+ArrowLeft is pressed", () => {
       const onPrevBookmark = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onPrevBookmark }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onPrevBookmark }));
 
       act(() => {
         fireKeyEvent("ArrowLeft", { shiftKey: true });
@@ -171,9 +154,7 @@ describe("useTimelineKeyboard", () => {
   describe("speed shortcuts", () => {
     it("should call onSetSpeed with 1 when 1 is pressed", () => {
       const onSetSpeed = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onSetSpeed }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onSetSpeed }));
 
       act(() => {
         fireKeyEvent("1");
@@ -184,9 +165,7 @@ describe("useTimelineKeyboard", () => {
 
     it("should call onSetSpeed with 2 when 2 is pressed", () => {
       const onSetSpeed = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onSetSpeed }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onSetSpeed }));
 
       act(() => {
         fireKeyEvent("2");
@@ -197,9 +176,7 @@ describe("useTimelineKeyboard", () => {
 
     it("should call onSetSpeed with 4 when 4 is pressed", () => {
       const onSetSpeed = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onSetSpeed }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onSetSpeed }));
 
       act(() => {
         fireKeyEvent("4");
@@ -212,9 +189,7 @@ describe("useTimelineKeyboard", () => {
   describe("disabled state", () => {
     it("should not call callbacks when disabled", () => {
       const onPlayPause = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: false, onPlayPause }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: false, onPlayPause }));
 
       act(() => {
         fireKeyEvent(" ");
@@ -227,9 +202,7 @@ describe("useTimelineKeyboard", () => {
   describe("input focus", () => {
     it("should not handle shortcuts when input is focused", () => {
       const onPlayPause = vi.fn();
-      renderHook(() =>
-        useTimelineKeyboard({ enabled: true, onPlayPause }),
-      );
+      renderHook(() => useTimelineKeyboard({ enabled: true, onPlayPause }));
 
       // Create and focus an input
       const input = document.createElement("input");

@@ -4,7 +4,15 @@
  * TDD tests for Agent HITL API MSW handlers.
  * Validates that handlers return proper data structures.
  */
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
 import { setupServer } from "msw/node";
 import {
   agentRequestHandlers,

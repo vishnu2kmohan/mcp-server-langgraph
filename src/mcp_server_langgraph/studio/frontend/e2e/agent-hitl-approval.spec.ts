@@ -624,10 +624,9 @@ test.describe('Agent HITL Approval Flow', () => {
         if (hasReject) {
           await rejectButton.first().click();
 
-          // Verify rejection indication
+          // Verify rejection indication (use text matching)
           const rejectedMessage = alicePage.locator(
-            'text=/rejected|declined/i, ' +
-            '[data-testid*="rejected"]'
+            'text=/rejected|declined/i'
           );
 
           const wasRejected = await rejectedMessage.first()
@@ -975,9 +974,8 @@ test.describe('Agent HITL Approval Flow', () => {
         // Step 3: Wait for approval request to appear
         // This may take time depending on agent execution
         const approvalNotification = alicePage.locator(
-          '[data-testid*="approval-required"], ' +
           '[data-testid*="pending-approval"], ' +
-          'text=/awaiting approval|needs review/i'
+          'text=/awaiting approval|needs review|approval required/i'
         );
 
         const hasApproval = await approvalNotification.first()
@@ -999,10 +997,9 @@ test.describe('Agent HITL Approval Flow', () => {
           const approveButton = dialog.locator('button:has-text("Approve")');
           await approveButton.first().click();
 
-          // Step 6: Verify agent resumed
+          // Step 6: Verify agent resumed (use text matching)
           const resumedMessage = alicePage.locator(
-            'text=/resumed|continuing|approved/i, ' +
-            '[data-testid*="agent-resumed"]'
+            'text=/resumed|continuing|approved/i'
           );
 
           const wasResumed = await resumedMessage.first()
@@ -1044,10 +1041,9 @@ test.describe('Agent HITL Approval Flow', () => {
         const rejectButton = alicePage.locator('button:has-text("Reject")');
         await rejectButton.first().click();
 
-        // Verify agent halted
+        // Verify agent halted (use text matching)
         const haltedMessage = alicePage.locator(
-          'text=/halted|stopped|rejected/i, ' +
-          '[data-testid*="agent-halted"]'
+          'text=/halted|stopped|rejected/i'
         );
 
         const wasHalted = await haltedMessage.first()
@@ -1064,9 +1060,9 @@ test.describe('Agent HITL Approval Flow', () => {
       // This test verifies timeout behavior
       // In a real scenario, unanswered approvals would timeout
 
-      // Look for timeout-related UI elements
+      // Look for timeout-related UI elements (use text matching)
       const timeoutIndicator = alicePage.locator(
-        '[data-testid*="timeout"], ' +
+        'text=/timeout|expired/i, ' +
         'text=/expires|timeout|time remaining/i'
       );
 
@@ -1192,8 +1188,8 @@ test.describe('Agent HITL Approval Flow', () => {
       // Look for selection checkboxes
       const checkboxes = adminPage.locator(
         'input[type="checkbox"][data-testid*="select-request"], ' +
-        '[role="checkbox"][data-testid*="request-select"], ' +
-        'input[type="checkbox"][aria-label*="Select"]'
+        'input[type="checkbox"][aria-label*="Select"], ' +
+        '[role="checkbox"][aria-label*="Select"]'
       );
 
       const checkboxCount = await checkboxes.count();
@@ -1261,10 +1257,9 @@ test.describe('Agent HITL Approval Flow', () => {
         if (hasBatchApprove) {
           await batchApproveBtn.first().click();
 
-          // Verify success message
+          // Verify success message (use text matching)
           const successMessage = adminPage.locator(
-            'text=/approved|success/i, ' +
-            '[data-testid*="batch-success"]'
+            'text=/approved|success/i'
           );
 
           const wasSuccessful = await successMessage.first()
@@ -1360,10 +1355,9 @@ test.describe('Agent HITL Approval Flow', () => {
       if (hasBatchApprove) {
         await batchApproveBtn.first().click();
 
-        // Look for partial failure indication
+        // Look for partial failure indication (use text matching)
         const partialFailure = adminPage.locator(
-          'text=/partial|some failed|1 failed/i, ' +
-          '[data-testid*="partial-failure"]'
+          'text=/partial|some failed|1 failed/i'
         );
 
         const hasPartialFailure = await partialFailure.first()

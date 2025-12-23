@@ -196,8 +196,8 @@ export function useStableCallback<T extends (...args: any[]) => any>(
   const callbackRef = useRef(callback);
   callbackRef.current = callback;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ((...args: any[]) => callbackRef.current(...args)) as T,
     [],
   );

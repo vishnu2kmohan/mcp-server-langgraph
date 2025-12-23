@@ -4,7 +4,13 @@
  * TDD tests for Grafana alerts integration.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, within, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  within,
+  cleanup,
+} from "@testing-library/react";
 import React from "react";
 
 import { AlertsTab } from "./AlertsTab";
@@ -16,10 +22,14 @@ import { DevToolsTimelineProvider } from "../context/DevToolsTimelineProvider";
 
 function renderWithProvider(
   ui: React.ReactElement,
-  providerProps?: Partial<React.ComponentProps<typeof DevToolsTimelineProvider>>,
+  providerProps?: Partial<
+    React.ComponentProps<typeof DevToolsTimelineProvider>
+  >,
 ) {
   return render(
-    <DevToolsTimelineProvider {...providerProps}>{ui}</DevToolsTimelineProvider>,
+    <DevToolsTimelineProvider {...providerProps}>
+      {ui}
+    </DevToolsTimelineProvider>,
   );
 }
 
@@ -86,8 +96,12 @@ describe("AlertsTab", () => {
 
     it("should display filter controls", () => {
       renderWithProvider(<AlertsTab />);
-      expect(screen.getByRole("button", { name: /state/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /severity/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /state/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /severity/i }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -104,7 +118,9 @@ describe("AlertsTab", () => {
       renderWithProvider(<AlertsTab alerts={mockAlerts} />);
 
       expect(screen.getByText(/error rate exceeded 5%/i)).toBeInTheDocument();
-      expect(screen.getByText(/query latency approaching/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/query latency approaching/i),
+      ).toBeInTheDocument();
     });
 
     it("should display state badges", () => {
@@ -122,7 +138,9 @@ describe("AlertsTab", () => {
       const alertsTab = screen.getByTestId("alerts-tab");
       expect(within(alertsTab).getByText(/critical/i)).toBeInTheDocument();
       // Warning appears twice
-      expect(within(alertsTab).getAllByText(/warning/i).length).toBeGreaterThan(0);
+      expect(within(alertsTab).getAllByText(/warning/i).length).toBeGreaterThan(
+        0,
+      );
     });
 
     it("should show service names", () => {
@@ -198,7 +216,9 @@ describe("AlertsTab", () => {
   describe("alert actions", () => {
     it("should display silence button for firing alerts", () => {
       const onSilence = vi.fn();
-      renderWithProvider(<AlertsTab alerts={mockAlerts} onSilence={onSilence} />);
+      renderWithProvider(
+        <AlertsTab alerts={mockAlerts} onSilence={onSilence} />,
+      );
 
       expect(
         screen.getByRole("button", { name: /silence/i }),
@@ -207,7 +227,9 @@ describe("AlertsTab", () => {
 
     it("should call onSilence when silence button clicked", () => {
       const onSilence = vi.fn();
-      renderWithProvider(<AlertsTab alerts={mockAlerts} onSilence={onSilence} />);
+      renderWithProvider(
+        <AlertsTab alerts={mockAlerts} onSilence={onSilence} />,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /silence/i }));
 
@@ -217,7 +239,9 @@ describe("AlertsTab", () => {
     it("should display details toggle", () => {
       renderWithProvider(<AlertsTab alerts={mockAlerts} />);
 
-      const detailsButtons = screen.getAllByRole("button", { name: /details/i });
+      const detailsButtons = screen.getAllByRole("button", {
+        name: /details/i,
+      });
       expect(detailsButtons.length).toBeGreaterThan(0);
     });
   });

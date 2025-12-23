@@ -268,9 +268,9 @@ test.describe("Admin HITL Intelligence", () => {
     // Wait for page to load
     await expect(adminPage.locator("main, [role='main']").first()).toBeVisible();
 
-    // Look for similar decisions section
+    // Look for similar decisions section (use class/text fallbacks)
     const similarDecisions = adminPage.locator(
-      '[data-testid*="similar-decisions"], [data-testid*="past-decisions"]'
+      '[class*="similar-decisions"], [class*="past-decisions"], text=/similar|past decisions/i'
     );
     // Similar decisions shown when viewing approval details
   });
@@ -343,9 +343,9 @@ test.describe("Auditor HITL Intelligence", () => {
     // Wait for page to load
     await expect(auditorPage.locator("main, [role='main'], h1").first()).toBeVisible();
 
-    // Decision patterns shown in analytics
+    // Decision patterns shown in analytics (use class fallbacks)
     const patterns = auditorPage.locator(
-      '[data-testid*="pattern"], [data-testid*="analytics"], [class*="statistics"]'
+      '[class*="analytics"], [class*="statistics"], [class*="pattern"]'
     );
     // Patterns may be in a dashboard section
   });

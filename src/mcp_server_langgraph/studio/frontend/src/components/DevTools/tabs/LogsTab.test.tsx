@@ -4,7 +4,13 @@
  * TDD tests for OTEL structured logs with trace correlation.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, within, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  within,
+  cleanup,
+} from "@testing-library/react";
 import React from "react";
 
 import { LogsTab } from "./LogsTab";
@@ -16,10 +22,14 @@ import { DevToolsTimelineProvider } from "../context/DevToolsTimelineProvider";
 
 function renderWithProvider(
   ui: React.ReactElement,
-  providerProps?: Partial<React.ComponentProps<typeof DevToolsTimelineProvider>>,
+  providerProps?: Partial<
+    React.ComponentProps<typeof DevToolsTimelineProvider>
+  >,
 ) {
   return render(
-    <DevToolsTimelineProvider {...providerProps}>{ui}</DevToolsTimelineProvider>,
+    <DevToolsTimelineProvider {...providerProps}>
+      {ui}
+    </DevToolsTimelineProvider>,
   );
 }
 
@@ -101,8 +111,12 @@ describe("LogsTab", () => {
 
     it("should display filter controls", () => {
       renderWithProvider(<LogsTab />);
-      expect(screen.getByRole("button", { name: /level/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /service/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /level/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /service/i }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -157,7 +171,9 @@ describe("LogsTab", () => {
 
     it("should have Jump to Trace button for logs with trace_id", () => {
       const onJumpToTrace = vi.fn();
-      renderWithProvider(<LogsTab logs={mockLogs} onJumpToTrace={onJumpToTrace} />);
+      renderWithProvider(
+        <LogsTab logs={mockLogs} onJumpToTrace={onJumpToTrace} />,
+      );
 
       const jumpButtons = screen.getAllByRole("button", {
         name: /jump to trace/i,
@@ -167,7 +183,9 @@ describe("LogsTab", () => {
 
     it("should call onJumpToTrace when Jump to Trace clicked", () => {
       const onJumpToTrace = vi.fn();
-      renderWithProvider(<LogsTab logs={mockLogs} onJumpToTrace={onJumpToTrace} />);
+      renderWithProvider(
+        <LogsTab logs={mockLogs} onJumpToTrace={onJumpToTrace} />,
+      );
 
       const jumpButtons = screen.getAllByRole("button", {
         name: /jump to trace/i,

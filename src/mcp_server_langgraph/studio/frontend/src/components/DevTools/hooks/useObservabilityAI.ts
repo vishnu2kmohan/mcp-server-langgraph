@@ -137,7 +137,8 @@ export function correlateAlerts(alerts: AlertData[]): AlertCorrelation[] {
 
   // Sort by time
   const sorted = [...alerts].sort(
-    (a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime(),
+    (a, b) =>
+      new Date(a.started_at).getTime() - new Date(b.started_at).getTime(),
   );
 
   const correlations: AlertCorrelation[] = [];
@@ -156,7 +157,9 @@ export function correlateAlerts(alerts: AlertData[]): AlertCorrelation[] {
           services: [...new Set(currentGroup.map((a) => a.service))],
           timeWindow: {
             start: new Date(currentGroup[0].started_at).getTime(),
-            end: new Date(currentGroup[currentGroup.length - 1].started_at).getTime(),
+            end: new Date(
+              currentGroup[currentGroup.length - 1].started_at,
+            ).getTime(),
           },
         });
       }
@@ -171,7 +174,9 @@ export function correlateAlerts(alerts: AlertData[]): AlertCorrelation[] {
       services: [...new Set(currentGroup.map((a) => a.service))],
       timeWindow: {
         start: new Date(currentGroup[0].started_at).getTime(),
-        end: new Date(currentGroup[currentGroup.length - 1].started_at).getTime(),
+        end: new Date(
+          currentGroup[currentGroup.length - 1].started_at,
+        ).getTime(),
       },
     });
   }
@@ -230,10 +235,14 @@ export function generateRootCauseAnalysis(context: {
 
   // Analyze alerts for patterns
   const dbAlerts = context.alerts.filter(
-    (a) => a.service?.includes("db") || a.message?.toLowerCase().includes("database"),
+    (a) =>
+      a.service?.includes("db") ||
+      a.message?.toLowerCase().includes("database"),
   );
   const apiAlerts = context.alerts.filter(
-    (a) => a.service?.includes("api") || a.message?.toLowerCase().includes("request"),
+    (a) =>
+      a.service?.includes("api") ||
+      a.message?.toLowerCase().includes("request"),
   );
 
   // Database issues often cascade to API issues
@@ -314,7 +323,8 @@ export function useObservabilityAI(
   const { enabled, spans = [], alerts = [], metrics = [] } = options;
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [insights, setInsights] = useState<ObservabilityInsights>(EMPTY_INSIGHTS);
+  const [insights, setInsights] =
+    useState<ObservabilityInsights>(EMPTY_INSIGHTS);
 
   // Analyze data when inputs change
   const analyze = useCallback(() => {
@@ -326,9 +336,11 @@ export function useObservabilityAI(
     setIsAnalyzing(true);
 
     // Perform analysis (synchronous for now, could be async with worker)
-    const traceAnomalies = spans.length > 0 ? analyzeTraceAnomalies(spans) : null;
+    const traceAnomalies =
+      spans.length > 0 ? analyzeTraceAnomalies(spans) : null;
     const alertCorrelations = correlateAlerts(alerts);
-    const costPrediction = metrics.length > 0 ? predictCostTrends(metrics) : null;
+    const costPrediction =
+      metrics.length > 0 ? predictCostTrends(metrics) : null;
     const rootCauseAnalysis =
       alerts.length > 0 || spans.length > 0
         ? generateRootCauseAnalysis({ alerts, spans })

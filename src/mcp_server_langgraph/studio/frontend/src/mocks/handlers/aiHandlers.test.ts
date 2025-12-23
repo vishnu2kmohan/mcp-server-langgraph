@@ -4,7 +4,15 @@
  * Tests for AI API mock handlers.
  * Validates the contract between frontend and backend for AI endpoints.
  */
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
 import { setupServer } from "msw/node";
 import {
   aiHandlers,

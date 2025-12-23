@@ -207,10 +207,9 @@ test.describe('iOS PWA - Offline Functionality', () => {
     // Wait for offline detection
     await page.waitForTimeout(500);
 
-    // Check for offline indicator (may be banner, toast, or icon)
+    // Check for offline indicator (component uses offline-banner testid)
     const offlineIndicator = page.locator(
       '[data-testid="offline-banner"], ' +
-        '[data-testid="offline-indicator"], ' +
         'text=offline, ' +
         '[aria-label*="offline"]'
     );
@@ -281,9 +280,9 @@ test.describe('iOS PWA - Standalone Mode', () => {
     // Check that app doesn't rely on browser back button
     const hasNavigation = await page.locator(
       '[data-testid="app-navigation"], ' +
-        '[data-testid="back-button"], ' +
         'nav, ' +
-        '[role="navigation"]'
+        '[role="navigation"], ' +
+        'button[aria-label*="back"]'
     ).first().isVisible().catch(() => false);
 
     // App should have its own navigation for standalone mode

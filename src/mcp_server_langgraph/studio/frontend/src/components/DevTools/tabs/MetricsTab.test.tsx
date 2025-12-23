@@ -4,7 +4,13 @@
  * TDD tests for OTEL/HEART metrics dashboard.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, within, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  within,
+  cleanup,
+} from "@testing-library/react";
 import React from "react";
 
 import { MetricsTab } from "./MetricsTab";
@@ -16,10 +22,14 @@ import { DevToolsTimelineProvider } from "../context/DevToolsTimelineProvider";
 
 function renderWithProvider(
   ui: React.ReactElement,
-  providerProps?: Partial<React.ComponentProps<typeof DevToolsTimelineProvider>>,
+  providerProps?: Partial<
+    React.ComponentProps<typeof DevToolsTimelineProvider>
+  >,
 ) {
   return render(
-    <DevToolsTimelineProvider {...providerProps}>{ui}</DevToolsTimelineProvider>,
+    <DevToolsTimelineProvider {...providerProps}>
+      {ui}
+    </DevToolsTimelineProvider>,
   );
 }
 
@@ -93,7 +103,9 @@ describe("MetricsTab", () => {
 
     it("should display refresh button", () => {
       renderWithProvider(<MetricsTab />);
-      expect(screen.getByRole("button", { name: /refresh/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /refresh/i }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -191,7 +203,9 @@ describe("MetricsTab", () => {
 
     it("should call onRefresh when refresh button clicked", () => {
       const onRefresh = vi.fn();
-      renderWithProvider(<MetricsTab metrics={mockMetrics} onRefresh={onRefresh} />);
+      renderWithProvider(
+        <MetricsTab metrics={mockMetrics} onRefresh={onRefresh} />,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /refresh/i }));
 
@@ -226,7 +240,9 @@ describe("MetricsTab", () => {
     it("should show retry button on error", () => {
       renderWithProvider(<MetricsTab error="Failed to fetch metrics" />);
 
-      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /retry/i }),
+      ).toBeInTheDocument();
     });
   });
 

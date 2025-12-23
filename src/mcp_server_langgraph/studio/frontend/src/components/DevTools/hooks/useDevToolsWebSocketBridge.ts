@@ -160,7 +160,9 @@ export function mapLogToEvent(log: LogData): TimelineEvent {
 /**
  * Map LangGraph node to timeline event for time-travel debugging
  */
-export function mapLangGraphNodeToEvent(node: LangGraphNodeData): TimelineEvent {
+export function mapLangGraphNodeToEvent(
+  node: LangGraphNodeData,
+): TimelineEvent {
   const timestamp = node.startTime ?? Date.now();
 
   return {
@@ -250,7 +252,13 @@ export function useDevToolsWebSocketBridge(
       handleLog,
       handleLangGraphNode,
     }),
-    [handleTraceSpan, handleAlert, handleMetric, handleLog, handleLangGraphNode],
+    [
+      handleTraceSpan,
+      handleAlert,
+      handleMetric,
+      handleLog,
+      handleLangGraphNode,
+    ],
   );
 }
 

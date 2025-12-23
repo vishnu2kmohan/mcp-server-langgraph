@@ -176,9 +176,9 @@ test.describe("Security Admin User Journey", () => {
     test("should view FedRAMP compliance status", async ({ adminPage }) => {
       await adminPage.goto("/studio/compliance");
 
-      // Look for FedRAMP section
+      // Look for FedRAMP section (component uses fedramp-panel testid)
       const fedrampSection = adminPage.locator(
-        '[data-testid*="fedramp"], [data-testid*="FedRAMP"], h2:has-text("FedRAMP"), h3:has-text("FedRAMP")'
+        '[data-testid="fedramp-panel"], h2:has-text("FedRAMP"), h3:has-text("FedRAMP")'
       );
       if (await fedrampSection.first().isVisible().catch(() => false)) {
         await expect(fedrampSection.first()).toBeVisible();
@@ -188,9 +188,9 @@ test.describe("Security Admin User Journey", () => {
     test("should view SOC-2 compliance status", async ({ adminPage }) => {
       await adminPage.goto("/studio/compliance");
 
-      // Look for SOC-2 section
+      // Look for SOC-2 section (component uses soc2-panel testid)
       const soc2Section = adminPage.locator(
-        '[data-testid*="soc2"], [data-testid*="SOC"], h2:has-text("SOC"), h3:has-text("SOC")'
+        '[data-testid="soc2-panel"], h2:has-text("SOC"), h3:has-text("SOC")'
       );
       if (await soc2Section.first().isVisible().catch(() => false)) {
         await expect(soc2Section.first()).toBeVisible();

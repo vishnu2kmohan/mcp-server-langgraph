@@ -4,7 +4,13 @@
  * TDD: Tests written FIRST for the ProjectsPage component.
  */
 
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MemoryRouter } from "react-router";
 import { ProjectsPage } from "./ProjectsPage";

@@ -144,9 +144,9 @@ test.describe('AI UX Suggestions', () => {
       // This may require interaction or time
       await page.waitForTimeout(2000);
 
-      // Check for nudge or disclosure prompt
-      const nudge = page.getByTestId('disclosure-nudge');
-      const hasNudge = await nudge.isVisible().catch(() => false);
+      // Check for nudge or disclosure prompt (component uses dynamic testid: nudge-tooltip-{id})
+      const nudge = page.locator('[data-testid^="nudge-tooltip-"], [data-testid^="nudge-spotlight-"]');
+      const hasNudge = await nudge.first().isVisible().catch(() => false);
       expect(hasNudge || true).toBeTruthy(); // Soft check during implementation
     });
   });

@@ -4,7 +4,7 @@
  * TDD tests for the unified timeline scrubber component.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, act, cleanup } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import React from "react";
 
 import { TimelineBar } from "./TimelineBar";
@@ -16,10 +16,14 @@ import { DevToolsTimelineProvider } from "./context/DevToolsTimelineProvider";
 
 function renderWithProvider(
   ui: React.ReactElement,
-  providerProps?: Partial<React.ComponentProps<typeof DevToolsTimelineProvider>>,
+  providerProps?: Partial<
+    React.ComponentProps<typeof DevToolsTimelineProvider>
+  >,
 ) {
   return render(
-    <DevToolsTimelineProvider {...providerProps}>{ui}</DevToolsTimelineProvider>,
+    <DevToolsTimelineProvider {...providerProps}>
+      {ui}
+    </DevToolsTimelineProvider>,
   );
 }
 
@@ -48,9 +52,13 @@ describe("TimelineBar", () => {
 
     it("should display playback controls", () => {
       renderWithProvider(<TimelineBar />);
-      expect(screen.getByRole("button", { name: /jump to start/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /jump to start/i }),
+      ).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /play/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /jump to end/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /jump to end/i }),
+      ).toBeInTheDocument();
     });
 
     it("should display time information", () => {
@@ -81,12 +89,16 @@ describe("TimelineBar", () => {
   describe("optional features", () => {
     it("should display bookmark button when showBookmarkButton is true", () => {
       renderWithProvider(<TimelineBar showBookmarkButton />);
-      expect(screen.getByRole("button", { name: /add bookmark/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /add bookmark/i }),
+      ).toBeInTheDocument();
     });
 
     it("should display export button when showExport is true", () => {
       renderWithProvider(<TimelineBar showExport />);
-      expect(screen.getByRole("button", { name: /export/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /export/i }),
+      ).toBeInTheDocument();
     });
 
     it("should display time range selector when showTimeRangeSelector is true", () => {

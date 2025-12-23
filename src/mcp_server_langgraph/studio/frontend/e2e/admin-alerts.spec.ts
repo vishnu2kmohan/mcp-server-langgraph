@@ -657,11 +657,10 @@ test.describe('Admin Alerts', () => {
             .catch(() => false);
 
           if (hasDialog) {
-            // Confirm approval
+            // Confirm approval (use button text matching - no specific testid)
             const confirmButton = adminPage.locator(
               'button:has-text("Confirm"), ' +
-              'button:has-text("Yes"), ' +
-              '[data-testid*="confirm-approve"]'
+              'button:has-text("Yes")'
             );
             await confirmButton.first().click();
           }
@@ -705,9 +704,9 @@ test.describe('Admin Alerts', () => {
       // Verify alert shows as resolved in UI
       await adminPage.waitForTimeout(2000);
 
-      // The alert should show resolved state or be removed
+      // The alert should show resolved state or be removed (use alert-state testid)
       const resolvedIndicator = adminPage.locator(
-        '[data-testid*="resolved"], ' +
+        '[data-testid="alert-state"]:has-text("Resolved"), ' +
         '.alert-resolved, ' +
         'text=/resolved/i'
       );
@@ -720,9 +719,9 @@ test.describe('Admin Alerts', () => {
       await adminPage.getByRole('tab', { name: /alerts/i }).click();
       await expect(adminPage.getByTestId('alerts-container')).toBeVisible();
 
-      // Look for correlation or grouping controls
+      // Look for correlation or grouping controls (use view-mode-grouped testid)
       const correlationControl = adminPage.locator(
-        '[data-testid*="correlation"], ' +
+        '[data-testid="view-mode-grouped"], ' +
         '[data-testid*="group"], ' +
         'button:has-text("Group"), ' +
         'select:has-text("Group by")'

@@ -264,7 +264,10 @@ export function AlertDetailPanel({
     pendingRemediations.find((r) => r.step_number === stepNumber);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div
+      data-testid="alert-detail-panel"
+      className="flex flex-col h-full overflow-hidden"
+    >
       {/* Header */}
       <div className="flex items-start justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex-1">

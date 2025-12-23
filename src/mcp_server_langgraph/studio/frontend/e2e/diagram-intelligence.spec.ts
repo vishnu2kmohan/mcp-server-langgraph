@@ -177,9 +177,9 @@ test.describe("Admin Diagram Intelligence", () => {
       adminPage.locator("main, [role='main'], h1, h2").first()
     ).toBeVisible();
 
-    // Look for diagram analysis indicators
+    // Look for diagram analysis indicators (use class fallbacks)
     const analysisUI = adminPage.locator(
-      '[data-testid*="diagram-analysis"], [class*="diagram-validation"]'
+      '[class*="diagram-validation"], [class*="diagram-analysis"]'
     );
     // Analysis shown when diagrams are rendered
   });
@@ -192,9 +192,9 @@ test.describe("Admin Diagram Intelligence", () => {
       adminPage.locator("main, [role='main'], h1").first()
     ).toBeVisible();
 
-    // Look for code generation button/panel
+    // Look for code generation button/panel (use text/aria fallbacks)
     const codeGenUI = adminPage.locator(
-      '[data-testid*="diagram-to-code"], [data-testid*="generate-code"]'
+      'button:has-text("Generate Code"), [aria-label*="code generation"]'
     );
     // Code generation UI shown on diagram artifacts
   });
@@ -291,9 +291,9 @@ test.describe("Alice Builder Diagram Intelligence", () => {
       alicePage.locator("main, [role='main'], h1").first()
     ).toBeVisible();
 
-    // Look for code generation capabilities
+    // Look for code generation capabilities (use class/aria fallbacks)
     const codeGenUI = alicePage.locator(
-      '[data-testid*="to-code"], [class*="code-gen"], [aria-label*="generate"]'
+      '[class*="code-gen"], [aria-label*="generate"], button:has-text("Code")'
     );
     // Code generation button should be accessible
   });
@@ -349,9 +349,9 @@ test.describe("Bob Diagram Intelligence Restrictions", () => {
       bobPage.locator("main, [role='main']").first()
     ).toBeVisible();
 
-    // Bob should not see AI diagram features
+    // Bob should not see AI diagram features (use class fallbacks)
     const aiDiagramFeatures = bobPage.locator(
-      '[data-testid="ai-diagram-to-code"], [data-testid="ai-diagram-analysis"]'
+      '[class*="ai-diagram"], [aria-label*="diagram intelligence"]'
     );
     // These should not be visible for bob
   });
@@ -447,9 +447,9 @@ test.describe("Diagram Validation", () => {
       adminPage.locator("main, [role='main'], h1").first()
     ).toBeVisible();
 
-    // Look for validation warning/error indicators
+    // Look for validation warning/error indicators (use class/aria fallbacks)
     const validationUI = adminPage.locator(
-      '[data-testid*="validation"], [data-testid*="error"], [class*="warning"]'
+      '[class*="validation"], [class*="warning"], [role="alert"]'
     );
     // Validation issues shown when diagram has syntax errors
   });

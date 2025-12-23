@@ -206,7 +206,8 @@ export function ExecutionTraceTab({
     useWorkflowExecution({ workflowId });
 
   // Filter steps by timeline window for time-travel debugging
-  const filteredSteps = useMemo(() => {
+  // TODO: Use filteredSteps in the render output for time-travel filtering
+  const _filteredSteps = useMemo(() => {
     if (!steps) return [];
     if (!timeline.timeWindow) return steps;
 

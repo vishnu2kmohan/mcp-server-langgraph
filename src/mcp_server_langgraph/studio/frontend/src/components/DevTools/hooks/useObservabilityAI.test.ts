@@ -87,7 +87,11 @@ describe("useObservabilityAI", () => {
 
     it("should identify service dependencies in correlated alerts", () => {
       const alerts = [
-        { id: "a1", started_at: "2024-01-01T12:00:00Z", service: "api-gateway" },
+        {
+          id: "a1",
+          started_at: "2024-01-01T12:00:00Z",
+          service: "api-gateway",
+        },
         { id: "a2", started_at: "2024-01-01T12:00:30Z", service: "db-primary" },
       ];
 
@@ -134,7 +138,12 @@ describe("useObservabilityAI", () => {
           { id: "a2", service: "api", message: "5xx error spike" },
         ],
         spans: [
-          { span_id: "s1", name: "db.query", status: "error", duration_ms: 30000 },
+          {
+            span_id: "s1",
+            name: "db.query",
+            status: "error",
+            duration_ms: 30000,
+          },
         ],
       };
 

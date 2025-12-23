@@ -10,7 +10,6 @@ import {
   Filter,
   ExternalLink,
   ChevronRight,
-  ChevronDown,
   Clock,
   AlertCircle,
   CheckCircle,
@@ -91,7 +90,8 @@ function getStatusIcon(status: "ok" | "error" | "unset") {
   }
 }
 
-function getStatusColor(status: "ok" | "error" | "unset"): string {
+// TODO: Use _getStatusColor for span bar coloring in waterfall view
+function _getStatusColor(status: "ok" | "error" | "unset"): string {
   switch (status) {
     case "ok":
       return "bg-green-500";
@@ -128,12 +128,12 @@ function SpanRow({
   isSelected,
   onClick,
 }: SpanRowProps) {
-  const leftOffset = totalDuration > 0
-    ? ((span.start_time - traceStartTime) / totalDuration) * 100
-    : 0;
-  const width = totalDuration > 0
-    ? (span.duration_ms / totalDuration) * 100
-    : 0;
+  const leftOffset =
+    totalDuration > 0
+      ? ((span.start_time - traceStartTime) / totalDuration) * 100
+      : 0;
+  const width =
+    totalDuration > 0 ? (span.duration_ms / totalDuration) * 100 : 0;
 
   return (
     <div
@@ -257,11 +257,13 @@ export function TracesTab({
 }: TracesTabProps): React.ReactElement {
   const timeline = useTimelineContext();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "ok" | "error">("all");
-  const [serviceFilter, setServiceFilter] = useState<string>("all");
-  const [localSelectedTraceId, setLocalSelectedTraceId] = useState<string | null>(
-    selectedTraceId ?? null,
+  const [statusFilter, setStatusFilter] = useState<"all" | "ok" | "error">(
+    "all",
   );
+  const [serviceFilter, setServiceFilter] = useState<string>("all");
+  const [localSelectedTraceId, setLocalSelectedTraceId] = useState<
+    string | null
+  >(selectedTraceId ?? null);
   const [selectedSpanId, setSelectedSpanId] = useState<string | null>(null);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showServiceMenu, setShowServiceMenu] = useState(false);
@@ -288,7 +290,7 @@ export function TracesTab({
         if (
           !trace.name.toLowerCase().includes(lowerSearch) &&
           !trace.trace_id.toLowerCase().includes(lowerSearch) &&
-          !(trace.service_name?.toLowerCase().includes(lowerSearch))
+          !trace.service_name?.toLowerCase().includes(lowerSearch)
         ) {
           return false;
         }
@@ -310,7 +312,9 @@ export function TracesTab({
 
   // Get unique services for filter
   const services = useMemo(() => {
-    const uniqueServices = new Set(traces.map((t) => t.service_name).filter(Boolean));
+    const uniqueServices = new Set(
+      traces.map((t) => t.service_name).filter(Boolean),
+    );
     return Array.from(uniqueServices) as string[];
   }, [traces]);
 
@@ -318,7 +322,9 @@ export function TracesTab({
   const selectedTraceSpans = useMemo(() => {
     const traceId = selectedTraceId ?? localSelectedTraceId;
     if (!traceId) return [];
-    return spans.filter((s) => s.trace_id === traceId).sort((a, b) => a.start_time - b.start_time);
+    return spans
+      .filter((s) => s.trace_id === traceId)
+      .sort((a, b) => a.start_time - b.start_time);
   }, [spans, selectedTraceId, localSelectedTraceId]);
 
   // Get selected trace data
@@ -371,7 +377,9 @@ export function TracesTab({
         data-testid="traces-tab"
         className={cn("flex items-center justify-center h-full", className)}
       >
-        <div className="text-gray-500 dark:text-gray-400">Loading traces...</div>
+        <div className="text-gray-500 dark:text-gray-400">
+          Loading traces...
+        </div>
       </div>
     );
   }
@@ -581,7 +589,9 @@ export function TracesTab({
                 <Clock className="h-12 w-12 mb-4 opacity-50" />
                 <p>No traces found</p>
                 {searchTerm && (
-                  <p className="text-sm mt-2">Try adjusting your search or filters</p>
+                  <p className="text-sm mt-2">
+                    Try adjusting your search or filters
+                  </p>
                 )}
               </div>
             ) : (

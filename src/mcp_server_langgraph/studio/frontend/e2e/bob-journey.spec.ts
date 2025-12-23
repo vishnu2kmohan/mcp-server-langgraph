@@ -301,9 +301,9 @@ test.describe("Bob User Journey", () => {
     test("should be able to view shared content", async ({ bobPage }) => {
       await bobPage.goto("/studio/projects");
 
-      // Look for shared indicators
+      // Look for shared indicators (use class/aria fallbacks)
       const sharedContent = bobPage.locator(
-        '[data-testid*="shared"], .shared, [aria-label*="shared"]'
+        '.shared, [aria-label*="shared"]'
       );
       // Shared content visibility depends on what's actually shared
       await expect(

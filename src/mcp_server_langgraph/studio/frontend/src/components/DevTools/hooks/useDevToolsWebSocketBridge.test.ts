@@ -182,7 +182,9 @@ describe("useDevToolsWebSocketBridge", () => {
 
       // Log level is preserved in data
       expect((errorEvent.data as Record<string, unknown>).level).toBe("error");
-      expect((warningEvent.data as Record<string, unknown>).level).toBe("warning");
+      expect((warningEvent.data as Record<string, unknown>).level).toBe(
+        "warning",
+      );
     });
   });
 

@@ -381,9 +381,9 @@ test.describe("Bob Canvas Intelligence Restrictions", () => {
     ).toBeVisible();
 
     // Bob (user role) should not see advanced canvas features
-    // Look for AI-specific canvas elements that should be hidden
+    // Look for AI-specific canvas elements that should be hidden (use class fallbacks)
     const aiCanvasFeatures = bobPage.locator(
-      '[data-testid="ai-artifact-suggestion"], [data-testid="ai-code-analysis"]'
+      '[class*="ai-suggestion"], [class*="ai-analysis"], [aria-label*="AI"]'
     );
     // These should not be visible for bob
   });

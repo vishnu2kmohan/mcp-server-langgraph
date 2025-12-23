@@ -60,7 +60,8 @@ function LevelBadge({ level }: LevelBadgeProps): React.ReactElement {
   const config = {
     debug: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
     info: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-    warning: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+    warning:
+      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
     error: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   }[level];
 
@@ -506,11 +507,7 @@ export function LogsTab({
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {filteredLogs.map((log) => (
-              <LogRow
-                key={log.id}
-                log={log}
-                onJumpToTrace={onJumpToTrace}
-              />
+              <LogRow key={log.id} log={log} onJumpToTrace={onJumpToTrace} />
             ))}
           </div>
         )}

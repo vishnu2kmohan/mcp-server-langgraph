@@ -134,10 +134,17 @@ function TrendIndicator({
   return (
     <span
       data-testid="trend-indicator"
-      className={cn("flex items-center gap-1 text-xs font-medium", color, className)}
+      className={cn(
+        "flex items-center gap-1 text-xs font-medium",
+        color,
+        className,
+      )}
     >
       <span>{icon}</span>
-      <span>{change > 0 ? "+" : ""}{change.toFixed(1)}%</span>
+      <span>
+        {change > 0 ? "+" : ""}
+        {change.toFixed(1)}%
+      </span>
     </span>
   );
 }
@@ -455,7 +462,9 @@ export function MetricsTab({
                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
               />
             </svg>
-            <p className="text-gray-500 dark:text-gray-400">No metrics available</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              No metrics available
+            </p>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
               Metrics will appear when data is collected
             </p>

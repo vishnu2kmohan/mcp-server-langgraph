@@ -4,7 +4,13 @@
  * TDD tests for OTEL distributed traces waterfall view.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, within, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  within,
+  cleanup,
+} from "@testing-library/react";
 import React from "react";
 
 import { TracesTab } from "./TracesTab";
@@ -16,10 +22,14 @@ import { DevToolsTimelineProvider } from "../context/DevToolsTimelineProvider";
 
 function renderWithProvider(
   ui: React.ReactElement,
-  providerProps?: Partial<React.ComponentProps<typeof DevToolsTimelineProvider>>,
+  providerProps?: Partial<
+    React.ComponentProps<typeof DevToolsTimelineProvider>
+  >,
 ) {
   return render(
-    <DevToolsTimelineProvider {...providerProps}>{ui}</DevToolsTimelineProvider>,
+    <DevToolsTimelineProvider {...providerProps}>
+      {ui}
+    </DevToolsTimelineProvider>,
   );
 }
 
@@ -118,8 +128,12 @@ describe("TracesTab", () => {
 
     it("should display filter controls", () => {
       renderWithProvider(<TracesTab />);
-      expect(screen.getByRole("button", { name: /service/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /status/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /service/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /status/i }),
+      ).toBeInTheDocument();
     });
   });
 

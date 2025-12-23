@@ -4,7 +4,13 @@
  * TDD tests for performance optimizations in NetworkTab.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 
 import { NetworkTab } from "./NetworkTab";
 import type { NetworkEntry } from "../types";

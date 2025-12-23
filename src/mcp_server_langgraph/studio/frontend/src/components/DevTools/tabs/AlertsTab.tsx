@@ -90,7 +90,8 @@ interface SeverityBadgeProps {
 function SeverityBadge({ severity }: SeverityBadgeProps): React.ReactElement {
   const config = {
     critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-    warning: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+    warning:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
     info: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   }[severity];
 
@@ -281,7 +282,10 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
         >
           Details
           <svg
-            className={cn("w-3 h-3 transition-transform", showDetails && "rotate-180")}
+            className={cn(
+              "w-3 h-3 transition-transform",
+              showDetails && "rotate-180",
+            )}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -397,7 +401,13 @@ export function AlertsTab({
     }
 
     return result;
-  }, [alerts, timeline?.timeWindow, stateFilter, severityFilter, serviceFilter]);
+  }, [
+    alerts,
+    timeline?.timeWindow,
+    stateFilter,
+    severityFilter,
+    serviceFilter,
+  ]);
 
   // Loading state
   if (isLoading) {

@@ -297,9 +297,9 @@ test.describe("Alice Analyst User Journey", () => {
     }) => {
       await alicePage.goto("/studio/observability");
 
-      // Look for time range selector
+      // Look for time range selector (use generic selectors)
       const timeSelector = alicePage.locator(
-        '[data-testid*="time"], [data-testid*="range"], select, [role="combobox"]'
+        'select, [role="combobox"], button:has-text("15m"), button:has-text("1h")'
       );
       if (await timeSelector.first().isVisible().catch(() => false)) {
         await expect(timeSelector.first()).toBeVisible();

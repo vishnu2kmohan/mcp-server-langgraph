@@ -72,9 +72,38 @@ const DEFAULT_HEIGHT = 250;
 
 /** Tabs available in each context */
 const TABS_BY_CONTEXT: Record<DevToolsContext, DevToolsTabId[]> = {
-  global: ["console", "network", "state", "problems", "traces", "metrics", "alerts", "logs"],
-  session: ["console", "agent-trace", "network", "state", "problems", "traces", "metrics", "alerts", "logs"],
-  workflow: ["console", "execution-trace", "network", "state", "problems", "traces", "metrics", "alerts", "logs"],
+  global: [
+    "console",
+    "network",
+    "state",
+    "problems",
+    "traces",
+    "metrics",
+    "alerts",
+    "logs",
+  ],
+  session: [
+    "console",
+    "agent-trace",
+    "network",
+    "state",
+    "problems",
+    "traces",
+    "metrics",
+    "alerts",
+    "logs",
+  ],
+  workflow: [
+    "console",
+    "execution-trace",
+    "network",
+    "state",
+    "problems",
+    "traces",
+    "metrics",
+    "alerts",
+    "logs",
+  ],
 };
 
 // =============================================================================

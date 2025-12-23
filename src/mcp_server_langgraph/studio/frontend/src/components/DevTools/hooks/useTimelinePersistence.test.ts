@@ -62,7 +62,11 @@ describe("useTimelinePersistence", () => {
       );
 
       act(() => {
-        result.current.addBookmark({ id: "b1", time: 100, label: "Bookmark 1" });
+        result.current.addBookmark({
+          id: "b1",
+          time: 100,
+          label: "Bookmark 1",
+        });
       });
 
       expect(result.current.state.bookmarks).toHaveLength(1);
@@ -75,8 +79,16 @@ describe("useTimelinePersistence", () => {
       );
 
       act(() => {
-        result.current.addBookmark({ id: "b1", time: 100, label: "Bookmark 1" });
-        result.current.addBookmark({ id: "b2", time: 200, label: "Bookmark 2" });
+        result.current.addBookmark({
+          id: "b1",
+          time: 100,
+          label: "Bookmark 1",
+        });
+        result.current.addBookmark({
+          id: "b2",
+          time: 200,
+          label: "Bookmark 2",
+        });
       });
 
       act(() => {
@@ -93,7 +105,11 @@ describe("useTimelinePersistence", () => {
       );
 
       act(() => {
-        result.current.addBookmark({ id: "b1", time: 100, label: "Bookmark 1" });
+        result.current.addBookmark({
+          id: "b1",
+          time: 100,
+          label: "Bookmark 1",
+        });
       });
 
       act(() => {
@@ -140,7 +156,11 @@ describe("useTimelinePersistence", () => {
       );
 
       act(() => {
-        result.current.addBookmark({ id: "b1", time: 100, label: "Bookmark 1" });
+        result.current.addBookmark({
+          id: "b1",
+          time: 100,
+          label: "Bookmark 1",
+        });
         result.current.setPlaybackSpeed(4);
         result.current.setActiveFilters({ types: ["console"] });
       });

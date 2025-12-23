@@ -5,7 +5,13 @@
  * Displays Redux/session/workflow state inspection.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, within, fireEvent, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  within,
+  fireEvent,
+  cleanup,
+} from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -185,7 +191,9 @@ describe("StateTab", () => {
       expect(screen.queryByTestId("go-back-button")).not.toBeInTheDocument();
       expect(screen.queryByTestId("go-forward-button")).not.toBeInTheDocument();
       expect(screen.queryByTestId("jump-start-button")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("jump-latest-button")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("jump-latest-button"),
+      ).not.toBeInTheDocument();
     });
 
     it("should keep recording toggle to control snapshot capture", () => {

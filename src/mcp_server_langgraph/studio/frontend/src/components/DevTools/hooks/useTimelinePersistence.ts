@@ -6,6 +6,8 @@
  */
 import { useState, useCallback, useEffect } from "react";
 
+import { storage } from "../../../utils/storage";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -65,15 +67,14 @@ function getStorageKey(sessionId: string): string {
 function loadFromStorage(sessionId: string): PersistedTimelineState {
   try {
     const key = getStorageKey(sessionId);
-    const data = localStorage.getItem(key);
+    const data = storage.get<PersistedTimelineState>(key);
     if (!data) return DEFAULT_STATE;
 
-    const parsed = JSON.parse(data);
     return {
-      bookmarks: Array.isArray(parsed.bookmarks) ? parsed.bookmarks : [],
+      bookmarks: Array.isArray(data.bookmarks) ? data.bookmarks : [],
       playbackSpeed:
-        typeof parsed.playbackSpeed === "number" ? parsed.playbackSpeed : 1,
-      activeFilters: parsed.activeFilters || { types: [] },
+        typeof data.playbackSpeed === "number" ? data.playbackSpeed : 1,
+      activeFilters: data.activeFilters || { types: [] },
     };
   } catch {
     // Handle corrupted data gracefully
@@ -84,7 +85,7 @@ function loadFromStorage(sessionId: string): PersistedTimelineState {
 function saveToStorage(sessionId: string, state: PersistedTimelineState): void {
   try {
     const key = getStorageKey(sessionId);
-    localStorage.setItem(key, JSON.stringify(state));
+    storage.set(key, state);
   } catch {
     // Handle storage quota exceeded or other errors
     console.warn("Failed to persist timeline state to localStorage");
@@ -94,7 +95,7 @@ function saveToStorage(sessionId: string, state: PersistedTimelineState): void {
 function removeFromStorage(sessionId: string): void {
   try {
     const key = getStorageKey(sessionId);
-    localStorage.removeItem(key);
+    storage.remove(key);
   } catch {
     // Ignore errors during removal
   }

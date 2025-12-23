@@ -13,7 +13,15 @@
  * Phase 2: TDD RED phase - Write tests before implementing api/index.ts endpoints
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
 import { setupServer } from "msw/node";
 import { canvasHandlers } from "../mocks/handlers/canvasHandlers";
 import type {

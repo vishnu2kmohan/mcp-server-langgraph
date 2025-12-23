@@ -8,7 +8,15 @@
  * preventing schema drift between mocks and actual API expectations.
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
 import { setupServer } from "msw/node";
 import { aiHandlers } from "../mocks/handlers/aiHandlers";
 

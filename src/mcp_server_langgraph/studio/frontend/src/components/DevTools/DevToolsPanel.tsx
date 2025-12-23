@@ -358,105 +358,105 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             "border-b border-gray-200 dark:border-gray-700",
           )}
         >
-        {/* Context Indicator */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-            {contextLabel}
-          </span>
-        </div>
+          {/* Context Indicator */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+              {contextLabel}
+            </span>
+          </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-1">
-          {/* Console Filter (only show when Console tab active) */}
-          {activeTab === "console" && (
-            <ConsoleFilter
-              value={consoleFilter}
-              onChange={handleFilterChange}
-            />
-          )}
-
-          {/* Clear Console */}
-          <button
-            onClick={handleClearConsole}
-            className={cn(
-              "p-1.5 rounded",
-              "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
-              "hover:bg-gray-100 dark:hover:bg-gray-700",
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1">
+            {/* Console Filter (only show when Console tab active) */}
+            {activeTab === "console" && (
+              <ConsoleFilter
+                value={consoleFilter}
+                onChange={handleFilterChange}
+              />
             )}
-            title="Clear Console"
-            aria-label="Clear"
-          >
-            <Trash2 size={14} />
-          </button>
 
-          {/* Maximize/Minimize */}
-          <button
-            onClick={handleMaximize}
-            className={cn(
-              "p-1.5 rounded",
-              "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
-              "hover:bg-gray-100 dark:hover:bg-gray-700",
-            )}
-            title={maximized ? "Minimize" : "Maximize"}
-            aria-label={maximized ? "Minimize" : "Maximize"}
-          >
-            {maximized ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          </button>
-
-          {/* Collapse */}
-          <button
-            onClick={handleCollapse}
-            className={cn(
-              "p-1.5 rounded",
-              "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
-              "hover:bg-gray-100 dark:hover:bg-gray-700",
-            )}
-            title="Collapse"
-            aria-label="Collapse"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      </div>
-
-      {/* Timeline Bar - Unified time-travel scrubber */}
-      <TimelineBar />
-
-      {/* Tabs */}
-      <div
-        data-testid="devtools-tabs"
-        role="tablist"
-        className={cn(
-          "flex items-center gap-0.5 px-2 py-1",
-          "bg-gray-100 dark:bg-gray-800",
-          "border-b border-gray-200 dark:border-gray-700",
-        )}
-      >
-        {availableTabs.map((tabId) => {
-          const Icon = TAB_ICONS[tabId];
-          const isActive = tabId === activeTab;
-
-          return (
+            {/* Clear Console */}
             <button
-              key={tabId}
-              data-testid={`devtools-tab-${tabId}`}
-              role="tab"
-              aria-selected={isActive}
-              aria-controls={`tabpanel-${tabId}`}
-              onClick={() => handleTabSelect(tabId)}
+              onClick={handleClearConsole}
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded",
-                isActive
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700",
+                "p-1.5 rounded",
+                "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+                "hover:bg-gray-100 dark:hover:bg-gray-700",
               )}
+              title="Clear Console"
+              aria-label="Clear"
             >
-              <Icon size={14} />
-              {TAB_LABELS[tabId]}
+              <Trash2 size={14} />
             </button>
-          );
-        })}
-      </div>
+
+            {/* Maximize/Minimize */}
+            <button
+              onClick={handleMaximize}
+              className={cn(
+                "p-1.5 rounded",
+                "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+                "hover:bg-gray-100 dark:hover:bg-gray-700",
+              )}
+              title={maximized ? "Minimize" : "Maximize"}
+              aria-label={maximized ? "Minimize" : "Maximize"}
+            >
+              {maximized ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            </button>
+
+            {/* Collapse */}
+            <button
+              onClick={handleCollapse}
+              className={cn(
+                "p-1.5 rounded",
+                "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+                "hover:bg-gray-100 dark:hover:bg-gray-700",
+              )}
+              title="Collapse"
+              aria-label="Collapse"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* Timeline Bar - Unified time-travel scrubber */}
+        <TimelineBar />
+
+        {/* Tabs */}
+        <div
+          data-testid="devtools-tabs"
+          role="tablist"
+          className={cn(
+            "flex items-center gap-0.5 px-2 py-1",
+            "bg-gray-100 dark:bg-gray-800",
+            "border-b border-gray-200 dark:border-gray-700",
+          )}
+        >
+          {availableTabs.map((tabId) => {
+            const Icon = TAB_ICONS[tabId];
+            const isActive = tabId === activeTab;
+
+            return (
+              <button
+                key={tabId}
+                data-testid={`devtools-tab-${tabId}`}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`tabpanel-${tabId}`}
+                onClick={() => handleTabSelect(tabId)}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded",
+                  isActive
+                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700",
+                )}
+              >
+                <Icon size={14} />
+                {TAB_LABELS[tabId]}
+              </button>
+            );
+          })}
+        </div>
 
         {/* Tab Content */}
         <div

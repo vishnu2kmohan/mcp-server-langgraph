@@ -296,8 +296,10 @@ export function AgentTraceTab({
   }, [trace?.nodes, timeline?.timeWindow]);
 
   // Calculate total duration for timeline (using filtered nodes)
-  const totalDuration =
-    filteredNodes.reduce((sum, node) => sum + (node.duration ?? 0), 0);
+  const totalDuration = filteredNodes.reduce(
+    (sum, node) => sum + (node.duration ?? 0),
+    0,
+  );
 
   // Calculate start offsets for timeline (using filtered nodes)
   const getStartOffset = (index: number): number => {

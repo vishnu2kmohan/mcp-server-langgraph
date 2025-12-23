@@ -205,9 +205,9 @@ test.describe("Compliance Officer User Journey", () => {
     test("should view HIPAA compliance status", async ({ alicePage }) => {
       await alicePage.goto("/studio/compliance");
 
-      // Look for HIPAA section
+      // Look for HIPAA section (component uses hipaa-panel testid)
       const hipaaContent = alicePage.locator(
-        '[data-testid*="hipaa"], [data-testid*="HIPAA"], h2:has-text("HIPAA"), h3:has-text("HIPAA"), [class*="hipaa"]'
+        '[data-testid="hipaa-panel"], h2:has-text("HIPAA"), h3:has-text("HIPAA"), [class*="hipaa"]'
       );
       if (await hipaaContent.first().isVisible().catch(() => false)) {
         await expect(hipaaContent.first()).toBeVisible();
@@ -217,9 +217,9 @@ test.describe("Compliance Officer User Journey", () => {
     test("should view GDPR compliance status", async ({ alicePage }) => {
       await alicePage.goto("/studio/compliance");
 
-      // Look for GDPR section
+      // Look for GDPR section (component uses gdpr-panel testid)
       const gdprContent = alicePage.locator(
-        '[data-testid*="gdpr"], [data-testid*="GDPR"], h2:has-text("GDPR"), h3:has-text("GDPR"), [class*="gdpr"]'
+        '[data-testid="gdpr-panel"], h2:has-text("GDPR"), h3:has-text("GDPR"), [class*="gdpr"]'
       );
       if (await gdprContent.first().isVisible().catch(() => false)) {
         await expect(gdprContent.first()).toBeVisible();
@@ -229,9 +229,9 @@ test.describe("Compliance Officer User Journey", () => {
     test("should view SOC-2 compliance status", async ({ alicePage }) => {
       await alicePage.goto("/studio/compliance");
 
-      // Look for SOC-2 section
+      // Look for SOC-2 section (component uses soc2-panel testid)
       const soc2Content = alicePage.locator(
-        '[data-testid*="soc2"], [data-testid*="SOC"], h2:has-text("SOC"), h3:has-text("SOC"), [class*="soc"]'
+        '[data-testid="soc2-panel"], h2:has-text("SOC"), h3:has-text("SOC"), [class*="soc"]'
       );
       if (await soc2Content.first().isVisible().catch(() => false)) {
         await expect(soc2Content.first()).toBeVisible();
@@ -309,9 +309,9 @@ test.describe("Compliance Officer User Journey", () => {
     test("should show compliance status overview", async ({ alicePage }) => {
       await alicePage.goto("/studio/compliance");
 
-      // Look for status overview
+      // Look for status overview (use class fallbacks)
       const statusOverview = alicePage.locator(
-        '[data-testid*="status"], [data-testid*="overview"], .compliance-status, .status-card'
+        '[data-testid*="compliance-dashboard"], .compliance-status, .status-card'
       );
       if (await statusOverview.first().isVisible().catch(() => false)) {
         await expect(statusOverview.first()).toBeVisible();

@@ -4,7 +4,15 @@
  * Tests for MSW handlers that mock the Canvas API endpoints.
  * Phase 2: Contract-First development - define API contracts via MSW.
  */
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
 import { setupServer } from "msw/node";
 import {
   canvasHandlers,

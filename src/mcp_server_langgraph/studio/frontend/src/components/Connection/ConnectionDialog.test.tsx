@@ -12,7 +12,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import { ConnectionDialog } from "./ConnectionDialog";
 import type { MCPConnection } from "../../types/connection";
 

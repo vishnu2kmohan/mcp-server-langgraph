@@ -8,7 +8,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import { http, HttpResponse, delay } from "msw";
 import { server } from "../../mocks/server";
 import { ConnectionBulkActions } from "./ConnectionBulkActions";

@@ -9,7 +9,15 @@
  * - POST /api/v1/studio/suggestions - Studio suggestions
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  vi,
+} from "vitest";
 import { setupServer } from "msw/node";
 import { studioHandlers, createStudioAnalyzeResponse } from "./studioHandlers";
 
