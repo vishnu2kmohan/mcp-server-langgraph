@@ -5,7 +5,6 @@ import { PersonaGuard } from "./guards/PersonaGuard";
 import { PermissionGuard } from "./guards/PermissionGuard";
 import { RootRedirect } from "./guards/RootRedirect";
 import { StudioShellGuard } from "./guards/StudioShellGuard";
-import { StudioV2Redirect } from "./guards/StudioV2Redirect";
 import {
   chatLoader,
   sessionsLoader,

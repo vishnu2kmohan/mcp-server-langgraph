@@ -19,7 +19,15 @@ import {
 import { cn } from "../../../utils/cn";
 import { useNetworkEntries } from "../hooks/useNetworkEntries";
 import { exportNetworkToJSON, exportNetworkToCSV } from "../utils/export";
+import { useDebouncedValue, useStableCallback } from "../utils/performance";
 import type { NetworkTabProps, NetworkEntry } from "../types";
+
+// =============================================================================
+// Performance Constants
+// =============================================================================
+
+/** Debounce delay for search input (ms) */
+const SEARCH_DEBOUNCE_MS = 150;
 
 // =============================================================================
 // Types
@@ -307,6 +315,12 @@ export function NetworkTab({
   const { entries, isRecording, toggleRecording, clearEntries } =
     useNetworkEntries({ contextEntityId, includeMCP: showMCPCalls });
 
+  // Debounce search term to prevent excessive re-renders during typing
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, SEARCH_DEBOUNCE_MS);
+
+  // Create stable callbacks for row selection
+  const stableSetSelectedEntryId = useStableCallback(setSelectedEntryId);
+
   // Filter entries
   const filteredEntries = useMemo(() => {
     let result = entries;
@@ -329,9 +343,9 @@ export function NetworkTab({
       );
     }
 
-    // Filter by search
-    if (searchTerm) {
-      const lowerSearch = searchTerm.toLowerCase();
+    // Filter by debounced search term for better performance
+    if (debouncedSearchTerm) {
+      const lowerSearch = debouncedSearchTerm.toLowerCase();
       result = result.filter(
         (e) =>
           e.url.toLowerCase().includes(lowerSearch) ||
@@ -341,7 +355,7 @@ export function NetworkTab({
     }
 
     return result;
-  }, [entries, filter, showMCPCalls, searchTerm]);
+  }, [entries, filter, showMCPCalls, debouncedSearchTerm]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

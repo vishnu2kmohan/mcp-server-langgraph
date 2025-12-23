@@ -690,6 +690,48 @@ class CacheService:
 
         self.stats["deletes"] += 1
 
+    async def adelete_pattern(self, pattern: str) -> int:
+        """
+        Async delete from cache by pattern.
+
+        Deletes entries from both L1 and L2 that match the given pattern.
+        Uses fnmatch for L1 (in-memory) and Redis KEYS for L2.
+
+        Args:
+            pattern: Key pattern to match (e.g., "user:123:*" or "ai_ux:*")
+
+        Returns:
+            Number of keys deleted (L1 + L2 count)
+        """
+        import fnmatch
+
+        deleted_count = 0
+
+        # Delete from L1 (pattern match on in-memory keys)
+        l1_keys_to_delete = [
+            key for key in list(self.l1_cache.keys()) if fnmatch.fnmatch(key, pattern)
+        ]
+        for key in l1_keys_to_delete:
+            self.l1_cache.pop(key, None)
+            deleted_count += 1
+
+        # Delete from L2 (async Redis)
+        async_redis = await self._ensure_async_redis()
+        if async_redis:
+            try:
+                keys = await async_redis.keys(pattern)
+                if keys:
+                    await async_redis.delete(*keys)
+                    deleted_count += len(keys)
+                    logger.info(
+                        f"Deleted {len(keys)} L2 cache keys matching pattern: {pattern}"
+                    )
+            except Exception as e:
+                logger.warning(f"L2 async cache pattern delete failed: {e}")
+
+        self.stats["deletes"] += deleted_count
+        return deleted_count
+
     async def aclear(self, pattern: str | None = None) -> None:
         """
         Async clear cache (all or by pattern).

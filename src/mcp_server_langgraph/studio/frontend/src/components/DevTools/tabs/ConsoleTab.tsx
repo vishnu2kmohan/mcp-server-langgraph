@@ -446,6 +446,7 @@ export function ConsoleTab({
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onClick={() => setFocusedIndex(0)}
+          onScroll={handleScroll}
           className="flex-1 overflow-y-auto focus:outline-none"
         >
           {displayEntries.map((entry, index) => (
@@ -458,6 +459,15 @@ export function ConsoleTab({
               onCopy={() => copyMessage(entry.message)}
             />
           ))}
+          {/* Load more indicator for batched lists */}
+          {shouldBatch && hasMore && (
+            <div
+              data-testid="load-more-indicator"
+              className="flex items-center justify-center py-2 text-xs text-gray-400 dark:text-gray-500"
+            >
+              Scroll to load more ({allEntries.length - displayEntries.length} remaining)
+            </div>
+          )}
         </div>
       )}
     </div>
