@@ -181,3 +181,22 @@ v1_router.include_router(alert_recommendation_router, tags=["alerts"])
 from mcp_server_langgraph.api.v1.skills import router as skills_router
 
 v1_router.include_router(skills_router, tags=["skills"])
+
+# =============================================================================
+# Consolidated WebSocket Router (ADR-0068 - WebSocket Standardization)
+# =============================================================================
+# All WebSocket endpoints consolidated under /api/v1/ws/* for consistent access
+# This replaces scattered WebSocket routes with a unified structure:
+#   /api/v1/ws/mcp          - MCP WebSocket
+#   /api/v1/ws/mcp/tasks    - MCP task status streaming
+#   /api/v1/ws/workflows    - Workflow execution streaming
+#   /api/v1/ws/connections  - Connection health monitoring
+#   /api/v1/ws/audit        - Audit log streaming
+#   /api/v1/ws/notifications - Push notifications
+#   /api/v1/ws/agents       - Agent request (HITL) streaming
+#   /api/v1/ws/alerts       - Alert streaming (admin)
+#   /api/v1/ws/metrics/heart - HEART metrics streaming
+#   /api/v1/ws/usage/cost   - Cost tracking streaming
+from mcp_server_langgraph.api.v1.ws_router import ws_router
+
+v1_router.include_router(ws_router, prefix="/ws", tags=["websocket"])
