@@ -682,7 +682,6 @@ FEEDBACK:
             # Try to get screenshot from cache first
             screenshot_result = None
             cache_key = None
-            used_cache = False
 
             if use_screenshot_cache:
                 try:
