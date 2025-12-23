@@ -81,6 +81,10 @@ export const STORAGE_KEYS = {
 
   // Cross-Insights Panel
   CROSS_INSIGHTS_DISMISSED: "studio-cross-insights-dismissed",
+
+  // DevTools Panel
+  DEVTOOLS_COLLAPSED: "studio-devtools-collapsed",
+  DEVTOOLS_HEIGHT: "studio-devtools-height",
 } as const;
 
 // Type for storage keys

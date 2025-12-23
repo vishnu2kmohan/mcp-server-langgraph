@@ -125,10 +125,10 @@ export function CanvasArtifact({
     refetch: refetchAI,
   } = useCodeAnalysis({
     userId: userId ?? "anonymous",
-    sessionId: sessionId ?? undefined,
+    sessionId: sessionId ?? "",
     code: artifact.content,
     language: language ?? undefined,
-    enabled: enableAI && isCodeArtifact && !!userId,
+    enabled: enableAI && isCodeArtifact && !!userId && !!sessionId,
   });
 
   const handleContentChange = useCallback(
@@ -463,7 +463,7 @@ export function CanvasArtifact({
               )}
 
               {/* Suggestions */}
-              {aiSuggestions && aiSuggestions.length > 0 && (
+              {aiSuggestions && aiSuggestions.length > 0 && aiSuggestions[0] && (
                 <div className="text-xs text-gray-500 dark:text-gray-400">
                   <span className="font-medium">Suggestion:</span>{" "}
                   {aiSuggestions[0].description}

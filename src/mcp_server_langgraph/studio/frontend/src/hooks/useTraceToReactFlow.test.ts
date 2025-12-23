@@ -10,12 +10,21 @@
  * - Duration formatting
  */
 
-import { describe, it, expect } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, cleanup } from "@testing-library/react";
 import { useTraceToReactFlow } from "./useTraceToReactFlow";
 import type { TraceSpan } from "./useTraceWebSocket";
 
 describe("useTraceToReactFlow", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
+  });
   describe("Empty State", () => {
     it("should return empty arrays for empty spans", () => {
       const { result } = renderHook(() => useTraceToReactFlow({ spans: [] }));

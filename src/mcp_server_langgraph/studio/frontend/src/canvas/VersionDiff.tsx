@@ -208,10 +208,10 @@ export function VersionDiff({
     refetch: refetchAI,
   } = useDiffExplanation({
     userId: userId ?? "anonymous",
-    sessionId: sessionId ?? undefined,
+    sessionId: sessionId ?? "",
     oldContent: baseVersion.content,
     newContent: comparedVersion.content,
-    enabled: enableAI && hasChanges && !!userId,
+    enabled: enableAI && hasChanges && !!userId && !!sessionId,
   });
 
   return (

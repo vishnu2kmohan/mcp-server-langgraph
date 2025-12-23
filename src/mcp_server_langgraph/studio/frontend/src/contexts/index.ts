@@ -26,18 +26,10 @@ export type {
 // Preferences Context
 // =============================================================================
 
-export {
-  PreferencesProvider,
-  PreferencesContext,
-  usePreferences,
-} from "./PreferencesContext";
+export { PreferencesProvider, usePreferences } from "./PreferencesContext";
 
 // =============================================================================
 // Telemetry Context
 // =============================================================================
 
-export {
-  TelemetryProvider,
-  TelemetryContext,
-  useTelemetry,
-} from "./TelemetryContext";
+export { TelemetryProvider, useTelemetry } from "./TelemetryContext";
