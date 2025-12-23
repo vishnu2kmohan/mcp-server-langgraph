@@ -92,7 +92,7 @@ test.describe('Persona Navigation Visibility', () => {
       await adminPage.goto('/studio/admin', { waitUntil: 'networkidle' });
 
       // Should not redirect away - admin has access
-      await expect(adminPage).toHaveURL(/\/studio\/v2\/admin/);
+      await expect(adminPage).toHaveURL(/\/studio\/admin/);
     });
 
     test('should have access to compliance dashboard', async ({ adminPage }) => {
@@ -132,7 +132,7 @@ test.describe('Persona Navigation Visibility', () => {
       await alicePage.goto('/studio/admin', { waitUntil: 'networkidle' });
 
       // Should redirect away - alice doesn't have admin access
-      await expect(alicePage).not.toHaveURL(/\/studio\/v2\/admin/);
+      await expect(alicePage).not.toHaveURL(/\/studio\/admin/);
     });
   });
 
@@ -169,7 +169,7 @@ test.describe('Persona Navigation Visibility', () => {
       await bobPage.goto('/studio/admin', { waitUntil: 'networkidle' });
 
       // Should redirect away - bob doesn't have admin access
-      await expect(bobPage).not.toHaveURL(/\/studio\/v2\/admin/);
+      await expect(bobPage).not.toHaveURL(/\/studio\/admin/);
     });
 
     test('should redirect from compliance routes', async ({ bobPage }) => {
@@ -177,7 +177,7 @@ test.describe('Persona Navigation Visibility', () => {
       await bobPage.goto('/studio/compliance', { waitUntil: 'networkidle' });
 
       // Should redirect away - bob doesn't have compliance access
-      await expect(bobPage).not.toHaveURL(/\/studio\/v2\/compliance/);
+      await expect(bobPage).not.toHaveURL(/\/studio\/compliance/);
     });
   });
 

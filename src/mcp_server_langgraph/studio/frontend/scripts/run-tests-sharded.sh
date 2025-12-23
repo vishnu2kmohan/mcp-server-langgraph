@@ -26,10 +26,11 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Default shard count - 48 shards for ~10 test files per shard
-# With 481 test files, 48 shards = ~10 files each
-# This prevents OOM by keeping memory under 8GB per shard
-SHARD_COUNT=48
+# Default shard count - 200 shards for ~2-3 test files per shard
+# With 481 test files, 200 shards = ~2.4 files each
+# This prevents OOM by keeping memory under 4GB per shard
+# Increased from 80 to 200 due to severe memory accumulation in jsdom
+SHARD_COUNT=200
 
 run_shard() {
     local shard_num=$1
@@ -83,7 +84,7 @@ else
 
     for i in $(seq 1 $SHARD_COUNT); do
         if ! run_shard $i $SHARD_COUNT; then
-            FAILED_SHARDS+=($i)
+            FAILED_SHARDS+=("$i")
         fi
     done
 

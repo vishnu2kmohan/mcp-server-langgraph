@@ -127,7 +127,7 @@ describe("useSafeRouteLoaderData", () => {
         router: {
           state: {
             loaderData: {
-              "studio-v2": mockLoaderData,
+              studio: mockLoaderData,
             },
           },
         },
@@ -136,7 +136,7 @@ describe("useSafeRouteLoaderData", () => {
 
       // WHEN: Calling useSafeRouteLoaderData with matching route ID
       const { result } = renderHook(
-        () => useSafeRouteLoaderData<typeof mockLoaderData>("studio-v2"),
+        () => useSafeRouteLoaderData<typeof mockLoaderData>("studio"),
         { wrapper },
       );
 
@@ -160,7 +160,7 @@ describe("useSafeRouteLoaderData", () => {
 
       // WHEN: Calling useSafeRouteLoaderData with non-matching route ID
       const { result } = renderHook(
-        () => useSafeRouteLoaderData<{ data: string }>("studio-v2"),
+        () => useSafeRouteLoaderData<{ data: string }>("studio"),
         { wrapper },
       );
 
@@ -181,7 +181,7 @@ describe("useSafeRouteLoaderData", () => {
 
       // WHEN: Calling useSafeRouteLoaderData
       const { result } = renderHook(
-        () => useSafeRouteLoaderData<{ data: string }>("studio-v2"),
+        () => useSafeRouteLoaderData<{ data: string }>("studio"),
         { wrapper },
       );
 
@@ -202,7 +202,7 @@ describe("useSafeRouteLoaderData", () => {
 
       // WHEN: Calling useSafeRouteLoaderData
       const { result } = renderHook(
-        () => useSafeRouteLoaderData<{ data: string }>("studio-v2"),
+        () => useSafeRouteLoaderData<{ data: string }>("studio"),
         { wrapper },
       );
 

@@ -4,20 +4,42 @@
  * Cost tracking dashboard page showing LLM usage costs
  * with summary metrics and breakdown by model.
  * Uses RTK Query for data fetching with automatic caching.
+ * Supports real-time WebSocket updates for live cost tracking.
  */
 
-import { useState } from "react";
-import { DollarSign, TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  DollarSign,
+  TrendingUp,
+  AlertTriangle,
+  Wifi,
+  WifiOff,
+  X,
+} from "lucide-react";
 import { Skeleton, SkeletonCard, ErrorState } from "../components/UI";
 import {
   useGetCostSummaryQuery,
   useGetCostByModelQuery,
   useGetCostHistoryQuery,
 } from "../api";
+import { useCostTrackingWebSocket } from "../hooks/useCostTrackingWebSocket";
 
 type Period = "day" | "week" | "month";
 
-export function CostPage() {
+interface CostPageProps {
+  /** Enable real-time WebSocket updates (default: true) */
+  enableRealtime?: boolean;
+  /** User ID for budget tracking */
+  userId?: string;
+  /** Current session ID for session cost tracking */
+  sessionId?: string;
+}
+
+export function CostPage({
+  enableRealtime = true,
+  userId,
+  sessionId,
+}: CostPageProps = {}) {
   const [period, setPeriod] = useState<Period>("week");
 
   // RTK Query hooks for cost data
@@ -40,6 +62,45 @@ export function CostPage() {
     isLoading: historyLoading,
     refetch: refetchHistory,
   } = useGetCostHistoryQuery({ period });
+
+  // Real-time WebSocket for cost tracking
+  const {
+    status: wsStatus,
+    sessionCosts,
+    userBudget,
+    budgetWarnings,
+    error: _wsError,
+    subscribeSession,
+    subscribeUser,
+    clearBudgetWarnings,
+  } = useCostTrackingWebSocket(
+    enableRealtime
+      ? {
+          onBudgetWarning: (warning) => {
+            console.log("Budget warning received:", warning);
+          },
+        }
+      : undefined,
+  );
+
+  // Subscribe to session and user when connected
+  useEffect(() => {
+    if (enableRealtime && wsStatus === "connected") {
+      if (sessionId) {
+        subscribeSession(sessionId);
+      }
+      if (userId) {
+        subscribeUser(userId);
+      }
+    }
+  }, [
+    enableRealtime,
+    wsStatus,
+    sessionId,
+    userId,
+    subscribeSession,
+    subscribeUser,
+  ]);
 
   const isLoading = summaryLoading || modelLoading || historyLoading;
 
@@ -72,6 +133,33 @@ export function CostPage() {
   // History data is already an array from backend
   const historyItems = historyData ?? [];
 
+  // Convert session costs to array for display
+  const liveSessionCostsList = Object.values(sessionCosts);
+
+  // Get WebSocket status display text and color
+  const getWsStatusDisplay = () => {
+    switch (wsStatus) {
+      case "connected":
+        return { text: "Live", color: "text-green-500", Icon: Wifi };
+      case "connecting":
+        return { text: "Connecting...", color: "text-yellow-500", Icon: Wifi };
+      case "reconnecting":
+        return {
+          text: "Reconnecting...",
+          color: "text-yellow-500",
+          Icon: Wifi,
+        };
+      case "disconnected":
+        return { text: "Offline", color: "text-gray-500", Icon: WifiOff };
+      case "error":
+        return { text: "Error", color: "text-red-500", Icon: WifiOff };
+      default:
+        return { text: "Unknown", color: "text-gray-500", Icon: WifiOff };
+    }
+  };
+
+  const wsStatusDisplay = enableRealtime ? getWsStatusDisplay() : null;
+
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -86,6 +174,27 @@ export function CostPage() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            {/* WebSocket Status Indicator */}
+            {enableRealtime && wsStatusDisplay && (
+              <div
+                data-testid="ws-status-indicator"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+                  wsStatus === "connected"
+                    ? "bg-green-100 dark:bg-green-900/30"
+                    : wsStatus === "error"
+                      ? "bg-red-100 dark:bg-red-900/30"
+                      : "bg-yellow-100 dark:bg-yellow-900/30"
+                }`}
+              >
+                <wsStatusDisplay.Icon
+                  size={14}
+                  className={wsStatusDisplay.color}
+                />
+                <span className={wsStatusDisplay.color}>
+                  {wsStatusDisplay.text}
+                </span>
+              </div>
+            )}
             {/* Period Selector */}
             <select
               value={period}
@@ -99,6 +208,36 @@ export function CostPage() {
           </div>
         </div>
       </header>
+
+      {/* Budget Warnings */}
+      {enableRealtime && budgetWarnings.length > 0 && (
+        <div
+          data-testid="budget-warning-banner"
+          className="mx-6 mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle
+              size={20}
+              className="text-amber-500 flex-shrink-0 mt-0.5"
+            />
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                Budget Warning
+              </h3>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                {budgetWarnings[budgetWarnings.length - 1].message}
+              </p>
+            </div>
+            <button
+              onClick={clearBudgetWarnings}
+              className="text-amber-500 hover:text-amber-700 dark:hover:text-amber-300"
+              aria-label="Dismiss warning"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
@@ -193,6 +332,84 @@ export function CostPage() {
                   <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     Past {period}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* User Budget Progress */}
+            {enableRealtime && userBudget && (
+              <div
+                data-testid="budget-progress-bar"
+                className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Budget Usage
+                  </h3>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {formatCurrency(userBudget.remaining)} remaining
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                  <div
+                    className={`h-3 rounded-full transition-all ${
+                      userBudget.current_usage / userBudget.budget_limit > 0.9
+                        ? "bg-red-500"
+                        : userBudget.current_usage / userBudget.budget_limit >
+                            0.75
+                          ? "bg-amber-500"
+                          : "bg-green-500"
+                    }`}
+                    style={{
+                      width: `${Math.min(100, (userBudget.current_usage / userBudget.budget_limit) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  <span>{formatCurrency(userBudget.current_usage)} used</span>
+                  <span>{formatCurrency(userBudget.budget_limit)} limit</span>
+                </div>
+              </div>
+            )}
+
+            {/* Live Session Costs */}
+            {enableRealtime && liveSessionCostsList.length > 0 && (
+              <div
+                data-testid="live-session-costs"
+                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+              >
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Live Session Costs
+                  </h2>
+                </div>
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {liveSessionCostsList.map((session) => (
+                    <div
+                      key={session.session_id}
+                      className="px-6 py-4 flex items-center justify-between"
+                    >
+                      <div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {session.session_id.slice(0, 8)}...
+                        </span>
+                        {session.model && (
+                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                            {session.model}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                          {formatCurrency(session.total_cost)}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatNumber(session.token_count)} tokens
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

@@ -434,7 +434,7 @@ test.describe("Cross-Persona Workflow Sharing", () => {
       await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should redirect away from admin
-      await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
+      await expect(page).not.toHaveURL(/\/studio\/admin$/);
 
       await context.close();
     });
@@ -492,7 +492,7 @@ test.describe("Cross-Persona Workflow Sharing", () => {
       await page.waitForTimeout(1000);
 
       // alice-builder should be on chat page
-      await expect(page).toHaveURL(/\/studio\/v2\/chat/);
+      await expect(page).toHaveURL(/\/studio\/chat/);
 
       await context.close();
     });
@@ -507,7 +507,7 @@ test.describe("Cross-Persona Security Boundaries", () => {
     await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
     // Should not be on admin page
-    await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
+    await expect(page).not.toHaveURL(/\/studio\/admin$/);
 
     await context.close();
   });
@@ -541,19 +541,19 @@ test.describe("Cross-Persona Security Boundaries", () => {
 
     // Admin should access chat
     await page.goto("/studio/chat", { waitUntil: "networkidle" });
-    await expect(page).toHaveURL(/\/studio\/v2\/chat/);
+    await expect(page).toHaveURL(/\/studio\/chat/);
 
     // Admin should access admin dashboard
     await page.goto("/studio/admin", { waitUntil: "networkidle" });
-    await expect(page).toHaveURL(/\/studio\/v2\/admin/);
+    await expect(page).toHaveURL(/\/studio\/admin/);
 
     // Admin should access compliance
     await page.goto("/studio/compliance", { waitUntil: "networkidle" });
-    await expect(page).toHaveURL(/\/studio\/v2\/compliance/);
+    await expect(page).toHaveURL(/\/studio\/compliance/);
 
     // Admin should access audit
     await page.goto("/studio/audit", { waitUntil: "networkidle" });
-    await expect(page).toHaveURL(/\/studio\/v2\/audit/);
+    await expect(page).toHaveURL(/\/studio\/audit/);
 
     await context.close();
   });

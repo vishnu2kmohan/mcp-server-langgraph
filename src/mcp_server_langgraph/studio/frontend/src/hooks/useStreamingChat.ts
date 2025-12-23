@@ -18,6 +18,13 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { getAuthToken } from "../utils/storage";
+import { useAppDispatch } from "../store/hooks";
+import {
+  addNode,
+  clearNodes,
+  setCurrentSessionId,
+  type LangGraphNode as ReduxLangGraphNode,
+} from "../store/slices/langGraphSlice";
 
 /**
  * Token usage information from streaming response
@@ -119,6 +126,7 @@ export interface UseStreamingChatReturn extends StreamingChatState {
  * ```
  */
 export function useStreamingChat(): UseStreamingChatReturn {
+  const dispatch = useAppDispatch();
   const [state, setState] = useState<StreamingChatState>({
     isStreaming: false,
     streamingContent: "",
@@ -134,6 +142,8 @@ export function useStreamingChat(): UseStreamingChatReturn {
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  // Store sessionId in ref so it's accessible inside processStream
+  const sessionIdRef = useRef<string | null>(null);
 
   /**
    * Parse SSE data line and extract content
@@ -261,6 +271,13 @@ export function useStreamingChat(): UseStreamingChatReturn {
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
 
+      // Store sessionId for use in processStream
+      sessionIdRef.current = sessionId;
+
+      // Dispatch Redux actions for LangGraph tracking
+      dispatch(setCurrentSessionId(sessionId));
+      dispatch(clearNodes(sessionId));
+
       // Reset state
       setState({
         isStreaming: true,
@@ -342,6 +359,16 @@ export function useStreamingChat(): UseStreamingChatReturn {
               if (parsed.done) {
                 setState((prev) => ({ ...prev, isStreaming: false }));
                 return;
+              }
+
+              // Dispatch LangGraph node to Redux (outside setState)
+              if (parsed.langgraphNode && sessionIdRef.current) {
+                const reduxNode: ReduxLangGraphNode = {
+                  ...parsed.langgraphNode,
+                  sessionId: sessionIdRef.current,
+                  startTime: Date.now(),
+                };
+                dispatch(addNode(reduxNode));
               }
 
               setState((prev) => {
@@ -433,7 +460,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
       // Start processing (don't await - let it run async)
       processStream();
     },
-    [parseSSELine],
+    [parseSSELine, dispatch],
   );
 
   /**

@@ -93,70 +93,70 @@ const DENIAL_SCENARIOS: PermissionDenialScenario[] = [
   {
     persona: "bob",
     route: "/studio/admin",
-    expectedRedirect: /\/studio\/v2\/chat/,
+    expectedRedirect: /\/studio\/chat/,
     description: "bob should be redirected from admin to chat",
   },
   {
     persona: "bob",
     route: "/studio/compliance",
-    expectedRedirect: /\/studio\/v2\/chat/,
+    expectedRedirect: /\/studio\/chat/,
     description: "bob should be redirected from compliance to chat",
   },
   {
     persona: "bob",
     route: "/studio/audit",
-    expectedRedirect: /\/studio\/v2\/chat/,
+    expectedRedirect: /\/studio\/chat/,
     description: "bob should be redirected from audit to chat",
   },
   // Auditor denied scenarios
   {
     persona: "auditor",
     route: "/studio/admin",
-    expectedRedirect: /\/studio\/v2\/(audit|chat)/,
+    expectedRedirect: /\/studio\/(audit|chat)/,
     description: "auditor should be redirected from admin",
   },
   {
     persona: "auditor",
     route: "/studio/chat",
-    expectedRedirect: /\/studio\/v2\/(audit|compliance)/,
+    expectedRedirect: /\/studio\/(audit|compliance)/,
     description: "auditor should be redirected from chat",
   },
   {
     persona: "auditor",
     route: "/studio/workflows",
-    expectedRedirect: /\/studio\/v2\/(audit|compliance)/,
+    expectedRedirect: /\/studio\/(audit|compliance)/,
     description: "auditor should be redirected from workflows",
   },
   // Compliance officer denied scenarios
   {
     persona: "compliance-officer",
     route: "/studio/admin",
-    expectedRedirect: /\/studio\/v2\/(compliance|chat)/,
+    expectedRedirect: /\/studio\/(compliance|chat)/,
     description: "compliance-officer should be redirected from admin",
   },
   {
     persona: "compliance-officer",
     route: "/studio/chat",
-    expectedRedirect: /\/studio\/v2\/(compliance|audit)/,
+    expectedRedirect: /\/studio\/(compliance|audit)/,
     description: "compliance-officer should be redirected from chat",
   },
   // Alice-builder denied scenarios
   {
     persona: "alice-builder",
     route: "/studio/admin",
-    expectedRedirect: /\/studio\/v2\/chat/,
+    expectedRedirect: /\/studio\/chat/,
     description: "alice-builder should be redirected from admin to chat",
   },
   {
     persona: "alice-builder",
     route: "/studio/compliance",
-    expectedRedirect: /\/studio\/v2\/chat/,
+    expectedRedirect: /\/studio\/chat/,
     description: "alice-builder should be redirected from compliance to chat",
   },
   {
     persona: "alice-builder",
     route: "/studio/audit",
-    expectedRedirect: /\/studio\/v2\/chat/,
+    expectedRedirect: /\/studio\/chat/,
     description: "alice-builder should be redirected from audit to chat",
   },
 ];
@@ -333,7 +333,7 @@ test.describe("Permission Denial Flows", () => {
       await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should not be on admin page
-      await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
+      await expect(page).not.toHaveURL(/\/studio\/admin$/);
 
       // Should redirect to allowed route (chat or fallback)
       const currentUrl = page.url();
@@ -393,7 +393,7 @@ test.describe("Permission Denial Flows", () => {
       await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should not be on admin page
-      await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
+      await expect(page).not.toHaveURL(/\/studio\/admin$/);
 
       await context.close();
     });
@@ -447,7 +447,7 @@ test.describe("Permission Denial Flows", () => {
       await page.goto("/studio/audit", { waitUntil: "networkidle" });
 
       // Should be on audit page
-      await expect(page).toHaveURL(/\/studio\/v2\/audit/);
+      await expect(page).toHaveURL(/\/studio\/audit/);
       await expect(page.locator("body")).not.toContainText("Access Denied");
 
       await context.close();
@@ -464,7 +464,7 @@ test.describe("Permission Denial Flows", () => {
       await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should not be on admin page
-      await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
+      await expect(page).not.toHaveURL(/\/studio\/admin$/);
 
       await context.close();
     });
@@ -497,7 +497,7 @@ test.describe("Permission Denial Flows", () => {
       await page.goto("/studio/compliance", { waitUntil: "networkidle" });
 
       // Should be on compliance page
-      await expect(page).toHaveURL(/\/studio\/v2\/compliance/);
+      await expect(page).toHaveURL(/\/studio\/compliance/);
       await expect(page.locator("body")).not.toContainText("Access Denied");
 
       await context.close();
@@ -514,7 +514,7 @@ test.describe("Permission Denial Flows", () => {
       await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should not be on admin page
-      await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
+      await expect(page).not.toHaveURL(/\/studio\/admin$/);
 
       await context.close();
     });
@@ -566,7 +566,7 @@ test.describe("Permission Denial Flows", () => {
       await page.goto("/studio/chat", { waitUntil: "networkidle" });
 
       // Should be on chat page
-      await expect(page).toHaveURL(/\/studio\/v2\/chat/);
+      await expect(page).toHaveURL(/\/studio\/chat/);
       await expect(page.locator("body")).not.toContainText("Access Denied");
 
       await context.close();

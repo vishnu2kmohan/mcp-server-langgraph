@@ -327,7 +327,7 @@ describe("Session Hooks Integration", () => {
 
       // Verify navigation happened
       expect(mockNavigate).toHaveBeenCalledWith(
-        expect.stringMatching(/^\/studio\/v2\/chat\/session-/),
+        expect.stringMatching(/^\/studio\/chat\/session-/),
       );
     });
 

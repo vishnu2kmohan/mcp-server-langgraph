@@ -44,6 +44,7 @@ import type alertReducer from "./slices/alertSlice";
 import type disclosureReducer from "./slices/disclosureSlice";
 import type nudgeReducer from "./slices/nudgeSlice";
 import type devToolsReducer from "./slices/devToolsSlice";
+import type langGraphReducer from "./slices/langGraphSlice";
 
 // =============================================================================
 // Slice State Types (inferred from reducer return types)
@@ -69,6 +70,7 @@ type AlertState = ReturnType<typeof alertReducer>;
 type DisclosureState = ReturnType<typeof disclosureReducer>;
 type NudgeState = ReturnType<typeof nudgeReducer>;
 type DevToolsState = ReturnType<typeof devToolsReducer>;
+type LangGraphState = ReturnType<typeof langGraphReducer>;
 
 // =============================================================================
 // SliceStates - Individual state types for test stores
@@ -104,6 +106,7 @@ export interface SliceStates {
   disclosure: DisclosureState;
   nudge: NudgeState;
   devTools: DevToolsState;
+  langGraph: LangGraphState;
 }
 
 // =============================================================================

@@ -14,13 +14,18 @@
  * Extracted from ChatPage for improved modularity.
  */
 
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useChatAutoScroll } from "../../hooks/useChatAutoScroll";
-import { MessageSquare, RefreshCw, ExternalLink } from "lucide-react";
+import { MessageSquare, RefreshCw, ExternalLink, Loader2 } from "lucide-react";
 import { ConfidenceIndicator } from "./ConfidenceIndicator";
 import { MessageActions } from "./MessageActions";
 import { MarkdownContent } from "./MarkdownContent";
-import { AgentExecutionTracePanel } from "./AgentExecutionTracePanel";
+// Lazy load AgentExecutionTracePanel to reduce initial bundle size and prevent OOM in tests
+const AgentExecutionTracePanel = lazy(() =>
+  import("./AgentExecutionTracePanel").then((m) => ({
+    default: m.AgentExecutionTracePanel,
+  })),
+);
 import { AgentTraceToggleButton } from "./AgentTraceToggleButton";
 import {
   HallucinationIndicator,
@@ -312,7 +317,16 @@ export function ChatMessages({
 
                 {/* Agent execution trace panel */}
                 {showAgentExecutionTrace && (
-                  <AgentExecutionTracePanel trace={agentExecutionTrace} />
+                  <Suspense
+                    fallback={
+                      <div className="flex items-center gap-2 p-3 text-gray-400">
+                        <Loader2 size={14} className="animate-spin" />
+                        <span className="text-xs">Loading trace panel...</span>
+                      </div>
+                    }
+                  >
+                    <AgentExecutionTracePanel trace={agentExecutionTrace} />
+                  </Suspense>
                 )}
               </div>
             )}
@@ -339,7 +353,16 @@ export function ChatMessages({
             </div>
             {/* Agent execution trace panel (shows empty state when no trace) */}
             {showAgentExecutionTrace && (
-              <AgentExecutionTracePanel trace={undefined} />
+              <Suspense
+                fallback={
+                  <div className="flex items-center gap-2 p-3 text-gray-400">
+                    <Loader2 size={14} className="animate-spin" />
+                    <span className="text-xs">Loading trace panel...</span>
+                  </div>
+                }
+              >
+                <AgentExecutionTracePanel trace={undefined} />
+              </Suspense>
             )}
           </div>
         </div>

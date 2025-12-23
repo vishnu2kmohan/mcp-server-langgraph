@@ -41,14 +41,14 @@ interface RouteContextConfig {
 const ROUTE_CONTEXT_CONFIGS: RouteContextConfig[] = [
   // Session context: chat routes
   {
-    pattern: /^\/studio(?:\/v2)?\/chat(?:\/([^/]+))?/,
+    pattern: /^\/studio\/chat(?:\/([^/]+))?/,
     context: "session",
     entityIdParam: "session",
     entityIdPathGroup: 1, // Captures ID from /chat/:id
   },
   // Workflow context: workflow routes
   {
-    pattern: /^\/studio(?:\/v2)?\/workflows(?:\/([^/]+))?/,
+    pattern: /^\/studio\/workflows(?:\/([^/]+))?/,
     context: "workflow",
     entityIdParam: "workflow",
     entityIdPathGroup: 1, // Captures ID from /workflows/:id

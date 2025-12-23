@@ -96,7 +96,7 @@ export function SessionNav({
   const { createNewChat, isCreating } = useNewChat();
 
   // Get sessions from route loader data
-  const loaderData = useRouteLoaderData("studio-v2") as
+  const loaderData = useRouteLoaderData("studio") as
     | SessionsLoaderData
     | undefined;
 

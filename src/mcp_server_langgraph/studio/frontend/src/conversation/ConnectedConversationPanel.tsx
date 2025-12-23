@@ -10,9 +10,17 @@
  *
  * Use this in StudioShellLayout instead of the standalone ConversationPanel.
  */
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useNavigate, useRouteLoaderData, useParams } from "react-router";
-import { AlertTriangle, Target, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  Target,
+  Sparkles,
+  Wifi,
+  WifiOff,
+  X,
+  Lightbulb,
+} from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   sendMessage,
@@ -26,6 +34,8 @@ import {
   useContextOptimization,
   useGoalTracking,
 } from "../hooks/useConversationIntelligence";
+import { useAIRealTimeUXSuggestions } from "../hooks/useAIRealTimeUXSuggestions";
+import type { Suggestion } from "../hooks/useAIRealTimeSuggestions";
 import { ConversationPanel } from "./ConversationPanel";
 import type { SlashCommand } from "./SlashCommandMenu";
 import type { ChatLoaderData } from "../router/loaders";
@@ -43,6 +53,8 @@ export interface ConnectedConversationPanelProps {
   className?: string;
   /** Enable AI conversation intelligence (Sprint 3) */
   enableAI?: boolean;
+  /** Enable real-time AI UX suggestions via WebSocket */
+  enableRealTimeSuggestions?: boolean;
   /** User ID for AI features */
   userId?: string;
   /** Show context optimization warning */
@@ -87,6 +99,7 @@ const DEFAULT_SLASH_COMMANDS: SlashCommand[] = [
 export function ConnectedConversationPanel({
   className,
   enableAI = false,
+  enableRealTimeSuggestions = false,
   userId = "default-user",
   showContextWarning = false,
   showGoals = false,
@@ -99,6 +112,63 @@ export function ConnectedConversationPanel({
 
   // Track input for intent detection
   const [inputQuery, setInputQuery] = useState("");
+
+  // =============================================================================
+  // Real-time AI UX Suggestions (WebSocket)
+  // =============================================================================
+
+  const {
+    isConnected: aiSuggestionsConnected,
+    error: aiSuggestionsError,
+    suggestions: aiSuggestions,
+    isEnabled: aiSuggestionsEnabled,
+    requestSuggestions,
+    dismissSuggestion,
+  } = useAIRealTimeUXSuggestions();
+
+  // Request suggestions when typing (debounced effect)
+  useEffect(() => {
+    if (
+      !enableRealTimeSuggestions ||
+      !aiSuggestionsEnabled ||
+      inputQuery.length < 3
+    ) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      requestSuggestions({
+        page: "conversation",
+        action: "typing",
+        query: inputQuery,
+        sessionId: sessionId ?? "default-session",
+      });
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [
+    enableRealTimeSuggestions,
+    aiSuggestionsEnabled,
+    inputQuery,
+    sessionId,
+    requestSuggestions,
+  ]);
+
+  // Filter suggestions by type
+  const bannerSuggestions = useMemo(
+    () => aiSuggestions.filter((s: Suggestion) => s.type === "banner"),
+    [aiSuggestions],
+  );
+
+  const tooltipSuggestions = useMemo(
+    () => aiSuggestions.filter((s: Suggestion) => s.type === "tooltip"),
+    [aiSuggestions],
+  );
+
+  const spotlightSuggestions = useMemo(
+    () => aiSuggestions.filter((s: Suggestion) => s.type === "spotlight"),
+    [aiSuggestions],
+  );
 
   // Hook for revalidating loader data after sending messages
   const { revalidateMessages } = useMessageRevalidation();
@@ -301,6 +371,145 @@ export function ConnectedConversationPanel({
           </span>
         </div>
       )}
+
+      {/* AI Suggestions Status Indicator (Real-time WebSocket) */}
+      {enableRealTimeSuggestions && (
+        <div
+          data-testid="ai-suggestions-status"
+          data-connected={aiSuggestionsConnected ? "true" : "false"}
+          data-error={aiSuggestionsError ? "true" : "false"}
+          className={cn(
+            "flex items-center gap-2 px-4 py-1",
+            "border-b",
+            aiSuggestionsError
+              ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+              : aiSuggestionsConnected
+                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                : "bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700",
+          )}
+        >
+          {aiSuggestionsConnected ? (
+            <Wifi size={12} className="text-green-500" />
+          ) : (
+            <WifiOff size={12} className="text-gray-400" />
+          )}
+          <span
+            className={cn(
+              "text-xs",
+              aiSuggestionsError
+                ? "text-red-600 dark:text-red-400"
+                : aiSuggestionsConnected
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-gray-500 dark:text-gray-400",
+            )}
+          >
+            {aiSuggestionsError
+              ? "AI suggestions offline"
+              : aiSuggestionsConnected
+                ? "AI suggestions active"
+                : "AI suggestions connecting..."}
+          </span>
+        </div>
+      )}
+
+      {/* Banner Suggestions (Real-time AI UX) */}
+      {enableRealTimeSuggestions &&
+        bannerSuggestions.map((suggestion: Suggestion) => (
+          <div
+            key={suggestion.id}
+            data-testid="ai-suggestion-banner"
+            className={cn(
+              "flex items-center gap-2 px-4 py-2",
+              suggestion.priority === "high"
+                ? "bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800"
+                : "bg-cyan-50 dark:bg-cyan-900/20 border-b border-cyan-200 dark:border-cyan-800",
+            )}
+          >
+            <Lightbulb
+              size={16}
+              className={cn(
+                "flex-shrink-0",
+                suggestion.priority === "high"
+                  ? "text-orange-500"
+                  : "text-cyan-500",
+              )}
+            />
+            <div className="flex-1 text-sm text-gray-700 dark:text-gray-300">
+              {suggestion.message}
+            </div>
+            <button
+              data-testid="dismiss-suggestion-button"
+              onClick={() => dismissSuggestion(suggestion.id)}
+              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+              aria-label="Dismiss suggestion"
+            >
+              <X size={14} className="text-gray-400" />
+            </button>
+          </div>
+        ))}
+
+      {/* Spotlight Suggestions (Real-time AI UX - High Priority) */}
+      {enableRealTimeSuggestions &&
+        spotlightSuggestions.map((suggestion: Suggestion) => (
+          <div
+            key={suggestion.id}
+            data-testid="ai-suggestion-spotlight"
+            className={cn(
+              "flex items-center gap-3 px-4 py-3",
+              "bg-gradient-to-r from-purple-50 to-pink-50",
+              "dark:from-purple-900/20 dark:to-pink-900/20",
+              "border-b border-purple-200 dark:border-purple-800",
+            )}
+          >
+            <Sparkles
+              size={20}
+              className="flex-shrink-0 text-purple-500 animate-pulse"
+            />
+            <div className="flex-1 text-sm font-medium text-purple-700 dark:text-purple-300">
+              {suggestion.message}
+            </div>
+            <button
+              data-testid="dismiss-suggestion-button"
+              onClick={() => dismissSuggestion(suggestion.id)}
+              className="p-1 hover:bg-purple-200 dark:hover:bg-purple-700 rounded"
+              aria-label="Dismiss suggestion"
+            >
+              <X size={14} className="text-purple-400" />
+            </button>
+          </div>
+        ))}
+
+      {/* Tooltip Suggestions (Real-time AI UX) */}
+      {enableRealTimeSuggestions &&
+        tooltipSuggestions.map((suggestion: Suggestion) => (
+          <div
+            key={suggestion.id}
+            data-testid="ai-suggestion-tooltip"
+            className={cn(
+              "flex items-center gap-2 px-4 py-1.5",
+              "bg-gray-50 dark:bg-gray-800/50",
+              "border-b border-gray-200 dark:border-gray-700",
+            )}
+          >
+            <Lightbulb size={12} className="flex-shrink-0 text-gray-400" />
+            <div className="flex-1 text-xs text-gray-600 dark:text-gray-400">
+              {suggestion.targetElement && (
+                <span className="font-mono text-xs text-gray-400 mr-2">
+                  [{suggestion.targetElement}]
+                </span>
+              )}
+              {suggestion.message}
+            </div>
+            <button
+              data-testid="dismiss-suggestion-button"
+              onClick={() => dismissSuggestion(suggestion.id)}
+              className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+              aria-label="Dismiss suggestion"
+            >
+              <X size={12} className="text-gray-400" />
+            </button>
+          </div>
+        ))}
 
       <ConversationPanel
         data-testid="connected-conversation-panel"

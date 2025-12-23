@@ -15,9 +15,14 @@ import { useTraceWebSocket } from "../../../hooks/useTraceWebSocket";
 import { useAppSelector } from "../../../store/hooks";
 import type { Alert } from "../../../store/slices/alertSlice";
 import type { RootState } from "../../../store";
+import {
+  selectLangGraphNodes,
+  type LangGraphNode,
+} from "../../../store/slices/langGraphSlice";
 
-// Stable empty array for memoization when alerts slice is missing
+// Stable empty arrays for memoization when slices are missing
 const EMPTY_ALERTS: Alert[] = [];
+const EMPTY_LANGGRAPH_NODES: LangGraphNode[] = [];
 
 // Safe selector that handles missing alert slice (e.g., in tests)
 // Returns stable EMPTY_ALERTS reference to prevent unnecessary re-renders
@@ -26,6 +31,15 @@ const selectAlertsSafe = (state: RootState): Alert[] => {
     return state?.alerts?.alerts ?? EMPTY_ALERTS;
   } catch {
     return EMPTY_ALERTS;
+  }
+};
+
+// Safe selector that handles missing langGraph slice (e.g., in tests)
+const selectLangGraphNodesSafe = (state: RootState): LangGraphNode[] => {
+  try {
+    return selectLangGraphNodes(state) ?? EMPTY_LANGGRAPH_NODES;
+  } catch {
+    return EMPTY_LANGGRAPH_NODES;
   }
 };
 
@@ -67,16 +81,11 @@ export function DevToolsWebSocketObserver({
   const { registerEvent } = useTimelineContext();
 
   // Get bridge handlers
-  // Note: handleLangGraphNode is available but unused until LangGraph
-  // node events are dispatched from chat components to Redux
-  const {
-    handleTraceSpan,
-    handleAlert,
-    handleLangGraphNode: _handleLangGraphNode,
-  } = useDevToolsWebSocketBridge({
-    enabled,
-    registerEvent,
-  });
+  const { handleTraceSpan, handleAlert, handleLangGraphNode } =
+    useDevToolsWebSocketBridge({
+      enabled,
+      registerEvent,
+    });
 
   // Observe trace spans
   const { spans } = useTraceWebSocket({ autoConnect: enabled });
@@ -84,9 +93,13 @@ export function DevToolsWebSocketObserver({
   // Observe alerts from Redux (with safe fallback for tests)
   const alerts = useAppSelector(selectAlertsSafe);
 
+  // Observe LangGraph nodes from Redux
+  const langGraphNodes = useAppSelector(selectLangGraphNodesSafe);
+
   // Track processed IDs to avoid duplicates
   const processedSpanIds = useRef<Set<string>>(new Set());
   const processedAlertIds = useRef<Set<string>>(new Set());
+  const processedNodeIds = useRef<Set<string>>(new Set());
 
   // Process new trace spans
   useEffect(() => {
@@ -138,11 +151,27 @@ export function DevToolsWebSocketObserver({
     }
   }, [enabled, alerts, handleAlert]);
 
-  // Note: LangGraph node observation requires useStreamingChat which
-  // is used in chat components. To integrate LangGraph nodes:
-  // 1. Chat components could dispatch LangGraph events to Redux
-  // 2. Or a shared context could be used across chat and DevTools
-  // For now, this observer handles trace spans and alerts.
+  // Process new LangGraph nodes from Redux
+  useEffect(() => {
+    if (!enabled) return;
+
+    for (const node of langGraphNodes) {
+      if (!processedNodeIds.current.has(node.id)) {
+        processedNodeIds.current.add(node.id);
+
+        handleLangGraphNode({
+          id: node.id,
+          name: node.name,
+          type: node.type,
+          status: node.status,
+          startTime: node.startTime,
+          endTime: node.endTime,
+          duration: node.duration,
+          output: node.output,
+        });
+      }
+    }
+  }, [enabled, langGraphNodes, handleLangGraphNode]);
 
   // Render children if provided, otherwise null
   return children ?? null;

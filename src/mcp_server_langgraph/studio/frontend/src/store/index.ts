@@ -36,6 +36,7 @@ import alertReducer, { initializeSoundFromStorage } from "./slices/alertSlice";
 import disclosureReducer from "./slices/disclosureSlice";
 import nudgeReducer from "./slices/nudgeSlice";
 import devToolsReducer from "./slices/devToolsSlice";
+import langGraphReducer from "./slices/langGraphSlice";
 
 // =============================================================================
 // Listener Middleware for Cross-Slice Side Effects
@@ -97,6 +98,8 @@ export const store = configureStore({
     nudge: nudgeReducer,
     // DevTools panel state (Chrome DevTools-like debugging)
     devTools: devToolsReducer,
+    // LangGraph execution events (for DevTools time-travel debugging)
+    langGraph: langGraphReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()

@@ -99,8 +99,8 @@ export function AnalyticsDashboardPage(): React.ReactElement {
               <DimensionCard
                 key={dim.dimension}
                 dimension={dim.dimension}
-                score={dim.overallScore}
-                hasData={dim.hasData}
+                score={dim.score}
+                hasData={dim.samples > 0}
               />
             ))}
           </section>

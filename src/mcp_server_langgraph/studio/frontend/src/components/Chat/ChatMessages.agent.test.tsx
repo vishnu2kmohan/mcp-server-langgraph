@@ -1,14 +1,36 @@
 /**
  * ChatMessages Agent Execution Tests
  *
- * Tests for AgentExecutionTrace with LangGraph node visualization.
- * Split from ChatMessages.integration.test.tsx for memory optimization.
+ * =============================================================================
+ * DEPRECATED - SKIPPED DUE TO OOM/HANG ISSUES
+ * =============================================================================
  *
- * Note: This file uses Redux Provider and API mocking for AgentExecutionTracePanel.
+ * These tests are DEPRECATED in favor of AgentExecutionTracePanel.test.tsx.
+ * Reason: The lazy-loaded AgentExecutionTracePanel causes OOM hangs when
+ * testing through ChatMessages integration, even with code splitting.
+ *
+ * COVERAGE: All 28 LangGraph visualization tests are in:
+ *   src/components/Chat/AgentExecutionTracePanel.test.tsx
+ *
+ * This file is kept for reference but tests are skipped. If lazy-loading
+ * stability improves in future Vitest versions, these can be re-enabled.
+ *
+ * Historical context:
+ * - AgentExecutionTracePanel is lazy-loaded in ChatMessages.tsx
+ * - Tests use async/await patterns to handle Suspense boundary loading
+ * - Memory consumption was ~11GB causing worker OOM in fork pool
+ *
+ * =============================================================================
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ChatMessages } from "./ChatMessages";
@@ -58,9 +80,9 @@ const renderWithProvider = (ui: React.ReactElement) => {
   return render(ui, { wrapper: ReduxWrapper });
 };
 
-// Skip these tests due to OOM - AgentExecutionTracePanel loads heavy dependencies
-// TODO: Investigate memory usage of AgentExecutionTracePanel and optimize
-describe.skip("ChatMessages AgentExecutionTrace", () => {
+// SKIPPED: Tests cause OOM/hang issues with lazy-loaded AgentExecutionTracePanel.
+// See AgentExecutionTracePanel.test.tsx for comprehensive coverage (28 tests).
+describe.skip("ChatMessages AgentExecutionTrace (DEPRECATED - see header)", () => {
   const mockMessagesForTrace = [
     {
       id: "msg-1",
@@ -76,7 +98,7 @@ describe.skip("ChatMessages AgentExecutionTrace", () => {
     vi.clearAllMocks();
   });
 
-  it("should render agent execution trace panel when provided", () => {
+  it("should render agent execution trace panel when provided", async () => {
     renderWithProvider(
       <ChatMessages
         messages={mockMessagesForTrace}
@@ -92,10 +114,13 @@ describe.skip("ChatMessages AgentExecutionTrace", () => {
     const toggleButton = screen.getByLabelText("Toggle agent execution trace");
     fireEvent.click(toggleButton);
 
-    expect(screen.getByText(/Execution Steps/i)).toBeInTheDocument();
+    // Wait for lazy-loaded component to render
+    await waitFor(() => {
+      expect(screen.getByText(/Execution Steps/i)).toBeInTheDocument();
+    });
   });
 
-  it("should display LangGraph nodes when provided in trace", () => {
+  it("should display LangGraph nodes when provided in trace", async () => {
     renderWithProvider(
       <ChatMessages
         messages={mockMessagesForTrace}
@@ -136,15 +161,18 @@ describe.skip("ChatMessages AgentExecutionTrace", () => {
     const toggleButton = screen.getByLabelText("Toggle agent execution trace");
     fireEvent.click(toggleButton);
 
-    expect(
-      screen.getByTestId("langgraph-node-visualization"),
-    ).toBeInTheDocument();
+    // Wait for lazy-loaded component to render
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("langgraph-node-visualization"),
+      ).toBeInTheDocument();
+    });
     expect(screen.getByText("Start")).toBeInTheDocument();
     expect(screen.getByText("Analyze Input")).toBeInTheDocument();
     expect(screen.getByText("Route Decision")).toBeInTheDocument();
   });
 
-  it("should highlight the current active node", () => {
+  it("should highlight the current active node", async () => {
     renderWithProvider(
       <ChatMessages
         messages={mockMessagesForTrace}
@@ -173,11 +201,14 @@ describe.skip("ChatMessages AgentExecutionTrace", () => {
     const toggleButton = screen.getByLabelText("Toggle agent execution trace");
     fireEvent.click(toggleButton);
 
-    const activeNode = screen.getByTestId("node-process");
-    expect(activeNode).toHaveClass("ring-2");
+    // Wait for lazy-loaded component to render
+    await waitFor(() => {
+      const activeNode = screen.getByTestId("node-process");
+      expect(activeNode).toHaveClass("ring-2");
+    });
   });
 
-  it("should display different node type icons", () => {
+  it("should display different node type icons", async () => {
     renderWithProvider(
       <ChatMessages
         messages={mockMessagesForTrace}
@@ -207,12 +238,15 @@ describe.skip("ChatMessages AgentExecutionTrace", () => {
     const toggleButton = screen.getByLabelText("Toggle agent execution trace");
     fireEvent.click(toggleButton);
 
-    expect(screen.getByTestId("node-type-start")).toBeInTheDocument();
+    // Wait for lazy-loaded component to render
+    await waitFor(() => {
+      expect(screen.getByTestId("node-type-start")).toBeInTheDocument();
+    });
     expect(screen.getByTestId("node-type-tool")).toBeInTheDocument();
     expect(screen.getByTestId("node-type-conditional")).toBeInTheDocument();
   });
 
-  it("should show node status indicators", () => {
+  it("should show node status indicators", async () => {
     renderWithProvider(
       <ChatMessages
         messages={mockMessagesForTrace}
@@ -232,13 +266,16 @@ describe.skip("ChatMessages AgentExecutionTrace", () => {
     const toggleButton = screen.getByLabelText("Toggle agent execution trace");
     fireEvent.click(toggleButton);
 
-    expect(screen.getByTestId("node-status-completed")).toBeInTheDocument();
+    // Wait for lazy-loaded component to render
+    await waitFor(() => {
+      expect(screen.getByTestId("node-status-completed")).toBeInTheDocument();
+    });
     expect(screen.getByTestId("node-status-running")).toBeInTheDocument();
     expect(screen.getByTestId("node-status-error")).toBeInTheDocument();
     expect(screen.getByTestId("node-status-pending")).toBeInTheDocument();
   });
 
-  it("should display edge connections between nodes", () => {
+  it("should display edge connections between nodes", async () => {
     renderWithProvider(
       <ChatMessages
         messages={mockMessagesForTrace}
@@ -257,10 +294,13 @@ describe.skip("ChatMessages AgentExecutionTrace", () => {
     const toggleButton = screen.getByLabelText("Toggle agent execution trace");
     fireEvent.click(toggleButton);
 
-    expect(screen.getByTestId("edge-a-to-b")).toBeInTheDocument();
+    // Wait for lazy-loaded component to render
+    await waitFor(() => {
+      expect(screen.getByTestId("edge-a-to-b")).toBeInTheDocument();
+    });
   });
 
-  it("should show conditional edge labels", () => {
+  it("should show conditional edge labels", async () => {
     renderWithProvider(
       <ChatMessages
         messages={mockMessagesForTrace}
@@ -298,11 +338,14 @@ describe.skip("ChatMessages AgentExecutionTrace", () => {
     const toggleButton = screen.getByLabelText("Toggle agent execution trace");
     fireEvent.click(toggleButton);
 
-    expect(screen.getByText("passed")).toBeInTheDocument();
+    // Wait for lazy-loaded component to render
+    await waitFor(() => {
+      expect(screen.getByText("passed")).toBeInTheDocument();
+    });
     expect(screen.getByText("failed")).toBeInTheDocument();
   });
 
-  it("should fallback to simple steps view when no nodes provided", () => {
+  it("should fallback to simple steps view when no nodes provided", async () => {
     renderWithProvider(
       <ChatMessages
         messages={mockMessagesForTrace}
@@ -321,7 +364,10 @@ describe.skip("ChatMessages AgentExecutionTrace", () => {
     const toggleButton = screen.getByLabelText("Toggle agent execution trace");
     fireEvent.click(toggleButton);
 
-    expect(screen.getByText("Processing")).toBeInTheDocument();
+    // Wait for lazy-loaded component to render
+    await waitFor(() => {
+      expect(screen.getByText("Processing")).toBeInTheDocument();
+    });
     expect(
       screen.queryByTestId("langgraph-node-visualization"),
     ).not.toBeInTheDocument();

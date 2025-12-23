@@ -625,12 +625,20 @@
           "this": {}
         },
         "viewer": {
-          "computedUserset": {"relation": "owner"}
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}}
+            ]
+          }
         }
       },
       "metadata": {
         "relations": {
           "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
             "directly_related_user_types": [{"type": "user"}]
           }
         }
@@ -766,6 +774,25 @@
             "directly_related_user_types": [{"type": "user"}]
           },
           "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "mcp",
+      "description": "MCP WebSocket protocol access for /api/v1/ws/mcp",
+      "relations": {
+        "user": {
+          "this": {}
+        },
+        "viewer": {
+          "computedUserset": {"relation": "user"}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "user": {
             "directly_related_user_types": [{"type": "user"}]
           }
         }

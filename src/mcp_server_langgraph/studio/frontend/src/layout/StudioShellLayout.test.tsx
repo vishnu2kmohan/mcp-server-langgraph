@@ -232,7 +232,7 @@ vi.mock("../hooks/usePersonaRouting", () => ({
   usePersonaRouting: () => ({
     isAuthenticated: true,
     persona: "user",
-    defaultRoute: "/studio/v2/chat",
+    defaultRoute: "/studio/chat",
     canAccessRoute: true,
   }),
 }));
@@ -390,7 +390,7 @@ vi.mock("react-router", () => {
   return {
     MemoryRouter: MockMemoryRouter,
     useLocation: () => ({
-      pathname: "/studio/v2/chat",
+      pathname: "/studio/chat",
       search: "",
       hash: "",
       state: null,
@@ -398,7 +398,7 @@ vi.mock("react-router", () => {
     useNavigate: () => vi.fn(),
     useParams: () => ({}),
     useRouteLoaderData: (id: string) => {
-      if (id === "studio-v2") {
+      if (id === "studio") {
         return {
           sessions: [
             {

@@ -597,18 +597,8 @@ describe("useAIEmptyState", () => {
 
   describe("timeout functionality", () => {
     // Note: RTK Query handles request timeouts internally, so custom timeout
-    // functionality is not supported. These tests verify fallback still works.
-    it.skip("should timeout and fallback when request takes too long", async () => {
-      // Skipped: RTK Query manages request lifecycle internally.
-      // Custom timeoutMs is not supported with RTK Query mutations.
-      // The fallback behavior still works for network errors.
-    });
-
-    it.skip("should use fallback config on timeout", async () => {
-      // Skipped: RTK Query manages request lifecycle internally.
-      // Custom timeoutMs is not supported with RTK Query mutations.
-      // Fallback config is tested in other error handling tests.
-    });
+    // functionality is not supported. Error handling and fallback behavior
+    // is tested in the "error handling" describe block above.
 
     it("should succeed if response arrives before timeout", async () => {
       // API schema: { title, description, action_type, action_target, icon?, priority }

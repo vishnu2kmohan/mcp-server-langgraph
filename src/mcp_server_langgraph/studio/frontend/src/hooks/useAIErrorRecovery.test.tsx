@@ -427,54 +427,8 @@ describe("useAIErrorRecovery", () => {
   describe("timeout handling", () => {
     // Note: RTK Query manages its own request lifecycle and doesn't support
     // custom timeout via AbortController like the raw fetch implementation did.
-    // These tests are skipped as timeout is now handled by RTK Query internally.
-    it.skip("should timeout after default 5000ms - RTK Query manages request lifecycle", async () => {
-      server.use(
-        http.post("/api/v1/ai/errors/analyze", async () => {
-          await delay(6000);
-          return HttpResponse.json(mockNetworkErrorResponse);
-        }),
-      );
-
-      const { result } = renderHook(() => useAIErrorRecovery(), {
-        wrapper: createWrapper(store),
-      });
-
-      const error = new Error("Test error");
-      let analysisResult: AIErrorAnalysis | null = null;
-
-      await act(async () => {
-        analysisResult = await result.current.analyze(error);
-      });
-
-      expect(analysisResult).toBeNull();
-    }, 10000);
-
-    it.skip("should respect custom timeout option - RTK Query manages request lifecycle", async () => {
-      server.use(
-        http.post("/api/v1/ai/errors/analyze", async () => {
-          await delay(2000);
-          return HttpResponse.json(mockNetworkErrorResponse);
-        }),
-      );
-
-      const options: UseAIErrorRecoveryOptions = {
-        timeoutMs: 1000,
-      };
-
-      const { result } = renderHook(() => useAIErrorRecovery(options), {
-        wrapper: createWrapper(store),
-      });
-
-      const error = new Error("Test error");
-      let analysisResult: AIErrorAnalysis | null = null;
-
-      await act(async () => {
-        analysisResult = await result.current.analyze(error);
-      });
-
-      expect(analysisResult).toBeNull();
-    });
+    // Timeout is now handled by RTK Query internally. Error scenarios are
+    // tested in the "error handling" describe block above.
 
     it("should complete successfully with fast response", async () => {
       server.use(

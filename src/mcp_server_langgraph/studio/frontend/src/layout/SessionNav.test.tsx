@@ -29,7 +29,7 @@ vi.mock("react-router", async () => {
     useNavigate: () => mockNavigate,
     useParams: () => ({ sessionId: "session-1" }),
     useRouteLoaderData: (id: string) => {
-      if (id === "studio-v2") {
+      if (id === "studio") {
         return {
           sessions: mockSessions,
         };

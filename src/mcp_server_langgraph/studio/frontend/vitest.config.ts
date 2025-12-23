@@ -137,9 +137,9 @@ export default defineConfig({
 
     // Vitest 4: execArgv is a top-level option that applies to all worker processes
     // Per-worker heap limits to prevent OOM in individual workers
-    // Each worker gets 12GB max heap - complex test files with many mocks need more memory
-    // With 2 max workers, max total usage is ~24GB which fits within 32GB system memory
-    execArgv: ["--max-old-space-size=12288"],
+    // Each worker gets 16GB max heap - complex test files with many mocks need more memory
+    // With 1 max worker in sharded mode (VITEST_MAX_FORKS=1), max total usage is ~16GB
+    execArgv: ["--max-old-space-size=16384"],
 
     // Each test file gets its own environment (better isolation)
     isolate: true,
@@ -155,7 +155,7 @@ export default defineConfig({
     // Restart workers after running this many tests to prevent memory accumulation
     // This helps prevent OOM by recycling workers with fresh heap
     restartWorkers: true,
-    restartWorkersAfter: 2, // Restart after every 2 test files to clear accumulated memory
+    restartWorkersAfter: 1, // Restart after every test file to clear accumulated memory
 
     // Teardown timeout - give workers time to clean up gracefully
     teardownTimeout: 10000, // Increased from 5s to 10s for GC time

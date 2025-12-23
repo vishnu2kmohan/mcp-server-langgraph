@@ -240,4 +240,85 @@ describe("usePersonaCacheInvalidation", () => {
       expect(clearAllAICache).not.toHaveBeenCalled();
     });
   });
+
+  describe("backend cache invalidation", () => {
+    it("should call backend API when invalidateBackend is true", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ deleted_count: 3 }),
+      });
+      global.fetch = mockFetch;
+
+      const store = createTestStore();
+      const { result } = renderHook(
+        () => usePersonaCacheInvalidation({ invalidateBackend: true }),
+        { wrapper: createWrapper(store) },
+      );
+
+      await act(async () => {
+        await result.current.invalidateNow();
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/api/v1/cache/prefix/"),
+        expect.objectContaining({
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    });
+
+    it("should not call backend API when invalidateBackend is false", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ deleted_count: 0 }),
+      });
+      global.fetch = mockFetch;
+
+      const store = createTestStore();
+      const { result } = renderHook(
+        () => usePersonaCacheInvalidation({ invalidateBackend: false }),
+        { wrapper: createWrapper(store) },
+      );
+
+      await act(async () => {
+        await result.current.invalidateNow();
+      });
+
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("should handle backend API errors gracefully", async () => {
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+      global.fetch = mockFetch;
+
+      const store = createTestStore();
+      const { result } = renderHook(
+        () => usePersonaCacheInvalidation({ invalidateBackend: true }),
+        { wrapper: createWrapper(store) },
+      );
+
+      // Should not throw
+      await act(async () => {
+        await result.current.invalidateNow();
+      });
+
+      // Should log warning
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Backend invalidation failed"),
+        expect.any(Error),
+      );
+
+      // Should still update lastInvalidatedAt
+      expect(result.current.lastInvalidatedAt).not.toBeNull();
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
 });

@@ -69,17 +69,36 @@ let mockAlerts: Array<{
   message: string;
   started_at: string;
 }> = [];
+
+// Mock LangGraph nodes from Redux
+let mockLangGraphNodes: Array<{
+  id: string;
+  sessionId: string;
+  name: string;
+  type: string;
+  status: string;
+  startTime: number;
+}> = [];
+
+// Create mock state that both selectors can use
+const getMockState = () => ({
+  alerts: { alerts: mockAlerts },
+  langGraph: { nodes: mockLangGraphNodes, currentSessionId: null },
+});
+
 vi.mock("../../../store/hooks", () => ({
-  useAppSelector: (selector: unknown) => {
-    // Return mock alerts when selector is for alerts
-    if (typeof selector === "function") {
-      return mockAlerts;
-    }
-    return [];
+  useAppSelector: (selector: (state: unknown) => unknown) => {
+    // Call the actual selector with mock state
+    return selector(getMockState());
   },
 }));
 vi.mock("../../../store/slices/alertSlice", () => ({
-  selectAlerts: (_state: unknown) => mockAlerts,
+  selectAlerts: (state: { alerts?: { alerts?: unknown[] } }) =>
+    state?.alerts?.alerts ?? [],
+}));
+vi.mock("../../../store/slices/langGraphSlice", () => ({
+  selectLangGraphNodes: (state: { langGraph?: { nodes?: unknown[] } }) =>
+    state?.langGraph?.nodes ?? [],
 }));
 
 // =============================================================================
@@ -91,6 +110,7 @@ describe("DevToolsWebSocketObserver", () => {
     vi.clearAllMocks();
     mockSpans = [];
     mockAlerts = [];
+    mockLangGraphNodes = [];
   });
 
   afterEach(() => {
@@ -211,6 +231,58 @@ describe("DevToolsWebSocketObserver", () => {
       render(<DevToolsWebSocketObserver enabled={false} />);
 
       expect(mockHandleTraceSpan).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("LangGraph node observation", () => {
+    it("should call handleLangGraphNode when new nodes appear in Redux", async () => {
+      render(<DevToolsWebSocketObserver />);
+
+      // Simulate new LangGraph node in Redux
+      mockLangGraphNodes = [
+        {
+          id: "node-1",
+          sessionId: "session-123",
+          name: "AgentNode",
+          type: "agent",
+          status: "running",
+          startTime: 1700000000000,
+        },
+      ];
+
+      const { rerender } = render(<DevToolsWebSocketObserver />);
+      rerender(<DevToolsWebSocketObserver />);
+
+      await waitFor(() => {
+        expect(mockHandleLangGraphNode).toHaveBeenCalled();
+      });
+    });
+
+    it("should not call handleLangGraphNode for already processed nodes", async () => {
+      mockLangGraphNodes = [
+        {
+          id: "node-1",
+          sessionId: "session-123",
+          name: "AgentNode",
+          type: "agent",
+          status: "completed",
+          startTime: 1700000000000,
+        },
+      ];
+
+      const { rerender } = render(<DevToolsWebSocketObserver />);
+
+      // First render should process the node
+      await waitFor(() => {
+        expect(mockHandleLangGraphNode).toHaveBeenCalledTimes(1);
+      });
+
+      // Re-render with same nodes
+      mockHandleLangGraphNode.mockClear();
+      rerender(<DevToolsWebSocketObserver />);
+
+      // Should not call again for same node
+      expect(mockHandleLangGraphNode).not.toHaveBeenCalled();
     });
   });
 });

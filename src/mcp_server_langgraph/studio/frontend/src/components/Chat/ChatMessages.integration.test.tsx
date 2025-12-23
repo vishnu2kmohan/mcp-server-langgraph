@@ -4,10 +4,12 @@
  * Tests for message actions and LLM thinking trace.
  * Split from ChatMessages.test.tsx for memory optimization.
  *
- * Related test files:
- * - ChatMessages.test.tsx - Basic display, streaming, accessibility
- * - ChatMessages.artifacts.test.tsx - Code blocks, diagrams, charts
- * - ChatMessages.agent.test.tsx - AI suggestions, agent execution trace
+ * See ChatMessages.test.tsx header for complete TEST ARCHITECTURE documentation.
+ *
+ * This file covers:
+ * - Message action callbacks (edit, regenerate, copy, feedback)
+ * - LLM thinking trace display
+ * - Edit mode functionality
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";

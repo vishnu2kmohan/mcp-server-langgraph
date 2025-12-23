@@ -9,6 +9,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useStreamingChat } from "./useStreamingChat";
 
+// Mock useAppDispatch for Redux integration tests
+const mockDispatch = vi.fn();
+vi.mock("../store/hooks", () => ({
+  useAppDispatch: () => mockDispatch,
+  useAppSelector: vi.fn(),
+}));
+
 // Helper to create a mock ReadableStream that yields SSE chunks
 function createMockSSEStream(chunks: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -838,6 +845,85 @@ describe("useStreamingChat", () => {
       expect(result.current.langgraphNodes).toEqual([]);
       expect(result.current.langgraphEdges).toEqual([]);
       expect(result.current.currentNode).toBeNull();
+    });
+
+    it("should dispatch addNode to Redux when langgraph node is received", async () => {
+      mockDispatch.mockClear();
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"langgraph_node":{"id":"node-1","name":"Agent","type":"agent","status":"running"}}\n\n',
+          'data: {"langgraph_node":{"id":"node-1","name":"Agent","type":"agent","status":"completed","duration":500}}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      // Should have dispatched addNode actions with sessionId
+      expect(mockDispatch).toHaveBeenCalled();
+      const addNodeCalls = mockDispatch.mock.calls.filter(
+        (call) => call[0]?.type === "langGraph/addNode",
+      );
+      expect(addNodeCalls.length).toBeGreaterThan(0);
+
+      // Verify sessionId is added to dispatched nodes
+      const firstNodePayload = addNodeCalls[0][0].payload;
+      expect(firstNodePayload.sessionId).toBe("session-123");
+      expect(firstNodePayload.id).toBe("node-1");
+      expect(firstNodePayload.name).toBe("Agent");
+    });
+
+    it("should dispatch clearNodes when starting new stream", async () => {
+      mockDispatch.mockClear();
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Response"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      // Should have dispatched clearNodes for this session
+      const clearNodesCalls = mockDispatch.mock.calls.filter(
+        (call) => call[0]?.type === "langGraph/clearNodes",
+      );
+      expect(clearNodesCalls.length).toBe(1);
+      expect(clearNodesCalls[0][0].payload).toBe("session-123");
+    });
+
+    it("should dispatch setCurrentSessionId when starting stream", async () => {
+      mockDispatch.mockClear();
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Response"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-456", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      // Should have dispatched setCurrentSessionId
+      const setSessionCalls = mockDispatch.mock.calls.filter(
+        (call) => call[0]?.type === "langGraph/setCurrentSessionId",
+      );
+      expect(setSessionCalls.length).toBe(1);
+      expect(setSessionCalls[0][0].payload).toBe("session-456");
     });
   });
 });

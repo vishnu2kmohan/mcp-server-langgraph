@@ -364,8 +364,8 @@ services:
       test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
       interval: 3s  # Codex Fix: interval must be >= timeout
       timeout: 3s
-      retries: 15
-      start_period: 15s  # Increased from 5s to allow Keycloak OIDC endpoints to be fully ready
+      retries: 20  # Increased to tolerate Keycloak OIDC endpoint delays
+      start_period: 30s  # Allow time for OIDC discovery and token validation from Keycloak
     deploy:
       resources:
         limits:
@@ -441,6 +441,11 @@ services:
         reservations:
           cpus: '0.05'
           memory: 64M
+    volumes:
+      # Mount the local seed script to use the latest version during development
+      - ./scripts/docker/seed_openfga.py:/app/seed_openfga.py:ro
+      # Mount config directory for model and tuples updates without rebuilding
+      - ./config/openfga:/app/config/openfga:ro
     networks:
       - mcp-test-network
     restart: "no"  # Run once and exit
@@ -1253,8 +1258,8 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
       interval: 5s
       timeout: 5s
-      retries: 20
-      start_period: 30s  # Allow time for OIDC token acquisition and dependency connections
+      retries: 30  # Increased to tolerate Keycloak OIDC endpoint delays (150s max)
+      start_period: 45s  # Allow time for OIDC token acquisition and dependency connections
     init: true  # Proper process cleanup for Python app
     deploy:
       resources:
@@ -1935,8 +1940,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/api/authz-proxy/health"]
       interval: 5s
-      timeout: 3s
-      retries: 10
+      timeout: 5s  # Increased to match interval
+      retries: 20  # Increased to tolerate Keycloak OIDC endpoint delays (100s max)
+      start_period: 30s  # Allow time for OIDC token acquisition from Keycloak
     init: true
     deploy:
       resources:

@@ -260,9 +260,12 @@ def load_tuples_from_config() -> list[dict[str, str]]:
 
         raw_tuples = config.get("tuples", [])
 
-        # Filter out _comment keys and keep only user/relation/object
+        # Filter out comment-only entries and keep only valid tuples with user/relation/object
         tuples = []
         for t in raw_tuples:
+            # Skip comment-only entries that don't have the required fields
+            if "user" not in t or "relation" not in t or "object" not in t:
+                continue
             tuples.append(
                 {
                     "user": t["user"],

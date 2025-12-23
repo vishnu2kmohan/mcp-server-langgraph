@@ -418,7 +418,7 @@ test.describe("Persona Access Matrix Verification", () => {
       await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should redirect away from admin
-      await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
+      await expect(page).not.toHaveURL(/\/studio\/admin$/);
 
       await context.close();
     });
@@ -430,7 +430,7 @@ test.describe("Persona Access Matrix Verification", () => {
       await page.goto("/studio/audit", { waitUntil: "networkidle" });
 
       // Should not redirect away
-      await expect(page).toHaveURL(/\/studio\/v2\/audit/);
+      await expect(page).toHaveURL(/\/studio\/audit/);
       await expect(page.locator("body")).not.toContainText("Access Denied");
 
       await context.close();
@@ -508,7 +508,7 @@ test.describe("Persona Access Matrix Verification", () => {
       await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should not be on admin page
-      await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
+      await expect(page).not.toHaveURL(/\/studio\/admin$/);
 
       await context.close();
     });
@@ -520,7 +520,7 @@ test.describe("Persona Access Matrix Verification", () => {
       await page.goto("/studio/audit", { waitUntil: "networkidle" });
 
       // Should not be on audit page
-      await expect(page).not.toHaveURL(/\/studio\/v2\/audit$/);
+      await expect(page).not.toHaveURL(/\/studio\/audit$/);
 
       await context.close();
     });
@@ -654,7 +654,7 @@ test.describe("Persona Access Matrix Verification", () => {
         await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
         // Non-admin should not stay on admin route
-        await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
+        await expect(page).not.toHaveURL(/\/studio\/admin$/);
 
         await page.close();
       }

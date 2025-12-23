@@ -79,8 +79,26 @@ export function usePersonaCacheInvalidation(
       // Optionally call backend to invalidate user-specific cache
       if (invalidateBackend && userId) {
         try {
-          // TODO: Add API call when endpoint is available
-          // await invalidateUserCache({ userId });
+          // Delete all cache entries for this user's prefix
+          const userCachePrefix = `user:${userId}:`;
+          const response = await fetch(
+            `/api/v1/cache/prefix/${encodeURIComponent(userCachePrefix)}`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error(`Cache invalidation failed: ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.debug(
+            `[PersonaCacheInvalidation] Cleared ${result.deleted_count} backend cache entries`,
+          );
         } catch (error) {
           console.warn(
             "[PersonaCacheInvalidation] Backend invalidation failed:",

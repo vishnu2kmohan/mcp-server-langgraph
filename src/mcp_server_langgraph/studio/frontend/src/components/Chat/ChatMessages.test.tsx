@@ -1,12 +1,24 @@
 /**
  * ChatMessages Basic Tests
  *
- * Tests for basic chat message display, streaming, and accessibility.
- * Split from original file for memory optimization.
+ * =============================================================================
+ * TEST ARCHITECTURE - ChatMessages Component Family
+ * =============================================================================
  *
- * Related test files:
- * - ChatMessages.artifacts.test.tsx - Code blocks, diagrams, charts
- * - ChatMessages.integration.test.tsx - Message actions, thinking trace, agent execution
+ * This file tests basic message display, streaming, and accessibility.
+ * The ChatMessages tests are split across multiple files for memory optimization.
+ *
+ * TEST FILE FAMILY:
+ * - ChatMessages.test.tsx (this file)     - Basic display, streaming, accessibility
+ * - ChatMessages.artifacts.test.tsx       - Code blocks, diagrams, charts
+ * - ChatMessages.integration.test.tsx     - Message actions, thinking trace
+ * - ChatMessages.suggestions.test.tsx     - AI follow-up suggestions
+ * - ChatMessages.agent.test.tsx           - DEPRECATED: See AgentExecutionTracePanel.test.tsx
+ *
+ * RELATED COMPONENT TESTS:
+ * - AgentExecutionTracePanel.test.tsx (28 tests) - LangGraph visualization, trace AI
+ * - MarkdownContent.test.tsx              - Markdown rendering
+ * - CodeBlock.test.tsx                    - Syntax highlighting
  */
 
 import { describe, it, expect, afterEach, vi } from "vitest";
