@@ -35,11 +35,25 @@ import {
 import { cn } from "../../../utils/cn";
 import { useConsoleEntries } from "../hooks/useConsoleEntries";
 import { exportConsoleToJSON, exportConsoleToCSV } from "../utils/export";
+import {
+  useBatchedUpdates,
+  useStableCallback,
+} from "../utils/performance";
 import type {
   ConsoleTabProps,
   ConsoleEntry,
   ConsoleEntrySource,
 } from "../types";
+
+// =============================================================================
+// Performance Constants
+// =============================================================================
+
+/** Initial batch size for rendering entries (improves initial render time) */
+const INITIAL_BATCH_SIZE = 100;
+
+/** Enable batched rendering for lists larger than this threshold */
+const BATCHING_THRESHOLD = 50;
 
 // =============================================================================
 // Constants
@@ -297,10 +311,35 @@ export function ConsoleTab({
   /**
    * Get display entries.
    */
-  const displayEntries = useMemo(() => {
+  const allEntries = useMemo(() => {
     // Use filtered entries if filter is applied, otherwise use all entries
     return filteredEntries.length > 0 ? filteredEntries : entries;
   }, [filteredEntries, entries]);
+
+  /**
+   * Use batched updates for large lists to improve initial render performance.
+   * Only applies batching when list exceeds threshold.
+   */
+  const shouldBatch = allEntries.length > BATCHING_THRESHOLD;
+  const { displayedItems: batchedEntries, hasMore, loadMore } = useBatchedUpdates(
+    allEntries,
+    INITIAL_BATCH_SIZE,
+  );
+
+  // Use batched entries for large lists, otherwise use all entries
+  const displayEntries = shouldBatch ? batchedEntries : allEntries;
+
+  /**
+   * Load more entries when scrolling near bottom.
+   */
+  const stableLoadMore = useStableCallback(loadMore);
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const nearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 100;
+    if (nearBottom && hasMore) {
+      stableLoadMore();
+    }
+  }, [hasMore, stableLoadMore]);
 
   return (
     <div
