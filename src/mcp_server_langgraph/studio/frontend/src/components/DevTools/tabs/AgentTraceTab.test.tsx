@@ -5,7 +5,7 @@
  * Displays LangGraph agent execution traces.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -51,11 +51,6 @@ const mockTrace: AgentExecutionTrace = {
     total: 150,
   },
   rawOutput: "Agent completed successfully",
-};
-
-const _mockEmptyTrace: AgentExecutionTrace = {
-  nodes: [],
-  steps: [],
 };
 
 // =============================================================================

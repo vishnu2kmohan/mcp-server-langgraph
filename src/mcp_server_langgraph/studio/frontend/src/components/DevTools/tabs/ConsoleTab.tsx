@@ -207,7 +207,7 @@ export function ConsoleTab({
   onFilterChange,
   contextEntityId,
 }: ConsoleTabProps) {
-  const { entries, filteredEntries, clearConsole, counts } = useConsoleEntries({
+  const { entries, filteredEntries, clearConsole } = useConsoleEntries({
     filter,
     contextEntityId,
   });
