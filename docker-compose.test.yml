@@ -1192,6 +1192,54 @@ services:
       - FF_ENABLE_SDK_HOOKS=true        # SDK hook system for tool lifecycle
       - FF_ENABLE_SDK_FILE_CHECKPOINTING=true # File rollback capability
       - FF_ENABLE_SDK_INTERRUPT=true    # Graceful interrupt support
+      # -----------------------------------------------------------------------
+      # Studio AI Orchestration (StudioShell AI Enhancement)
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_STUDIO_AI=true                   # Master toggle for Studio AI
+      - FF_ENABLE_SESSION_INTELLIGENCE=true        # Session summarize, group, similarity
+      - FF_ENABLE_CONVERSATION_INTELLIGENCE=true   # Intent detection, context optimization
+      - FF_ENABLE_CANVAS_INTELLIGENCE=true         # Artifact suggestions, code analysis
+      - FF_ENABLE_DIAGRAM_INTELLIGENCE=true        # Diagram analyze, convert to code
+      - FF_ENABLE_TRACE_INTELLIGENCE=true          # Trace summarize, anomaly detection
+      - FF_ENABLE_HITL_AI=true                     # Risk assessment, decision history
+      - FF_ENABLE_GENUI=true                       # Generative UI components
+      # -----------------------------------------------------------------------
+      # UI Enhancement Features
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_INTERACTIVE_ARTIFACTS=true       # Interactive rendering (Sandpack, Mermaid)
+      - FF_ENABLE_URL_CONTENT_FETCH=true           # #URL content fetch
+      - FF_ENABLE_SLASH_COMMANDS=true              # Slash commands (/)
+      - FF_ENABLE_STYLE_PRESETS=true               # Response style presets
+      - FF_ENABLE_COMMAND_PALETTE=true             # Command palette (Cmd+K)
+      - FF_ENABLE_KEYBOARD_SHORTCUTS=true          # Customizable keyboard shortcuts
+      # -----------------------------------------------------------------------
+      # Experimental Features
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_EXPERIMENTAL_FEATURES=true       # Master switch for experimental
+      - FF_ENABLE_MULTI_AGENT_COLLABORATION=true   # Multi-agent coordination
+      - FF_ENABLE_TOOL_REFLECTION=true             # Agent tool usage analysis
+      # -----------------------------------------------------------------------
+      # DevTools AI Features
+      # -----------------------------------------------------------------------
+      - FF_DEVTOOLS_AI_INSIGHTS=true               # AI Insights tab in DevTools
+      - FF_DEVTOOLS_AI_LAYOUT=true                 # AI-powered layout suggestions
+      # -----------------------------------------------------------------------
+      # Agent HITL Features (explicit for visibility)
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_AGENT_HITL=true                  # Confidence-based human-in-the-loop
+      - FF_ENABLE_AGENT_HITL_PUSH_NOTIFICATIONS=true # Push notifications for approvals
+      - FF_ENABLE_AGENT_HITL_WEBSOCKET=true        # WebSocket for real-time updates
+      # -----------------------------------------------------------------------
+      # WebSocket Infrastructure (ADR-0068)
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_WEBSOCKET_NEW_BASE=true          # New WebSocketBase infrastructure
+      - FF_ENABLE_WEBSOCKET_SERVER_HEARTBEAT=true  # Server-initiated heartbeat
+      - FF_ENABLE_WEBSOCKET_ENHANCED_METRICS=true  # Enhanced WebSocket metrics
+      # -----------------------------------------------------------------------
+      # AI UX Master Switches
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_AI_UX=true                       # Master switch for AI UX features
+      - FF_ENABLE_AI_UX_PARALLEL_GRAPH=true        # Parallel graph execution
     # Map localhost to traefik-gateway so MCP server can resolve OIDC issuer URLs from Keycloak
     # OPENFGA_OIDC_ISSUER=http://localhost/authn/realms/default requires localhost to resolve to gateway
     # Same pattern as openfga-test (line 333-334) for consistent OIDC token acquisition
@@ -1228,6 +1276,8 @@ services:
       - "traefik.http.routers.mcp-api.entrypoints=web"
       - "traefik.http.routers.mcp-api.priority=10"
       - "traefik.http.services.mcp-api.loadbalancer.server.port=8000"
+      # WebSocket transport settings: disable buffering for real-time connections
+      - "traefik.http.services.mcp-api.loadbalancer.responseForwarding.flushInterval=-1"
       - "traefik.http.middlewares.mcp-strip.stripprefix.prefixes=/mcp"
       # NO forward-auth - MCP protocol requires 'token' parameter in tool calls
       - "traefik.http.routers.mcp-api.middlewares=mcp-strip"
@@ -1264,6 +1314,13 @@ services:
       - "traefik.http.routers.assets.priority=100"
       - "traefik.http.routers.assets.service=mcp-api"
       # NO forward-auth middleware - static assets are publicly accessible
+      # Route: /sounds/* -> mcp-server (NO AUTH for alert sounds)
+      # Alert sound files (critical-alert.wav, etc.) used by useAlertSound hook
+      - "traefik.http.routers.sounds.rule=PathPrefix(`/sounds`)"
+      - "traefik.http.routers.sounds.entrypoints=web"
+      - "traefik.http.routers.sounds.priority=100"
+      - "traefik.http.routers.sounds.service=mcp-api"
+      # NO forward-auth middleware - sound assets are publicly accessible
       # Route: /api/v1/auth/* -> mcp-server (NO AUTH)
       # Native OAuth2 endpoints (login, logout, callback, refresh, introspect, etc.)
       # These endpoints handle Keycloak OAuth2 flows directly without traefik-forward-auth

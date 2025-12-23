@@ -8,7 +8,7 @@
  * - Renders StudioShellLayout (new Canvas-style UI)
  *
  * When studio_canvas_shell is disabled:
- * - Renders Outlet directly (App.tsx wraps with AppShell)
+ * - Renders Outlet directly (child routes render without shell wrapper)
  *
  * This allows /studio/* to use either shell based on feature flag.
  */
@@ -79,7 +79,7 @@ export function StudioShellGuard() {
   }
 
   // When disabled, render Outlet directly
-  // App.tsx will wrap with AppShell for legacy rendering
+  // Child routes render without shell wrapper (legacy mode)
   return <Outlet />;
 }
 

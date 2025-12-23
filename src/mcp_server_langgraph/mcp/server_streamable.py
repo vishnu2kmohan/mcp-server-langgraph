@@ -2634,6 +2634,14 @@ if _studio_spa_handler:
     # Mount at /studio to match Traefik gateway routing and vite.config.ts base path
     app.mount("/studio", _studio_spa_handler, name="studio-spa")
 
+# Mount sound files at root /sounds/* (used by useAlertSound hook)
+# These are served without authentication to allow playback during alert scenarios
+_sounds_dir = _studio_frontend_dist / "sounds"
+if _sounds_dir.exists():
+    from starlette.staticfiles import StaticFiles
+
+    app.mount("/sounds", StaticFiles(directory=str(_sounds_dir)), name="sounds")
+
 
 def main() -> None:
     """Entry point for console script"""

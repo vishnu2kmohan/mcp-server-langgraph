@@ -219,6 +219,45 @@ export const router = createBrowserRouter(
                 },
               ],
             },
+            // Agents - standalone route (ActivityBar points here)
+            // Renders AgentsPage directly - admin/developer only
+            {
+              path: "agents",
+              element: (
+                <PersonaGuard allowedPersonas={["admin", "developer"]}>
+                  <Outlet />
+                </PersonaGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { AgentsPage } = await import("../pages/AgentsPage");
+                    return { Component: AgentsPage };
+                  },
+                },
+              ],
+            },
+            // Traces - observability traces view (ActivityBar points here)
+            // Renders ObservabilityPage with traces tab - admin/developer only
+            {
+              path: "traces",
+              element: (
+                <PersonaGuard allowedPersonas={["admin", "developer"]}>
+                  <Outlet />
+                </PersonaGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+              ],
+            },
             {
               path: "settings",
               lazy: async () => {

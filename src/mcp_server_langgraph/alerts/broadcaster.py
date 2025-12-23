@@ -212,7 +212,7 @@ class AlertBroadcaster:
         self._recent_alerts.append(alert_dict)
         # Keep buffer size limited
         if len(self._recent_alerts) > self._max_recent_alerts:
-            self._recent_alerts = self._recent_alerts[-self._max_recent_alerts:]
+            self._recent_alerts = self._recent_alerts[-self._max_recent_alerts :]
 
     async def subscribe(
         self,
