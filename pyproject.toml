@@ -797,6 +797,7 @@ markers = [
     "tools: Tool implementation tests (bash, file, web tools)",
     "llm: LLM API tests (expensive, requires API keys, skipped in CI)",
     "ai: AI UX service tests (persona analysis, disclosure, nudges, error recovery)",
+    "feature_flags: Feature flag configuration and toggle tests",
     "observability: OpenTelemetry/metrics/logging tests",
     "metrics: Prometheus/OTel metrics instrumentation tests",
     "monitoring: Cost metrics and usage tracking tests",
