@@ -12,12 +12,6 @@ import {
   Search,
   RefreshCw,
   Database,
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Rewind,
-  FastForward,
   Clock,
 } from "lucide-react";
 
@@ -269,214 +263,6 @@ function StateTree({ state, searchTerm }: StateTreeProps) {
 }
 
 // =============================================================================
-// Time Travel Controls Component
-// =============================================================================
-
-interface TimeTravelControlsProps {
-  snapshots: { id: string; timestamp: number; label?: string }[];
-  currentIndex: number;
-  isPlaying: boolean;
-  canGoBack: boolean;
-  canGoForward: boolean;
-  isAtLatest: boolean;
-  onGoBack: () => void;
-  onGoForward: () => void;
-  onJumpTo: (index: number) => void;
-  onJumpToLatest: () => void;
-  onStartPlayback: () => void;
-  onStopPlayback: () => void;
-  onClearHistory: () => void;
-}
-
-function TimeTravelControls({
-  snapshots,
-  currentIndex,
-  isPlaying,
-  canGoBack,
-  canGoForward,
-  isAtLatest,
-  onGoBack,
-  onGoForward,
-  onJumpTo,
-  onJumpToLatest,
-  onStartPlayback,
-  onStopPlayback,
-  onClearHistory,
-}: TimeTravelControlsProps) {
-  const formatTime = (timestamp: number): string => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
-
-  if (snapshots.length === 0) {
-    return (
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-850">
-        <Clock size={12} className="text-gray-400" aria-hidden="true" />
-        <span className="text-xs text-gray-500">No history recorded</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-850">
-      {/* Playback controls */}
-      <div className="flex items-center gap-1 px-2 py-1">
-        <Clock size={12} className="text-gray-500" aria-hidden="true" />
-        <span className="text-xs text-gray-600 dark:text-gray-400 mr-2">
-          History
-        </span>
-
-        {/* Jump to start */}
-        <button
-          data-testid="jump-start-button"
-          type="button"
-          onClick={() => onJumpTo(0)}
-          disabled={currentIndex === 0}
-          className={cn(
-            "p-1 rounded",
-            currentIndex === 0
-              ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
-              : "text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700",
-          )}
-          aria-label="Jump to start"
-        >
-          <Rewind size={12} />
-        </button>
-
-        {/* Go back */}
-        <button
-          data-testid="go-back-button"
-          type="button"
-          onClick={onGoBack}
-          disabled={!canGoBack}
-          className={cn(
-            "p-1 rounded",
-            !canGoBack
-              ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
-              : "text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700",
-          )}
-          aria-label="Go back"
-        >
-          <SkipBack size={12} />
-        </button>
-
-        {/* Play/Pause */}
-        <button
-          data-testid="playback-button"
-          type="button"
-          onClick={isPlaying ? onStopPlayback : onStartPlayback}
-          disabled={snapshots.length < 2}
-          className={cn(
-            "p-1 rounded",
-            snapshots.length < 2
-              ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
-              : isPlaying
-                ? "text-primary-500 hover:bg-gray-200 dark:hover:bg-gray-700"
-                : "text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700",
-          )}
-          aria-label={isPlaying ? "Pause playback" : "Start playback"}
-        >
-          {isPlaying ? <Pause size={12} /> : <Play size={12} />}
-        </button>
-
-        {/* Go forward */}
-        <button
-          data-testid="go-forward-button"
-          type="button"
-          onClick={onGoForward}
-          disabled={!canGoForward}
-          className={cn(
-            "p-1 rounded",
-            !canGoForward
-              ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
-              : "text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700",
-          )}
-          aria-label="Go forward"
-        >
-          <SkipForward size={12} />
-        </button>
-
-        {/* Jump to end/latest */}
-        <button
-          data-testid="jump-latest-button"
-          type="button"
-          onClick={onJumpToLatest}
-          disabled={isAtLatest}
-          className={cn(
-            "p-1 rounded",
-            isAtLatest
-              ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
-              : "text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700",
-          )}
-          aria-label="Jump to latest"
-        >
-          <FastForward size={12} />
-        </button>
-
-        <div className="flex-1" />
-
-        {/* Snapshot info */}
-        <span className="text-xs text-gray-500">
-          {currentIndex + 1} / {snapshots.length}
-        </span>
-
-        {/* Current timestamp */}
-        {snapshots[currentIndex] && (
-          <span className="text-xs text-gray-400 ml-2">
-            {formatTime(snapshots[currentIndex].timestamp)}
-          </span>
-        )}
-
-        {/* Clear history */}
-        <button
-          data-testid="clear-history-button"
-          type="button"
-          onClick={onClearHistory}
-          className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-gray-700 ml-2"
-          aria-label="Clear history"
-        >
-          <RefreshCw size={12} />
-        </button>
-      </div>
-
-      {/* Timeline slider */}
-      <div className="px-2 pb-1">
-        <input
-          data-testid="timeline-slider"
-          type="range"
-          min={0}
-          max={Math.max(0, snapshots.length - 1)}
-          value={currentIndex}
-          onChange={(e) => onJumpTo(parseInt(e.target.value, 10))}
-          className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
-          aria-label="Timeline slider"
-        />
-      </div>
-
-      {/* Not at latest indicator */}
-      {!isAtLatest && (
-        <div className="flex items-center justify-center px-2 py-0.5 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-200 dark:border-yellow-800">
-          <span className="text-xs text-yellow-600 dark:text-yellow-400">
-            Viewing historical state
-          </span>
-          <button
-            type="button"
-            onClick={onJumpToLatest}
-            className="ml-2 text-xs text-primary-500 hover:underline"
-          >
-            Jump to latest
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -510,24 +296,9 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
     return stateObj;
   }, [context, reduxState]);
 
-  // Time-travel debugging
-  const {
-    snapshots,
-    currentIndex,
-    currentSnapshot,
-    isPlaying,
-    canGoBack,
-    canGoForward,
-    isAtLatest,
-    recordSnapshot,
-    goBack,
-    goForward,
-    jumpTo,
-    jumpToLatest,
-    clearHistory,
-    startPlayback,
-    stopPlayback,
-  } = useStateHistory({
+  // State history for timeline integration
+  // Note: Playback controls are provided by the unified TimelineBar
+  const { snapshots, recordSnapshot } = useStateHistory({
     maxSnapshots: 50,
     playbackInterval: 300,
   });
@@ -539,7 +310,8 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
     }
   }, [displayState, timeTravelEnabled, recordSnapshot]);
 
-  // Use historical state if not at latest, or sync with timeline
+  // Sync state display with unified timeline
+  // The TimelineBar controls time-travel; StateTab shows the appropriate snapshot
   const stateToDisplay = useMemo(() => {
     // If timeline has a time window, find the snapshot closest to the current time
     if (timeline.timeWindow && snapshots.length > 0) {
@@ -558,12 +330,9 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
       }
     }
 
-    // Fallback to local time-travel state
-    if (!isAtLatest && currentSnapshot) {
-      return currentSnapshot.state;
-    }
+    // Default: show current state
     return displayState;
-  }, [isAtLatest, currentSnapshot, displayState, timeline.timeWindow, snapshots]);
+  }, [displayState, timeline.timeWindow, snapshots]);
 
   const handleRefresh = useCallback(() => {
     setRefreshKey((prev) => prev + 1);
@@ -657,26 +426,7 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
         </button>
       </div>
 
-      {/* Time-travel controls */}
-      {timeTravelEnabled && (
-        <TimeTravelControls
-          snapshots={snapshots}
-          currentIndex={currentIndex}
-          isPlaying={isPlaying}
-          canGoBack={canGoBack}
-          canGoForward={canGoForward}
-          isAtLatest={isAtLatest}
-          onGoBack={goBack}
-          onGoForward={goForward}
-          onJumpTo={jumpTo}
-          onJumpToLatest={jumpToLatest}
-          onStartPlayback={startPlayback}
-          onStopPlayback={stopPlayback}
-          onClearHistory={clearHistory}
-        />
-      )}
-
-      {/* State tree */}
+      {/* State tree - syncs with unified TimelineBar for time-travel */}
       <div className="flex-1 overflow-y-auto p-2" key={refreshKey}>
         <StateTree state={stateToDisplay} searchTerm={searchTerm} />
       </div>

@@ -125,6 +125,35 @@ describe("Chat Types", () => {
       expect(node.duration).toBe(250);
       expect(node.output).toBe("Tool output result");
     });
+
+    it("should accept node with timing properties for time-travel debugging", () => {
+      const now = Date.now();
+      const node: LangGraphNode = {
+        id: "node-3",
+        name: "Agent Node",
+        type: "agent",
+        status: "completed",
+        startTime: now - 1000,
+        endTime: now,
+        duration: 1000,
+        output: "Agent completed",
+      };
+      expect(node.startTime).toBe(now - 1000);
+      expect(node.endTime).toBe(now);
+      expect(node.duration).toBe(1000);
+    });
+
+    it("should allow startTime without endTime (for running nodes)", () => {
+      const node: LangGraphNode = {
+        id: "node-4",
+        name: "Running Node",
+        type: "tool",
+        status: "running",
+        startTime: Date.now(),
+      };
+      expect(node.startTime).toBeDefined();
+      expect(node.endTime).toBeUndefined();
+    });
   });
 
   describe("LangGraphEdge interface", () => {
@@ -172,6 +201,57 @@ describe("Chat Types", () => {
       expect(trace.nodes).toHaveLength(2);
       expect(trace.tokens?.input).toBe(500);
       expect(trace.currentNode).toBe("n2");
+    });
+
+    it("should accept trace with timing properties for time-travel debugging", () => {
+      const now = Date.now();
+      const trace: AgentExecutionTrace = {
+        startTime: now - 5000,
+        endTime: now,
+        nodes: [
+          {
+            id: "n1",
+            name: "Start",
+            type: "start",
+            status: "completed",
+            startTime: now - 5000,
+            endTime: now - 4000,
+            duration: 1000,
+          },
+          {
+            id: "n2",
+            name: "Agent",
+            type: "agent",
+            status: "completed",
+            startTime: now - 4000,
+            endTime: now,
+            duration: 4000,
+          },
+        ],
+        edges: [{ from: "n1", to: "n2" }],
+      };
+      expect(trace.startTime).toBe(now - 5000);
+      expect(trace.endTime).toBe(now);
+      expect(trace.nodes?.[0].startTime).toBe(now - 5000);
+      expect(trace.nodes?.[1].endTime).toBe(now);
+    });
+
+    it("should allow trace with only startTime (for running traces)", () => {
+      const now = Date.now();
+      const trace: AgentExecutionTrace = {
+        startTime: now - 1000,
+        nodes: [
+          {
+            id: "n1",
+            name: "Running Agent",
+            type: "agent",
+            status: "running",
+            startTime: now - 1000,
+          },
+        ],
+      };
+      expect(trace.startTime).toBeDefined();
+      expect(trace.endTime).toBeUndefined();
     });
   });
 });

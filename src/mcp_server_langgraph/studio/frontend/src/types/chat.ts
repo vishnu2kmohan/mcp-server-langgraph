@@ -85,6 +85,10 @@ export interface LangGraphNode {
   duration?: number;
   /** Tool/function output if applicable */
   output?: string;
+  /** Start timestamp in milliseconds (for time-travel debugging) */
+  startTime?: number;
+  /** End timestamp in milliseconds (for time-travel debugging) */
+  endTime?: number;
 }
 
 /**
@@ -116,6 +120,10 @@ export interface AgentExecutionTrace {
   edges?: LangGraphEdge[];
   /** Currently active node ID */
   currentNode?: string;
+  /** Trace start timestamp in milliseconds (for time-travel debugging) */
+  startTime?: number;
+  /** Trace end timestamp in milliseconds (for time-travel debugging) */
+  endTime?: number;
 }
 
 /**

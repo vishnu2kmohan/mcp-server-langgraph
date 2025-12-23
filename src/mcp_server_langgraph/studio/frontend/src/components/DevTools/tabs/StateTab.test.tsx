@@ -167,4 +167,39 @@ describe("StateTab", () => {
       expect(results).toHaveNoViolations();
     });
   });
+
+  describe("unified timeline integration", () => {
+    it("should NOT have redundant timeline slider (uses unified TimelineBar)", () => {
+      renderWithStore(<StateTab context="global" />);
+
+      // The redundant timeline-slider should NOT exist
+      // TimelineBar at DevToolsPanel level provides this functionality
+      expect(screen.queryByTestId("timeline-slider")).not.toBeInTheDocument();
+    });
+
+    it("should NOT have redundant playback controls (uses unified TimelineBar)", () => {
+      renderWithStore(<StateTab context="global" />);
+
+      // These redundant controls should NOT exist
+      expect(screen.queryByTestId("playback-button")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("go-back-button")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("go-forward-button")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("jump-start-button")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("jump-latest-button")).not.toBeInTheDocument();
+    });
+
+    it("should keep recording toggle to control snapshot capture", () => {
+      renderWithStore(<StateTab context="global" />);
+
+      // Recording toggle should still exist - it controls snapshot capture
+      expect(screen.getByTestId("time-travel-toggle")).toBeInTheDocument();
+    });
+
+    it("should display state tree synced with unified timeline", () => {
+      renderWithStore(<StateTab context="global" />);
+
+      // State tree should still be visible and functional
+      expect(screen.getByTestId("state-tree")).toBeInTheDocument();
+    });
+  });
 });

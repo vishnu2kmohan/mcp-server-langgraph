@@ -69,14 +69,16 @@ vi.mock("../hooks/useAgentTrace", () => ({
 }));
 
 // Mock timeline context to avoid provider requirement
+const mockTimelineContext = vi.fn().mockReturnValue({
+  timeWindow: null,
+  isLiveMode: true,
+  currentTime: Date.now(),
+  events: [],
+  bookmarks: [],
+});
+
 vi.mock("../context/DevToolsTimelineProvider", () => ({
-  useTimelineContext: () => ({
-    timeWindow: null,
-    isLiveMode: true,
-    currentTime: Date.now(),
-    events: [],
-    bookmarks: [],
-  }),
+  useTimelineContext: () => mockTimelineContext(),
 }));
 
 // =============================================================================
@@ -91,6 +93,14 @@ describe("AgentTraceTab", () => {
       isLoading: false,
       error: null,
       refetch: vi.fn(),
+    });
+    // Reset timeline context to default (no filtering)
+    mockTimelineContext.mockReturnValue({
+      timeWindow: null,
+      isLiveMode: true,
+      currentTime: Date.now(),
+      events: [],
+      bookmarks: [],
     });
   });
 
@@ -305,6 +315,74 @@ describe("AgentTraceTab", () => {
       const { container } = render(<AgentTraceTab sessionId="session-123" />);
       const results = await axe(container);
       expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe("timeline filtering with startTime", () => {
+    it("should show all nodes when timeWindow is null", () => {
+      // timeWindow is null by default from beforeEach
+      render(<AgentTraceTab sessionId="session-123" />);
+
+      // All 3 nodes should be visible
+      expect(screen.getByText("Agent")).toBeInTheDocument();
+      expect(screen.getByText("Tool Call")).toBeInTheDocument();
+      expect(screen.getByText("Response")).toBeInTheDocument();
+    });
+
+    it("should filter nodes by timeline window when startTime is available", () => {
+      // Mock timeline context with a time window that overlaps all nodes
+      mockTimelineContext.mockReturnValue({
+        timeWindow: {
+          start: 1703000000100,
+          end: 1703000000250,
+        },
+        isLiveMode: false,
+        currentTime: 1703000000175,
+        events: [],
+        bookmarks: [],
+      });
+
+      render(<AgentTraceTab sessionId="session-123" />);
+
+      // Only nodes overlapping with timeWindow should be visible
+      // node-1: starts at 1703000000000, ends at 1703000000150 - overlaps (endTime > window.start)
+      // node-2: starts at 1703000000150, ends at 1703000000200 - overlaps
+      // node-3: starts at 1703000000200, no end (running) - overlaps (startTime < window.end)
+      expect(screen.getByText("Agent")).toBeInTheDocument();
+      expect(screen.getByText("Tool Call")).toBeInTheDocument();
+      expect(screen.getByText("Response")).toBeInTheDocument();
+    });
+
+    it("should exclude nodes outside the timeline window", () => {
+      // Mock timeline context with a narrow time window
+      mockTimelineContext.mockReturnValue({
+        timeWindow: {
+          start: 1703000000160,
+          end: 1703000000180,
+        },
+        isLiveMode: false,
+        currentTime: 1703000000170,
+        events: [],
+        bookmarks: [],
+      });
+
+      render(<AgentTraceTab sessionId="session-123" />);
+
+      // node-1: ends at 1703000000150 - before window start (150 < 160), excluded
+      // node-2: starts at 1703000000150, ends at 1703000000200 - overlaps (150 < 180 && 200 > 160)
+      // node-3: starts at 1703000000200 - after window end (200 > 180), excluded
+      expect(screen.queryByText("Agent")).not.toBeInTheDocument();
+      expect(screen.getByText("Tool Call")).toBeInTheDocument();
+      expect(screen.queryByText("Response")).not.toBeInTheDocument();
+    });
+
+    it("should show nodes with startTime for time-travel debugging", () => {
+      render(<AgentTraceTab sessionId="session-123" />);
+
+      // Nodes with startTime should be rendered and have data-testid
+      expect(screen.getByTestId("trace-node-node-1")).toBeInTheDocument();
+      expect(screen.getByTestId("trace-node-node-2")).toBeInTheDocument();
+      expect(screen.getByTestId("trace-node-node-3")).toBeInTheDocument();
     });
   });
 });

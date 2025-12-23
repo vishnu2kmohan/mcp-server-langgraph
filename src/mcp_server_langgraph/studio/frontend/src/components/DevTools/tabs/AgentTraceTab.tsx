@@ -266,23 +266,42 @@ export function AgentTraceTab({
   }, []);
 
   // Filter nodes by timeline window for time-travel debugging
-  // Note: LangGraphNode doesn't have startTime, so we display all nodes
-  // Timeline filtering is available for tabs with timestamped entries
+  // Uses startTime and endTime properties from LangGraphNode for filtering
   const filteredNodes = useMemo(() => {
     if (!trace?.nodes) return [];
-    // LangGraphNode type doesn't include startTime, so we show all nodes
-    // The timeline context is still available for future enhanced node timing
-    return trace.nodes;
-  }, [trace?.nodes]);
+
+    // If no timeline window is set, show all nodes
+    if (!timeline?.timeWindow) {
+      return trace.nodes;
+    }
+
+    const { start: windowStart, end: windowEnd } = timeline.timeWindow;
+
+    // Filter nodes that overlap with the timeline window
+    // A node overlaps if: nodeStart < windowEnd AND nodeEnd > windowStart
+    return trace.nodes.filter((node) => {
+      // If node has no timing info, include it (backward compatibility)
+      if (node.startTime === undefined) {
+        return true;
+      }
+
+      const nodeStart = node.startTime;
+      // For running nodes without endTime, use current time
+      const nodeEnd = node.endTime ?? Date.now();
+
+      // Check for overlap: node overlaps window if it doesn't end before window starts
+      // AND doesn't start after window ends
+      return nodeEnd > windowStart && nodeStart < windowEnd;
+    });
+  }, [trace?.nodes, timeline?.timeWindow]);
 
   // Calculate total duration for timeline (using filtered nodes)
   const totalDuration =
     filteredNodes.reduce((sum, node) => sum + (node.duration ?? 0), 0);
 
-  // Calculate start offsets for timeline
+  // Calculate start offsets for timeline (using filtered nodes)
   const getStartOffset = (index: number): number => {
-    if (!trace?.nodes) return 0;
-    return trace.nodes
+    return filteredNodes
       .slice(0, index)
       .reduce((sum, node) => sum + (node.duration ?? 0), 0);
   };
@@ -431,7 +450,7 @@ export function AgentTraceTab({
       <div className="flex-1 overflow-y-auto">
         {viewMode === "list" ? (
           <div data-testid="trace-list-view">
-            {trace.nodes.map((node) => (
+            {filteredNodes.map((node) => (
               <div key={node.id}>
                 <TraceNodeRow
                   node={node}
@@ -446,7 +465,7 @@ export function AgentTraceTab({
           </div>
         ) : (
           <div data-testid="trace-timeline-view" className="p-2">
-            {trace.nodes.map((node, index) => (
+            {filteredNodes.map((node, index) => (
               <TimelineNode
                 key={node.id}
                 node={node}

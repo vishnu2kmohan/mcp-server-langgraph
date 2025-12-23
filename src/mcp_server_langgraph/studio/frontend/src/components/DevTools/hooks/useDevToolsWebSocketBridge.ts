@@ -53,6 +53,17 @@ export interface LogData {
   attributes?: Record<string, unknown>;
 }
 
+export interface LangGraphNodeData {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  startTime?: number;
+  endTime?: number;
+  duration?: number;
+  output?: string;
+}
+
 export interface UseDevToolsWebSocketBridgeOptions {
   /** Whether the bridge is enabled */
   enabled: boolean;
@@ -69,6 +80,8 @@ export interface UseDevToolsWebSocketBridgeReturn {
   handleMetric: (metric: MetricData) => void;
   /** Handle incoming log */
   handleLog: (log: LogData) => void;
+  /** Handle incoming LangGraph node event */
+  handleLangGraphNode: (node: LangGraphNodeData) => void;
 }
 
 // =============================================================================
@@ -144,6 +157,22 @@ export function mapLogToEvent(log: LogData): TimelineEvent {
   };
 }
 
+/**
+ * Map LangGraph node to timeline event for time-travel debugging
+ */
+export function mapLangGraphNodeToEvent(node: LangGraphNodeData): TimelineEvent {
+  const timestamp = node.startTime ?? Date.now();
+
+  return {
+    id: generateEventId(),
+    type: "langgraph_node" as TimelineEventType,
+    timestamp,
+    relativeTime: 0, // Will be calculated by timeline context
+    source: "langgraph",
+    data: node as unknown as Record<string, unknown>,
+  };
+}
+
 // =============================================================================
 // Hook Implementation
 // =============================================================================
@@ -201,14 +230,27 @@ export function useDevToolsWebSocketBridge(
     [enabled, registerEvent],
   );
 
+  /**
+   * Handle incoming LangGraph node event
+   */
+  const handleLangGraphNode = useCallback(
+    (node: LangGraphNodeData) => {
+      if (!enabled) return;
+      const event = mapLangGraphNodeToEvent(node);
+      registerEvent(event);
+    },
+    [enabled, registerEvent],
+  );
+
   return useMemo(
     () => ({
       handleTraceSpan,
       handleAlert,
       handleMetric,
       handleLog,
+      handleLangGraphNode,
     }),
-    [handleTraceSpan, handleAlert, handleMetric, handleLog],
+    [handleTraceSpan, handleAlert, handleMetric, handleLog, handleLangGraphNode],
   );
 }
 

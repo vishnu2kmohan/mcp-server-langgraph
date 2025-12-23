@@ -5,7 +5,6 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import React from "react";
 
 import {
   useDevToolsWebSocketBridge,
@@ -13,6 +12,7 @@ import {
   mapAlertToEvent,
   mapMetricToEvent,
   mapLogToEvent,
+  mapLangGraphNodeToEvent,
 } from "./useDevToolsWebSocketBridge";
 
 // =============================================================================
@@ -186,8 +186,99 @@ describe("useDevToolsWebSocketBridge", () => {
     });
   });
 
+  describe("mapLangGraphNodeToEvent", () => {
+    it("should map LangGraph node to timeline event with langgraph_node type", () => {
+      const now = Date.now();
+      const node = {
+        id: "node-123",
+        name: "AgentNode",
+        type: "agent" as const,
+        status: "completed" as const,
+        startTime: now - 1000,
+        endTime: now,
+        duration: 1000,
+      };
+
+      const event = mapLangGraphNodeToEvent(node);
+
+      expect(event.type).toBe("langgraph_node");
+      expect(event.timestamp).toBe(node.startTime);
+      expect(event.data).toEqual(node);
+    });
+
+    it("should use current time if startTime not provided", () => {
+      const node = {
+        id: "node-123",
+        name: "ToolNode",
+        type: "tool" as const,
+        status: "running" as const,
+        duration: 500,
+      };
+
+      const before = Date.now();
+      const event = mapLangGraphNodeToEvent(node);
+      const after = Date.now();
+
+      expect(event.timestamp).toBeGreaterThanOrEqual(before);
+      expect(event.timestamp).toBeLessThanOrEqual(after);
+    });
+
+    it("should preserve node status and type in data", () => {
+      const node = {
+        id: "node-456",
+        name: "ConditionalNode",
+        type: "conditional" as const,
+        status: "error" as const,
+        startTime: Date.now() - 500,
+        duration: 500,
+      };
+
+      const event = mapLangGraphNodeToEvent(node);
+
+      expect((event.data as Record<string, unknown>).status).toBe("error");
+      expect((event.data as Record<string, unknown>).type).toBe("conditional");
+    });
+
+    it("should set source to langgraph", () => {
+      const node = {
+        id: "node-789",
+        name: "StartNode",
+        type: "start" as const,
+        status: "completed" as const,
+        startTime: Date.now(),
+      };
+
+      const event = mapLangGraphNodeToEvent(node);
+
+      expect(event.source).toBe("langgraph");
+    });
+
+    it("should generate unique id for each node event", () => {
+      const node1 = {
+        id: "node-1",
+        name: "Node1",
+        type: "agent" as const,
+        status: "completed" as const,
+        startTime: Date.now(),
+      };
+
+      const node2 = {
+        id: "node-2",
+        name: "Node2",
+        type: "tool" as const,
+        status: "completed" as const,
+        startTime: Date.now() + 100,
+      };
+
+      const event1 = mapLangGraphNodeToEvent(node1);
+      const event2 = mapLangGraphNodeToEvent(node2);
+
+      expect(event1.id).not.toBe(event2.id);
+    });
+  });
+
   describe("hook integration", () => {
-    it("should return registerEvent function", () => {
+    it("should return all handler functions including handleLangGraphNode", () => {
       const mockRegisterEvent = vi.fn();
       const { result } = renderHook(() =>
         useDevToolsWebSocketBridge({
@@ -200,6 +291,7 @@ describe("useDevToolsWebSocketBridge", () => {
       expect(result.current.handleAlert).toBeDefined();
       expect(result.current.handleMetric).toBeDefined();
       expect(result.current.handleLog).toBeDefined();
+      expect(result.current.handleLangGraphNode).toBeDefined();
     });
 
     it("should call registerEvent when handling trace span", () => {
@@ -256,6 +348,58 @@ describe("useDevToolsWebSocketBridge", () => {
           type: "alert",
         }),
       );
+    });
+
+    it("should call registerEvent when handling LangGraph node", () => {
+      const mockRegisterEvent = vi.fn();
+      const { result } = renderHook(() =>
+        useDevToolsWebSocketBridge({
+          enabled: true,
+          registerEvent: mockRegisterEvent,
+        }),
+      );
+
+      const now = Date.now();
+      act(() => {
+        result.current.handleLangGraphNode({
+          id: "node-123",
+          name: "AgentNode",
+          type: "agent",
+          status: "completed",
+          startTime: now - 1000,
+          endTime: now,
+          duration: 1000,
+        });
+      });
+
+      expect(mockRegisterEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "langgraph_node",
+          timestamp: now - 1000,
+        }),
+      );
+    });
+
+    it("should not call registerEvent for LangGraph nodes when disabled", () => {
+      const mockRegisterEvent = vi.fn();
+      const { result } = renderHook(() =>
+        useDevToolsWebSocketBridge({
+          enabled: false,
+          registerEvent: mockRegisterEvent,
+        }),
+      );
+
+      act(() => {
+        result.current.handleLangGraphNode({
+          id: "node-123",
+          name: "AgentNode",
+          type: "agent",
+          status: "completed",
+          startTime: Date.now(),
+        });
+      });
+
+      expect(mockRegisterEvent).not.toHaveBeenCalled();
     });
 
     it("should not call registerEvent when disabled", () => {
