@@ -1,7 +1,7 @@
 /**
- * StudioShellLayout - Hybrid Canvas Implementation
+ * StudioShellLayout - Studio Canvas Implementation
  *
- * New app shell for the Hybrid Canvas paradigm (Gemini/ChatGPT Canvas style).
+ * New app shell for the Studio Canvas paradigm (Gemini/ChatGPT Canvas style).
  * Uses react-resizable-panels for flexible panel sizing.
  *
  * Layout:

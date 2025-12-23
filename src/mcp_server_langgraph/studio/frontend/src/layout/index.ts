@@ -1,5 +1,5 @@
 /**
- * Layout Module - Hybrid Canvas Shell Components
+ * Layout Module - Studio Canvas Shell Components
  *
  * Phase 1: StudioShellLayout with resizable panels
  * Exports main layout component and sub-components.

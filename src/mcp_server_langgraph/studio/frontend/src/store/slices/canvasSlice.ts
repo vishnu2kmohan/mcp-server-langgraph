@@ -1,7 +1,7 @@
 /**
  * Canvas Slice - Phase 1
  *
- * State management for the Hybrid Canvas shell.
+ * State management for the Studio Canvas shell.
  * Completely independent from workspaceSlice - no bridging.
  *
  * Manages:

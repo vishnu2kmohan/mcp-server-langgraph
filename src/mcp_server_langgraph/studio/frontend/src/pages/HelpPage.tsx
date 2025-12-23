@@ -1,7 +1,7 @@
 /**
  * HelpPage
  *
- * Full-page help center for the Hybrid Shell.
+ * Full-page help center for the Studio Shell.
  * Renders HelpPane with default topics and optional keyboard shortcuts.
  */
 import { useCallback, useState } from "react";

@@ -1,7 +1,7 @@
 /**
  * Canvas Slice Tests
  *
- * Tests for the Hybrid Canvas state management.
+ * Tests for the Studio Canvas state management.
  */
 import { describe, it, expect } from "vitest";
 import canvasReducer, {

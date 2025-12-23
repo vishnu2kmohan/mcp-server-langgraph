@@ -206,9 +206,9 @@ export interface FeatureFlags {
   confirmation_dialogs?: boolean;
 
   // ==========================================================================
-  // Canvas Hybrid Shell Feature Flags (Phase 0+)
+  // Canvas Studio Shell Feature Flags (Phase 0+)
   // ==========================================================================
-  /** Enable Hybrid Canvas shell at /studio (Phase 1) */
+  /** Enable Studio Canvas shell at /studio (Phase 1) */
   canvas_studio_shell?: boolean;
   /** Enable editable artifacts in Canvas panel (Phase 2) */
   canvas_editable?: boolean;

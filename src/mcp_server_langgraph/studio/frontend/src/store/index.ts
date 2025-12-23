@@ -26,7 +26,7 @@ import workspaceReducer, {
   workspacePersistenceMiddleware,
   removeTabsByEntityId,
 } from "./slices/workspaceSlice";
-// Hybrid Canvas state (Phase 7 integration)
+// Studio Canvas state (Phase 7 integration)
 import canvasReducer from "./slices/canvasSlice";
 import backgroundAgentReducer from "./slices/backgroundAgentSlice";
 import aiContextReducer from "./slices/aiContextSlice";
@@ -79,7 +79,7 @@ export const store = configureStore({
     observability: observabilityReducer,
     // Workspace layout state (JupyterLab-inspired)
     workspace: workspaceReducer,
-    // Hybrid Canvas layout state (Phase 7 - separate from workspace)
+    // Studio Canvas layout state (Phase 7 - separate from workspace)
     canvas: canvasReducer,
     // Background agent state (Phase 7 - AI agents)
     backgroundAgent: backgroundAgentReducer,
