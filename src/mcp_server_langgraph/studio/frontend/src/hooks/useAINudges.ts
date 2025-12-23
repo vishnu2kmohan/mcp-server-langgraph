@@ -141,7 +141,7 @@ const DEFAULT_DEBOUNCE_MS = 500;
 // Helper Functions
 // =============================================================================
 
-function transformResponse(response: NudgeRecommendationResponse): NudgeRecommendation {
+function _transformResponse(response: NudgeRecommendationResponse): NudgeRecommendation {
   return {
     nudge: response.nudge
       ? {
@@ -187,7 +187,7 @@ export function useAINudges(options: UseAINudgesOptions = {}): UseAINudgesResult
     enabled = false,
     pageContext,
     maxPerSession = 5,
-    userMotivation,
+    userMotivation: _userMotivation,
     userAbility,
     debounceMs = DEFAULT_DEBOUNCE_MS,
   } = options;
@@ -226,10 +226,19 @@ export function useAINudges(options: UseAINudgesOptions = {}): UseAINudgesResult
     setError(null);
 
     try {
-      const data = await fetchNudgeRecommendation({
+      const data = (await fetchNudgeRecommendation({
+        context: pageContext || "default",
         current_feature: pageContext,
         persona: userAbility,
-      }).unwrap();
+      }).unwrap()) as {
+        nudge_type: string;
+        message: string;
+        confidence: number;
+        action_cta?: string;
+        action_target?: string;
+        dismiss_duration_ms?: number;
+        trigger_delay_ms?: number;
+      };
 
       if (!mountedRef.current) return;
 

@@ -131,7 +131,7 @@ export function useRiskAssessment(
     try {
       const response = await analyzeMutation({
         user_id: userId,
-        session_id: undefined,
+        session_id: "",
         tasks: [
           {
             category: "hitl",
@@ -247,7 +247,7 @@ export function useDecisionHistory(
     try {
       const response = await analyzeMutation({
         user_id: userId,
-        session_id: undefined,
+        session_id: "",
         tasks: [
           {
             category: "hitl",

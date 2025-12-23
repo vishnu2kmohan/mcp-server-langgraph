@@ -139,7 +139,7 @@ export function useNavPrediction(
     try {
       const response = await analyzeMutation({
         user_id: userId,
-        session_id: undefined,
+        session_id: "",
         tasks: [
           {
             category: "ux",
@@ -239,7 +239,7 @@ export function useContextualHelp(
     try {
       const response = await analyzeMutation({
         user_id: userId,
-        session_id: undefined,
+        session_id: "",
         tasks: [
           {
             category: "ux",
@@ -345,7 +345,7 @@ export function useLearningPath(
     try {
       const response = await analyzeMutation({
         user_id: userId,
-        session_id: undefined,
+        session_id: "",
         tasks: [
           {
             category: "ux",

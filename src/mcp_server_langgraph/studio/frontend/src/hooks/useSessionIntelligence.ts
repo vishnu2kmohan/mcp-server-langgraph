@@ -183,7 +183,11 @@ export function useSessionSummary(
         ],
       }).unwrap();
 
-      const sessionResult = data.analyses?.session_summarize;
+      const sessionResult = data.analyses?.session_summarize as {
+        summary?: string;
+        key_topics?: string[];
+        message_count?: number;
+      } | undefined;
       if (sessionResult) {
         setSummary(sessionResult.summary || null);
         setKeyTopics(sessionResult.key_topics || []);
@@ -274,7 +278,10 @@ export function useSessionGroups(
         ],
       }).unwrap();
 
-      const groupResult = data.analyses?.session_group;
+      const groupResult = data.analyses?.session_group as {
+        groups?: SessionGroup[];
+        ungrouped?: string[];
+      } | undefined;
       if (groupResult) {
         setGroups(groupResult.groups || []);
         setUngrouped(groupResult.ungrouped || []);
@@ -365,7 +372,9 @@ export function useSessionSimilarity(
         ],
       }).unwrap();
 
-      const similarResult = data.analyses?.session_similarity;
+      const similarResult = data.analyses?.session_similarity as {
+        similar_sessions?: SimilarSession[];
+      } | undefined;
       if (similarResult) {
         setSimilarSessions(similarResult.similar_sessions || []);
       }

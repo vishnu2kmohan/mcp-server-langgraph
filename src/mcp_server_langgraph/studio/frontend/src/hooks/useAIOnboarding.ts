@@ -88,8 +88,7 @@ export interface UseAIOnboardingOptions {
   timeoutMs?: number;
 }
 
-/** Default timeout for AI requests - kept for API compatibility but not used with RTK Query */
-const _DEFAULT_TIMEOUT_MS = 5000;
+// Note: Default timeout of 5000ms no longer used - RTK Query handles timeouts internally
 
 /**
  * Hook result
@@ -155,7 +154,6 @@ export function useAIOnboarding(
 
   // Get session context from Redux
   const currentSession = useSelector(selectCurrentSession);
-  const _sessionId = currentSession?.id;
 
   // State
   const [detectedIntent, setDetectedIntent] = useState<string | null>(null);

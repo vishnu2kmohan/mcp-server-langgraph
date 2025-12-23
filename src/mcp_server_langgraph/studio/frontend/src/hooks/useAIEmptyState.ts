@@ -167,8 +167,8 @@ export function useAIEmptyState(
         const data = await fetchSuggestions({
           context: forContext,
           persona: effectivePersona,
-          session_id: sessionId || undefined,
-        }).unwrap();
+          // session_id is passed via context if needed
+        } as Parameters<typeof fetchSuggestions>[0]).unwrap();
 
         if (!isMounted.current) return;
 
