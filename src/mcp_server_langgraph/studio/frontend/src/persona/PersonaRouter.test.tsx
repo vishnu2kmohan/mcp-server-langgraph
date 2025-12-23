@@ -82,35 +82,35 @@ describe("PersonaRouter", () => {
   describe("Loading State", () => {
     it("should show loading spinner when persona is loading", () => {
       const store = createTestStore({ isPersonaLoading: true });
-      renderWithRouter(store, "/studio/v2/chat", <div>Content</div>);
+      renderWithRouter(store, "/studio/chat", <div>Content</div>);
 
       expect(screen.getByTestId("persona-loading")).toBeInTheDocument();
     });
 
     it("should show loading message", () => {
       const store = createTestStore({ isPersonaLoading: true });
-      renderWithRouter(store, "/studio/v2/chat", <div>Content</div>);
+      renderWithRouter(store, "/studio/chat", <div>Content</div>);
 
       expect(screen.getByText(/loading/i)).toBeInTheDocument();
     });
 
     it("should render children when persona is loaded", () => {
       const store = createTestStore({ isPersonaLoading: false });
-      renderWithRouter(store, "/studio/v2/chat", <div>Protected Content</div>);
+      renderWithRouter(store, "/studio/chat", <div>Protected Content</div>);
 
       expect(screen.getByText("Protected Content")).toBeInTheDocument();
     });
   });
 
   describe("Index Route Redirect", () => {
-    it("should redirect admin to /studio/v2/admin on index route", async () => {
+    it("should redirect admin to /studio/admin on index route", async () => {
       const store = createTestStore({
         persona: "admin",
         subPersona: "admin",
       });
       renderWithRouter(
         store,
-        "/studio/v2",
+        "/studio",
         <Routes>
           <Route index element={<div>Index</div>} />
           <Route path="admin" element={<div>Admin Page</div>} />
@@ -119,19 +119,19 @@ describe("PersonaRouter", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("location")).toHaveTextContent(
-          "/studio/v2/admin",
+          "/studio/admin",
         );
       });
     });
 
-    it("should redirect bob to /studio/v2/chat on index route", async () => {
+    it("should redirect bob to /studio/chat on index route", async () => {
       const store = createTestStore({
         persona: "user",
         subPersona: "bob",
       });
       renderWithRouter(
         store,
-        "/studio/v2",
+        "/studio",
         <Routes>
           <Route index element={<div>Index</div>} />
           <Route path="chat" element={<div>Chat Page</div>} />
@@ -140,7 +140,7 @@ describe("PersonaRouter", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("location")).toHaveTextContent(
-          "/studio/v2/chat",
+          "/studio/chat",
         );
       });
     });
@@ -152,7 +152,7 @@ describe("PersonaRouter", () => {
       });
       renderWithRouter(
         store,
-        "/studio/v2",
+        "/studio",
         <Routes>
           <Route index element={<div>Index</div>} />
           <Route path="observability" element={<div>Observability</div>} />
@@ -161,7 +161,7 @@ describe("PersonaRouter", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("location")).toHaveTextContent(
-          "/studio/v2/observability",
+          "/studio/observability",
         );
       });
     });
@@ -175,7 +175,7 @@ describe("PersonaRouter", () => {
       });
       renderWithRouter(
         store,
-        "/studio/v2/admin",
+        "/studio/admin",
         <div data-testid="admin-content">Admin Content</div>,
       );
 
@@ -189,7 +189,7 @@ describe("PersonaRouter", () => {
       });
       renderWithRouter(
         store,
-        "/studio/v2/chat",
+        "/studio/chat",
         <div data-testid="chat-content">Chat Content</div>,
       );
 
@@ -203,7 +203,7 @@ describe("PersonaRouter", () => {
       });
       renderWithRouter(
         store,
-        "/studio/v2/admin",
+        "/studio/admin",
         <div data-testid="admin-content">Admin Content</div>,
       );
 
@@ -217,7 +217,7 @@ describe("PersonaRouter", () => {
         persona: "user",
         subPersona: "bob",
       });
-      renderWithRouter(store, "/studio/v2/admin", <div>Admin Content</div>);
+      renderWithRouter(store, "/studio/admin", <div>Admin Content</div>);
 
       await waitFor(() => {
         expect(screen.getByText(/request access/i)).toBeInTheDocument();
@@ -233,7 +233,7 @@ describe("PersonaRouter", () => {
       });
       renderWithRouter(
         store,
-        "/studio/v2/audit",
+        "/studio/audit",
         <div data-testid="audit-content">Audit Content</div>,
       );
 
@@ -247,7 +247,7 @@ describe("PersonaRouter", () => {
       });
       renderWithRouter(
         store,
-        "/studio/v2/compliance",
+        "/studio/compliance",
         <div data-testid="compliance-content">Compliance Content</div>,
       );
 
@@ -258,7 +258,7 @@ describe("PersonaRouter", () => {
   describe("Accessibility", () => {
     it("should have proper ARIA role for loading state", () => {
       const store = createTestStore({ isPersonaLoading: true });
-      renderWithRouter(store, "/studio/v2/chat", <div>Content</div>);
+      renderWithRouter(store, "/studio/chat", <div>Content</div>);
 
       const loading = screen.getByTestId("persona-loading");
       expect(loading).toHaveAttribute("role", "status");
@@ -269,7 +269,7 @@ describe("PersonaRouter", () => {
         persona: "user",
         subPersona: "bob",
       });
-      renderWithRouter(store, "/studio/v2/admin", <div>Admin</div>);
+      renderWithRouter(store, "/studio/admin", <div>Admin</div>);
 
       await waitFor(() => {
         const denied = screen.getByTestId("access-denied");

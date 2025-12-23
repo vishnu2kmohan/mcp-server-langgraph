@@ -407,14 +407,14 @@ describe("Help Panel Telemetry", () => {
 
       onHelpOpened({
         source: "keyboard_shortcut", // ? key
-        currentRoute: "/studio/v2/chat",
+        currentRoute: "/studio/chat",
         timestamp: Date.now(),
       });
 
       expect(onHelpOpened).toHaveBeenCalledWith(
         expect.objectContaining({
           source: "keyboard_shortcut",
-          currentRoute: "/studio/v2/chat",
+          currentRoute: "/studio/chat",
         }),
       );
     });
@@ -425,7 +425,7 @@ describe("Help Panel Telemetry", () => {
       onHelpOpened({
         source: "contextual_tooltip",
         helpTopic: "canvas_artifacts",
-        currentRoute: "/studio/v2/chat/session-123",
+        currentRoute: "/studio/chat/session-123",
         timestamp: Date.now(),
       });
 

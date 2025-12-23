@@ -150,17 +150,17 @@ describe("PersonaVariants", () => {
   describe("getDefaultView", () => {
     it("should return default view for admin", () => {
       const view = getDefaultView("admin");
-      expect(view).toBe("/studio/v2/admin");
+      expect(view).toBe("/studio/admin");
     });
 
     it("should return chat view for bob", () => {
       const view = getDefaultView("bob");
-      expect(view).toBe("/studio/v2/chat");
+      expect(view).toBe("/studio/chat");
     });
 
     it("should return default chat view for unknown persona", () => {
       const view = getDefaultView("nonexistent");
-      expect(view).toBe("/studio/v2/chat");
+      expect(view).toBe("/studio/chat");
     });
   });
 

@@ -95,7 +95,7 @@ describe("useNudges + NudgeTooltip Integration", () => {
     function NudgeIntegration() {
       const { activeNudge, dismiss, trackAcceptance } = useNudges({
         enableAI: true,
-        pageContext: "/studio/v2/chat",
+        pageContext: "/studio/chat",
       });
 
       if (!activeNudge) return <div data-testid="no-nudge">No nudge</div>;
@@ -146,7 +146,7 @@ describe("useNudges + NudgeTooltip Integration", () => {
     function NudgeIntegration() {
       const { activeNudge, dismiss, trackAcceptance } = useNudges({
         enableAI: true,
-        pageContext: "/studio/v2/chat",
+        pageContext: "/studio/chat",
       });
 
       if (!activeNudge) return <div data-testid="no-nudge">No nudge</div>;
@@ -201,7 +201,7 @@ describe("useNudges + NudgeTooltip Integration", () => {
       const { activeNudge, dismiss, trackAcceptance, getNudgeHistory } =
         useNudges({
           enableAI: true,
-          pageContext: "/studio/v2/chat",
+          pageContext: "/studio/chat",
         });
 
       if (!activeNudge) {

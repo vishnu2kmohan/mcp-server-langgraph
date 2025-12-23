@@ -197,7 +197,7 @@ describe("SessionNav", () => {
       const sessionButton = screen.getByText("Today's Chat");
       await user.click(sessionButton);
 
-      expect(mockNavigate).toHaveBeenCalledWith("/studio/v2/chat/session-1");
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/chat/session-1");
     });
 
     it("should highlight current session", () => {

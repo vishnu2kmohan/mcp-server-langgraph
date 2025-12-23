@@ -28,7 +28,7 @@ describe("helpSlice", () => {
     id: "tip-1",
     title: "Getting Started",
     content: "Welcome to the platform!",
-    route: "/studio/v2",
+    route: "/studio",
     dismissed: false,
   };
 
@@ -109,7 +109,7 @@ describe("helpSlice", () => {
     it("shows tips for a route", () => {
       const state = helpReducer(
         initialState,
-        showTipsForRoute({ route: "/studio/v2", tips: [mockTip] }),
+        showTipsForRoute({ route: "/studio", tips: [mockTip] }),
       );
       expect(state.visibleTips).toHaveLength(1);
     });
@@ -118,7 +118,7 @@ describe("helpSlice", () => {
       let state = helpReducer(initialState, dismissTip("tip-1"));
       state = helpReducer(
         state,
-        showTipsForRoute({ route: "/studio/v2", tips: [mockTip] }),
+        showTipsForRoute({ route: "/studio", tips: [mockTip] }),
       );
       expect(state.visibleTips).toHaveLength(0);
     });

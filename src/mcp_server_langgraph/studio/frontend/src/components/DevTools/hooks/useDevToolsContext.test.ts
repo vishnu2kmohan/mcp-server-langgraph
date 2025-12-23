@@ -101,14 +101,14 @@ describe("useDevToolsContext", () => {
       expect(result.current.context).toBe("session");
     });
 
-    it("should detect session context from /studio/v2/chat route", () => {
+    it("should detect session context from /studio/chat route", () => {
       const store = createTestStore();
       mockUseLocation.mockReturnValue({
-        pathname: "/studio/v2/chat",
+        pathname: "/studio/chat",
         search: "",
         hash: "",
         state: null,
-        key: "v2-chat",
+        key: "chat",
       });
 
       const { result } = renderHook(() => useDevToolsContext(), {
@@ -135,14 +135,14 @@ describe("useDevToolsContext", () => {
       expect(result.current.context).toBe("workflow");
     });
 
-    it("should detect workflow context from /studio/v2/workflows route", () => {
+    it("should detect workflow context from /studio/workflows route", () => {
       const store = createTestStore();
       mockUseLocation.mockReturnValue({
-        pathname: "/studio/v2/workflows",
+        pathname: "/studio/workflows",
         search: "",
         hash: "",
         state: null,
-        key: "v2-workflows",
+        key: "workflows",
       });
 
       const { result } = renderHook(() => useDevToolsContext(), {

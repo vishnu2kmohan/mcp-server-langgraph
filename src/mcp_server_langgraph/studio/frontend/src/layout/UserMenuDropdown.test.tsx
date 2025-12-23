@@ -114,7 +114,7 @@ describe("UserMenuDropdown", () => {
 
       await user.click(screen.getByTestId("menu-item-profile"));
 
-      expect(mockNavigate).toHaveBeenCalledWith("/studio/v2/settings");
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/settings");
       expect(onClose).toHaveBeenCalled();
     });
 
@@ -130,7 +130,7 @@ describe("UserMenuDropdown", () => {
 
       await user.click(screen.getByTestId("menu-item-settings"));
 
-      expect(mockNavigate).toHaveBeenCalledWith("/studio/v2/settings");
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/settings");
       expect(onClose).toHaveBeenCalled();
     });
 
@@ -206,7 +206,7 @@ describe("UserMenuDropdown", () => {
       // Select admin persona
       await user.click(screen.getByTestId("persona-option-admin"));
 
-      expect(mockNavigate).toHaveBeenCalledWith("/studio/v2/admin");
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/admin");
       expect(onClose).toHaveBeenCalled();
     });
 
@@ -215,14 +215,14 @@ describe("UserMenuDropdown", () => {
       const user = userEvent.setup();
 
       const expectedRoutes: Record<string, string> = {
-        admin: "/studio/v2/admin",
-        "security-admin": "/studio/v2/compliance",
-        auditor: "/studio/v2/admin/audit-logs",
-        "alice-builder": "/studio/v2/chat",
-        "alice-analyst": "/studio/v2/observability",
-        "alice-devops": "/studio/v2/connections",
-        "compliance-officer": "/studio/v2/compliance",
-        bob: "/studio/v2/chat",
+        admin: "/studio/admin",
+        "security-admin": "/studio/compliance",
+        auditor: "/studio/admin/audit-logs",
+        "alice-builder": "/studio/chat",
+        "alice-analyst": "/studio/observability",
+        "alice-devops": "/studio/connections",
+        "compliance-officer": "/studio/compliance",
+        bob: "/studio/chat",
       };
 
       for (const [personaId, expectedRoute] of Object.entries(expectedRoutes)) {

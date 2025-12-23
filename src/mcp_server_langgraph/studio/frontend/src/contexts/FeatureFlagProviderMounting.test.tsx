@@ -63,15 +63,15 @@ describe("FeatureFlagProvider Mounting", () => {
   });
 });
 
-describe("canvas_studio_shell feature flag", () => {
+describe("studio_shell feature flag", () => {
   it("should be defined in feature flags type", async () => {
     // Read api types file
     const typesPath = path.resolve(__dirname, "../types/api.ts");
     const typesContent = fs.readFileSync(typesPath, "utf-8");
 
-    // Check that canvas_studio_shell is defined
-    const hasCanvasStudioShell = typesContent.includes("canvas_studio_shell");
+    // Check that studio_shell is defined
+    const hasStudioShell = typesContent.includes("studio_shell");
 
-    expect(hasCanvasStudioShell).toBe(true);
+    expect(hasStudioShell).toBe(true);
   });
 });

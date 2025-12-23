@@ -85,9 +85,9 @@ describe("useNewChat", () => {
 
       // Verify navigation happened (session was created)
       expect(mockNavigate).toHaveBeenCalled();
-      // Navigation path should start with /studio/v2/chat/
+      // Navigation path should start with /studio/chat/
       expect(mockNavigate).toHaveBeenCalledWith(
-        expect.stringMatching(/^\/studio\/v2\/chat\/session-/),
+        expect.stringMatching(/^\/studio\/chat\/session-/),
       );
     });
 
@@ -104,7 +104,7 @@ describe("useNewChat", () => {
       // Verify navigation happened with a session ID
       expect(mockNavigate).toHaveBeenCalledTimes(1);
       const navigatePath = mockNavigate.mock.calls[0][0];
-      expect(navigatePath).toMatch(/^\/studio\/v2\/chat\/session-[a-f0-9]+$/);
+      expect(navigatePath).toMatch(/^\/studio\/chat\/session-[a-f0-9]+$/);
     });
 
     it("should accept a custom session name", async () => {

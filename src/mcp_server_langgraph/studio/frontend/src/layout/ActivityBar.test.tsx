@@ -159,7 +159,7 @@ describe("ActivityBar", () => {
 
       await user.click(screen.getByTestId("nav-chat"));
 
-      expect(mockNavigate).toHaveBeenCalledWith("/studio/v2/chat");
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/chat");
     });
 
     it("should highlight active nav item", async () => {

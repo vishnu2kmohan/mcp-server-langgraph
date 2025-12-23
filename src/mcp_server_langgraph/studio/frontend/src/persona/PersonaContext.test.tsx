@@ -222,7 +222,7 @@ describe("PersonaContext", () => {
         wrapper: createWrapper(store),
       });
 
-      expect(result.current).toBe("/studio/v2/admin");
+      expect(result.current).toBe("/studio/admin");
     });
 
     it("should return chat route for bob", () => {
@@ -231,7 +231,7 @@ describe("PersonaContext", () => {
         wrapper: createWrapper(store),
       });
 
-      expect(result.current).toBe("/studio/v2/chat");
+      expect(result.current).toBe("/studio/chat");
     });
 
     it("should return observability route for alice-analyst", () => {
@@ -243,7 +243,7 @@ describe("PersonaContext", () => {
         wrapper: createWrapper(store),
       });
 
-      expect(result.current).toBe("/studio/v2/observability");
+      expect(result.current).toBe("/studio/observability");
     });
   });
 });

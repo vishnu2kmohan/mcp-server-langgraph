@@ -293,7 +293,7 @@ describe("Routing Integration", () => {
     it("should maintain ActivityBar across route changes", async () => {
       const store = createTestStore();
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/chat"],
+        initialEntries: ["/studio/chat"],
       });
 
       render(
@@ -308,7 +308,7 @@ describe("Routing Integration", () => {
 
       // Navigate to different route
       await act(async () => {
-        router.navigate("/studio/v2/compliance");
+        router.navigate("/studio/compliance");
       });
 
       await waitFor(() => {
@@ -320,7 +320,7 @@ describe("Routing Integration", () => {
     it("should maintain SessionNav across route changes", async () => {
       const store = createTestStore();
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/chat"],
+        initialEntries: ["/studio/chat"],
       });
 
       render(
@@ -335,7 +335,7 @@ describe("Routing Integration", () => {
 
       // Navigate to different route
       await act(async () => {
-        router.navigate("/studio/v2/chat/session-456");
+        router.navigate("/studio/chat/session-456");
       });
 
       await waitFor(() => {
@@ -349,7 +349,7 @@ describe("Routing Integration", () => {
       const store = createTestStore();
       const routes = [
         {
-          path: "/studio/v2/chat/:sessionId",
+          path: "/studio/chat/:sessionId",
           element: <SessionIdDisplay />,
         },
       ];
@@ -360,7 +360,7 @@ describe("Routing Integration", () => {
       }
 
       const router = createMemoryRouter(routes, {
-        initialEntries: ["/studio/v2/chat/test-session-id"],
+        initialEntries: ["/studio/chat/test-session-id"],
       });
 
       render(
@@ -379,7 +379,7 @@ describe("Routing Integration", () => {
     it("should render StudioShell when flag enabled", async () => {
       const store = createTestStore();
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/chat"],
+        initialEntries: ["/studio/chat"],
       });
 
       render(
@@ -399,7 +399,7 @@ describe("Routing Integration", () => {
       const store = createTestStore("developer");
 
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/chat"],
+        initialEntries: ["/studio/chat"],
       });
 
       render(
@@ -418,7 +418,7 @@ describe("Routing Integration", () => {
     it("should not crash on valid routes", async () => {
       const store = createTestStore();
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/chat"],
+        initialEntries: ["/studio/chat"],
       });
 
       // Should not throw
@@ -437,7 +437,7 @@ describe("Routing Integration", () => {
       const store = createTestStore();
       const routes = [
         {
-          path: "/studio/v2",
+          path: "/studio",
           element: (
             <Suspense fallback={<div data-testid="loading">Loading...</div>}>
               <div data-testid="content">Content</div>
@@ -447,7 +447,7 @@ describe("Routing Integration", () => {
       ];
 
       const router = createMemoryRouter(routes, {
-        initialEntries: ["/studio/v2"],
+        initialEntries: ["/studio"],
       });
 
       render(
@@ -468,22 +468,22 @@ describe("Routing Integration", () => {
       const store = createTestStore("admin");
       const routes = [
         {
-          path: "/studio/v2/admin",
+          path: "/studio/admin",
           element: <div data-testid="admin-page">Admin</div>,
         },
         {
-          path: "/studio/v2/compliance",
+          path: "/studio/compliance",
           element: <div data-testid="compliance-page">Compliance</div>,
         },
         {
-          path: "/studio/v2/chat",
+          path: "/studio/chat",
           element: <div data-testid="chat-page">Chat</div>,
         },
       ];
 
       // Test admin route
       let router = createMemoryRouter(routes, {
-        initialEntries: ["/studio/v2/admin"],
+        initialEntries: ["/studio/admin"],
       });
 
       const { unmount } = render(
@@ -500,7 +500,7 @@ describe("Routing Integration", () => {
 
       // Test compliance route
       router = createMemoryRouter(routes, {
-        initialEntries: ["/studio/v2/compliance"],
+        initialEntries: ["/studio/compliance"],
       });
 
       render(
@@ -518,13 +518,13 @@ describe("Routing Integration", () => {
       const store = createTestStore("developer");
       const routes = [
         {
-          path: "/studio/v2/chat",
+          path: "/studio/chat",
           element: <div data-testid="chat-page">Chat</div>,
         },
       ];
 
       const router = createMemoryRouter(routes, {
-        initialEntries: ["/studio/v2/chat"],
+        initialEntries: ["/studio/chat"],
       });
 
       render(
@@ -542,13 +542,13 @@ describe("Routing Integration", () => {
       const store = createTestStore("user");
       const routes = [
         {
-          path: "/studio/v2/chat",
+          path: "/studio/chat",
           element: <div data-testid="chat-page">Chat</div>,
         },
       ];
 
       const router = createMemoryRouter(routes, {
-        initialEntries: ["/studio/v2/chat"],
+        initialEntries: ["/studio/chat"],
       });
 
       render(

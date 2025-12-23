@@ -118,11 +118,11 @@ describe("usePersonaRouting", () => {
   });
 
   describe("default route redirect", () => {
-    it("should NOT redirect on /studio/v2 - router index redirect handles it", async () => {
-      // The hook should NOT navigate on /studio/v2 paths
+    it("should NOT redirect on /studio - router index redirect handles it", async () => {
+      // The hook should NOT navigate on /studio paths
       // The router has: { index: true, element: <Navigate to="chat" replace /> }
       renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2", "admin"),
+        wrapper: createWrapper("/studio", "admin"),
       });
 
       // Wait a bit to ensure no navigation happens
@@ -145,9 +145,9 @@ describe("usePersonaRouting", () => {
       });
     });
 
-    it("should NOT redirect on /studio/v2/chat - already on valid route", async () => {
+    it("should NOT redirect on /studio/chat - already on valid route", async () => {
       renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2/chat", "developer"),
+        wrapper: createWrapper("/studio/chat", "developer"),
       });
 
       // Wait a bit to ensure no navigation happens
@@ -161,7 +161,7 @@ describe("usePersonaRouting", () => {
   describe("route access validation", () => {
     it("should allow admin to access admin routes", () => {
       const { result } = renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2/admin", "admin"),
+        wrapper: createWrapper("/studio/admin", "admin"),
       });
 
       expect(result.current.canAccessRoute).toBe(true);
@@ -169,7 +169,7 @@ describe("usePersonaRouting", () => {
 
     it("should allow admin to access all routes", () => {
       const { result } = renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2/compliance", "admin"),
+        wrapper: createWrapper("/studio/compliance", "admin"),
       });
 
       expect(result.current.canAccessRoute).toBe(true);
@@ -177,7 +177,7 @@ describe("usePersonaRouting", () => {
 
     it("should allow developer to access developer routes", () => {
       const { result } = renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2/chat", "developer"),
+        wrapper: createWrapper("/studio/chat", "developer"),
       });
 
       expect(result.current.canAccessRoute).toBe(true);
@@ -185,7 +185,7 @@ describe("usePersonaRouting", () => {
 
     it("should allow user to access chat routes", () => {
       const { result } = renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2/chat", "user"),
+        wrapper: createWrapper("/studio/chat", "user"),
       });
 
       expect(result.current.canAccessRoute).toBe(true);
@@ -195,7 +195,7 @@ describe("usePersonaRouting", () => {
   describe("persona info", () => {
     it("should return current persona", () => {
       const { result } = renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2/chat", "admin"),
+        wrapper: createWrapper("/studio/chat", "admin"),
       });
 
       expect(result.current.persona).toBe("admin");
@@ -203,7 +203,7 @@ describe("usePersonaRouting", () => {
 
     it("should return default route for persona", () => {
       const { result } = renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2/chat", "admin"),
+        wrapper: createWrapper("/studio/chat", "admin"),
       });
 
       expect(result.current.defaultRoute).toContain("/studio");
@@ -213,7 +213,7 @@ describe("usePersonaRouting", () => {
   describe("no navigation when not needed", () => {
     it("should not navigate when already on a valid route", async () => {
       renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2/chat", "user"),
+        wrapper: createWrapper("/studio/chat", "user"),
       });
 
       // Wait a bit to ensure no navigation happens
@@ -225,7 +225,7 @@ describe("usePersonaRouting", () => {
 
     it("should not navigate when not authenticated", async () => {
       renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2/chat", "user", null),
+        wrapper: createWrapper("/studio/chat", "user", null),
       });
 
       // Wait a bit to ensure no navigation happens

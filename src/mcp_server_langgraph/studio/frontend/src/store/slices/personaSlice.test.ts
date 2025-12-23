@@ -192,18 +192,18 @@ describe("personaSlice", () => {
         const adminState = {
           persona: { ...mockState.persona, persona: "admin" as Persona },
         };
-        expect(selectDefaultRoute(adminState)).toBe("/studio/v2/chat");
+        expect(selectDefaultRoute(adminState)).toBe("/studio/chat");
       });
 
       it("should return developer default route for developer (v2 chat)", () => {
-        expect(selectDefaultRoute(mockState)).toBe("/studio/v2/chat");
+        expect(selectDefaultRoute(mockState)).toBe("/studio/chat");
       });
 
       it("should return user default route for user (v2 chat)", () => {
         const userState = {
           persona: { ...mockState.persona, persona: "user" as Persona },
         };
-        expect(selectDefaultRoute(userState)).toBe("/studio/v2/chat");
+        expect(selectDefaultRoute(userState)).toBe("/studio/chat");
       });
     });
 
@@ -517,7 +517,7 @@ describe("personaSlice", () => {
             persona: "admin" as Persona,
           },
         };
-        expect(selectDefaultRoute(state)).toBe("/studio/v2/admin");
+        expect(selectDefaultRoute(state)).toBe("/studio/admin");
       });
 
       it("should return compliance route for security-admin", () => {
@@ -528,7 +528,7 @@ describe("personaSlice", () => {
             persona: "admin" as Persona,
           },
         };
-        expect(selectDefaultRoute(state)).toBe("/studio/v2/compliance");
+        expect(selectDefaultRoute(state)).toBe("/studio/compliance");
       });
 
       it("should return audit route for auditor", () => {
@@ -539,7 +539,7 @@ describe("personaSlice", () => {
             persona: "admin" as Persona,
           },
         };
-        expect(selectDefaultRoute(state)).toBe("/studio/v2/audit");
+        expect(selectDefaultRoute(state)).toBe("/studio/audit");
       });
 
       it("should return chat route for alice-builder", () => {
@@ -550,7 +550,7 @@ describe("personaSlice", () => {
             persona: "developer" as Persona,
           },
         };
-        expect(selectDefaultRoute(state)).toBe("/studio/v2/chat");
+        expect(selectDefaultRoute(state)).toBe("/studio/chat");
       });
 
       it("should return observability route for alice-analyst", () => {
@@ -561,7 +561,7 @@ describe("personaSlice", () => {
             persona: "developer" as Persona,
           },
         };
-        expect(selectDefaultRoute(state)).toBe("/studio/v2/observability");
+        expect(selectDefaultRoute(state)).toBe("/studio/observability");
       });
 
       it("should return connections route for alice-devops", () => {
@@ -572,7 +572,7 @@ describe("personaSlice", () => {
             persona: "developer" as Persona,
           },
         };
-        expect(selectDefaultRoute(state)).toBe("/studio/v2/connections");
+        expect(selectDefaultRoute(state)).toBe("/studio/connections");
       });
 
       it("should return compliance route for compliance-officer", () => {
@@ -583,7 +583,7 @@ describe("personaSlice", () => {
             persona: "developer" as Persona,
           },
         };
-        expect(selectDefaultRoute(state)).toBe("/studio/v2/compliance");
+        expect(selectDefaultRoute(state)).toBe("/studio/compliance");
       });
 
       it("should return chat route for bob", () => {
@@ -594,7 +594,7 @@ describe("personaSlice", () => {
             persona: "user" as Persona,
           },
         };
-        expect(selectDefaultRoute(state)).toBe("/studio/v2/chat");
+        expect(selectDefaultRoute(state)).toBe("/studio/chat");
       });
     });
   });
