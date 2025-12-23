@@ -4,8 +4,8 @@
  * Tests for the artifact action buttons component
  * (Remix/Fork, Share, Export, Copy, Delete).
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { ArtifactActions } from "./ArtifactActions";
 import type { CanvasArtifact } from "../types/artifacts";
 
@@ -38,6 +38,11 @@ const mockArtifact: CanvasArtifact = {
 
 describe("ArtifactActions", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

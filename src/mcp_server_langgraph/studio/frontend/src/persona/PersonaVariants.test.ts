@@ -4,7 +4,7 @@
  * Tests for persona variant definitions and utility functions.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 
 import {
   PERSONA_VARIANTS,
@@ -25,6 +25,10 @@ import {
 // =============================================================================
 
 describe("PersonaVariants", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("PERSONA_VARIANTS", () => {
     it("should have 8 persona variants", () => {
       expect(PERSONA_VARIANTS).toHaveLength(8);

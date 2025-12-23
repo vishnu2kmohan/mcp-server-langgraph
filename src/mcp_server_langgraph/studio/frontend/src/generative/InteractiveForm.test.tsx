@@ -3,8 +3,8 @@
  *
  * Tests for AI-generated interactive forms.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { InteractiveForm, type FormConfig } from "./InteractiveForm";
@@ -56,6 +56,11 @@ const mockFormConfig: FormConfig = {
 
 describe("InteractiveForm", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

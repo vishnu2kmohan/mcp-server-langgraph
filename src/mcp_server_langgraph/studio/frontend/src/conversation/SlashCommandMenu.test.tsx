@@ -3,8 +3,8 @@
  *
  * Tests for the slash command menu component.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { SlashCommandMenu, type SlashCommand } from "./SlashCommandMenu";
 
@@ -47,6 +47,11 @@ const mockCommands: SlashCommand[] = [
 
 describe("SlashCommandMenu", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

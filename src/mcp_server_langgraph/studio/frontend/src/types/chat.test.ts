@@ -5,7 +5,7 @@
  * These types are extracted from ChatMessages.tsx for reusability.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import type {
   Source,
   Message,
@@ -17,6 +17,10 @@ import type {
 } from "./chat";
 
 describe("Chat Types", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("Source interface", () => {
     it("should accept valid source with title and url", () => {
       const source: Source = {

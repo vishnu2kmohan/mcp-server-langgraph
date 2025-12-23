@@ -5,7 +5,7 @@
  * and demonstrate how to use MSW in tests.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import {
   server,
@@ -16,6 +16,10 @@ import {
 } from "./server";
 
 describe("MSW Handlers", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("Health Endpoint", () => {
     it("should return healthy status", async () => {
       const response = await fetch("/api/v1/health");

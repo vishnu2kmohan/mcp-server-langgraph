@@ -13,7 +13,7 @@ import { useState, useCallback, useEffect } from "react";
 import { cn } from "../utils/cn";
 import { storage } from "../utils/storage";
 
-const STORAGE_KEY = "studio-hybrid-shell-override";
+const STORAGE_KEY = "studio-studio-shell-override";
 
 export interface FeatureFlagToggleProps {
   /** Whether we're in dev mode */

@@ -110,7 +110,7 @@ If Keycloak authentication fails, tests fall back to mock auth:
 
 | Spec | Feature |
 |------|---------|
-| `hybrid-shell-smoke.spec.ts` | HybridShell layout |
+| `studio-shell-smoke.spec.ts` | StudioShell layout |
 | `canvas-artifacts.spec.ts` | Canvas artifact editing |
 | `session-sync-flow.spec.ts` | Session synchronization |
 | `ai-suggestions.spec.ts` | AI inline suggestions |
@@ -193,7 +193,7 @@ docker-compose -f docker-compose.test.yml logs api
 npm run test:e2e:chromium
 
 # Run specific test file
-npx playwright test hybrid-shell-smoke.spec.ts
+npx playwright test studio-shell-smoke.spec.ts
 
 # Run with headed browser (see what's happening)
 npx playwright test --headed
@@ -236,7 +236,7 @@ Before removing AppShell, E2E tests must validate:
 npx playwright test *-journey.spec.ts
 
 # Verify hybrid shell smoke test
-npx playwright test hybrid-shell-smoke.spec.ts
+npx playwright test studio-shell-smoke.spec.ts
 ```
 
 ## CI/CD Integration

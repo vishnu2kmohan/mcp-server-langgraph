@@ -66,7 +66,7 @@ function isNotificationMessage(data: unknown): data is NotificationMessage {
 /**
  * Get the default WebSocket URL for notifications
  */
-function getDefaultWebSocketUrl(): string {
+function getDefaultWebSocketUrl(token?: string): string {
   if (typeof window === "undefined") {
     return "ws://localhost:8000/api/v1/ws/notifications";
   }
@@ -82,8 +82,7 @@ function getDefaultWebSocketUrl(): string {
   // No need to change the host - just use the same origin
   // For gateway (localhost, localhost:80) and production, use the same host
 
-  // Get access token for authentication
-  const token = getAuthToken();
+  // Build URL with token if provided
   const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
 
   return `${protocol}//${host}/api/v1/ws/notifications${tokenParam}`;
@@ -113,10 +112,15 @@ export function useNotificationWebSocket(
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
-  // Compute WebSocket URL - recalculate when auth state changes
-  // This ensures the token query param is included when user becomes authenticated
+  // Get auth token when authenticated - makes dependency explicit for React
+  // Convert null to undefined for type compatibility
+  const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
 
-  const wsUrl = useMemo(() => url ?? getDefaultWebSocketUrl(), [url]);
+  // Compute WebSocket URL - recalculates when auth state changes via authToken
+  const wsUrl = useMemo(
+    () => url ?? getDefaultWebSocketUrl(authToken),
+    [url, authToken],
+  );
 
   // Handle incoming messages
   const handleMessage = useCallback(

@@ -190,7 +190,7 @@ test.describe('AI Command Palette', () => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Open command palette with Cmd+K (Meta+K on Mac)
     await alicePage.keyboard.press('Meta+k');
@@ -208,7 +208,7 @@ test.describe('AI Command Palette', () => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Open command palette
     await alicePage.keyboard.press('Meta+k');
@@ -224,7 +224,7 @@ test.describe('AI Command Palette', () => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Open command palette
     await alicePage.keyboard.press('Meta+k');
@@ -240,7 +240,7 @@ test.describe('AI Command Palette', () => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Open command palette
     await alicePage.keyboard.press('Meta+k');
@@ -259,7 +259,7 @@ test.describe('AI Command Palette', () => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Verify canvas is visible initially
     const canvasPanel = alicePage.getByTestId('canvas-panel');
@@ -282,7 +282,7 @@ test.describe('AI Command Palette', () => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Open command palette
     await alicePage.keyboard.press('Meta+k');
@@ -301,7 +301,7 @@ test.describe('AI Command Palette', () => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Open command palette
     await alicePage.keyboard.press('Meta+k');
@@ -324,7 +324,7 @@ test.describe('AI Command Palette', () => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Open command palette
     await alicePage.keyboard.press('Meta+k');
@@ -372,21 +372,21 @@ test.describe('Suggestion Chips Component', () => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
   });
 
   test('should show confidence indicator on chips', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
   });
 
   test('should be keyboard navigable', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Tab navigation
     await alicePage.keyboard.press('Tab');
@@ -685,7 +685,7 @@ test.describe('AI Feature Flags', () => {
     });
 
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Try to open command palette with Cmd+K
     await alicePage.keyboard.press('Meta+k');
@@ -733,7 +733,7 @@ test.describe('AI Feature Flags', () => {
     });
 
     await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Inline suggestions component should NOT be visible
     const inlineSuggestions = alicePage.getByTestId('inline-suggestions');
@@ -762,7 +762,7 @@ test.describe('AI Feature Flags', () => {
     });
 
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Background agent panel should NOT be visible
     const agentPanel = alicePage.getByTestId('background-agent-panel');
@@ -773,7 +773,7 @@ test.describe('AI Feature Flags', () => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Open command palette with Cmd+K
     await alicePage.keyboard.press('Meta+k');
@@ -800,7 +800,7 @@ test.describe('AI Feature Flags', () => {
 
     await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Canvas panel should be visible (AI features available)
     const canvasPanel = alicePage.getByTestId('canvas-panel');
@@ -828,7 +828,7 @@ test.describe('AI Feature Flags', () => {
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
     // App should still render without crashing
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // AI features should be disabled by default when flags fail to load
     await alicePage.keyboard.press('Meta+k');
@@ -843,13 +843,13 @@ test.describe('AI Accessibility', () => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
   });
 
   test('should announce AI suggestions to screen readers', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
 
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
   });
 });

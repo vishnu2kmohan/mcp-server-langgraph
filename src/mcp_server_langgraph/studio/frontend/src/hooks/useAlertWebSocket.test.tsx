@@ -26,6 +26,7 @@ import alertReducer, {
   selectAlerts,
   type Alert,
 } from "../store/slices/alertSlice";
+import authReducer from "../store/slices/authSlice";
 
 // =============================================================================
 // Mocks
@@ -52,9 +53,21 @@ vi.mock("./useRealtimeSync", () => ({
   },
 }));
 
-// Mock getAuthToken
+// Mock storage module (including exports needed by authSlice)
 vi.mock("../utils/storage", () => ({
   getAuthToken: vi.fn(() => "mock-token"),
+  STORAGE_KEYS: {
+    AUTH_STATE: "mcp_auth_state",
+    PREFERENCES: "mcp_preferences",
+    SESSION_HISTORY: "mcp_session_history",
+  },
+  storage: {
+    get: vi.fn(),
+    set: vi.fn(),
+    remove: vi.fn(),
+    clear: vi.fn(),
+  },
+  clearAuthTokens: vi.fn(),
 }));
 
 // Mock toast
@@ -74,10 +87,25 @@ vi.mock("sonner", () => ({
 // Test Helpers
 // =============================================================================
 
-const createTestStore = () => {
+const createTestStore = (isAuthenticated = true) => {
   return configureStore({
     reducer: {
       alerts: alertReducer,
+      auth: authReducer,
+    },
+    preloadedState: {
+      auth: {
+        user: isAuthenticated
+          ? { id: "test-user", email: "test@example.com", roles: ["user"], persona: "user" as const }
+          : null,
+        tokens: null,
+        organizations: [],
+        currentOrganization: null,
+        permissions: [],
+        lastSynced: null,
+        isLoading: false,
+        error: null,
+      },
     },
   });
 };

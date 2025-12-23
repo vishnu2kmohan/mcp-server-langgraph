@@ -350,7 +350,7 @@ describe("StudioShellLayout", () => {
     it("renders the hybrid shell with all panels", () => {
       renderWithProviders(createTestStore());
 
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
       expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
       expect(screen.getByTestId("session-nav")).toBeInTheDocument();
       expect(screen.getByTestId("conversation-panel")).toBeInTheDocument();
@@ -366,8 +366,8 @@ describe("StudioShellLayout", () => {
     it("has proper layout structure with resizable panels", () => {
       renderWithProviders(createTestStore());
 
-      const shell = screen.getByTestId("hybrid-shell");
-      expect(shell).toHaveClass("hybrid-shell");
+      const shell = screen.getByTestId("studio-shell");
+      expect(shell).toHaveClass("studio-shell");
       expect(screen.getByTestId("panel-group")).toBeInTheDocument();
     });
 
@@ -699,7 +699,7 @@ describe("StudioShellLayout", () => {
       renderWithProviders(createTestStore());
 
       // Core layout should still render
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
       // Activity bar should still be present for navigation
       expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
     });
@@ -707,8 +707,8 @@ describe("StudioShellLayout", () => {
     it("has responsive CSS classes on hybrid shell", () => {
       renderWithProviders(createTestStore());
 
-      const shell = screen.getByTestId("hybrid-shell");
-      expect(shell).toHaveClass("hybrid-shell");
+      const shell = screen.getByTestId("studio-shell");
+      expect(shell).toHaveClass("studio-shell");
     });
 
     it("activity bar is always visible across breakpoints", () => {
@@ -969,7 +969,7 @@ describe("StudioShellLayout", () => {
 
       // Note: The actual toggle happens via Redux, which we can't easily verify
       // without re-rendering, but we can verify the event handler was set up
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("toggles canvas when Ctrl+/ is pressed (Windows/Linux)", async () => {
@@ -982,7 +982,7 @@ describe("StudioShellLayout", () => {
       await dispatchKeyboardEvent("/", { ctrlKey: true });
 
       // Verify the shell is still rendered after keydown
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("does not toggle canvas when regular / is pressed", async () => {
@@ -1354,7 +1354,7 @@ describe("StudioShellLayout", () => {
       renderWithProviders(createTestStore());
 
       // TopBar should be present
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
 
       // Find the user menu button in TopBar (if present)
       const userMenuButton = screen.queryByTestId("user-menu-button");
@@ -1370,7 +1370,7 @@ describe("StudioShellLayout", () => {
       renderWithProviders(createTestStore());
 
       // TelemetryViewer should be rendered (may be hidden based on dev mode)
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
   });
 
@@ -1659,7 +1659,7 @@ describe("StudioShellLayout", () => {
 
       // The onLayout callback would be called by react-resizable-panels
       // We verify the component renders and dispatch is available
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
       expect(dispatchSpy).toBeDefined();
     });
   });
@@ -1720,7 +1720,7 @@ describe("StudioShellLayout", () => {
       }
 
       // Verify the component is still rendered
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("toggles canvas when toggle-canvas command is executed", async () => {
@@ -1768,7 +1768,7 @@ describe("StudioShellLayout", () => {
       }
 
       // Verify the component is still rendered
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("toggles sidebar when toggle-sidebar command is executed", async () => {
@@ -1816,7 +1816,7 @@ describe("StudioShellLayout", () => {
       }
 
       // Verify the component is still rendered
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("navigates to settings when open-settings command is executed", async () => {
@@ -2070,7 +2070,7 @@ describe("StudioShellLayout", () => {
         // Agent task queue should now be visible
         await waitFor(() => {
           // The panel is rendered when showAgentPanel is true
-          expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+          expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
         });
       }
     });
@@ -2355,7 +2355,7 @@ describe("StudioShellLayout", () => {
       });
 
       // Should not crash on unknown action
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
 
       vi.restoreAllMocks();
     });
@@ -2466,7 +2466,7 @@ describe("StudioShellLayout", () => {
 
       // Command palette should still be open - the AI interpretation happened
       expect(screen.getByTestId("ai-command-palette")).toBeInTheDocument();
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
 
       vi.restoreAllMocks();
     });
@@ -2507,7 +2507,7 @@ describe("StudioShellLayout", () => {
 
       // Should still have command palette open (fallback to search action)
       expect(screen.getByTestId("ai-command-palette")).toBeInTheDocument();
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
 
       vi.restoreAllMocks();
     });
@@ -2543,7 +2543,7 @@ describe("StudioShellLayout", () => {
 
       // Should still have command palette open (fallback to search action with lower confidence)
       expect(screen.getByTestId("ai-command-palette")).toBeInTheDocument();
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
 
       vi.restoreAllMocks();
     });
@@ -3470,7 +3470,7 @@ describe("StudioShellLayout", () => {
       );
 
       // Component should still be functional (fallback action applied)
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("returns fallback with confidence 0.3 when network error occurs", async () => {
@@ -3519,7 +3519,7 @@ describe("StudioShellLayout", () => {
       );
 
       // Component should still be functional despite error
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("includes auth token in request headers when available", async () => {
@@ -3620,7 +3620,7 @@ describe("StudioShellLayout", () => {
 
       // The state should be toggled - verify the shortcut handler ran
       // (The actual panel visibility depends on whether crossInsights exist)
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("toggles CrossInsightsPanel dismissed state when Ctrl+I is pressed (Windows/Linux)", async () => {
@@ -3630,7 +3630,7 @@ describe("StudioShellLayout", () => {
       await dispatchKeyboardEvent("i", { ctrlKey: true });
 
       // The state should be toggled
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("does not toggle when regular I key is pressed without modifier", async () => {
@@ -3640,7 +3640,7 @@ describe("StudioShellLayout", () => {
       await dispatchKeyboardEvent("i");
 
       // Should not crash and shell should still be rendered
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("prevents default browser behavior when Cmd+I is pressed", async () => {
@@ -3683,7 +3683,7 @@ describe("StudioShellLayout", () => {
       await dispatchKeyboardEvent("i", { metaKey: true });
 
       // Shell should still be rendered
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
   });
 
@@ -3718,7 +3718,7 @@ describe("StudioShellLayout", () => {
       renderWithProviders(createTestStore());
 
       // Component should have read the value from localStorage
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
 
       // Verify localStorage still has the value
       expect(localStorage.getItem(STORAGE_KEY)).toBe("true");
@@ -3731,7 +3731,7 @@ describe("StudioShellLayout", () => {
       renderWithProviders(createTestStore());
 
       // Component should render without issues
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("persists dismissed state to localStorage when toggled via keyboard", async () => {
@@ -3776,7 +3776,7 @@ describe("StudioShellLayout", () => {
         renderWithProviders(createTestStore());
       }).not.toThrow();
 
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
 
     it("preserves dismissed state across re-renders", async () => {
@@ -3795,7 +3795,7 @@ describe("StudioShellLayout", () => {
 
       // Should have preserved the state
       expect(localStorage.getItem(STORAGE_KEY)).toBe("true");
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
   });
 
@@ -3831,7 +3831,7 @@ describe("StudioShellLayout", () => {
       renderWithProviders(createTestStore());
 
       // Component should render without issues
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
       // localStorage value should remain unchanged (not cleared)
       expect(localStorage.getItem(STORAGE_KEY)).toBe("true");
     });
@@ -3904,7 +3904,7 @@ describe("StudioShellLayout", () => {
       renderWithProviders(createTestStore());
 
       // Component should render normally (session state reset)
-      expect(screen.getByTestId("hybrid-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
   });
 });

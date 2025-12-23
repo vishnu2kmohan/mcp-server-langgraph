@@ -4,11 +4,15 @@
  * Tests for bidirectional tab-to-route sync utilities.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { getRouteForTab, tabMatchesRoute } from "./tabRoutes";
 import type { TabState } from "../store/slices/workspaceSlice";
 
 describe("getRouteForTab", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should return chat route for chat tab", () => {
     const tab: TabState = { id: "tab-1", type: "chat", title: "Chat" };
     expect(getRouteForTab(tab)).toBe("/studio/chat");
@@ -71,6 +75,10 @@ describe("getRouteForTab", () => {
 });
 
 describe("tabMatchesRoute", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should match chat tab to chat route", () => {
     const tab: TabState = { id: "tab-1", type: "chat", title: "Chat" };
     const searchParams = new URLSearchParams();

@@ -9,7 +9,7 @@
  * These tests verify that the frontend correctly handles the API response format.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { mockFeatureFlags } from "../mocks/handlers";
 import type { FeatureFlags } from "../types/api";
 
@@ -65,6 +65,10 @@ const _EXPECTED_API_RESPONSE_KEYS = [
 ] as const;
 
 describe("Feature Flags API Contract", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("MSW Mock Format", () => {
     it("should use API response format (short names) not backend field names", () => {
       // The API returns short names like "workflows", not "enable_workflows_feature"

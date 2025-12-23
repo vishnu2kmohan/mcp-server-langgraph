@@ -7,8 +7,8 @@
  * - Uses message revalidation after sending
  * - Renders ConversationPanel with slash commands
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -152,6 +152,11 @@ describe("ConnectedConversationPanel", () => {
     mockSessionLoaderData.messages = [];
     mockSessionLoaderData.artifacts = [];
     mockSessionLoaderData.session = undefined;
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Rendering", () => {

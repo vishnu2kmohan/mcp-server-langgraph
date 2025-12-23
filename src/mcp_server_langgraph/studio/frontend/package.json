@@ -23,7 +23,8 @@
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "generate-types": "openapi-typescript ../../../../api/openapi.json -o src/types/generated-api.ts",
-    "generate-types:check": "openapi-typescript ../../../../api/openapi.json --dry-run"
+    "generate-types:check": "openapi-typescript ../../../../api/openapi.json --dry-run",
+    "validate:test-cleanup": "tsx scripts/validate-test-cleanup.ts"
   },
   "dependencies": {
     "@codesandbox/sandpack-react": "^2.20.0",

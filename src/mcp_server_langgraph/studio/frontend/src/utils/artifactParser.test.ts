@@ -6,7 +6,7 @@
  * and converts them to renderable Artifact types.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   parseArtifacts,
   extractCodeBlocks,
@@ -15,6 +15,10 @@ import {
 } from "./artifactParser";
 
 describe("Artifact Parser", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("extractCodeBlocks", () => {
     it("should extract a single code block", () => {
       const content = `Here is some text.

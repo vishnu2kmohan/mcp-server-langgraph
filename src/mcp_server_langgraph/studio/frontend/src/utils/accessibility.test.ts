@@ -5,7 +5,7 @@
  * Tests color contrast, focus management, and ARIA utilities.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   calculateContrastRatio,
   meetsWCAGAA,
@@ -16,6 +16,10 @@ import {
 } from "./accessibility";
 
 describe("Accessibility Utilities", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("hexToRgb", () => {
     it("should convert 6-digit hex to RGB", () => {
       expect(hexToRgb("#ffffff")).toEqual({ r: 255, g: 255, b: 255 });

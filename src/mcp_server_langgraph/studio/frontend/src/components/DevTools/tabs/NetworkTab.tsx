@@ -13,10 +13,12 @@ import {
   ChevronDown as _ChevronDown,
   Globe,
   Loader2,
+  Download,
 } from "lucide-react";
 
 import { cn } from "../../../utils/cn";
 import { useNetworkEntries } from "../hooks/useNetworkEntries";
+import { exportNetworkToJSON, exportNetworkToCSV } from "../utils/export";
 import type { NetworkTabProps, NetworkEntry } from "../types";
 
 // =============================================================================
@@ -452,6 +454,37 @@ export function NetworkTab({
 
         {/* Spacer */}
         <div className="flex-1" />
+
+        {/* Export dropdown */}
+        <div className="relative group">
+          <button
+            data-testid="export-network-button"
+            type="button"
+            aria-label="Export network log"
+            aria-haspopup="true"
+            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500"
+          >
+            <Download size={14} />
+          </button>
+          <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-10 hidden group-hover:block">
+            <button
+              data-testid="export-network-json-button"
+              type="button"
+              onClick={() => exportNetworkToJSON(filteredEntries)}
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap"
+            >
+              Export as JSON
+            </button>
+            <button
+              data-testid="export-network-csv-button"
+              type="button"
+              onClick={() => exportNetworkToCSV(filteredEntries)}
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap"
+            >
+              Export as CSV
+            </button>
+          </div>
+        </div>
 
         {/* Search */}
         <div className="relative">

@@ -2,7 +2,7 @@
 
 **Date:** 2025-12-19
 **Build Tool:** Vite 6.x
-**Purpose:** Establish baseline before Hybrid Canvas implementation
+**Purpose:** Establish baseline before Studio Shell implementation
 
 ---
 
@@ -77,11 +77,11 @@ These are already code-split and only loaded when needed:
 
 ---
 
-## Phase 0 HybridShell Impact
+## Phase 0 StudioShell Impact
 
 | New Code | Size | Notes |
 |----------|------|-------|
-| HybridShellLayout.tsx | ~2 KB | Skeleton component |
+| StudioShellLayout.tsx | ~2 KB | Skeleton component |
 | types/artifacts.ts extension | ~3 KB | Canvas types |
 | layout/index.ts | <1 KB | Module export |
 
@@ -89,11 +89,11 @@ These are already code-split and only loaded when needed:
 
 ---
 
-## Targets for Hybrid Canvas Rebuild
+## Targets for Studio Shell Rebuild
 
 Per the plan, focus on:
 
-1. **Not making it worse** - New HybridShell code should be < 50 KB total
+1. **Not making it worse** - New StudioShell code should be < 50 KB total
 2. **Lazy loading heavy deps** - Already implemented
 3. **Measuring impact of each new feature** - Track per phase
 
@@ -102,7 +102,7 @@ Per the plan, focus on:
 - [x] Baseline documented
 - [x] Top chunks identified
 - [x] Lazy loading strategy confirmed
-- [ ] HybridShellLayout < 10 KB (when fully built)
+- [ ] StudioShellLayout < 10 KB (when fully built)
 
 ---
 

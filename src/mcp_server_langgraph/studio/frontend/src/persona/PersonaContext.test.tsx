@@ -4,8 +4,8 @@
  * TDD tests for the React context that provides persona state
  * to components without direct Redux access.
  */
-import { describe, it, expect } from "vitest";
-import { render, screen, renderHook, act } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, renderHook, act, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
@@ -63,6 +63,11 @@ const createWrapper = (store: ReturnType<typeof createTestStore>) => {
 // =============================================================================
 
 describe("PersonaContext", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("PersonaProvider", () => {
     it("should render children", () => {
       const store = createTestStore();

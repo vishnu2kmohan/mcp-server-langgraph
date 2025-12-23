@@ -4,11 +4,16 @@
  * Phase 6: Help & Accessibility
  * Tests for keyboard shortcuts reference panel.
  */
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { KeyboardShortcuts, type ShortcutCategory } from "./KeyboardShortcuts";
 
 describe("KeyboardShortcuts", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   const mockCategories: ShortcutCategory[] = [
     {
       id: "navigation",

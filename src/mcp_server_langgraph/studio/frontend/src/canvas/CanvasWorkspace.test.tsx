@@ -4,13 +4,14 @@
  * Tests for the main Canvas workspace component that manages
  * the artifact display area with resizable panels.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   render,
   screen,
   fireEvent,
   waitFor,
   act,
+  cleanup,
 } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -108,6 +109,11 @@ function renderWithProviders(
 
 describe("CanvasWorkspace", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

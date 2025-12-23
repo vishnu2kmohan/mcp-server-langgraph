@@ -12,11 +12,15 @@
  * - GREEN: Test will pass after adding FeatureFlagProvider
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 
 describe("FeatureFlagProvider Mounting", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should be mounted in main.tsx", () => {
     // Read main.tsx file
     const mainTsxPath = path.resolve(__dirname, "../main.tsx");

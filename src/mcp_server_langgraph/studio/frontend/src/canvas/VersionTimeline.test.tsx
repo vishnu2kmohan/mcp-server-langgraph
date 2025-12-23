@@ -4,8 +4,8 @@
  * Tests for the artifact version history timeline component
  * that displays version history and allows rollback.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { VersionTimeline } from "./VersionTimeline";
 import type { ArtifactVersion } from "../types/artifacts";
 
@@ -61,6 +61,11 @@ const mockVersions: ArtifactVersion[] = [
 
 describe("VersionTimeline", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

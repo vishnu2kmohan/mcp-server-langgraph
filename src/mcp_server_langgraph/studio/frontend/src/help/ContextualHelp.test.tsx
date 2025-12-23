@@ -4,8 +4,8 @@
  * Phase 6: Help & Accessibility
  * Tests for context-aware help tips component.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ContextualHelp, type HelpTip } from "./ContextualHelp";
 
 describe("ContextualHelp", () => {
@@ -27,6 +27,11 @@ describe("ContextualHelp", () => {
   const mockOnLearnMore = vi.fn();
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

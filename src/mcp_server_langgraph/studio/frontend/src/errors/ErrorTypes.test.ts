@@ -7,7 +7,7 @@
  * the application.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   ClassifiedError,
   isRecoverable,
@@ -23,6 +23,11 @@ import {
 } from "./ErrorTypes";
 
 describe("ErrorTypes", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+
   describe("ERROR_CATEGORIES", () => {
     it("defines all 9 error categories", () => {
       expect(ERROR_CATEGORIES).toHaveLength(9);

@@ -3,8 +3,8 @@
  *
  * Tests for AI-generated follow-up suggestion chips.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { FollowUpSuggestions, type Suggestion } from "./FollowUpSuggestions";
 
@@ -38,6 +38,11 @@ const mockSuggestions: Suggestion[] = [
 
 describe("FollowUpSuggestions", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

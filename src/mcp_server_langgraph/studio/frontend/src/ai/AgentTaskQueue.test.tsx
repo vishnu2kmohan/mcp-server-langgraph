@@ -7,8 +7,8 @@
  * - Allows clearing completed tasks
  * - Shows task progress
  */
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -61,6 +61,11 @@ const createWrapper = (store: ReturnType<typeof createTestStore>) => {
 // =============================================================================
 
 describe("AgentTaskQueue", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Empty State", () => {
     it("should show empty state when no tasks", () => {
       const store = createTestStore();

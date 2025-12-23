@@ -5,7 +5,7 @@
  * Validates color palette, typography, spacing, and shadows.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   colors,
   typography,
@@ -19,6 +19,11 @@ import {
 } from "./tokens";
 
 describe("Design Tokens", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+
   describe("Colors", () => {
     it("should have primary brand colors", () => {
       expect(colors.primary).toBeDefined();

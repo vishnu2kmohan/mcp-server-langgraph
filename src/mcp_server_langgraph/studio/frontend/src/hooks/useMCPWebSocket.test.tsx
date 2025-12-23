@@ -6,7 +6,11 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import React from "react";
 import { useMCPWebSocket } from "./useMCPWebSocket";
+import authReducer from "../store/slices/authSlice";
 
 // Mock useRealtimeSync
 const mockSend = vi.fn();
@@ -37,10 +41,43 @@ vi.mock("./useRealtimeSync", () => ({
   },
 }));
 
+// Create test store with auth slice
+function createTestStore(isAuthenticated = true) {
+  return configureStore({
+    reducer: {
+      auth: authReducer,
+    },
+    preloadedState: {
+      auth: {
+        user: isAuthenticated
+          ? { id: "test-user", email: "test@example.com", roles: ["user"], persona: "user" as const }
+          : null,
+        tokens: null,
+        organizations: [],
+        currentOrganization: null,
+        permissions: [],
+        lastSynced: null,
+        isLoading: false,
+        error: null,
+      },
+    },
+  });
+}
+
+// Test wrapper with Redux Provider
+function createWrapper(store: ReturnType<typeof createTestStore>) {
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return <Provider store={store}>{children}</Provider>;
+  };
+}
+
 describe("useMCPWebSocket", () => {
+  let store: ReturnType<typeof createTestStore>;
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockStatus = "disconnected";
+    store = createTestStore();
   });
 
   afterEach(() => {
@@ -49,7 +86,7 @@ describe("useMCPWebSocket", () => {
 
   describe("hook structure", () => {
     it("should return required properties and methods", () => {
-      const { result } = renderHook(() => useMCPWebSocket());
+      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
 
       // Status properties
       expect(result.current).toHaveProperty("status");
@@ -76,7 +113,7 @@ describe("useMCPWebSocket", () => {
     });
 
     it("should return initial disconnected state", () => {
-      const { result } = renderHook(() => useMCPWebSocket());
+      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
 
       expect(result.current.status).toBe("disconnected");
       expect(result.current.isInitialized).toBe(false);
@@ -89,7 +126,7 @@ describe("useMCPWebSocket", () => {
     });
 
     it("should return callable functions", () => {
-      const { result } = renderHook(() => useMCPWebSocket());
+      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
 
       expect(typeof result.current.initialize).toBe("function");
       expect(typeof result.current.listTools).toBe("function");
@@ -101,7 +138,7 @@ describe("useMCPWebSocket", () => {
 
   describe("connection management", () => {
     it("should provide disconnect function", () => {
-      const { result } = renderHook(() => useMCPWebSocket());
+      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
 
       act(() => {
         result.current.disconnect();
@@ -111,7 +148,7 @@ describe("useMCPWebSocket", () => {
     });
 
     it("should provide reconnect function", () => {
-      const { result } = renderHook(() => useMCPWebSocket());
+      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
 
       act(() => {
         result.current.reconnect();
@@ -122,7 +159,7 @@ describe("useMCPWebSocket", () => {
 
     it("should clear state on disconnect", async () => {
       mockStatus = "connected";
-      const { result } = renderHook(() => useMCPWebSocket());
+      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
 
       // Simulate disconnect
       await act(async () => {
@@ -134,7 +171,9 @@ describe("useMCPWebSocket", () => {
 
     it("should respect enabled option", () => {
       mockStatus = "connected";
-      const { result } = renderHook(() => useMCPWebSocket({ enabled: false }));
+      const { result } = renderHook(() => useMCPWebSocket({ enabled: false }), {
+        wrapper: createWrapper(store),
+      });
 
       // Status should be disconnected when not enabled
       expect(result.current.status).toBe("disconnected");
@@ -144,7 +183,7 @@ describe("useMCPWebSocket", () => {
   describe("request handling", () => {
     it("should throw error when not connected", async () => {
       mockStatus = "disconnected";
-      const { result } = renderHook(() => useMCPWebSocket());
+      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
 
       await act(async () => {
         await expect(result.current.initialize()).rejects.toThrow(
@@ -155,7 +194,7 @@ describe("useMCPWebSocket", () => {
 
     it("should send initialize request with correct format when connected", async () => {
       mockStatus = "connected";
-      const { result } = renderHook(() => useMCPWebSocket());
+      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
 
       // Don't await - just check that send was called with correct format
       result.current.initialize().catch(() => {});
@@ -175,7 +214,7 @@ describe("useMCPWebSocket", () => {
 
     it("should send tools/call with correct format", async () => {
       mockStatus = "connected";
-      const { result } = renderHook(() => useMCPWebSocket());
+      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
 
       // Don't await - just check that send was called with correct format
       result.current
@@ -196,7 +235,7 @@ describe("useMCPWebSocket", () => {
 
     it("should include unique message IDs", () => {
       mockStatus = "connected";
-      const { result } = renderHook(() => useMCPWebSocket());
+      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
 
       // Make two requests
       result.current.listTools().catch(() => {});
@@ -216,10 +255,12 @@ describe("useMCPWebSocket", () => {
       const onStreamingStart = vi.fn();
       mockStatus = "connected";
 
-      renderHook(() =>
-        useMCPWebSocket({
-          onStreamingStart,
-        }),
+      renderHook(
+        () =>
+          useMCPWebSocket({
+            onStreamingStart,
+          }),
+        { wrapper: createWrapper(store) },
       );
 
       // Simulate streaming start notification
@@ -238,10 +279,12 @@ describe("useMCPWebSocket", () => {
       const onStreamingChunk = vi.fn();
       mockStatus = "connected";
 
-      renderHook(() =>
-        useMCPWebSocket({
-          onStreamingChunk,
-        }),
+      renderHook(
+        () =>
+          useMCPWebSocket({
+            onStreamingChunk,
+          }),
+        { wrapper: createWrapper(store) },
       );
 
       // Simulate streaming chunk notification
@@ -266,10 +309,12 @@ describe("useMCPWebSocket", () => {
       const onStreamingEnd = vi.fn();
       mockStatus = "connected";
 
-      renderHook(() =>
-        useMCPWebSocket({
-          onStreamingEnd,
-        }),
+      renderHook(
+        () =>
+          useMCPWebSocket({
+            onStreamingEnd,
+          }),
+        { wrapper: createWrapper(store) },
       );
 
       // Simulate streaming end notification
@@ -288,10 +333,12 @@ describe("useMCPWebSocket", () => {
   describe("options", () => {
     it("should use custom client info", () => {
       mockStatus = "connected";
-      const { result } = renderHook(() =>
-        useMCPWebSocket({
-          clientInfo: { name: "custom-client", version: "2.0.0" },
-        }),
+      const { result } = renderHook(
+        () =>
+          useMCPWebSocket({
+            clientInfo: { name: "custom-client", version: "2.0.0" },
+          }),
+        { wrapper: createWrapper(store) },
       );
 
       result.current.initialize().catch(() => {});

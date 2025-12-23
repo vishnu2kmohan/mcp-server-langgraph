@@ -43,6 +43,19 @@ export {
   useIntersectionObserver,
 } from "./utils/performance";
 
+// Export utilities
+export {
+  exportToJSON,
+  exportToCSV,
+  downloadFile,
+  formatConsoleEntriesForExport,
+  formatNetworkEntriesForExport,
+  exportConsoleToJSON,
+  exportConsoleToCSV,
+  exportNetworkToJSON,
+  exportNetworkToCSV,
+} from "./utils/export";
+
 // Types
 export type {
   DevToolsTabId,

@@ -1,7 +1,7 @@
 /**
  * Visual Regression E2E Tests
  *
- * Visual regression tests for the Hybrid Canvas frontend using Playwright's
+ * Visual regression tests for the Studio Shell frontend using Playwright's
  * screenshot comparison. These tests capture and compare screenshots of key
  * UI components to detect unintended visual changes.
  *
@@ -102,13 +102,13 @@ test.describe('Visual Regression - StudioShell Layout', () => {
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
     // Wait for layout to stabilize
-    await alicePage.waitForSelector('[data-testid="hybrid-shell"]', { timeout: 10000 });
+    await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
 
     // Allow CSS animations to complete
     await alicePage.waitForTimeout(500);
 
     // Take full page screenshot
-    await expect(alicePage).toHaveScreenshot('hybrid-shell-desktop.png', {
+    await expect(alicePage).toHaveScreenshot('studio-shell-desktop.png', {
       fullPage: true,
       maxDiffPixels: 100, // Allow minor rendering differences
     });
@@ -119,10 +119,10 @@ test.describe('Visual Regression - StudioShell Layout', () => {
     await alicePage.setViewportSize(viewports.laptop);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await alicePage.waitForSelector('[data-testid="hybrid-shell"]', { timeout: 10000 });
+    await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
     await alicePage.waitForTimeout(500);
 
-    await expect(alicePage).toHaveScreenshot('hybrid-shell-laptop.png', {
+    await expect(alicePage).toHaveScreenshot('studio-shell-laptop.png', {
       fullPage: true,
       maxDiffPixels: 100,
     });
@@ -133,10 +133,10 @@ test.describe('Visual Regression - StudioShell Layout', () => {
     await alicePage.setViewportSize(viewports.tablet);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await alicePage.waitForSelector('[data-testid="hybrid-shell"]', { timeout: 10000 });
+    await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
     await alicePage.waitForTimeout(500);
 
-    await expect(alicePage).toHaveScreenshot('hybrid-shell-tablet.png', {
+    await expect(alicePage).toHaveScreenshot('studio-shell-tablet.png', {
       fullPage: true,
       maxDiffPixels: 100,
     });
@@ -248,7 +248,7 @@ test.describe('Visual Regression - Dark/Light Theme', () => {
     });
 
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
-    await alicePage.waitForSelector('[data-testid="hybrid-shell"]', { timeout: 10000 });
+    await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
     await alicePage.waitForTimeout(500);
 
     await expect(alicePage).toHaveScreenshot('theme-light.png', {
@@ -267,7 +267,7 @@ test.describe('Visual Regression - Dark/Light Theme', () => {
     });
 
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
-    await alicePage.waitForSelector('[data-testid="hybrid-shell"]', { timeout: 10000 });
+    await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
     await alicePage.waitForTimeout(500);
 
     await expect(alicePage).toHaveScreenshot('theme-dark.png', {
@@ -347,7 +347,7 @@ test.describe('Visual Regression - Accessibility Focus States', () => {
     await alicePage.setViewportSize(viewports.desktop);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    await alicePage.waitForSelector('[data-testid="hybrid-shell"]', { timeout: 10000 });
+    await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
 
     // Tab to focus first interactive element
     await alicePage.keyboard.press('Tab');

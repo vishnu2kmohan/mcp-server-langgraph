@@ -6,8 +6,8 @@
  * - Blocks access to unauthorized routes
  * - Shows loading state while persona is loading
  */
-import { describe, it, expect } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { MemoryRouter, Routes, Route, useLocation } from "react-router";
 import { configureStore } from "@reduxjs/toolkit";
@@ -74,6 +74,11 @@ const renderWithRouter = (
 // =============================================================================
 
 describe("PersonaRouter", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Loading State", () => {
     it("should show loading spinner when persona is loading", () => {
       const store = createTestStore({ isPersonaLoading: true });

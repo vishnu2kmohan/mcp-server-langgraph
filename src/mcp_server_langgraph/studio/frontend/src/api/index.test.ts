@@ -4,7 +4,7 @@
  * Tests for API configuration, hook exports, and type definitions.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   api,
   useListWorkflowsQuery,
@@ -47,6 +47,10 @@ import {
 } from "./index";
 
 describe("RTK Query API", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("API Configuration", () => {
     it("should have correct reducerPath", () => {
       expect(api.reducerPath).toBe("api");

@@ -4,8 +4,8 @@
  * Phase 4: AI-Native Features
  * Tests for inline AI suggestions component.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { InlineSuggestions, type Suggestion } from "./InlineSuggestions";
 
 describe("InlineSuggestions", () => {
@@ -34,6 +34,11 @@ describe("InlineSuggestions", () => {
   const mockOnDismiss = vi.fn();
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

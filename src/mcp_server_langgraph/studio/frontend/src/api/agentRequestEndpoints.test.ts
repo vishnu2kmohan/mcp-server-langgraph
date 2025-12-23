@@ -14,7 +14,7 @@
  * - POST /agents/requests/batch/reject - Batch reject (admin)
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 
 // Import the RTK Query hooks to verify they exist
 import {
@@ -266,6 +266,10 @@ function isBatchApprovalResponse(obj: unknown): obj is BatchApprovalResponse {
 // ============================================================================
 
 describe("Agent Request API Contract Tests", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("PendingAgentRequestsResponse", () => {
     it("should validate correct pending requests response structure", () => {
       const validResponse: PendingAgentRequestsResponse = {

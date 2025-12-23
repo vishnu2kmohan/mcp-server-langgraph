@@ -27,7 +27,7 @@ import { ActivityLog } from '@/components/Layout/ActivityLog';
 
 After (when using DevTools):
 ```tsx
-// DevTools ConsoleTab is automatically available in HybridShellLayout
+// DevTools ConsoleTab is automatically available in StudioShellLayout
 // No manual import needed - use keyboard shortcut Cmd+Shift+I
 ```
 

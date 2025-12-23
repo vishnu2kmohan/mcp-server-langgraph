@@ -330,7 +330,10 @@ export function AgentApprovalDialog({
                 <p className="font-medium text-amber-700 dark:text-amber-400">
                   Low Confidence
                 </p>
-                <p className="text-sm text-amber-600 dark:text-amber-400/80">
+                <p
+                  data-testid="trigger-explanation"
+                  className="text-sm text-amber-600 dark:text-amber-400/80"
+                >
                   {getTriggerExplanation(
                     request.trigger_reason,
                     request.confidence,
@@ -439,7 +442,7 @@ export function AgentApprovalDialog({
           {/* Sprint 6: Risk Assessment Panel */}
           {enableAI && (
             <div
-              data-testid="risk-assessment-panel"
+              data-testid="hitl-risk-assessment"
               className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 space-y-3"
             >
               <div className="flex items-center justify-between">
@@ -542,7 +545,7 @@ export function AgentApprovalDialog({
           {/* Sprint 6: Decision History Panel */}
           {enableAI && (
             <div
-              data-testid="decision-history-panel"
+              data-testid="hitl-decision-history"
               className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 space-y-3"
             >
               <div className="flex items-center justify-between">
@@ -627,7 +630,10 @@ export function AgentApprovalDialog({
           {/* Agent Info */}
           <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-900 dark:text-white">
+              <span
+                data-testid="agent-name"
+                className="font-medium text-gray-900 dark:text-white"
+              >
                 Agent: {request.agent_name}
               </span>
             </div>
@@ -636,7 +642,10 @@ export function AgentApprovalDialog({
               <span className="text-sm text-gray-500 dark:text-gray-400">
                 Proposed Action:
               </span>
-              <p className="text-sm text-gray-900 dark:text-white mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+              <p
+                data-testid="proposed-action"
+                className="text-sm text-gray-900 dark:text-white mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded"
+              >
                 {request.proposed_action}
               </p>
             </div>

@@ -12,8 +12,8 @@
  * - Error boundary integration
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen, renderHook } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, renderHook, cleanup } from "@testing-library/react";
 import type { ReactNode } from "react";
 import {
   AIIntelligenceProvider,
@@ -40,6 +40,11 @@ function createWrapper(config?: Partial<AIIntelligenceConfig>) {
 // =============================================================================
 
 describe("AIIntelligenceContext", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Provider", () => {
     it("should render children", () => {
       render(

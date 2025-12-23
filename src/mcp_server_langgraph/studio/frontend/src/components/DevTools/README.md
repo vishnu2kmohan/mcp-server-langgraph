@@ -242,12 +242,12 @@ Requires `devtools_ai_insights` feature flag.
 - **Cost Projection**: Estimated costs based on usage
 - **Optimization Suggestions**: AI-generated recommendations
 
-## Integration with HybridShellLayout
+## Integration with StudioShellLayout
 
-DevTools is integrated into the HybridShellLayout:
+DevTools is integrated into the StudioShellLayout:
 
 ```tsx
-// In HybridShellLayout.tsx
+// In StudioShellLayout.tsx
 <PanelGroup direction="vertical">
   <Panel id="main-content" defaultSize={devToolsCollapsed ? 100 : 80}>
     {/* Main content */}

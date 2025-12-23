@@ -292,12 +292,12 @@ class ArtifactsServiceProtocol(ABC):
 
 ## Lower Priority Questions
 
-### 6. Wireframes for HybridShell
+### 6. Wireframes for StudioShell
 
-**Question:** Should we create Figma wireframes before further HybridShell iterations?
+**Question:** Should we create Figma wireframes before further StudioShell iterations?
 
 **Context:**
-- HybridShell layout is implemented and functional
+- StudioShell layout is implemented and functional
 - No formal design approval process documented
 - Minor UX polish items remain (Phase 6)
 

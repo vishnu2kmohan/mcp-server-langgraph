@@ -3,10 +3,14 @@
  *
  * Tests for the shared className utility function.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { cn } from "./cn";
 
 describe("cn", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should join multiple class strings", () => {
     expect(cn("foo", "bar", "baz")).toBe("foo bar baz");
   });

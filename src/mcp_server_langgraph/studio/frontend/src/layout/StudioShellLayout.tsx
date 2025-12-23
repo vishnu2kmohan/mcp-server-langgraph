@@ -511,8 +511,8 @@ export function StudioShellLayout() {
 
   return (
     <div
-      data-testid="hybrid-shell"
-      className="hybrid-shell flex flex-col h-screen bg-white dark:bg-gray-900"
+      data-testid="studio-shell"
+      className="studio-shell flex flex-col h-screen bg-white dark:bg-gray-900"
     >
       {/* TopBar - persona-aware header */}
       <TopBar

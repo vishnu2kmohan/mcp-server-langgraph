@@ -3,8 +3,8 @@
  *
  * Tests for dynamic data exploration dashboard.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { DataExplorer, type DataExplorerConfig } from "./DataExplorer";
 
@@ -47,6 +47,11 @@ const mockConfig: DataExplorerConfig = {
 
 describe("DataExplorer", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

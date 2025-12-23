@@ -3,8 +3,8 @@
  *
  * Tests for inline AI edit overlay in the canvas.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AIEditOverlay } from "./AIEditOverlay";
 
@@ -36,6 +36,11 @@ const mockEditResult = {
 
 describe("AIEditOverlay", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

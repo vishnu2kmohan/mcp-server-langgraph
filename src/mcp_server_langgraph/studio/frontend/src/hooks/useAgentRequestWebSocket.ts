@@ -224,7 +224,7 @@ export function parseAgentRequestMessage(
 // URL Construction
 // =============================================================================
 
-function getDefaultWebSocketUrl(sessionId?: string): string {
+function getDefaultWebSocketUrl(sessionId?: string, token?: string): string {
   if (typeof window === "undefined") {
     return "ws://localhost:8000/api/v1/ws/agents/requests";
   }
@@ -235,7 +235,6 @@ function getDefaultWebSocketUrl(sessionId?: string): string {
   // Build query params
   const params = new URLSearchParams();
 
-  const token = getAuthToken();
   if (token) {
     params.set("token", token);
   }
@@ -298,12 +297,14 @@ export function useAgentRequestWebSocket(
     onExecutionResumed,
   };
 
-  // Compute WebSocket URL - recalculate when auth state changes
-  // This ensures the token query param is included when user becomes authenticated
+  // Get auth token when authenticated - makes dependency explicit for React
+  // Convert null to undefined for type compatibility
+  const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
 
+  // Compute WebSocket URL - recalculates when auth state changes via authToken
   const wsUrl = useMemo(
-    () => url ?? getDefaultWebSocketUrl(sessionId),
-    [url, sessionId],
+    () => url ?? getDefaultWebSocketUrl(sessionId, authToken),
+    [url, sessionId, authToken],
   );
 
   // Track effective enabled state - only connect when authenticated

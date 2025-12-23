@@ -18,6 +18,7 @@ import notificationReducer, {
   selectNotifications,
   selectUnreadCount,
 } from "../store/slices/notificationSlice";
+import authReducer from "../store/slices/authSlice";
 import type { ReactNode } from "react";
 
 // Mock WebSocket class
@@ -75,11 +76,26 @@ class MockWebSocket {
   static readonly CLOSED = 3;
 }
 
-// Create test store
-const createTestStore = () => {
+// Create test store with auth and notifications slices
+const createTestStore = (isAuthenticated = true) => {
   return configureStore({
     reducer: {
       notifications: notificationReducer,
+      auth: authReducer,
+    },
+    preloadedState: {
+      auth: {
+        user: isAuthenticated
+          ? { id: "test-user", email: "test@example.com", roles: ["user"], persona: "user" as const }
+          : null,
+        tokens: null,
+        organizations: [],
+        currentOrganization: null,
+        permissions: [],
+        lastSynced: null,
+        isLoading: false,
+        error: null,
+      },
     },
   });
 };

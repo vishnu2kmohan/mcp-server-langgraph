@@ -7,7 +7,7 @@
  * suggestions based on error classification.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   getSuggestions,
   getUserMessage,
@@ -17,6 +17,11 @@ import {
 import { createClassifiedError } from "./ErrorTypes";
 
 describe("ErrorSuggestions", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+
   describe("getSuggestions", () => {
     describe("for network errors", () => {
       it("returns network-specific suggestions", () => {

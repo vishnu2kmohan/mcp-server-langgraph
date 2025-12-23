@@ -4,10 +4,14 @@
  * Tests for help page constants including topics and keyboard shortcuts.
  * Ensures data integrity and completeness.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { DEFAULT_HELP_TOPICS, DEFAULT_SHORTCUT_CATEGORIES } from "./helpData";
 
 describe("Help Data", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("DEFAULT_HELP_TOPICS", () => {
     it("should be an array with at least 8 topics", () => {
       expect(Array.isArray(DEFAULT_HELP_TOPICS)).toBe(true);

@@ -87,7 +87,7 @@ test.describe('Error Recovery UX', () => {
       await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
       // Wait for the page to load
-      await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+      await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
       // Trigger an action that would cause an error (e.g., sending a message)
       // The error recovery panel should appear if the ErrorBoundary is triggered
@@ -142,7 +142,7 @@ test.describe('Error Recovery UX', () => {
       }
 
       await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
-      await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+      await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
       // Simulate going offline
       await alicePage.context().setOffline(true);
@@ -168,7 +168,7 @@ test.describe('Error Recovery UX', () => {
       }
 
       await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
-      await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+      await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
       // This test validates offline queue functionality
       // When offline with pending actions, the banner should show count
@@ -274,7 +274,7 @@ test.describe('Error Recovery UX', () => {
       }
 
       await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
-      await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+      await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
       // When user clicks "Sign in again" from an auth error recovery panel,
       // they should be redirected to the login page
@@ -294,7 +294,7 @@ test.describe('Error Recovery UX', () => {
       }
 
       await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
-      await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+      await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
       // When user clicks "Try again" from error recovery panel,
       // the failed action should be retried

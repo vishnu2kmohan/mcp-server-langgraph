@@ -4,11 +4,14 @@
  * Phase 5: Compliance Dashboards
  * Tests for GDPR compliance panel.
  */
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { GDPRPanel, type GDPRControl } from "./GDPRPanel";
 
 describe("GDPRPanel", () => {
+  afterEach(() => {
+    cleanup();
+  });
   const mockControls: GDPRControl[] = [
     {
       id: "Art5",

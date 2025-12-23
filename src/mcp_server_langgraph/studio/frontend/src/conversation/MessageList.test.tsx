@@ -3,8 +3,8 @@
  *
  * Tests for the virtualized message list component.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { MessageList } from "./MessageList";
 import type { ChatMessage } from "./MessageBubble";
@@ -48,6 +48,11 @@ const mockMessages: ChatMessage[] = [
 
 describe("MessageList", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

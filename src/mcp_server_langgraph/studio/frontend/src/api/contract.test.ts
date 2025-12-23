@@ -11,7 +11,7 @@
  * - Nullable fields are handled
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import type {
   HealthStatus,
   HEARTAggregateMetrics,
@@ -475,6 +475,10 @@ function isPagePaginatedResponse<T>(
 }
 
 describe("API Contract Tests", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("Health Endpoint", () => {
     it("should validate HealthStatus schema", () => {
       const validResponse = {

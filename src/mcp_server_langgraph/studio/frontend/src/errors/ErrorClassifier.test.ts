@@ -7,7 +7,7 @@
  * categorizes them for appropriate handling.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   classifyError,
   classifyFetchError,
@@ -16,6 +16,11 @@ import {
 } from "./ErrorClassifier";
 
 describe("ErrorClassifier", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+
   describe("classifyError", () => {
     describe("from Error objects", () => {
       it("classifies TypeError as client error", () => {

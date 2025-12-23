@@ -5,9 +5,12 @@
  * These components are code-split and loaded on-demand.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 
 describe("Lazy AI Components", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
   describe("LazyAICommandPalette", () => {
     it("should export LazyAICommandPalette", async () => {
       const { LazyAICommandPalette } = await import("./lazy");

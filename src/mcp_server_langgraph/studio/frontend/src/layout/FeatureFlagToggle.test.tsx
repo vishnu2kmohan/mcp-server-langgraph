@@ -9,7 +9,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { FeatureFlagToggle } from "./FeatureFlagToggle";
 
 // Storage key used by the component
-const STORAGE_KEY = "studio-hybrid-shell-override";
+const STORAGE_KEY = "studio-studio-shell-override";
 
 describe("FeatureFlagToggle", () => {
   beforeEach(() => {

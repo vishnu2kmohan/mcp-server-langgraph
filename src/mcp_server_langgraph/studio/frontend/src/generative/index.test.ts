@@ -4,10 +4,15 @@
  * Verifies that all expected exports are accessible from the module's index.
  * This ensures module organization and prevents accidental breaking changes.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import * as generativeModule from "./index";
 
 describe("Generative Module Exports", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+
   describe("Components", () => {
     it("should export GenerativeWidget", () => {
       expect(generativeModule.GenerativeWidget).toBeDefined();

@@ -3,8 +3,8 @@
  *
  * TDD tests for injectable telemetry via React context.
  */
-import { describe, it, expect, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import {
   TelemetryProvider,
   useTelemetry,
@@ -16,6 +16,11 @@ import { WebVitalsTracker } from "../utils/webVitals";
 import type { ReactNode } from "react";
 
 describe("TelemetryContext", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("TelemetryProvider", () => {
     it("should provide default session telemetry instance", () => {
       const { result } = renderHook(() => useTelemetry(), {

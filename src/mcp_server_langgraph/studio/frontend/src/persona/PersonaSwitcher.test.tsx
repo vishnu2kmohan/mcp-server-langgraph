@@ -3,8 +3,8 @@
  *
  * Tests for persona/sub-persona selection component.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { PersonaSwitcher, type Persona } from "./PersonaSwitcher";
 
 // =============================================================================
@@ -71,6 +71,11 @@ const mockPersonas: Persona[] = [
 
 describe("PersonaSwitcher", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

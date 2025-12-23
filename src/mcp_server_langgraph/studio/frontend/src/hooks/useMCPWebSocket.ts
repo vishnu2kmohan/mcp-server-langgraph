@@ -212,7 +212,7 @@ export interface UseMCPWebSocketReturn {
 /**
  * Get default MCP WebSocket URL
  */
-function getDefaultMCPWebSocketUrl(authenticated: boolean): string {
+function getDefaultMCPWebSocketUrl(authenticated: boolean, token?: string): string {
   if (typeof window === "undefined") {
     return authenticated
       ? "ws://localhost:8000/api/v1/ws/mcp/auth"
@@ -222,8 +222,7 @@ function getDefaultMCPWebSocketUrl(authenticated: boolean): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.host;
 
-  // Get access token for authentication using storage utility
-  const token = getAuthToken();
+  // Build URL with endpoint and optional token
   const endpoint = authenticated ? "/api/v1/ws/mcp/auth" : "/api/v1/ws/mcp";
   const tokenParam =
     authenticated && token ? `?token=${encodeURIComponent(token)}` : "";
@@ -334,12 +333,14 @@ export function useMCPWebSocket(
     };
   }, [onStreamingChunk, onStreamingStart, onStreamingEnd]);
 
-  // Compute WebSocket URL - recalculate when auth state changes
-  // This ensures the token query param is included when user becomes authenticated
+  // Get auth token when authenticated - makes dependency explicit for React
+  // Convert null to undefined for type compatibility
+  const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
 
+  // Compute WebSocket URL - recalculates when auth state changes via authToken
   const wsUrl = useMemo(
-    () => url ?? getDefaultMCPWebSocketUrl(authenticated),
-    [url, authenticated],
+    () => url ?? getDefaultMCPWebSocketUrl(authenticated, authToken),
+    [url, authenticated, authToken],
   );
 
   // Track effective enabled state - only connect when authenticated (for authenticated endpoints)

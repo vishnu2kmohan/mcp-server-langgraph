@@ -6,7 +6,7 @@
  * Tests the exponential backoff retry strategy.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   calculateBackoff,
   shouldRetry,
@@ -18,6 +18,10 @@ import {
 import type { ClassifiedError } from "../errors/ErrorTypes";
 
 describe("retryStrategy", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("DEFAULT_RETRY_CONFIG", () => {
     it("should have sensible default values", () => {
       expect(DEFAULT_RETRY_CONFIG.maxRetries).toBe(3);

@@ -4,8 +4,8 @@
  * Tests for the API-connected compliance dashboard container.
  * Verifies data fetching, transformation, and error handling.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import * as api from "../api";
 import { ConnectedComplianceDashboard } from "./ConnectedComplianceDashboard";
 
@@ -74,6 +74,11 @@ beforeEach(() => {
     error: undefined,
     refetch: vi.fn(),
   });
+});
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
 });
 
 // =============================================================================

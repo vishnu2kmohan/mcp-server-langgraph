@@ -59,7 +59,7 @@ src/
 ├── conversation/       # Chat/conversation components
 ├── help/               # Help and accessibility
 ├── hooks/              # Custom React hooks
-├── layout/             # Layout components (HybridShell, TopBar, etc.)
+├── layout/             # Layout components (StudioShell, TopBar, etc.)
 ├── pages/              # Page components
 ├── router/             # React Router configuration
 ├── store/              # Redux store and slices
@@ -69,7 +69,7 @@ src/
 
 ## Architecture
 
-The frontend uses a **Hybrid Shell Layout** pattern:
+The frontend uses a **Studio Shell Layout** pattern:
 
 - **ActivityBar**: Left navigation (Chat, Workflows, Agents, etc.)
 - **SessionNav**: Session/conversation list
@@ -92,4 +92,4 @@ Additional frontend-specific documentation is in `docs-internal/frontend/`:
 Lighthouse audit results are stored in `.metrics/`:
 
 - `lighthouse-appshell.json`
-- `lighthouse-hybrid-shell.json`
+- `lighthouse-studio-shell.json`

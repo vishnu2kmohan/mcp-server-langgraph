@@ -4,8 +4,8 @@
  * Tests for the Code/Preview/Data tabs component
  * that switches between different views of an artifact.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { CanvasTabs } from "./CanvasTabs";
 
 // =============================================================================
@@ -14,6 +14,11 @@ import { CanvasTabs } from "./CanvasTabs";
 
 describe("CanvasTabs", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

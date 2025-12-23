@@ -7,7 +7,7 @@
  * Reference: ADR-0026 - Comprehensive Client Resilience Patterns
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   api,
   useGetAlertRecommendationQuery,
@@ -33,6 +33,10 @@ import type {
 // =============================================================================
 
 describe("Alert API Types", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("AIRecommendation type", () => {
     it("should have correct structure", () => {
       const recommendation: AIRecommendation = {

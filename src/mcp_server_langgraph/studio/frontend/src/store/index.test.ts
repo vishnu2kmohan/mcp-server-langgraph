@@ -9,11 +9,15 @@
  * - Type safety
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { store, RootState, AppDispatch } from "./index";
 import { api } from "../api";
 
 describe("Redux Store", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("Store Configuration", () => {
     it("should be properly configured", () => {
       expect(store).toBeDefined();

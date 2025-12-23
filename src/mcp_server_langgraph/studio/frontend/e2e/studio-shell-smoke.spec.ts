@@ -1,7 +1,7 @@
 /**
- * Hybrid Shell Smoke E2E Tests
+ * Studio Shell Smoke E2E Tests
  *
- * P0 smoke tests for the Hybrid Canvas implementation.
+ * P0 smoke tests for the Studio Shell implementation.
  * These tests validate critical functionality to ensure no regressions.
  *
  * Test Coverage:
@@ -44,7 +44,7 @@ const mockFeatureFlags = {
   slash_commands: true,
 };
 
-test.describe('Hybrid Shell Smoke Tests', () => {
+test.describe('Studio Shell Smoke Tests', () => {
   test.describe('Layout Rendering', () => {
     test('should render StudioShell when feature flag enabled', async ({ alicePage }) => {
       // Setup: Mock feature flag if backend disabled
@@ -62,7 +62,7 @@ test.describe('Hybrid Shell Smoke Tests', () => {
       await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
       // Verify StudioShell layout components are rendered
-      await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+      await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
       await expect(alicePage.getByTestId('activity-bar')).toBeVisible();
       await expect(alicePage.getByTestId('session-nav')).toBeVisible();
       await expect(alicePage.getByTestId('conversation-panel')).toBeVisible();
@@ -119,7 +119,7 @@ test.describe('Hybrid Shell Smoke Tests', () => {
       await expect(alicePage.locator('body')).toBeVisible({ timeout: 10000 });
     });
 
-    test('should handle navigation between legacy and hybrid routes', async ({ alicePage }) => {
+    test('should handle navigation between navigation routes', async ({ alicePage }) => {
       if (!backendEnabled) {
         await alicePage.route('**/api/v1/features', async (route) => {
           await route.fulfill({
@@ -134,7 +134,7 @@ test.describe('Hybrid Shell Smoke Tests', () => {
       await alicePage.goto('/studio', { waitUntil: 'networkidle' });
       await expect(alicePage.locator('body')).toBeVisible({ timeout: 10000 });
 
-      // Navigate to hybrid route
+      // Navigate to studio route
       await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
       // Should not crash or show error page
       await expect(alicePage.locator('body')).not.toContainText('Error');
@@ -411,8 +411,8 @@ test.describe('Hybrid Shell Smoke Tests', () => {
       await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
       // Check that the panel group exists (from react-resizable-panels)
-      const hybridShell = alicePage.getByTestId('hybrid-shell');
-      await expect(hybridShell).toBeVisible({ timeout: 10000 });
+      const studioShell = alicePage.getByTestId('studio-shell');
+      await expect(studioShell).toBeVisible({ timeout: 10000 });
 
       // Panel resizers should be present
       // Note: The exact selectors depend on react-resizable-panels implementation

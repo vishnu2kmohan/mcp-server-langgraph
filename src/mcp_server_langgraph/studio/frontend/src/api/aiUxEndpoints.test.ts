@@ -16,7 +16,7 @@
  * - POST /ai/composite/batch - Batch composite analysis
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 
 // Import the RTK Query hooks to verify they exist
 import {
@@ -366,6 +366,10 @@ function isBatchCompositeResponse(obj: unknown): obj is BatchCompositeResponse {
 // ============================================================================
 
 describe("AI UX RTK Query Endpoints - Hook Existence", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should export useAnalyzeDisclosureMutation hook", () => {
     expect(useAnalyzeDisclosureMutation).toBeDefined();
     expect(typeof useAnalyzeDisclosureMutation).toBe("function");

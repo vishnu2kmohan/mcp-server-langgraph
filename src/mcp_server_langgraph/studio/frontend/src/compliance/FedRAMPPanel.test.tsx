@@ -4,11 +4,14 @@
  * Phase 5: Compliance Dashboards
  * Tests for FedRAMP compliance panel.
  */
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { FedRAMPPanel, type FedRAMPControl } from "./FedRAMPPanel";
 
 describe("FedRAMPPanel", () => {
+  afterEach(() => {
+    cleanup();
+  });
   const mockControls: FedRAMPControl[] = [
     {
       id: "AC-1",

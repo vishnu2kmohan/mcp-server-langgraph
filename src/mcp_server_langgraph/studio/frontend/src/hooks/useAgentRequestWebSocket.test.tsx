@@ -21,6 +21,7 @@ import React from "react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import backgroundAgentReducer from "../store/slices/backgroundAgentSlice";
+import authReducer from "../store/slices/authSlice";
 import {
   useAgentRequestWebSocket,
   type ApprovalRequiredPayload,
@@ -75,10 +76,25 @@ class MockWebSocket {
 }
 
 // Test store creator
-function createTestStore() {
+function createTestStore(isAuthenticated = true) {
   return configureStore({
     reducer: {
       backgroundAgent: backgroundAgentReducer,
+      auth: authReducer,
+    },
+    preloadedState: {
+      auth: {
+        user: isAuthenticated
+          ? { id: "test-user", email: "test@example.com", roles: ["user"], persona: "user" as const }
+          : null,
+        tokens: null,
+        organizations: [],
+        currentOrganization: null,
+        permissions: [],
+        lastSynced: null,
+        isLoading: false,
+        error: null,
+      },
     },
   });
 }

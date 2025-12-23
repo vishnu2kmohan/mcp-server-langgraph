@@ -3,8 +3,8 @@
  *
  * TDD tests for the dev tools telemetry viewer component.
  */
-import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { TelemetryViewer } from "./TelemetryViewer";
 import { TelemetryProvider } from "../contexts/TelemetryContext";
 import { SessionTelemetry } from "../utils/sessionTelemetry";
@@ -21,6 +21,11 @@ describe("TelemetryViewer", () => {
 
   beforeEach(() => {
     testTelemetry = new SessionTelemetry();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Rendering", () => {

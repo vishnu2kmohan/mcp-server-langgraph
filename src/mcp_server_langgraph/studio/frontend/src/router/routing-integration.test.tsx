@@ -8,8 +8,8 @@
  * - Navigation between routes
  * - Route loaders
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor, act, cleanup } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider, Outlet } from "react-router";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -24,7 +24,7 @@ import authReducer from "../store/slices/authSlice";
 // Mock components to avoid loading complex page dependencies
 vi.mock("../layout/StudioShellLayout", () => ({
   StudioShellLayout: ({ children }: { children?: React.ReactNode }) => (
-    <div data-testid="hybrid-shell-layout">
+    <div data-testid="studio-shell-layout">
       <div data-testid="activity-bar">Activity Bar</div>
       <div data-testid="session-nav">Session Nav</div>
       <div data-testid="main-content">{children}</div>
@@ -104,7 +104,7 @@ const createTestRoutes = () => [
     path: "/studio/v2",
     element: (
       <Suspense fallback={<div>Loading...</div>}>
-        <div data-testid="hybrid-shell-wrapper">
+        <div data-testid="studio-shell-wrapper">
           <div data-testid="activity-bar">Activity Bar</div>
           <div data-testid="session-nav">Session Nav</div>
           <div data-testid="main-content">
@@ -160,6 +160,11 @@ describe("Routing Integration", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("StudioShell Routes", () => {
     it("should render StudioShell layout at /studio/v2", async () => {
       const store = createTestStore();
@@ -174,7 +179,7 @@ describe("Routing Integration", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("hybrid-shell-wrapper")).toBeInTheDocument();
+        expect(screen.getByTestId("studio-shell-wrapper")).toBeInTheDocument();
       });
     });
 
@@ -384,7 +389,7 @@ describe("Routing Integration", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("hybrid-shell-wrapper")).toBeInTheDocument();
+        expect(screen.getByTestId("studio-shell-wrapper")).toBeInTheDocument();
       });
     });
 

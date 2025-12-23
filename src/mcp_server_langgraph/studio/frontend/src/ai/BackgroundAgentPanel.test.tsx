@@ -4,8 +4,8 @@
  * Phase 4: AI-Native Features
  * Tests for background agent status panel.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import {
   BackgroundAgentPanel,
   type BackgroundAgent,
@@ -52,6 +52,11 @@ describe("BackgroundAgentPanel", () => {
   const mockOnRetry = vi.fn();
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

@@ -239,8 +239,8 @@ test.describe('Workspace Presets', () => {
     await setupFeatureFlagMock(alicePage);
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-    // Verify the hybrid shell layout is rendered
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    // Verify the studio shell layout is rendered
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Panels should be visible
     await expect(alicePage.getByTestId('session-nav')).toBeVisible();
@@ -253,10 +253,10 @@ test.describe('Workspace Presets', () => {
     await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
     // Verify the layout is stable after navigation
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Reload and verify layout persists
     await alicePage.reload({ waitUntil: 'networkidle' });
-    await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
+    await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
   });
 });

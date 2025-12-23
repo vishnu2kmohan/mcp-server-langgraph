@@ -29,10 +29,12 @@ import {
   Bell,
   Zap,
   Server,
+  Download,
 } from "lucide-react";
 
 import { cn } from "../../../utils/cn";
 import { useConsoleEntries } from "../hooks/useConsoleEntries";
+import { exportConsoleToJSON, exportConsoleToCSV } from "../utils/export";
 import type {
   ConsoleTabProps,
   ConsoleEntry,
@@ -331,6 +333,37 @@ export function ConsoleTab({
 
         {/* Spacer */}
         <div className="flex-1" />
+
+        {/* Export dropdown */}
+        <div className="relative group">
+          <button
+            data-testid="export-console-button"
+            type="button"
+            aria-label="Export console logs"
+            aria-haspopup="true"
+            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500"
+          >
+            <Download size={14} />
+          </button>
+          <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-10 hidden group-hover:block">
+            <button
+              data-testid="export-json-button"
+              type="button"
+              onClick={() => exportConsoleToJSON(displayEntries)}
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap"
+            >
+              Export as JSON
+            </button>
+            <button
+              data-testid="export-csv-button"
+              type="button"
+              onClick={() => exportConsoleToCSV(displayEntries)}
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap"
+            >
+              Export as CSV
+            </button>
+          </div>
+        </div>
 
         {/* Scroll to bottom */}
         <button

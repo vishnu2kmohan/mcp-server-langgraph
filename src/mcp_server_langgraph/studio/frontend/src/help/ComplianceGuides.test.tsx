@@ -3,8 +3,8 @@
  *
  * Tests for compliance runbooks and guides in the help module.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ComplianceGuides, type Guide } from "./ComplianceGuides";
 
 // =============================================================================
@@ -85,6 +85,11 @@ const mockGuides: Guide[] = [
 
 describe("ComplianceGuides", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

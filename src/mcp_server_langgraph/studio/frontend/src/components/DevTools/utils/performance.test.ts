@@ -5,7 +5,6 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useRef } from "react";
 
 import {
   useBatchedUpdates,
@@ -402,7 +401,6 @@ describe("useStableCallback", () => {
   });
 
   it("should call latest callback version", () => {
-    let callCount = 0;
     const callback1 = vi.fn(() => "first");
     const callback2 = vi.fn(() => "second");
 

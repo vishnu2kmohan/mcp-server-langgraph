@@ -6,7 +6,7 @@
  * without triggering the full store/api initialization.
  */
 
-import { describe, it, expect, expectTypeOf } from "vitest";
+import { describe, it, expect, expectTypeOf, afterEach, vi } from "vitest";
 
 // This import should NOT trigger api module loading
 // Use value import to ensure module exists (not just type-only)
@@ -14,6 +14,10 @@ import * as StoreTypes from "./types";
 import type { RootState, AppDispatch, SliceStates } from "./types";
 
 describe("Store Types", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("RootState", () => {
     it("should include ui slice state", () => {
       // Type-level test: RootState should have ui property

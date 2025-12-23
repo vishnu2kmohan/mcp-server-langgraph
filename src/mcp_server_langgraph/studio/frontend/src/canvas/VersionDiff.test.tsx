@@ -5,8 +5,8 @@
  * Shows text differences between two versions.
  * Sprint 4: Added Redux Provider wrapping for AI features.
  */
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -89,6 +89,11 @@ const modifiedVersion = createVersion(
 );
 
 describe("VersionDiff", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("rendering", () => {
     it("should render diff container", () => {
       renderWithProvider(

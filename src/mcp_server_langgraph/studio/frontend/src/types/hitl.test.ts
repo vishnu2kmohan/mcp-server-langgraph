@@ -5,7 +5,7 @@
  * Ensures type safety and conversion functions work correctly.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   convertUIResponseToAPIResponse,
   convertAPIResponseToUIResponse,
@@ -20,6 +20,10 @@ import {
 } from "./hitl";
 
 describe("HITL Types", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("convertUIResponseToAPIResponse", () => {
     it("should convert text response correctly", () => {
       const uiResponse: ClarificationUIResponse = {

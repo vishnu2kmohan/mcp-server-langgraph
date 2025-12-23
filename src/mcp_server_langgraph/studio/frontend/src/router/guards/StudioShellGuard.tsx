@@ -73,7 +73,7 @@ export function StudioShellGuard() {
     ? true
     : isEnabled("canvas_studio_shell");
 
-  // When hybrid shell is enabled, render StudioShellLayout
+  // When studio shell is enabled, render StudioShellLayout
   // StudioShellLayout includes its own Outlet for child routes
   if (isStudioShellEnabled) {
     return <StudioShellLayout />;

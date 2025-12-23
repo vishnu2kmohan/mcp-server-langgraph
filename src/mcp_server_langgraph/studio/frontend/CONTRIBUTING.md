@@ -33,7 +33,7 @@ src/
 ├── conversation/       # Chat/conversation components
 ├── help/               # Help and accessibility
 ├── hooks/              # Custom React hooks
-├── layout/             # Layout components (HybridShell, TopBar, etc.)
+├── layout/             # Layout components (StudioShell, TopBar, etc.)
 ├── pages/              # Page components
 ├── router/             # React Router configuration
 ├── store/              # Redux store and slices

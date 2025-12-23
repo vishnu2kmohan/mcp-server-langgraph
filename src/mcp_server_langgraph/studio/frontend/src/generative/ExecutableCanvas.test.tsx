@@ -3,8 +3,8 @@
  *
  * Tests for sandboxed code execution canvas.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { ExecutableCanvas, type ExecutableConfig } from "./ExecutableCanvas";
 
@@ -43,6 +43,11 @@ const mockJsConfig: ExecutableConfig = {
 
 describe("ExecutableCanvas", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

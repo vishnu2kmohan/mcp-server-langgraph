@@ -3,7 +3,7 @@
  *
  * TDD tests for type-safe API response transformations.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   isApiSession,
   transformApiSessionToClient,
@@ -42,6 +42,10 @@ const minimalApiSession: ApiSession = {
 // =============================================================================
 
 describe("apiTransforms", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("isApiSession (Type Guard)", () => {
     it("should return true for valid API session", () => {
       expect(isApiSession(validApiSession)).toBe(true);
