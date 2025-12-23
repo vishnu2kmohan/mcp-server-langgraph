@@ -6,7 +6,7 @@
  * UI components to detect unintended visual changes.
  *
  * Test Coverage:
- * - HybridShell layout structure
+ * - StudioShell layout structure
  * - ActivityBar icons and state
  * - SessionNav panel
  * - Canvas panel layout
@@ -24,7 +24,7 @@ const backendEnabled = process.env.BACKEND_ENABLED !== 'false';
 
 // Mock feature flags
 const mockFeatureFlags = {
-  canvas_hybrid_shell: true,
+  canvas_studio_shell: true,
   canvas_editable: true,
   canvas_agents: true,
   canvas_ai_palette: true,
@@ -95,7 +95,7 @@ const viewports = {
   mobile: { width: 768, height: 1024 },
 } as const;
 
-test.describe('Visual Regression - HybridShell Layout', () => {
+test.describe('Visual Regression - StudioShell Layout', () => {
   test('should match screenshot for desktop viewport', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.setViewportSize(viewports.desktop);

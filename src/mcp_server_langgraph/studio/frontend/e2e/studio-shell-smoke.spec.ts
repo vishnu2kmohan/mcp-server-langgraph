@@ -5,7 +5,7 @@
  * These tests validate critical functionality to ensure no regressions.
  *
  * Test Coverage:
- * - HybridShell layout renders correctly
+ * - StudioShell layout renders correctly
  * - Legacy AppShell still works (no regressions)
  * - Session list loads and displays
  * - Basic navigation between panels
@@ -20,8 +20,8 @@ import { test, expect } from './fixtures/auth';
 // Backend integration is enabled by default for E2E tests.
 const backendEnabled = process.env.BACKEND_ENABLED !== 'false';
 
-// Feature flag for HybridShell (matches backend feature flag)
-const HYBRID_SHELL_FLAG = 'canvas_hybrid_shell';
+// Feature flag for StudioShell (matches backend feature flag)
+const HYBRID_SHELL_FLAG = 'canvas_studio_shell';
 
 // Mock feature flags - matches the format from MSW handlers (flat object, not wrapped)
 // IMPORTANT: The API returns flags directly, not wrapped in { features: {...} }
@@ -46,7 +46,7 @@ const mockFeatureFlags = {
 
 test.describe('Hybrid Shell Smoke Tests', () => {
   test.describe('Layout Rendering', () => {
-    test('should render HybridShell when feature flag enabled', async ({ alicePage }) => {
+    test('should render StudioShell when feature flag enabled', async ({ alicePage }) => {
       // Setup: Mock feature flag if backend disabled
       if (!backendEnabled) {
         await alicePage.route('**/api/v1/features', async (route) => {
@@ -61,7 +61,7 @@ test.describe('Hybrid Shell Smoke Tests', () => {
       // Navigate to the studio v2 route
       await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
 
-      // Verify HybridShell layout components are rendered
+      // Verify StudioShell layout components are rendered
       await expect(alicePage.getByTestId('hybrid-shell')).toBeVisible({ timeout: 10000 });
       await expect(alicePage.getByTestId('activity-bar')).toBeVisible();
       await expect(alicePage.getByTestId('session-nav')).toBeVisible();

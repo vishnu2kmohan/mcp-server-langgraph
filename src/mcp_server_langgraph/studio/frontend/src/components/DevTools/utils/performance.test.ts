@@ -542,26 +542,33 @@ describe("useIntersectionObserver", () => {
   let mockObserve: ReturnType<typeof vi.fn>;
   let mockDisconnect: ReturnType<typeof vi.fn>;
   let observerCallback: IntersectionObserverCallback;
+  let originalIntersectionObserver: typeof IntersectionObserver;
 
   beforeEach(() => {
     mockObserve = vi.fn();
     mockDisconnect = vi.fn();
+    originalIntersectionObserver = global.IntersectionObserver;
 
-    global.IntersectionObserver = vi.fn((callback) => {
-      observerCallback = callback;
-      return {
-        observe: mockObserve,
-        disconnect: mockDisconnect,
-        unobserve: vi.fn(),
-        root: null,
-        rootMargin: "",
-        thresholds: [],
-        takeRecords: () => [],
-      };
-    }) as unknown as typeof IntersectionObserver;
+    // Create a proper class-based mock
+    const MockObserver = class MockIntersectionObserver {
+      constructor(callback: IntersectionObserverCallback) {
+        observerCallback = callback;
+      }
+      observe = mockObserve;
+      disconnect = mockDisconnect;
+      unobserve = vi.fn();
+      takeRecords = (): IntersectionObserverEntry[] => [];
+      root = null;
+      rootMargin = "";
+      thresholds: readonly number[] = [];
+    };
+
+    global.IntersectionObserver =
+      MockObserver as unknown as typeof IntersectionObserver;
   });
 
   afterEach(() => {
+    global.IntersectionObserver = originalIntersectionObserver;
     vi.restoreAllMocks();
   });
 

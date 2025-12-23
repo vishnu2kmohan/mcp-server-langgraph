@@ -183,7 +183,7 @@ export const mockFeatureFlags: FeatureFlags = {
   // ==========================================================================
 
   // Canvas Hybrid Shell Feature Flags (Phase 0+)
-  canvas_hybrid_shell: true, // Phase 1: Hybrid Canvas shell at /studio/v2
+  canvas_studio_shell: true, // Phase 1: Hybrid Canvas shell at /studio/v2
   canvas_editable: true, // Phase 2: Editable artifacts in Canvas panel
   canvas_agents: true, // Phase 4: Background agent panel
   canvas_ai_palette: true, // Phase 4: AI fallback in command palette

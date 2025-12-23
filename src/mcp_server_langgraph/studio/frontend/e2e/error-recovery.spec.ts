@@ -18,7 +18,7 @@ import { test, expect } from './fixtures/auth';
 
 // Mock feature flags for error recovery features
 const mockFeatureFlags = {
-  canvas_hybrid_shell: true,
+  canvas_studio_shell: true,
   canvas_editable: true,
   canvas_ai_palette: true,
   ai_suggestions: true,

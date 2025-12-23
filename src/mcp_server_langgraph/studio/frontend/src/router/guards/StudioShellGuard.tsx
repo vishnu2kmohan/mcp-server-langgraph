@@ -2,12 +2,12 @@
  * StudioShellGuard
  *
  * Conditionally wraps /studio routes with StudioShellLayout when
- * canvas_hybrid_shell feature flag is enabled.
+ * canvas_studio_shell feature flag is enabled.
  *
- * When canvas_hybrid_shell is enabled:
+ * When canvas_studio_shell is enabled:
  * - Renders StudioShellLayout (new Canvas-style UI)
  *
- * When canvas_hybrid_shell is disabled:
+ * When canvas_studio_shell is disabled:
  * - Renders Outlet directly (App.tsx wraps with AppShell)
  *
  * This allows /studio/* to use either shell based on feature flag,
@@ -71,7 +71,7 @@ export function StudioShellGuard() {
   // On error, default to StudioShell (fail-open) for better UX
   const isStudioShellEnabled = isError
     ? true
-    : isEnabled("canvas_hybrid_shell");
+    : isEnabled("canvas_studio_shell");
 
   // When hybrid shell is enabled, render StudioShellLayout
   // StudioShellLayout includes its own Outlet for child routes

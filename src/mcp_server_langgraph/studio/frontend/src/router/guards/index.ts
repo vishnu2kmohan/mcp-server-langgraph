@@ -7,10 +7,6 @@
 
 export { AuthGuard, type AuthGuardProps } from "./AuthGuard";
 export { PersonaGuard, type PersonaGuardProps } from "./PersonaGuard";
-export {
-  StudioShellGuard,
-  type StudioShellGuardProps,
-} from "./StudioShellGuard";
 export { PermissionGuard, type PermissionGuardProps } from "./PermissionGuard";
 export { RootRedirect } from "./RootRedirect";
 export { StudioShellGuard } from "./StudioShellGuard";
