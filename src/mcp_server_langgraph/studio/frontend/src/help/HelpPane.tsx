@@ -78,13 +78,13 @@ export function HelpPane({
 
   // AI Contextual Help (Sprint 6)
   const {
-    topics: aiTopics,
+    helpTopics: aiTopics,
     quickActions,
-    summary: contextSummary,
     isLoading: aiLoading,
   } = useContextualHelp({
+    userId: "",
     currentPage: currentPage ?? "",
-    currentFeature,
+    activeFeature: currentFeature ?? "",
     enabled: enableAI,
   });
 
@@ -175,19 +175,6 @@ export function HelpPane({
           data-testid="ai-contextual-help-section"
           className="p-3 border-b border-gray-200 dark:border-gray-700"
         >
-          {/* Context Summary */}
-          {contextSummary && (
-            <div className="mb-3 p-2 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-sm">
-              <div className="flex items-center gap-1.5 text-primary-700 dark:text-primary-400 font-medium mb-1">
-                <Sparkles size={14} />
-                <span>Suggested for you</span>
-              </div>
-              <p className="text-gray-600 dark:text-gray-300 text-xs">
-                {contextSummary}
-              </p>
-            </div>
-          )}
-
           {/* Quick Actions */}
           {quickActions.length > 0 && (
             <div className="space-y-1">
@@ -195,11 +182,11 @@ export function HelpPane({
                 Quick Actions
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {quickActions.map((action) => (
+                {quickActions.map((action, index) => (
                   <button
-                    key={action.id}
+                    key={`${action.label}-${index}`}
                     type="button"
-                    onClick={() => onQuickAction?.(action)}
+                    onClick={() => onQuickAction?.({ id: `action-${index}`, label: action.label, action: action.action })}
                     className={cn(
                       "inline-flex items-center gap-1 px-2 py-1 rounded text-xs",
                       "bg-gray-100 dark:bg-gray-800",
@@ -226,7 +213,13 @@ export function HelpPane({
                 <button
                   key={topic.id}
                   type="button"
-                  onClick={() => onTopicSelect(topic)}
+                  onClick={() => onTopicSelect({
+                    id: topic.id,
+                    title: topic.title,
+                    category: "ai-suggested",
+                    content: topic.summary,
+                    keywords: [],
+                  })}
                   className={cn(
                     "w-full text-left p-2 rounded-lg text-sm",
                     "bg-gray-50 dark:bg-gray-800",

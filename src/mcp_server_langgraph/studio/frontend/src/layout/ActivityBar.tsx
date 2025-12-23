@@ -149,7 +149,8 @@ export function ActivityBar({
   const allowedItems = useAppSelector(selectSidebarItems);
 
   // AI Navigation Predictions (Sprint 6)
-  const { predictions, isLoading: predictionsLoading } = useNavPrediction({
+  const { predictedItems, isLoading: predictionsLoading } = useNavPrediction({
+    userId: "",
     currentPage: activeNavItem ?? "chat",
     recentPages: [], // Could be tracked via session history
     enabled: enableAI,
@@ -157,31 +158,31 @@ export function ActivityBar({
 
   // Create a set of predicted item IDs for quick lookup
   const predictedItemIds = useMemo(() => {
-    if (!enableAI || !predictions.length) return new Set<string>();
-    return new Set(predictions.map((p) => p.itemId));
-  }, [enableAI, predictions]);
+    if (!enableAI || !predictedItems.length) return new Set<string>();
+    return new Set(predictedItems.map((p) => p.id));
+  }, [enableAI, predictedItems]);
 
   // Filter navigation items based on persona permissions
   const visibleNavItems = useMemo(() => {
     const filtered = NAV_ITEMS.filter((item) => allowedItems.includes(item.id));
 
     // Optionally reorder based on predictions
-    if (enableAI && reorderByPrediction && predictions.length > 0) {
+    if (enableAI && reorderByPrediction && predictedItems.length > 0) {
       // Create a score map from predictions
       const scoreMap = new Map(
-        predictions.map((p) => [p.itemId, p.score])
+        predictedItems.map((p) => [p.id, p.score])
       );
 
       // Sort by prediction score (higher first), then original order
       return [...filtered].sort((a, b) => {
         const scoreA = scoreMap.get(a.id) ?? 0;
         const scoreB = scoreMap.get(b.id) ?? 0;
-        return scoreB - scoreA;
+        return (scoreB as number) - (scoreA as number);
       });
     }
 
     return filtered;
-  }, [allowedItems, enableAI, reorderByPrediction, predictions]);
+  }, [allowedItems, enableAI, reorderByPrediction, predictedItems]);
 
   // Filter bottom items based on persona permissions
   const visibleBottomItems = useMemo(

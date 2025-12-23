@@ -48,12 +48,6 @@ import { AgentApprovalDialog } from "../components/Admin/AgentApprovalDialog";
 import { ClarificationDialog } from "../components/Admin/ClarificationDialog";
 // Use consolidated HITL types from types/hitl.ts
 import {
-  type ApprovalRequiredPayload,
-  type ClarificationRequiredPayload,
-  type AgentApprovalRequest,
-  type AgentClarificationRequest,
-  type ClarificationUIResponse,
-  type ClarificationAPIResponse,
   convertUIResponseToAPIResponse,
   convertApprovalPayloadToRequest,
   convertClarificationPayloadToRequest,
@@ -77,6 +71,12 @@ import { ResizeHandle } from "./ResizeHandle";
 import { ConnectedCanvasPanel } from "../canvas/ConnectedCanvasPanel";
 import { TelemetryViewer } from "../devtools";
 import { devLogger } from "../utils/devLogger";
+import { DevToolsPanel } from "../components/DevTools";
+import {
+  selectDevToolsCollapsed,
+  selectDevToolsHeight,
+  toggleDevTools,
+} from "../store/slices/devToolsSlice";
 import { getAuthToken } from "../utils/storage";
 
 const logger = devLogger.withPrefix("[HybridShell]");
@@ -143,6 +143,8 @@ export function HybridShellLayout() {
   const dispatch = useAppDispatch();
   const sessionNavCollapsed = useAppSelector(selectSessionNavCollapsed);
   const canvasCollapsed = useAppSelector(selectCanvasCollapsed);
+  const devToolsCollapsed = useAppSelector(selectDevToolsCollapsed);
+  const devToolsHeight = useAppSelector(selectDevToolsHeight);
 
   // AI component state
   const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -324,6 +326,13 @@ export function HybridShellLayout() {
         return;
       }
 
+      // Check for Cmd+Shift+I (Mac) or Ctrl+Shift+I (Windows/Linux) to toggle DevTools
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "I") {
+        e.preventDefault();
+        dispatch(toggleDevTools());
+        return;
+      }
+
       // Note: Cmd+I / Ctrl+I for insights panel is handled by useCrossInsightsPanel hook
     };
 
@@ -495,62 +504,96 @@ export function HybridShellLayout() {
         onPendingApprovalsClick={agentHitlEnabled ? handlePendingApprovalsClick : undefined}
       />
 
-      {/* Main content area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Activity Bar - fixed width */}
-        <ActivityBar />
-
-        {/* Resizable panels */}
-        <PanelGroup
-          direction="horizontal"
-          onLayout={handlePanelResize}
-          className="flex-1"
+      {/* Main content area with DevTools */}
+      <PanelGroup direction="vertical" className="flex-1">
+        {/* Main horizontal panels */}
+        <Panel
+          id="main-content"
+          order={1}
+          defaultSize={devToolsCollapsed ? 100 : 75}
+          minSize={50}
         >
-          {/* Session Nav Panel */}
-          {!sessionNavCollapsed && (
-            <>
+          <div className="flex h-full overflow-hidden">
+            {/* Activity Bar - fixed width */}
+            <ActivityBar />
+
+            {/* Resizable panels */}
+            <PanelGroup
+              direction="horizontal"
+              onLayout={handlePanelResize}
+              className="flex-1"
+            >
+              {/* Session Nav Panel */}
+              {!sessionNavCollapsed && (
+                <>
+                  <Panel
+                    id="session-nav"
+                    order={1}
+                    defaultSize={20}
+                    minSize={15}
+                    maxSize={35}
+                  >
+                    <SessionNav />
+                  </Panel>
+                  <ResizeHandle />
+                </>
+              )}
+
+              {/* Conversation Panel */}
               <Panel
-                id="session-nav"
-                order={1}
-                defaultSize={20}
-                minSize={15}
-                maxSize={35}
+                id="conversation"
+                order={2}
+                defaultSize={canvasCollapsed ? 80 : 40}
+                minSize={30}
               >
-                <SessionNav />
+                <ConnectedConversationPanel />
               </Panel>
-              <ResizeHandle />
-            </>
-          )}
 
-          {/* Conversation Panel */}
-          <Panel
-            id="conversation"
-            order={2}
-            defaultSize={canvasCollapsed ? 80 : 40}
-            minSize={30}
-          >
-            <ConnectedConversationPanel />
-          </Panel>
+              {/* Canvas Panel */}
+              {!canvasCollapsed && (
+                <>
+                  <ResizeHandle />
+                  <Panel
+                    id="canvas"
+                    order={3}
+                    defaultSize={40}
+                    minSize={25}
+                    maxSize={60}
+                  >
+                    <ConnectedCanvasPanel />
+                  </Panel>
+                </>
+              )}
+            </PanelGroup>
+          </div>
+        </Panel>
 
-          {/* Canvas Panel */}
-          {!canvasCollapsed && (
-            <>
-              <ResizeHandle />
-              <Panel
-                id="canvas"
-                order={3}
-                defaultSize={40}
-                minSize={25}
-                maxSize={60}
+        {/* DevTools Panel */}
+        {!devToolsCollapsed && (
+          <>
+            <ResizeHandle vertical />
+            <Panel
+              id="devtools"
+              order={2}
+              defaultSize={25}
+              minSize={10}
+              maxSize={50}
+            >
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center h-full bg-white dark:bg-gray-900">
+                    <span className="text-sm text-gray-400">Loading DevTools...</span>
+                  </div>
+                }
               >
-                <ConnectedCanvasPanel />
-              </Panel>
-            </>
-          )}
-        </PanelGroup>
-      </div>
+                <DevToolsPanel />
+              </Suspense>
+            </Panel>
+          </>
+        )}
+      </PanelGroup>
 
-      {/* StatusBar - connection status, model, tokens, user */}
+      {/* StatusBar - connection status, model, tokens, user, DevTools toggle */}
       <StatusBar
         connectionStatus={connectionStatus}
         modelName={modelName ?? undefined}
@@ -561,6 +604,8 @@ export function HybridShellLayout() {
         agentQueueOpen={showAgentPanel}
         pendingApprovals={agentHitlEnabled ? pendingApprovals.length : undefined}
         onPendingApprovalsClick={agentHitlEnabled ? handlePendingApprovalsClick : undefined}
+        devToolsCollapsed={devToolsCollapsed}
+        onDevToolsToggle={() => dispatch(toggleDevTools())}
       />
 
       {/* Dev mode telemetry viewer (fixed position overlay) */}

@@ -357,6 +357,121 @@ describe("StatusBar", () => {
     });
   });
 
+  describe("DevTools toggle", () => {
+    it("should display DevTools toggle button when onDevToolsToggle is provided", () => {
+      render(<StatusBar onDevToolsToggle={() => {}} />);
+
+      const button = screen.getByTestId("devtools-toggle");
+      expect(button).toBeInTheDocument();
+    });
+
+    it("should not display DevTools toggle when onDevToolsToggle is not provided", () => {
+      render(<StatusBar />);
+
+      expect(screen.queryByTestId("devtools-toggle")).not.toBeInTheDocument();
+    });
+
+    it("should call onDevToolsToggle when button is clicked", async () => {
+      const handleToggle = vi.fn();
+      render(<StatusBar onDevToolsToggle={handleToggle} />);
+
+      const button = screen.getByTestId("devtools-toggle");
+      await button.click();
+
+      expect(handleToggle).toHaveBeenCalledTimes(1);
+    });
+
+    it("should show active state when DevTools is open", () => {
+      render(
+        <StatusBar
+          onDevToolsToggle={() => {}}
+          devToolsCollapsed={false}
+        />,
+      );
+
+      const button = screen.getByTestId("devtools-toggle");
+      expect(button).toHaveClass("bg-primary-100");
+    });
+
+    it("should not show active state when DevTools is collapsed", () => {
+      render(
+        <StatusBar
+          onDevToolsToggle={() => {}}
+          devToolsCollapsed={true}
+        />,
+      );
+
+      const button = screen.getByTestId("devtools-toggle");
+      expect(button).not.toHaveClass("bg-primary-100");
+    });
+
+    it("should have accessible aria-label for collapsed state", () => {
+      render(
+        <StatusBar onDevToolsToggle={() => {}} devToolsCollapsed={true} />,
+      );
+
+      const button = screen.getByTestId("devtools-toggle");
+      expect(button).toHaveAttribute("aria-label", "Open DevTools");
+    });
+
+    it("should have accessible aria-label for open state", () => {
+      render(
+        <StatusBar onDevToolsToggle={() => {}} devToolsCollapsed={false} />,
+      );
+
+      const button = screen.getByTestId("devtools-toggle");
+      expect(button).toHaveAttribute("aria-label", "Close DevTools");
+    });
+
+    it("should have aria-pressed attribute", () => {
+      render(
+        <StatusBar onDevToolsToggle={() => {}} devToolsCollapsed={false} />,
+      );
+
+      const button = screen.getByTestId("devtools-toggle");
+      expect(button).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("should display problem count badge when problemCount > 0", () => {
+      render(
+        <StatusBar onDevToolsToggle={() => {}} problemCount={5} />,
+      );
+
+      const badge = screen.getByTestId("devtools-problem-count");
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveTextContent("5");
+    });
+
+    it("should not display problem count badge when problemCount is 0", () => {
+      render(
+        <StatusBar onDevToolsToggle={() => {}} problemCount={0} />,
+      );
+
+      expect(screen.queryByTestId("devtools-problem-count")).not.toBeInTheDocument();
+    });
+
+    it("should not display problem count badge when problemCount is undefined", () => {
+      render(<StatusBar onDevToolsToggle={() => {}} />);
+
+      expect(screen.queryByTestId("devtools-problem-count")).not.toBeInTheDocument();
+    });
+
+    it("should display 99+ when problem count exceeds 99", () => {
+      render(
+        <StatusBar onDevToolsToggle={() => {}} problemCount={150} />,
+      );
+
+      const badge = screen.getByTestId("devtools-problem-count");
+      expect(badge).toHaveTextContent("99+");
+    });
+
+    it("should display DevTools keyboard shortcut", () => {
+      render(<StatusBar />);
+
+      expect(screen.getByText("⌘⇧I DevTools")).toBeInTheDocument();
+    });
+  });
+
   describe("accessibility", () => {
     it("should have role status", () => {
       render(<StatusBar />);

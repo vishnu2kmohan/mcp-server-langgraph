@@ -21,19 +21,23 @@ export interface ResizeHandleProps
   extends Omit<ComponentProps<typeof PanelResizeHandle>, "className"> {
   /** Additional CSS classes */
   className?: string;
+  /** Whether this is a vertical resize handle (horizontal divider) */
+  vertical?: boolean;
 }
 
 // =============================================================================
 // Component
 // =============================================================================
 
-export function ResizeHandle({ className, ...props }: ResizeHandleProps) {
+export function ResizeHandle({ className, vertical, ...props }: ResizeHandleProps) {
   return (
     <PanelResizeHandle
       className={cn(
-        "w-1 hover:w-2 transition-all",
+        "transition-all",
         "bg-transparent hover:bg-primary-500/30",
-        "cursor-col-resize",
+        vertical
+          ? "h-1 hover:h-2 cursor-row-resize"
+          : "w-1 hover:w-2 cursor-col-resize",
         className,
       )}
       {...props}

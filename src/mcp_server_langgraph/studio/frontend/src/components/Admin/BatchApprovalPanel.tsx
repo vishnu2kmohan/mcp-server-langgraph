@@ -17,14 +17,7 @@
  */
 
 import { useState, useMemo, useCallback } from "react";
-import {
-  CheckCircle,
-  XCircle,
-  Loader2,
-  AlertTriangle,
-  CheckSquare,
-  Square,
-} from "lucide-react";
+import { CheckCircle, XCircle, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "../../utils/cn";
 
 // =============================================================================

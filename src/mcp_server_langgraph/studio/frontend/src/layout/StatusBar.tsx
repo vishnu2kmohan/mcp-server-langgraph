@@ -15,7 +15,7 @@
  * - Keyboard shortcut hints
  * - Feature flag toggle (dev mode)
  */
-import { Cpu, Hash, User, ListTodo, AlertTriangle } from "lucide-react";
+import { Cpu, Hash, User, ListTodo, AlertTriangle, Terminal } from "lucide-react";
 import { cn } from "../utils/cn";
 import { FeatureFlagToggle } from "./FeatureFlagToggle";
 
@@ -56,6 +56,12 @@ export interface StatusBarProps {
   onPendingApprovalsClick?: () => void;
   /** Whether the approvals panel is currently open */
   approvalsPanelOpen?: boolean;
+  /** Whether the DevTools panel is collapsed */
+  devToolsCollapsed?: boolean;
+  /** Callback when DevTools toggle is clicked */
+  onDevToolsToggle?: () => void;
+  /** Number of problems/errors in DevTools */
+  problemCount?: number;
   /** Additional CSS classes */
   className?: string;
 }
@@ -78,6 +84,9 @@ export function StatusBar({
   pendingApprovals,
   onPendingApprovalsClick,
   approvalsPanelOpen = false,
+  devToolsCollapsed = true,
+  onDevToolsToggle,
+  problemCount,
   className,
 }: StatusBarProps) {
   // Check if we're in dev mode
@@ -215,12 +224,40 @@ export function StatusBar({
               </span>
             </button>
           )}
+
+        {/* DevTools toggle button */}
+        {onDevToolsToggle && (
+          <button
+            data-testid="devtools-toggle"
+            type="button"
+            onClick={onDevToolsToggle}
+            aria-label={devToolsCollapsed ? "Open DevTools" : "Close DevTools"}
+            aria-pressed={!devToolsCollapsed}
+            className={cn(
+              "flex items-center gap-1 px-2 py-0.5 rounded",
+              "hover:bg-gray-200 dark:hover:bg-gray-700",
+              "transition-colors",
+              !devToolsCollapsed && "bg-primary-100 dark:bg-primary-900/30",
+            )}
+          >
+            <Terminal size={12} aria-hidden="true" />
+            {problemCount !== undefined && problemCount > 0 && (
+              <span
+                data-testid="devtools-problem-count"
+                className="min-w-[1rem] h-4 px-1 text-xs font-medium text-white bg-red-500 rounded-full flex items-center justify-center"
+              >
+                {problemCount > 99 ? "99+" : problemCount}
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Right section: Keyboard shortcuts */}
       <div className="flex items-center gap-4">
         <span className="hidden sm:inline">⌘K Command Palette</span>
         <span className="hidden sm:inline">⌘/ Toggle Canvas</span>
+        <span className="hidden sm:inline">⌘⇧I DevTools</span>
       </div>
     </div>
   );
