@@ -348,6 +348,51 @@ class PostgresExecutionHistoryManager(ExecutionHistoryManagerInterface):
 
 
 # ==============================================================================
+# Global Execution Manager Instance
+# ==============================================================================
+
+# Global execution manager instance (set by application)
+_global_execution_manager: PostgresExecutionHistoryManager | None = None
+
+
+def set_execution_manager(manager: PostgresExecutionHistoryManager) -> None:
+    """
+    Set global execution manager instance.
+
+    This should be called during application startup.
+
+    Args:
+        manager: PostgresExecutionHistoryManager instance.
+    """
+    global _global_execution_manager
+    _global_execution_manager = manager
+    logger.info("Global execution manager set")
+
+
+def get_execution_manager() -> PostgresExecutionHistoryManager | None:
+    """
+    Get global execution manager instance.
+
+    This is used by WebSocket workflow execution service and other components
+    that need access to the execution manager without DI.
+
+    Returns:
+        PostgresExecutionHistoryManager if configured, None otherwise.
+    """
+    return _global_execution_manager
+
+
+def clear_execution_manager() -> None:
+    """
+    Clear global execution manager instance.
+
+    Useful for testing to reset state between tests.
+    """
+    global _global_execution_manager
+    _global_execution_manager = None
+
+
+# ==============================================================================
 # Exports
 # ==============================================================================
 
@@ -355,4 +400,8 @@ __all__ = [
     "PostgresExecutionHistoryManager",
     "WorkflowExecutionModel",
     "ExecutionBase",
+    # Global getter pattern
+    "set_execution_manager",
+    "get_execution_manager",
+    "clear_execution_manager",
 ]

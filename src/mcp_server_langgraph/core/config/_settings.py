@@ -409,6 +409,7 @@ class Settings(BaseSettings):
     redis_port: int = 6379  # Redis port for rate limiting and cache
     redis_password: str | None = None
     redis_ssl: bool = False
+    redis_rate_limit_db: int = 5  # Redis database for WebSocket rate limiting
     session_ttl_seconds: int = 86400  # 24 hours (absolute maximum)
     session_idle_seconds: int = 1800  # 30 minutes (OWASP recommendation for idle timeout)
     session_sliding_window: bool = True

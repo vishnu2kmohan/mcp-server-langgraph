@@ -320,3 +320,112 @@ class TestSPAStaticFilesFactory:
         handler = create_spa_static_files(str(spa_directory), caching=True)
 
         assert handler is not None
+
+
+@pytest.mark.xdist_group(name="spa_static_files")
+class TestAuthenticatedSPAStaticFilesPublicAssets:
+    """Test AuthenticatedSPAStaticFiles public asset detection."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_audio_files_are_public_assets(self) -> None:
+        """Test audio files (.wav, .mp3, .ogg, .webm) are public assets."""
+        from mcp_server_langgraph.utils.spa_static_files import AuthenticatedSPAStaticFiles
+
+        audio_extensions = {".wav", ".mp3", ".ogg", ".webm"}
+        assert audio_extensions.issubset(AuthenticatedSPAStaticFiles.PUBLIC_ASSET_EXTENSIONS)
+
+    @pytest.mark.unit
+    def test_is_public_asset_returns_true_for_audio_files(self, spa_directory: Path) -> None:
+        """Test _is_public_asset returns True for audio paths."""
+        from mcp_server_langgraph.utils.spa_static_files import (
+            AuthenticatedSPAStaticFiles,
+            SPAStaticFiles,
+        )
+
+        spa_handler = SPAStaticFiles(directory=str(spa_directory), html=True)
+        auth_spa = AuthenticatedSPAStaticFiles(spa_handler=spa_handler)
+
+        audio_paths = [
+            "/studio/sounds/notification.wav",
+            "/assets/alert.mp3",
+            "/audio/ping.ogg",
+            "/sounds/chime.webm",
+        ]
+
+        for path in audio_paths:
+            assert auth_spa._is_public_asset(path), f"Audio {path} should be public"
+
+    @pytest.mark.unit
+    def test_standard_assets_remain_public(self, spa_directory: Path) -> None:
+        """Test standard assets (JS, CSS, images) are still public."""
+        from mcp_server_langgraph.utils.spa_static_files import (
+            AuthenticatedSPAStaticFiles,
+            SPAStaticFiles,
+        )
+
+        spa_handler = SPAStaticFiles(directory=str(spa_directory), html=True)
+        auth_spa = AuthenticatedSPAStaticFiles(spa_handler=spa_handler)
+
+        standard_paths = [
+            "/assets/app.js",
+            "/assets/style.css",
+            "/images/logo.png",
+            "/fonts/roboto.woff2",
+        ]
+
+        for path in standard_paths:
+            assert auth_spa._is_public_asset(path), f"Asset {path} should be public"
+
+    @pytest.mark.unit
+    def test_html_routes_are_not_public_assets(self, spa_directory: Path) -> None:
+        """Test HTML routes require authentication."""
+        from mcp_server_langgraph.utils.spa_static_files import (
+            AuthenticatedSPAStaticFiles,
+            SPAStaticFiles,
+        )
+
+        spa_handler = SPAStaticFiles(directory=str(spa_directory), html=True)
+        auth_spa = AuthenticatedSPAStaticFiles(spa_handler=spa_handler)
+
+        protected_paths = ["/dashboard", "/settings", "/admin/users", "/"]
+
+        for path in protected_paths:
+            assert not auth_spa._is_public_asset(path), f"Route {path} should NOT be public"
+
+
+@pytest.mark.xdist_group(name="spa_static_files")
+class TestSPAStaticFilesAudioCaching:
+    """Test SPAStaticFiles caching behavior for audio files."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_audio_files_have_cache_headers(self, spa_directory: Path) -> None:
+        """Test audio files include cache control headers."""
+        from fastapi import FastAPI
+
+        from mcp_server_langgraph.utils.spa_static_files import SPAStaticFiles
+
+        sounds_dir = spa_directory / "sounds"
+        sounds_dir.mkdir()
+        (sounds_dir / "notification.wav").write_bytes(b"RIFF\x00\x00\x00\x00WAVEfmt ")
+
+        app = FastAPI()
+        app.mount(
+            "/",
+            SPAStaticFiles(directory=str(spa_directory), html=True, caching=True),
+            name="spa",
+        )
+
+        client = TestClient(app)
+        response = client.get("/sounds/notification.wav")
+
+        assert response.status_code == 200
+        cache_control = response.headers.get("cache-control", "")
+        assert "immutable" in cache_control.lower() or "max-age" in cache_control.lower()

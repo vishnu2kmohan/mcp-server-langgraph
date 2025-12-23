@@ -261,7 +261,6 @@ class TestConnectionsServiceSingleton:
         """Test reset_websocket_connections_service clears singleton."""
         from mcp_server_langgraph.websocket.services.connections import (
             reset_websocket_connections_service,
-            _connections_service,
         )
         import mcp_server_langgraph.websocket.services.connections as connections_module
 
@@ -272,3 +271,57 @@ class TestConnectionsServiceSingleton:
         reset_websocket_connections_service()
 
         assert connections_module._connections_service is None
+
+    def test_get_websocket_connections_service_creates_instance(self) -> None:
+        """Test get_websocket_connections_service creates new adapter when None."""
+        from unittest.mock import patch
+
+        from mcp_server_langgraph.websocket.services.connections import (
+            ConnectionsServiceAdapter,
+            get_websocket_connections_service,
+            reset_websocket_connections_service,
+        )
+
+        # Ensure starting from clean state
+        reset_websocket_connections_service()
+
+        mock_repo = MagicMock()
+
+        # Patch in core.dependencies where get_connection_repository is defined
+        with patch(
+            "mcp_server_langgraph.core.dependencies.get_connection_repository",
+            return_value=mock_repo,
+        ):
+            service = get_websocket_connections_service(owner_id="test-owner")
+
+            assert service is not None
+            assert isinstance(service, ConnectionsServiceAdapter)
+            assert service._owner_id == "test-owner"
+            assert service._repository is mock_repo
+
+    def test_get_websocket_connections_service_returns_cached_instance(self) -> None:
+        """Test get_websocket_connections_service returns cached instance."""
+        from unittest.mock import patch
+
+        from mcp_server_langgraph.websocket.services.connections import (
+            get_websocket_connections_service,
+            reset_websocket_connections_service,
+        )
+
+        # Ensure starting from clean state
+        reset_websocket_connections_service()
+
+        mock_repo = MagicMock()
+
+        # Patch in core.dependencies where get_connection_repository is defined
+        with patch(
+            "mcp_server_langgraph.core.dependencies.get_connection_repository",
+            return_value=mock_repo,
+        ):
+            # First call creates instance
+            service1 = get_websocket_connections_service()
+            # Second call returns same instance
+            service2 = get_websocket_connections_service(owner_id="different-owner")
+
+            # Both should be the same instance (singleton)
+            assert service1 is service2

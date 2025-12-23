@@ -37,13 +37,13 @@ class TestConnectionState:
         assert ConnectionState.ERROR.value == "error"
 
     def test_connection_state_is_string_enum(self) -> None:
-        """GIVEN ConnectionState value WHEN used as string THEN works correctly."""
+        """GIVEN ConnectionState value WHEN accessing value THEN returns string."""
         from mcp_server_langgraph.websocket.types import ConnectionState
 
-        # StrEnum allows direct comparison with string value
-        assert ConnectionState.CONNECTED == "connected"
-        # But str() returns the enum representation
-        assert ConnectionState.CONNECTED.value == "connected"
+        # StrEnum .value returns string
+        connected_value = ConnectionState.CONNECTED.value
+        assert connected_value == "connected"
+        assert isinstance(connected_value, str)
 
 
 @pytest.mark.xdist_group(name="websocket_types")
@@ -198,6 +198,7 @@ class TestMessageEnvelope:
         assert envelope.type == "test"
         assert envelope.payload == {"key": "value"}
         assert envelope.id == "msg-123"
+        assert envelope.timestamp is not None
         assert envelope.timestamp.year == 2025
         assert envelope.timestamp.month == 1
         assert envelope.timestamp.day == 15

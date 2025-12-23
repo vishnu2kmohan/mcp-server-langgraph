@@ -396,6 +396,10 @@ class TestRedisCaching:
         """Test that cache miss triggers LLM call."""
         from mcp_server_langgraph.api.v1.ai_ux import PersonaAnalyzeRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+
+        # Reset circuit breaker to ensure clean state
+        reset_circuit_breaker("ai_ux_llm")
 
         mock_llm = MagicMock()
         mock_llm.ainvoke = AsyncMock(

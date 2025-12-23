@@ -165,6 +165,16 @@ SAMPLE_METRICS_INSIGHTS_LLM_RESPONSE = """
 # =============================================================================
 
 
+@pytest.fixture(autouse=True)
+def reset_ai_circuit_breakers():
+    """Reset all AI UX circuit breakers before each test to ensure clean state."""
+    from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+    reset_circuit_breaker("ai_ux_llm")
+    yield
+    # Clean up after test
+    reset_circuit_breaker("ai_ux_llm")
+
+
 @pytest.fixture
 def mock_llm_factory():
     """Create mock LLM factory."""
@@ -223,6 +233,11 @@ class TestAIUXServiceInitialization:
 
 class TestErrorAnalysisWithLLM:
     """Test LLM-enhanced error analysis."""
+
+    def setup_method(self) -> None:
+        """Reset circuit breakers before each test."""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+        reset_circuit_breaker("ai_ux_llm")
 
     @pytest.mark.asyncio
     async def test_error_analysis_calls_llm(self, mock_llm_factory, mock_settings):

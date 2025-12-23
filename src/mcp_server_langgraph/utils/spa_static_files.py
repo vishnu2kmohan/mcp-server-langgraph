@@ -142,7 +142,23 @@ class SPAStaticFiles(StaticFiles):
 
         # Static assets with extensions can be cached
         file_ext = Path(path).suffix.lower()
-        cacheable_extensions = {".js", ".css", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".woff", ".woff2", ".ttf"}
+        cacheable_extensions = {
+            ".js",
+            ".css",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".gif",
+            ".svg",
+            ".ico",
+            ".woff",
+            ".woff2",
+            ".ttf",
+            ".wav",
+            ".mp3",
+            ".ogg",
+            ".webm",  # Audio files
+        }
 
         if file_ext in cacheable_extensions:
             # Long cache time for immutable assets (Vite adds content hashes)
@@ -204,6 +220,7 @@ class AuthenticatedSPAStaticFiles:
 
     # File extensions that should be served without authentication
     # These are needed for the login page to render properly
+    # Includes audio files for notification sounds
     PUBLIC_ASSET_EXTENSIONS = {
         ".js",
         ".css",
@@ -218,6 +235,11 @@ class AuthenticatedSPAStaticFiles:
         ".ttf",
         ".eot",
         ".map",
+        # Audio files for notification/alert sounds
+        ".wav",
+        ".mp3",
+        ".ogg",
+        ".webm",
     }
 
     def __init__(

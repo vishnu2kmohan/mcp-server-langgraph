@@ -1456,6 +1456,7 @@ class TestBatchApprovalAuditLogging:
             batch_request=batch_request,
             current_user=mock_user,
             audit_service=mock_audit,
+            queue=queue,
         )
 
         assert response.succeeded == 2

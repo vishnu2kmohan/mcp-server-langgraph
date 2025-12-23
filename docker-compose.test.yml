@@ -1287,6 +1287,16 @@ services:
       - "traefik.http.routers.api-idp.priority=100"
       - "traefik.http.routers.api-idp.service=mcp-api"
       # NO forward-auth middleware - identity providers endpoint is publicly accessible
+      # Route: /api/v1/ws/* -> mcp-server:8000/api/v1/ws/* (WebSocket endpoints)
+      # Dedicated WebSocket router with higher priority for real-time connections
+      # Frontend hooks connect to /api/v1/ws/notifications, /api/v1/ws/alerts, etc.
+      # Authentication: WebSocket auth via token query param (validated by backend)
+      - "traefik.http.routers.api-ws.rule=PathPrefix(`/api/v1/ws`)"
+      - "traefik.http.routers.api-ws.entrypoints=web"
+      - "traefik.http.routers.api-ws.priority=15"
+      - "traefik.http.routers.api-ws.service=mcp-api"
+      # NO forward-auth - WebSocket handles auth via token query param
+      # NO strip - FastAPI serves /api/v1/ws/* directly
       # Route: /api/* -> mcp-server:8000/api/* (API endpoints for frontend)
       # This allows the frontend at /studio to call /api/v1/* endpoints directly
       # Authentication: JWT validation via AuthRequestMiddleware (no forward-auth)
