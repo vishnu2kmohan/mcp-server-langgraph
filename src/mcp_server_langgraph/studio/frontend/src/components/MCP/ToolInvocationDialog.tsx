@@ -17,7 +17,7 @@ import {
   useInvokeMcpToolMutation,
 } from "../../api";
 
-interface ToolInvocationDialogProps {
+export interface ToolInvocationDialogProps {
   open: boolean;
   onClose: () => void;
 }

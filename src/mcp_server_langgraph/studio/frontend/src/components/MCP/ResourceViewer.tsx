@@ -11,13 +11,13 @@
  * - Copy content to clipboard
  */
 
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   useListMcpResourcesQuery,
   useReadMcpResourceMutation,
 } from "../../api";
 
-interface ResourceViewerProps {
+export interface ResourceViewerProps {
   open: boolean;
   onClose: () => void;
 }
@@ -69,7 +69,15 @@ export function ResourceViewer({ open, onClose }: ResourceViewerProps) {
       try {
         const response = await readResource({ uri }).unwrap();
         if (response.contents && response.contents.length > 0) {
-          setContent(response.contents[0]);
+          const item = response.contents[0];
+          if (item) {
+            setContent({
+              uri: item.uri,
+              mime_type: item.mime_type ?? null,
+              text: item.text ?? null,
+              blob: item.blob ?? null,
+            });
+          }
         }
       } catch (error) {
         setReadError("Failed to read resource");

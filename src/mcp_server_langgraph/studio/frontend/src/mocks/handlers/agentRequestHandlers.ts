@@ -64,7 +64,11 @@ export const createMockClarificationRequest = (
   agent_name: "TestAgent",
   clarification_type: "choice",
   question: "Which file format should I use?",
-  options: ["JSON", "YAML", "XML"],
+  options: [
+    { id: "json", label: "JSON", description: "JavaScript Object Notation" },
+    { id: "yaml", label: "YAML", description: "YAML Ain't Markup Language" },
+    { id: "xml", label: "XML", description: "Extensible Markup Language" },
+  ],
   placeholder: "Select a format",
   required: true,
   context: {
@@ -101,13 +105,18 @@ export const mockPendingClarifications: ClarificationRequiredPayload[] = [
     request_id: "req-clarify-1",
     agent_name: "ReportGenerator",
     question: "Which report format do you prefer?",
-    options: ["PDF", "Excel", "CSV"],
+    options: [
+      { id: "pdf", label: "PDF", description: "Portable Document Format" },
+      { id: "excel", label: "Excel", description: "Microsoft Excel format" },
+      { id: "csv", label: "CSV", description: "Comma Separated Values" },
+    ],
   }),
 ];
 
 export const mockPendingRequestsResponse: PendingAgentRequestsResponse = {
   approvals: mockPendingApprovals,
   clarifications: mockPendingClarifications,
+  total_count: mockPendingApprovals.length + mockPendingClarifications.length,
 };
 
 // =============================================================================
@@ -145,6 +154,7 @@ export const agentRequestHandlers = [
     return HttpResponse.json({
       approvals,
       clarifications,
+      total_count: approvals.length + clarifications.length,
     } satisfies PendingAgentRequestsResponse);
   }),
 
@@ -297,11 +307,8 @@ export const agentRequestHandlers = [
     return HttpResponse.json({
       success: true,
       request_id: requestId as string,
-      action: "approved",
-      approved_by: body.approved_by,
-      reason: body.reason,
-      modifications: body.modifications,
-      timestamp: new Date().toISOString(),
+      status: "approved",
+      message: body.reason ?? `Approved by ${body.approved_by}`,
     } satisfies AgentRequestActionResponse);
   }),
 
@@ -329,10 +336,8 @@ export const agentRequestHandlers = [
     return HttpResponse.json({
       success: true,
       request_id: requestId as string,
-      action: "rejected",
-      rejected_by: body.rejected_by,
-      reason: body.reason,
-      timestamp: new Date().toISOString(),
+      status: "rejected",
+      message: body.reason ?? `Rejected by ${body.rejected_by}`,
     } satisfies AgentRequestActionResponse);
   }),
 
@@ -364,11 +369,8 @@ export const agentRequestHandlers = [
     return HttpResponse.json({
       success: true,
       request_id: requestId as string,
-      action: "responded",
-      response_type: body.response_type,
-      response_value:
-        body.selected_option ?? body.text_response ?? String(body.confirmed),
-      timestamp: new Date().toISOString(),
+      status: "responded",
+      message: `Responded with ${body.response_type}: ${body.selected_option ?? body.text_response ?? String(body.confirmed)}`,
     } satisfies AgentRequestActionResponse);
   }),
 ];

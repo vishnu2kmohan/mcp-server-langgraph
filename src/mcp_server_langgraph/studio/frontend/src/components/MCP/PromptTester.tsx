@@ -16,7 +16,7 @@ import {
   useGetMcpPromptMutation,
 } from "../../api";
 
-interface PromptTesterProps {
+export interface PromptTesterProps {
   open: boolean;
   onClose: () => void;
 }

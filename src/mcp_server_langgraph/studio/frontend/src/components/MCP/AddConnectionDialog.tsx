@@ -20,7 +20,7 @@ import type {
   AuthType,
 } from "../../types/connection";
 
-interface AddConnectionDialogProps {
+export interface AddConnectionDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: MCPConnectionCreate) => Promise<void> | void;

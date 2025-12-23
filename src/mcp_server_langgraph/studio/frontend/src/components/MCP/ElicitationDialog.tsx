@@ -13,14 +13,14 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useRequestMcpElicitationMutation } from "../../api";
 
-interface ElicitationDialogProps {
+export interface ElicitationDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
 interface ElicitationResponse {
-  action: "accept" | "decline";
-  content: Record<string, unknown> | null;
+  action: "accept" | "decline" | "cancel";
+  content?: Record<string, unknown> | null;
 }
 
 export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {

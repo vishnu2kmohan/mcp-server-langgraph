@@ -284,7 +284,7 @@ export function createDelayedHandler(
 ) {
   return http[method](path, async () => {
     await new Promise((resolve) => setTimeout(resolve, delayMs));
-    return HttpResponse.json(response);
+    return HttpResponse.json(response as Record<string, unknown>);
   });
 }
 
