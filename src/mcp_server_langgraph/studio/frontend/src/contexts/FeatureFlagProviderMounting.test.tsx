@@ -5,7 +5,7 @@
  * This is a critical test because:
  * - StudioShellGuard depends on useFeatureFlag("canvas_studio_shell")
  * - Without FeatureFlagProvider, the guard always returns false
- * - This causes /studio/v2/* routes to redirect to legacy /studio/*
+ * - This causes /studio/* routes to not render correctly
  *
  * Following TDD principles:
  * - RED: Test will fail if FeatureFlagProvider is not in main.tsx

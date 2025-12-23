@@ -90,7 +90,7 @@ describe("helpSlice", () => {
     it("removes tip from visible tips", () => {
       let state = helpReducer(
         initialState,
-        showTipsForRoute({ route: "/studio/v2", tips: [mockTip] }),
+        showTipsForRoute({ route: "/studio", tips: [mockTip] }),
       );
       state = helpReducer(state, dismissTip("tip-1"));
       expect(state.visibleTips).toHaveLength(0);
@@ -128,7 +128,7 @@ describe("helpSlice", () => {
     it("clears all visible tips", () => {
       let state = helpReducer(
         initialState,
-        showTipsForRoute({ route: "/studio/v2", tips: [mockTip] }),
+        showTipsForRoute({ route: "/studio", tips: [mockTip] }),
       );
       state = helpReducer(state, clearVisibleTips());
       expect(state.visibleTips).toHaveLength(0);

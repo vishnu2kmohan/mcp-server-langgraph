@@ -208,7 +208,7 @@ describe("FilesPage", () => {
     it("should filter files by search query", () => {
       renderFilesPage();
 
-      const searchInput = screen.getByTestId("files-search");
+      const searchInput = screen.getByTestId("file-search");
       fireEvent.change(searchInput, { target: { value: "main" } });
 
       expect(screen.getByTestId("file-card-art-1")).toBeInTheDocument();
@@ -219,7 +219,7 @@ describe("FilesPage", () => {
     it("should show 'No files match' when search has no results", () => {
       renderFilesPage();
 
-      const searchInput = screen.getByTestId("files-search");
+      const searchInput = screen.getByTestId("file-search");
       fireEvent.change(searchInput, { target: { value: "nonexistent" } });
 
       expect(
@@ -230,7 +230,7 @@ describe("FilesPage", () => {
     it("should update file count based on search results", () => {
       renderFilesPage();
 
-      const searchInput = screen.getByTestId("files-search");
+      const searchInput = screen.getByTestId("file-search");
       fireEvent.change(searchInput, { target: { value: "main" } });
 
       expect(screen.getByText("1 files")).toBeInTheDocument();

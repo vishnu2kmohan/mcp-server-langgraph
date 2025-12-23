@@ -211,7 +211,7 @@ export function StatusBar({
           pendingApprovals > 0 &&
           onPendingApprovalsClick && (
             <button
-              data-testid="pending-approvals-indicator"
+              data-testid="awaiting-approval-indicator"
               type="button"
               onClick={onPendingApprovalsClick}
               aria-label={`View ${pendingApprovals} pending agent approval${pendingApprovals === 1 ? "" : "s"}`}

@@ -43,6 +43,7 @@ export function NudgeTooltip({
           <span className="nudge-priority-badge">High</span>
         )}
         <button
+          data-testid="nudge-dismiss"
           className="nudge-dismiss"
           onClick={onDismiss}
           aria-label="Dismiss"

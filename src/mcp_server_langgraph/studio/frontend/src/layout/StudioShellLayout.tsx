@@ -367,16 +367,16 @@ export function StudioShellLayout() {
             break;
           case "open-settings":
             // Navigation handled by router
-            window.location.href = "/studio/v2/settings";
+            window.location.href = "/studio/settings";
             break;
           case "open-help":
-            window.location.href = "/studio/v2/help";
+            window.location.href = "/studio/help";
             break;
           case "open-observability":
-            window.location.href = "/studio/v2/observability";
+            window.location.href = "/studio/observability";
             break;
           case "open-compliance":
-            window.location.href = "/studio/v2/compliance";
+            window.location.href = "/studio/compliance";
             break;
           default:
             logger.warn("Unknown command:", command.id);
@@ -534,7 +534,7 @@ export function StudioShellLayout() {
           defaultSize={devToolsCollapsed ? 100 : 75}
           minSize={50}
         >
-          <div className="flex h-full overflow-hidden">
+          <div data-testid="left-sidebar" className="flex h-full overflow-hidden">
             {/* Activity Bar - fixed width */}
             <ActivityBar />
 

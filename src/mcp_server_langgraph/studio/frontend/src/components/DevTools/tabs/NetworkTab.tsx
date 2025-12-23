@@ -319,7 +319,7 @@ export function NetworkTab({
   const debouncedSearchTerm = useDebouncedValue(searchTerm, SEARCH_DEBOUNCE_MS);
 
   // Create stable callbacks for row selection
-  const stableSetSelectedEntryId = useStableCallback(setSelectedEntryId);
+  const _stableSetSelectedEntryId = useStableCallback(setSelectedEntryId);
 
   // Filter entries
   const filteredEntries = useMemo(() => {

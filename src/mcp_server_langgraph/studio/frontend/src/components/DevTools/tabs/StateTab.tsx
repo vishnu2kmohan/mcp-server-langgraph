@@ -3,18 +3,27 @@
  *
  * Displays Redux/session/workflow state inspection in DevTools.
  * Provides a tree view of state with search and expand/collapse.
+ * Includes time-travel debugging for history replay.
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   ChevronRight,
   ChevronDown,
   Search,
   RefreshCw,
   Database,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Rewind,
+  FastForward,
+  Clock,
 } from "lucide-react";
 
 import { cn } from "../../../utils/cn";
 import { useAppSelector } from "../../../store/hooks";
+import { useStateHistory } from "../hooks/useStateHistory";
 import type { StateTabProps } from "../types";
 
 // =============================================================================

@@ -343,9 +343,9 @@ export function SettingsPage() {
 
             {/* Notifications Tab */}
             {activeTab === "notifications" && (
-              <div className="space-y-6">
+              <div data-testid="notifications-settings" className="space-y-6">
                 {/* Push Notifications Section */}
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div data-testid="push-notifications-section" className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-3 mb-3">
                     <BellRing className="h-5 w-5 text-blue-500" />
                     <h3 className="font-medium text-gray-900 dark:text-gray-100">
@@ -373,6 +373,7 @@ export function SettingsPage() {
                     </div>
                   ) : isPushSubscribed ? (
                     <button
+                      data-testid="push-notifications-toggle"
                       onClick={unsubscribePush}
                       disabled={isPushLoading}
                       className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50"
@@ -385,6 +386,7 @@ export function SettingsPage() {
                     </button>
                   ) : (
                     <button
+                      data-testid="push-notifications-toggle"
                       onClick={subscribePush}
                       disabled={isPushLoading}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"

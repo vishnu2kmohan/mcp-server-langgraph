@@ -702,7 +702,7 @@ export function AgentApprovalDialog({
             </label>
             <textarea
               id="reason-input"
-              data-testid="reason-input"
+              data-testid="approval-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Enter a reason for your decision..."

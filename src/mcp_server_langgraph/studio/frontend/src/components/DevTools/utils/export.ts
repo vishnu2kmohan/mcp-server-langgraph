@@ -182,7 +182,9 @@ export function exportConsoleToJSON(entries: ConsoleEntry[]): void {
  */
 export function exportConsoleToCSV(entries: ConsoleEntry[]): void {
   const formatted = formatConsoleEntriesForExport(entries);
-  const content = exportToCSV(formatted);
+  const content = exportToCSV(
+    formatted as unknown as Record<string, unknown>[],
+  );
   const filename = `console-log-${new Date().toISOString().slice(0, 10)}.csv`;
   downloadFile(content, filename, "text/csv");
 }
@@ -202,7 +204,9 @@ export function exportNetworkToJSON(entries: NetworkEntry[]): void {
  */
 export function exportNetworkToCSV(entries: NetworkEntry[]): void {
   const formatted = formatNetworkEntriesForExport(entries);
-  const content = exportToCSV(formatted);
+  const content = exportToCSV(
+    formatted as unknown as Record<string, unknown>[],
+  );
   const filename = `network-log-${new Date().toISOString().slice(0, 10)}.csv`;
   downloadFile(content, filename, "text/csv");
 }

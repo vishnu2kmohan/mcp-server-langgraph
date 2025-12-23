@@ -392,8 +392,10 @@ class TestWorkflowShareNotifications:
         request = AddWorkflowShareRequest(email="bob@example.com", permission="edit")
 
         # Mock the notification broadcaster
+        # Implementation uses notify_user(), not broadcast_to_user()
+        # Import is local in _notify_workflow_shared, so patch at source module
         mock_broadcaster = AsyncMock()  # async-mock-configured
-        mock_broadcaster.broadcast_to_user = AsyncMock()  # async-mock-configured
+        mock_broadcaster.notify_user = AsyncMock()  # async-mock-configured
 
         with patch(
             "mcp_server_langgraph.api.v1.notification_websocket.get_notification_broadcaster",
@@ -411,8 +413,8 @@ class TestWorkflowShareNotifications:
             assert result["email"] == "bob@example.com"
 
             # AND notification was sent to target user
-            mock_broadcaster.broadcast_to_user.assert_called_once()
-            call_args = mock_broadcaster.broadcast_to_user.call_args
+            mock_broadcaster.notify_user.assert_called_once()
+            call_args = mock_broadcaster.notify_user.call_args
             assert call_args.kwargs["user_id"] == "bob@example.com"
             assert call_args.kwargs["notification_type"] == "info"
             assert "Test Workflow" in call_args.kwargs["message"]
@@ -438,8 +440,10 @@ class TestWorkflowShareNotifications:
         request = AddWorkflowShareRequest(email="bob@example.com", permission="view")
 
         # Mock broadcaster that raises exception
+        # Implementation uses notify_user(), not broadcast_to_user()
+        # Import is local in _notify_workflow_shared, so patch at source module
         mock_broadcaster = AsyncMock()  # async-mock-configured
-        mock_broadcaster.broadcast_to_user = AsyncMock(side_effect=Exception("WebSocket error"))
+        mock_broadcaster.notify_user = AsyncMock(side_effect=Exception("WebSocket error"))
 
         with patch(
             "mcp_server_langgraph.api.v1.notification_websocket.get_notification_broadcaster",
@@ -483,8 +487,10 @@ class TestWorkflowShareNotifications:
         )
 
         request = AddWorkflowShareRequest(email="carol@example.com", permission="execute")
+        # Implementation uses notify_user(), not broadcast_to_user()
+        # Import is local in _notify_workflow_shared, so patch at source module
         mock_broadcaster = AsyncMock()  # async-mock-configured
-        mock_broadcaster.broadcast_to_user = AsyncMock()  # async-mock-configured
+        mock_broadcaster.notify_user = AsyncMock()  # async-mock-configured
 
         with patch(
             "mcp_server_langgraph.api.v1.notification_websocket.get_notification_broadcaster",
@@ -497,6 +503,6 @@ class TestWorkflowShareNotifications:
                 service=mock_service,
             )
 
-            call_args = mock_broadcaster.broadcast_to_user.call_args
+            call_args = mock_broadcaster.notify_user.call_args
             assert "My Important Analysis" in call_args.kwargs["message"]
             assert "execute" in call_args.kwargs["message"]

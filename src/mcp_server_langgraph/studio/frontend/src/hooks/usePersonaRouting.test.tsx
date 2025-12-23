@@ -102,7 +102,7 @@ describe("usePersonaRouting", () => {
   describe("authentication check", () => {
     it("should return isAuthenticated false when user is null", () => {
       const { result } = renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2/chat", "user", null),
+        wrapper: createWrapper("/studio/chat", "user", null),
       });
 
       expect(result.current.isAuthenticated).toBe(false);
@@ -110,7 +110,7 @@ describe("usePersonaRouting", () => {
 
     it("should return isAuthenticated true when user exists", () => {
       const { result } = renderHook(() => usePersonaRouting(), {
-        wrapper: createWrapper("/studio/v2/chat"),
+        wrapper: createWrapper("/studio/chat"),
       });
 
       expect(result.current.isAuthenticated).toBe(true);

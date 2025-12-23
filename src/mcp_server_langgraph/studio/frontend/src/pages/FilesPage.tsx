@@ -562,7 +562,7 @@ export function FilesPage() {
             />
             <input
               type="text"
-              data-testid="files-search"
+              data-testid="file-search"
               placeholder="Search files..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

@@ -189,13 +189,15 @@ export function useMemoizedFilter<T>(
  * Creates a stable callback reference that doesn't change identity
  * Useful for preventing child re-renders
  */
-export function useStableCallback<T extends (...args: unknown[]) => unknown>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useStableCallback<T extends (...args: any[]) => any>(
   callback: T,
 ): T {
   const callbackRef = useRef(callback);
   callbackRef.current = callback;
 
-  return useCallback(((...args: unknown[]) => callbackRef.current(...args)) as T, []);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return useCallback(((...args: any[]) => callbackRef.current(...args)) as T, []);
 }
 
 // =============================================================================

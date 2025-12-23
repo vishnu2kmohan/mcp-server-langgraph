@@ -540,7 +540,7 @@ describe("StudioShellLayout", () => {
   describe("ConversationPanel with Chat Integration (Phase 3)", () => {
     it("renders conversation panel with chat functionality", () => {
       renderWithProviders(createStoreWithPersona("user"), [
-        "/studio/v2/chat/session-1",
+        "/studio/chat/session-1",
       ]);
 
       const conversationPanel = screen.getByTestId("conversation-panel");
@@ -548,7 +548,7 @@ describe("StudioShellLayout", () => {
     });
 
     it("shows empty state when no session is selected", () => {
-      renderWithProviders(createStoreWithPersona("user"), ["/studio/v2/chat"]);
+      renderWithProviders(createStoreWithPersona("user"), ["/studio/chat"]);
 
       // Should show some indication that no session is active
       const conversationPanel = screen.getByTestId("conversation-panel");
@@ -1850,7 +1850,7 @@ describe("StudioShellLayout", () => {
       if (settingsItem) {
         await user.click(settingsItem);
         // Verify navigation
-        expect(window.location.href).toBe("/studio/v2/settings");
+        expect(window.location.href).toBe("/studio/settings");
       }
     });
 
@@ -1885,7 +1885,7 @@ describe("StudioShellLayout", () => {
       if (helpItem) {
         await user.click(helpItem);
         // Verify navigation
-        expect(window.location.href).toBe("/studio/v2/help");
+        expect(window.location.href).toBe("/studio/help");
       }
     });
 
@@ -1920,7 +1920,7 @@ describe("StudioShellLayout", () => {
       if (observabilityItem) {
         await user.click(observabilityItem);
         // Verify navigation
-        expect(window.location.href).toBe("/studio/v2/observability");
+        expect(window.location.href).toBe("/studio/observability");
       }
     });
 
@@ -1955,7 +1955,7 @@ describe("StudioShellLayout", () => {
       if (complianceItem) {
         await user.click(complianceItem);
         // Verify navigation
-        expect(window.location.href).toBe("/studio/v2/compliance");
+        expect(window.location.href).toBe("/studio/compliance");
       }
     });
 
@@ -2161,7 +2161,7 @@ describe("StudioShellLayout", () => {
         json: () =>
           Promise.resolve({
             action: "navigate",
-            params: { path: "/studio/v2/compliance" },
+            params: { path: "/studio/compliance" },
             confidence: 0.9,
           }),
       });

@@ -138,7 +138,7 @@ export function TopBar({
           pendingApprovals > 0 &&
           onPendingApprovalsClick && (
             <button
-              data-testid="pending-approvals-badge"
+              data-testid="review-approval-button"
               type="button"
               onClick={onPendingApprovalsClick}
               aria-label={`${pendingApprovals} pending agent approval${pendingApprovals === 1 ? "" : "s"}`}

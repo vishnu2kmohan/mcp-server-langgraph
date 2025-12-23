@@ -160,6 +160,7 @@ export function BatchApprovalPanel({
 
   return (
     <div
+      data-testid="batch-approval-panel"
       className={cn(
         "flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg",
         className,
@@ -174,6 +175,7 @@ export function BatchApprovalPanel({
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
+              data-testid="select-all"
               checked={allSelected}
               onChange={handleToggleSelectAll}
               disabled={isLoading}
@@ -195,6 +197,7 @@ export function BatchApprovalPanel({
         <div className="flex items-center gap-2">
           <button
             type="button"
+            data-testid="batch-approve-btn"
             onClick={handleBatchApprove}
             disabled={selectedCount === 0 || isLoading}
             aria-label="Approve selected"
@@ -217,6 +220,7 @@ export function BatchApprovalPanel({
           </button>
           <button
             type="button"
+            data-testid="batch-reject-btn"
             onClick={handleBatchReject}
             disabled={selectedCount === 0 || isLoading}
             aria-label="Reject selected"
@@ -279,6 +283,7 @@ export function BatchApprovalPanel({
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
+                  data-testid={`select-request-${approval.request_id}`}
                   checked={isSelected}
                   onChange={() => handleToggleSelect(approval.request_id)}
                   disabled={isLoading}

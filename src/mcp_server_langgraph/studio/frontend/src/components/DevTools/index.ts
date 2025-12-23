@@ -13,6 +13,9 @@ export { useDevToolsContext } from "./hooks/useDevToolsContext";
 export { useDevToolsKeyboard } from "./hooks/useDevToolsKeyboard";
 export { useDevToolsResize } from "./hooks/useDevToolsResize";
 export { useDevToolsAI } from "./hooks/useDevToolsAI";
+export { useDevToolsWebSocket } from "./hooks/useDevToolsWebSocket";
+export { useTraceLinking } from "./hooks/useTraceLinking";
+export { useStateHistory } from "./hooks/useStateHistory";
 
 // Lazy loading
 export {
