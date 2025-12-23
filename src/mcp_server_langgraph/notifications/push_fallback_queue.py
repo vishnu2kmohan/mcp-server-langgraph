@@ -224,7 +224,7 @@ class PushFallbackQueue:
             parsed = json.loads(data)
             return QueuedMessage.from_dict(parsed)
         except (json.JSONDecodeError, KeyError) as e:
-            logger.error(f"Failed to parse queued message: {e}")
+            logger.exception(f"Failed to parse queued message: {e}")
             return None
 
     async def dequeue_batch(self, max_count: int = 100) -> list[QueuedMessage]:

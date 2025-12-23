@@ -231,7 +231,7 @@ def _validate_value_size(value: Any) -> None:
 # =============================================================================
 
 
-@frontend_cache_router.get("/{key:path}", response_model=CacheResponse)
+@frontend_cache_router.get("/{key:path}")
 async def get_cached_value(
     key: str,
     cache: CacheService = Depends(get_cache),
@@ -305,7 +305,7 @@ async def get_cached_value(
         return CacheResponse(key=key, hit=False, value=None)
 
 
-@frontend_cache_router.put("/{key:path}", response_model=CacheResponse)
+@frontend_cache_router.put("/{key:path}")
 async def set_cached_value(
     key: str,
     request: CacheSetRequest,
@@ -384,7 +384,7 @@ async def set_cached_value(
         ) from e
 
 
-@frontend_cache_router.delete("/prefix/{prefix:path}", response_model=CacheInvalidateResponse)
+@frontend_cache_router.delete("/prefix/{prefix:path}")
 async def invalidate_prefix(
     prefix: str,
     cache: CacheService = Depends(get_cache),
@@ -435,7 +435,7 @@ async def invalidate_prefix(
         return CacheInvalidateResponse(prefix=prefix, deleted_count=0)
 
 
-@frontend_cache_router.delete("/{key:path}", response_model=CacheResponse)
+@frontend_cache_router.delete("/{key:path}")
 async def delete_cached_value(
     key: str,
     cache: CacheService = Depends(get_cache),

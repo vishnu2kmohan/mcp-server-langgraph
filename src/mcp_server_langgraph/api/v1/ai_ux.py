@@ -458,7 +458,6 @@ class BatchCompositeResponse(BaseModel):
 
 @ai_ux_router.post(
     "/disclosure/analyze",
-    response_model=DisclosureAnalyzeResponse,
     summary="Analyze user disclosure level",
     description="Analyzes user behavior to recommend appropriate UI complexity level.",
 )
@@ -477,7 +476,6 @@ async def analyze_disclosure(
 
 @ai_ux_router.post(
     "/empty-state/suggestions",
-    response_model=EmptyStateSuggestionsResponse,
     summary="Get empty state suggestions",
     description="Returns contextual suggestions for empty state pages. Uses LLM when available for personalized suggestions.",
 )
@@ -497,7 +495,6 @@ async def get_empty_state_suggestions(
 
 @ai_ux_router.post(
     "/nudges/recommend",
-    response_model=NudgeRecommendResponse,
     summary="Get nudge recommendation",
     description="Returns a contextual nudge recommendation based on user behavior.",
 )
@@ -516,7 +513,6 @@ async def recommend_nudge(
 
 @ai_ux_router.post(
     "/errors/analyze",
-    response_model=ErrorAnalyzeResponse,
     summary="Analyze error for recovery",
     description="Analyzes an error and provides recovery suggestions. Uses LLM when available for intelligent analysis.",
 )
@@ -536,7 +532,6 @@ async def analyze_error(
 
 @ai_ux_router.post(
     "/onboarding/personalize",
-    response_model=OnboardingPersonalizeResponse,
     summary="Personalize onboarding",
     description="Returns a personalized onboarding path based on detected intent.",
 )
@@ -555,7 +550,6 @@ async def personalize_onboarding(
 
 @ai_ux_router.get(
     "/metrics/insights",
-    response_model=MetricsInsightsResponse,
     summary="Get HEART metrics insights",
     description="Returns AI-generated insights from HEART metrics data.",
 )
@@ -573,7 +567,6 @@ async def get_metrics_insights(
 
 @ai_ux_router.post(
     "/persona/analyze",
-    response_model=PersonaAnalyzeResponse,
     summary="Analyze user persona fit",
     description="Analyzes user behavior to detect actual persona. Uses LLM when available for nuanced analysis.",
 )
@@ -593,7 +586,6 @@ async def analyze_persona(
 
 @ai_ux_router.post(
     "/composite/analyze",
-    response_model=CompositeAnalysisResponse,
     summary="Run composite analysis",
     description="Runs multiple AI UX analyses in parallel and provides cross-service insights.",
 )
@@ -643,7 +635,6 @@ async def stream_composite_analyze(
 
 @ai_ux_router.post(
     "/composite/batch",
-    response_model=BatchCompositeResponse,
     summary="Batch composite analysis",
     description="Processes multiple composite analysis requests in parallel with configurable concurrency.",
 )

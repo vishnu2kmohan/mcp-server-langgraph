@@ -124,7 +124,7 @@ class SkillInstaller:
             )
 
         except Exception as e:
-            logger.error(f"Failed to install skill {skill_name}: {e}")
+            logger.exception(f"Failed to install skill {skill_name}: {e}")
             return InstallationResult(
                 success=False,
                 skill_name=skill_name,
@@ -236,7 +236,7 @@ class SkillInstaller:
                 # No dependencies to install
                 return True
         except Exception as e:
-            logger.error(f"Failed to install dependencies: {e}")
+            logger.exception(f"Failed to install dependencies: {e}")
             return False
 
     async def _run_uv_sync(self, skill_dir: Path) -> bool:

@@ -242,7 +242,8 @@ class SkillsToolHandler(AbstractToolHandler):
             ]
 
         name = arguments.get("name", "")
-        skill_args = arguments.get("args", {})
+        # Note: skill_args will be used when sandbox execution is implemented
+        # skill_args = arguments.get("args", {})
 
         skill = self.skill_registry.get(name)
         if skill is None:

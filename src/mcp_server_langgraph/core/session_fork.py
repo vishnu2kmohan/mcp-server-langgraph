@@ -122,26 +122,11 @@ class SessionForkManager:
 
         # Check if session exists
         # In real implementation, this would query the session store
-        # For testing, we use a set of known valid sessions
-        is_valid_session = (
-            source_session_id in self._valid_sessions
-            or source_session_id.startswith("session-")
-            or source_session_id.startswith("parent-")
-            or source_session_id.startswith("fork-")
-            or source_session_id.startswith("original-")
-        )
-
         if source_session_id == "nonexistent-session":
             raise SessionNotFoundError(source_session_id)
 
         # Check checkpoint validity if specified
         if checkpoint_id is not None:
-            # For testing: valid checkpoints follow a pattern
-            is_valid_checkpoint = (
-                checkpoint_id.startswith("checkpoint-at-msg-")
-                or checkpoint_id.startswith("checkpoint-")
-                and checkpoint_id != "invalid-checkpoint"
-            )
             if checkpoint_id == "invalid-checkpoint":
                 raise CheckpointNotFoundError(checkpoint_id, source_session_id)
 

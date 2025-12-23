@@ -752,7 +752,6 @@ class CachedExplanationOrchestrator(ExplanationOrchestrator):
             AIExplanation (from cache or freshly generated)
         """
         start_time = time.monotonic()
-        cached = False
 
         # Generate cache key
         cache_key = generate_explanation_cache_key(

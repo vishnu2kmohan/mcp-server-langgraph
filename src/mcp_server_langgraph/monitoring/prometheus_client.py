@@ -206,7 +206,7 @@ class PrometheusClient:
                     continue
 
                 # All retries exhausted - record failure for circuit breaker
-                logger.error(f"Prometheus query failed after {max_attempts} attempts: {e}", extra={"query": promql})
+                logger.exception(f"Prometheus query failed after {max_attempts} attempts: {e}", extra={"query": promql})
                 try:
                     breaker._inc_counter()
                     breaker.state.on_failure(e)
@@ -216,7 +216,7 @@ class PrometheusClient:
 
             except httpx.TimeoutException as e:
                 # Timeout - record failure (don't retry, already waited)
-                logger.error(f"Prometheus query timed out: {e}", extra={"query": promql})
+                logger.exception(f"Prometheus query timed out: {e}", extra={"query": promql})
                 try:
                     breaker._inc_counter()
                     breaker.state.on_failure(e)

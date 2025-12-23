@@ -97,7 +97,7 @@ async def check_database_connectivity(postgres_url: str, timeout: float = 5.0) -
                 continue
 
             # All retries exhausted - record failure for circuit breaker
-            logger.error(f"PostgreSQL connectivity check failed after {max_attempts} attempts: {e}")
+            logger.exception(f"PostgreSQL connectivity check failed after {max_attempts} attempts: {e}")
             try:
                 breaker._inc_counter()
                 breaker.state.on_failure(e)
@@ -109,7 +109,7 @@ async def check_database_connectivity(postgres_url: str, timeout: float = 5.0) -
             return False, "asyncpg not installed - cannot validate database connectivity"
         except Exception as e:
             # Unexpected error - record failure for circuit breaker
-            logger.error(f"Unexpected error during database validation: {e}")
+            logger.exception(f"Unexpected error during database validation: {e}")
             try:
                 breaker._inc_counter()
                 breaker.state.on_failure(e)
@@ -197,7 +197,7 @@ async def create_connection_pool(
 
     except Exception as e:
         # Record failure for circuit breaker
-        logger.error(f"PostgreSQL pool creation failed: {e}")
+        logger.exception(f"PostgreSQL pool creation failed: {e}")
         try:
             breaker._inc_counter()
             breaker.state.on_failure(e)

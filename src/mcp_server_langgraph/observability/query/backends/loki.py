@@ -170,7 +170,7 @@ class LokiLoggingClient(LoggingQueryClient):
                     continue
 
                 # All retries exhausted - record failure for circuit breaker
-                logger.error(f"Loki query failed after {max_attempts} attempts: {e}")
+                logger.exception(f"Loki query failed after {max_attempts} attempts: {e}")
                 try:
                     breaker._inc_counter()
                     breaker.state.on_failure(e)

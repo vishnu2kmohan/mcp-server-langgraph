@@ -59,7 +59,6 @@ router = APIRouter(tags=["interrupt"])
 
 @router.post(
     "/sessions/{session_id}/interrupt",
-    response_model=InterruptSignalResponse,
     summary="Signal session interrupt",
     description="Signal that a session should stop execution. Running operations will stop at the next checkpoint.",
 )
@@ -101,7 +100,6 @@ async def signal_interrupt(
 
 @router.get(
     "/sessions/{session_id}/interrupt",
-    response_model=InterruptStatusResponse,
     summary="Check interrupt status",
     description="Check whether a session is currently interrupted.",
 )
@@ -130,7 +128,6 @@ async def check_interrupt(
 
 @router.delete(
     "/sessions/{session_id}/interrupt",
-    response_model=InterruptClearResponse,
     summary="Clear session interrupt",
     description="Clear the interrupt flag for a session, allowing it to proceed normally.",
 )

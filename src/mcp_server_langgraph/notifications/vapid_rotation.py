@@ -285,7 +285,7 @@ class VAPIDKeyRotationService:
             return key_pair
 
         except ImportError:
-            logger.error("cryptography package not installed")
+            logger.exception("cryptography package not installed")
             raise RuntimeError(
                 "cryptography package required for VAPID key generation. Install with: pip install cryptography"
             )

@@ -534,7 +534,6 @@ class CorrelateAlertsResponse(BaseModel):
 
 @alert_recommendation_router.post(
     "/correlate",
-    response_model=CorrelateAlertsResponse,
     summary="Correlate alerts",
     description="Correlate alerts by label or time window with optional pattern detection.",
 )

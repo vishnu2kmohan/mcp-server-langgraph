@@ -181,7 +181,7 @@ class HybridCloudStorageService:
             }
 
         except Exception as e:
-            logger.error(
+            logger.exception(
                 "Failed to upload content to cloud storage",
                 extra={
                     "artifact_id": artifact_id,

@@ -219,7 +219,7 @@ class TempoClient:
                     continue
 
                 # All retries exhausted - record failure for circuit breaker
-                logger.error(f"Tempo get_trace failed after {max_attempts} attempts: {e}", extra={"trace_id": trace_id})
+                logger.exception(f"Tempo get_trace failed after {max_attempts} attempts: {e}", extra={"trace_id": trace_id})
                 try:
                     breaker._inc_counter()
                     breaker.state.on_failure(e)
@@ -344,7 +344,7 @@ class TempoClient:
                     continue
 
                 # All retries exhausted - record failure for circuit breaker
-                logger.error(f"Tempo search failed after {max_attempts} attempts: {e}")
+                logger.exception(f"Tempo search failed after {max_attempts} attempts: {e}")
                 try:
                     breaker._inc_counter()
                     breaker.state.on_failure(e)

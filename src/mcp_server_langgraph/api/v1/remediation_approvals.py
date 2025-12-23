@@ -228,7 +228,6 @@ class HistoryResponse(BaseModel):
 
 @remediation_approval_router.get(
     "/pending",
-    response_model=PendingRemediationsResponse,
     summary="List pending remediations",
     description="Get all remediations waiting for approval. Requires admin role.",
 )
@@ -252,7 +251,6 @@ async def list_pending_remediations(
 
 @remediation_approval_router.post(
     "/{remediation_id}/approve",
-    response_model=ApprovalResponse,
     summary="Approve a remediation",
     description="Approve a pending remediation for execution. Requires admin role.",
 )
@@ -317,7 +315,6 @@ async def approve_remediation(
 
 @remediation_approval_router.post(
     "/{remediation_id}/reject",
-    response_model=ApprovalResponse,
     summary="Reject a remediation",
     description="Reject a pending remediation. Requires admin role.",
 )
@@ -389,7 +386,6 @@ async def reject_remediation(
 
 @remediation_approval_router.get(
     "/history",
-    response_model=HistoryResponse,
     summary="Get remediation history",
     description="Get completed (approved/rejected) remediations. Requires admin role.",
 )
@@ -415,7 +411,6 @@ async def get_remediation_history(
 
 @remediation_approval_router.get(
     "/{remediation_id}",
-    response_model=RemediationRequest,
     summary="Get remediation details",
     description="Get details of a specific remediation.",
 )

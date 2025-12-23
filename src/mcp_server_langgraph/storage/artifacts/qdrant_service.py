@@ -154,7 +154,7 @@ class QdrantArtifactVectorService:
             return True
 
         except Exception as e:
-            logger.error(
+            logger.exception(
                 "Failed to index artifact vector",
                 extra={"artifact_id": artifact_id, "error": str(e)},
             )
@@ -205,7 +205,7 @@ class QdrantArtifactVectorService:
             ]
 
         except Exception as e:
-            logger.error(
+            logger.exception(
                 "Failed to search artifact vectors",
                 extra={"query": query[:50], "error": str(e)},
             )
@@ -271,7 +271,7 @@ class QdrantArtifactVectorService:
             ][:limit]
 
         except Exception as e:
-            logger.error(
+            logger.exception(
                 "Failed to find similar artifacts",
                 extra={"artifact_id": artifact_id, "error": str(e)},
             )
@@ -302,7 +302,7 @@ class QdrantArtifactVectorService:
             return True
 
         except Exception as e:
-            logger.error(
+            logger.exception(
                 "Failed to delete artifact vector",
                 extra={"artifact_id": artifact_id, "error": str(e)},
             )
