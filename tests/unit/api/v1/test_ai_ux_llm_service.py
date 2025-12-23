@@ -234,11 +234,6 @@ class TestAIUXServiceInitialization:
 class TestErrorAnalysisWithLLM:
     """Test LLM-enhanced error analysis."""
 
-    def setup_method(self) -> None:
-        """Reset circuit breakers before each test."""
-        from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
-        reset_circuit_breaker("ai_ux_llm")
-
     @pytest.mark.asyncio
     async def test_error_analysis_calls_llm(self, mock_llm_factory, mock_settings):
         """Error analysis uses LLM when available."""

@@ -23,6 +23,17 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
+
+@pytest.fixture(autouse=True)
+def reset_ai_circuit_breakers():
+    """Reset all AI UX circuit breakers before each test to ensure clean state."""
+    from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+    reset_circuit_breaker("ai_ux_llm")
+    yield
+    # Clean up after test
+    reset_circuit_breaker("ai_ux_llm")
+
+
 @pytest.mark.ai
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="ai_ux_enhancements")
@@ -396,10 +407,6 @@ class TestRedisCaching:
         """Test that cache miss triggers LLM call."""
         from mcp_server_langgraph.api.v1.ai_ux import PersonaAnalyzeRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
-        from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
-
-        # Reset circuit breaker to ensure clean state
-        reset_circuit_breaker("ai_ux_llm")
 
         mock_llm = MagicMock()
         mock_llm.ainvoke = AsyncMock(
